@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "compilerOptions": {
+    // Strict Mode - All strict checks enabled
+    // See: https://www.typescriptlang.org/tsconfig/strict.html
+    "strict": true,
+
+    // Additional Strict Checks (2026 recommended, not included in strict flag)
+    // See: https://www.totaltypescript.com/tsconfig-cheat-sheet
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "exactOptionalPropertyTypes": true,
+
+    // Module Resolution - Modern ESM-first
+    // See: https://turborepo.dev/docs/guides/tools/typescript
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+
+    // Emit Settings
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+
+    // Type Checking
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+
+    // Language Target - Node 20+ supports ES2022
+    "target": "ES2022",
+    "lib": ["ES2022"],
+
+    // Monorepo Support - Critical for caching
+    // See: https://turborepo.dev/docs/guides/tools/typescript
+    "composite": true,
+    "incremental": true
+  }
+}
