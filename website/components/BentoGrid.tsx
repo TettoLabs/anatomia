@@ -236,7 +236,7 @@ export function BentoGrid() {
               className="text-[15px] lg:text-[17px] leading-[1.65] mb-6 lg:mb-8 max-w-[90%]"
               style={{ color: "var(--text-muted-60)" }}
             >
-              Reference modes in any AI tool. Claude Code, Cursor, and Windsurf read your .ana/ files and follow your project's patterns—not generic best practices.
+              Reference modes in any AI tool. Claude Code, Cursor, and Windsurf read your .ana/ files and follow your project&apos;s patterns—not generic best practices.
             </div>
             <div
               className="bg-[#1a1a2e] rounded-lg p-5 lg:p-6 font-mono text-sm lg:text-[14px] leading-[1.6]"
