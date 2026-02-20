@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useTheme } from 'next-themes';
 
-type WaitlistProduct = 'webops' | 'inspector' | 'both';
+type WaitlistProduct = 'anatomia' | 'webops' | 'inspector' | 'both';
 
 interface WaitlistModalProps {
   product: WaitlistProduct;
@@ -13,6 +13,11 @@ interface WaitlistModalProps {
 }
 
 const productInfo: Record<WaitlistProduct, { name: string; tagline: string; description: string }> = {
+  anatomia: {
+    name: 'Anatomia',
+    tagline: 'Beta Week 7',
+    description: 'Auto-generated AI context for your codebase. Be among the first to try pattern detection and .ana/ folder generation.',
+  },
   inspector: {
     name: 'Inspector',
     tagline: 'Coming Early 2026',
@@ -73,7 +78,7 @@ export function WaitlistModal({ product, source = 'website', trigger }: Waitlist
     // Demo version - just show success without API call
     setTimeout(() => {
       setStatus('success');
-      setMessage("Thanks for your interest! This is a demo site.");
+      setMessage("You're on the list!");
       setEmail('');
     }, 800);
   };
@@ -149,7 +154,7 @@ export function WaitlistModal({ product, source = 'website', trigger }: Waitlist
                       className="text-sm mb-6"
                       style={{ color: 'var(--text-muted-60)' }}
                     >
-                      We&apos;ll let you know when {info.name} is ready.
+                      We&apos;ll email you when {info.name} beta launches.
                     </p>
                     <button
                       onClick={() => setIsOpen(false)}
