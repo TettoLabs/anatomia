@@ -1,0 +1,63 @@
+# Test Template - {{projectName}}
+
+**Project:** {{projectName}}
+**Node ID:** {{nodeId}}
+**Created:** {{timestamp}}
+
+## Features
+
+{{#if federation}}
+### Federation Enabled
+
+This project is federated with other nodes:
+{{#each federationNodes}}
+- **{{name}}**: {{description}}
+{{/each}}
+
+{{else}}
+### Standalone Project
+
+This project operates independently (no federation).
+{{/if}}
+
+## Description
+
+{{description}}
+
+## Tech Stack
+
+{{#if framework}}
+**Framework:** {{framework}}
+{{/if}}
+
+{{#if language}}
+**Language:** {{language}}
+{{/if}}
+
+## Notes
+
+{{#if notes}}
+{{notes}}
+{{else}}
+No additional notes provided.
+{{/if}}
+
+---
+
+Variables tested:
+- projectName: {{projectName}} (required)
+- nodeId: {{nodeId}} (required)
+- timestamp: {{timestamp}} (required)
+- description: {{description}} (required)
+- federation: {{federation}} (boolean)
+- framework: {{framework}} (optional)
+- language: {{language}} (optional)
+- notes: {{notes}} (optional)
+- federationNodes: {{federationNodes}} (array, only if federation true)
+
+Edge cases tested:
+- Undefined optional variables (framework, language, notes)
+- Boolean conditionals (federation)
+- Nested conditionals (federation → each)
+- Array loops (federationNodes)
+- Empty else blocks
