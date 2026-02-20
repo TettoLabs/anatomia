@@ -1,148 +1,113 @@
 # Anatomia CLI
 
-**Auto-generated AI context for codebases**
-
-Anatomia generates professional `.ana/` context folders that help AI assistants understand your project instantly.
+Auto-generated AI context for codebases.
 
 ---
 
-## Features
+## Install
 
-- **5 Task-Specific Modes:** architect (design), code (implement), debug (troubleshoot), docs (document), test (test writing)
-- **Structured Context:** Guides you to document architecture, patterns, and conventions
-- **Dynamic Generation:** Handlebars templates customize context per project type (FastAPI, Next.js, Express, Go, etc.)
-- **Tool-Agnostic:** Works with Claude Code, Cursor, GitHub Copilot, any AI tool
-- **Federation:** Multi-service context for microservice architectures (optional)
-
----
-
-## Installation
-
-**From source (current):**
-```bash
-git clone https://github.com/TettoLabs/anatomia.git
-cd anatomia/packages/cli
-pnpm install
-pnpm build
-npm link
-```
-
-**From npm (coming soon):**
 ```bash
 npm install -g anatomia
 ```
 
+**From source:**
+```bash
+git clone https://github.com/TettoLabs/anatomia.git
+cd anatomia/packages/cli
+pnpm install && pnpm build
+npm link
+```
+
 ---
 
-## Quick Start
+## Usage
 
-**1. Initialize .ana/ context:**
+**Initialize context:**
 ```bash
 cd your-project/
 ana init
 ```
 
-Answer prompts:
-- Project name: my-api
-- Node ID: main
-- Project type: node
-- Framework: Next.js
-- Language: TypeScript
-- Federation: No
-
-**2. Fill context files:**
-
-Edit `.ana/context/main.md` with your project details:
-- Project overview
-- Architecture
-- Tech stack
-- Directory structure
-- Key concepts
-
-**3. Use modes in your AI chat:**
-
+**Reference modes:**
 ```bash
-# Reference architect mode for design work
-ana mode architect
-
-# Reference code mode for implementation
-ana mode code
+ana mode architect  # System design
+ana mode code       # Implementation
+ana mode debug      # Troubleshooting
+ana mode docs       # Documentation
+ana mode test       # Test writing
 ```
 
-Or load mode directly in your AI tool:
+**In your AI tool:**
 ```
-Read .ana/modes/code.md before starting implementation
+@.ana/modes/code.md "Implement user auth"
 ```
+
+AI reads your patterns, writes code your way.
+
+---
+
+## What You Get
+
+**10 files in `.ana/`:**
+
+```
+.ana/
+├── ENTRY.md              # Orientation (read this first)
+├── node.json             # Project metadata
+├── modes/
+│   ├── architect.md      # Design mode
+│   ├── code.md           # Implementation mode
+│   ├── debug.md          # Debugging mode
+│   ├── docs.md           # Documentation mode
+│   └── test.md           # Testing mode
+└── context/
+    ├── main.md           # Project overview
+    ├── patterns.md       # Code patterns
+    └── conventions.md    # Coding standards
+```
+
+**Fill `context/*.md` with your project details. Reference `modes/*.md` when working.**
 
 ---
 
 ## Commands
 
-### `ana --version`
-Display CLI version.
-
-### `ana --help`
-Show available commands and options.
-
 ### `ana init [options]`
-Initialize `.ana/` context folder in current directory.
+
+Initialize `.ana/` folder.
 
 **Options:**
 - `-y, --yes` - Skip prompts, use defaults
-- `-f, --force` - Overwrite existing .ana/ directory
-
-**Creates 10 files:**
-- `.ana/ENTRY.md` - Orientation contract (explains .ana/, lists modes, defines principles)
-- `.ana/node.json` - Project identity and metadata
-- `.ana/modes/*.md` - 5 mode files (architect, code, debug, docs, test)
-- `.ana/context/*.md` - 3 context files (main, patterns, conventions)
-
-### `ana mode <name>`
-Reference a specific mode file.
-
-**Available modes:**
-- `architect` - System design and architecture
-- `code` - Feature implementation
-- `debug` - Debugging and troubleshooting
-- `docs` - Documentation writing
-- `test` - Test writing
+- `-f, --force` - Overwrite existing .ana/
 
 **Example:**
 ```bash
-ana mode architect
-# Output: Mode information and file path
+ana init -y  # Quick start with defaults
 ```
 
----
+### `ana mode <name>`
 
-## .ana/ Directory Structure
+Display mode file path and info.
 
-```
-.ana/
-├── ENTRY.md           # Orientation contract (read this first)
-├── node.json          # Project metadata
-├── context/
-│   ├── main.md        # Project overview (fill manually)
-│   ├── patterns.md    # Code patterns (fill manually)
-│   └── conventions.md # Coding standards (fill manually)
-└── modes/
-    ├── architect.md   # Design mode (system architecture)
-    ├── code.md        # Implementation mode
-    ├── debug.md       # Debugging mode
-    ├── docs.md        # Documentation mode
-    └── test.md        # Testing mode
+**Example:**
+```bash
+ana mode code
+# Output: .ana/modes/code.md - Implementation mode
 ```
 
-**Workflow:**
-1. Read `ENTRY.md` (orientation)
-2. Fill `context/*.md` files (project-specific details)
-3. Reference `modes/*.md` when working (task-specific guidance)
+### `ana --version`
+
+Show CLI version.
+
+### `ana --help`
+
+Show all commands.
 
 ---
 
 ## Mode Boundaries
 
-**Each mode has a specific purpose. Boundaries are STRICT.**
+Each mode has strict boundaries:
 
 - **architect** - Designs systems, does NOT implement
 - **code** - Implements features, does NOT design architecture
@@ -150,61 +115,51 @@ ana mode architect
 - **docs** - Writes documentation, does NOT create features
 - **test** - Writes tests, does NOT implement features
 
-**Why boundaries matter:**
-- Prevents scope creep (design + implement in one session = rushed design)
-- Ensures thoroughness (separate testing = better coverage)
-- Maintains quality (focused modes = higher quality output)
+**Why:** Prevents scope creep, ensures thoroughness, maintains quality.
 
 ---
 
 ## Templates
 
-Templates use Handlebars syntax for dynamic generation:
-- **Variables:** `{{projectName}}`, `{{framework}}`, `{{language}}`
-- **Conditionals:** `{{#if federation}}...{{/if}}`
-- **Framework-specific:** FastAPI, Next.js, Express, Go guidance appears when framework selected
+Templates use Handlebars for dynamic generation:
 
-**Quality standard:** ≥8/10 measured by:
-- Orientation speed: ≤30 seconds (AI understands project quickly)
-- Boundary discipline: ≤2% violations (AI respects mode constraints)
-- Naturalness: ≥4/5 rating (developers say "reads well")
+```handlebars
+{{#if framework === 'fastapi'}}
+FastAPI-specific guidance here
+{{/if}}
+```
+
+**Supported frameworks:**
+- FastAPI (Python)
+- Next.js (TypeScript/JavaScript)
+- Express (Node.js)
+- Django (Python)
+- Go (standard library)
 
 ---
 
 ## Development
 
-**Setup:**
+**Run tests:**
 ```bash
-pnpm install
-pnpm build
-pnpm test
+pnpm test  # 100+ tests
 ```
 
-**Testing:**
-```bash
-pnpm test                 # Run tests (100 tests)
-pnpm tsx src/test-templates.ts  # Validation script
-```
+**Modify templates:**
+1. Edit `templates/*.hbs` or `templates/*.md`
+2. Run `pnpm test`
+3. Build with `pnpm build`
 
-**Modifying templates:**
-1. Edit templates/*.hbs or templates/*.md
-2. Run tests: `pnpm test`
-3. Build: `pnpm build`
-4. Test locally: `npm link && ana init`
+See [TEMPLATE_GUIDE.md](./docs/TEMPLATE_GUIDE.md) for details.
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) and [docs/TEMPLATE_GUIDE.md](./docs/TEMPLATE_GUIDE.md) for details.
+---
+
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md)
 
 ---
 
 ## License
 
 MIT
-
----
-
-## Links
-
-- **Website:** https://anatomia.dev
-- **Documentation:** Coming with beta (Week 7)
-- **Issues:** https://github.com/TettoLabs/anatomia/issues
-- **Contributing:** See CONTRIBUTING.md

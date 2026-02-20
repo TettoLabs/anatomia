@@ -2,19 +2,56 @@
 
 Auto-generated AI context for codebases in 30 seconds.
 
-**Status:** Strategy complete (11,100 lines), ready for STEP_0.1 execution
+[![npm version](https://img.shields.io/npm/v/anatomia.svg)](https://www.npmjs.com/package/anatomia)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
 ---
 
-## What is Anatomia?
+## What is this?
 
-Anatomia analyzes your project and creates `.ana/` folders with:
-- **Framework-specific context** (FastAPI, Next.js, Express, Django, Go)
-- **5 specialized modes** (architect, code, debug, docs, test)
-- **Real code examples** extracted from YOUR project
-- **Auto-updates** when code changes (`ana evolve`)
+Anatomia generates `.ana/` folders that help AI assistants understand your project instantly. Instead of re-explaining your patterns every conversation, drop mode files in chat.
 
-Works with Claude Code, Cursor, Windsurf, any AI assistant.
+**Problem:** "Use our API client pattern" → AI invents its own pattern
+**Solution:** `@.ana/modes/code.md` → AI follows YOUR pattern
+
+---
+
+## Install
+
+```bash
+npm install -g anatomia
+```
+
+---
+
+## Quick Start
+
+```bash
+cd your-project/
+ana init
+```
+
+This creates 10 files in `.ana/`:
+- `ENTRY.md` - Orientation contract
+- `modes/*.md` - 5 task modes (architect, code, debug, docs, test)
+- `context/*.md` - Your patterns, conventions, architecture
+
+**Use in Claude Code:**
+```
+@.ana/modes/code.md "Implement JWT refresh"
+```
+
+Claude reads your patterns, writes code your way.
+
+---
+
+## Features
+
+- **5 specialized modes** - Architect, code, debug, docs, test
+- **Framework-aware** - Detects FastAPI, Next.js, Express, Django, Go
+- **Auto-updating** - Context stays current with code changes
+- **Tool-agnostic** - Works with Claude Code, Cursor, Windsurf
+- **Federation ready** - Multi-service query (microservices, monorepos)
 
 ---
 
@@ -22,59 +59,53 @@ Works with Claude Code, Cursor, Windsurf, any AI assistant.
 
 ```
 anatomia/
-├── ATLAS3/
-│   └── strategy/         # Execution strategy (STEP_0-6, 11,100 lines)
-├── master_plan/          # Complete specifications
-│   ├── CORE_DOCS/        # Vision, README
-│   └── IMPLEMENTATION/   # Technical architecture, roadmap
-├── website/              # Landing page (anatomia.dev)
-└── packages/             # Will be created in STEP_0.1
-    └── cli/              # Anatomia CLI (to be built)
+├── packages/
+│   ├── cli/          # CLI tool (this package)
+│   ├── analyzer/     # Pattern detection
+│   └── generator/    # Template engine
+└── website/          # Landing page (anatomia.dev)
 ```
 
 ---
 
-## Build Strategy
+## Development
 
-**Timeline:** 16 weeks to federation moat
-
-- **Week 1-2:** Foundation (templates, CLI scaffold, website)
-- **Week 3-4:** Detection engine (alpha: `ana analyze`)
-- **Week 5-7:** Auto-generation (beta: `ana init`)
-- **Week 8-10:** Production launch (public: npm 1.0.0)
-- **Week 11-12:** Multi-node detection
-- **Week 13-16:** Federation protocol (THE MOAT)
-
-**Strategy files:** See `ATLAS3/strategy/steps/` for complete STEP_0-6 specifications
-
----
-
-## Development (After STEP_0.1)
-
-Prerequisites: Node 20+, pnpm 9+
-
+**Setup:**
 ```bash
+git clone https://github.com/TettoLabs/anatomia.git
+cd anatomia
 pnpm install
 pnpm build
-cd packages/cli && pnpm link --global
+```
+
+**Test:**
+```bash
+pnpm test
+```
+
+**Link locally:**
+```bash
+cd packages/cli
+pnpm link --global
 ana --version
 ```
 
 ---
 
-## Building with ATLAS3
+## Contributing
 
-This project uses ATLAS3 framework for systematic execution.
-
-**To begin:**
-1. Load `ATLAS3/ATLAS_ENTRY_POINT.md` in Claude Code
-2. Run ATLAS Mode 1 (Auto-Resume)
-3. Start STEP_0.1 research
-
-**Strategy quality:** 8.4/10 average (validated by 12 agents across 4 rounds)
+See [packages/cli/CONTRIBUTING.md](./packages/cli/CONTRIBUTING.md)
 
 ---
 
 ## License
 
 MIT
+
+---
+
+## Links
+
+- **Website:** [anatomia.dev](https://anatomia.dev)
+- **Issues:** [GitHub Issues](https://github.com/TettoLabs/anatomia/issues)
+- **CLI Package:** [packages/cli](./packages/cli)
