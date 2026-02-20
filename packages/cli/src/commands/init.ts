@@ -26,8 +26,13 @@ import inquirer from 'inquirer';
 import chalk from 'chalk';
 import ora from 'ora';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { fileWriter } from '../utils/file-writer.js';
 import { renderTemplate } from '../utils/template-loader.js';
+
+// Get __dirname in ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Project types supported
 const PROJECT_TYPES = ['python', 'node', 'go', 'rust', 'mixed'] as const;
@@ -38,6 +43,8 @@ interface InitAnswers {
   projectName: string;
   nodeId: string;
   projectType: ProjectType;
+  framework?: string | null;
+  language?: string;
   federation: boolean;
   useDefaults: boolean;
 }
@@ -86,10 +93,12 @@ export const initCommand = new Command('init')
         projectName: path.basename(cwd),
         nodeId: 'main',
         projectType: 'node',
+        framework: null,
+        language: 'typescript', // Default for node projects
         federation: false,
         useDefaults: true,
       };
-      console.log(chalk.gray(`Using defaults: ${answers.projectName} (${answers.projectType}, standalone)`));
+      console.log(chalk.gray(`Using defaults: ${answers.projectName} (${answers.projectType}, ${answers.language}, standalone)`));
     } else {
       // Interactive prompts
       answers = await inquirer.prompt<InitAnswers>([
@@ -126,6 +135,34 @@ export const initCommand = new Command('init')
           default: 'node',
         },
         {
+          type: 'list',
+          name: 'framework',
+          message: 'Framework (optional):',
+          choices: [
+            { name: 'FastAPI (Python)', value: 'fastapi' },
+            { name: 'Django (Python)', value: 'django' },
+            { name: 'Next.js (Node)', value: 'nextjs' },
+            { name: 'Express (Node)', value: 'express' },
+            { name: 'Standard Library (Go)', value: 'stdlib' },
+            { name: 'Skip (generic templates)', value: null },
+          ],
+          default: null,
+        },
+        {
+          type: 'list',
+          name: 'language',
+          message: 'Primary language:',
+          choices: ['python', 'typescript', 'javascript', 'go', 'rust', 'other'],
+          default: (answers: Partial<InitAnswers>) => {
+            // Infer from project type
+            if (answers.projectType === 'python') return 'python';
+            if (answers.projectType === 'node') return 'typescript';
+            if (answers.projectType === 'go') return 'go';
+            if (answers.projectType === 'rust') return 'rust';
+            return 'other';
+          },
+        },
+        {
           type: 'confirm',
           name: 'federation',
           message: 'Enable federation (multi-service context)?',
@@ -154,6 +191,8 @@ export const initCommand = new Command('init')
         nodeId: answers.nodeId,
         timestamp: new Date().toISOString(),
         federation: answers.federation,
+        framework: answers.framework,
+        language: answers.language,
       };
 
       // Render and write ENTRY.md
@@ -166,75 +205,57 @@ export const initCommand = new Command('init')
       await fileWriter.writeFile(path.join(anaPath, 'node.json'), nodeJsonContent);
       spinner.text = 'Created .ana/node.json';
 
-      // Create context/main.md (still placeholder for now - CP2 will improve)
-      const mainContext = `# Project Context
+      // Render 5 mode templates
+      const modes = ['architect', 'code', 'debug', 'docs', 'test'];
+      for (const mode of modes) {
+        const modeContent = renderTemplate(`${mode}.md.hbs`, templateData);
+        await fileWriter.writeFile(path.join(anaPath, 'modes', `${mode}.md`), modeContent);
+        spinner.text = `Created .ana/modes/${mode}.md`;
+      }
 
-## Overview
-<!-- TODO: Add 2-3 sentence project description -->
-<!-- Example: "FastAPI backend for multi-tenant SaaS product with user authentication, billing, and analytics" -->
+      // Copy 3 context templates (static files with simple {{projectName}} replacement)
+      const contextTemplates = ['main.md', 'patterns.md', 'conventions.md'];
+      for (const ctx of contextTemplates) {
+        // Determine template path (src/ vs dist/)
+        const isCompiled = __dirname.includes('dist');
+        const templatePath = isCompiled
+          ? path.join(__dirname, '..', 'templates', ctx)
+          : path.join(__dirname, '..', '..', 'templates', ctx);
 
-## Architecture
-<!-- TODO: Describe high-level architecture -->
-<!-- Example: "Layered architecture: API layer (FastAPI) → Service layer (business logic) → Data layer (SQLAlchemy ORM → PostgreSQL)" -->
+        // Read static template
+        const content = await fileWriter.readFile(templatePath);
 
-## Tech Stack
-- **Language:** ${answers.projectType}
-- **Framework:** <!-- TODO: Add framework (e.g., FastAPI, Next.js, Express) -->
-- **Database:** <!-- TODO: Add database if any (e.g., PostgreSQL, MongoDB, None) -->
+        // Replace {{projectName}} (simple string replacement, no Handlebars needed)
+        const renderedContent = content.replace(/\{\{projectName\}\}/g, answers.projectName);
 
-## Key Concepts
-<!-- TODO: Define domain-specific terms -->
-<!-- Example: "Multi-tenant: Each customer has isolated data. Tenant ID passed in JWT token." -->
-
----
-*Fill this file with your project details. Better context = better AI assistance.*
-`;
-      await fileWriter.writeFile(path.join(anaPath, 'context', 'main.md'), mainContext);
-      spinner.text = 'Created .ana/context/main.md';
-
-      // Create modes/code.md (still placeholder - CP2 will create all 5 modes properly)
-      const codeMode = `# Code Mode
-
-## Purpose
-Day-to-day feature implementation, refactoring, code modifications.
-
-## What This Mode Produces
-- Working code following project patterns and conventions
-- Focused implementations (features, bug fixes, refactors)
-- Tests for new code
-
-## What This Mode Delegates
-- Architecture changes → Switch to architect mode
-- Complex debugging → Switch to debug mode
-- Documentation → Switch to docs mode
-
-## Hard Constraints
-- Do not make architectural changes without discussion
-- Do not modify files outside current scope
-- Do not add new frameworks without proposal
-
----
-*This is a placeholder mode file. Full modes created in STEP_0.2 CP2.*
-`;
-      await fileWriter.writeFile(path.join(anaPath, 'modes', 'code.md'), codeMode);
-      spinner.text = 'Created .ana/modes/code.md';
+        await fileWriter.writeFile(path.join(anaPath, 'context', ctx), renderedContent);
+        spinner.text = `Created .ana/context/${ctx}`;
+      }
 
       spinner.succeed('Created .ana/ structure');
 
-      // Success message
+      // Enhanced success message
       console.log('');
       console.log(chalk.green('✓ Success!') + ' .ana/ context initialized.');
       console.log('');
       console.log(chalk.gray('Created files:'));
-      console.log(chalk.gray('  📄 .ana/ENTRY.md        - Orientation contract'));
-      console.log(chalk.gray('  📄 .ana/node.json       - Project identity'));
-      console.log(chalk.gray('  📄 .ana/context/main.md - Project overview (fill manually)'));
-      console.log(chalk.gray('  📄 .ana/modes/code.md   - Code mode (more modes in CP2)'));
+      console.log(chalk.gray('  📄 .ana/ENTRY.md           - Orientation contract'));
+      console.log(chalk.gray('  📄 .ana/node.json          - Project identity'));
+      console.log(chalk.gray('  📂 .ana/modes/             - 5 mode files:'));
+      console.log(chalk.gray('     • architect.md          - System design'));
+      console.log(chalk.gray('     • code.md               - Implementation'));
+      console.log(chalk.gray('     • debug.md              - Debugging'));
+      console.log(chalk.gray('     • docs.md               - Documentation'));
+      console.log(chalk.gray('     • test.md               - Testing'));
+      console.log(chalk.gray('  📂 .ana/context/           - 3 context files:'));
+      console.log(chalk.gray('     • main.md               - Project overview (fill manually)'));
+      console.log(chalk.gray('     • patterns.md           - Code patterns (fill manually)'));
+      console.log(chalk.gray('     • conventions.md        - Coding standards (fill manually)'));
       console.log('');
       console.log(chalk.gray('Next steps:'));
-      console.log(chalk.gray('  1. Edit .ana/context/main.md with your project details'));
+      console.log(chalk.gray('  1. Fill .ana/context/*.md files with your project details'));
       console.log(chalk.gray('  2. Reference .ana/ENTRY.md in your AI chat'));
-      console.log(chalk.gray('  3. Use `ana mode <name>` to load mode-specific context'));
+      console.log(chalk.gray('  3. Use `ana mode <name>` to load specific mode context'));
       console.log('');
     } catch (error) {
       spinner.fail('Failed to create .ana/ structure');

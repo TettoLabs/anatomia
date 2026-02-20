@@ -13,6 +13,9 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Register Handlebars helpers
+Handlebars.registerHelper('eq', (a, b) => a === b);
+
 /**
  * Template data interface
  */
@@ -22,8 +25,8 @@ export interface TemplateData {
   timestamp?: string;
   description?: string;
   federation?: boolean;
-  framework?: string;
-  language?: string;
+  framework?: string | null | undefined;
+  language?: string | undefined;
   notes?: string;
   federationNodes?: Array<{ name: string; description: string }>;
   [key: string]: unknown; // Allow additional properties
