@@ -91,8 +91,10 @@ describe('ana init command', () => {
     const parsed = JSON.parse(content);
 
     expect(parsed).toHaveProperty('name');
-    expect(parsed).toHaveProperty('type', 'node');
+    expect(parsed).toHaveProperty('nodeId', 'main');
+    expect(parsed).toHaveProperty('role', 'main');
     expect(parsed).toHaveProperty('version', '1.0.0');
+    expect(parsed).toHaveProperty('created');
     expect(parsed).toHaveProperty('federation');
   });
 
@@ -143,8 +145,8 @@ describe('ana init command', () => {
     const originalParsed = JSON.parse(originalContent);
     const newParsed = JSON.parse(newContent);
 
-    // created_at should be different
-    expect(newParsed.created_at).not.toBe(originalParsed.created_at);
+    // created timestamp should be different
+    expect(newParsed.created).not.toBe(originalParsed.created);
   });
 
   it('shows version correctly', () => {
