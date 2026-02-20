@@ -17,7 +17,7 @@ const pricingTiers = [
       "Health check",
       "Open source, MIT license",
     ],
-    cta: "Get Started",
+    cta: "Join Waitlist",
     ctaStyle: "primary" as const,
     disabled: false,
   },
@@ -247,14 +247,19 @@ export function PricingSection() {
                 {tier.cta}
               </Button>
             ) : (
-              <ButtonLink
-                href="#"
-                variant={tier.ctaStyle}
-                size="md"
-                className="w-full justify-center"
-              >
-                {tier.cta}
-              </ButtonLink>
+              <WaitlistModal
+                product="anatomia"
+                source="pricing"
+                trigger={
+                  <Button
+                    variant={tier.ctaStyle}
+                    size="md"
+                    className="w-full justify-center"
+                  >
+                    {tier.cta}
+                  </Button>
+                }
+              />
             )}
           </motion.div>
         ))}
