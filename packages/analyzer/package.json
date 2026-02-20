@@ -1,0 +1,17 @@
+{
+  "name": "@anatomia/analyzer",
+  "version": "0.1.0",
+  "description": "Code analysis engine for Anatomia",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.7.0"
+  }
+}

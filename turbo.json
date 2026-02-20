@@ -3,17 +3,36 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**"]
+      "outputs": ["dist/**", ".next/**"],
+      "env": ["NODE_ENV"]
     },
     "dev": {
       "cache": false,
       "persistent": true
     },
     "test": {
-      "cache": false
+      "dependsOn": ["build"],
+      "outputs": ["coverage/**"],
+      "cache": true
     },
     "lint": {
+      "outputs": [],
+      "cache": true
+    },
+    "clean": {
       "cache": false
+    },
+    "type-check": {
+      "dependsOn": ["^build"],
+      "outputs": [],
+      "cache": true
     }
-  }
+  },
+  "globalDependencies": [
+    "tsconfig.base.json",
+    "pnpm-lock.yaml"
+  ],
+  "globalEnv": [
+    "NODE_ENV"
+  ]
 }
