@@ -158,7 +158,7 @@ export function Hero() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 1.2 }}
-            className="text-[13px]"
+            className="text-[12px] sm:text-[13px] px-4"
             style={{ color: "var(--text-muted-40)" }}
           >
             Beta launches Week 7 • MIT License • Works with Claude Code, Cursor, Windsurf
