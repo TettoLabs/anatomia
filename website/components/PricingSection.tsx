@@ -2,7 +2,6 @@
 
 import { TetrisCorner } from "./TetrisCorner";
 import { ButtonLink, Button } from "./ui/Button";
-import { WaitlistModal } from "./WaitlistModal";
 import { motion } from "motion/react";
 
 const pricingTiers = [
@@ -17,7 +16,7 @@ const pricingTiers = [
       "Health check",
       "Open source, MIT license",
     ],
-    cta: "Join Waitlist",
+    cta: "Get Started",
     ctaStyle: "primary" as const,
     disabled: false,
   },
@@ -247,19 +246,15 @@ export function PricingSection() {
                 {tier.cta}
               </Button>
             ) : (
-              <WaitlistModal
-                product="anatomia"
-                source="pricing"
-                trigger={
-                  <Button
-                    variant={tier.ctaStyle}
-                    size="md"
-                    className="w-full justify-center"
-                  >
-                    {tier.cta}
-                  </Button>
-                }
-              />
+              <ButtonLink
+                href="https://github.com/TettoLabs/anatomia"
+                variant={tier.ctaStyle}
+                size="md"
+                className="w-full justify-center"
+                external
+              >
+                {tier.cta}
+              </ButtonLink>
             )}
           </motion.div>
         ))}

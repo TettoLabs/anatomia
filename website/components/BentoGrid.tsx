@@ -3,7 +3,6 @@
 import { TetrisCorner } from "./TetrisCorner";
 import { CounterBlur } from "./CounterBlur";
 import { IndustryTicker } from "./IndustryTicker";
-import { WaitlistModal } from "./WaitlistModal";
 
 const analysisMetrics = [
   { label: "SPEED", value: "30s" },
@@ -89,23 +88,23 @@ export function BentoGrid() {
                 Drop <span className="font-mono">ana init</span> in your project. We analyze your stack, patterns, and conventions — then generate specialized context and behavioral contracts.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 lg:gap-4">
-                <WaitlistModal
-                  product="anatomia"
-                  source="bento"
-                  trigger={
-                    <button
-                      className="cursor-pointer transition-all duration-200 border-none px-6 lg:px-8 py-4 text-sm lg:text-base font-semibold rounded-lg hover:opacity-90"
-                      style={{
-                        background: "var(--btn-primary-bg)",
-                        color: "var(--btn-primary-text)",
-                      }}
-                    >
-                      Join Waitlist
-                    </button>
-                  }
-                />
-                <button
-                  className="cursor-pointer transition-all duration-200 px-6 lg:px-8 py-4 text-sm lg:text-base font-semibold rounded-lg hover:bg-[rgba(62,207,142,0.1)] hover:border-[var(--green-from)]"
+                <a
+                  href="https://github.com/TettoLabs/anatomia"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="cursor-pointer transition-all duration-200 border-none px-6 lg:px-8 py-4 text-sm lg:text-base font-semibold rounded-lg hover:opacity-90 no-underline inline-flex items-center justify-center"
+                  style={{
+                    background: "var(--btn-primary-bg)",
+                    color: "var(--btn-primary-text)",
+                  }}
+                >
+                  Get started
+                </a>
+                <a
+                  href="https://github.com/TettoLabs/anatomia#readme"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="cursor-pointer transition-all duration-200 px-6 lg:px-8 py-4 text-sm lg:text-base font-semibold rounded-lg hover:bg-[rgba(62,207,142,0.1)] hover:border-[var(--green-from)] no-underline inline-flex items-center justify-center"
                   style={{
                     background: "var(--btn-secondary-bg)",
                     color: "var(--btn-secondary-text)",
@@ -113,7 +112,7 @@ export function BentoGrid() {
                   }}
                 >
                   See how it works
-                </button>
+                </a>
               </div>
             </div>
           </header>

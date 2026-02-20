@@ -6,7 +6,6 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
-import { WaitlistModal } from "./WaitlistModal";
 
 const navLinks = [
   { href: "#features", label: "Features" },
@@ -102,21 +101,18 @@ export function LandingNav() {
           );
         })}
         <ThemeToggle />
-        <WaitlistModal
-          product="anatomia"
-          source="nav"
-          trigger={
-            <button
-              className="px-6 py-2.5 rounded-lg font-semibold transition-all hover:opacity-90"
-              style={{
-                background: "var(--btn-primary-bg)",
-                color: "var(--btn-primary-text)",
-              }}
-            >
-              Join Waitlist
-            </button>
-          }
-        />
+        <Link
+          href="https://github.com/TettoLabs/anatomia"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="px-6 py-2.5 rounded-lg font-semibold transition-all hover:opacity-90 no-underline"
+          style={{
+            background: "var(--btn-primary-bg)",
+            color: "var(--btn-primary-text)",
+          }}
+        >
+          Get Started
+        </Link>
       </div>
 
       {/* Mobile: theme toggle + hamburger */}

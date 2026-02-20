@@ -1,9 +1,8 @@
 "use client";
 
 import { motion } from "motion/react";
-import { Calendar, Github } from "lucide-react";
+import { Download, Github } from "lucide-react";
 import { BracketRevealLogo } from "./BracketRevealLogo";
-import { WaitlistModal } from "./WaitlistModal";
 
 export function Hero() {
   return (
@@ -121,28 +120,28 @@ export function Hero() {
           className="flex flex-col items-center gap-4 mb-12"
         >
           <div className="flex flex-wrap gap-4 justify-center">
-            <WaitlistModal
-              product="anatomia"
-              source="hero"
-              trigger={
-                <motion.button
-                  whileHover={{ scale: 1.02, y: -2 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="px-6 lg:px-8 py-3 lg:py-4 text-sm lg:text-base font-semibold rounded-lg transition-all inline-flex items-center gap-2"
-                  style={{
-                    background: "var(--btn-primary-bg)",
-                    color: "var(--btn-primary-text)",
-                  }}
-                >
-                  <Calendar className="w-5 h-5" strokeWidth={2} />
-                  Join Beta Waitlist
-                </motion.button>
-              }
-            />
-            <motion.button
+            <motion.a
+              href="https://github.com/TettoLabs/anatomia"
+              target="_blank"
+              rel="noopener noreferrer"
               whileHover={{ scale: 1.02, y: -2 }}
               whileTap={{ scale: 0.98 }}
-              className="px-6 lg:px-8 py-3 lg:py-4 text-sm lg:text-base font-semibold rounded-lg transition-all inline-flex items-center gap-2"
+              className="px-6 lg:px-8 py-3 lg:py-4 text-sm lg:text-base font-semibold rounded-lg transition-all inline-flex items-center gap-2 no-underline"
+              style={{
+                background: "var(--btn-primary-bg)",
+                color: "var(--btn-primary-text)",
+              }}
+            >
+              <Download className="w-5 h-5" strokeWidth={2} />
+              Install Now
+            </motion.a>
+            <motion.a
+              href="https://github.com/TettoLabs/anatomia"
+              target="_blank"
+              rel="noopener noreferrer"
+              whileHover={{ scale: 1.02, y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              className="px-6 lg:px-8 py-3 lg:py-4 text-sm lg:text-base font-semibold rounded-lg transition-all inline-flex items-center gap-2 no-underline"
               style={{
                 background: "var(--btn-secondary-bg)",
                 border: "1px solid var(--btn-secondary-border)",
@@ -151,7 +150,7 @@ export function Hero() {
             >
               <Github className="w-5 h-5" />
               View on GitHub
-            </motion.button>
+            </motion.a>
           </div>
 
           <motion.p
@@ -161,7 +160,7 @@ export function Hero() {
             className="text-[12px] sm:text-[13px] px-4"
             style={{ color: "var(--text-muted-40)" }}
           >
-            Beta launches Week 7 • MIT License • Works with Claude Code, Cursor, Windsurf
+            npm install -g anatomia • MIT License • Works with Claude Code, Cursor, Windsurf
           </motion.p>
         </motion.div>
       </div>
