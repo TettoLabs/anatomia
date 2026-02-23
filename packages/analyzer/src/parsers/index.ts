@@ -1,67 +1,22 @@
 /**
  * Dependency parsers for all supported languages
- *
- * Implementation: CP1
  */
 
-/**
- * Read Python dependencies from requirements.txt, pyproject.toml, Pipfile
- * Implementation: CP1
- */
-export async function readPythonDependencies(
-  rootPath: string
-): Promise<string[]> {
-  // TODO: CP1 - Implement Python dependency parsing
-  return [];
-}
+// High-level readers (main API)
+export { readPythonDependencies } from './python.js';
+export { readNodeDependencies } from './node.js';
+export { readGoDependencies } from './go.js';
+export { readRustDependencies } from './rust.js';
+export { readRubyDependencies } from './ruby.js';
+export { readPhpDependencies } from './php.js';
 
-/**
- * Read Node dependencies from package.json
- * Implementation: CP1
- */
-export async function readNodeDependencies(
-  rootPath: string
-): Promise<string[]> {
-  // TODO: CP1 - Implement Node dependency parsing
-  return [];
-}
-
-/**
- * Read Go dependencies from go.mod
- * Implementation: CP1
- */
-export async function readGoDependencies(rootPath: string): Promise<string[]> {
-  // TODO: CP1 - Implement Go dependency parsing
-  return [];
-}
-
-/**
- * Read Rust dependencies from Cargo.toml
- * Implementation: CP1
- */
-export async function readRustDependencies(
-  rootPath: string
-): Promise<string[]> {
-  // TODO: CP1 - Implement Rust dependency parsing
-  return [];
-}
-
-/**
- * Read Ruby dependencies from Gemfile
- * Implementation: CP1
- */
-export async function readRubyDependencies(
-  rootPath: string
-): Promise<string[]> {
-  // TODO: CP1 - Implement Ruby dependency parsing
-  return [];
-}
-
-/**
- * Read PHP dependencies from composer.json
- * Implementation: CP1
- */
-export async function readPhpDependencies(rootPath: string): Promise<string[]> {
-  // TODO: CP1 - Implement PHP dependency parsing
-  return [];
-}
+// Re-export individual parsers for testing
+export { parseRequirementsTxt } from './python/requirements.js';
+export { parsePyprojectToml } from './python/pyproject.js';
+export { parsePipfile } from './python/Pipfile.js';
+export { parsePackageJson } from './node/package.js';
+export { parsePackageLock } from './node/packageLock.js';
+export { parseGoMod } from './go.js';
+export { parseCargoToml } from './rust.js';
+export { parseGemfile } from './ruby.js';
+export { parseComposerJson } from './php.js';
