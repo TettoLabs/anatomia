@@ -243,4 +243,56 @@ const anaPath = `${cwd}/.ana/modes/code.md`;
 
 ---
 
+## Analyzer Package Patterns (STEP_1.1 CP0)
+
+**Zod schema + TypeScript interface pattern:**
+```typescript
+// Define Zod schema first, infer TypeScript type
+export const ProjectTypeSchema = z.enum(['python', 'node', 'go', 'rust', 'ruby', 'php', 'mixed', 'unknown']);
+export type ProjectType = z.infer<typeof ProjectTypeSchema>;
+
+// Runtime validation
+export function validateAnalysisResult(data: unknown): AnalysisResult {
+  return AnalysisResultSchema.parse(data); // Throws ZodError if invalid
+}
+```
+
+**Helper factory pattern:**
+```typescript
+// Factory for creating empty/default instances
+export function createEmptyAnalysisResult(): AnalysisResult {
+  return {
+    projectType: 'unknown',
+    framework: null,
+    confidence: { projectType: 0.0, framework: 0.0 },
+    indicators: { projectType: [], framework: [] },
+    detectedAt: new Date().toISOString(),
+    version: '0.1.0-alpha',
+  };
+}
+```
+
+**Graceful file operations pattern:**
+```typescript
+// File utilities return empty/false on error (no throw)
+export async function readFile(filePath: string): Promise<string> {
+  try {
+    return await fs.readFile(filePath, 'utf-8');
+  } catch {
+    return ''; // Graceful degradation
+  }
+}
+
+export async function exists(filePath: string): Promise<boolean> {
+  try {
+    await fs.access(filePath);
+    return true;
+  } catch {
+    return false; // Not found = false, not error
+  }
+}
+```
+
+---
+
 *These patterns ensure consistent, maintainable code across the Anatomia codebase.*
