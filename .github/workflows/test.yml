@@ -1,0 +1,50 @@
+name: Test Suite
+
+on:
+  push:
+    branches: [main, staging, effort/**]
+  pull_request:
+    branches: [main, staging]
+
+jobs:
+  test:
+    name: Test (${{ matrix.os }}, Node ${{ matrix.node-version }})
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false  # CRITICAL: Run all combinations even if one fails
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node-version: [20, 22]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm build
+
+      - name: Run tests
+        run: pnpm test --run
+
+      - name: Upload coverage (Ubuntu + Node 20 only)
+        if: matrix.os == 'ubuntu-latest' && matrix.node-version == 20
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./packages/cli/coverage/coverage-final.json
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}

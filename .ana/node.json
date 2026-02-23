@@ -1,0 +1,12 @@
+{
+  "name": "anatomia",
+  "nodeId": "main",
+  "role": "main",
+  "version": "1.0.0",
+  "created": "2026-02-21T18:25:13.688Z",
+  "description": "TODO: Add project description",
+  "federation": {
+    "queryable": false,
+    "nodes": []
+  }
+}
