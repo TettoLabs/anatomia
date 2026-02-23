@@ -18,16 +18,25 @@ anatomia/
 ├── packages/
 │   ├── cli/              # Commander.js CLI (user-facing, 0.1.0)
 │   │   ├── src/
-│   │   │   ├── index.ts           # Entry (45 lines, Commander setup)
-│   │   │   ├── commands/          # init.ts (268 lines), mode.ts (120 lines)
-│   │   │   └── utils/             # template-loader.ts (99 lines), file-writer.ts (134 lines)
-│   │   ├── templates/             # 10 files (7 .hbs, 3 .md)
+│   │   │   ├── index.ts           # Entry (44 lines, Commander setup)
+│   │   │   ├── commands/          # init.ts (267 lines), mode.ts (120 lines)
+│   │   │   └── utils/             # template-loader.ts (98 lines), file-writer.ts (133 lines)
+│   │   ├── templates/             # 10 files (7 .hbs, 3 .md, 1,049 total lines)
 │   │   ├── tests/                 # 7 test files, 100 tests
 │   │   └── dist/                  # Build output (10.58 KB + templates/)
-│   ├── analyzer/         # Pattern detection (STEP_1, placeholder)
-│   ├── generator/        # Auto-generation (STEP_1, placeholder)
+│   ├── analyzer/         # Detection engine (STEP_1.1, CP0 complete)
+│   │   ├── src/
+│   │   │   ├── types/             # AnalysisResult interface + Zod schema
+│   │   │   ├── detectors/         # projectType.ts, framework.ts (CP1-CP2)
+│   │   │   ├── parsers/           # python/, node/, go/, rust/, ruby/, php/ (CP1)
+│   │   │   ├── utils/             # file.ts (exists, readFile, isDirectory)
+│   │   │   └── index.ts           # Main exports, analyze() placeholder
+│   │   ├── tests/                 # types.test.ts (6 tests passing)
+│   │   ├── vitest.config.ts       # Coverage thresholds (85%)
+│   │   └── dist/                  # Compiled TypeScript
+│   ├── generator/        # Auto-generation (STEP_2, placeholder)
 │   └── shared/           # Common types (placeholder)
-└── website/              # Next.js 15 marketing (anatomia.dev)
+└── website/              # Next.js 15 marketing (anatomia.dev live)
 ```
 
 **Build dependency graph (from turbo.json):**
@@ -139,11 +148,20 @@ anatomia/
 - ✅ STEP_0.1: Monorepo infrastructure, CLI scaffold, anatomia.dev deployed
 - ✅ STEP_0.2: Manual template system (10 templates, 100 tests, 582 lines docs)
 - ✅ STEP_0.3: Website content (production-ready, GitHub links, install instructions)
-- 🔄 STEP_0.4: Template validation (THIS - dogfooding in progress)
+- ✅ STEP_0.4: Template validation (9.9/10 quality, tested on 3 languages, .ana/ dogfooded)
 
-**Next:**
-- STEP_1: Pattern detection engine (analyzer package, detects framework/language/patterns)
-- STEP_2: Auto-generation (generator package, creates .ana/ without manual filling)
+**In Progress:**
+- 🔄 STEP_1.1: Project Type + Framework Detection (CP0 complete, CP1-CP4 planned)
+  - Status: Infrastructure ready, parsers next
+  - Analyzer package: types ✓, utils ✓, detectors/parsers pending
+  - Target: ≥95% project type, ≥90% framework accuracy on 30 projects
+  - Ships: `ana analyze` command (Week 4 alpha)
+
+**Planned:**
+- STEP_1.2: Directory Structure Analysis (Week 3-4)
+- STEP_1.3: Tree-sitter Integration + Caching (Week 4)
+- STEP_1.4: Alpha Publish + Website Update (Week 4)
+- STEP_2: Auto-generation engine (Week 5-7, builds on STEP_1 detection)
 
 ## Development Workflow
 
