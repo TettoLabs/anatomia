@@ -15,6 +15,7 @@
 import { Command } from 'commander';
 import { initCommand } from './commands/init.js';
 import { modeCommand } from './commands/mode.js';
+import { analyzeCommand } from './commands/analyze.js';
 
 const program = new Command();
 
@@ -26,6 +27,7 @@ program
 // Register commands
 program.addCommand(initCommand);
 program.addCommand(modeCommand);
+program.addCommand(analyzeCommand);
 
 // Parse arguments with async support
 // CRITICAL: Use parseAsync() not parse() for async action handlers
