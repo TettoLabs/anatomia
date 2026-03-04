@@ -25,6 +25,7 @@ export {
 // Import for internal use
 import { detectProjectType } from './detectors/projectType.js';
 import { detectFramework } from './detectors/framework.js';
+import { analyzeStructure } from './analyzers/structure.js';
 
 // Export detectors
 export { detectProjectType } from './detectors/projectType.js';
@@ -45,6 +46,16 @@ export {
 // Export utilities
 export { exists, readFile, isDirectory, joinPath } from './utils/file.js';
 
+// Export structure analysis functions (STEP_1.2)
+export {
+  analyzeStructure,
+  findEntryPoints,
+  classifyArchitecture,
+  findTestLocations,
+  buildAsciiTree,
+  findConfigFiles,
+} from './analyzers/structure.js';
+
 // Version constant
 export const VERSION = '0.1.0-alpha';
 
@@ -54,6 +65,7 @@ export const VERSION = '0.1.0-alpha';
 export interface AnalyzeOptions {
   skipImportScan?: boolean;
   skipMonorepo?: boolean;
+  skipStructure?: boolean;
   maxFiles?: number;
   strictMode?: boolean;
   verbose?: boolean;
@@ -110,6 +122,11 @@ export async function analyze(
       projectTypeResult.type
     );
 
+    // Phase 4: Structure analysis (STEP_1.2 - optional)
+    const structure = options.skipStructure
+      ? undefined
+      : await analyzeStructure(rootPath, projectTypeResult.type, frameworkResult.framework);
+
     // Build result
     return {
       projectType: projectTypeResult.type,
@@ -124,6 +141,7 @@ export async function analyze(
       },
       detectedAt: new Date().toISOString(),
       version: VERSION,
+      structure,
     };
   } catch (error) {
     // Critical failure - return empty result

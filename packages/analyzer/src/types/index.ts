@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { StructureAnalysis, StructureAnalysisSchema } from './structure.js';
 
 /**
  * Project types supported by Anatomia detection
@@ -26,30 +27,33 @@ export const ConfidenceScoreSchema = z.number().min(0.0).max(1.0);
  * Analysis result from project detection
  *
  * STEP_1.1 provides: projectType, framework, confidence, indicators
- * STEP_1.2 will add: structure, entryPoints, architecture
+ * STEP_1.2 adds: structure (entry points, architecture, tests, directory tree)
  * STEP_1.3 will add: parsed (tree-sitter results)
  * STEP_2 will add: patterns, conventions
  */
 export const AnalysisResultSchema = z.object({
-  // Project identification
+  // Project identification (STEP_1.1)
   projectType: ProjectTypeSchema,
   framework: z.string().nullable(), // null if no framework detected
 
-  // Confidence scores (transparency)
+  // Confidence scores (STEP_1.1)
   confidence: z.object({
     projectType: ConfidenceScoreSchema,
     framework: ConfidenceScoreSchema,
   }),
 
-  // Indicators that led to detection (explainability)
+  // Indicators (STEP_1.1)
   indicators: z.object({
     projectType: z.array(z.string()), // Files found: ["package.json", "package-lock.json"]
     framework: z.array(z.string()), // Signals found: ["next in dependencies", "next.config.js exists"]
   }),
 
-  // Metadata
+  // Metadata (STEP_1.1)
   detectedAt: z.string(), // ISO timestamp
   version: z.string(), // Tool version (e.g., "0.1.0-alpha")
+
+  // STEP_1.2 adds structure analysis (NEW - optional field)
+  structure: StructureAnalysisSchema.optional(),
 });
 
 export type AnalysisResult = z.infer<typeof AnalysisResultSchema>;
@@ -81,3 +85,18 @@ export function createEmptyAnalysisResult(): AnalysisResult {
 export function validateAnalysisResult(data: unknown): AnalysisResult {
   return AnalysisResultSchema.parse(data);
 }
+
+// Export structure analysis types (STEP_1.2)
+export type {
+  StructureAnalysis,
+  EntryPointResult,
+  ArchitectureResult,
+  TestLocationResult,
+} from './structure.js';
+export {
+  StructureAnalysisSchema,
+  EntryPointResultSchema,
+  ArchitectureResultSchema,
+  TestLocationResultSchema,
+  createEmptyStructureAnalysis,
+} from './structure.js';
