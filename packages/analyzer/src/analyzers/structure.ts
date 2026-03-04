@@ -33,6 +33,188 @@ import { createEmptyStructureAnalysis } from '../types/structure.js';
  *
  * Source: START_HERE_PART1.md lines 508-599 (validated against real projects)
  */
+import { basename } from 'node:path';
+
+/**
+ * Directory purpose mapping (basename → purpose description)
+ */
+const DIRECTORY_PURPOSES: Record<string, string> = {
+  // Source code
+  'src': 'Source code',
+  'lib': 'Library code',
+  'app': 'Application code',
+  'api': 'API routes/endpoints',
+  'routes': 'HTTP routes',
+  'controllers': 'Request handlers',
+  'handlers': 'Request handlers',
+  'models': 'Data models',
+  'schemas': 'Data schemas',
+  'services': 'Business logic',
+  'domain': 'Domain logic',
+  'core': 'Core functionality',
+  'utils': 'Utility functions',
+  'helpers': 'Helper functions',
+  'middleware': 'Middleware',
+  'middlewares': 'Middleware',
+  'config': 'Configuration',
+  // Tests
+  'tests': 'Tests',
+  'test': 'Tests',
+  '__tests__': 'Jest tests',
+  'spec': 'Spec tests',
+  'e2e': 'End-to-end tests',
+  // Documentation
+  'docs': 'Documentation',
+  'documentation': 'Documentation',
+  // Frontend
+  'components': 'UI components',
+  'pages': 'Page components',
+  'views': 'View templates',
+  'layouts': 'Layout components',
+  'styles': 'Stylesheets',
+  'css': 'Stylesheets',
+  'scss': 'Sass stylesheets',
+  'public': 'Public static files',
+  'static': 'Static files',
+  'assets': 'Assets',
+  // Backend
+  'migrations': 'Database migrations',
+  'alembic': 'Database migrations (Python)',
+  'schema': 'Database schema',
+  'database': 'Database code',
+  'db': 'Database code',
+  // Features/Modules (DDD)
+  'features': 'Feature modules',
+  'modules': 'Modules',
+  'contexts': 'Bounded contexts',
+  'domains': 'Domain modules',
+  // Multiple services (Microservices)
+  'apps': 'Applications',
+  // Go-specific
+  'cmd': 'Command binaries (Go)',
+  'internal': 'Private packages (Go)',
+  'pkg': 'Public packages (Go)',
+  // Build/Generated
+  'dist': 'Build output',
+  'build': 'Build output',
+  'out': 'Build output',
+  '.next': 'Next.js build cache',
+  'target': 'Rust build output',
+  // Other
+  'scripts': 'Build/utility scripts',
+  'tools': 'Development tools',
+  'deployments': 'Deployment configs',
+  'docker': 'Docker configurations',
+};
+
+/**
+ * Map directory paths to purpose descriptions
+ */
+function mapDirectoriesToPurposes(directories: string[]): Record<string, string> {
+  const mapped: Record<string, string> = {};
+  for (const dir of directories) {
+    const base = basename(dir);
+    mapped[dir] = DIRECTORY_PURPOSES[base] || 'Unknown';
+  }
+  return mapped;
+}
+
+/**
+ * Detect layered architecture pattern
+ */
+function isLayeredArchitecture(directories: string[]): {
+  match: boolean;
+  confidence: number;
+  indicators: string[];
+} {
+  const indicators: string[] = [];
+
+  const hasModels = directories.some(d => d.includes('models'));
+  if (hasModels) indicators.push('models/');
+
+  const hasServices = directories.some(d =>
+    d.includes('services') || d.includes('domain') || d.includes('business')
+  );
+  if (hasServices) indicators.push('services/ or domain/');
+
+  const hasApi = directories.some(d =>
+    d.includes('api') || d.includes('routes') || d.includes('controllers') || d.includes('handlers')
+  );
+  if (hasApi) indicators.push('api/ or routes/ or controllers/');
+
+  if (hasModels && hasServices && hasApi) {
+    return { match: true, confidence: 0.95, indicators };
+  }
+  if ((hasModels && hasServices) || (hasServices && hasApi) || (hasModels && hasApi)) {
+    return { match: true, confidence: 0.85, indicators };
+  }
+  if (hasModels || hasServices || hasApi) {
+    return { match: true, confidence: 0.70, indicators };
+  }
+  return { match: false, confidence: 0.0, indicators: [] };
+}
+
+/**
+ * Detect domain-driven design pattern
+ */
+function isDomainDriven(directories: string[], framework: string | null): {
+  match: boolean;
+  confidence: number;
+  indicators: string[];
+} {
+  const featurePattern = /^(features|modules|contexts|domains)\/\w+/;
+  const domainDirs = directories.filter(d => featurePattern.test(d));
+
+  if (domainDirs.length >= 3) {
+    return { match: true, confidence: 0.90, indicators: domainDirs.slice(0, 5) };
+  }
+  if (domainDirs.length === 2) {
+    return { match: true, confidence: 0.80, indicators: domainDirs };
+  }
+
+  // NestJS special case
+  if (framework?.toLowerCase() === 'nestjs') {
+    const nestModulePattern = /^src\/modules\/\w+/;
+    const nestModules = directories.filter(d => nestModulePattern.test(d));
+    if (nestModules.length >= 2) {
+      return { match: true, confidence: 0.85, indicators: ['NestJS modules/', ...nestModules.slice(0, 3)] };
+    }
+  }
+
+  return { match: false, confidence: 0.0, indicators: [] };
+}
+
+/**
+ * Detect microservices architecture
+ */
+function isMicroservices(directories: string[], projectType: string): {
+  match: boolean;
+  confidence: number;
+  indicators: string[];
+} {
+  const servicePattern = /^services\/\w+/;
+  const services = directories.filter(d => servicePattern.test(d));
+  if (services.length >= 2) {
+    return { match: true, confidence: 0.90, indicators: services.slice(0, 5) };
+  }
+
+  const appPattern = /^apps\/\w+/;
+  const apps = directories.filter(d => appPattern.test(d));
+  if (apps.length >= 2) {
+    return { match: true, confidence: 0.90, indicators: apps.slice(0, 5) };
+  }
+
+  if (projectType === 'go') {
+    const cmdPattern = /^cmd\/\w+/;
+    const cmds = directories.filter(d => cmdPattern.test(d));
+    if (cmds.length >= 2) {
+      return { match: true, confidence: 0.85, indicators: cmds.slice(0, 5) };
+    }
+  }
+
+  return { match: false, confidence: 0.0, indicators: [] };
+}
+
 const ENTRY_POINT_PATTERNS: Record<string, string[]> = {
   python: [
     'manage.py', // Django (100% - ALWAYS at root)
@@ -424,13 +606,60 @@ export async function findEntryPoints(
 export function classifyArchitecture(
   directories: string[],
   entryPoints: string[],
-  framework: string | null
+  framework: string | null,
+  projectType: string = 'unknown'
 ): ArchitectureResult {
-  // TODO: CP2 - Implement architecture classification
+  // 1. Check microservices (highest specificity)
+  const microservices = isMicroservices(directories, projectType);
+  if (microservices.match) {
+    return {
+      architecture: 'microservices',
+      confidence: microservices.confidence,
+      indicators: microservices.indicators,
+    };
+  }
+
+  // 2. Check domain-driven (features/*, modules/*)
+  const ddd = isDomainDriven(directories, framework);
+  if (ddd.match) {
+    return {
+      architecture: 'domain-driven',
+      confidence: ddd.confidence,
+      indicators: ddd.indicators,
+    };
+  }
+
+  // 3. Check layered (models + services + api)
+  const layered = isLayeredArchitecture(directories);
+  if (layered.match) {
+    return {
+      architecture: 'layered',
+      confidence: layered.confidence,
+      indicators: layered.indicators,
+    };
+  }
+
+  // 4. Check library (no entry point + lib/ or pkg/)
+  if (entryPoints.length === 0) {
+    const hasLib = directories.some(d => {
+      const base = basename(d);
+      // Check if directory is lib/ or pkg/ or starts with them
+      return base === 'lib' || base === 'pkg' || d.startsWith('lib/') || d.startsWith('pkg/');
+    });
+    if (hasLib) {
+      return {
+        architecture: 'library',
+        confidence: 0.90,
+        indicators: ['no entry point', 'lib/ or pkg/ directory present'],
+      };
+    }
+  }
+
+  // 5. Default: Monolith (no clear pattern)
   return {
     architecture: 'monolith',
     confidence: 0.70,
-    indicators: [],
+    indicators: ['no clear architectural pattern'],
   };
 }
 
@@ -479,8 +708,41 @@ export async function buildAsciiTree(
   maxDepth: number = 4,
   maxDirs: number = 40
 ): Promise<string> {
-  // TODO: CP2 - Implement ASCII tree generation
-  return '';
+  const { walkDirectories } = await import('../utils/directory.js');
+
+  const directories = await walkDirectories(rootPath, maxDepth);
+
+  // Sort alphabetically with priority dirs first
+  const priorityDirs = ['src', 'lib', 'app', 'tests', 'docs'];
+  const sorted = directories.sort((a, b) => {
+    const aBase = basename(a);
+    const bBase = basename(b);
+    const aPriority = priorityDirs.indexOf(aBase);
+    const bPriority = priorityDirs.indexOf(bBase);
+    if (aPriority !== -1 && bPriority !== -1) return aPriority - bPriority;
+    if (aPriority !== -1) return -1;
+    if (bPriority !== -1) return 1;
+    return a.localeCompare(b);
+  });
+
+  const limited = sorted.slice(0, maxDirs);
+  const remaining = sorted.length - maxDirs;
+
+  const projectName = basename(rootPath);
+  let tree = `${projectName}/\n`;
+
+  for (const dir of limited) {
+    const depth = dir.split('/').length;
+    const indent = '  '.repeat(depth);
+    const dirName = basename(dir);
+    tree += `${indent}${dirName}/\n`;
+  }
+
+  if (remaining > 0) {
+    tree += `  ... ${remaining} more director${remaining === 1 ? 'y' : 'ies'}\n`;
+  }
+
+  return tree;
 }
 
 /**
