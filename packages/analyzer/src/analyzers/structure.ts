@@ -15,7 +15,7 @@
  */
 
 import { glob } from 'glob';
-import { exists, readFile, joinPath } from '../utils/file.js';
+import { exists, readFile, joinPath, isDirectory } from '../utils/file.js';
 import type { ProjectType } from '../types/index.js';
 import type {
   StructureAnalysis,
@@ -24,6 +24,8 @@ import type {
   TestLocationResult,
 } from '../types/structure.js';
 import { createEmptyStructureAnalysis } from '../types/structure.js';
+import { basename } from 'node:path';
+import { walkDirectories } from '../utils/directory.js';
 
 /**
  * Entry point patterns per project type (priority-ordered)
@@ -33,7 +35,6 @@ import { createEmptyStructureAnalysis } from '../types/structure.js';
  *
  * Source: START_HERE_PART1.md lines 508-599 (validated against real projects)
  */
-import { basename } from 'node:path';
 
 /**
  * Directory purpose mapping (basename → purpose description)
@@ -359,15 +360,64 @@ async function getPackageJsonEntry(rootPath: string): Promise<string | null> {
  * @param framework - Detected framework (from STEP_1.1, can be null)
  * @returns Complete structure analysis
  *
- * Implementation: CP3 (currently placeholder)
+ * Implementation: CP3
  */
 export async function analyzeStructure(
   rootPath: string,
   projectType: ProjectType,
   framework: string | null
 ): Promise<StructureAnalysis> {
-  // TODO: CP3 - Implement orchestrator that calls all functions below
-  return createEmptyStructureAnalysis();
+  try {
+    // Step 1: Find entry points
+    const entryPointResult = await findEntryPoints(rootPath, projectType, framework);
+
+    // Step 2: Find test locations
+    const testLocationResult = await findTestLocations(rootPath, projectType, framework);
+
+    // Step 3: Walk directories
+    const directories = await walkDirectories(rootPath, 4);
+
+    // Step 4: Classify architecture
+    const architectureResult = classifyArchitecture(
+      directories,
+      entryPointResult.entryPoints,
+      framework,
+      projectType
+    );
+
+    // Step 5: Build ASCII tree
+    const directoryTree = await buildAsciiTree(rootPath, 4, 40);
+
+    // Step 6: Find config files
+    const configFiles = await findConfigFiles(rootPath, projectType);
+
+    // Step 7: Map directories to purposes
+    const directoryPurposes = mapDirectoriesToPurposes(directories);
+
+    // Step 8: Calculate overall confidence (weighted)
+    const overallConfidence = (
+      entryPointResult.confidence * 0.50 +
+      testLocationResult.confidence * 0.25 +
+      architectureResult.confidence * 0.25
+    );
+
+    return {
+      directories: directoryPurposes,
+      entryPoints: entryPointResult.entryPoints,
+      testLocation: testLocationResult.testLocations[0] || null,
+      architecture: architectureResult.architecture,
+      directoryTree,
+      configFiles,
+      confidence: {
+        entryPoints: entryPointResult.confidence,
+        testLocation: testLocationResult.confidence,
+        architecture: architectureResult.confidence,
+        overall: overallConfidence,
+      },
+    };
+  } catch (error) {
+    return createEmptyStructureAnalysis();
+  }
 }
 
 /**
@@ -664,6 +714,96 @@ export function classifyArchitecture(
 }
 
 /**
+ * Find pytest test location (Python)
+ */
+async function findPytestLocation(rootPath: string): Promise<TestLocationResult> {
+  const testsDir = joinPath(rootPath, 'tests');
+  if (await exists(testsDir) && await isDirectory(testsDir)) {
+    return { testLocations: ['tests/'], confidence: 1.0, framework: 'pytest' };
+  }
+
+  const testDir = joinPath(rootPath, 'test');
+  if (await exists(testDir) && await isDirectory(testDir)) {
+    return { testLocations: ['test/'], confidence: 1.0, framework: 'pytest' };
+  }
+
+  const pytestIni = joinPath(rootPath, 'pytest.ini');
+  const pyprojectToml = joinPath(rootPath, 'pyproject.toml');
+  if (await exists(pytestIni) || await exists(pyprojectToml)) {
+    return { testLocations: ['test_*.py', '*_test.py'], confidence: 0.80, framework: 'pytest' };
+  }
+
+  return { testLocations: [], confidence: 0.0, framework: 'unknown' };
+}
+
+/**
+ * Find Jest/Vitest test location (Node)
+ */
+async function findJestVitestLocation(rootPath: string): Promise<TestLocationResult> {
+  const jestTestsDir = joinPath(rootPath, '__tests__');
+  if (await exists(jestTestsDir) && await isDirectory(jestTestsDir)) {
+    return { testLocations: ['__tests__/'], confidence: 1.0, framework: 'jest' };
+  }
+
+  const testsDir = joinPath(rootPath, 'tests');
+  if (await exists(testsDir) && await isDirectory(testsDir)) {
+    return { testLocations: ['tests/'], confidence: 1.0, framework: 'jest' };
+  }
+
+  const testDir = joinPath(rootPath, 'test');
+  if (await exists(testDir) && await isDirectory(testDir)) {
+    return { testLocations: ['test/'], confidence: 1.0, framework: 'jest' };
+  }
+
+  const vitestConfig = joinPath(rootPath, 'vitest.config.ts');
+  if (await exists(vitestConfig)) {
+    return { testLocations: ['*.test.ts', '*.spec.ts'], confidence: 0.85, framework: 'vitest' };
+  }
+
+  const jestConfig = joinPath(rootPath, 'jest.config.js');
+  if (await exists(jestConfig)) {
+    return { testLocations: ['*.test.ts', '*.spec.ts', '*.test.js', '*.spec.js'], confidence: 0.85, framework: 'jest' };
+  }
+
+  const pkgPath = joinPath(rootPath, 'package.json');
+  if (await exists(pkgPath)) {
+    try {
+      const content = await readFile(pkgPath);
+      const pkg = JSON.parse(content);
+      if (pkg.jest) {
+        return { testLocations: ['*.test.ts', '*.spec.ts'], confidence: 0.85, framework: 'jest' };
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }
+
+  return { testLocations: [], confidence: 0.0, framework: 'unknown' };
+}
+
+/**
+ * Find go test location (Go)
+ */
+function findGoTestLocation(): TestLocationResult {
+  return {
+    testLocations: ['*_test.go'],
+    confidence: 1.0,
+    framework: 'go-test',
+  };
+}
+
+/**
+ * Find Rust test location
+ */
+async function findRustTestLocation(rootPath: string): Promise<TestLocationResult> {
+  const testsDir = joinPath(rootPath, 'tests');
+  if (await exists(testsDir) && await isDirectory(testsDir)) {
+    return { testLocations: ['tests/'], confidence: 1.0, framework: 'cargo-test' };
+  }
+  return { testLocations: [], confidence: 0.0, framework: 'unknown' };
+}
+
+/**
  * Find test locations (where tests live)
  *
  * Detects test framework and locations using:
@@ -683,12 +823,23 @@ export async function findTestLocations(
   projectType: ProjectType,
   framework: string | null
 ): Promise<TestLocationResult> {
-  // TODO: CP3 - Implement test location detection
-  return {
-    testLocations: [],
-    confidence: 0.0,
-    framework: 'unknown',
-  };
+  if (projectType === 'python') {
+    return await findPytestLocation(rootPath);
+  }
+
+  if (projectType === 'node') {
+    return await findJestVitestLocation(rootPath);
+  }
+
+  if (projectType === 'go') {
+    return findGoTestLocation();
+  }
+
+  if (projectType === 'rust') {
+    return await findRustTestLocation(rootPath);
+  }
+
+  return { testLocations: [], confidence: 0.0, framework: 'unknown' };
 }
 
 /**
@@ -758,6 +909,72 @@ export async function findConfigFiles(
   rootPath: string,
   projectType: ProjectType
 ): Promise<string[]> {
-  // TODO: CP3 - Implement config file detection
-  return [];
+  const configs: string[] = [];
+
+  const commonConfigs = [
+    '.env',
+    '.env.local',
+    '.env.example',
+    '.gitignore',
+    'README.md',
+    'LICENSE',
+  ];
+
+  const jsConfigs = [
+    'tsconfig.json',
+    'jsconfig.json',
+    'package.json',
+    'eslint.config.mjs',
+    '.eslintrc.js',
+    '.prettierrc',
+    'vite.config.ts',
+    'vitest.config.ts',
+    'jest.config.js',
+    'next.config.js',
+    'nest-cli.json',
+  ];
+
+  const pythonConfigs = [
+    'pyproject.toml',
+    'setup.py',
+    'requirements.txt',
+    'Pipfile',
+    'pytest.ini',
+    'setup.cfg',
+    '.flake8',
+    'mypy.ini',
+  ];
+
+  const goConfigs = [
+    'go.mod',
+    'go.sum',
+    '.golangci.yml',
+  ];
+
+  const rustConfigs = [
+    'Cargo.toml',
+    'Cargo.lock',
+    'rust-toolchain.toml',
+  ];
+
+  let configsToCheck = commonConfigs;
+
+  if (projectType === 'node') {
+    configsToCheck = [...commonConfigs, ...jsConfigs];
+  } else if (projectType === 'python') {
+    configsToCheck = [...commonConfigs, ...pythonConfigs];
+  } else if (projectType === 'go') {
+    configsToCheck = [...commonConfigs, ...goConfigs];
+  } else if (projectType === 'rust') {
+    configsToCheck = [...commonConfigs, ...rustConfigs];
+  }
+
+  for (const configFile of configsToCheck) {
+    const configPath = joinPath(rootPath, configFile);
+    if (await exists(configPath)) {
+      configs.push(configFile);
+    }
+  }
+
+  return configs;
 }
