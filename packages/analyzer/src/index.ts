@@ -45,6 +45,16 @@ export {
 // Export utilities
 export { exists, readFile, isDirectory, joinPath } from './utils/file.js';
 
+// Export structure analysis functions (STEP_1.2)
+export {
+  analyzeStructure,
+  findEntryPoints,
+  classifyArchitecture,
+  findTestLocations,
+  buildAsciiTree,
+  findConfigFiles,
+} from './analyzers/structure.js';
+
 // Version constant
 export const VERSION = '0.1.0-alpha';
 
