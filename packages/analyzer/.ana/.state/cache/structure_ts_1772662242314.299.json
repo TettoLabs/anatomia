@@ -1,0 +1,69 @@
+{
+  "functions": [
+    {
+      "name": "createEmptyStructureAnalysis",
+      "line": 148,
+      "async": false,
+      "decorators": []
+    }
+  ],
+  "classes": [],
+  "imports": [
+    {
+      "module": "zod",
+      "names": [],
+      "line": 1
+    }
+  ],
+  "parseTime": 0.1822080000000028,
+  "exports": [
+    {
+      "name": "export const EntryPointResultSchema = z.object({\n ",
+      "type": "default",
+      "line": 18
+    },
+    {
+      "name": "export type EntryPointResult = z.infer<typeof Entr",
+      "type": "default",
+      "line": 30
+    },
+    {
+      "name": "export const ArchitectureResultSchema = z.object({",
+      "type": "default",
+      "line": 46
+    },
+    {
+      "name": "export type ArchitectureResult = z.infer<typeof Ar",
+      "type": "default",
+      "line": 58
+    },
+    {
+      "name": "export const TestLocationResultSchema = z.object({",
+      "type": "default",
+      "line": 74
+    },
+    {
+      "name": "export type TestLocationResult = z.infer<typeof Te",
+      "type": "default",
+      "line": 87
+    },
+    {
+      "name": "export const StructureAnalysisSchema = z.object({\n",
+      "type": "default",
+      "line": 115
+    },
+    {
+      "name": "export type StructureAnalysis = z.infer<typeof Str",
+      "type": "default",
+      "line": 143
+    },
+    {
+      "name": "export function createEmptyStructureAnalysis(): St",
+      "type": "default",
+      "line": 148
+    }
+  ],
+  "decorators": [],
+  "mtimeMs": 1772662242314.299,
+  "cachedAt": "2026-03-06T14:03:15.617Z"
+}

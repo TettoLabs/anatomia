@@ -1,0 +1,74 @@
+{
+  "functions": [
+    {
+      "name": "createEmptyParsedAnalysis",
+      "line": 221,
+      "async": false,
+      "decorators": []
+    }
+  ],
+  "classes": [],
+  "imports": [
+    {
+      "module": "zod",
+      "names": [],
+      "line": 1
+    }
+  ],
+  "parseTime": 0.21616600000004382,
+  "exports": [
+    {
+      "name": "export const FunctionInfoSchema = z.object({\n  nam",
+      "type": "default",
+      "line": 28
+    },
+    {
+      "name": "export type FunctionInfo = z.infer<typeof Function",
+      "type": "default",
+      "line": 35
+    },
+    {
+      "name": "export const ClassInfoSchema = z.object({\n  name: ",
+      "type": "default",
+      "line": 64
+    },
+    {
+      "name": "export type ClassInfo = z.infer<typeof ClassInfoSc",
+      "type": "default",
+      "line": 72
+    },
+    {
+      "name": "export const ImportInfoSchema = z.object({\n  modul",
+      "type": "default",
+      "line": 97
+    },
+    {
+      "name": "export type ImportInfo = z.infer<typeof ImportInfo",
+      "type": "default",
+      "line": 103
+    },
+    {
+      "name": "export const ExportInfoSchema = z.object({\n  name:",
+      "type": "default",
+      "line": 119
+    },
+    {
+      "name": "export type ExportInfo = z.infer<typeof ExportInfo",
+      "type": "default",
+      "line": 125
+    },
+    {
+      "name": "export const DecoratorInfoSchema = z.object({\n  na",
+      "type": "default",
+      "line": 150
+    },
+    {
+      "name": "export type DecoratorInfo = z.infer<typeof Decorat",
+      "type": "default",
+      "line": 156
+    }
+  ],
+  "decorators": [],
+  "mtimeMs": 1772799250293.4507,
+  "cachedAt": "2026-03-06T14:03:15.614Z"
+}
