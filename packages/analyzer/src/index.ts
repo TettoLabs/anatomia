@@ -56,6 +56,26 @@ export {
   findConfigFiles,
 } from './analyzers/structure.js';
 
+// Export parsed analysis functions (STEP_1.3)
+export {
+  parseFile,
+  detectLanguage,
+  ParserManager,
+  parserManager,
+} from './parsers/treeSitter.js';
+export type { Language } from './parsers/treeSitter.js';
+
+// Export parsed analysis types (STEP_1.3)
+export type {
+  ParsedAnalysis,
+  ParsedFile,
+  FunctionInfo,
+  ClassInfo,
+  ImportInfo,
+  ExportInfo,
+  DecoratorInfo,
+} from './types/parsed.js';
+
 // Version constant
 export const VERSION = '0.1.0-alpha';
 
