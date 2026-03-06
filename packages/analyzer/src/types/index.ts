@@ -1,5 +1,22 @@
 import { z } from 'zod';
 import { StructureAnalysis, StructureAnalysisSchema } from './structure.js';
+import {
+  ParsedAnalysis,
+  ParsedAnalysisSchema,
+  ParsedFile,
+  ParsedFileSchema,
+  FunctionInfo,
+  FunctionInfoSchema,
+  ClassInfo,
+  ClassInfoSchema,
+  ImportInfo,
+  ImportInfoSchema,
+  ExportInfo,
+  ExportInfoSchema,
+  DecoratorInfo,
+  DecoratorInfoSchema,
+  createEmptyParsedAnalysis,
+} from './parsed.js';
 
 /**
  * Project types supported by Anatomia detection
@@ -52,8 +69,11 @@ export const AnalysisResultSchema = z.object({
   detectedAt: z.string(), // ISO timestamp
   version: z.string(), // Tool version (e.g., "0.1.0-alpha")
 
-  // STEP_1.2 adds structure analysis (NEW - optional field)
+  // STEP_1.2 adds structure analysis (optional field)
   structure: StructureAnalysisSchema.optional(),
+
+  // STEP_1.3 adds tree-sitter parsing (optional field)
+  parsed: ParsedAnalysisSchema.optional(),
 });
 
 export type AnalysisResult = z.infer<typeof AnalysisResultSchema>;
@@ -100,3 +120,24 @@ export {
   TestLocationResultSchema,
   createEmptyStructureAnalysis,
 } from './structure.js';
+
+// Export parsed analysis types (STEP_1.3)
+export type {
+  ParsedAnalysis,
+  ParsedFile,
+  FunctionInfo,
+  ClassInfo,
+  ImportInfo,
+  ExportInfo,
+  DecoratorInfo,
+} from './parsed.js';
+export {
+  ParsedAnalysisSchema,
+  ParsedFileSchema,
+  FunctionInfoSchema,
+  ClassInfoSchema,
+  ImportInfoSchema,
+  ExportInfoSchema,
+  DecoratorInfoSchema,
+  createEmptyParsedAnalysis,
+} from './parsed.js';

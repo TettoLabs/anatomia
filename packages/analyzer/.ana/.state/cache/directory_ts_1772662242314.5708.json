@@ -1,0 +1,56 @@
+{
+  "functions": [
+    {
+      "name": "walkDirectories",
+      "line": 38,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "walk",
+      "line": 45,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "getSubdirectories",
+      "line": 80,
+      "async": true,
+      "decorators": []
+    }
+  ],
+  "classes": [],
+  "imports": [
+    {
+      "module": "node:fs/promises",
+      "names": [],
+      "line": 5
+    },
+    {
+      "module": "node:path",
+      "names": [],
+      "line": 6
+    }
+  ],
+  "parseTime": 0.12462499999998045,
+  "exports": [
+    {
+      "name": "export async function walkDirectories(\n  rootPath:",
+      "type": "default",
+      "line": 38
+    },
+    {
+      "name": "export async function getSubdirectories(rootPath: ",
+      "type": "default",
+      "line": 80
+    },
+    {
+      "name": "export { DEFAULT_IGNORE_PATTERNS };",
+      "type": "default",
+      "line": 91
+    }
+  ],
+  "decorators": [],
+  "mtimeMs": 1772662242314.5708,
+  "cachedAt": "2026-03-06T14:03:15.599Z"
+}

@@ -1,0 +1,49 @@
+{
+  "functions": [
+    {
+      "name": "detectFlask",
+      "line": 18,
+      "async": true,
+      "decorators": []
+    }
+  ],
+  "classes": [],
+  "imports": [
+    {
+      "module": "../../utils/importScanner.js",
+      "names": [],
+      "line": 5
+    },
+    {
+      "module": "../../utils/confidence.js",
+      "names": [],
+      "line": 6
+    },
+    {
+      "module": "../../utils/file.js",
+      "names": [],
+      "line": 7
+    },
+    {
+      "module": "node:path",
+      "names": [],
+      "line": 8
+    },
+    {
+      "module": "./fastapi.js",
+      "names": [],
+      "line": 9
+    }
+  ],
+  "parseTime": 0.08629200000001447,
+  "exports": [
+    {
+      "name": "export async function detectFlask(\n  rootPath: str",
+      "type": "default",
+      "line": 18
+    }
+  ],
+  "decorators": [],
+  "mtimeMs": 1771867604384.6309,
+  "cachedAt": "2026-03-06T14:03:15.618Z"
+}

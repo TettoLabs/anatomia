@@ -1,0 +1,168 @@
+{
+  "functions": [
+    {
+      "name": "mapDirectoriesToPurposes",
+      "line": 114,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "isLayeredArchitecture",
+      "line": 126,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "isDomainDriven",
+      "line": 161,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "isMicroservices",
+      "line": 191,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "getPackageJsonEntry",
+      "line": 297,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "analyzeStructure",
+      "line": 365,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "findEntryPoints",
+      "line": 441,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "classifyArchitecture",
+      "line": 656,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "findPytestLocation",
+      "line": 719,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "findJestVitestLocation",
+      "line": 742,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "findGoTestLocation",
+      "line": 787,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "findRustTestLocation",
+      "line": 798,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "findTestLocations",
+      "line": 821,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "buildAsciiTree",
+      "line": 857,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "findConfigFiles",
+      "line": 908,
+      "async": true,
+      "decorators": []
+    }
+  ],
+  "classes": [],
+  "imports": [
+    {
+      "module": "glob",
+      "names": [],
+      "line": 17
+    },
+    {
+      "module": "../utils/file.js",
+      "names": [],
+      "line": 18
+    },
+    {
+      "module": "../types/index.js",
+      "names": [],
+      "line": 19
+    },
+    {
+      "module": "../types/structure.js",
+      "names": [],
+      "line": 25
+    },
+    {
+      "module": "../types/structure.js",
+      "names": [],
+      "line": 26
+    },
+    {
+      "module": "node:path",
+      "names": [],
+      "line": 27
+    },
+    {
+      "module": "../utils/directory.js",
+      "names": [],
+      "line": 28
+    }
+  ],
+  "parseTime": 1.2878750000000423,
+  "exports": [
+    {
+      "name": "export async function analyzeStructure(\n  rootPath",
+      "type": "default",
+      "line": 365
+    },
+    {
+      "name": "export async function findEntryPoints(\n  rootPath:",
+      "type": "default",
+      "line": 441
+    },
+    {
+      "name": "export function classifyArchitecture(\n  directorie",
+      "type": "default",
+      "line": 656
+    },
+    {
+      "name": "export async function findTestLocations(\n  rootPat",
+      "type": "default",
+      "line": 821
+    },
+    {
+      "name": "export async function buildAsciiTree(\n  rootPath: ",
+      "type": "default",
+      "line": 857
+    },
+    {
+      "name": "export async function findConfigFiles(\n  rootPath:",
+      "type": "default",
+      "line": 908
+    }
+  ],
+  "decorators": [],
+  "mtimeMs": 1772662242313.3303,
+  "cachedAt": "2026-03-06T14:03:15.612Z"
+}
