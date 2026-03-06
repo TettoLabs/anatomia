@@ -69,6 +69,10 @@ export type { Language } from './parsers/treeSitter.js';
 export { QUERIES, QueryCache, queryCache } from './parsers/queries.js';
 export type { QueryType } from './parsers/queries.js';
 
+// Export caching system (STEP_1.3 CP2)
+export { ASTCache } from './cache/astCache.js';
+export type { ASTCacheEntry, CacheStats } from './cache/astCache.js';
+
 // Export parsed analysis types (STEP_1.3)
 export type {
   ParsedAnalysis,

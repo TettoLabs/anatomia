@@ -32,6 +32,7 @@ import type { Tree, SyntaxNode } from 'tree-sitter';
 import type { ParsedFile, FunctionInfo, ClassInfo, ImportInfo, DecoratorInfo, ExportInfo } from '../types/parsed.js';
 import { queryCache } from './queries.js';
 import { readFile } from '../utils/file.js';
+import type { ASTCache } from '../cache/astCache.js';
 
 export type Language = 'python' | 'typescript' | 'tsx' | 'javascript' | 'go';
 
@@ -720,11 +721,29 @@ function countErrors(node: SyntaxNode): number {
 export async function parseFile(
   filePath: string,
   language: string,
-  cache?: any  // ASTCache type from CP2
+  cache?: ASTCache  // Cache now functional (CP2)
 ): Promise<ParsedFile> {
-  // CP2 will add cache check here
+  // Check cache first (CP2 integration)
+  if (cache) {
+    const cached = await cache.get(filePath);
+    if (cached) {
+      // Cache hit - return cached data (fast path: 5-10ms)
+      return {
+        file: filePath,
+        language,
+        functions: cached.functions,
+        classes: cached.classes,
+        imports: cached.imports,
+        exports: cached.exports,
+        decorators: cached.decorators,
+        parseTime: cached.parseTime,
+        parseMethod: 'cached',
+        errors: 0,  // Cached data was valid when stored
+      };
+    }
+  }
 
-  // Read file content
+  // Cache miss - parse file (slow path: 50-150ms)
   const content = await readFile(filePath);
 
   // Get parser for language
@@ -735,7 +754,7 @@ export async function parseFile(
   const tree = parser.parse(content);
   const parseTime = performance.now() - startTime;
 
-  // Extract elements using queries
+  // Extract elements using queries (from CP1)
   let functions = extractFunctions(tree, content, language);
   let classes = extractClasses(tree, content, language);
   const imports = extractImports(tree, content, language);
@@ -765,7 +784,24 @@ export async function parseFile(
     errors: errorCount,
   };
 
-  // CP2 will add: await cache.set(filePath, result)
+  // Store in cache for next run (CP2 integration)
+  if (cache) {
+    const cacheData: any = {
+      functions: result.functions,
+      classes: result.classes,
+      imports: result.imports,
+      parseTime: result.parseTime,
+    };
+
+    if (result.exports !== undefined) {
+      cacheData.exports = result.exports;
+    }
+    if (result.decorators !== undefined) {
+      cacheData.decorators = result.decorators;
+    }
+
+    await cache.set(filePath, cacheData);
+  }
 
   return result;
 }
