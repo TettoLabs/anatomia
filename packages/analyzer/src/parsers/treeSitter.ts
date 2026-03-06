@@ -29,10 +29,13 @@ const Go = require('tree-sitter-go');
 const { typescript, tsx } = TypeScriptGrammar;
 
 import type { Tree, SyntaxNode } from 'tree-sitter';
-import type { ParsedFile, FunctionInfo, ClassInfo, ImportInfo, DecoratorInfo, ExportInfo } from '../types/parsed.js';
+import type { ParsedFile, FunctionInfo, ClassInfo, ImportInfo, DecoratorInfo, ExportInfo, ParsedAnalysis } from '../types/parsed.js';
 import { queryCache } from './queries.js';
-import { readFile } from '../utils/file.js';
+import { readFile, joinPath } from '../utils/file.js';
 import type { ASTCache } from '../cache/astCache.js';
+import { ASTCache as ASTCacheClass } from '../cache/astCache.js';
+import { sampleFiles } from '../sampling/fileSampler.js';
+import type { AnalysisResult } from '../types/index.js';
 
 export type Language = 'python' | 'typescript' | 'tsx' | 'javascript' | 'go';
 
@@ -804,4 +807,82 @@ export async function parseFile(
   }
 
   return result;
+}
+
+/**
+ * Parse project files using tree-sitter
+ *
+ * Orchestrates: file sampling → parsing → caching
+ *
+ * @param projectRoot - Absolute path to project root
+ * @param analysis - AnalysisResult with structure field
+ * @param options - Options with maxFiles
+ * @returns ParsedAnalysis or undefined if no structure
+ *
+ * @example
+ * ```typescript
+ * const analysis = await analyze(rootPath);
+ * const parsed = await parseProjectFiles(rootPath, analysis, { maxFiles: 20 });
+ * // → { files: ParsedFile[], totalParsed: 20, cacheHits: 15, cacheMisses: 5 }
+ * ```
+ */
+export async function parseProjectFiles(
+  projectRoot: string,
+  analysis: AnalysisResult,
+  options: { maxFiles?: number } = {}
+): Promise<ParsedAnalysis | undefined> {
+  // Require structure analysis for sampling
+  if (!analysis.structure) {
+    return undefined;
+  }
+
+  // Initialize cache
+  const cache = new ASTCacheClass(projectRoot);
+
+  // Sample files intelligently
+  const filesToParse = await sampleFiles(projectRoot, analysis, {
+    maxFiles: options.maxFiles ?? 20,
+    minConfidence: 0.8,
+    includeTests: false,
+  });
+
+  if (filesToParse.length === 0) {
+    return {
+      files: [],
+      totalParsed: 0,
+      cacheHits: 0,
+      cacheMisses: 0,
+    };
+  }
+
+  // Parse files sequentially (worker threads incompatible with native bindings)
+  const parsedFiles: ParsedFile[] = [];
+
+  for (const relativeFile of filesToParse) {
+    const absolutePath = joinPath(projectRoot, relativeFile);
+
+    // Detect language from extension
+    const language = detectLanguage(absolutePath);
+    if (!language) {
+      // Skip unsupported file types
+      continue;
+    }
+
+    try {
+      const parsed = await parseFile(absolutePath, language, cache);
+      parsedFiles.push(parsed);
+    } catch (error) {
+      // Parse failed - continue with other files
+      continue;
+    }
+  }
+
+  const stats = cache.getStats();
+
+  return {
+    files: parsedFiles,
+    totalParsed: parsedFiles.length,
+    cacheHits: stats.hits,
+    cacheMisses: stats.misses,
+  };
 }
