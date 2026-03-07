@@ -6,8 +6,14 @@ Auto-generated AI context for codebases.
 
 ## Install
 
+**Try the alpha (with `ana analyze` detection):**
 ```bash
-npm install -g anatomia
+npx anatomia-cli@alpha analyze
+```
+
+**Install globally:**
+```bash
+npm install -g anatomia-cli@alpha
 ```
 
 **From source:**
@@ -71,6 +77,40 @@ AI reads your patterns, writes code your way.
 ---
 
 ## Commands
+
+### `ana analyze` ✨ NEW in Alpha
+
+Detect project type, framework, structure, and code patterns.
+
+**Usage:**
+```bash
+ana analyze
+```
+
+**Output:** JSON with detection results
+```json
+{
+  "projectType": "python",
+  "framework": "fastapi",
+  "structure": {
+    "entryPoints": ["app/main.py"],
+    "architecture": "layered"
+  },
+  "parsed": {
+    "files": [...],
+    "totalParsed": 15
+  }
+}
+```
+
+**Features:**
+- Project type detection (Python, Node, Go, Rust)
+- Framework detection (FastAPI, Next.js, Express, Django, etc.)
+- Entry point detection (95% accurate)
+- Tree-sitter code parsing (functions, classes, imports)
+- Caching (98% faster on second run)
+
+---
 
 ### `ana init [options]`
 

@@ -1,5 +1,5 @@
 {
-  "name": "anatomia",
+  "name": "anatomia-cli",
   "version": "0.1.0-alpha",
   "description": "Auto-generated AI context for codebases",
   "bin": {
