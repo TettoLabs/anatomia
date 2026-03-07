@@ -1,6 +1,6 @@
 {
   "name": "anatomia",
-  "version": "0.1.0",
+  "version": "0.1.0-alpha",
   "description": "Auto-generated AI context for codebases",
   "bin": {
     "ana": "./dist/index.js"
