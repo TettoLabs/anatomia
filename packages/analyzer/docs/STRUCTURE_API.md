@@ -87,10 +87,6 @@ console.log(analysis);
 // }
 ```
 
-### Accuracy Target
-
-**95%** - High accuracy through multi-phase analysis combining authoritative sources (package.json), framework conventions, and heuristic fallbacks.
-
 ### Implementation Notes
 
 - Orchestrates all structure analysis sub-functions
@@ -174,13 +170,6 @@ const libResult = await findEntryPoints(
 );
 // → { entryPoints: [], confidence: 0.0, source: 'not-found' }
 ```
-
-### Accuracy Target
-
-**95%** - Very high accuracy through layered detection strategy:
-1. Framework-specific shortcuts (100% for Django, NestJS, etc.)
-2. Authoritative package.json parsing for Node.js projects
-3. Priority-ordered convention lists based on analysis of 50+ real projects per framework
 
 ### Detection Strategy
 
@@ -312,10 +301,6 @@ const monolith = classifyArchitecture(
 //   }
 ```
 
-### Accuracy Target
-
-**90%** - Good accuracy for clearly-defined patterns. Architecture classification is inherently more subjective than entry point detection.
-
 ### Classification Logic
 
 **Priority order (highest specificity first):**
@@ -424,10 +409,6 @@ const rustResult = await findTestLocations(
 // → { testLocations: ['tests/'], confidence: 1.0, framework: 'cargo-test' }
 ```
 
-### Accuracy Target
-
-**95%** - Very high accuracy as test locations follow strong conventions.
-
 ### Detection Strategy by Language
 
 **Python (pytest):**
@@ -506,10 +487,6 @@ console.log(tree);
 const smallTree = await buildAsciiTree('/Users/dev/large-project', 2, 10);
 // Limits to 2 levels deep and shows max 10 directories
 ```
-
-### Accuracy Target
-
-**90%** - Accurate structure representation with intelligent truncation to maintain readability.
 
 ### Implementation Notes
 
@@ -596,10 +573,6 @@ const rustConfigs = await findConfigFiles('/Users/dev/rust-cli', 'rust');
 //     'Cargo.lock'
 //   ]
 ```
-
-### Accuracy Target
-
-**85%** - Good coverage of common configuration files. Projects may have additional custom configs not detected.
 
 ### Config Files by Category
 
@@ -816,19 +789,6 @@ const configs = await findConfigFiles('/path/to/project', 'python');
 - Phase 3: Test location detection and integration ✓
 
 All functions are fully implemented and production-ready.
-
----
-
-## Accuracy Summary
-
-| Function | Target Accuracy | Rationale |
-|----------|----------------|-----------|
-| `analyzeStructure()` | **95%** | Orchestration of high-accuracy sub-functions |
-| `findEntryPoints()` | **95%** | Authoritative sources (package.json) + framework conventions |
-| `classifyArchitecture()` | **90%** | Heuristic-based, subjective nature of architecture patterns |
-| `findTestLocations()` | **95%** | Strong testing conventions across languages |
-| `buildAsciiTree()` | **90%** | Accurate structure with intelligent truncation |
-| `findConfigFiles()` | **85%** | Comprehensive but not exhaustive coverage |
 
 ---
 
