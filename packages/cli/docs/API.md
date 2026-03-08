@@ -1,9 +1,9 @@
-# @anatomia/analyzer API Documentation
+# anatomia-analyzer API Documentation
 
 > Comprehensive API reference for the Anatomia code analysis engine
 
 **Version:** 0.1.0
-**Package:** `@anatomia/analyzer`
+**Package:** `anatomia-analyzer`
 
 ---
 
@@ -36,11 +36,11 @@
 ## Installation
 
 ```bash
-npm install @anatomia/analyzer
+npm install anatomia-analyzer
 # or
-pnpm add @anatomia/analyzer
+pnpm add anatomia-analyzer
 # or
-yarn add @anatomia/analyzer
+yarn add anatomia-analyzer
 ```
 
 ---
@@ -48,7 +48,7 @@ yarn add @anatomia/analyzer
 ## Quick Start
 
 ```typescript
-import { analyze } from '@anatomia/analyzer';
+import { analyze } from 'anatomia-analyzer';
 
 // Analyze a project
 const result = await analyze('/path/to/project');
@@ -126,7 +126,7 @@ The `analyze()` function performs comprehensive project analysis in multiple pha
 #### Usage Example
 
 ```typescript
-import { analyze } from '@anatomia/analyzer';
+import { analyze } from 'anatomia-analyzer';
 
 // Basic usage
 const result = await analyze('/Users/dev/my-project');
@@ -140,7 +140,7 @@ console.log(result);
 //     framework: ['next in dependencies', 'next.config.js found', 'app/ directory (App Router)']
 //   },
 //   detectedAt: '2026-02-24T10:30:00.000Z',
-//   version: '0.1.0-alpha'
+//   version: '0.1.0'
 // }
 
 // With options
@@ -222,7 +222,7 @@ Scans the project directory for language-specific dependency files and determine
 #### Usage Example
 
 ```typescript
-import { detectProjectType } from '@anatomia/analyzer';
+import { detectProjectType } from 'anatomia-analyzer';
 
 const result = await detectProjectType('/Users/dev/fastapi-app');
 console.log(result);
@@ -303,7 +303,7 @@ Identifies the specific framework used based on project type. Uses **priority-ba
 #### Usage Example
 
 ```typescript
-import { detectFramework, detectProjectType } from '@anatomia/analyzer';
+import { detectFramework, detectProjectType } from 'anatomia-analyzer';
 
 // First detect project type
 const projectType = await detectProjectType('/Users/dev/my-app');
@@ -385,7 +385,7 @@ All package names are normalized to lowercase and deduplicated. If parsing fails
 #### Usage Example
 
 ```typescript
-import { readPythonDependencies } from '@anatomia/analyzer';
+import { readPythonDependencies } from 'anatomia-analyzer';
 
 // Basic usage
 const deps = await readPythonDependencies('/Users/dev/python-app');
@@ -393,7 +393,7 @@ console.log(deps);
 // ['fastapi', 'uvicorn', 'pydantic', 'sqlalchemy', 'pytest']
 
 // With error collector
-import { DetectionCollector } from '@anatomia/analyzer';
+import { DetectionCollector } from 'anatomia-analyzer';
 
 const collector = new DetectionCollector();
 const depsWithErrors = await readPythonDependencies(
@@ -464,7 +464,7 @@ Scoped package names (e.g., `@nestjs/core`) preserve the `@` symbol for accurate
 #### Usage Example
 
 ```typescript
-import { readNodeDependencies } from '@anatomia/analyzer';
+import { readNodeDependencies } from 'anatomia-analyzer';
 
 const deps = await readNodeDependencies('/Users/dev/nextjs-app');
 console.log(deps);
@@ -537,7 +537,7 @@ Parses requirements.txt files according to pip's specification ([PEP 508](https:
 #### Usage Example
 
 ```typescript
-import { parseRequirementsTxt } from '@anatomia/analyzer';
+import { parseRequirementsTxt } from 'anatomia-analyzer';
 
 // Basic usage with versions
 const deps1 = parseRequirementsTxt('flask==2.0.1\ndjango>=3.0');
@@ -624,7 +624,7 @@ Package names are normalized to lowercase while preserving the `@` symbol for sc
 #### Usage Example
 
 ```typescript
-import { parsePackageJson } from '@anatomia/analyzer';
+import { parsePackageJson } from 'anatomia-analyzer';
 
 // Basic usage
 const deps1 = parsePackageJson(JSON.stringify({
@@ -718,7 +718,7 @@ Parses pyproject.toml files supporting both modern and legacy formats:
 #### Usage Example
 
 ```typescript
-import { parsePyprojectToml } from '@anatomia/analyzer';
+import { parsePyprojectToml } from 'anatomia-analyzer';
 
 // PEP 621 format (modern standard)
 const deps1 = parsePyprojectToml(`
@@ -816,7 +816,7 @@ If `fastapi` is not in dependencies, immediately returns `null` with 0.0 confide
 #### Usage Example
 
 ```typescript
-import { detectFastAPI, readPythonDependencies } from '@anatomia/analyzer';
+import { detectFastAPI, readPythonDependencies } from 'anatomia-analyzer';
 
 // Basic usage
 const deps = await readPythonDependencies('/Users/dev/fastapi-app');
@@ -901,7 +901,7 @@ If `next` is not in dependencies, immediately returns `null` with 0.0 confidence
 #### Usage Example
 
 ```typescript
-import { detectNextjs, readNodeDependencies } from '@anatomia/analyzer';
+import { detectNextjs, readNodeDependencies } from 'anatomia-analyzer';
 
 // Full detection (all signals)
 const deps = await readNodeDependencies('/Users/dev/nextjs-app');
@@ -1001,7 +1001,7 @@ Calculates a confidence score using a weighted multi-signal approach:
 #### Usage Example
 
 ```typescript
-import { calculateConfidence } from '@anatomia/analyzer';
+import { calculateConfidence } from 'anatomia-analyzer';
 
 // Maximum confidence (all signals present)
 const maxConfidence = calculateConfidence({
@@ -1037,7 +1037,7 @@ const lowConfidence = calculateConfidence({
 console.log(lowConfidence); // 0.20
 
 // Interpret confidence level
-import { interpretConfidence } from '@anatomia/analyzer';
+import { interpretConfidence } from 'anatomia-analyzer';
 
 const interpretation = interpretConfidence(0.95);
 console.log(interpretation);
@@ -1107,7 +1107,7 @@ Scans up to 6-8 source files for framework import patterns using regex matching.
 #### Usage Example
 
 ```typescript
-import { scanForImports } from '@anatomia/analyzer';
+import { scanForImports } from 'anatomia-analyzer';
 
 // Basic usage
 const result = await scanForImports('/Users/dev/fastapi-app', 'fastapi');
@@ -1162,7 +1162,7 @@ async function exists(filePath: string): Promise<boolean>
 
 **Example:**
 ```typescript
-import { exists } from '@anatomia/analyzer';
+import { exists } from 'anatomia-analyzer';
 
 const hasPackageJson = await exists('/Users/dev/project/package.json');
 if (hasPackageJson) {
@@ -1180,7 +1180,7 @@ async function readFile(filePath: string): Promise<string>
 
 **Example:**
 ```typescript
-import { readFile } from '@anatomia/analyzer';
+import { readFile } from 'anatomia-analyzer';
 
 const content = await readFile('/Users/dev/project/requirements.txt');
 // Returns '' if file doesn't exist
@@ -1196,7 +1196,7 @@ async function isDirectory(filePath: string): Promise<boolean>
 
 **Example:**
 ```typescript
-import { isDirectory } from '@anatomia/analyzer';
+import { isDirectory } from 'anatomia-analyzer';
 
 const isSrcDir = await isDirectory('/Users/dev/project/src');
 if (isSrcDir) {
@@ -1214,7 +1214,7 @@ function joinPath(...segments: string[]): string
 
 **Example:**
 ```typescript
-import { joinPath } from '@anatomia/analyzer';
+import { joinPath } from 'anatomia-analyzer';
 
 const configPath = joinPath(rootPath, 'config', 'settings.json');
 // Cross-platform: handles / vs \ correctly
@@ -1391,7 +1391,7 @@ import {
   analyze,
   DetectionEngineError,
   ERROR_CODES
-} from '@anatomia/analyzer';
+} from 'anatomia-analyzer';
 
 try {
   const result = await analyze('/path/to/project', { strictMode: true });
@@ -1433,7 +1433,7 @@ Error collector for gathering warnings and info messages during detection.
 import {
   DetectionCollector,
   readPythonDependencies
-} from '@anatomia/analyzer';
+} from 'anatomia-analyzer';
 
 const collector = new DetectionCollector();
 const deps = await readPythonDependencies('/path/to/project', collector);
@@ -1471,7 +1471,7 @@ import {
   interpretConfidence,
   type AnalysisResult,
   type ProjectType
-} from '@anatomia/analyzer';
+} from 'anatomia-analyzer';
 
 async function analyzeProject(projectPath: string) {
   // Full analysis (recommended)
@@ -1528,8 +1528,8 @@ analyzeProject('/Users/dev/my-project')
 
 ## Additional Resources
 
-- **GitHub Repository**: [anatomia](https://github.com/yourusername/anatomia)
-- **Issue Tracker**: [Report Issues](https://github.com/yourusername/anatomia/issues)
+- **GitHub Repository**: [anatomia](https://github.com/TettoLabs/anatomia)
+- **Issue Tracker**: [Report Issues](https://github.com/TettoLabs/anatomia/issues)
 - **Template Guide**: See `TEMPLATE_GUIDE.md` for template creation
 - **Contributing**: See `CONTRIBUTING.md` for contribution guidelines
 
@@ -1542,4 +1542,4 @@ MIT License - See LICENSE file for details
 ---
 
 **Last Updated:** 2026-02-24
-**Version:** 0.1.0-alpha
+**Version:** 0.1.0

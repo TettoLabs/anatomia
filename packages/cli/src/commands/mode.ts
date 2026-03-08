@@ -88,7 +88,7 @@ export const modeCommand = new Command('mode')
     } else {
       console.log(chalk.yellow('⚠ Mode file not found'));
       console.log(chalk.gray('  The mode will be created when you run `ana init`.'));
-      console.log(chalk.gray('  (Full mode templates come in STEP_0.2)'));
+      console.log(chalk.gray('  Run `ana init` to create this mode file.'));
     }
 
     console.log('');

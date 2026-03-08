@@ -1,0 +1,27 @@
+{
+  "functions": [],
+  "classes": [],
+  "imports": [
+    {
+      "module": "tsup",
+      "names": [],
+      "line": 1
+    },
+    {
+      "module": "node:fs",
+      "names": [],
+      "line": 2
+    }
+  ],
+  "parseTime": 0.07483300000001236,
+  "exports": [
+    {
+      "name": "export default defineConfig({\n  entry: ['src/index",
+      "type": "default",
+      "line": 4
+    }
+  ],
+  "decorators": [],
+  "mtimeMs": 1771596634400.3137,
+  "cachedAt": "2026-03-07T22:40:00.901Z"
+}

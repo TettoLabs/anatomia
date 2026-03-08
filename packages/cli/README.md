@@ -1,67 +1,56 @@
 # Anatomia CLI
 
-Auto-generated AI context for codebases.
+> Auto-generate AI context for your codebase
 
----
+Anatomia creates `.ana/` context folders that help AI understand your project's patterns, architecture, and conventions.
 
 ## Install
 
-**Try the alpha (with `ana analyze` detection):**
 ```bash
-npx anatomia-cli@alpha analyze
+npm install -g anatomia-cli
 ```
 
-**Install globally:**
+Or try without installing:
 ```bash
-npm install -g anatomia-cli@alpha
-```
-
-**From source:**
-```bash
-git clone https://github.com/TettoLabs/anatomia.git
-cd anatomia/packages/cli
-pnpm install && pnpm build
-npm link
+npx anatomia-cli analyze
 ```
 
 ---
 
-## Usage
+## Quick Start
 
-**Initialize context:**
+**1. Initialize context:**
 ```bash
 cd your-project/
 ana init
 ```
 
-**Reference modes:**
-```bash
-ana mode architect  # System design
-ana mode code       # Implementation
-ana mode debug      # Troubleshooting
-ana mode docs       # Documentation
-ana mode test       # Test writing
+**2. Reference modes in your AI tool:**
+```
+@.ana/modes/code.md "Implement user authentication"
 ```
 
-**In your AI tool:**
-```
-@.ana/modes/code.md "Implement user auth"
-```
-
-AI reads your patterns, writes code your way.
+AI reads your patterns and writes code that matches your style.
 
 ---
 
-## What You Get
+## Commands
 
-**10 files in `.ana/`:**
+### `ana init [options]`
 
+Initialize `.ana/` folder with templates.
+
+**Options:**
+- `-y, --yes` - Skip prompts, use defaults
+- `-f, --force` - Overwrite existing .ana/
+
+**Creates 10 files:**
 ```
 .ana/
-├── ENTRY.md              # Orientation (read this first)
+├── ENTRY.md              # Project orientation
 ├── node.json             # Project metadata
 ├── modes/
-│   ├── architect.md      # Design mode
+│   ├── architect.md      # System design mode
 │   ├── code.md           # Implementation mode
 │   ├── debug.md          # Debugging mode
 │   ├── docs.md           # Documentation mode
@@ -72,22 +61,20 @@ AI reads your patterns, writes code your way.
     └── conventions.md    # Coding standards
 ```
 
-**Fill `context/*.md` with your project details. Reference `modes/*.md` when working.**
+Fill `context/*.md` with your project details. Reference `modes/*.md` when working with AI.
 
 ---
 
-## Commands
+### `ana analyze`
 
-### `ana analyze` ✨ NEW in Alpha
-
-Detect project type, framework, structure, and code patterns.
+Detect project type, framework, and structure.
 
 **Usage:**
 ```bash
 ana analyze
 ```
 
-**Output:** JSON with detection results
+**Output:**
 ```json
 {
   "projectType": "python",
@@ -103,37 +90,25 @@ ana analyze
 }
 ```
 
-**Features:**
-- Project type detection (Python, Node, Go, Rust)
-- Framework detection (FastAPI, Next.js, Express, Django, etc.)
-- Entry point detection (95% accurate)
-- Tree-sitter code parsing (functions, classes, imports)
-- Caching (98% faster on second run)
+**What it detects:**
+- Project type (Python, Node, Go, Rust, Ruby, PHP)
+- Framework (FastAPI, Next.js, Express, Django, and more)
+- Entry points
+- Architecture pattern
+- Code structure (functions, classes, imports)
 
 ---
 
-### `ana init [options]`
-
-Initialize `.ana/` folder.
-
-**Options:**
-- `-y, --yes` - Skip prompts, use defaults
-- `-f, --force` - Overwrite existing .ana/
-
-**Example:**
-```bash
-ana init -y  # Quick start with defaults
-```
-
 ### `ana mode <name>`
 
-Display mode file path and info.
+Display mode file path and information.
 
-**Example:**
 ```bash
 ana mode code
 # Output: .ana/modes/code.md - Implementation mode
 ```
+
+---
 
 ### `ana --version`
 
@@ -145,36 +120,43 @@ Show all commands.
 
 ---
 
-## Mode Boundaries
+## Mode System
 
-Each mode has strict boundaries:
+Each mode has a specific purpose:
 
-- **architect** - Designs systems, does NOT implement
-- **code** - Implements features, does NOT design architecture
-- **debug** - Finds root causes, does NOT implement fixes
-- **docs** - Writes documentation, does NOT create features
-- **test** - Writes tests, does NOT implement features
-
-**Why:** Prevents scope creep, ensures thoroughness, maintains quality.
+- **architect** - System design (doesn't implement)
+- **code** - Implementation (doesn't design architecture)
+- **debug** - Root cause analysis (doesn't implement fixes)
+- **docs** - Documentation (doesn't create features)
+- **test** - Test writing (doesn't implement features)
 
 ---
 
 ## Templates
 
-Templates use Handlebars for dynamic generation:
+Templates use Handlebars for dynamic content:
 
 ```handlebars
-{{#if framework === 'fastapi'}}
+{{#if (eq framework "fastapi")}}
 FastAPI-specific guidance here
 {{/if}}
 ```
 
 **Supported frameworks:**
-- FastAPI (Python)
-- Next.js (TypeScript/JavaScript)
-- Express (Node.js)
-- Django (Python)
-- Go (standard library)
+- FastAPI, Django, Flask (Python)
+- Next.js, Express, Nest.js, Fastify (Node.js)
+- Gin, Echo, Chi, Cobra (Go)
+
+See [TEMPLATE_GUIDE.md](./docs/TEMPLATE_GUIDE.md) for details.
+
+---
+
+## Documentation
+
+- [API Reference](./docs/API.md)
+- [Template Guide](./docs/TEMPLATE_GUIDE.md)
+- [Detection Flow](./docs/DETECTION_FLOW.md)
+- [Troubleshooting](./docs/TROUBLESHOOTING.md)
 
 ---
 
@@ -182,15 +164,13 @@ FastAPI-specific guidance here
 
 **Run tests:**
 ```bash
-pnpm test  # 100+ tests
+pnpm test
 ```
 
-**Modify templates:**
-1. Edit `templates/*.hbs` or `templates/*.md`
-2. Run `pnpm test`
-3. Build with `pnpm build`
-
-See [TEMPLATE_GUIDE.md](./docs/TEMPLATE_GUIDE.md) for details.
+**Build:**
+```bash
+pnpm build
+```
 
 ---
 

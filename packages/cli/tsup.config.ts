@@ -8,6 +8,7 @@ export default defineConfig({
   shims: true,
   clean: true,
   dts: true,
+  external: ['anatomia-analyzer'], // Don't bundle dependency
   // Copy template files to dist/
   publicDir: 'templates',
   // Fallback: Ensure templates persist after DTS generation

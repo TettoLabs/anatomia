@@ -160,7 +160,6 @@ See [docs/TEMPLATE_GUIDE.md](./docs/TEMPLATE_GUIDE.md) for details.
 ## Questions?
 
 - Open an issue: https://github.com/TettoLabs/anatomia/issues
-- Email: support@anatomia.dev (coming soon)
 
 ---
 

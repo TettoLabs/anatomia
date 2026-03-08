@@ -7,7 +7,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
-import { analyze, type AnalysisResult } from '@anatomia/analyzer';
+import { analyze, type AnalysisResult } from 'anatomia-analyzer';
 
 interface AnalyzeCommandOptions {
   output?: string;

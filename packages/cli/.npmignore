@@ -1,0 +1,15 @@
+# Build artifacts
+.turbo/
+*.tsbuildinfo
+
+# Development files
+src/
+tests/
+*.test.ts
+vitest.config.ts
+tsup.config.ts
+tsconfig.json
+
+# Development dependencies
+node_modules/
+.ana/

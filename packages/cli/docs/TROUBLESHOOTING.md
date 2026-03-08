@@ -692,7 +692,7 @@ ls Cargo.toml
 **Option 3: File issue for new language support**
 ```bash
 # If language should be supported, report it:
-# https://github.com/your-org/anatomia/issues
+# https://github.com/TettoLabs/anatomia/issues
 ```
 
 ### Example
@@ -844,7 +844,7 @@ ana analyze --verbose 2>&1 | grep "phase:"
 
 ### Check System Requirements
 ```bash
-# Node.js version (requires 18+)
+# Node.js version (requires 20+)
 node --version
 
 # File permissions

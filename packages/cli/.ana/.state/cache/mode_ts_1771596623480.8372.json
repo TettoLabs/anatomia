@@ -1,0 +1,50 @@
+{
+  "functions": [
+    {
+      "name": "isValidMode",
+      "line": 104,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "printAvailableModes",
+      "line": 111,
+      "async": false,
+      "decorators": []
+    }
+  ],
+  "classes": [],
+  "imports": [
+    {
+      "module": "commander",
+      "names": [],
+      "line": 21
+    },
+    {
+      "module": "chalk",
+      "names": [],
+      "line": 22
+    },
+    {
+      "module": "node:path",
+      "names": [],
+      "line": 23
+    },
+    {
+      "module": "../utils/file-writer.js",
+      "names": [],
+      "line": 24
+    }
+  ],
+  "parseTime": 0.2272079999999903,
+  "exports": [
+    {
+      "name": "export const modeCommand = new Command('mode')\n  .",
+      "type": "default",
+      "line": 39
+    }
+  ],
+  "decorators": [],
+  "mtimeMs": 1771596623480.8372,
+  "cachedAt": "2026-03-07T22:40:00.899Z"
+}

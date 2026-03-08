@@ -1,19 +1,49 @@
 {
   "name": "anatomia-cli",
-  "version": "0.1.0-alpha",
+  "version": "0.1.0",
   "description": "Auto-generated AI context for codebases",
   "bin": {
     "ana": "./dist/index.js"
   },
   "main": "./dist/index.js",
   "type": "module",
+  "license": "MIT",
+  "keywords": [
+    "cli",
+    "ai",
+    "context",
+    "codebase",
+    "llm",
+    "developer-tools",
+    "code-analysis",
+    "ai-assistant",
+    "templates"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TettoLabs/anatomia.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/TettoLabs/anatomia",
+  "bugs": {
+    "url": "https://github.com/TettoLabs/anatomia/issues"
+  },
+  "author": "TettoLabs",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "files": [
+    "dist",
+    "templates",
+    "docs"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
     "test": "vitest"
   },
   "dependencies": {
-    "@anatomia/analyzer": "workspace:*",
+    "anatomia-analyzer": "^0.1.0",
     "chalk": "^5.3.0",
     "commander": "^12.0.0",
     "glob": "^10.3.0",

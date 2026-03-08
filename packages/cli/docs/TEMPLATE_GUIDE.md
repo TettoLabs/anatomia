@@ -244,4 +244,3 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md) for full guidelines.
 - **README.md** - CLI usage and installation
 - **CONTRIBUTING.md** - Development and contribution guidelines
 - **TEMPLATE_GUIDE.md** - This file (template details)
-- **START_HERE.md** - Research and design rationale (in ATLAS3/efforts/STEP_0_2_TEMPLATES/)

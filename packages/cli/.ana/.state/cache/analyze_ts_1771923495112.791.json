@@ -1,0 +1,54 @@
+{
+  "functions": [
+    {
+      "name": "formatHumanReadable",
+      "line": 100,
+      "async": false,
+      "decorators": []
+    }
+  ],
+  "classes": [],
+  "imports": [
+    {
+      "module": "commander",
+      "names": [],
+      "line": 5
+    },
+    {
+      "module": "chalk",
+      "names": [],
+      "line": 6
+    },
+    {
+      "module": "ora",
+      "names": [],
+      "line": 7
+    },
+    {
+      "module": "node:path",
+      "names": [],
+      "line": 8
+    },
+    {
+      "module": "node:fs/promises",
+      "names": [],
+      "line": 9
+    },
+    {
+      "module": "@anatomia/analyzer",
+      "names": [],
+      "line": 10
+    }
+  ],
+  "parseTime": 0.2745840000000044,
+  "exports": [
+    {
+      "name": "export const analyzeCommand = new Command('analyze",
+      "type": "default",
+      "line": 20
+    }
+  ],
+  "decorators": [],
+  "mtimeMs": 1771923495112.791,
+  "cachedAt": "2026-03-07T22:40:00.885Z"
+}

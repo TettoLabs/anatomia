@@ -328,7 +328,7 @@ flowchart TD
     framework: string[]     // e.g., ["next in dependencies", "next.config.js exists"]
   },
   detectedAt: string,      // ISO timestamp
-  version: string          // Tool version (e.g., "0.1.0-alpha")
+  version: string          // Tool version (e.g., "0.1.0")
 }
 ```
 - **Data Flow**: Detection results → Result assembly → AnalysisResult object → Return to caller
@@ -366,6 +366,6 @@ Input Path
 6. **Type Safety**: All results validated with Zod schemas
 
 ## Version
-- **Tool Version**: 0.1.0-alpha
+- **Tool Version**: 0.1.0
 - **Documentation Date**: 2026-02-24
-- **Detection Engine**: @anatomia/analyzer
+- **Detection Engine**: anatomia-analyzer
