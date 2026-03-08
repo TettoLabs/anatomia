@@ -94,7 +94,7 @@ export function createEmptyAnalysisResult(): AnalysisResult {
       framework: [],
     },
     detectedAt: new Date().toISOString(),
-    version: '0.1.0-alpha',
+    version: '0.1.0',
   };
 }
 

@@ -90,7 +90,7 @@ export type {
 } from './types/parsed.js';
 
 // Version constant
-export const VERSION = '0.1.0-alpha';
+export const VERSION = '0.1.0';
 
 /**
  * Analysis options
