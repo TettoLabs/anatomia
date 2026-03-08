@@ -1,10 +1,46 @@
 {
-  "name": "@anatomia/analyzer",
-  "version": "0.1.0-alpha",
+  "name": "anatomia-analyzer",
+  "version": "0.1.0",
   "description": "Code analysis engine for Anatomia",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "type": "module",
+  "license": "MIT",
+  "keywords": [
+    "code-analysis",
+    "static-analysis",
+    "tree-sitter",
+    "ast-parsing",
+    "framework-detection",
+    "project-detection",
+    "typescript",
+    "python",
+    "javascript",
+    "golang"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TettoLabs/anatomia.git",
+    "directory": "packages/analyzer"
+  },
+  "homepage": "https://github.com/TettoLabs/anatomia/tree/main/packages/analyzer",
+  "bugs": {
+    "url": "https://github.com/TettoLabs/anatomia/issues"
+  },
+  "author": "TettoLabs",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",

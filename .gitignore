@@ -36,3 +36,4 @@ test-results/
 # Temporary
 *.tmp
 .temp/
+master_plan/

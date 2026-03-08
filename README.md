@@ -1,25 +1,29 @@
 # Anatomia
 
-Auto-generated AI context for codebases in 30 seconds.
+Auto-generated AI context for codebases.
 
-[![npm version](https://img.shields.io/npm/v/anatomia.svg)](https://www.npmjs.com/package/anatomia)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![npm version](https://img.shields.io/npm/v/anatomia-cli.svg)](https://www.npmjs.com/package/anatomia-cli)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
 
 ## What is this?
 
-Anatomia generates `.ana/` folders that help AI assistants understand your project instantly. Instead of re-explaining your patterns every conversation, drop mode files in chat.
+Anatomia generates `.ana/` folders that help AI assistants understand your project. Instead of re-explaining your patterns every conversation, reference mode files in chat.
 
-**Problem:** "Use our API client pattern" → AI invents its own pattern
-**Solution:** `@.ana/modes/code.md` → AI follows YOUR pattern
+**Example:**
+```
+@.ana/modes/code.md "Implement user authentication"
+```
+
+AI reads your patterns and writes code that matches your team's standards.
 
 ---
 
 ## Install
 
 ```bash
-npm install -g anatomia
+npm install -g anatomia-cli
 ```
 
 ---
@@ -32,26 +36,11 @@ ana init
 ```
 
 This creates 10 files in `.ana/`:
-- `ENTRY.md` - Orientation contract
+- `ENTRY.md` - Project orientation
 - `modes/*.md` - 5 task modes (architect, code, debug, docs, test)
 - `context/*.md` - Your patterns, conventions, architecture
 
-**Use in Claude Code:**
-```
-@.ana/modes/code.md "Implement JWT refresh"
-```
-
-Claude reads your patterns, writes code your way.
-
----
-
-## Features
-
-- **5 specialized modes** - Architect, code, debug, docs, test
-- **Framework-aware** - Detects FastAPI, Next.js, Express, Django, Go
-- **Auto-updating** - Context stays current with code changes
-- **Tool-agnostic** - Works with Claude Code, Cursor, Windsurf
-- **Federation ready** - Multi-service query (microservices, monorepos)
+Fill `context/*.md` with your project details. Reference `modes/*.md` when working with AI.
 
 ---
 
@@ -60,10 +49,9 @@ Claude reads your patterns, writes code your way.
 ```
 anatomia/
 ├── packages/
-│   ├── cli/          # CLI tool (this package)
-│   ├── analyzer/     # Pattern detection
-│   └── generator/    # Template engine
-└── website/          # Landing page (anatomia.dev)
+│   ├── cli/          # CLI tool
+│   └── analyzer/     # Code analysis engine
+└── website/          # Documentation
 ```
 
 ---
@@ -92,9 +80,16 @@ ana --version
 
 ---
 
+## Documentation
+
+- [CLI Documentation](./packages/cli/README.md)
+- [Analyzer Documentation](./packages/analyzer/README.md)
+
+---
+
 ## Contributing
 
-See [packages/cli/CONTRIBUTING.md](./packages/cli/CONTRIBUTING.md)
+See [CONTRIBUTING.md](./CONTRIBUTING.md)
 
 ---
 
@@ -106,6 +101,7 @@ MIT
 
 ## Links
 
-- **Website:** [anatomia.dev](https://anatomia.dev)
-- **Issues:** [GitHub Issues](https://github.com/TettoLabs/anatomia/issues)
-- **CLI Package:** [packages/cli](./packages/cli)
+- **Repository:** [GitHub](https://github.com/TettoLabs/anatomia)
+- **Issues:** [Report Issues](https://github.com/TettoLabs/anatomia/issues)
+- **CLI Package:** [anatomia-cli on npm](https://www.npmjs.com/package/anatomia-cli)
+- **Analyzer Package:** [anatomia-analyzer on npm](https://www.npmjs.com/package/anatomia-analyzer)
