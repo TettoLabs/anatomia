@@ -111,14 +111,16 @@ export const VERSION = '0.1.0';
  *
  * STEP_1.1: skipImportScan, skipMonorepo
  * STEP_1.2: skipStructure
- * STEP_1.3: skipParsing, maxFiles (NEW)
+ * STEP_1.3: skipParsing, maxFiles
+ * STEP_2.1: skipPatterns (NEW)
  */
 export interface AnalyzeOptions {
   skipImportScan?: boolean;
   skipMonorepo?: boolean;
   skipStructure?: boolean;
-  skipParsing?: boolean;      // Skip tree-sitter parsing (STEP_1.3 - NEW)
-  maxFiles?: number;          // Max files to parse (default: 20 - NEW)
+  skipParsing?: boolean;      // Skip tree-sitter parsing (STEP_1.3)
+  skipPatterns?: boolean;     // Skip pattern inference (STEP_2.1 - NEW)
+  maxFiles?: number;          // Max files to parse (default: 20)
   strictMode?: boolean;
   verbose?: boolean;
 }
@@ -131,19 +133,21 @@ export interface AnalyzeOptions {
  * 2. Project type detection (STEP_1.1)
  * 3. Framework detection (STEP_1.1)
  * 4. Structure analysis (STEP_1.2)
- * 5. Tree-sitter parsing (STEP_1.3 - NEW)
+ * 5. Tree-sitter parsing (STEP_1.3)
+ * 6. Pattern inference (STEP_2.1 - NEW)
  *
  * @param rootPath - Absolute path to project root
  * @param options - Analysis options
- * @returns Analysis results with project type, framework, structure, and parsed code
+ * @returns Analysis results with project type, framework, structure, parsed code, and patterns
  *
  * @example
  * ```typescript
  * const result = await analyze('/path/to/project');
- * console.log(result.projectType);        // 'python' | 'node' | etc.
- * console.log(result.framework);          // 'fastapi' | 'nextjs' | etc.
- * console.log(result.structure?.entryPoints); // ['app/main.py']
- * console.log(result.parsed?.files.length);   // 15 (NEW - STEP_1.3)
+ * console.log(result.projectType);             // 'python' | 'node' | etc.
+ * console.log(result.framework);               // 'fastapi' | 'nextjs' | etc.
+ * console.log(result.structure?.entryPoints);  // ['app/main.py']
+ * console.log(result.parsed?.files.length);    // 15 (STEP_1.3)
+ * console.log(result.patterns?.validation);    // { library: 'pydantic', confidence: 0.95, ... } (STEP_2.1 - NEW)
  * ```
  */
 export async function analyze(
@@ -198,16 +202,28 @@ export async function analyze(
       structure,
     };
 
-    // Phase 5: Tree-sitter parsing (STEP_1.3 - NEW, optional)
+    // Phase 5: Tree-sitter parsing (STEP_1.3, optional)
     const { parseProjectFiles } = await import('./parsers/treeSitter.js');
     const parsed = options.skipParsing || !structure
       ? undefined
       : await parseProjectFiles(rootPath, intermediateResult, options);
 
+    // Build intermediate result with parsed data (needed for pattern inference)
+    const withParsed: import('./types/index.js').AnalysisResult = {
+      ...intermediateResult,
+      parsed,
+    };
+
+    // Phase 6: Pattern inference (STEP_2.1 - NEW, optional)
+    const { inferPatterns } = await import('./analyzers/patterns.js');
+    const patterns = options.skipPatterns || !parsed
+      ? undefined
+      : await inferPatterns(rootPath, withParsed);
+
     // Return complete result
     return {
-      ...intermediateResult,
-      parsed,  // NEW optional field
+      ...withParsed,
+      patterns,  // NEW optional field (STEP_2.1)
     };
   } catch (error) {
     // Critical failure - return empty result
