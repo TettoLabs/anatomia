@@ -14,7 +14,7 @@ import { readNodeDependencies } from '../parsers/node.js';
 import { readGoDependencies } from '../parsers/go.js';
 import { exists, joinPath, readFile } from '../utils/file.js';
 import type { ProjectType, AnalysisResult, ParsedFile } from '../types/index.js';
-import type { PatternConfidence } from '../types/patterns.js';
+import type { PatternConfidence, MultiPattern } from '../types/patterns.js';
 
 /**
  * Detect patterns from dependencies (Stage 1)
@@ -812,6 +812,9 @@ async function confirmErrorHandlingPattern(
 /**
  * Confirm database pattern usage and detect variants
  *
+ * UPDATED (CP3): Now detects multiple patterns (e.g., SQLAlchemy sync + async)
+ * Uses detectMultipleDatabasePatterns() for variant detection.
+ *
  * SQLAlchemy: Distinguish async vs sync based on imports (AsyncSession vs Session)
  * Prisma: Verify PrismaClient imports
  * GORM: Check struct tag usage
@@ -824,6 +827,21 @@ async function confirmDatabasePattern(
   if (!patterns['database']) return;
 
   const library = patterns['database'].library;
+
+  // SQLAlchemy confirmation with multi-pattern detection (CP3)
+  if (library === 'sqlalchemy') {
+    // Detect if multiple patterns exist (sync + async)
+    const multiPattern = await detectMultipleDatabasePatterns(parsedFiles);
+
+    if (multiPattern && 'patterns' in multiPattern) {
+      // Multi-pattern detected - replace with MultiPattern object
+      patterns['database'] = multiPattern as any;  // Type union handles this
+      return;  // Multi-pattern replaces single pattern, no further boosting
+    }
+
+    // Single pattern or no pattern detected via multi-pattern check
+    // Continue with existing boost logic below
+  }
 
   // SQLAlchemy confirmation and variant detection
   if (library === 'sqlalchemy') {
@@ -1107,6 +1125,130 @@ async function confirmTestingPattern(
       patterns['testing'].evidence.push(`${framework} imports found`);
     }
   }
+}
+
+// ============================================================================
+// MULTI-PATTERN DETECTION (CP3)
+// ============================================================================
+
+/**
+ * Detect multiple database patterns (variant detection)
+ *
+ * Common scenario: Project migrating from sync to async SQLAlchemy
+ * - Legacy routes: Session (sync)
+ * - New routes: AsyncSession (async)
+ *
+ * Returns:
+ * - MultiPattern if both variants detected (2+ patterns)
+ * - PatternConfidence if only one variant (single pattern)
+ * - null if no database pattern detected
+ *
+ * Primary selection logic:
+ * 1. Highest frequency (most files using pattern)
+ * 2. If tied: async preferred over sync (modern pattern)
+ * 3. If still tied: higher confidence wins
+ *
+ * @param parsedFiles - Parsed files from STEP_1.3
+ * @returns Multi-pattern, single pattern, or null
+ */
+export async function detectMultipleDatabasePatterns(
+  parsedFiles: ParsedFile[]
+): Promise<MultiPattern | PatternConfidence | null> {
+  const detected: PatternConfidence[] = [];
+
+  // Count AsyncSession usage (async variant)
+  const asyncSessionFiles = parsedFiles.filter(f =>
+    f.imports.some(imp =>
+      imp.module.includes('sqlalchemy.ext.asyncio') &&
+      (imp.names.includes('AsyncSession') ||
+       imp.names.includes('create_async_engine'))
+    )
+  ).length;
+
+  // Count Session usage (sync variant)
+  // Exclude files that also have async imports (avoid double-counting mixed files)
+  const syncSessionFiles = parsedFiles.filter(f => {
+    const hasAsyncImport = f.imports.some(imp =>
+      imp.module.includes('sqlalchemy.ext.asyncio')
+    );
+    const hasSyncImport = f.imports.some(imp =>
+      imp.module.includes('sqlalchemy.orm') &&
+      (imp.names.includes('Session') || imp.names.includes('sessionmaker'))
+    );
+    // Only count if has sync import AND no async import
+    return hasSyncImport && !hasAsyncImport;
+  }).length;
+
+  // Detect async variant if files found
+  if (asyncSessionFiles > 0) {
+    const confidence = 0.80 + (asyncSessionFiles >= 5 ? 0.15 : 0.10);
+    detected.push({
+      library: 'sqlalchemy',
+      variant: 'async',
+      confidence: Math.min(1.0, confidence),
+      evidence: [
+        `AsyncSession imports in ${asyncSessionFiles} file(s)`,
+        'Modern async pattern detected'
+      ],
+      primary: asyncSessionFiles >= syncSessionFiles,  // Primary if more files
+    });
+  }
+
+  // Detect sync variant if files found
+  if (syncSessionFiles > 0) {
+    const confidence = 0.70 + (syncSessionFiles >= 5 ? 0.15 : 0.10);
+    detected.push({
+      library: 'sqlalchemy',
+      variant: 'sync',
+      confidence: Math.min(1.0, confidence),
+      evidence: [
+        `Session imports in ${syncSessionFiles} file(s)`,
+        'Legacy sync pattern detected'
+      ],
+      primary: syncSessionFiles > asyncSessionFiles,  // Primary if more files
+    });
+  }
+
+  // No patterns detected
+  if (detected.length === 0) {
+    return null;
+  }
+
+  // Single pattern detected - return PatternConfidence (not MultiPattern)
+  if (detected.length === 1) {
+    const pattern = detected[0]!;  // Length check guarantees this exists
+    pattern.primary = true;  // Single pattern is always primary
+    return pattern;
+  }
+
+  // Multiple patterns detected - determine primary based on frequency
+  // Primary selection: highest frequency, async preferred on tie
+  const asyncPattern = detected.find(p => p.variant === 'async');
+  const syncPattern = detected.find(p => p.variant === 'sync');
+
+  let primary: PatternConfidence;
+  if (asyncSessionFiles > syncSessionFiles) {
+    // Async has more files - it's primary
+    primary = asyncPattern!;
+    primary.primary = true;
+    if (syncPattern) syncPattern.primary = false;
+  } else if (syncSessionFiles > asyncSessionFiles) {
+    // Sync has more files - it's primary
+    primary = syncPattern!;
+    primary.primary = true;
+    if (asyncPattern) asyncPattern.primary = false;
+  } else {
+    // Tied frequency - prefer async (modern pattern)
+    primary = asyncPattern!;
+    primary.primary = true;
+    if (syncPattern) syncPattern.primary = false;
+  }
+
+  return {
+    patterns: detected,
+    primary,
+    confidence: primary.confidence,  // Use primary pattern's confidence
+  };
 }
 
 // ============================================================================

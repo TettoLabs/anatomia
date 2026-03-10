@@ -92,10 +92,11 @@ export type {
 // Export pattern analysis functions (STEP_2.1)
 export {
   detectFromDependencies,
-  confirmPatternsWithTreeSitter,  // CP1
-  filterByConfidence,             // CP2
-  interpretConfidence,            // CP2
-  calculateECE,                   // CP2
+  confirmPatternsWithTreeSitter,    // CP1
+  filterByConfidence,               // CP2
+  interpretConfidence,              // CP2
+  calculateECE,                     // CP2
+  detectMultipleDatabasePatterns,   // CP3
 } from './analyzers/patterns.js';
 export type { PatternDetectionResult } from './analyzers/patterns.js';
 
