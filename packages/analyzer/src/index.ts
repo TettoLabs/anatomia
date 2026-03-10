@@ -93,7 +93,11 @@ export type {
 export {
   detectFromDependencies,
   confirmPatternsWithTreeSitter,  // CP1
+  filterByConfidence,             // CP2
+  interpretConfidence,            // CP2
+  calculateECE,                   // CP2
 } from './analyzers/patterns.js';
+export type { PatternDetectionResult } from './analyzers/patterns.js';
 
 // Pattern types already exported via types/index.ts import/export chain
 // (PatternAnalysis, PatternConfidence exported from types/index.ts which imports from types/patterns.ts)
