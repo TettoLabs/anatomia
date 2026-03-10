@@ -89,6 +89,12 @@ export type {
   DecoratorInfo,
 } from './types/parsed.js';
 
+// Export pattern analysis functions (STEP_2.1)
+export { detectFromDependencies } from './analyzers/patterns.js';
+
+// Pattern types already exported via types/index.ts import/export chain
+// (PatternAnalysis, PatternConfidence exported from types/index.ts which imports from types/patterns.ts)
+
 // Version constant
 export const VERSION = '0.1.0';
 
