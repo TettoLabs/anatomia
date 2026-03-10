@@ -156,9 +156,12 @@ export {
 export type {
   PatternAnalysis,
   PatternConfidence,
+  MultiPattern,  // CP3
 } from './patterns.js';
 export {
   PatternAnalysisSchema,
   PatternConfidenceSchema,
+  MultiPatternSchema,  // CP3
   createEmptyPatternAnalysis,
+  isMultiPattern,  // CP3 - type guard
 } from './patterns.js';

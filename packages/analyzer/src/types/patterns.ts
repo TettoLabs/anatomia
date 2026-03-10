@@ -56,6 +56,70 @@ export const PatternConfidenceSchema = z.object({
 export type PatternConfidence = z.infer<typeof PatternConfidenceSchema>;
 
 /**
+ * Multi-pattern detection result
+ *
+ * Used when multiple variants of same category detected
+ * (e.g., SQLAlchemy sync + async in migration scenario)
+ *
+ * @example SQLAlchemy migration project
+ * ```typescript
+ * {
+ *   patterns: [
+ *     {
+ *       library: 'sqlalchemy',
+ *       variant: 'async',
+ *       confidence: 0.95,
+ *       evidence: ['AsyncSession in 12 files', 'asyncpg driver'],
+ *       primary: true  // Dominant pattern
+ *     },
+ *     {
+ *       library: 'sqlalchemy',
+ *       variant: 'sync',
+ *       confidence: 0.85,
+ *       evidence: ['Session in 3 files', 'legacy routes'],
+ *       primary: false  // Secondary pattern
+ *     }
+ *   ],
+ *   primary: {
+ *     library: 'sqlalchemy',
+ *     variant: 'async',
+ *     confidence: 0.95,
+ *     evidence: ['AsyncSession in 12 files', 'asyncpg driver'],
+ *     primary: true
+ *   },
+ *   confidence: 0.95  // Uses primary pattern's confidence
+ * }
+ * ```
+ */
+export const MultiPatternSchema = z.object({
+  patterns: z.array(PatternConfidenceSchema),  // All detected patterns for this category
+  primary: PatternConfidenceSchema,            // Dominant pattern (highest frequency/confidence)
+  confidence: z.number().min(0).max(1),        // Overall category confidence (uses primary's confidence)
+});
+
+export type MultiPattern = z.infer<typeof MultiPatternSchema>;
+
+/**
+ * Type guard to check if pattern is multi-pattern
+ *
+ * @example
+ * ```typescript
+ * const pattern = result.database;
+ * if (isMultiPattern(pattern)) {
+ *   console.log('Multiple database patterns:', pattern.patterns.length);
+ *   console.log('Primary:', pattern.primary.variant);
+ * } else {
+ *   console.log('Single pattern:', pattern.library);
+ * }
+ * ```
+ */
+export function isMultiPattern(
+  pattern: PatternConfidence | MultiPattern | undefined
+): pattern is MultiPattern {
+  return pattern !== undefined && 'patterns' in pattern;
+}
+
+/**
  * Complete pattern analysis result
  *
  * Contains detected patterns for 5 categories (all optional - may not detect all).
@@ -99,11 +163,12 @@ export type PatternConfidence = z.infer<typeof PatternConfidenceSchema>;
  */
 export const PatternAnalysisSchema = z.object({
   // 5 pattern categories (all optional - not all projects have all patterns)
-  errorHandling: PatternConfidenceSchema.optional(),
-  validation: PatternConfidenceSchema.optional(),
-  database: PatternConfidenceSchema.optional(),
-  auth: PatternConfidenceSchema.optional(),
-  testing: PatternConfidenceSchema.optional(),
+  // UPDATED (CP3): Now support union types (PatternConfidence | MultiPattern)
+  errorHandling: z.union([PatternConfidenceSchema, MultiPatternSchema]).optional(),
+  validation: z.union([PatternConfidenceSchema, MultiPatternSchema]).optional(),
+  database: z.union([PatternConfidenceSchema, MultiPatternSchema]).optional(),
+  auth: z.union([PatternConfidenceSchema, MultiPatternSchema]).optional(),
+  testing: z.union([PatternConfidenceSchema, MultiPatternSchema]).optional(),
 
   // Metadata
   sampledFiles: z.number(),               // How many files sampled (0 in CP0, 20 in CP1+)
