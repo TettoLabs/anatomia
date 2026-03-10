@@ -14,7 +14,8 @@ import { readNodeDependencies } from '../parsers/node.js';
 import { readGoDependencies } from '../parsers/go.js';
 import { exists, joinPath, readFile } from '../utils/file.js';
 import type { ProjectType, AnalysisResult, ParsedFile } from '../types/index.js';
-import type { PatternConfidence, MultiPattern } from '../types/patterns.js';
+import type { PatternConfidence, MultiPattern, PatternAnalysis } from '../types/patterns.js';
+import { createEmptyPatternAnalysis } from '../types/patterns.js';
 
 /**
  * Detect patterns from dependencies (Stage 1)
@@ -515,6 +516,121 @@ async function detectErrorHandlingPattern(
   }
 
   return null;  // No error handling pattern detected
+}
+
+// ============================================================================
+// MAIN ORCHESTRATOR (CP4)
+// ============================================================================
+
+/**
+ * Infer patterns from project analysis (STEP_2.1 main entry point)
+ *
+ * 3-stage detection pipeline:
+ * - Stage 1 (CP0): Dependency-based detection (0.75-0.85 confidence)
+ * - Stage 2 (CP1): File sampling (reuses STEP_1.3 sampleFiles)
+ * - Stage 3 (CP1): Tree-sitter confirmation (boosts to 0.90-0.95)
+ *
+ * Post-processing (CP2-3):
+ * - Confidence filtering (≥0.7 threshold)
+ * - Multi-pattern handling (SQLAlchemy sync + async)
+ *
+ * @param rootPath - Project root directory
+ * @param analysis - AnalysisResult from STEP_1 (includes parsed field)
+ * @returns PatternAnalysis with detected patterns + metadata
+ *
+ * @example
+ * ```typescript
+ * const analysis = await analyze('/path/to/project');
+ * // analysis.patterns will contain:
+ * {
+ *   validation: { library: 'pydantic', confidence: 0.95, evidence: [...] },
+ *   database: { library: 'sqlalchemy', variant: 'async', confidence: 0.95, evidence: [...] },
+ *   auth: { library: 'jwt', confidence: 0.85, evidence: [...] },
+ *   testing: { library: 'pytest', confidence: 0.90, evidence: [...] },
+ *   errorHandling: { library: 'exceptions', variant: 'fastapi-httpexception', confidence: 0.95, evidence: [...] },
+ *   sampledFiles: 20,
+ *   detectionTime: 8742,
+ *   threshold: 0.7
+ * }
+ * ```
+ */
+export async function inferPatterns(
+  rootPath: string,
+  analysis: AnalysisResult
+): Promise<PatternAnalysis> {
+  const startTime = Date.now();
+
+  try {
+    // Stage 1: Dependency-based detection (CP0)
+    const stage1Start = Date.now();
+    const dependencyPatterns = await detectFromDependencies(
+      rootPath,
+      analysis.projectType,
+      analysis.framework
+    );
+    const stage1Duration = Date.now() - stage1Start;
+
+    if (process.env['VERBOSE']) {
+      console.log(`[Pattern Inference] Stage 1 (dependencies): ${stage1Duration}ms`);
+      console.log(`[Pattern Inference] Detected ${Object.keys(dependencyPatterns).length} patterns from dependencies`);
+    }
+
+    // Stage 2: File sampling (reuses STEP_1.3 parsed files - no re-parsing)
+    // Already done in STEP_1.3, data available in analysis.parsed
+    const sampledFiles = analysis.parsed?.files?.length || 0;
+
+    // Stage 3: Tree-sitter confirmation (CP1)
+    const stage3Start = Date.now();
+    const confirmedPatterns = await confirmPatternsWithTreeSitter(
+      rootPath,
+      dependencyPatterns,
+      analysis
+    );
+    const stage3Duration = Date.now() - stage3Start;
+
+    if (process.env['VERBOSE']) {
+      console.log(`[Pattern Inference] Stage 3 (confirmation): ${stage3Duration}ms`);
+    }
+
+    // Post-processing: Confidence filtering (CP2)
+    const filteredPatterns = filterByConfidence(confirmedPatterns, 0.7);
+
+    if (process.env['VERBOSE']) {
+      console.log(`[Pattern Inference] Filtered: ${Object.keys(filteredPatterns).length}/${Object.keys(confirmedPatterns).length} patterns ≥0.7 confidence`);
+    }
+
+    // Calculate total detection time
+    const detectionTime = Date.now() - startTime;
+
+    if (process.env['VERBOSE']) {
+      console.log(`[Pattern Inference] Total time: ${detectionTime}ms`);
+    }
+
+    // Build PatternAnalysis result
+    const result: PatternAnalysis = {
+      // Spread filtered patterns into category fields
+      errorHandling: filteredPatterns['errorHandling'] as any,
+      validation: filteredPatterns['validation'] as any,
+      database: filteredPatterns['database'] as any,
+      auth: filteredPatterns['auth'] as any,
+      testing: filteredPatterns['testing'] as any,
+
+      // Metadata
+      sampledFiles,
+      detectionTime,
+      threshold: 0.7,
+    };
+
+    return result;
+
+  } catch (error) {
+    // Graceful degradation: If pattern inference fails, return empty result
+    if (process.env['VERBOSE']) {
+      console.error('[Pattern Inference] Error during inference:', error);
+    }
+
+    return createEmptyPatternAnalysis();
+  }
 }
 
 // ============================================================================
