@@ -29,6 +29,30 @@ export const QUERIES: Record<Language, Record<string, string>> = {
     decorators: `(decorator) @decorator`,
     imports: `(import_from_statement module_name: (dotted_name) @import.module)
 (import_statement name: (dotted_name) @import.module)`,
+
+    // STEP_2.1 pattern detection queries
+    tryExcept: `(try_statement
+  (block) @try.body
+  (except_clause) @except
+)`,
+
+    baseModelClass: `(class_definition
+  name: (identifier) @class.name
+  (argument_list
+    (identifier) @superclass
+  )
+)`,
+
+    specificImport: `(import_from_statement
+  module_name: (dotted_name) @module
+  (import_names
+    (imported_name (identifier) @name)
+  )
+)`,
+
+    asyncDef: `(function_definition
+  name: (identifier) @function.name
+)`,
   },
 
   typescript: {
@@ -39,6 +63,30 @@ export const QUERIES: Record<Language, Record<string, string>> = {
     exports: `(export_statement) @export`,
     decorators: `(decorator) @decorator`,
     imports: `(import_statement source: (string) @import.module)`,
+
+    // STEP_2.1 pattern detection queries
+    tryCatch: `(try_statement
+  (block) @try.body
+  (catch_clause) @catch
+)`,
+
+    memberCall: `(call_expression
+  function: (member_expression
+    object: (identifier) @obj
+    property: (property_identifier) @method
+  )
+)`,
+
+    namedImport: `(import_statement
+  source: (string) @source
+  (import_clause
+    (named_imports
+      (import_specifier
+        (identifier) @name
+      )
+    )
+  )
+)`,
   },
 
   tsx: {
@@ -49,6 +97,30 @@ export const QUERIES: Record<Language, Record<string, string>> = {
     exports: `(export_statement) @export`,
     decorators: `(decorator) @decorator`,
     imports: `(import_statement source: (string) @import.module)`,
+
+    // STEP_2.1 pattern detection queries (same as TypeScript)
+    tryCatch: `(try_statement
+  (block) @try.body
+  (catch_clause) @catch
+)`,
+
+    memberCall: `(call_expression
+  function: (member_expression
+    object: (identifier) @obj
+    property: (property_identifier) @method
+  )
+)`,
+
+    namedImport: `(import_statement
+  source: (string) @source
+  (import_clause
+    (named_imports
+      (import_specifier
+        (identifier) @name
+      )
+    )
+  )
+)`,
   },
 
   javascript: {
@@ -57,6 +129,19 @@ export const QUERIES: Record<Language, Record<string, string>> = {
     classes: `(class_declaration name: (identifier) @class.name)`,
     exports: `(export_statement) @export`,
     imports: `(import_statement source: (string) @import.module)`,
+
+    // STEP_2.1 pattern detection queries
+    tryCatch: `(try_statement
+  (block) @try.body
+  (catch_clause) @catch
+)`,
+
+    memberCall: `(call_expression
+  function: (member_expression
+    object: (identifier) @obj
+    property: (property_identifier) @method
+  )
+)`,
   },
 
   go: {
@@ -64,6 +149,24 @@ export const QUERIES: Record<Language, Record<string, string>> = {
     methods: `(method_declaration name: (field_identifier) @method.name)`,
     structs: `(type_spec name: (type_identifier) @struct.name type: (struct_type))`,
     imports: `(import_spec path: (interpreted_string_literal) @import.path)`,
+
+    // STEP_2.1 pattern detection queries
+    ifErrNotNil: `(if_statement
+  condition: (binary_expression
+    left: (identifier) @var
+    operator: "!="
+    right: (identifier) @nil
+  )
+)`,
+
+    structWithTags: `(type_spec
+  name: (type_identifier) @struct.name
+  type: (struct_type
+    (field_declaration
+      tag: (raw_string_literal) @tag
+    )
+  )
+)`,
   },
 };
 
@@ -78,7 +181,17 @@ export type QueryType =
   | 'exports'
   | 'interfaces'
   | 'methods'
-  | 'structs';
+  | 'structs'
+  // STEP_2.1 pattern detection queries
+  | 'tryExcept'      // Python
+  | 'baseModelClass' // Python
+  | 'specificImport' // Python
+  | 'asyncDef'       // Python
+  | 'tryCatch'       // TypeScript/JavaScript
+  | 'memberCall'     // TypeScript/JavaScript
+  | 'namedImport'    // TypeScript
+  | 'ifErrNotNil'    // Go
+  | 'structWithTags'; // Go
 
 /**
  * Query compilation cache

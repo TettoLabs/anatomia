@@ -17,6 +17,13 @@ import {
   DecoratorInfoSchema,
   createEmptyParsedAnalysis,
 } from './parsed.js';
+import {
+  PatternAnalysis,
+  PatternAnalysisSchema,
+  PatternConfidence,
+  PatternConfidenceSchema,
+  createEmptyPatternAnalysis,
+} from './patterns.js';
 
 /**
  * Project types supported by Anatomia detection
@@ -45,8 +52,8 @@ export const ConfidenceScoreSchema = z.number().min(0.0).max(1.0);
  *
  * STEP_1.1 provides: projectType, framework, confidence, indicators
  * STEP_1.2 adds: structure (entry points, architecture, tests, directory tree)
- * STEP_1.3 will add: parsed (tree-sitter results)
- * STEP_2 will add: patterns, conventions
+ * STEP_1.3 adds: parsed (tree-sitter results)
+ * STEP_2.1 adds: patterns (pattern inference results)
  */
 export const AnalysisResultSchema = z.object({
   // Project identification (STEP_1.1)
@@ -74,6 +81,9 @@ export const AnalysisResultSchema = z.object({
 
   // STEP_1.3 adds tree-sitter parsing (optional field)
   parsed: ParsedAnalysisSchema.optional(),
+
+  // STEP_2.1 adds pattern inference (optional field)
+  patterns: PatternAnalysisSchema.optional(),
 });
 
 export type AnalysisResult = z.infer<typeof AnalysisResultSchema>;
@@ -141,3 +151,17 @@ export {
   DecoratorInfoSchema,
   createEmptyParsedAnalysis,
 } from './parsed.js';
+
+// Export pattern analysis types (STEP_2.1)
+export type {
+  PatternAnalysis,
+  PatternConfidence,
+  MultiPattern,  // CP3
+} from './patterns.js';
+export {
+  PatternAnalysisSchema,
+  PatternConfidenceSchema,
+  MultiPatternSchema,  // CP3
+  createEmptyPatternAnalysis,
+  isMultiPattern,  // CP3 - type guard
+} from './patterns.js';
