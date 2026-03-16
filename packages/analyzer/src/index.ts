@@ -103,6 +103,21 @@ export type { PatternDetectionResult } from './analyzers/patterns.js';
 // Pattern types already exported via types/index.ts import/export chain
 // (PatternAnalysis, PatternConfidence exported from types/index.ts which imports from types/patterns.ts)
 
+// Export convention analysis functions (STEP_2.2 - NEW)
+export { detectConventions } from './analyzers/conventions/index.js';
+export {
+  classifyNamingStyle,
+  analyzeNamingConvention,
+} from './analyzers/conventions/naming.js';
+export {
+  classifyPythonImport,
+  classifyTSImport,
+  classifyGoImport,
+} from './analyzers/conventions/imports.js';
+
+// Convention types already exported via types/index.ts import/export chain
+// (ConventionAnalysis, NamingConvention, etc. exported from types/index.ts which imports from types/conventions.ts)
+
 // Version constant
 export const VERSION = '0.1.0';
 
@@ -119,7 +134,8 @@ export interface AnalyzeOptions {
   skipMonorepo?: boolean;
   skipStructure?: boolean;
   skipParsing?: boolean;      // Skip tree-sitter parsing (STEP_1.3)
-  skipPatterns?: boolean;     // Skip pattern inference (STEP_2.1 - NEW)
+  skipPatterns?: boolean;     // Skip pattern inference (STEP_2.1)
+  skipConventions?: boolean;  // Skip convention detection (STEP_2.2 - NEW)
   maxFiles?: number;          // Max files to parse (default: 20)
   strictMode?: boolean;
   verbose?: boolean;
@@ -134,11 +150,12 @@ export interface AnalyzeOptions {
  * 3. Framework detection (STEP_1.1)
  * 4. Structure analysis (STEP_1.2)
  * 5. Tree-sitter parsing (STEP_1.3)
- * 6. Pattern inference (STEP_2.1 - NEW)
+ * 6. Pattern inference (STEP_2.1)
+ * 7. Convention detection (STEP_2.2 - NEW)
  *
  * @param rootPath - Absolute path to project root
  * @param options - Analysis options
- * @returns Analysis results with project type, framework, structure, parsed code, and patterns
+ * @returns Analysis results with project type, framework, structure, parsed code, patterns, and conventions
  *
  * @example
  * ```typescript
@@ -147,7 +164,8 @@ export interface AnalyzeOptions {
  * console.log(result.framework);               // 'fastapi' | 'nextjs' | etc.
  * console.log(result.structure?.entryPoints);  // ['app/main.py']
  * console.log(result.parsed?.files.length);    // 15 (STEP_1.3)
- * console.log(result.patterns?.validation);    // { library: 'pydantic', confidence: 0.95, ... } (STEP_2.1 - NEW)
+ * console.log(result.patterns?.validation);    // { library: 'pydantic', confidence: 0.95, ... } (STEP_2.1)
+ * console.log(result.conventions?.naming);     // { files: {...}, functions: {...}, ... } (STEP_2.2 - NEW)
  * ```
  */
 export async function analyze(
@@ -214,16 +232,28 @@ export async function analyze(
       parsed,
     };
 
-    // Phase 6: Pattern inference (STEP_2.1 - NEW, optional)
+    // Phase 6: Pattern inference (STEP_2.1, optional)
     const { inferPatterns } = await import('./analyzers/patterns.js');
     const patterns = options.skipPatterns || !parsed
       ? undefined
       : await inferPatterns(rootPath, withParsed);
 
+    // Build result with patterns
+    const withPatterns: import('./types/index.js').AnalysisResult = {
+      ...withParsed,
+      patterns,
+    };
+
+    // Phase 7: Convention detection (STEP_2.2 - NEW, optional)
+    const { detectConventions } = await import('./analyzers/conventions/index.js');
+    const conventions = options.skipConventions || !parsed
+      ? undefined
+      : await detectConventions(rootPath, withPatterns);
+
     // Return complete result
     return {
-      ...withParsed,
-      patterns,  // NEW optional field (STEP_2.1)
+      ...withPatterns,
+      conventions,  // NEW optional field (STEP_2.2)
     };
   } catch (error) {
     // Critical failure - return empty result
