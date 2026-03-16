@@ -53,6 +53,9 @@ export const QUERIES: Record<Language, Record<string, string>> = {
     asyncDef: `(function_definition
   name: (identifier) @function.name
 )`,
+
+    // STEP_2.2 convention detection queries (CP0)
+    variables: `(assignment left: (identifier) @variable.name)`,
   },
 
   typescript: {
@@ -121,6 +124,11 @@ export const QUERIES: Record<Language, Record<string, string>> = {
     )
   )
 )`,
+
+    // STEP_2.2 convention detection queries (CP0)
+    variables: `(lexical_declaration
+  (variable_declarator
+    name: (identifier) @variable.name))`,
   },
 
   javascript: {
@@ -142,6 +150,11 @@ export const QUERIES: Record<Language, Record<string, string>> = {
     property: (property_identifier) @method
   )
 )`,
+
+    // STEP_2.2 convention detection queries (CP0)
+    variables: `(variable_declaration
+  (variable_declarator
+    name: (identifier) @variable.name))`,
   },
 
   go: {
@@ -167,6 +180,15 @@ export const QUERIES: Record<Language, Record<string, string>> = {
     )
   )
 )`,
+
+    // STEP_2.2 convention detection queries (CP0)
+    variables: `(var_declaration
+  (var_spec
+    name: (identifier) @variable.name))`,
+
+    shortVars: `(short_var_declaration
+  left: (expression_list
+    (identifier) @variable.name))`,
   },
 };
 
@@ -191,7 +213,10 @@ export type QueryType =
   | 'memberCall'     // TypeScript/JavaScript
   | 'namedImport'    // TypeScript
   | 'ifErrNotNil'    // Go
-  | 'structWithTags'; // Go
+  | 'structWithTags' // Go
+  // STEP_2.2 convention detection queries (CP0)
+  | 'variables'      // All languages
+  | 'shortVars';     // Go only
 
 /**
  * Query compilation cache
