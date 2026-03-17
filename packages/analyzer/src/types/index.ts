@@ -24,6 +24,11 @@ import {
   PatternConfidenceSchema,
   createEmptyPatternAnalysis,
 } from './patterns.js';
+import {
+  ConventionAnalysis,
+  ConventionAnalysisSchema,
+  createEmptyConventionAnalysis,
+} from './conventions.js';
 
 /**
  * Project types supported by Anatomia detection
@@ -54,6 +59,7 @@ export const ConfidenceScoreSchema = z.number().min(0.0).max(1.0);
  * STEP_1.2 adds: structure (entry points, architecture, tests, directory tree)
  * STEP_1.3 adds: parsed (tree-sitter results)
  * STEP_2.1 adds: patterns (pattern inference results)
+ * STEP_2.2 adds: conventions (convention detection results)
  */
 export const AnalysisResultSchema = z.object({
   // Project identification (STEP_1.1)
@@ -84,6 +90,9 @@ export const AnalysisResultSchema = z.object({
 
   // STEP_2.1 adds pattern inference (optional field)
   patterns: PatternAnalysisSchema.optional(),
+
+  // STEP_2.2 adds convention detection (optional field)
+  conventions: ConventionAnalysisSchema.optional(),
 });
 
 export type AnalysisResult = z.infer<typeof AnalysisResultSchema>;
@@ -165,3 +174,32 @@ export {
   createEmptyPatternAnalysis,
   isMultiPattern,  // CP3 - type guard
 } from './patterns.js';
+
+// Export convention analysis types (STEP_2.2)
+export type {
+  ConventionAnalysis,
+  NamingConvention,
+  ImportConvention,
+  TypeHintConvention,
+  DocstringConvention,
+  IndentationConvention,
+  NamingStyle,
+  ImportStyle,
+  TypeHintUsage,
+  DocstringFormat,
+  IndentStyle,
+} from './conventions.js';
+export {
+  ConventionAnalysisSchema,
+  NamingConventionSchema,
+  ImportConventionSchema,
+  TypeHintConventionSchema,
+  DocstringConventionSchema,
+  IndentationConventionSchema,
+  NamingStyleSchema,
+  ImportStyleSchema,
+  TypeHintUsageSchema,
+  DocstringFormatSchema,
+  IndentStyleSchema,
+  createEmptyConventionAnalysis,
+} from './conventions.js';
