@@ -214,50 +214,29 @@ Query types with different rules:
 
 ---
 
-## Principle 4: ENTRY.md is Orientation, Not Orchestration
+## Principle 4: ENTRY.md Orients and Instructs (Revised 2026-03-17)
 
-**Rule:** ENTRY.md orients AI, doesn't route execution.
+**Rule:** ENTRY.md orients the AI and instructs it on self-routing. It establishes
+persona, presents mode options, and teaches the AI how to determine which mode
+applies and what context to load. It does NOT contain executable code, state
+machines, or conditional branching logic.
 
-### What ENTRY.md Contains
+**Allowed:**
+- ✅ Persona establishment ("You are now the assistant for X")
+- ✅ Numbered mode options (1-6 with descriptions)
+- ✅ Routing instructions ("Determine which mode, then read that mode file")
+- ✅ Enrichment detection and offer
+- ✅ Progressive loading specifications ("Mode 2 loads code.md + patterns.md")
 
-**Allowed (declarative):**
-- ✅ What .ana/ folder contains
-- ✅ List of available modes
-- ✅ Core principles (read-first, human authority)
-- ✅ How to use federation (suggest ana query)
-- ✅ Safety guidelines (propose before implementing)
+**Not Allowed:**
+- ❌ Executable routing logic (if/else code, state machines)
+- ❌ Automatic mode switching (AI suggests switches, never executes)
+- ❌ Workflow orchestration ("Step 1, Step 2, Step 3" execution sequences)
 
-**Not Allowed (imperative):**
-- ❌ "First check if task is architectural, if yes load architect mode"
-- ❌ "Step 1: analyze, Step 2: plan, Step 3: execute"
-- ❌ Conditional logic (if/then statements)
-- ❌ Routing trees (check A, then B, then C)
-- ❌ State tracking (current mode: X)
+**Updated limit: 120 lines**
 
-### Size Discipline
-
-**Hard limit: 80 lines**
-
-If ENTRY.md exceeds 80 lines, you're adding framework logic. Stop.
-
-**Valid reasons to approach limit:**
-- Complex federation (10+ nodes to list)
-- Project has unusual safety requirements
-
-**Invalid reasons:**
-- Adding workflow steps (remove them)
-- Adding routing logic (framework territory)
-- "Being thorough" (be concise)
-
-### The Test
-
-**Before adding to ENTRY.md, ask:**
-
-"Does this help AI understand WHAT the environment is?"
-→ ✅ Add it
-
-"Does this tell AI WHAT TO DO in this environment?"
-→ ❌ Don't add it (put in modes instead)
+**The test:** Does this teach the AI how to operate (✅) or dictate step-by-step
+execution (❌)?
 
 ---
 
