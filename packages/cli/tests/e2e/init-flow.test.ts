@@ -159,7 +159,7 @@ describe('regression tests', () => {
   });
 
   it('ana mode shows 7 modes (general, setup added in CP4)', async () => {
-    const { stdout } = await execFileAsync('node', [cliPath, 'mode'], {
+    const { stdout } = await execFileAsync('node', [cliPath, 'mode', 'code'], {
       cwd: tmpProject,
     });
 
