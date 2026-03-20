@@ -20,9 +20,9 @@ describe('Cross-Platform Path Handling', () => {
     const fs = await import('node:fs/promises');
     const initContent = await fs.readFile('src/commands/init.ts', 'utf-8');
 
-    // Verify path.join used for .ana/ paths
-    expect(initContent).toContain("path.join(anaPath, 'modes'");
-    expect(initContent).toContain("path.join(anaPath, 'context'");
+    // Verify path.join used for .ana/ paths (tmpAnaPath in new implementation)
+    expect(initContent).toContain("path.join(tmpAnaPath, 'modes'");
+    expect(initContent).toContain("path.join(tmpAnaPath, 'context'");
   });
 
   it('FileWriter utility uses path.join (from STEP_0.1)', async () => {
