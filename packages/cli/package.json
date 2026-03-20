@@ -1,7 +1,7 @@
 {
   "name": "anatomia-cli",
-  "version": "0.1.0",
-  "description": "Auto-generated AI context for codebases",
+  "version": "0.2.0",
+  "description": "AI context framework with analyzer-driven setup",
   "bin": {
     "ana": "./dist/index.js"
   },
@@ -17,7 +17,10 @@
     "developer-tools",
     "code-analysis",
     "ai-assistant",
-    "templates"
+    "templates",
+    "analyzer",
+    "setup",
+    "framework"
   ],
   "repository": {
     "type": "git",

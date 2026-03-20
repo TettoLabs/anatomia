@@ -1,182 +1,163 @@
 # Anatomia CLI
 
-> Auto-generate AI context for your codebase
+Auto-generated AI context framework for codebases.
 
-Anatomia creates `.ana/` context folders that help AI understand your project's patterns, architecture, and conventions.
-
-## Install
+## Installation
 
 ```bash
 npm install -g anatomia-cli
 ```
 
-Or try without installing:
-```bash
-npx anatomia-cli analyze
-```
-
----
-
 ## Quick Start
 
-**1. Initialize context:**
 ```bash
+# Initialize framework in your project
 cd your-project/
 ana init
-```
 
-**2. Reference modes in your AI tool:**
-```
-@.ana/modes/code.md "Implement user authentication"
-```
+# Run setup in Claude Code
+# Reference: @.ana/modes/setup.md
 
-AI reads your patterns and writes code that matches your style.
+# Validate setup
+ana setup complete
 
----
+# Use framework
+# Reference: @.ana/ENTRY.md
+```
 
 ## Commands
 
-### `ana init [options]`
+### `ana init`
 
-Initialize `.ana/` folder with templates.
+Initialize .ana/ context framework with analyzer-driven scaffolds.
 
 **Options:**
-- `-y, --yes` - Skip prompts, use defaults
-- `-f, --force` - Overwrite existing .ana/
+- `-f, --force` - Overwrite existing .ana/ (preserves .state/)
+- `--skip-analysis` - Skip analyzer, create empty scaffolds
 
-**Creates 10 files:**
-```
-.ana/
-├── ENTRY.md              # Project orientation
-├── node.json             # Project metadata
-├── modes/
-│   ├── architect.md      # System design mode
-│   ├── code.md           # Implementation mode
-│   ├── debug.md          # Debugging mode
-│   ├── docs.md           # Documentation mode
-│   └── test.md           # Testing mode
-└── context/
-    ├── main.md           # Project overview
-    ├── patterns.md       # Code patterns
-    └── conventions.md    # Coding standards
-```
+**What it creates:**
+- `analysis.md` - Auto-generated analysis brief
+- 7 context scaffolds - Pre-populated with analyzer data
+- 7 mode files - Work modes for different tasks
+- Setup files - First-run setup experience
+- `.meta.json` - Framework metadata
+- `.state/snapshot.json` - Analyzer baseline for drift detection
 
-Fill `context/*.md` with your project details. Reference `modes/*.md` when working with AI.
+**Does NOT create:** `ENTRY.md` (created by `ana setup complete` after setup)
 
----
+**Examples:**
 
-### `ana analyze`
-
-Detect project type, framework, and structure.
-
-**Usage:**
 ```bash
+# First time setup
+ana init
+
+# Recreate (preserves .state/)
+ana init --force
+
+# Skip analyzer (faster, empty scaffolds)
+ana init --skip-analysis
+```
+
+### `ana setup complete`
+
+Validate context files and generate ENTRY.md after setup.
+
+**Options:**
+- `--mode <tier>` - Override setup tier (quick|guided|complete)
+
+**Run after:** Completing setup mode in Claude Code
+
+**Examples:**
+
+```bash
+# After setup
+ana setup complete
+
+# Override tier
+ana setup complete --mode guided
+```
+
+### `ana analyze [directory]`
+
+Run analyzer standalone - detect framework, patterns, conventions.
+
+**Options:**
+- `-o, --output <file>` - Write results to file
+- `--json` - Output JSON format
+- `-v, --verbose` - Show all signals
+- `--skip-import-scan` - Faster analysis
+- `--strict` - Fail on low confidence
+
+**Examples:**
+
+```bash
+# Analyze current directory
 ana analyze
+
+# Analyze and save
+ana analyze . -o analysis.json --json
+
+# Verbose output
+ana analyze -v
 ```
 
-**Output:**
-```json
-{
-  "projectType": "python",
-  "framework": "fastapi",
-  "structure": {
-    "entryPoints": ["app/main.py"],
-    "architecture": "layered"
-  },
-  "parsed": {
-    "files": [...],
-    "totalParsed": 15
-  }
-}
-```
+### `ana mode [name]`
 
-**What it detects:**
-- Project type (Python, Node, Go, Rust, Ruby, PHP)
-- Framework (FastAPI, Next.js, Express, Django, and more)
-- Entry points
-- Architecture pattern
-- Code structure (functions, classes, imports)
+Display mode information or list all modes.
 
----
+**Modes:**
+- `architect` - System design and architecture
+- `code` - Implementation and coding
+- `debug` - Debugging and troubleshooting
+- `test` - Test writing
+- `docs` - Documentation
+- `general` - Quick questions and orientation
+- `setup` - First-run setup (run once)
 
-### `ana mode <name>`
-
-Display mode file path and information.
+**Examples:**
 
 ```bash
+# List all modes
+ana mode
+
+# Show specific mode
 ana mode code
-# Output: .ana/modes/code.md - Implementation mode
 ```
 
----
+## Workflow
 
-### `ana --version`
+1. **Initialize:** `ana init` in your project
+2. **Setup:** Reference `@.ana/modes/setup.md` in Claude Code (~2-15 min)
+3. **Validate:** `ana setup complete` to activate framework
+4. **Use:** Reference `@.ana/ENTRY.md` in all future Claude Code sessions
 
-Show CLI version.
+## Migration from v0.1.0
 
-### `ana --help`
+**Breaking changes:**
+- `ana init` no longer prompts - runs analyzer automatically
+- Removed `-y, --yes` flag (init is now non-interactive)
+- Removed `node.json` (replaced by `.meta.json`)
+- ENTRY.md now generated by `ana setup complete` (not init)
 
-Show all commands.
+**Migration steps:**
 
----
-
-## Mode System
-
-Each mode has a specific purpose:
-
-- **architect** - System design (doesn't implement)
-- **code** - Implementation (doesn't design architecture)
-- **debug** - Root cause analysis (doesn't implement fixes)
-- **docs** - Documentation (doesn't create features)
-- **test** - Test writing (doesn't implement features)
-
----
-
-## Templates
-
-Templates use Handlebars for dynamic content:
-
-```handlebars
-{{#if (eq framework "fastapi")}}
-FastAPI-specific guidance here
-{{/if}}
-```
-
-**Supported frameworks:**
-- FastAPI, Django, Flask (Python)
-- Next.js, Express, Nest.js, Fastify (Node.js)
-- Gin, Echo, Chi, Cobra (Go)
-
-See [TEMPLATE_GUIDE.md](./docs/TEMPLATE_GUIDE.md) for details.
-
----
-
-## Documentation
-
-- [API Reference](./docs/API.md)
-- [Template Guide](./docs/TEMPLATE_GUIDE.md)
-- [Detection Flow](./docs/DETECTION_FLOW.md)
-- [Troubleshooting](./docs/TROUBLESHOOTING.md)
-
----
-
-## Development
-
-**Run tests:**
 ```bash
-pnpm test
+# Remove old .ana/
+rm -rf .ana/
+
+# Run new init
+ana init
+
+# Run setup
+# Reference @.ana/modes/setup.md in Claude Code
+
+# Complete setup
+ana setup complete
 ```
 
-**Build:**
-```bash
-pnpm build
-```
+## Version
 
----
-
-## Contributing
-
-See [CONTRIBUTING.md](./CONTRIBUTING.md)
+Current: 0.2.0
 
 ---
 
