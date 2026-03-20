@@ -1,0 +1,90 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`architecture.md scaffold > empty analysis (analyzer failed) 1`] = `
+"<!-- SCAFFOLD - Setup will fill this file -->
+
+# Architecture — test-project
+
+## Architecture Pattern
+
+**Detected:** Unknown
+
+[Setup will add: Why this pattern, how components interact, architectural principles]
+
+## System Boundaries
+
+[Setup will add: What's in scope, what's external, how boundaries are enforced]
+
+## Design Decisions
+
+[Setup will add: Key architectural decisions, rationale, alternatives considered]
+
+## Trade-Offs
+
+[Setup will add: What we optimize for, what we sacrifice, technical debt]
+
+---
+
+*Last updated: 2026-03-19T10:00:00Z*
+"
+`;
+
+exports[`architecture.md scaffold > flat project with unknown architecture 1`] = `
+"<!-- SCAFFOLD - Setup will fill this file -->
+
+# Architecture — test-project
+
+## Architecture Pattern
+
+**Detected:** Unknown
+**Confidence:** 0.00
+
+[Setup will add: Why this pattern, how components interact, architectural principles]
+
+## System Boundaries
+
+[Setup will add: What's in scope, what's external, how boundaries are enforced]
+
+## Design Decisions
+
+[Setup will add: Key architectural decisions, rationale, alternatives considered]
+
+## Trade-Offs
+
+[Setup will add: What we optimize for, what we sacrifice, technical debt]
+
+---
+
+*Last updated: 2026-03-19T10:00:00Z*
+"
+`;
+
+exports[`architecture.md scaffold > rich project with layered architecture 1`] = `
+"<!-- SCAFFOLD - Setup will fill this file -->
+
+# Architecture — test-project
+
+## Architecture Pattern
+
+**Detected:** layered
+**Confidence:** 0.85
+
+[Setup will add: Why this pattern, how components interact, architectural principles]
+
+## System Boundaries
+
+[Setup will add: What's in scope, what's external, how boundaries are enforced]
+
+## Design Decisions
+
+[Setup will add: Key architectural decisions, rationale, alternatives considered]
+
+## Trade-Offs
+
+[Setup will add: What we optimize for, what we sacrifice, technical debt]
+
+---
+
+*Last updated: 2026-03-19T10:00:00Z*
+"
+`;

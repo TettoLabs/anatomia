@@ -7,7 +7,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
-import { analyze, type AnalysisResult } from 'anatomia-analyzer';
+import type { AnalysisResult } from 'anatomia-analyzer';
 
 interface AnalyzeCommandOptions {
   output?: string;
@@ -44,6 +44,9 @@ export const analyzeCommand = new Command('analyze')
       const spinner = options.json ? null : ora('Analyzing project...').start();
 
       try {
+        // Dynamic import - only loads analyzer when actually needed
+        const { analyze } = await import('anatomia-analyzer');
+
         // Run analysis
         const result = await analyze(rootPath, {
           skipImportScan: options.skipImportScan,
@@ -96,6 +99,9 @@ export const analyzeCommand = new Command('analyze')
 
 /**
  * Format analysis result as human-readable text
+ * @param result - Analysis result to format
+ * @param verbose - Show all detection signals
+ * @returns Formatted string output
  */
 function formatHumanReadable(
   result: AnalysisResult,

@@ -30,6 +30,8 @@ const MODES: Record<string, string> = {
   debug: 'Debugging and troubleshooting',
   docs: 'Documentation writing',
   test: 'Test writing and coverage',
+  general: 'Quick questions and orientation',
+  setup: 'First-run setup experience (run once)',
 };
 
 // Mode names as type
@@ -38,7 +40,7 @@ type ModeName = keyof typeof MODES;
 // Create the mode command
 export const modeCommand = new Command('mode')
   .description('Reference a mode file')
-  .argument('[name]', 'Mode name (architect, code, debug, docs, test)')
+  .argument('[name]', 'Mode name (architect, code, debug, docs, test, general, setup)')
   .option('-l, --list', 'List all available modes')
   .action(async (name: string | undefined, options: { list?: boolean }) => {
     // If --list flag, show all modes and exit
@@ -100,6 +102,8 @@ export const modeCommand = new Command('mode')
 
 /**
  * Type guard to check if string is valid mode name
+ * @param name - Mode name to validate
+ * @returns true if valid mode name
  */
 function isValidMode(name: string): name is ModeName {
   return Object.prototype.hasOwnProperty.call(MODES, name);

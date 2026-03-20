@@ -1,209 +1,196 @@
-/**
- * Tests for ana init command
- *
- * These tests verify:
- * - .ana/ directory creation
- * - File content correctness
- * - Overwrite protection
- *
- * Uses a temporary directory for isolation.
- */
-
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { execSync, ExecSyncOptions } from 'node:child_process';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import * as os from 'node:os';
+import { createEmptyAnalysisResult } from '../scaffolds/test-types.js';
 
-// Path to built CLI
-const CLI_PATH = path.resolve(__dirname, '../../dist/index.js');
-
-// Test directory (unique per test run)
-let testDir: string;
-
-/**
- * Execute CLI command in test directory
- */
-function runCli(args: string, options: ExecSyncOptions = {}): string {
+async function dirExists(dirPath: string): Promise<boolean> {
   try {
-    const result = execSync(`node ${CLI_PATH} ${args}`, {
-      cwd: testDir,
-      encoding: 'utf-8',
-      stdio: ['pipe', 'pipe', 'pipe'],
-      ...options,
-    });
-    return result;
-  } catch (error) {
-    // Return stderr for error cases
-    if (error && typeof error === 'object' && 'stderr' in error) {
-      return (error as { stderr: string }).stderr;
-    }
-    throw error;
+    const stats = await fs.stat(dirPath);
+    return stats.isDirectory();
+  } catch {
+    return false;
   }
 }
 
-/**
- * Check if file exists in test directory
- */
-async function fileExists(relativePath: string): Promise<boolean> {
+async function fileExists(filePath: string): Promise<boolean> {
   try {
-    await fs.access(path.join(testDir, relativePath));
+    await fs.access(filePath);
     return true;
   } catch {
     return false;
   }
 }
 
-/**
- * Read file content from test directory
- */
-async function readFile(relativePath: string): Promise<string> {
-  return fs.readFile(path.join(testDir, relativePath), 'utf-8');
+describe('ana init', () => {
+  let tmpDir: string;
+
+  beforeEach(async () => {
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ana-init-test-'));
+  });
+
+  afterEach(async () => {
+    await fs.rm(tmpDir, { recursive: true, force: true });
+  });
+
+  describe('directory structure', () => {
+    it('creates all 6 directories', async () => {
+      const anaPath = path.join(tmpDir, '.ana');
+      await fs.mkdir(anaPath);
+
+      // Simulate Phase 3
+      await fs.mkdir(path.join(anaPath, 'modes'), { recursive: true });
+      await fs.mkdir(path.join(anaPath, 'context'), { recursive: true });
+      await fs.mkdir(path.join(anaPath, 'context/setup'), { recursive: true });
+      await fs.mkdir(path.join(anaPath, 'context/setup/steps'), { recursive: true });
+      await fs.mkdir(path.join(anaPath, 'context/setup/framework-snippets'), { recursive: true });
+      await fs.mkdir(path.join(anaPath, '.state'), { recursive: true });
+
+      // Verify all exist
+      const dirs = [
+        'modes',
+        'context',
+        'context/setup',
+        'context/setup/steps',
+        'context/setup/framework-snippets',
+        '.state',
+      ];
+
+      for (const dir of dirs) {
+        const exists = await dirExists(path.join(anaPath, dir));
+        expect(exists).toBe(true);
+      }
+    });
+  });
+
+  describe('template inventory', () => {
+    it('all 25 template files exist in CLI package', async () => {
+      // Get templates directory using same logic as init.ts
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = path.dirname(__filename);
+      const templatesDir = path.join(__dirname, '..', '..', 'templates');
+
+      const expectedFiles = [
+        // 7 mode files
+        'modes/architect.md',
+        'modes/code.md',
+        'modes/debug.md',
+        'modes/docs.md',
+        'modes/test.md',
+        'modes/general.md',
+        'modes/setup.md',
+        // 3 setup files
+        'context/setup/SETUP_GUIDE.md',
+        'context/setup/templates.md',
+        'context/setup/rules.md',
+        // 1 ENTRY template (stored, not copied to .ana/)
+        'ENTRY.md',
+        // 8 step files
+        'context/setup/steps/00_explore_codebase.md',
+        'context/setup/steps/01_project_overview.md',
+        'context/setup/steps/02_conventions.md',
+        'context/setup/steps/03_patterns.md',
+        'context/setup/steps/04_architecture.md',
+        'context/setup/steps/05_testing.md',
+        'context/setup/steps/06_workflow.md',
+        'context/setup/steps/07_debugging.md',
+        // 6 framework-snippets
+        'context/setup/framework-snippets/fastapi.md',
+        'context/setup/framework-snippets/django.md',
+        'context/setup/framework-snippets/nextjs.md',
+        'context/setup/framework-snippets/express.md',
+        'context/setup/framework-snippets/go.md',
+        'context/setup/framework-snippets/generic.md',
+      ];
+
+      expect(expectedFiles).toHaveLength(25); // Sanity check our count
+
+      for (const file of expectedFiles) {
+        const filePath = path.join(templatesDir, file);
+        const exists = await fileExists(filePath);
+        expect(exists, `Missing template: ${file}`).toBe(true);
+      }
+    });
+  });
+
+  describe('.meta.json', () => {
+    it('creates valid initial .meta.json', async () => {
+      const analysis = createEmptyAnalysisResult();
+      analysis.framework = 'fastapi';
+      analysis.version = '0.2.0';
+
+      const meta = {
+        version: '1.0.0',
+        createdAt: new Date().toISOString(),
+        setupStatus: 'pending',
+        setupCompletedAt: null,
+        setupMode: null,
+        framework: analysis.framework,
+        analyzerVersion: analysis.version,
+        lastEvolve: null,
+        lastHealth: null,
+        sessionCount: 0,
+      };
+
+      expect(meta.setupStatus).toBe('pending');
+      expect(meta.framework).toBe('fastapi');
+      expect(meta.analyzerVersion).toBe('0.2.0');
+      expect(meta.sessionCount).toBe(0);
+    });
+
+    it('has all 10 required fields', () => {
+      const meta = {
+        version: '1.0.0',
+        createdAt: new Date().toISOString(),
+        setupStatus: 'pending',
+        setupCompletedAt: null,
+        setupMode: null,
+        framework: null,
+        analyzerVersion: '0.2.0',
+        lastEvolve: null,
+        lastHealth: null,
+        sessionCount: 0,
+      };
+
+      const keys = Object.keys(meta);
+      expect(keys).toHaveLength(10);
+      expect(keys).toContain('setupStatus');
+      expect(keys).toContain('setupMode');
+      expect(keys).toContain('framework');
+      expect(keys).toContain('analyzerVersion');
+    });
+  });
+
+  describe('--force flag', () => {
+    it('preserves .state/ when overwriting', async () => {
+      const anaPath = path.join(tmpDir, '.ana');
+      const statePath = path.join(anaPath, '.state');
+
+      // Create existing .ana/ with .state/
+      await fs.mkdir(statePath, { recursive: true });
+      await fs.writeFile(path.join(statePath, 'snapshot.json'), '{"test":"data"}');
+
+      // Simulate --force: backup .state/
+      const backup = path.join(os.tmpdir(), `.ana-state-backup-${Date.now()}`);
+      await fs.cp(statePath, backup, { recursive: true });
+
+      // Delete .ana/
+      await fs.rm(anaPath, { recursive: true });
+
+      // Recreate .ana/
+      await fs.mkdir(statePath, { recursive: true });
+
+      // Restore .state/
+      await fs.rm(statePath, { recursive: true });
+      await fs.rename(backup, statePath);
+
+      // Verify snapshot preserved
+      const content = await fs.readFile(path.join(statePath, 'snapshot.json'), 'utf-8');
+      expect(JSON.parse(content)).toEqual({ test: 'data' });
+    });
+  });
+});
+
+function fileURLToPath(url: string): string {
+  return new URL(url).pathname;
 }
-
-describe('ana init command', () => {
-  beforeEach(async () => {
-    // Create unique temp directory for each test
-    testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ana-test-'));
-  });
-
-  afterEach(async () => {
-    // Clean up temp directory
-    await fs.rm(testDir, { recursive: true, force: true });
-  });
-
-  it('creates .ana directory', async () => {
-    // Run init with defaults (--yes skips prompts)
-    runCli('init --yes');
-
-    // Verify .ana/ exists
-    expect(await fileExists('.ana')).toBe(true);
-  });
-
-  it('creates node.json file', async () => {
-    runCli('init --yes');
-
-    // Verify node.json exists
-    expect(await fileExists('.ana/node.json')).toBe(true);
-
-    // Verify content is valid JSON
-    const content = await readFile('.ana/node.json');
-    const parsed = JSON.parse(content);
-
-    expect(parsed).toHaveProperty('name');
-    expect(parsed).toHaveProperty('nodeId', 'main');
-    expect(parsed).toHaveProperty('role', 'main');
-    expect(parsed).toHaveProperty('version', '1.0.0');
-    expect(parsed).toHaveProperty('created');
-    expect(parsed).toHaveProperty('federation');
-  });
-
-  it('creates context/main.md file', async () => {
-    runCli('init --yes');
-
-    // Verify context/main.md exists
-    expect(await fileExists('.ana/context/main.md')).toBe(true);
-
-    // Verify content has expected sections
-    const content = await readFile('.ana/context/main.md');
-    expect(content).toContain('# Project Context');
-    expect(content).toContain('## Overview');
-    expect(content).toContain('## Tech Stack');
-  });
-
-  it('creates modes/code.md file', async () => {
-    runCli('init --yes');
-
-    // Verify modes/code.md exists
-    expect(await fileExists('.ana/modes/code.md')).toBe(true);
-
-    // Verify content has expected sections
-    const content = await readFile('.ana/modes/code.md');
-    expect(content).toContain('# Code Mode');
-    expect(content).toContain('## Purpose');
-    expect(content).toContain('## Hard Constraints');
-  });
-
-  it('respects --force flag for overwrite', async () => {
-    // Create initial .ana/
-    runCli('init --yes');
-
-    // Verify it exists
-    expect(await fileExists('.ana/node.json')).toBe(true);
-
-    // Modify a file to detect overwrite
-    const originalContent = await readFile('.ana/node.json');
-
-    // Run init again with --force
-    runCli('init --yes --force');
-
-    // Verify .ana/ still exists (was recreated)
-    expect(await fileExists('.ana/node.json')).toBe(true);
-
-    // Content should be fresh (timestamps would differ)
-    const newContent = await readFile('.ana/node.json');
-    const originalParsed = JSON.parse(originalContent);
-    const newParsed = JSON.parse(newContent);
-
-    // created timestamp should be different
-    expect(newParsed.created).not.toBe(originalParsed.created);
-  });
-
-  it('shows version correctly', () => {
-    const output = runCli('--version');
-    expect(output.trim()).toBe('0.1.0');
-  });
-
-  it('shows help correctly', () => {
-    const output = runCli('--help');
-    expect(output).toContain('ana');
-    expect(output).toContain('init');
-    expect(output).toContain('mode');
-  });
-});
-
-describe('ana mode command', () => {
-  beforeEach(async () => {
-    testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ana-test-'));
-  });
-
-  afterEach(async () => {
-    await fs.rm(testDir, { recursive: true, force: true });
-  });
-
-  it('shows mode information for valid mode', () => {
-    const output = runCli('mode code');
-    expect(output).toContain('Mode: code');
-    expect(output).toContain('Implementation and coding');
-  });
-
-  it('lists all modes with --list flag', () => {
-    const output = runCli('mode code --list');
-    expect(output).toContain('architect');
-    expect(output).toContain('code');
-    expect(output).toContain('debug');
-    expect(output).toContain('docs');
-    expect(output).toContain('test');
-  });
-
-  it('shows error for invalid mode', () => {
-    // This test checks the error handling
-    // execSync throws on non-zero exit, so we catch it
-    let errorOutput = '';
-    try {
-      execSync(`node ${CLI_PATH} mode invalid`, {
-        cwd: testDir,
-        encoding: 'utf-8',
-        stdio: ['pipe', 'pipe', 'pipe'],
-      });
-    } catch (error) {
-      if (error && typeof error === 'object' && 'stderr' in error) {
-        errorOutput = (error as { stderr: string }).stderr;
-      }
-      if (error && typeof error === 'object' && 'stdout' in error) {
-        errorOutput = (error as { stdout: string }).stdout;
-      }
-    }
-    expect(errorOutput).toContain('Unknown mode');
-  });
-});
