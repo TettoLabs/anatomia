@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Anatomia - AI that understands your codebase",
-  description: "Auto-generated context that stays current. Federated nodes for teams. Built for Claude Code, Cursor, and Windsurf.",
+  description: "Auto-generated AI context for your codebase. 7 modes, smart analysis, guided setup. Open source CLI.",
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },
