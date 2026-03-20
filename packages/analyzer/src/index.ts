@@ -100,8 +100,19 @@ export {
 } from './analyzers/patterns.js';
 export type { PatternDetectionResult } from './analyzers/patterns.js';
 
-// Pattern types already exported via types/index.ts import/export chain
-// (PatternAnalysis, PatternConfidence exported from types/index.ts which imports from types/patterns.ts)
+// Export pattern types (STEP_2.1)
+export type {
+  PatternAnalysis,
+  PatternConfidence,
+  MultiPattern,
+} from './types/patterns.js';
+export {
+  PatternAnalysisSchema,
+  PatternConfidenceSchema,
+  MultiPatternSchema,
+  createEmptyPatternAnalysis,
+  isMultiPattern,
+} from './types/patterns.js';
 
 // Export convention analysis functions (STEP_2.2 - NEW)
 export { detectConventions } from './analyzers/conventions/index.js';
