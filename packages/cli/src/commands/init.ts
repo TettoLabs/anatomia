@@ -203,6 +203,8 @@ async function validateInitPreconditions(
 
 /**
  * Check if directory exists
+ * @param dirPath - Path to check
+ * @returns true if directory exists
  */
 async function dirExists(dirPath: string): Promise<boolean> {
   try {
@@ -264,6 +266,7 @@ async function runAnalyzer(
 
 /**
  * Display detection summary after analysis
+ * @param result
  */
 function displayDetectionSummary(result: AnalysisResult): void {
   console.log();
@@ -409,6 +412,7 @@ async function generateScaffolds(
 
 /**
  * Get CLI version from package.json
+ * @returns CLI version string
  */
 async function getCliVersion(): Promise<string> {
   try {

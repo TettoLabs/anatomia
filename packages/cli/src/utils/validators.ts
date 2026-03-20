@@ -207,6 +207,9 @@ export async function getProjectName(rootPath: string): Promise<string> {
 
 /**
  * Check if file exists
+ *
+ * @param filePath - Path to file
+ * @returns true if file exists, false otherwise
  */
 export async function fileExists(filePath: string): Promise<boolean> {
   try {

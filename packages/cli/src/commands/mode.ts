@@ -102,6 +102,8 @@ export const modeCommand = new Command('mode')
 
 /**
  * Type guard to check if string is valid mode name
+ * @param name - Mode name to validate
+ * @returns true if valid mode name
  */
 function isValidMode(name: string): name is ModeName {
   return Object.prototype.hasOwnProperty.call(MODES, name);

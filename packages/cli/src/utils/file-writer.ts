@@ -18,6 +18,11 @@ export interface WriteFileOptions {
   mode?: number;
 }
 
+/**
+ * File system operations utility
+ *
+ * Provides async file writing and existence checking.
+ */
 export class FileWriter {
   /**
    * Check if a file or directory exists

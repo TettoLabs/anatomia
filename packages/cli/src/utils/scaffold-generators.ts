@@ -27,6 +27,9 @@ import { SCAFFOLD_MARKER } from '../constants.js';
  *
  * Local implementation to avoid runtime import of analyzer
  * (which would trigger tree-sitter native module loading).
+ *
+ * @param pattern - Pattern to check
+ * @returns true if MultiPattern, false otherwise
  */
 function isMultiPattern(
   pattern: PatternConfidence | MultiPattern | undefined

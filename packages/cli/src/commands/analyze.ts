@@ -96,6 +96,9 @@ export const analyzeCommand = new Command('analyze')
 
 /**
  * Format analysis result as human-readable text
+ * @param result - Analysis result to format
+ * @param verbose - Show all detection signals
+ * @returns Formatted string output
  */
 function formatHumanReadable(
   result: AnalysisResult,

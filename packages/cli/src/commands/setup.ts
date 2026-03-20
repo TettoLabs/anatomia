@@ -27,6 +27,8 @@ interface SetupCompleteOptions {
 
 /**
  * Type guard to check if string is valid setup tier
+ * @param tier - Setup tier to validate
+ * @returns true if valid setup tier
  */
 function isValidSetupTier(tier: string): tier is typeof VALID_SETUP_TIERS[number] {
   return VALID_SETUP_TIERS.includes(tier as typeof VALID_SETUP_TIERS[number]);
@@ -135,6 +137,7 @@ setupCommand
 
 /**
  * Display validation failures in readable format
+ * @param errors - Array of validation errors to display
  */
 function displayValidationFailures(errors: ValidationError[]): void {
   errors.forEach((error) => {

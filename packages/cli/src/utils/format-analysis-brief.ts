@@ -25,6 +25,9 @@ import type {
  * Local implementation to avoid runtime import of analyzer
  * (which would trigger tree-sitter native module loading).
  * Type imports above are erased at compile time - safe.
+ *
+ * @param pattern - Pattern to check
+ * @returns true if MultiPattern, false otherwise
  */
 function isMultiPattern(
   pattern: PatternConfidence | MultiPattern | undefined
