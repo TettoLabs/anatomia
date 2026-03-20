@@ -30,7 +30,6 @@ import * as os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import type { AnalysisResult } from 'anatomia-analyzer';
-import { analyze, createEmptyAnalysisResult } from 'anatomia-analyzer';
 import { formatAnalysisBrief } from '../utils/format-analysis-brief.js';
 import {
   generateProjectOverviewScaffold,
@@ -60,6 +59,25 @@ interface InitCommandOptions {
 interface PreflightResult {
   canProceed: boolean;
   stateBackup?: string; // Path to .state/ backup if --force used
+}
+
+/**
+ * Create empty analysis result for fallback
+ *
+ * Used when analyzer fails or is skipped with --skip-analysis.
+ * Scaffolds handle undefined optional fields gracefully.
+ *
+ * @returns Minimal valid AnalysisResult
+ */
+function createEmptyAnalysisResult(): AnalysisResult {
+  return {
+    projectType: 'unknown',
+    framework: null,
+    confidence: { projectType: 0, framework: 0 },
+    indicators: { projectType: [], framework: [] },
+    detectedAt: new Date().toISOString(),
+    version: '0.0.0',
+  } as AnalysisResult;
 }
 
 /** Create init command */
@@ -239,6 +257,9 @@ async function runAnalyzer(
   const spinner = ora('Analyzing project...').start();
 
   try {
+    // Dynamic import - only loads analyzer when actually needed
+    const { analyze } = await import('anatomia-analyzer');
+
     const result = await analyze(rootPath, {
       skipImportScan: false,
       strictMode: false,
