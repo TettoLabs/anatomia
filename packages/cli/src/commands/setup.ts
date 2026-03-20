@@ -25,6 +25,13 @@ interface SetupCompleteOptions {
   mode?: string;
 }
 
+/**
+ * Type guard to check if string is valid setup tier
+ */
+function isValidSetupTier(tier: string): tier is typeof VALID_SETUP_TIERS[number] {
+  return VALID_SETUP_TIERS.includes(tier as typeof VALID_SETUP_TIERS[number]);
+}
+
 /** Create setup parent command */
 export const setupCommand = new Command('setup').description(
   'Setup-related commands'
@@ -247,7 +254,7 @@ async function updateMetaJson(
     setupMode = options.mode;
 
     // Validate tier value
-    if (!VALID_SETUP_TIERS.includes(setupMode as any)) {
+    if (!isValidSetupTier(setupMode)) {
       console.error(chalk.red(`Error: Invalid --mode value: ${setupMode}`));
       console.error(chalk.gray(`Valid values: ${VALID_SETUP_TIERS.join(', ')}`));
       process.exit(1);
