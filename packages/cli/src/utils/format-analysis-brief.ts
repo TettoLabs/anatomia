@@ -15,32 +15,16 @@
 import type {
   AnalysisResult,
   ParsedFile,
+  PatternConfidence,
+  MultiPattern,
 } from 'anatomia-analyzer';
 
 /**
- * Pattern confidence with evidence
- * Local type to avoid import issues with workspace linking
- */
-interface PatternConfidence {
-  library: string;
-  variant?: string;
-  confidence: number;
-  evidence: string[];
-  primary?: boolean;
-}
-
-/**
- * Multi-pattern detection result
- * Used when multiple variants of same category detected
- */
-interface MultiPattern {
-  patterns: PatternConfidence[];
-  primary: PatternConfidence;
-  confidence: number;
-}
-
-/**
  * Type guard to check if pattern is multi-pattern
+ *
+ * Local implementation to avoid runtime import of analyzer
+ * (which would trigger tree-sitter native module loading).
+ * Type imports above are erased at compile time - safe.
  */
 function isMultiPattern(
   pattern: PatternConfidence | MultiPattern | undefined
