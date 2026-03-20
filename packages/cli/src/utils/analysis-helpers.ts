@@ -4,6 +4,8 @@
  * Used by: format-analysis-brief.ts, scaffold-generators.ts
  */
 
+import { PATTERN_CATEGORIES } from '../constants.js';
+
 /**
  * Convert projectType to human-readable display name
  *
@@ -30,17 +32,8 @@ export function displayProjectType(type: string): string {
   return displayNames[type] || type.charAt(0).toUpperCase() + type.slice(1);
 }
 
-/**
- * Pattern categories analyzed by the analyzer
- * Shared by: formatAnalysisBrief, scaffold generators
- */
-export const PATTERN_CATEGORIES = [
-  'errorHandling',
-  'validation',
-  'database',
-  'auth',
-  'testing',
-] as const;
+// Re-export PATTERN_CATEGORIES from constants for backward compatibility
+export { PATTERN_CATEGORIES } from '../constants.js';
 
 /**
  * Convert pattern category to human-readable section name

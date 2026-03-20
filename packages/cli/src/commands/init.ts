@@ -42,6 +42,13 @@ import {
   generateDebuggingScaffold,
 } from '../utils/scaffold-generators.js';
 import { getProjectName } from '../utils/validators.js';
+import {
+  MODE_FILES,
+  SETUP_FILES,
+  STEP_FILES,
+  FRAMEWORK_SNIPPETS,
+  META_VERSION,
+} from '../constants.js';
 
 /** Command options */
 interface InitCommandOptions {
@@ -435,17 +442,7 @@ async function copyStaticFilesWithVerification(tmpAnaPath: string): Promise<void
   const templatesDir = getTemplatesDir();
 
   // 7 mode files
-  const modeFiles = [
-    'architect.md',
-    'code.md',
-    'debug.md',
-    'docs.md',
-    'test.md',
-    'general.md',
-    'setup.md',
-  ];
-
-  for (const file of modeFiles) {
+  for (const file of MODE_FILES) {
     const sourcePath = path.join(templatesDir, 'modes', file);
     const destPath = path.join(tmpAnaPath, 'modes', file);
     await copyAndVerifyFile(sourcePath, destPath, `modes/${file}`);
@@ -465,34 +462,14 @@ async function copyStaticFilesWithVerification(tmpAnaPath: string): Promise<void
   }
 
   // 8 step files
-  const stepFiles = [
-    '00_explore_codebase.md',
-    '01_project_overview.md',
-    '02_conventions.md',
-    '03_patterns.md',
-    '04_architecture.md',
-    '05_testing.md',
-    '06_workflow.md',
-    '07_debugging.md',
-  ];
-
-  for (const file of stepFiles) {
+  for (const file of STEP_FILES) {
     const sourcePath = path.join(templatesDir, 'context/setup/steps', file);
     const destPath = path.join(tmpAnaPath, 'context/setup/steps', file);
     await copyAndVerifyFile(sourcePath, destPath, `context/setup/steps/${file}`);
   }
 
   // 6 framework-snippets
-  const snippetFiles = [
-    'fastapi.md',
-    'django.md',
-    'nextjs.md',
-    'express.md',
-    'go.md',
-    'generic.md',
-  ];
-
-  for (const file of snippetFiles) {
+  for (const file of FRAMEWORK_SNIPPETS) {
     const sourcePath = path.join(templatesDir, 'context/setup/framework-snippets', file);
     const destPath = path.join(tmpAnaPath, 'context/setup/framework-snippets', file);
     await copyAndVerifyFile(sourcePath, destPath, `context/setup/framework-snippets/${file}`);
@@ -584,7 +561,7 @@ async function createMetaJson(
   const analysis = analysisResult || createEmptyAnalysisResult();
 
   const meta = {
-    version: '1.0.0',
+    version: META_VERSION,
     createdAt: new Date().toISOString(),
     setupStatus: 'pending',
     setupCompletedAt: null,

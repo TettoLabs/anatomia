@@ -11,6 +11,13 @@
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
 import type { AnalysisResult } from 'anatomia-analyzer';
+import {
+  SCAFFOLD_MARKER,
+  MIN_FILE_SIZE_WARNING,
+  MAX_FILE_SIZE_WARNING,
+  MIN_DEBUGGING_FILE_SIZE,
+  REQUIRED_CONTEXT_FILES,
+} from '../constants.js';
 
 /** Validation error type */
 export interface ValidationError {
@@ -19,9 +26,6 @@ export interface ValidationError {
   file: string;
   message: string;
 }
-
-/** Scaffold marker constant */
-const SCAFFOLD_MARKER = '<!-- SCAFFOLD';
 
 /**
  * Count how many patterns analyzer detected
@@ -230,15 +234,7 @@ export async function fileExists(filePath: string): Promise<boolean> {
 export async function validateStructure(anaPath: string): Promise<ValidationError[]> {
   const errors: ValidationError[] = [];
 
-  const requiredFiles = [
-    'context/project-overview.md',
-    'context/architecture.md',
-    'context/patterns.md',
-    'context/conventions.md',
-    'context/workflow.md',
-    'context/testing.md',
-    'context/debugging.md',
-  ];
+  const requiredFiles = REQUIRED_CONTEXT_FILES;
 
   // Pre-check: Detect if setup not run yet (all files still scaffolded)
   let scaffoldCount = 0;
@@ -430,15 +426,7 @@ export async function validateCrossReferences(
 export async function validateQuality(anaPath: string): Promise<ValidationError[]> {
   const warnings: ValidationError[] = [];
 
-  const contextFiles = [
-    'context/project-overview.md',
-    'context/architecture.md',
-    'context/patterns.md',
-    'context/conventions.md',
-    'context/workflow.md',
-    'context/testing.md',
-    'context/debugging.md',
-  ];
+  const contextFiles = REQUIRED_CONTEXT_FILES;
 
   // SW1, SW2: Line count checks
   for (const file of contextFiles) {
@@ -449,7 +437,7 @@ export async function validateQuality(anaPath: string): Promise<ValidationError[
       const lines = content.split('\n').length;
 
       // SW1: Too thin
-      if (lines < 20) {
+      if (lines < MIN_FILE_SIZE_WARNING) {
         warnings.push({
           type: 'WARNING',
           rule: 'SW1',
@@ -459,7 +447,7 @@ export async function validateQuality(anaPath: string): Promise<ValidationError[
       }
 
       // SW2: Too verbose
-      if (lines > 1500) {
+      if (lines > MAX_FILE_SIZE_WARNING) {
         warnings.push({
           type: 'WARNING',
           rule: 'SW2',
@@ -482,7 +470,7 @@ export async function validateQuality(anaPath: string): Promise<ValidationError[
 
       // SW4: debugging.md minimal check
       if (file === 'context/debugging.md') {
-        if (lines < 15) {
+        if (lines < MIN_DEBUGGING_FILE_SIZE) {
           warnings.push({
             type: 'WARNING',
             rule: 'SW4',

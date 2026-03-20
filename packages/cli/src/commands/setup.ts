@@ -19,6 +19,7 @@ import {
   fileExists,
   type ValidationError,
 } from '../utils/validators.js';
+import { VALID_SETUP_TIERS, META_VERSION } from '../constants.js';
 
 interface SetupCompleteOptions {
   mode?: string;
@@ -233,7 +234,7 @@ async function updateMetaJson(
   } catch (error) {
     // If .meta.json doesn't exist or is corrupt, create minimal
     meta = {
-      version: '1.0.0',
+      version: META_VERSION,
       createdAt: new Date().toISOString(),
     };
   }
@@ -246,10 +247,9 @@ async function updateMetaJson(
     setupMode = options.mode;
 
     // Validate tier value
-    const validTiers = ['quick', 'guided', 'complete'];
-    if (!validTiers.includes(setupMode)) {
+    if (!VALID_SETUP_TIERS.includes(setupMode as any)) {
       console.error(chalk.red(`Error: Invalid --mode value: ${setupMode}`));
-      console.error(chalk.gray(`Valid values: ${validTiers.join(', ')}`));
+      console.error(chalk.gray(`Valid values: ${VALID_SETUP_TIERS.join(', ')}`));
       process.exit(1);
     }
   }

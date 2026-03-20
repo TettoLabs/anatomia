@@ -20,9 +20,7 @@ import {
   formatCategoryName,
   PATTERN_CATEGORIES,
 } from './analysis-helpers.js';
-
-/** Scaffold marker (exact text, first line of every scaffold) */
-const SCAFFOLD_MARKER = '<!-- SCAFFOLD - Setup will fill this file -->';
+import { SCAFFOLD_MARKER } from '../constants.js';
 
 /**
  * Type guard to check if pattern is multi-pattern
