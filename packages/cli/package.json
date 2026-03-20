@@ -41,7 +41,7 @@
     "docs"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && cp -r templates dist/",
     "dev": "tsup --watch",
     "test": "vitest",
     "lint": "eslint src/",
