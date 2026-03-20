@@ -1,0 +1,124 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`testing.md scaffold > empty analysis (analyzer failed) 1`] = `
+"<!-- SCAFFOLD - Setup will fill this file -->
+
+# Testing — test-project
+
+## Test Framework
+
+**Detected:** None
+
+[Setup will add: Test runner config, test scripts, watch mode]
+
+## Test Structure
+
+[Setup will add: Test file organization, naming conventions, directory structure]
+
+## Fixture Patterns
+
+[Setup will add: How fixtures are organized, setup/teardown patterns, shared fixtures]
+
+## Mocking
+
+[Setup will add: Mocking strategy, what gets mocked, mock libraries used]
+
+## Coverage
+
+[Setup will add: Coverage targets, coverage tools, what's excluded]
+
+## Example Test Structure
+
+[Setup will add: Real test example from codebase showing structure, assertions, patterns]
+
+---
+
+*Last updated: 2026-03-19T10:00:00Z*
+"
+`;
+
+exports[`testing.md scaffold > flat project with vitest but no test location 1`] = `
+"<!-- SCAFFOLD - Setup will fill this file -->
+
+# Testing — test-project
+
+## Test Framework
+
+**Framework:** vitest
+**Confidence:** 0.92
+
+**Evidence:**
+- vitest in dependencies
+
+[Setup will add: Test runner config, test scripts, watch mode]
+
+## Test Structure
+
+[Setup will add: Test file organization, naming conventions, directory structure]
+
+## Fixture Patterns
+
+[Setup will add: How fixtures are organized, setup/teardown patterns, shared fixtures]
+
+## Mocking
+
+[Setup will add: Mocking strategy, what gets mocked, mock libraries used]
+
+## Coverage
+
+[Setup will add: Coverage targets, coverage tools, what's excluded]
+
+## Example Test Structure
+
+[Setup will add: Real test example from codebase showing structure, assertions, patterns]
+
+---
+
+*Last updated: 2026-03-19T10:00:00Z*
+"
+`;
+
+exports[`testing.md scaffold > rich project with pytest testing 1`] = `
+"<!-- SCAFFOLD - Setup will fill this file -->
+
+# Testing — test-project
+
+## Test Framework
+
+**Framework:** pytest
+**Confidence:** 1.00
+
+**Evidence:**
+- pytest in dependencies
+- pytest.ini found
+- tests/ directory
+
+[Setup will add: Test runner config, test scripts, watch mode]
+
+## Test Structure
+
+**Test location:** \`tests/\`
+
+[Setup will add: Test file organization, naming conventions, directory structure]
+
+## Fixture Patterns
+
+[Setup will add: How fixtures are organized, setup/teardown patterns, shared fixtures]
+
+## Mocking
+
+[Setup will add: Mocking strategy, what gets mocked, mock libraries used]
+
+## Coverage
+
+[Setup will add: Coverage targets, coverage tools, what's excluded]
+
+## Example Test Structure
+
+[Setup will add: Real test example from codebase showing structure, assertions, patterns]
+
+---
+
+*Last updated: 2026-03-19T10:00:00Z*
+"
+`;

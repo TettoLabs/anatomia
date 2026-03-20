@@ -1,0 +1,110 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`workflow.md scaffold > empty analysis (analyzer failed) 1`] = `
+"<!-- SCAFFOLD - Setup will fill this file -->
+
+# Workflow — test-project
+
+## Git Workflow
+
+[Setup will add: Branching strategy, merge vs rebase, branch naming]
+
+## Commit Conventions
+
+[Setup will add: Commit message format, conventional commits usage, scope/type]
+
+## PR Process
+
+[Setup will add: Review process, approval requirements, PR templates]
+
+## CI/CD
+
+[Setup will add: Build pipeline, test automation, deployment triggers]
+
+## Deployment
+
+[Setup will add: Deployment process, environments (dev/staging/prod), rollback procedure]
+
+## Environment Management
+
+[Setup will add: Environment variables, secrets management, config per environment]
+
+---
+
+*Last updated: 2026-03-19T10:00:00Z*
+"
+`;
+
+exports[`workflow.md scaffold > flat project with no CI config detected 1`] = `
+"<!-- SCAFFOLD - Setup will fill this file -->
+
+# Workflow — test-project
+
+## Git Workflow
+
+[Setup will add: Branching strategy, merge vs rebase, branch naming]
+
+## Commit Conventions
+
+[Setup will add: Commit message format, conventional commits usage, scope/type]
+
+## PR Process
+
+[Setup will add: Review process, approval requirements, PR templates]
+
+## CI/CD
+
+[Setup will add: Build pipeline, test automation, deployment triggers]
+
+## Deployment
+
+[Setup will add: Deployment process, environments (dev/staging/prod), rollback procedure]
+
+## Environment Management
+
+[Setup will add: Environment variables, secrets management, config per environment]
+
+---
+
+*Last updated: 2026-03-19T10:00:00Z*
+"
+`;
+
+exports[`workflow.md scaffold > rich project with GitHub Actions CI 1`] = `
+"<!-- SCAFFOLD - Setup will fill this file -->
+
+# Workflow — test-project
+
+## Git Workflow
+
+[Setup will add: Branching strategy, merge vs rebase, branch naming]
+
+## Commit Conventions
+
+[Setup will add: Commit message format, conventional commits usage, scope/type]
+
+## PR Process
+
+[Setup will add: Review process, approval requirements, PR templates]
+
+## CI/CD
+
+**CI config detected:**
+- \`.github/workflows/ci.yml\`
+- \`.github/workflows/deploy.yml\`
+
+[Setup will add: Build pipeline, test automation, deployment triggers]
+
+## Deployment
+
+[Setup will add: Deployment process, environments (dev/staging/prod), rollback procedure]
+
+## Environment Management
+
+[Setup will add: Environment variables, secrets management, config per environment]
+
+---
+
+*Last updated: 2026-03-19T10:00:00Z*
+"
+`;
