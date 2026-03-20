@@ -107,9 +107,9 @@ export function Hero() {
           className="text-[17px] lg:text-[20px] mb-10 lg:mb-12 max-w-[620px] mx-auto leading-[1.5]"
           style={{ color: "var(--text-muted-65)" }}
         >
-          Auto-generated in 30 seconds. Stays current with your code.
+          Auto-generated in 30 seconds. 7 modes for architecture, code, debug, docs, and testing.
           <br />
-          Your AI queries across services. Never leaves chat.
+          Your AI follows your patterns — not generic best practices.
         </motion.p>
 
         {/* CTAs */}

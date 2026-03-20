@@ -7,30 +7,30 @@ import { IndustryTicker } from "./IndustryTicker";
 const analysisMetrics = [
   { label: "SPEED", value: "30s" },
   { label: "PATTERNS", value: "18+" },
-  { label: "MODES", value: "5" },
-  { label: "SETUP", value: "0" },
+  { label: "MODES", value: "7" },
+  { label: "SETUP", value: "2min" },
 ];
 
 const generateFeatures = [
-  "5 behavioral modes (architect, code, debug, docs, test)",
+  "7 behavioral modes (architect, code, debug, docs, test, general, setup)",
   "Auto-detected patterns and coding conventions",
-  "Context that updates when your code changes",
+  "Guided setup fills context from your real code",
   "Free • Open source • Yours to modify",
 ];
 
 const federationFeatures = [
-  { icon: "→", text: "Each node knows its bounded context deeply" },
-  { icon: "◆", text: "Nodes query each other for cross-service patterns" },
-  { icon: "✓", text: "Auto-generated exports stay current with code" },
-  { icon: "○", text: "Your AI executes queries, you stay in chat" },
-  { icon: "▲", text: "Works in monorepos and microservices" },
-  { icon: "●", text: "File-based, local-first, no servers required" },
+  { icon: "→", text: "Detects project maturity automatically" },
+  { icon: "◆", text: "3 tiers: Quick (2 min), Guided (7 min), Complete (15 min)" },
+  { icon: "✓", text: "Extracts real code examples from your source files" },
+  { icon: "○", text: "Fills patterns, conventions, architecture, testing, workflow" },
+  { icon: "▲", text: "Works in Claude Code (Cursor, Windsurf support planned)" },
+  { icon: "●", text: "Run once, use forever — context stays with your repo" },
 ];
 
 const compatibilityBullets = [
   "Markdown files, not proprietary lock-in",
   "Git-tracked, version-controlled knowledge",
-  "Team-shareable nodes across your org",
+  "Git-tracked context travels with your repo",
 ];
 
 export function BentoGrid() {
@@ -198,7 +198,7 @@ export function BentoGrid() {
               className="text-[15px] lg:text-[17px] leading-[1.65] mb-6 lg:mb-8 max-w-[90%]"
               style={{ color: "var(--text-muted-60)" }}
             >
-              Creates .ana/ node with behavioral contracts, auto-detected patterns, and queryable exports for your service.
+              Creates .ana/ with behavioral contracts and auto-detected patterns. 7 context files pre-populated from your actual source code.
             </div>
             <ul className="list-none p-0 flex flex-col gap-2.5 lg:gap-3.5">
               {generateFeatures.map((feature, index) => (
@@ -251,9 +251,9 @@ export function BentoGrid() {
               <div style={{ color: "#888" }}># In Claude Code:</div>
               <div className="mt-2" style={{ color: "#06b6d4" }}>@.ana/modes/code.md</div>
               <div style={{ color: "#ffffff" }}>&quot;Implement JWT refresh&quot;</div>
-              <div className="mt-3" style={{ color: "#888" }}># Claude queries auth node:</div>
-              <div style={{ color: "#10b981" }}>ana query auth-api &quot;JWT pattern&quot;</div>
-              <div className="mt-2" style={{ color: "#888" }}># Then writes code using YOUR pattern</div>
+              <div className="mt-3" style={{ color: "#888" }}># Claude reads YOUR auth pattern from</div>
+              <div style={{ color: "#888" }}># patterns.md — not generic advice</div>
+              <div className="mt-3" style={{ color: "#888" }}># Then writes code matching YOUR conventions</div>
             </div>
           </div>
 
@@ -276,15 +276,13 @@ export function BentoGrid() {
                 className="text-2xl lg:text-4xl font-semibold leading-[1.1] tracking-[-0.02em]"
                 style={{ color: "var(--foreground-color)" }}
               >
-                Federate
+                Setup
               </div>
               <div
                 className="text-[15px] lg:text-[17px] leading-[1.65]"
                 style={{ color: "var(--text-muted-60)" }}
               >
-                Multiple services? Multiple nodes.
-                <br />
-                Query any node from anywhere.
+                Guided setup detects your project&apos;s maturity and walks you through filling 7 context files with real, project-specific content.
               </div>
             </div>
 

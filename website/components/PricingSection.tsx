@@ -11,9 +11,9 @@ const pricingTiers = [
     period: "Forever",
     features: [
       "Full ana init with smart analysis",
-      "All 5 core modes",
-      "Manual evolve",
-      "Health check",
+      "All 7 modes (6 work + guided setup)",
+      "Guided setup (3 tiers)",
+      "7 specialized context files",
       "Open source, MIT license",
     ],
     cta: "Get Started",
