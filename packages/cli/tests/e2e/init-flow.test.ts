@@ -2,7 +2,9 @@
  * End-to-end tests for ana init
  *
  * Tests actual command execution in temp project directory.
- * Validates all 36 files/directories created correctly.
+ * Validates all files/directories created correctly:
+ * - .ana/ with 36 files (34 original + 2 hook scripts)
+ * - .claude/ with settings.json and agents/ directory
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -35,7 +37,7 @@ describe('ana init E2E', () => {
     await fs.rm(tmpProject, { recursive: true, force: true });
   });
 
-  it('creates all 34 files (24 static + 8 generated + 2 JSON)', async () => {
+  it('creates all 36 files in .ana/ (24 static + 8 generated + 2 JSON + 2 hooks)', async () => {
     // Run ana init with --skip-analysis (faster, deterministic)
     await execFileAsync('node', [cliPath, 'init', '--skip-analysis'], {
       cwd: tmpProject,
@@ -43,9 +45,10 @@ describe('ana init E2E', () => {
 
     const anaPath = path.join(tmpProject, '.ana');
 
-    // Verify directories (6)
+    // Verify directories (7 including hooks/)
     const dirs = [
       'modes',
+      'hooks',
       'context',
       'context/setup',
       'context/setup/steps',
@@ -91,6 +94,18 @@ describe('ana init E2E', () => {
       expect(exists, `Mode file missing: ${file}`).toBe(true);
     }
 
+    // Verify hook scripts (2) — Step 2 addition
+    const hookScripts = ['hooks/verify-context-file.sh', 'hooks/quality-gate.sh'];
+
+    for (const script of hookScripts) {
+      const exists = await fileExists(path.join(anaPath, script));
+      expect(exists, `Hook script missing: ${script}`).toBe(true);
+
+      // Verify executable permissions
+      const stats = await fs.stat(path.join(anaPath, script));
+      expect(stats.mode & 0o111).toBeGreaterThan(0);
+    }
+
     // Verify .meta.json
     const metaExists = await fileExists(path.join(anaPath, '.meta.json'));
     expect(metaExists).toBe(true);
@@ -108,10 +123,23 @@ describe('ana init E2E', () => {
     const entryExists = await fileExists(path.join(anaPath, 'ENTRY.md'));
     expect(entryExists).toBe(false);
 
-    // Count total files
+    // Count total files in .ana/
     const allFiles = await findAllFiles(anaPath);
-    // 8 generated (analysis.md + 7 scaffolds) + 24 copied (7 modes + 3 setup + 8 steps + 6 snippets) + 2 JSON (.meta.json + snapshot.json) = 34
-    expect(allFiles.length).toBe(34);
+    // 8 generated + 24 copied + 2 JSON + 2 hooks = 36
+    expect(allFiles.length).toBe(36);
+
+    // Verify .claude/ directory was also created (outside .ana/)
+    const claudePath = path.join(tmpProject, '.claude');
+    const claudeExists = await dirExists(claudePath);
+    expect(claudeExists).toBe(true);
+
+    // Verify .claude/settings.json
+    const settingsExists = await fileExists(path.join(claudePath, 'settings.json'));
+    expect(settingsExists).toBe(true);
+
+    // Verify .claude/agents/ directory
+    const agentsExists = await dirExists(path.join(claudePath, 'agents'));
+    expect(agentsExists).toBe(true);
   }, 30000); // 30s timeout
 
   it('--force preserves .state/ directory', async () => {

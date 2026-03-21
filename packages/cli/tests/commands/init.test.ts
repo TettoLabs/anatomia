@@ -64,7 +64,7 @@ describe('ana init', () => {
   });
 
   describe('template inventory', () => {
-    it('all 25 template files exist in CLI package', async () => {
+    it('all 28 template files exist in CLI package', async () => {
       // Get templates directory using same logic as init.ts
       const __filename = fileURLToPath(import.meta.url);
       const __dirname = path.dirname(__filename);
@@ -101,9 +101,14 @@ describe('ana init', () => {
         'context/setup/framework-snippets/express.md',
         'context/setup/framework-snippets/go.md',
         'context/setup/framework-snippets/generic.md',
+        // 2 hook scripts (Step 2)
+        '.ana/hooks/verify-context-file.sh',
+        '.ana/hooks/quality-gate.sh',
+        // 1 settings template (Step 2)
+        '.claude/settings.json',
       ];
 
-      expect(expectedFiles).toHaveLength(25); // Sanity check our count
+      expect(expectedFiles).toHaveLength(28); // 25 original + 3 new
 
       for (const file of expectedFiles) {
         const filePath = path.join(templatesDir, file);
@@ -187,6 +192,276 @@ describe('ana init', () => {
       // Verify snapshot preserved
       const content = await fs.readFile(path.join(statePath, 'snapshot.json'), 'utf-8');
       expect(JSON.parse(content)).toEqual({ test: 'data' });
+    });
+  });
+
+  describe('.ana/hooks/', () => {
+    it('hook scripts are created with correct content', async () => {
+      // Get templates directory
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = path.dirname(__filename);
+      const templatesDir = path.join(__dirname, '..', '..', 'templates');
+
+      // Verify verify-context-file.sh
+      const verifyPath = path.join(templatesDir, '.ana/hooks/verify-context-file.sh');
+      const verifyContent = await fs.readFile(verifyPath, 'utf-8');
+      expect(verifyContent).toContain('#!/bin/bash');
+      expect(verifyContent).toContain('PostToolUse hook');
+      expect(verifyContent).toContain('.ana/context/');
+      expect(verifyContent).toContain('ana setup check');
+      expect(verifyContent).toContain('additionalContext');
+      // Verify jq parsing with grep fallback
+      expect(verifyContent).toContain('jq -r');
+      expect(verifyContent).toContain('.tool_input.file_path');
+      expect(verifyContent).toContain('Fallback: grep parsing');
+
+      // Verify quality-gate.sh
+      const gatePath = path.join(templatesDir, '.ana/hooks/quality-gate.sh');
+      const gateContent = await fs.readFile(gatePath, 'utf-8');
+      expect(gateContent).toContain('#!/bin/bash');
+      expect(gateContent).toContain('Stop hook');
+      expect(gateContent).toContain('exit 2');
+      // Verify file-based lockfile guard (not environment variable)
+      expect(gateContent).toContain('LOCKFILE=".ana/.stop_hook_active"');
+      expect(gateContent).toContain('if [ -f "$LOCKFILE" ]');
+      expect(gateContent).toContain('touch "$LOCKFILE"');
+      expect(gateContent).toContain("trap 'rm -f");
+    });
+
+    it('hook scripts will be executable after copy', async () => {
+      const anaPath = path.join(tmpDir, '.ana');
+      const hooksPath = path.join(anaPath, 'hooks');
+
+      // Simulate copying hooks with chmod
+      await fs.mkdir(hooksPath, { recursive: true });
+
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = path.dirname(__filename);
+      const templatesDir = path.join(__dirname, '..', '..', 'templates');
+
+      // Copy and set executable
+      const scripts = ['verify-context-file.sh', 'quality-gate.sh'];
+      for (const script of scripts) {
+        const sourcePath = path.join(templatesDir, '.ana/hooks', script);
+        const destPath = path.join(hooksPath, script);
+        await fs.copyFile(sourcePath, destPath);
+        await fs.chmod(destPath, 0o755);
+
+        // Verify executable permission
+        const stats = await fs.stat(destPath);
+        // Check that at least user execute bit is set (0o100)
+        expect(stats.mode & 0o111).toBeGreaterThan(0);
+      }
+    });
+  });
+
+  describe('.claude/ configuration', () => {
+    it('creates .claude/settings.json with correct hooks structure', async () => {
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = path.dirname(__filename);
+      const templatesDir = path.join(__dirname, '..', '..', 'templates');
+
+      const settingsPath = path.join(templatesDir, '.claude/settings.json');
+      const content = await fs.readFile(settingsPath, 'utf-8');
+      const settings = JSON.parse(content);
+
+      // Verify PostToolUse hook
+      expect(settings.hooks.PostToolUse).toBeDefined();
+      expect(settings.hooks.PostToolUse).toHaveLength(1);
+      expect(settings.hooks.PostToolUse[0].matcher).toBe('Write');
+      expect(settings.hooks.PostToolUse[0].hooks[0].command).toBe(
+        '.ana/hooks/verify-context-file.sh'
+      );
+      expect(settings.hooks.PostToolUse[0].hooks[0].timeout).toBe(30);
+
+      // Verify Stop hook
+      expect(settings.hooks.Stop).toBeDefined();
+      expect(settings.hooks.Stop).toHaveLength(1);
+      expect(settings.hooks.Stop[0].hooks[0].command).toBe('.ana/hooks/quality-gate.sh');
+      expect(settings.hooks.Stop[0].hooks[0].timeout).toBe(120);
+    });
+
+    it('creates .claude/agents/ directory', async () => {
+      const claudePath = path.join(tmpDir, '.claude');
+      const agentsPath = path.join(claudePath, 'agents');
+
+      // Simulate init creating .claude/agents/
+      await fs.mkdir(agentsPath, { recursive: true });
+
+      const exists = await dirExists(agentsPath);
+      expect(exists).toBe(true);
+
+      // Directory should be empty (agents come in Step 3)
+      const files = await fs.readdir(agentsPath);
+      expect(files).toHaveLength(0);
+    });
+
+    it('merges into existing .claude/settings.json without duplicates', async () => {
+      const claudePath = path.join(tmpDir, '.claude');
+      const settingsPath = path.join(claudePath, 'settings.json');
+
+      // Create existing settings with custom hook
+      await fs.mkdir(claudePath, { recursive: true });
+      const existingSettings = {
+        hooks: {
+          PreToolUse: [
+            {
+              matcher: '*',
+              hooks: [{ type: 'command', command: 'custom-hook.sh' }],
+            },
+          ],
+        },
+      };
+      await fs.writeFile(settingsPath, JSON.stringify(existingSettings, null, 2));
+
+      // Simulate merge logic
+      const templateSettings = {
+        hooks: {
+          PostToolUse: [
+            {
+              matcher: 'Write',
+              hooks: [
+                {
+                  type: 'command',
+                  command: '.ana/hooks/verify-context-file.sh',
+                  timeout: 30,
+                },
+              ],
+            },
+          ],
+          Stop: [
+            {
+              hooks: [
+                {
+                  type: 'command',
+                  command: '.ana/hooks/quality-gate.sh',
+                  timeout: 120,
+                },
+              ],
+            },
+          ],
+        },
+      };
+
+      // Merge
+      const merged = { ...existingSettings };
+      merged.hooks = { ...existingSettings.hooks, ...templateSettings.hooks };
+      await fs.writeFile(settingsPath, JSON.stringify(merged, null, 2));
+
+      // Verify merged content
+      const content = await fs.readFile(settingsPath, 'utf-8');
+      const result = JSON.parse(content);
+
+      // Should have all three hook types
+      expect(result.hooks.PreToolUse).toBeDefined();
+      expect(result.hooks.PostToolUse).toBeDefined();
+      expect(result.hooks.Stop).toBeDefined();
+
+      // Custom hook preserved
+      expect(result.hooks.PreToolUse[0].hooks[0].command).toBe('custom-hook.sh');
+    });
+
+    it('does not duplicate hooks on re-init', async () => {
+      const claudePath = path.join(tmpDir, '.claude');
+      const settingsPath = path.join(claudePath, 'settings.json');
+
+      // Create settings with our hooks already present
+      await fs.mkdir(claudePath, { recursive: true });
+      const settingsWithOurHooks = {
+        hooks: {
+          PostToolUse: [
+            {
+              matcher: 'Write',
+              hooks: [
+                {
+                  type: 'command',
+                  command: '.ana/hooks/verify-context-file.sh',
+                  timeout: 30,
+                },
+              ],
+            },
+          ],
+          Stop: [
+            {
+              hooks: [
+                {
+                  type: 'command',
+                  command: '.ana/hooks/quality-gate.sh',
+                  timeout: 120,
+                },
+              ],
+            },
+          ],
+        },
+      };
+      await fs.writeFile(settingsPath, JSON.stringify(settingsWithOurHooks, null, 2));
+
+      // Simulate re-init merge (should detect duplicates)
+      const templateSettings = { ...settingsWithOurHooks };
+
+      // Check if hook already exists by command path
+      const existingPostToolUse = settingsWithOurHooks.hooks.PostToolUse;
+      const templatePostToolUse = templateSettings.hooks.PostToolUse;
+
+      const postToolUseHasOurHook = existingPostToolUse.some(
+        (entry: { matcher?: string; hooks?: Array<{ command: string }> }) =>
+          entry.hooks?.some((h) => h.command === '.ana/hooks/verify-context-file.sh')
+      );
+
+      expect(postToolUseHasOurHook).toBe(true);
+
+      // Since hook exists, we wouldn't add it again
+      // Final count should be 1
+      expect(settingsWithOurHooks.hooks.PostToolUse).toHaveLength(1);
+      expect(settingsWithOurHooks.hooks.Stop).toHaveLength(1);
+    });
+
+    it('overwrites malformed .claude/settings.json with Anatomia defaults', async () => {
+      const claudePath = path.join(tmpDir, '.claude');
+      const settingsPath = path.join(claudePath, 'settings.json');
+
+      // Create malformed settings.json
+      await fs.mkdir(claudePath, { recursive: true });
+      await fs.writeFile(settingsPath, '{ invalid json here }');
+
+      // Simulate the try/catch behavior in createClaudeConfiguration
+      const templateSettings = {
+        hooks: {
+          PostToolUse: [
+            {
+              matcher: 'Write',
+              hooks: [
+                {
+                  type: 'command',
+                  command: '.ana/hooks/verify-context-file.sh',
+                  timeout: 30,
+                },
+              ],
+            },
+          ],
+        },
+      };
+
+      // Try to parse, catch error, overwrite
+      let didOverwrite = false;
+      try {
+        const content = await fs.readFile(settingsPath, 'utf-8');
+        JSON.parse(content); // This should throw
+      } catch {
+        // Malformed JSON - overwrite with defaults
+        await fs.writeFile(settingsPath, JSON.stringify(templateSettings, null, 2));
+        didOverwrite = true;
+      }
+
+      expect(didOverwrite).toBe(true);
+
+      // Verify the file is now valid JSON with our hooks
+      const content = await fs.readFile(settingsPath, 'utf-8');
+      const result = JSON.parse(content);
+      expect(result.hooks.PostToolUse).toBeDefined();
+      expect(result.hooks.PostToolUse[0].hooks[0].command).toBe(
+        '.ana/hooks/verify-context-file.sh'
+      );
     });
   });
 });

@@ -6,6 +6,9 @@
  * Creates:
  *   .ana/
  *   ├── modes/                    (7 mode files)
+ *   ├── hooks/                    (CC hook scripts)
+ *   │   ├── verify-context-file.sh
+ *   │   └── quality-gate.sh
  *   ├── context/
  *   │   ├── analysis.md           (generated from analyzer)
  *   │   ├── project-overview.md   (scaffold with 40% pre-pop)
@@ -19,6 +22,10 @@
  *   ├── .meta.json                (framework metadata)
  *   └── .state/
  *       └── snapshot.json         (analyzer baseline)
+ *
+ *   .claude/
+ *   ├── settings.json             (hooks configuration)
+ *   └── agents/                   (empty - agents come in Step 3)
  */
 
 import { Command } from 'commander';
@@ -106,6 +113,7 @@ export const initCommand = new Command('init')
       await generateAnalysisMd(tmpAnaPath, analysisResult, cwd);
       await generateScaffolds(tmpAnaPath, analysisResult, cwd);
       await copyStaticFilesWithVerification(tmpAnaPath);
+      await copyHookScripts(tmpAnaPath);
       await createMetaJson(tmpAnaPath, analysisResult);
       await storeSnapshot(tmpAnaPath, analysisResult);
 
@@ -120,6 +128,9 @@ export const initCommand = new Command('init')
 
       // SUCCESS: Atomic rename
       await atomicRename(tmpAnaPath, anaPath);
+
+      // Create .claude/ configuration (outside temp directory - handles merge)
+      await createClaudeConfiguration(cwd);
 
       // Display success
       displaySuccessMessage(analysisResult);
@@ -541,6 +552,189 @@ async function copyAndVerifyFile(
 }
 
 /**
+ * Copy hook scripts to .ana/hooks/
+ *
+ * Copies hook scripts and sets executable permissions.
+ *
+ * @param tmpAnaPath - Temp .ana/ path
+ */
+async function copyHookScripts(tmpAnaPath: string): Promise<void> {
+  const spinner = ora('Copying hook scripts...').start();
+
+  const templatesDir = getTemplatesDir();
+  const hooksDir = path.join(tmpAnaPath, 'hooks');
+
+  // Create hooks directory
+  await fs.mkdir(hooksDir, { recursive: true });
+
+  // Hook scripts to copy
+  const hookScripts = ['verify-context-file.sh', 'quality-gate.sh'];
+
+  for (const script of hookScripts) {
+    const sourcePath = path.join(templatesDir, '.ana/hooks', script);
+    const destPath = path.join(hooksDir, script);
+
+    // Copy with verification
+    await copyAndVerifyFile(sourcePath, destPath, `.ana/hooks/${script}`);
+
+    // Set executable permissions (chmod +x)
+    await fs.chmod(destPath, 0o755);
+  }
+
+  spinner.succeed('Copied hook scripts (2 files, executable)');
+}
+
+/**
+ * Create .claude/ configuration
+ *
+ * Creates .claude/ directory with settings.json and agents/ directory.
+ * If .claude/ already exists, merges our hooks into existing settings.json.
+ *
+ * @param cwd - Project root directory
+ */
+async function createClaudeConfiguration(cwd: string): Promise<void> {
+  const spinner = ora('Creating .claude/ configuration...').start();
+
+  const claudePath = path.join(cwd, '.claude');
+  const settingsPath = path.join(claudePath, 'settings.json');
+  const agentsPath = path.join(claudePath, 'agents');
+  const templatesDir = getTemplatesDir();
+
+  // Load our template settings
+  const templateSettingsPath = path.join(templatesDir, '.claude/settings.json');
+  const templateContent = await fs.readFile(templateSettingsPath, 'utf-8');
+  const templateSettings = JSON.parse(templateContent);
+
+  const claudeExists = await dirExists(claudePath);
+
+  if (!claudeExists) {
+    // First run: create everything fresh
+    await fs.mkdir(claudePath, { recursive: true });
+    await fs.mkdir(agentsPath, { recursive: true });
+    await fs.writeFile(settingsPath, JSON.stringify(templateSettings, null, 2), 'utf-8');
+    spinner.succeed('Created .claude/ configuration');
+    return;
+  }
+
+  // .claude/ exists - handle merge
+  const settingsExists = await fileExists(settingsPath);
+
+  if (!settingsExists) {
+    // settings.json doesn't exist - create it
+    await fs.writeFile(settingsPath, JSON.stringify(templateSettings, null, 2), 'utf-8');
+  } else {
+    // settings.json exists - try to merge our hooks
+    try {
+      const existingContent = await fs.readFile(settingsPath, 'utf-8');
+      const existingSettings = JSON.parse(existingContent);
+      const mergedSettings = mergeHooksSettings(existingSettings, templateSettings);
+      await fs.writeFile(settingsPath, JSON.stringify(mergedSettings, null, 2), 'utf-8');
+    } catch {
+      // Malformed JSON - warn and overwrite with our defaults
+      console.log(
+        chalk.yellow('\n  Warning: existing .claude/settings.json is malformed, overwriting with Anatomia defaults')
+      );
+      await fs.writeFile(settingsPath, JSON.stringify(templateSettings, null, 2), 'utf-8');
+    }
+  }
+
+  // Create agents/ if it doesn't exist
+  const agentsExists = await dirExists(agentsPath);
+  if (!agentsExists) {
+    await fs.mkdir(agentsPath, { recursive: true });
+  }
+
+  spinner.succeed('Created .claude/ configuration (merged)');
+}
+
+/**
+ * Check if file exists
+ * @param filePath - Path to check
+ * @returns true if file exists
+ */
+async function fileExists(filePath: string): Promise<boolean> {
+  try {
+    const stats = await fs.stat(filePath);
+    return stats.isFile();
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Merge Anatomia hooks into existing settings
+ *
+ * Appends our hooks alongside existing ones without duplicates.
+ * Uses the hook command path as the unique identifier.
+ *
+ * @param existing - Existing settings.json content
+ * @param template - Our template settings
+ * @returns Merged settings object
+ */
+function mergeHooksSettings(
+  existing: Record<string, unknown>,
+  template: Record<string, unknown>
+): Record<string, unknown> {
+  // Start with existing settings
+  const merged = { ...existing };
+
+  // Ensure hooks object exists
+  if (!merged.hooks || typeof merged.hooks !== 'object') {
+    merged.hooks = {};
+  }
+
+  const mergedHooks = merged.hooks as Record<string, unknown[]>;
+  const templateHooks = (template.hooks || {}) as Record<string, unknown[]>;
+
+  // Merge each hook type (PostToolUse, Stop, etc.)
+  for (const hookType of Object.keys(templateHooks)) {
+    const templateHookArray = templateHooks[hookType] as HookEntry[];
+    const existingHookArray = (mergedHooks[hookType] || []) as HookEntry[];
+
+    // Merge each hook entry
+    for (const templateEntry of templateHookArray) {
+      const isDuplicate = existingHookArray.some((existingEntry) =>
+        hookEntryMatches(existingEntry, templateEntry)
+      );
+
+      if (!isDuplicate) {
+        existingHookArray.push(templateEntry);
+      }
+    }
+
+    mergedHooks[hookType] = existingHookArray;
+  }
+
+  return merged;
+}
+
+/** Hook entry type for merge logic */
+interface HookEntry {
+  matcher?: string;
+  hooks?: Array<{ type: string; command: string; timeout?: number }>;
+}
+
+/**
+ * Check if two hook entries match (by command path)
+ *
+ * @param a - First hook entry
+ * @param b - Second hook entry
+ * @returns true if entries match
+ */
+function hookEntryMatches(a: HookEntry, b: HookEntry): boolean {
+  // Different matchers = different entries
+  if (a.matcher !== b.matcher) {
+    return false;
+  }
+
+  // Check if any command in a matches any command in b
+  const aCommands = (a.hooks || []).map((h) => h.command);
+  const bCommands = (b.hooks || []).map((h) => h.command);
+
+  return bCommands.some((cmd) => aCommands.includes(cmd));
+}
+
+/**
  * Get templates directory (handles dev vs built contexts)
  *
  * Build structure (verified):
@@ -669,6 +863,8 @@ function displaySuccessMessage(analysisResult: AnalysisResult | null): void {
   console.log('  • 7 context scaffolds (with analyzer data)');
   console.log('  • analysis.md');
   console.log('  • Setup files (orchestrator, templates, rules, 8 steps)');
+  console.log('  • Hook scripts (.ana/hooks/)');
+  console.log('  • Claude Code config (.claude/)');
   console.log();
 
   console.log(chalk.bold('Next: ') + 'Run this in Claude Code:');
