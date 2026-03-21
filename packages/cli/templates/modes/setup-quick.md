@@ -15,7 +15,7 @@ After exploration completes, proceed directly to writing context files.
 ## Flow Override
 
 1. Explorer runs → writes `.ana/.setup_exploration.md`
-2. Present findings for batch confirmation (single "looks good?" prompt)
+2. Present findings for batch confirmation: "Here's what I found. Type 1 if correct, or tell me what's different."
 3. Writer runs 7 times → one file each
 4. Verifier runs → verification report
 5. Done

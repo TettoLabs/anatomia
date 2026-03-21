@@ -38,18 +38,31 @@ Show key detections with evidence. Ask: "Here's what I found. Type 1 if correct,
 ### 5. Ask Tier-Appropriate Questions
 1. Create `.ana/.setup_qa_log.md` with header `# Setup Q&A Log` and timestamp if it doesn't exist
 2. For each question from tier file, invoke ana-question-formulator
-3. Present: "Question X of Y: [question]" → "Ana's guess: [answer] (Confidence: [score])" → "Type 1 if correct, or tell me what's different. Type 'not sure' to move on."
+3. Present: "Question X of Y: [question]" → "Ana's guess: [answer] (from [evidence]) — Confidence: [score]" → "Type 1 if correct, or tell me what's different. Type 'not sure' to move on."
 4. Between questions, acknowledge user's last response in one natural sentence before the next question
 5. If response isn't clear confirm/correction/'not sure', store as `response_type: user_context` and incorporate
 6. Log each Q&A entry:
 ```
 ## Q[N]: [question]
-- **Ana's guess:** [answer] (Confidence: [score])
+- **Ana's guess:** [answer] (from [evidence]) — Confidence: [score]
 - **User response:** [response]
 - **Response type:** confirmed | corrected | user_context | skipped
 - **Relevant to:** [context file names]
 - **Incorporate as:** [one sentence]
 ```
+
+### Answer Validation
+After receiving a user response that provides a factual claim (not opinions or goals):
+1. Quick-check against exploration results and codebase — Grep or Read to verify
+2. If user's answer contradicts codebase evidence, surface the conflict:
+   "I see [evidence] in [file] — did you mean [X] or is there something I'm missing?"
+3. If no contradiction, accept the answer
+4. Store the final validated answer in the Q&A log
+
+Examples:
+- User says "We use MongoDB" but prisma/schema.prisma shows PostgreSQL → "I see Prisma configured for PostgreSQL in prisma/schema.prisma — did you mean PostgreSQL, or are you using both?"
+- User says "No tests" but tests/ directory has 50 files → "I found 50 test files in tests/ — did you mean no *new* tests recently, or something else?"
+- User says "We deploy to AWS" — no contradicting evidence found → accept as-is
 
 ### 6. Write Context Files
 Invoke ana-writer 7 times. Include "User's goal: [goal]" in each invocation prompt:

@@ -46,6 +46,9 @@ For each selected question:
    - User response
    - What to incorporate (confirmed guess, user correction, or skipped)
 
+### Answer Validation
+For questions 3-6 (confidence-based), validate user answers against codebase before storing. See setup.md Step 5 for the validation protocol.
+
 ---
 
 ## Confidence Thresholds

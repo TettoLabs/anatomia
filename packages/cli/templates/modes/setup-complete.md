@@ -47,6 +47,9 @@ Same as Guided tier:
 
 **Difference from Guided:** Complete mode presents Ana's guess even for high-confidence findings, allowing user to correct or confirm explicitly.
 
+### Answer Validation
+Validate all user answers against codebase before storing. Complete mode validates thoroughly — if user contradicts code evidence, always surface the conflict.
+
 ---
 
 ## Verification
