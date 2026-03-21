@@ -40,7 +40,8 @@ export interface ValidationError {
  * countDetectedPatterns(snapshot); // Returns: 2
  */
 export function countDetectedPatterns(analysis: AnalysisResult): number {
-  if (!analysis.patterns) {
+  // Scenario B guard: analyzer may return null/undefined when tree-sitter fails
+  if (!analysis || !analysis.patterns) {
     return 0;
   }
 
@@ -84,7 +85,8 @@ export function getMissingPatterns(
   analysis: AnalysisResult,
   documented: string[]
 ): string[] {
-  if (!analysis.patterns) {
+  // Scenario B guard: analyzer may return null/undefined when tree-sitter fails
+  if (!analysis || !analysis.patterns) {
     return [];
   }
 
@@ -132,8 +134,10 @@ export function extractFrameworkFromContent(content: string): string | null {
 
   const framework = match[1].trim();
 
-  // Normalize: "None detected" → null
-  if (framework === 'None detected' || framework === 'None') {
+  // Normalize: "None detected", "None", "none" → null
+  // Scenario B: analyzer may return framework: "none" as a string
+  const frameworkLower = framework.toLowerCase();
+  if (framework === 'None detected' || framework === 'None' || frameworkLower === 'none') {
     return null;
   }
 
@@ -367,6 +371,12 @@ export async function validateCrossReferences(
 ): Promise<ValidationError[]> {
   const errors: ValidationError[] = [];
 
+  // Scenario B guard: skip all cross-reference checks if snapshot is null/undefined
+  // This happens when tree-sitter fails and analyzer returns no data
+  if (!snapshot) {
+    return errors;
+  }
+
   // BF5: Pattern count check
   const detectedCount = countDetectedPatterns(snapshot);
   const patternsPath = path.join(anaPath, 'context/patterns.md');
@@ -394,7 +404,9 @@ export async function validateCrossReferences(
   try {
     const overviewContent = await fs.readFile(overviewPath, 'utf-8');
     const overviewFramework = extractFrameworkFromContent(overviewContent);
-    const snapshotFramework = snapshot.framework?.toLowerCase() || null;
+    // Scenario B: normalize "none" to null (analyzer may return framework: "none")
+    const rawSnapshotFramework = snapshot.framework?.toLowerCase() || null;
+    const snapshotFramework = rawSnapshotFramework === 'none' ? null : rawSnapshotFramework;
 
     // Both should be null or both should match
     if (overviewFramework !== snapshotFramework) {
