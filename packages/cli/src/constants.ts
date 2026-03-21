@@ -72,6 +72,14 @@ export const FRAMEWORK_SNIPPETS = [
   'generic.md',
 ] as const;
 
+/** Agent definition files */
+export const AGENT_FILES = [
+  'ana-explorer.md',
+  'ana-question-formulator.md',
+  'ana-writer.md',
+  'ana-verifier.md',
+] as const;
+
 /** Valid setupMode tiers */
 export const VALID_SETUP_TIERS = ['quick', 'guided', 'complete'] as const;
 

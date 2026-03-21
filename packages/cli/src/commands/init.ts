@@ -53,6 +53,7 @@ import {
   SETUP_FILES,
   STEP_FILES,
   FRAMEWORK_SNIPPETS,
+  AGENT_FILES,
   META_VERSION,
 } from '../constants.js';
 
@@ -587,8 +588,9 @@ async function copyHookScripts(tmpAnaPath: string): Promise<void> {
 /**
  * Create .claude/ configuration
  *
- * Creates .claude/ directory with settings.json and agents/ directory.
+ * Creates .claude/ directory with settings.json, agents/ directory, and agent files.
  * If .claude/ already exists, merges our hooks into existing settings.json.
+ * Agent files are copied without overwriting existing ones (merge-not-overwrite).
  *
  * @param cwd - Project root directory
  */
@@ -612,6 +614,10 @@ async function createClaudeConfiguration(cwd: string): Promise<void> {
     await fs.mkdir(claudePath, { recursive: true });
     await fs.mkdir(agentsPath, { recursive: true });
     await fs.writeFile(settingsPath, JSON.stringify(templateSettings, null, 2), 'utf-8');
+
+    // Copy all agent files
+    await copyAgentFiles(agentsPath, templatesDir);
+
     spinner.succeed('Created .claude/ configuration');
     return;
   }
@@ -644,7 +650,36 @@ async function createClaudeConfiguration(cwd: string): Promise<void> {
     await fs.mkdir(agentsPath, { recursive: true });
   }
 
+  // Copy agent files (merge-not-overwrite)
+  await copyAgentFiles(agentsPath, templatesDir);
+
   spinner.succeed('Created .claude/ configuration (merged)');
+}
+
+/**
+ * Copy agent files to .claude/agents/
+ *
+ * Copies agent definition files from templates without overwriting existing ones.
+ * This allows user customizations to persist across re-init.
+ *
+ * @param agentsPath - Path to .claude/agents/ directory
+ * @param templatesDir - Path to CLI templates directory
+ */
+async function copyAgentFiles(agentsPath: string, templatesDir: string): Promise<void> {
+  for (const agentFile of AGENT_FILES) {
+    const sourcePath = path.join(templatesDir, '.claude/agents', agentFile);
+    const destPath = path.join(agentsPath, agentFile);
+
+    // Check if file already exists (don't overwrite)
+    const exists = await fileExists(destPath);
+    if (exists) {
+      // Skip - don't overwrite existing agent files
+      continue;
+    }
+
+    // Copy with verification
+    await copyAndVerifyFile(sourcePath, destPath, `.claude/agents/${agentFile}`);
+  }
 }
 
 /**

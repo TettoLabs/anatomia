@@ -64,7 +64,7 @@ describe('ana init', () => {
   });
 
   describe('template inventory', () => {
-    it('all 28 template files exist in CLI package', async () => {
+    it('all 32 template files exist in CLI package', async () => {
       // Get templates directory using same logic as init.ts
       const __filename = fileURLToPath(import.meta.url);
       const __dirname = path.dirname(__filename);
@@ -106,9 +106,14 @@ describe('ana init', () => {
         '.ana/hooks/quality-gate.sh',
         // 1 settings template (Step 2)
         '.claude/settings.json',
+        // 4 agent files (Step 3)
+        '.claude/agents/ana-explorer.md',
+        '.claude/agents/ana-question-formulator.md',
+        '.claude/agents/ana-writer.md',
+        '.claude/agents/ana-verifier.md',
       ];
 
-      expect(expectedFiles).toHaveLength(28); // 25 original + 3 new
+      expect(expectedFiles).toHaveLength(32); // 28 + 4 agents
 
       for (const file of expectedFiles) {
         const filePath = path.join(templatesDir, file);
@@ -281,19 +286,164 @@ describe('ana init', () => {
       expect(settings.hooks.Stop[0].hooks[0].timeout).toBe(120);
     });
 
-    it('creates .claude/agents/ directory', async () => {
+    it('creates .claude/agents/ directory with 4 agent files', async () => {
       const claudePath = path.join(tmpDir, '.claude');
       const agentsPath = path.join(claudePath, 'agents');
 
       // Simulate init creating .claude/agents/
       await fs.mkdir(agentsPath, { recursive: true });
 
+      // Get templates directory
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = path.dirname(__filename);
+      const templatesDir = path.join(__dirname, '..', '..', 'templates');
+
+      // Copy agent files
+      const agentFiles = [
+        'ana-explorer.md',
+        'ana-question-formulator.md',
+        'ana-writer.md',
+        'ana-verifier.md',
+      ];
+
+      for (const agentFile of agentFiles) {
+        const sourcePath = path.join(templatesDir, '.claude/agents', agentFile);
+        const destPath = path.join(agentsPath, agentFile);
+        await fs.copyFile(sourcePath, destPath);
+      }
+
       const exists = await dirExists(agentsPath);
       expect(exists).toBe(true);
 
-      // Directory should be empty (agents come in Step 3)
+      // Should have 4 agent files
       const files = await fs.readdir(agentsPath);
-      expect(files).toHaveLength(0);
+      expect(files).toHaveLength(4);
+      expect(files).toContain('ana-explorer.md');
+      expect(files).toContain('ana-question-formulator.md');
+      expect(files).toContain('ana-writer.md');
+      expect(files).toContain('ana-verifier.md');
+    });
+
+    it('agent files have valid frontmatter with required fields', async () => {
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = path.dirname(__filename);
+      const templatesDir = path.join(__dirname, '..', '..', 'templates');
+
+      const agentFiles = [
+        'ana-explorer.md',
+        'ana-question-formulator.md',
+        'ana-writer.md',
+        'ana-verifier.md',
+      ];
+
+      for (const agentFile of agentFiles) {
+        const filePath = path.join(templatesDir, '.claude/agents', agentFile);
+        const content = await fs.readFile(filePath, 'utf-8');
+
+        // Check frontmatter markers
+        expect(content.startsWith('---'), `${agentFile} should start with ---`).toBe(true);
+        const secondDashIndex = content.indexOf('---', 3);
+        expect(secondDashIndex).toBeGreaterThan(3);
+
+        const frontmatter = content.slice(3, secondDashIndex).trim();
+
+        // Check required fields
+        expect(frontmatter).toContain('name:');
+        expect(frontmatter).toContain('model:');
+        expect(frontmatter).toContain('tools:');
+        expect(frontmatter).toContain('description:');
+
+        // Check all agents use sonnet model
+        expect(frontmatter).toContain('model: sonnet');
+      }
+    });
+
+    it('re-init does not duplicate agent files', async () => {
+      const claudePath = path.join(tmpDir, '.claude');
+      const agentsPath = path.join(claudePath, 'agents');
+
+      // Simulate first init
+      await fs.mkdir(agentsPath, { recursive: true });
+
+      // Get templates directory
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = path.dirname(__filename);
+      const templatesDir = path.join(__dirname, '..', '..', 'templates');
+
+      // Copy agent files (first init)
+      const agentFiles = [
+        'ana-explorer.md',
+        'ana-question-formulator.md',
+        'ana-writer.md',
+        'ana-verifier.md',
+      ];
+
+      for (const agentFile of agentFiles) {
+        const sourcePath = path.join(templatesDir, '.claude/agents', agentFile);
+        const destPath = path.join(agentsPath, agentFile);
+        await fs.copyFile(sourcePath, destPath);
+      }
+
+      // Simulate re-init: check if file exists before copying
+      for (const agentFile of agentFiles) {
+        const destPath = path.join(agentsPath, agentFile);
+        const exists = await fileExists(destPath);
+        // Should skip copy if exists
+        expect(exists).toBe(true);
+      }
+
+      // Should still have exactly 4 files, not 8
+      const files = await fs.readdir(agentsPath);
+      expect(files).toHaveLength(4);
+    });
+
+    it('agent files have correct tools for their role', async () => {
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = path.dirname(__filename);
+      const templatesDir = path.join(__dirname, '..', '..', 'templates');
+
+      // Helper to extract frontmatter tools line
+      const getToolsLine = (content: string): string => {
+        const match = content.match(/^tools:\s*\[.*\]$/m);
+        return match ? match[0] : '';
+      };
+
+      // Explorer: Read, Grep, Glob, Bash
+      const explorerContent = await fs.readFile(
+        path.join(templatesDir, '.claude/agents/ana-explorer.md'),
+        'utf-8'
+      );
+      expect(explorerContent).toContain('tools: [Read, Grep, Glob, Bash]');
+
+      // Question-formulator: Read, Grep, Glob (NO Bash, NO Write in frontmatter)
+      const questionContent = await fs.readFile(
+        path.join(templatesDir, '.claude/agents/ana-question-formulator.md'),
+        'utf-8'
+      );
+      const questionTools = getToolsLine(questionContent);
+      expect(questionTools).toBe('tools: [Read, Grep, Glob]');
+      expect(questionTools).not.toContain('Write');
+      expect(questionTools).not.toContain('Edit');
+      expect(questionTools).not.toContain('Bash');
+
+      // Writer: Read, Write, Grep, Glob, Bash
+      const writerContent = await fs.readFile(
+        path.join(templatesDir, '.claude/agents/ana-writer.md'),
+        'utf-8'
+      );
+      expect(writerContent).toContain('tools: [Read, Write, Grep, Glob, Bash]');
+
+      // Verifier: Read, Grep, Glob, Bash (NO Write, NO Edit in frontmatter)
+      const verifierContent = await fs.readFile(
+        path.join(templatesDir, '.claude/agents/ana-verifier.md'),
+        'utf-8'
+      );
+      const verifierTools = getToolsLine(verifierContent);
+      expect(verifierTools).toBe('tools: [Read, Grep, Glob, Bash]');
+      expect(verifierTools).not.toContain('Write');
+      expect(verifierTools).not.toContain('Edit');
+      // Verifier should mention it cannot write in the body
+      expect(verifierContent).toContain('CANNOT write or edit');
     });
 
     it('merges into existing .claude/settings.json without duplicates', async () => {

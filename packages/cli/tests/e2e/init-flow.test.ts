@@ -4,7 +4,7 @@
  * Tests actual command execution in temp project directory.
  * Validates all files/directories created correctly:
  * - .ana/ with 36 files (34 original + 2 hook scripts)
- * - .claude/ with settings.json and agents/ directory
+ * - .claude/ with settings.json and agents/ directory (4 agent files)
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -137,9 +137,29 @@ describe('ana init E2E', () => {
     const settingsExists = await fileExists(path.join(claudePath, 'settings.json'));
     expect(settingsExists).toBe(true);
 
-    // Verify .claude/agents/ directory
+    // Verify .claude/agents/ directory with 4 agent files
     const agentsExists = await dirExists(path.join(claudePath, 'agents'));
     expect(agentsExists).toBe(true);
+
+    // Verify all 4 agent files exist (Step 3)
+    const agentFiles = [
+      'ana-explorer.md',
+      'ana-question-formulator.md',
+      'ana-writer.md',
+      'ana-verifier.md',
+    ];
+
+    for (const agentFile of agentFiles) {
+      const agentExists = await fileExists(path.join(claudePath, 'agents', agentFile));
+      expect(agentExists, `Agent file missing: ${agentFile}`).toBe(true);
+    }
+
+    // Verify agent files have valid frontmatter
+    for (const agentFile of agentFiles) {
+      const content = await fs.readFile(path.join(claudePath, 'agents', agentFile), 'utf-8');
+      expect(content.startsWith('---'), `${agentFile} should have frontmatter`).toBe(true);
+      expect(content).toContain('model: sonnet');
+    }
   }, 30000); // 30s timeout
 
   it('--force preserves .state/ directory', async () => {
