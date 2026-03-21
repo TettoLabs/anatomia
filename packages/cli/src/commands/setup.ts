@@ -20,6 +20,7 @@ import {
   type ValidationError,
 } from '../utils/validators.js';
 import { VALID_SETUP_TIERS, META_VERSION } from '../constants.js';
+import { createCheckCommand } from './check.js';
 
 interface SetupCompleteOptions {
   mode?: string;
@@ -38,6 +39,9 @@ function isValidSetupTier(tier: string): tier is typeof VALID_SETUP_TIERS[number
 export const setupCommand = new Command('setup').description(
   'Setup-related commands'
 );
+
+/** Add 'check' subcommand */
+setupCommand.addCommand(createCheckCommand());
 
 /** Add 'complete' subcommand */
 setupCommand
