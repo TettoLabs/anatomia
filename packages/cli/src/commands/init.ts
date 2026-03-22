@@ -37,6 +37,7 @@ import * as os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import type { AnalysisResult } from 'anatomia-analyzer';
+import { dirname } from 'node:path';
 import { formatAnalysisBrief } from '../utils/format-analysis-brief.js';
 import {
   generateProjectOverviewScaffold,
@@ -151,8 +152,17 @@ export const initCommand = new Command('init')
     const tmpAnaPath = path.join(tmpDir, '.ana');
 
     try {
+      // Set ASTCache to write to temp directory during analysis
+      // (prevents creating .ana/ in project root before atomic rename)
+      const { ASTCache } = await import('anatomia-analyzer');
+      const tmpCacheDir = path.join(tmpAnaPath, '.state', 'cache');
+      ASTCache.setCacheDir(tmpCacheDir);
+
       // All operations in temp directory
       const analysisResult = await runAnalyzer(cwd, options);
+
+      // Reset cache override after analysis
+      ASTCache.setCacheDir(null);
       await createDirectoryStructure(tmpAnaPath);
       await generateAnalysisMd(tmpAnaPath, analysisResult, cwd);
       await generateScaffolds(tmpAnaPath, analysisResult, cwd);
@@ -161,6 +171,7 @@ export const initCommand = new Command('init')
       await createMetaJson(tmpAnaPath, analysisResult, setupMode);
       await storeSnapshot(tmpAnaPath, analysisResult);
       await buildSymbolIndexSafe(cwd, tmpAnaPath);
+      await writeCliPath(tmpAnaPath);
 
       // Restore .state/ if --force was used
       if (preflight.stateBackup) {
@@ -170,10 +181,6 @@ export const initCommand = new Command('init')
         // Move backup into place
         await fs.rename(preflight.stateBackup, stateDir);
       }
-
-      // Clean up any .ana/ created by analyzer cache during Phase 2
-      // (ASTCache creates .ana/.state/cache/ in project root during parsing)
-      await fs.rm(anaPath, { recursive: true, force: true });
 
       // SUCCESS: Atomic rename
       await atomicRename(tmpAnaPath, anaPath);
@@ -497,7 +504,13 @@ async function generateScaffolds(
  */
 async function getCliVersion(): Promise<string> {
   try {
-    const pkgPath = new URL('../../package.json', import.meta.url);
+    // Detect bundle vs dev context
+    const moduleUrl = new URL('.', import.meta.url);
+    const isBundle = !moduleUrl.pathname.includes('/src/');
+    const pkgPath = isBundle
+      ? new URL('../package.json', import.meta.url) // dist/index.js → ../package.json = cli/package.json
+      : new URL('../../package.json', import.meta.url); // src/commands/init.ts → ../../package.json = cli/package.json
+
     const content = await fs.readFile(pkgPath, 'utf-8');
     const pkg = JSON.parse(content);
     return pkg.version || '0.2.0';
@@ -929,6 +942,40 @@ async function buildSymbolIndexSafe(cwd: string, tmpAnaPath: string): Promise<vo
       console.log(chalk.gray(`  Reason: ${error.message}`));
     }
   }
+}
+
+/**
+ * Write CLI path for hook scripts to find the CLI
+ *
+ * Writes absolute paths to node binary and CLI entry point.
+ * Used by run-check.sh to invoke ana commands from external projects.
+ *
+ * @param tmpAnaPath - Temp .ana/ path
+ */
+async function writeCliPath(tmpAnaPath: string): Promise<void> {
+  const stateDir = path.join(tmpAnaPath, '.state');
+  await fs.mkdir(stateDir, { recursive: true });
+
+  // Get CLI entry point path (handles both dev and built contexts)
+  // import.meta.url points to the currently executing file
+  const moduleUrl = fileURLToPath(import.meta.url);
+  const moduleDir = dirname(moduleUrl);
+
+  // In bundled context: dist/index.js → dist/index.js is the entry
+  // In dev context: src/commands/init.ts → go up to find index.ts
+  const isBundle = !moduleDir.includes('/src/');
+  const cliEntry = isBundle
+    ? moduleUrl // dist/index.js IS the entry
+    : path.join(moduleDir, '..', 'index.js'); // src/commands/init.ts → src/index.js (compiled)
+
+  // Store node executable path
+  const nodeExec = process.execPath;
+
+  await fs.writeFile(
+    path.join(stateDir, 'cli-path'),
+    JSON.stringify({ node: nodeExec, cli: cliEntry }),
+    'utf-8'
+  );
 }
 
 /**

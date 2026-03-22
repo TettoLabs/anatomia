@@ -109,6 +109,7 @@ interface CitationsResult {
   verified: number;
   failed: FailedCitation[];
   pass: boolean;
+  verification_level: 'full' | 'file-only';
 }
 
 interface FileCheckResult {
@@ -152,15 +153,17 @@ function checkHeaders(content: string, config: FileConfig): HeadersResult {
 }
 
 /**
- * Check for placeholder markers (skip matches inside fenced code blocks)
+ * Check for placeholder markers (skip matches inside fenced code blocks and inline code)
  */
 function checkPlaceholders(content: string): PlaceholdersResult {
   // Remove fenced code blocks before checking
-  const contentWithoutCodeBlocks = content.replace(/```[\s\S]*?```/g, '');
+  let contentToCheck = content.replace(/```[\s\S]*?```/g, '');
+  // Also remove inline code (backtick-wrapped)
+  contentToCheck = contentToCheck.replace(/`[^`]+`/g, '');
   const markers: string[] = [];
 
   for (const pattern of PLACEHOLDER_PATTERNS) {
-    const matches = contentWithoutCodeBlocks.match(new RegExp(pattern.source, 'gi'));
+    const matches = contentToCheck.match(new RegExp(pattern.source, 'gi'));
     if (matches) {
       markers.push(...matches);
     }
@@ -332,6 +335,7 @@ async function checkCitations(content: string, projectRoot: string): Promise<Cit
 
   // Load symbol index if available
   const symbolIndex = await loadSymbolIndex(projectRoot);
+  const verificationLevel: 'full' | 'file-only' = symbolIndex ? 'full' : 'file-only';
 
   for (const pattern of CITATION_PATTERNS) {
     const regex = new RegExp(pattern.source, 'g');
@@ -428,6 +432,7 @@ async function checkCitations(content: string, projectRoot: string): Promise<Cit
     verified,
     failed: uniqueFailed,
     pass: uniqueFailed.length === 0,
+    verification_level: verificationLevel,
   };
 }
 

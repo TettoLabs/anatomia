@@ -173,8 +173,12 @@ async function generateEntryMd(anaPath: string, cwd: string): Promise<void> {
   // Get project name (priority: package.json → pyproject.toml → go.mod → dirname)
   const projectName = await getProjectName(cwd);
 
-  // Get CLI version
-  const cliPkgPath = new URL('../../package.json', import.meta.url);
+  // Get CLI version - detect bundle vs dev context
+  const moduleUrl = new URL('.', import.meta.url);
+  const isBundle = !moduleUrl.pathname.includes('/src/');
+  const cliPkgPath = isBundle
+    ? new URL('../package.json', import.meta.url) // dist/index.js → ../package.json = cli/package.json
+    : new URL('../../package.json', import.meta.url); // src/commands/setup.ts → ../../package.json = cli/package.json
   const cliPkgContent = await fs.readFile(cliPkgPath, 'utf-8');
   const cliPkg = JSON.parse(cliPkgContent);
   const cliVersion = cliPkg.version || '0.2.0';

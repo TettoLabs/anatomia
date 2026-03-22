@@ -9,6 +9,9 @@
 #
 # The agent sees the failure message and is expected to fix issues.
 
+# Resolve script location (works regardless of CWD)
+HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
+
 # Read JSON from stdin (CC passes tool_input with file path)
 INPUT=$(cat)
 
@@ -37,7 +40,7 @@ fi
 FILENAME=$(basename "$FILE_PATH")
 
 # Run verification using the wrapper script
-RESULT=$(bash .ana/hooks/run-check.sh "$FILENAME" --json 2>&1)
+RESULT=$(bash "$HOOK_DIR/run-check.sh" "$FILENAME" --json 2>&1)
 CHECK_EXIT=$?
 
 if [ $CHECK_EXIT -eq 0 ]; then

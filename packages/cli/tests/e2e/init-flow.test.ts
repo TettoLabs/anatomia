@@ -125,8 +125,8 @@ describe('ana init E2E', () => {
 
     // Count total files in .ana/
     const allFiles = await findAllFiles(anaPath);
-    // 8 generated + 27 copied + 2 JSON + 4 hooks + 1 symbol-index.json = 42
-    expect(allFiles.length).toBe(42);
+    // 8 generated + 27 copied + 2 JSON + 4 hooks + 1 symbol-index.json + 1 cli-path = 43
+    expect(allFiles.length).toBe(43);
 
     // Verify .claude/ directory was also created (outside .ana/)
     const claudePath = path.join(tmpProject, '.claude');

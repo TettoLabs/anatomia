@@ -34,6 +34,20 @@ After all 5 questions, ask:
 
 ---
 
+## Question Preparation
+
+Before presenting questions to the user, invoke ALL 5 question-formulators in parallel:
+
+1. ana-question-formulator: "Formulate Q1 project purpose"
+2. ana-question-formulator: "Formulate Q2 target users"
+3. ana-question-formulator: "Formulate Q3 architecture rationale"
+4. ana-question-formulator: "Formulate Q4 pain points"
+5. ana-question-formulator: "Formulate Q5 deployment and release"
+
+Run all 5 simultaneously using parallel Task calls. Then present questions to the user one at a time in order. This saves significant time compared to sequential formulation.
+
+---
+
 ## Question Presentation
 
 For each question:

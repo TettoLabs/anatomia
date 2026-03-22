@@ -229,8 +229,8 @@ describe('ana init', () => {
       expect(gateContent).toContain('#!/bin/bash');
       expect(gateContent).toContain('Stop hook');
       expect(gateContent).toContain('exit 2');
-      // Verify file-based lockfile guard (not environment variable)
-      expect(gateContent).toContain('LOCKFILE=".ana/.stop_hook_active"');
+      // Verify file-based lockfile guard (uses PROJECT_ROOT for portability)
+      expect(gateContent).toContain('LOCKFILE="$PROJECT_ROOT/.ana/.stop_hook_active"');
       expect(gateContent).toContain('if [ -f "$LOCKFILE" ]');
       expect(gateContent).toContain('touch "$LOCKFILE"');
       expect(gateContent).toContain("trap 'rm -f");
@@ -276,16 +276,16 @@ describe('ana init', () => {
       // Verify PostToolUse hook
       expect(settings.hooks.PostToolUse).toBeDefined();
       expect(settings.hooks.PostToolUse).toHaveLength(1);
-      expect(settings.hooks.PostToolUse[0].matcher).toBe('Write');
+      expect(settings.hooks.PostToolUse[0].matcher).toBe('Write|Edit|MultiEdit');
       expect(settings.hooks.PostToolUse[0].hooks[0].command).toBe(
-        '.ana/hooks/verify-context-file.sh'
+        '"$CLAUDE_PROJECT_DIR"/.ana/hooks/verify-context-file.sh'
       );
       expect(settings.hooks.PostToolUse[0].hooks[0].timeout).toBe(30);
 
       // Verify Stop hook
       expect(settings.hooks.Stop).toBeDefined();
       expect(settings.hooks.Stop).toHaveLength(1);
-      expect(settings.hooks.Stop[0].hooks[0].command).toBe('.ana/hooks/quality-gate.sh');
+      expect(settings.hooks.Stop[0].hooks[0].command).toBe('"$CLAUDE_PROJECT_DIR"/.ana/hooks/quality-gate.sh');
       expect(settings.hooks.Stop[0].hooks[0].timeout).toBe(120);
     });
 

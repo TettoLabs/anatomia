@@ -2,8 +2,12 @@
 # SubagentStop hook: verify context files after writer completes
 # Exit 2 blocks the sub-agent from completing if verification fails
 
+# Resolve script location (works regardless of CWD)
+HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_ROOT="$(cd "$HOOK_DIR/../.." && pwd)"
+
 # Find recently modified context files (last 60 seconds)
-CONTEXT_DIR=".ana/context"
+CONTEXT_DIR="$PROJECT_ROOT/.ana/context"
 if [ ! -d "$CONTEXT_DIR" ]; then
   exit 0
 fi
@@ -26,7 +30,7 @@ for file in "$CONTEXT_DIR"/*.md; do
   fi
 
   # Run check using the wrapper script
-  RESULT=$(bash .ana/hooks/run-check.sh "$filename" --json 2>&1)
+  RESULT=$(bash "$HOOK_DIR/run-check.sh" "$filename" --json 2>&1)
   CHECK_EXIT=$?
 
   # Check if overall passed (check both exit code and JSON content)
