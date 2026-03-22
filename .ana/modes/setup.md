@@ -65,14 +65,10 @@ Examples:
 - User says "We deploy to AWS" — no contradicting evidence found → accept as-is
 
 ### 6. Write Context Files
-Invoke ana-writer in two batches. Include "User's goal: [goal]" in each invocation prompt.
-
-**Batch 1** (invoke simultaneously):
+Invoke ana-writer 7 times. Include "User's goal: [goal]" in each invocation prompt:
 1. ana-writer → project-overview.md (read: .ana/context/setup/steps/01_project_overview.md)
 2. ana-writer → conventions.md (read: .ana/context/setup/steps/02_conventions.md)
 3. ana-writer → patterns.md (read: .ana/context/setup/steps/03_patterns.md)
-
-**Batch 2** (invoke after batch 1 completes):
 4. ana-writer → architecture.md (read: .ana/context/setup/steps/04_architecture.md)
 5. ana-writer → testing.md (read: .ana/context/setup/steps/05_testing.md)
 6. ana-writer → workflow.md (read: .ana/context/setup/steps/06_workflow.md)

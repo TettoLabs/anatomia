@@ -43,17 +43,6 @@ Do NOT fabricate. Write "Not detected in codebase" instead. This is always bette
 
 **Why this matters:** The PostToolUse hook runs `ana setup check` on every file you write. Fabricated citations fail verification, and you will have to fix them. It is faster to cite correctly the first time.
 
-## Path Format
-
-Use paths relative to the project root in all citations. Never use absolute paths starting with / or ~.
-
-**Wrong:** Example from `/Users/rsmith/Projects/anatomia/src/index.ts` (lines 1-10)
-**Right:** Example from `src/index.ts` (lines 1-10)
-
-## Before Writing
-
-Read the existing scaffold file (the target .ana/context/[filename].md) before writing to it. This ensures you understand the current structure and avoids "file has not been read" errors.
-
 ## Content Quality Rules
 
 ### Every Claim Must Reference Real Code
@@ -76,24 +65,6 @@ Read the existing scaffold file (the target .ana/context/[filename].md) before w
 - "Not detected" is better than fabricated content
 - "Not applicable (single-developer project)" is better than made-up process
 
-### Quantitative Claims
-Never present calculated estimates as measured facts. If you compute a number from inferred data, tag it as Inferred.
-
-**Wrong:** "5-10ms per parser × 20 files = 100-200ms saved"
-**Right:** "**Inferred:** Parser reuse likely saves startup time (~100-200ms estimated, not measured)"
-
-### Avoid Cross-File Duplication
-Each context file owns specific content. If a code block is better documented in another file, reference it instead of quoting the same code again.
-
-File ownership:
-- **patterns.md** owns error handling, validation, database, auth, testing pattern code
-- **conventions.md** owns config files (.eslintrc, .prettierrc, tsconfig settings)
-- **project-overview.md** owns dependency lists and project structure
-- **workflow.md** owns CI/CD pipeline details and git workflow
-- **testing.md** owns test examples and fixture code
-
-If you need to reference content owned by another file, write: "See patterns.md for error handling code examples" instead of quoting the same code block.
-
 ## Trust Stack Tags
 
 Tag your information sources so readers know the confidence level:
@@ -102,10 +73,6 @@ Tag your information sources so readers know the confidence level:
 - **User confirmed:** [claim] — User validated via Q&A
 - **User stated:** [claim] — User provided, not verified against code
 - **Inferred:** [claim] — Your judgment, not mechanically verified
-- **Unexamined:** [pattern] — Detected but intent unknown
-
-### Trust Stack Integrity
-Only use "User confirmed" when the Q&A log has an explicit entry where the user confirmed this specific claim. Only use "User stated" when the Q&A log has the user's exact words on this topic. If the Q&A log has no relevant entry, use "Detected" (from code) or "Inferred" (your judgment). Never guess what the user would have said.
 
 ### Example:
 ```markdown
