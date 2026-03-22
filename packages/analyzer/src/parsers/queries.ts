@@ -3,19 +3,14 @@
  *
  * Simplified queries that focus on reliable extraction.
  * Complex patterns (decorators with args, etc.) can be added incrementally.
+ *
+ * WASM Migration (SS-10):
+ * - Query creation uses new Query(language, source) constructor
+ * - Language object passed as parameter to avoid circular dependency
+ * - NO imports from treeSitter.ts - breaks circular dependency completely
  */
 
-import Parser from 'tree-sitter';
-import { createRequire } from 'node:module';
-const require = createRequire(import.meta.url);
-
-// Load language grammars
-const Python = require('tree-sitter-python');
-const TypeScriptGrammar = require('tree-sitter-typescript');
-const JavaScript = require('tree-sitter-javascript');
-const Go = require('tree-sitter-go');
-
-const { typescript, tsx } = TypeScriptGrammar;
+import { Query, type Language as TSLanguage } from 'web-tree-sitter';
 
 type Language = 'python' | 'typescript' | 'tsx' | 'javascript' | 'go';
 
@@ -222,18 +217,28 @@ export type QueryType =
  * Query compilation cache
  *
  * Compiles S-expression queries once per language+type, caches for reuse.
+ *
+ * WASM Migration (SS-10):
+ * - Uses new Query(language, source) constructor
+ * - Language object passed as parameter (no dependency on ParserManager)
+ * - Stays SYNC - no async cascade
  */
 export class QueryCache {
-  private compiled = new Map<string, any>();
+  private compiled = new Map<string, Query>();
 
   /**
    * Get compiled query for language and query type
    *
-   * @param language - Language to query
-   * @param queryType - Type of query
+   * SYNC method - Language object passed as parameter to avoid circular dependency
+   *
+   * @param language - Language name ('python', 'typescript', etc.)
+   * @param queryType - Type of query ('functions', 'classes', etc.)
+   * @param tsLanguage - Pre-loaded WASM Language object from ParserManager
    * @returns Compiled query object
+   *
+   * @throws Error if query not defined for language+type
    */
-  getQuery(language: Language, queryType: QueryType): any {
+  getQuery(language: Language, queryType: QueryType, tsLanguage: TSLanguage): Query {
     const key = `${language}:${queryType}`;
 
     if (!this.compiled.has(key)) {
@@ -243,30 +248,8 @@ export class QueryCache {
         throw new Error(`No query defined for ${key}`);
       }
 
-      // Get language grammar
-      let languageGrammar: any;
-      switch (language) {
-        case 'python':
-          languageGrammar = Python;
-          break;
-        case 'typescript':
-          languageGrammar = typescript;
-          break;
-        case 'tsx':
-          languageGrammar = tsx;
-          break;
-        case 'javascript':
-          languageGrammar = JavaScript;
-          break;
-        case 'go':
-          languageGrammar = Go;
-          break;
-        default:
-          throw new Error(`Unsupported language: ${language}`);
-      }
-
-      // Create query using Parser.Query constructor
-      const compiled = new (Parser as any).Query(languageGrammar, queryString);
+      // Create query using new Query(language, source) (WASM API)
+      const compiled = new Query(tsLanguage, queryString);
       this.compiled.set(key, compiled);
     }
 

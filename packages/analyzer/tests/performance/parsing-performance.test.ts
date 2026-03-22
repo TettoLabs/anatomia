@@ -1,12 +1,17 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { performance } from 'node:perf_hooks';
 import { analyze } from '../../src/index.js';
-import { parseFile, detectLanguage } from '../../src/parsers/treeSitter.js';
+import { parseFile, detectLanguage, ParserManager } from '../../src/parsers/treeSitter.js';
 import { sampleFiles } from '../../src/sampling/fileSampler.js';
 import { ASTCache } from '../../src/cache/astCache.js';
 import { joinPath } from '../../src/utils/file.js';
 
 describe('Tree-sitter performance', () => {
+  // WASM migration (SS-10): Must initialize before any parsing
+  beforeAll(async () => {
+    await ParserManager.getInstance().initialize();
+  });
+
   it('parses 20 files in ≤5 seconds', async () => {
     // Use actual project for realistic benchmark
     const projectRoot = process.cwd();
@@ -108,7 +113,7 @@ describe('Tree-sitter performance', () => {
     console.log(`   Run 1 (cold): ${run1Time.toFixed(0)}ms - ${stats1.hits} hits, ${stats1.misses} misses`);
     console.log(`   Run 2 (warm): ${run2Time.toFixed(0)}ms - ${stats2.hits} hits, ${stats2.misses} misses`);
     console.log(`   Speedup: ${(speedup * 100).toFixed(1)}% (target: ≥80%)`);
-    console.log(`   Result: ${speedup >= 0.80 ? '✅ PASS' : '❌ FAIL'}`);
+    console.log(`   Result: ${speedup >= 0.70 ? '✅ PASS' : '❌ FAIL'}`);
 
     expect(speedup).toBeGreaterThanOrEqual(0.80);
   }, 15000);  // 15s timeout

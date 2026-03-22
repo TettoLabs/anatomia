@@ -32,21 +32,21 @@ importers:
       js-yaml:
         specifier: ^4.1.1
         version: 4.1.1
-      tree-sitter:
-        specifier: 0.25.0
-        version: 0.25.0
       tree-sitter-go:
         specifier: 0.25.0
-        version: 0.25.0(tree-sitter@0.25.0)
+        version: 0.25.0
       tree-sitter-javascript:
         specifier: 0.25.0
-        version: 0.25.0(tree-sitter@0.25.0)
+        version: 0.25.0
       tree-sitter-python:
         specifier: 0.25.0
-        version: 0.25.0(tree-sitter@0.25.0)
+        version: 0.25.0
       tree-sitter-typescript:
         specifier: 0.23.2
-        version: 0.23.2(tree-sitter@0.25.0)
+        version: 0.23.2
+      web-tree-sitter:
+        specifier: 0.25.10
+        version: 0.25.10
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -70,8 +70,8 @@ importers:
   packages/cli:
     dependencies:
       anatomia-analyzer:
-        specifier: ^0.1.0
-        version: 0.1.0
+        specifier: workspace:*
+        version: link:../analyzer
       chalk:
         specifier: ^5.3.0
         version: 5.6.2
@@ -1425,10 +1425,6 @@ packages:
 
   ajv@6.14.0:
     resolution: {integrity: sha512-IWrosm/yrn43eiKqkfkHis7QioDleaXQHdDVPKg0FSwwd/DuvyX79TZnFOnYpB7dcsFAMmtFztZuXPDvSePkFw==}
-
-  anatomia-analyzer@0.1.0:
-    resolution: {integrity: sha512-F2l8X+1d93WWLpninXoLl5KJNlR3K64msBfTrsjlce5fMV5FigIAzWH/4YVrO8YJk9AbBjwdLYbZKx0GHrHcjw==}
-    engines: {node: '>=20.0.0'}
 
   ansi-regex@5.0.1:
     resolution: {integrity: sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==}
@@ -3094,9 +3090,6 @@ packages:
       tree-sitter:
         optional: true
 
-  tree-sitter@0.25.0:
-    resolution: {integrity: sha512-PGZZzFW63eElZJDe/b/R/LbsjDDYJa5UEjLZJB59RQsMX+fo0j54fqBPn1MGKav/QNa0JR0zBiVaikYDWCj5KQ==}
-
   ts-api-utils@2.4.0:
     resolution: {integrity: sha512-3TaVTaAv2gTiMB35i3FiGJaRfwb3Pyn/j3m/bfAvGe8FB7CF6u+LMYqYlDh7reQf7UNvoTvdfAqHGmPGOSsPmA==}
     engines: {node: '>=18.12'}
@@ -3357,6 +3350,14 @@ packages:
       happy-dom:
         optional: true
       jsdom:
+        optional: true
+
+  web-tree-sitter@0.25.10:
+    resolution: {integrity: sha512-Y09sF44/13XvgVKgO2cNDw5rGk6s26MgoZPXLESvMXeefBf7i6/73eFurre0IsTW6E14Y0ArIzhUMmjoc7xyzA==}
+    peerDependencies:
+      '@types/emscripten': ^1.40.0
+    peerDependenciesMeta:
+      '@types/emscripten':
         optional: true
 
   which-boxed-primitive@1.1.1:
@@ -4503,18 +4504,6 @@ snapshots:
       fast-json-stable-stringify: 2.1.0
       json-schema-traverse: 0.4.1
       uri-js: 4.4.1
-
-  anatomia-analyzer@0.1.0:
-    dependencies:
-      chalk: 5.6.2
-      glob: 10.5.0
-      js-yaml: 4.1.1
-      tree-sitter: 0.25.0
-      tree-sitter-go: 0.25.0(tree-sitter@0.25.0)
-      tree-sitter-javascript: 0.25.0(tree-sitter@0.25.0)
-      tree-sitter-python: 0.25.0(tree-sitter@0.25.0)
-      tree-sitter-typescript: 0.23.2(tree-sitter@0.25.0)
-      zod: 4.3.6
 
   ansi-regex@5.0.1: {}
 
@@ -6400,46 +6389,31 @@ snapshots:
 
   tree-kill@1.2.2: {}
 
-  tree-sitter-go@0.25.0(tree-sitter@0.25.0):
+  tree-sitter-go@0.25.0:
     dependencies:
       node-addon-api: 8.6.0
       node-gyp-build: 4.8.4
-    optionalDependencies:
-      tree-sitter: 0.25.0
 
-  tree-sitter-javascript@0.23.1(tree-sitter@0.25.0):
+  tree-sitter-javascript@0.23.1:
     dependencies:
       node-addon-api: 8.6.0
       node-gyp-build: 4.8.4
-    optionalDependencies:
-      tree-sitter: 0.25.0
 
-  tree-sitter-javascript@0.25.0(tree-sitter@0.25.0):
+  tree-sitter-javascript@0.25.0:
     dependencies:
       node-addon-api: 8.6.0
       node-gyp-build: 4.8.4
-    optionalDependencies:
-      tree-sitter: 0.25.0
 
-  tree-sitter-python@0.25.0(tree-sitter@0.25.0):
+  tree-sitter-python@0.25.0:
     dependencies:
       node-addon-api: 8.6.0
       node-gyp-build: 4.8.4
-    optionalDependencies:
-      tree-sitter: 0.25.0
 
-  tree-sitter-typescript@0.23.2(tree-sitter@0.25.0):
+  tree-sitter-typescript@0.23.2:
     dependencies:
       node-addon-api: 8.6.0
       node-gyp-build: 4.8.4
-      tree-sitter-javascript: 0.23.1(tree-sitter@0.25.0)
-    optionalDependencies:
-      tree-sitter: 0.25.0
-
-  tree-sitter@0.25.0:
-    dependencies:
-      node-addon-api: 8.6.0
-      node-gyp-build: 4.8.4
+      tree-sitter-javascript: 0.23.1
 
   ts-api-utils@2.4.0(typescript@5.9.3):
     dependencies:
@@ -6727,6 +6701,8 @@ snapshots:
       - terser
       - tsx
       - yaml
+
+  web-tree-sitter@0.25.10: {}
 
   which-boxed-primitive@1.1.1:
     dependencies:

@@ -9,10 +9,10 @@
  * - Backward compatibility with STEP_1.1 and STEP_1.2
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
 import { analyze } from '../../src/index.js';
 import { sampleFiles } from '../../src/sampling/fileSampler.js';
-import { parseProjectFiles } from '../../src/parsers/treeSitter.js';
+import { parseProjectFiles, ParserManager } from '../../src/parsers/treeSitter.js';
 import { AnalysisResultSchema } from '../../src/types/index.js';
 import { mkdir, writeFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -213,6 +213,11 @@ describe('sampleFiles() entry point handling', () => {
 
 describe('parseProjectFiles() integration', () => {
   let testDir: string;
+
+  // WASM migration (SS-10): Must initialize before parseProjectFiles
+  beforeAll(async () => {
+    await ParserManager.getInstance().initialize();
+  });
 
   beforeEach(async () => {
     const suffix = randomBytes(4).toString('hex');

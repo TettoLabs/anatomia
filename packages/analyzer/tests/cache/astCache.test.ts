@@ -1,14 +1,20 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
 import { writeFile, rm, mkdir, stat, readdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ASTCache } from '../../src/cache/astCache.js';
 import type { ASTCacheEntry } from '../../src/cache/astCache.js';
+import { ParserManager } from '../../src/parsers/treeSitter.js';
 
 describe('ASTCache', () => {
   let tempDir: string;
   let cache: ASTCache;
   let testFilePath: string;
+
+  // WASM migration (SS-10): Must initialize before parseFile integration tests
+  beforeAll(async () => {
+    await ParserManager.getInstance().initialize();
+  });
 
   beforeEach(async () => {
     // Create unique temp directory for each test
