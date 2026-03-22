@@ -104,6 +104,15 @@ Never present calculated estimates as measured facts. If you compute a number fr
 **Wrong:** "5-10ms per parser × 20 files = 100-200ms saved"
 **Right:** "**Inferred:** Parser reuse likely saves startup time (~100-200ms estimated, not measured)"
 
+### No Self-Assessment in Output
+Do NOT include statements about your own work quality in context files. No:
+- "All patterns detected in this codebase, zero fabrications"
+- "All citations verified"
+- "Comprehensive coverage of..."
+- Any claim about completeness or accuracy
+
+Context files document the PROJECT, not your performance. Quality claims belong in the verification report, not in the content.
+
 ### Avoid Cross-File Duplication
 Each context file owns specific content. If a code block is better documented in another file, reference it instead of quoting the same code again.
 

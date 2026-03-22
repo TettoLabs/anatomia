@@ -61,6 +61,24 @@ Note: If the explorer detected fragile patterns that the user did not mention in
   <if_not_found>Write: "No APM detected — recommend adding for production scale"</if_not_found>
 </target>
 
+<target name="security_posture">
+  Search: Rate limiting, input sanitization, CORS config, security headers, secrets handling
+  Files: middleware.ts, src/**/middleware*, next.config.*, .env.example, src/**/cors*, package.json
+
+  Check for ABSENCE of:
+  - Rate limiting: no rate-limit or @upstash/ratelimit in deps AND no rate-limit middleware file → Unexamined CRITICAL: "No rate limiting on API routes"
+  - Input sanitization: API routes accepting req.body without Zod/validation → Unexamined: "User input reaches database without validation on [routes]"
+  - CORS: cors configured with origin: "*" → Unexamined: "CORS allows all origins"
+  - Security headers: no helmet or next-safe in deps → Unexamined: "No security headers configured"
+  - Hardcoded secrets: grep for sk_live_, pk_live_, API keys in .ts/.js files (not .env) → Unexamined CRITICAL
+  - Monitoring: no @sentry, datadog, logtail in deps → Unexamined: "No error tracking service"
+
+  Present all findings under "## Security Posture" heading.
+  Tag EVERY finding as Unexamined unless user confirms in Q&A.
+
+  <if_not_found>Write: "Security posture assessment incomplete — this section should ALWAYS have findings. If no patterns were detected, re-run exploration with focus on middleware, dependencies, and API route protection."</if_not_found>
+</target>
+
 ## Structure
 
 - 5 H2 sections: Logging, Error Tracing, Common Failure Modes, Debugging Workflow, Observability

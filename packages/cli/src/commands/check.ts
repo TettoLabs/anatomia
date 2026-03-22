@@ -27,12 +27,12 @@ interface FileConfig {
 /** File configurations indexed by filename (without .md) */
 const FILE_CONFIGS: Record<string, FileConfig> = {
   'project-overview': { minLines: 200, maxLines: 700, expectedHeaders: 4 },
-  'conventions': { minLines: 300, maxLines: 850, expectedHeaders: 4 },
+  'conventions': { minLines: 300, maxLines: 950, expectedHeaders: 4 },
   'patterns': { minLines: 550, maxLines: 1400, expectedHeaders: 6 },
   'architecture': { minLines: 200, maxLines: 700, expectedHeaders: 4 },
   'testing': { minLines: 250, maxLines: 850, expectedHeaders: 6 },
   'workflow': { minLines: 400, maxLines: 1000, expectedHeaders: 6 },
-  'debugging': { minLines: 200, maxLines: 700, expectedHeaders: 5 },
+  'debugging': { minLines: 200, maxLines: 700, expectedHeaders: 6 },
 };
 
 /** All context files to check */
@@ -85,6 +85,7 @@ interface HeadersResult {
   actual: number;
   expected: number;
   pass: boolean;
+  duplicates: string[];
 }
 
 interface PlaceholdersResult {
@@ -141,14 +142,29 @@ function checkLineCount(content: string, config: FileConfig): LineCountResult {
 }
 
 /**
- * Check H2 header count
+ * Check H2 header count and detect duplicates
  */
 function checkHeaders(content: string, config: FileConfig): HeadersResult {
-  const headers = content.match(/^## .+$/gm) || [];
+  // Remove fenced code blocks before checking (headers in examples shouldn't count)
+  const contentWithoutCodeBlocks = content.replace(/```[\s\S]*?```/g, '');
+  const headers = contentWithoutCodeBlocks.match(/^## .+$/gm) || [];
+
+  // Detect duplicate headers (case-insensitive)
+  const seen = new Set<string>();
+  const duplicates: string[] = [];
+  for (const header of headers) {
+    const normalized = header.toLowerCase();
+    if (seen.has(normalized)) {
+      duplicates.push(header);
+    }
+    seen.add(normalized);
+  }
+
   return {
     actual: headers.length,
     expected: config.expectedHeaders,
-    pass: headers.length >= config.expectedHeaders,
+    pass: headers.length >= config.expectedHeaders && duplicates.length === 0,
+    duplicates,
   };
 }
 
@@ -485,6 +501,9 @@ function displayFileResult(result: FileCheckResult): void {
   const headerIcon = result.headers.pass ? chalk.green('✓') : chalk.red('✗');
   const headerStatus = result.headers.pass ? 'pass' : 'fail';
   console.log(`${headerIcon} Headers: ${result.headers.actual} (expected ${result.headers.expected}) [${headerStatus}]`);
+  if (result.headers.duplicates && result.headers.duplicates.length > 0) {
+    console.log(chalk.gray(`   Duplicates: ${result.headers.duplicates.join(', ')}`));
+  }
 
   // Placeholders
   const placeholderIcon = result.placeholders.pass ? chalk.green('✓') : chalk.red('✗');
@@ -596,10 +615,10 @@ export function createCheckCommand(): Command {
               results.push({
                 file,
                 line_count: { actual: 0, minimum: config.minLines, maximum: config.maxLines, pass: false },
-                headers: { actual: 0, expected: config.expectedHeaders, pass: false },
+                headers: { actual: 0, expected: config.expectedHeaders, pass: false, duplicates: [] },
                 placeholders: { count: 0, markers: [], pass: true },
                 scaffold_markers: { count: 0, pass: true },
-                citations: { total: 0, verified: 0, failed: [], pass: true },
+                citations: { total: 0, verified: 0, failed: [], pass: true, verification_level: 'file-only' },
                 overall: false,
               });
             }

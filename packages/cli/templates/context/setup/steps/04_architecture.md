@@ -57,6 +57,21 @@ Before finishing, verify:
   <if_not_found>Write: "Not yet documented — add via teach mode"</if_not_found>
 </target>
 
+<target name="auth_architecture">
+  Search: Auth provider configuration, protected routes, middleware, session config
+  Files: auth.ts, auth.config.ts, middleware.ts, src/**/auth*, app/api/auth/**
+
+  Extract:
+  - Auth provider (Clerk, NextAuth, Supabase Auth, better-auth, Kinde)
+  - Session strategy (JWT vs database sessions, token expiration)
+  - Which API routes call auth/getServerSession and which DON'T
+  - List unprotected API routes as Unexamined: "POST /api/invoices has no auth check"
+  - Role-based access patterns (admin checks, role guards)
+  - OAuth providers configured (Google, GitHub, etc.)
+
+  <if_not_found>Write: "No authentication detected — all routes are public."</if_not_found>
+</target>
+
 Note: For each trade-off where the user did NOT confirm the rationale via Q&A, tag as **Unexamined** instead of **Detected**. Add: "Was this intentional?" Example: "**Unexamined:** No database indexes on frequently-queried columns — was this intentional?"
 
 ## Structure

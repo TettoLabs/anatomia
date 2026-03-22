@@ -88,3 +88,39 @@ For user answers, validate against codebase before storing. See setup.md Step 5 
 - Stage 2 (Three-Month Wall) projects
 - Stage 3 (Hiring Phase) projects
 - Most production projects benefit from Guided
+
+---
+
+## Trade-Off Review (after Q&A, before writing)
+
+Re-read `.ana/.setup_exploration.md` before presenting trade-offs to ensure exploration findings are fresh in context.
+
+After all questions are answered, review the exploration results for security and architecture concerns. Look for findings tagged with high confidence that involve:
+- Missing security measures (rate limiting, auth on routes, webhook verification)
+- Missing data safety (no database transactions, no backup strategy)
+- Missing observability (no error tracking, no monitoring)
+- Architectural choices that may be unintentional
+
+Present the top 3-5 findings to the user:
+
+```
+Before I start writing, I noticed a few things that might be unintentional:
+
+1. ⚠️ [finding from exploration, e.g., "No rate limiting on any API route"]
+2. ⚠️ [finding, e.g., "Stripe webhook handler doesn't verify signatures"]
+3. ⚠️ [finding, e.g., "Invoice creation uses 4 database operations without a transaction wrapper"]
+4. ⚠️ [finding, e.g., "3 API routes have no authentication check"]
+5. ⚠️ [finding, e.g., "No error tracking service — errors only go to console.error"]
+
+For each, were these intentional decisions?
+Type Y/N for each (e.g., "YNNNY"), or type 'skip' to move on.
+```
+
+For each response:
+- **Y (intentional)** → Tag as "User confirmed trade-off" in architecture.md Trade-Offs section
+- **N (needs review)** → Tag as "Unexamined — user flagged for review" in the relevant context file
+- **skip** → Tag all as "Unexamined" (same as Quick tier behavior)
+
+Store the responses in `.ana/.setup_qa_log.md` under a "## Trade-Off Review" section.
+
+**Only present findings from the exploration results.** Do NOT fabricate findings or present generic security advice. If the exploration found fewer than 3 concerns, present what you have. If none, skip this step entirely.
