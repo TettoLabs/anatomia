@@ -3,7 +3,7 @@
  *
  * Tests actual command execution in temp project directory.
  * Validates all files/directories created correctly:
- * - .ana/ with 37 files (34 original + 3 hook scripts)
+ * - .ana/ with 40 files (34 original + 3 tier files + 3 hook scripts)
  * - .claude/ with settings.json and agents/ directory (4 agent files)
  */
 
@@ -37,7 +37,7 @@ describe('ana init E2E', () => {
     await fs.rm(tmpProject, { recursive: true, force: true });
   });
 
-  it('creates all 37 files in .ana/ (24 static + 8 generated + 2 JSON + 3 hooks)', async () => {
+  it('creates all 40 files in .ana/ (27 static + 8 generated + 2 JSON + 3 hooks)', async () => {
     // Run ana init with --skip-analysis (faster, deterministic)
     await execFileAsync('node', [cliPath, 'init', '--skip-analysis'], {
       cwd: tmpProject,
@@ -125,8 +125,8 @@ describe('ana init E2E', () => {
 
     // Count total files in .ana/
     const allFiles = await findAllFiles(anaPath);
-    // 8 generated + 24 copied + 2 JSON + 3 hooks = 37
-    expect(allFiles.length).toBe(37);
+    // 8 generated + 27 copied + 2 JSON + 3 hooks = 40
+    expect(allFiles.length).toBe(40);
 
     // Verify .claude/ directory was also created (outside .ana/)
     const claudePath = path.join(tmpProject, '.claude');
