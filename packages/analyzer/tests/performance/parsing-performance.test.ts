@@ -7,7 +7,6 @@ import { ASTCache } from '../../src/cache/astCache.js';
 import { joinPath } from '../../src/utils/file.js';
 
 describe('Tree-sitter performance', () => {
-  // WASM migration (SS-10): Must initialize before any parsing
   beforeAll(async () => {
     await ParserManager.getInstance().initialize();
   });

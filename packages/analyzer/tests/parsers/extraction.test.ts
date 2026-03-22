@@ -4,7 +4,6 @@ import { ParserManager, extractFunctions, extractClasses, extractImports } from 
 describe('AST extraction', () => {
   const manager = ParserManager.getInstance();
 
-  // WASM migration (SS-10): Must initialize before any parsing
   beforeAll(async () => {
     await manager.initialize();
   });

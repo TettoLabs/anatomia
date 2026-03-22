@@ -11,7 +11,6 @@ describe('ASTCache', () => {
   let cache: ASTCache;
   let testFilePath: string;
 
-  // WASM migration (SS-10): Must initialize before parseFile integration tests
   beforeAll(async () => {
     await ParserManager.getInstance().initialize();
   });

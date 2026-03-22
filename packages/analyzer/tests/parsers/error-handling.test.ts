@@ -7,7 +7,6 @@ import { tmpdir } from 'node:os';
 describe('Error handling', () => {
   let testDir: string;
 
-  // WASM migration (SS-10): Must initialize before any parsing
   beforeAll(async () => {
     await ParserManager.getInstance().initialize();
   });

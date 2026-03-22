@@ -4,7 +4,6 @@ import { ParserManager } from '../../src/parsers/treeSitter.js';
 describe('ParserManager', () => {
   const manager = ParserManager.getInstance();
 
-  // WASM migration (SS-10): Must initialize before any parsing
   beforeAll(async () => {
     await manager.initialize();
   });

@@ -214,7 +214,6 @@ describe('sampleFiles() entry point handling', () => {
 describe('parseProjectFiles() integration', () => {
   let testDir: string;
 
-  // WASM migration (SS-10): Must initialize before parseProjectFiles
   beforeAll(async () => {
     await ParserManager.getInstance().initialize();
   });
