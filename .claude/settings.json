@@ -17,8 +17,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo '{\"additionalContext\": \"Sub-agent completed. If this was ana-writer, run: ana setup check [filename] --json to verify output quality.\"}'",
-            "timeout": 30
+            "command": ".ana/hooks/subagent-verify.sh",
+            "timeout": 60
           }
         ]
       }

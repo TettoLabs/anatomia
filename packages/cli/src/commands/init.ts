@@ -611,7 +611,7 @@ async function copyHookScripts(tmpAnaPath: string): Promise<void> {
   await fs.mkdir(hooksDir, { recursive: true });
 
   // Hook scripts to copy
-  const hookScripts = ['verify-context-file.sh', 'quality-gate.sh', 'subagent-verify.sh'];
+  const hookScripts = ['run-check.sh', 'verify-context-file.sh', 'quality-gate.sh', 'subagent-verify.sh'];
 
   for (const script of hookScripts) {
     const sourcePath = path.join(templatesDir, '.ana/hooks', script);
@@ -624,7 +624,7 @@ async function copyHookScripts(tmpAnaPath: string): Promise<void> {
     await fs.chmod(destPath, 0o755);
   }
 
-  spinner.succeed('Copied hook scripts (3 files, executable)');
+  spinner.succeed('Copied hook scripts (4 files, executable)');
 }
 
 /**

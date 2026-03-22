@@ -2,9 +2,9 @@
 
 ## Test Framework
 
-**Detected:** Vitest 2.0+ with globals enabled across CLI and analyzer packages
+**Detected:** Vitest 2.0.0 (CLI package) and Vitest 4.0.18 (analyzer package) with Node.js environment (from `packages/cli/vitest.config.ts` and `packages/analyzer/vitest.config.ts`)
 
-**CLI package configuration** from `packages/cli/vitest.config.ts` (lines 1-25):
+**Configuration** from `packages/cli/vitest.config.ts` (lines 1-25):
 ```typescript
 import { defineConfig } from 'vitest/config';
 
@@ -33,7 +33,7 @@ export default defineConfig({
 });
 ```
 
-**Analyzer package configuration** from `packages/analyzer/vitest.config.ts` (lines 1-25):
+**Configuration** from `packages/analyzer/vitest.config.ts` (lines 1-25):
 ```typescript
 import { defineConfig } from 'vitest/config';
 
@@ -62,55 +62,103 @@ export default defineConfig({
 ```
 
 **Test commands:**
-- **Local run:** `pnpm test` from package directory or root (via Turborepo)
-- **Coverage:** `pnpm test:coverage` (analyzer package only)
-- **CI run:** `pnpm test --run` (non-watch mode, from `.github/workflows/test.yml`, line 42)
+- `pnpm test` — Run all tests across all packages (from root `package.json`)
+- `pnpm test` in package — Run package-specific tests via Vitest
+- `pnpm test:coverage` — Generate coverage reports (if configured)
 
-**Detected:** V8 coverage provider with text, JSON, and HTML reporters
+**Key configuration features:**
+- **Global APIs enabled** (`globals: true`) — `describe`, `it`, `expect` available without imports
+- **Node.js environment** — Tests run in Node runtime, not browser or jsdom
+- **Test pattern** — All files matching `tests/**/*.test.ts`
+- **Coverage provider** — v8 (Node.js native coverage)
+- **Coverage reporters** — text (console), json (CI), html (local viewing)
 
-**Detected:** Node environment (not jsdom) for all tests — CLI and analyzer are Node.js tools, not browser code
+**Detected:** Higher coverage thresholds in analyzer package (85% lines/functions/statements) vs CLI package (80% lines/functions/statements, 75% branches) — suggests core analysis engine held to stricter quality bar
 
 ## Test Structure
 
-**Detected:** Package-level test organization with feature-based subdirectories
+**Test directories:**
 
-**CLI package** (`packages/cli/tests/`):
-- `/scaffolds/` — Scaffold generator tests (8 files for each scaffold + all-scaffolds.test.ts)
-- `/commands/` — Command tests (init.test.ts, setup.test.ts, check.test.ts, setup-complete-integration.test.ts)
-- `/e2e/` — End-to-end tests (init-flow.test.ts — spawns real CLI process)
-- `/contract/` — Analyzer contract tests (analyzer-contract.test.ts — validates analyzer API stability)
-- `/performance/` — Performance benchmarks (benchmarks.test.ts)
-- `/utils/` — Utility function tests (validators.test.ts, format-analysis-brief.test.ts)
-- `/templates/` — Template rendering tests (cross-platform.test.ts)
-- `/cleanup/` — Old system removal verification (old-system-removed.test.ts)
+CLI package (`packages/cli/tests/`):
+- `contract/` — Analyzer API contract tests (1 file)
+- `e2e/` — End-to-end command execution tests (1 file)
+- `scaffolds/` — Scaffold generation tests (8 files)
+- `commands/` — Command logic tests (4 files)
+- `utils/` — Utility function tests (2 files)
+- `templates/` — Template validation tests (1 file)
+- `performance/` — Performance benchmark tests (1 file)
+- `cleanup/` — Legacy system removal tests (1 file)
 
-**Analyzer package** (`packages/analyzer/tests/`):
-- `/parsers/` — Parser tests (node.test.ts, python.test.ts, go-rust.test.ts, ruby-php.test.ts, node-package.test.ts, detectLanguage.test.ts, error-handling.test.ts, extraction.test.ts, parserManager.test.ts, parsing.test.ts)
-- `/detectors/` — Framework detection tests (node-frameworks.test.ts, python-frameworks.test.ts, go-rust-frameworks.test.ts)
-- `/analyzers/` — Feature analysis tests organized by analyzer type:
-  - `/patterns/` — Pattern detection (confidence.test.ts, confirmation.test.ts, dependencies.test.ts, integration.test.ts, multiPattern.test.ts, performance.test.ts)
-  - `/architecture-*.test.ts` — Architecture detection (layered-ddd.test.ts, microservices-etc.test.ts)
-  - `/entryPoints-*.test.ts` — Entry point detection per language
-  - `/testLocations.test.ts` — Test directory detection
-- `/cache/` — AST cache tests (astCache.test.ts)
-- `/conventions/` — Convention detection (naming.test.ts, imports.test.ts, indentation.test.ts, docstrings.test.ts, typeHints.test.ts, edge-cases.test.ts, integration.test.ts)
-- `/integration/` — Integration tests (structure-analysis.test.ts, edge-cases.test.ts, parsed-integration.test.ts)
-- `/performance/` — Performance tests (parsing-performance.test.ts)
-- `/*-backward-compat.test.ts` — Backward compatibility tests for API stability
+Analyzer package (`packages/analyzer/tests/`):
+- `parsers/` — Tree-sitter parser tests (8 files)
+- `detectors/` — Project type and framework detection (3 files)
+- `analyzers/` — Structure, patterns, conventions analysis (8 files)
+- `analyzers/patterns/` — Pattern inference subsystem (6 files)
+- `conventions/` — Convention detection (7 files)
+- `cache/` — AST caching system (1 file)
+- `integration/` — Integration tests (3 files)
+- `*-backward-compat.test.ts` — Backward compatibility tests (4 files)
+- `types.test.ts` — Type validation tests (1 file)
 
-**File naming:** All tests use `*.test.ts` suffix
+**Test file naming:**
+- Convention: `*.test.ts` (all test files)
+- Pattern: `{feature}.test.ts` — e.g., `validators.test.ts`, `parserManager.test.ts`
+- Pattern: `{feature}-backward-compat.test.ts` — backward compatibility tests
+- Pattern: `{scope}-{variant}.test.ts` — e.g., `node-frameworks.test.ts`, `python.test.ts`
 
-**Test discovery:** `include: ['tests/**/*.test.ts']` in vitest.config.ts
+**Test grouping:**
+- Top-level `describe()` blocks group related tests by feature
+- Nested `describe()` blocks for sub-features or scenarios
+- `it()` blocks describe specific behaviors
+
+Example from `packages/cli/tests/scaffolds/all-scaffolds.test.ts` (lines 13-44):
+```typescript
+describe('all scaffolds integration', () => {
+  const analysis = createEmptyAnalysisResult();
+  const projectName = 'test-project';
+  const timestamp = '2026-03-19T10:00:00Z';
+  const version = '0.2.0';
+
+  it('all 7 generators produce valid scaffolds', () => {
+    const scaffolds = [
+      generateProjectOverviewScaffold(analysis, projectName, timestamp, version),
+      generateArchitectureScaffold(analysis, projectName, timestamp, version),
+      generatePatternsScaffold(analysis, projectName, timestamp, version),
+      generateConventionsScaffold(analysis, projectName, timestamp, version),
+      generateWorkflowScaffold(analysis, projectName, timestamp, version),
+      generateTestingScaffold(analysis, projectName, timestamp, version),
+      generateDebuggingScaffold(analysis, projectName, timestamp, version),
+    ];
+
+    // All should have scaffold marker
+    scaffolds.forEach((scaffold) => {
+      expect(scaffold).toContain('<!-- SCAFFOLD - Setup will fill this file -->');
+    });
+
+    // All should have project name in title
+    scaffolds.forEach((scaffold) => {
+      expect(scaffold).toContain(projectName);
+    });
+
+    // All should have timestamp or version in footer
+    scaffolds.forEach((scaffold) => {
+      expect(scaffold).toContain(timestamp);
+    });
+  });
+});
+```
+
+**Organizational principles:**
+1. **Feature-based grouping** — Tests organized by feature area, not file structure
+2. **Layered testing** — Unit tests (parsers, detectors), integration tests (full analysis), E2E tests (CLI commands)
+3. **Scenario-based grouping** — Tests grouped by edge cases (e.g., "Scenario B — analyzer returned no/minimal data")
+4. **Backward compatibility isolation** — Separate files for API stability tests
 
 ## Fixture Patterns
 
-**Detected:** Two fixture approaches — factory functions for test data and file-based fixtures for parser tests
+**Factory functions for test data:**
 
-### Factory Functions for Test Data
-
-**Detected:** Shared factory in CLI tests creates empty analysis results
-
-Example from `packages/cli/tests/scaffolds/test-types.ts` (lines 89-104):
+**Detected:** `createEmptyAnalysisResult()` factory in `packages/cli/tests/scaffolds/test-types.ts` (lines 89-104):
 ```typescript
 export function createEmptyAnalysisResult(): AnalysisResult {
   return {
@@ -130,268 +178,47 @@ export function createEmptyAnalysisResult(): AnalysisResult {
 }
 ```
 
-**Usage:** Scaffold tests use this factory to test edge cases (analyzer failures, minimal data scenarios)
+**Purpose:** Avoids importing anatomia-analyzer in CLI tests (prevents tree-sitter native module dependency issues), provides clean baseline for testing scaffold generation with empty data
 
-**Detected:** Inline object construction for rich test data
-
-Example from `packages/cli/tests/scaffolds/project-overview-scaffold.test.ts` (lines 12-40):
-```typescript
-const richAnalysis: AnalysisResult = {
-  projectType: 'python',
-  framework: 'fastapi',
-  confidence: { projectType: 1.0, framework: 0.95 },
-  indicators: {
-    projectType: ['pyproject.toml'],
-    framework: ['fastapi in dependencies'],
-  },
-  detectedAt: timestamp,
-  version: '0.2.0',
-  structure: {
-    architecture: 'layered',
-    confidence: { architecture: 0.85 },
-    entryPoints: ['src/main.py', 'src/api/app.py'],
-    testLocation: 'tests/',
-    directories: { src: 'src/', tests: 'tests/', api: 'src/api/' },
-    configFiles: ['pyproject.toml', 'pytest.ini'],
-  },
-  patterns: {
-    testing: {
-      library: 'pytest',
-      confidence: 1.0,
-      evidence: ['pytest in dependencies'],
-    },
-    sampledFiles: 20,
-    detectionTime: 5000,
-    threshold: 0.7,
-  },
-};
-```
-
-**Pattern:** Build complete test data inline when testing scaffold generation — tests full rendering, not simplified edge cases
-
-### File-Based Fixtures for Parser Tests
-
-**Detected:** Fixture loader utility for tree-sitter parser tests
-
-Example from `packages/analyzer/tests/fixtures.ts` (lines 1-34):
+**Detected:** Scenario-specific factories in `packages/cli/tests/utils/validators.test.ts` (lines 36-60):
 ```typescript
 /**
- * Fixture loader utility for parser tests
+ * Create minimal AnalysisResult for Scenario B testing
+ * Simulates what analyzer returns when tree-sitter fails
  */
-
-import * as path from 'node:path';
-import * as fs from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+function createScenarioBSnapshot(): AnalysisResult {
+  return {
+    projectType: 'unknown',
+    framework: null,
+    confidence: { projectType: 0, framework: 0 },
+    indicators: { projectType: [], framework: [] },
+    detectedAt: new Date().toISOString(),
+    version: '0.1.0',
+    // patterns: undefined - not present
+  };
+}
 
 /**
- * Load fixture file content
+ * Create AnalysisResult with framework = "none" (string)
  */
-export async function loadFixture(
-  language: string,
-  format: string,
-  name: string
-): Promise<string> {
-  const fixturePath = path.join(
-    __dirname,
-    'fixtures',
-    language,
-    format,
-    `${name}.txt`
-  );
-
-  try {
-    return await fs.readFile(fixturePath, 'utf-8');
-  } catch (error) {
-    throw new Error(`Failed to load fixture: ${fixturePath}`);
-  }
+function createFrameworkNoneSnapshot(): AnalysisResult {
+  return {
+    projectType: 'node',
+    framework: 'none',
+    confidence: { projectType: 0.5, framework: 0 },
+    indicators: { projectType: ['package.json'], framework: [] },
+    detectedAt: new Date().toISOString(),
+    version: '0.1.0',
+  };
 }
 ```
 
-**Organization:** Fixtures stored in `tests/fixtures/{language}/{format}/{name}.txt` directory structure
+**Purpose:** Tests edge cases where analyzer returns minimal data (Scenario B — empty scaffolds path)
 
-**Purpose:** Parser tests load real code samples to verify AST extraction across languages (Python, TypeScript, JavaScript, Go)
+**Temporary file system fixtures:**
 
-### Temporary Directory Pattern for Integration Tests
-
-**Detected:** E2E and cache tests create isolated temp directories with beforeEach/afterEach cleanup
-
-Example from `packages/cli/tests/e2e/init-flow.test.ts` (lines 23-38):
+**Detected:** `beforeEach`/`afterEach` pattern for isolated test environments in `packages/analyzer/tests/cache/astCache.test.ts` (lines 13-29):
 ```typescript
-beforeEach(async () => {
-  tmpProject = await fs.mkdtemp(path.join(os.tmpdir(), 'ana-e2e-'));
-
-  // Get path to built CLI
-  cliPath = path.join(__dirname, '..', '..', 'dist', 'index.js');
-
-  // Create minimal package.json in test project
-  await fs.writeFile(
-    path.join(tmpProject, 'package.json'),
-    JSON.stringify({ name: 'test-project', version: '1.0.0' })
-  );
-});
-
-afterEach(async () => {
-  await fs.rm(tmpProject, { recursive: true, force: true });
-});
-```
-
-**Pattern:** Each test gets fresh temp directory, executes real CLI commands, verifies file creation, then cleans up
-
-Example from `packages/analyzer/tests/cache/astCache.test.ts` (lines 13-29):
-```typescript
-beforeEach(async () => {
-  // Create unique temp directory for each test
-  tempDir = join(tmpdir(), `ana-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
-  await mkdir(tempDir, { recursive: true });
-
-  // Create ASTCache instance
-  cache = new ASTCache(tempDir);
-
-  // Create a test file with real content
-  testFilePath = join(tempDir, 'test.py');
-  await writeFile(testFilePath, 'def hello():\n    print("Hello")\n', 'utf8');
-});
-
-afterEach(async () => {
-  // Clean up temp directory
-  await rm(tempDir, { recursive: true, force: true });
-});
-```
-
-**Pattern:** Unique temp dir per test (timestamp + random suffix prevents collisions), real file creation for cache validation tests
-
-## Mocking Approach
-
-**Detected:** Minimal mocking — tests use real implementations where possible
-
-**No vi.mock or jest.mock detected** — Tests execute real code paths
-
-**Primary testing strategies:**
-1. **Real execution with test data** — Scaffold tests pass real AnalysisResult objects to generators
-2. **Temporary filesystems** — E2E tests create real temp directories and execute real CLI
-3. **Singleton pattern testing** — Parser manager tests verify singleton behavior without mocking
-
-Example from `packages/analyzer/tests/parsers/parserManager.test.ts` (lines 5-10):
-```typescript
-it('getInstance returns singleton', () => {
-  const instance1 = ParserManager.getInstance();
-  const instance2 = ParserManager.getInstance();
-
-  expect(instance1).toBe(instance2);  // Same instance
-});
-```
-
-**Pattern:** Test real singleton behavior by calling getInstance() twice and verifying reference equality
-
-Example from `packages/analyzer/tests/parsers/parserManager.test.ts` (lines 12-18):
-```typescript
-it('creates Python parser', () => {
-  const manager = ParserManager.getInstance();
-  const parser = manager.getParser('python');
-
-  expect(parser).toBeDefined();
-  expect(typeof parser.parse).toBe('function');
-});
-```
-
-**Pattern:** Tests verify real tree-sitter parser creation — no mocks for native modules
-
-**Why no mocking?**
-- Tree-sitter parsers are critical path — must test real behavior across platforms
-- Scaffold generators are pure functions — easy to test with real data
-- Cache behavior depends on real filesystem mtime — mocking would hide bugs
-
-**Exception — subprocess execution:**
-
-Example from `packages/cli/tests/e2e/init-flow.test.ts` (lines 42-44):
-```typescript
-await execFileAsync('node', [cliPath, 'init', '--skip-analysis'], {
-  cwd: tmpProject,
-});
-```
-
-**Pattern:** E2E tests spawn real CLI process with execFileAsync (promisified child_process.execFile) — not mocked, but isolated in temp directory
-
-## Coverage Expectations
-
-**Detected:** Different thresholds per package based on testability
-
-### CLI Package Coverage
-
-From `packages/cli/vitest.config.ts` (lines 17-22):
-```typescript
-thresholds: {
-  lines: 80,
-  branches: 75,
-  functions: 80,
-  statements: 80,
-},
-```
-
-**Target:** 80% lines/functions/statements, 75% branches
-
-**Exclusions:**
-- `dist/**` (build output)
-- `**/*.test.ts` (tests themselves)
-- `src/test-*.ts` (validation scripts)
-- `src/index.ts` (CLI entry point — just imports)
-
-### Analyzer Package Coverage
-
-From `packages/analyzer/vitest.config.ts` (lines 17-22):
-```typescript
-thresholds: {
-  lines: 85,
-  branches: 80,
-  functions: 85,
-  statements: 85,
-},
-```
-
-**Target:** 85% lines/functions/statements, 80% branches
-
-**Inferred:** Higher thresholds for analyzer (85% vs 80%) because it's a library with well-defined API surface — fewer UI paths, more deterministic logic
-
-**Exclusions:**
-- `dist/**` (build output)
-- `**/*.test.ts` (tests themselves)
-- `src/index.ts` (entry point — just exports)
-
-### CI Coverage Enforcement
-
-From `.github/workflows/test.yml` (lines 44-50):
-```yaml
-- name: Upload coverage (Ubuntu + Node 20 only)
-  if: matrix.os == 'ubuntu-latest' && matrix.node-version == 20
-  uses: codecov/codecov-action@v4
-  with:
-    files: ./packages/cli/coverage/coverage-final.json
-    fail_ci_if_error: false
-    token: ${{ secrets.CODECOV_TOKEN }}
-```
-
-**Detected:** Coverage uploaded to Codecov from Ubuntu + Node 20 matrix combination only (avoids duplicate uploads)
-
-**Detected:** `fail_ci_if_error: false` — coverage upload failures don't block CI (Codecov outages won't break builds)
-
-**Inferred:** Vitest coverage thresholds enforce coverage locally and in CI (test command fails if below threshold) — Codecov upload is for tracking/visualization, not enforcement
-
-## Example Test Structure
-
-**Complete test example** showing fixture setup, multiple test cases, and async file operations
-
-From `packages/analyzer/tests/cache/astCache.test.ts` (lines 1-93):
-```typescript
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { writeFile, rm, mkdir, stat, readdir } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { ASTCache } from '../../src/cache/astCache.js';
-import type { ASTCacheEntry } from '../../src/cache/astCache.js';
-
 describe('ASTCache', () => {
   let tempDir: string;
   let cache: ASTCache;
@@ -414,131 +241,230 @@ describe('ASTCache', () => {
     // Clean up temp directory
     await rm(tempDir, { recursive: true, force: true });
   });
+```
 
-  describe('Cache miss behavior', () => {
-    it('get() returns null on cache miss (file not in cache)', async () => {
-      // Given: Cache is empty
-      const stats = cache.getStats();
-      expect(stats.files).toBe(0);
+**Pattern:** Each test gets isolated temporary directory with unique name (timestamp + random suffix), guaranteed cleanup even if test fails
 
-      // When: Getting non-cached file
-      const result = await cache.get(testFilePath);
+**Detected:** Inline fixture creation for integration tests in `packages/analyzer/tests/analyzers/patterns/integration.test.ts` (lines 46-60):
+```typescript
+it('returns PatternAnalysis with metadata', async () => {
+  // Create mock analysis
+  const mockAnalysis: AnalysisResult = {
+    projectType: 'python',
+    framework: 'fastapi',
+    confidence: { projectType: 0.95, framework: 0.90 },
+    indicators: { projectType: [], framework: [] },
+    detectedAt: new Date().toISOString(),
+    version: '0.1.0',
+    parsed: {
+      files: [],
+      totalParsed: 0,
+      cacheHits: 0,
+      cacheMisses: 0,
+    },
+  };
 
-      // Then: Returns null and increments misses
-      expect(result).toBeNull();
-      expect(cache.getStats().misses).toBe(1);
-      expect(cache.getStats().hits).toBe(0);
-    });
+  const patterns = await inferPatterns('.', mockAnalysis);
+```
+
+**Pattern:** Fixtures built inline within test — clear intent, no shared mutable state
+
+**No centralized fixture directories detected** — Fixtures created on-demand within tests or via factory functions
+
+## Mocking Approach
+
+**No mocking library detected** — Tests use real implementations where possible
+
+**Detected:** Tests avoid mocking by:
+1. **Using real temporary file systems** — E2E tests create actual temp directories
+2. **Testing with actual CLI binary** — E2E tests execute compiled CLI via `execFile`
+3. **Factory functions for test data** — Avoids complex mocking setup
+4. **Dependency injection via parameters** — Functions accept dependencies as parameters (e.g., `ASTCache` passed to `parseFile`)
+
+**Type-level mocking for testing invalid inputs:**
+
+**Detected:** TypeScript `@ts-expect-error` comments bypass type checking in `packages/cli/tests/utils/validators.test.ts` (lines 64-84):
+```typescript
+it('returns 0 when analysis is null', () => {
+  // @ts-expect-error - testing null input
+  expect(countDetectedPatterns(null)).toBe(0);
+});
+
+it('returns 0 when analysis is undefined', () => {
+  // @ts-expect-error - testing undefined input
+  expect(countDetectedPatterns(undefined)).toBe(0);
+});
+
+it('returns 0 when analysis.patterns is null', () => {
+  const snapshot = createScenarioBSnapshot();
+  // @ts-expect-error - testing null patterns
+  snapshot.patterns = null;
+  expect(countDetectedPatterns(snapshot as never)).toBe(0);
+});
+```
+
+**Purpose:** Validates runtime error handling for inputs TypeScript would normally reject
+
+**Singleton pattern for reusable resources:**
+
+**Detected:** ParserManager singleton tested in `packages/analyzer/tests/parsers/parserManager.test.ts` (lines 4-10):
+```typescript
+describe('ParserManager', () => {
+  it('getInstance returns singleton', () => {
+    const instance1 = ParserManager.getInstance();
+    const instance2 = ParserManager.getInstance();
+
+    expect(instance1).toBe(instance2);  // Same instance
   });
+```
 
-  describe('Memory cache behavior', () => {
-    it('set() stores data in memory cache', async () => {
-      // Given: Cache entry data
-      const cacheData: Omit<ASTCacheEntry, 'mtimeMs' | 'cachedAt'> = {
-        functions: [{ name: 'hello', line: 1, async: false, decorators: [] }],
-        classes: [],
-        imports: [],
-        exports: [],
-        decorators: [],
-        parseTime: 42,
-      };
+**Pattern:** Tests verify singleton behavior (same instance returned), then tests use the real singleton for parsing tests
 
-      // When: Storing in cache
-      await cache.set(testFilePath, cacheData);
+**Process execution mocking:**
 
-      // Then: Memory cache contains the entry
-      const stats = cache.getStats();
-      expect(stats.files).toBe(1);
-    });
+**Detected:** E2E tests execute real commands via `execFile` from `packages/cli/tests/e2e/init-flow.test.ts` (lines 17-34):
+```typescript
+const execFileAsync = promisify(execFile);
 
-    it('get() returns cached data on hit (memory cache)', async () => {
-      // Given: Data stored in cache
-      const cacheData: Omit<ASTCacheEntry, 'mtimeMs' | 'cachedAt'> = {
-        functions: [{ name: 'hello', line: 1, async: false, decorators: [] }],
-        classes: [{ name: 'World', line: 5, superclasses: [], methods: [], decorators: [] }],
-        imports: [{ module: 'os', names: ['path'], line: 1 }],
-        parseTime: 42,
-      };
-      await cache.set(testFilePath, cacheData);
+describe('ana init E2E', () => {
+  let tmpProject: string;
+  let cliPath: string;
 
-      // When: Getting cached file
-      const result = await cache.get(testFilePath);
+  beforeEach(async () => {
+    tmpProject = await fs.mkdtemp(path.join(os.tmpdir(), 'ana-e2e-'));
 
-      // Then: Returns cached data and increments hits
-      expect(result).not.toBeNull();
-      expect(result!.functions).toHaveLength(1);
-      expect(result!.functions[0].name).toBe('hello');
-      expect(result!.classes).toHaveLength(1);
-      expect(result!.classes[0].name).toBe('World');
-      expect(result!.imports).toHaveLength(1);
-      expect(result!.imports[0].module).toBe('os');
-      expect(result!.parseTime).toBe(42);
-      expect(cache.getStats().hits).toBe(1);
-      expect(cache.getStats().misses).toBe(0);
-    });
+    // Get path to built CLI
+    cliPath = path.join(__dirname, '..', '..', 'dist', 'index.js');
+
+    // Create minimal package.json in test project
+    await fs.writeFile(
+      path.join(tmpProject, 'package.json'),
+      JSON.stringify({ name: 'test-project', version: '1.0.0' })
+    );
+  });
+```
+
+**Pattern:** Real CLI execution in isolated temp directories — no command mocking, tests actual behavior
+
+**Key insight:** Project prefers integration testing with real implementations over unit testing with mocks — higher confidence in actual behavior
+
+## Coverage Expectations
+
+**CLI package thresholds** (from `packages/cli/vitest.config.ts`, lines 17-22):
+```typescript
+thresholds: {
+  lines: 80,
+  branches: 75,
+  functions: 80,
+  statements: 80,
+},
+```
+
+**Analyzer package thresholds** (from `packages/analyzer/vitest.config.ts`, lines 17-22):
+```typescript
+thresholds: {
+  lines: 85,
+  branches: 80,
+  functions: 85,
+  statements: 85,
+},
+```
+
+**Enforcement:**
+- **Local enforcement** — Vitest fails test run if coverage below thresholds
+- **CI enforcement** — GitHub Actions workflow runs tests with coverage on every push/PR
+- **Coverage upload** — Codecov integration for ubuntu+node20 combination only (from exploration findings)
+
+**Coverage exclusions:**
+- `dist/**` — Build output (both packages)
+- `**/*.test.ts` — Test files themselves (both packages)
+- `src/test-*.ts` — Validation scripts (CLI only)
+- `src/index.ts` — Entry point files that only import/export (both packages)
+
+**Detected:** Matrix testing in CI runs tests on:
+- **Operating systems:** ubuntu, windows, macos
+- **Node versions:** 20, 22
+- **fail-fast:** false (all combinations run even if one fails)
+
+**Coverage gaps intentionally accepted:**
+- Entry points (just imports/exports, no logic to test)
+- Validation scripts used for one-off development tasks
+- Platform-specific edge cases (different test coverage on different OSes)
+
+## Example Test Structure
+
+**Complete test demonstrating multiple patterns** from `packages/analyzer/tests/cache/astCache.test.ts` (lines 262-288):
+
+```typescript
+describe('mtime-based invalidation', () => {
+  it('cache invalidates when file is modified', async () => {
+    // Given: File cached
+    const cacheData: Omit<ASTCacheEntry, 'mtimeMs' | 'cachedAt'> = {
+      functions: [{ name: 'original', line: 1, async: false, decorators: [] }],
+      classes: [],
+      imports: [],
+      parseTime: 30,
+    };
+    await cache.set(testFilePath, cacheData);
+
+    // Verify cache hit
+    let result = await cache.get(testFilePath);
+    expect(result).not.toBeNull();
+    expect(result!.functions[0].name).toBe('original');
+    expect(cache.getStats().hits).toBe(1);
+
+    // When: File is modified (changing mtime)
+    await new Promise(resolve => setTimeout(resolve, 10)); // Ensure different mtime
+    await writeFile(testFilePath, 'def modified():\n    print("Modified")\n', 'utf8');
+
+    // Then: Cache miss (mtime mismatch)
+    result = await cache.get(testFilePath);
+    expect(result).toBeNull();
+    expect(cache.getStats().misses).toBe(1);
   });
 });
 ```
 
-**Key patterns demonstrated:**
-1. **Global test state** — `let` declarations at describe scope, initialized in beforeEach
-2. **Async setup/teardown** — beforeEach/afterEach both return promises for file operations
-3. **Unique temp directories** — Timestamp + random suffix prevents test collisions
-4. **Given/When/Then comments** — Explicit test phase markers for readability
-5. **Nested describes** — Group related tests by feature area
-6. **Type safety** — `Omit<ASTCacheEntry, 'mtimeMs' | 'cachedAt'>` for partial test data
-7. **Non-null assertions** — `result!.functions` after null check (TypeScript strict mode)
-8. **Multiple assertions per test** — Verify both return value and side effects (stats)
+**Test structure breakdown:**
+1. **Given-When-Then comments** — Clarifies test phases (setup, action, assertion)
+2. **beforeEach setup** — Creates temp directory and cache instance (not shown, see lines 13-29)
+3. **Explicit typing** — `Omit<ASTCacheEntry, 'mtimeMs' | 'cachedAt'>` makes expectations clear
+4. **Multiple assertions** — Verify both positive case (cache hit) and negative case (cache miss)
+5. **Statistics tracking** — Validates not just return values but also internal state
+6. **Real file operations** — Uses actual file system, not mocks
+7. **Async/await** — All async operations properly awaited
+8. **afterEach cleanup** — Removes temp directory (not shown, see lines 26-29)
 
-**Another complete example** showing pattern detection with confidence scoring
+**Contract test example** from `packages/cli/tests/contract/analyzer-contract.test.ts` (lines 42-61):
 
-From `packages/analyzer/tests/analyzers/patterns/confidence.test.ts` (lines 10-38):
 ```typescript
-describe('Confidence Scoring and Filtering', () => {
-  describe('filterByConfidence', () => {
-    it('includes patterns ≥ threshold', () => {
-      const patterns: Partial<Record<string, PatternConfidence>> = {
-        validation: { library: 'pydantic', confidence: 0.95, evidence: [] },
-        database: { library: 'sqlalchemy', confidence: 0.70, evidence: [] },  // Exactly at threshold
-        auth: { library: 'jwt', confidence: 0.80, evidence: [] },
-      };
+it('catches field renames at compile time', () => {
+  // These assignments will fail TypeScript compilation if fields renamed
+  const result: AnalysisResult = createEmptyAnalysisResult();
 
-      const filtered = filterByConfidence(patterns, 0.7);
+  // Required field access
+  const _type: string = result.projectType;
+  const _fw: string | null = result.framework;
+  const _conf: { projectType: number; framework: number } = result.confidence;
+  const _indicators: { projectType: string[]; framework: string[] } = result.indicators;
+  const _version: string = result.version;
+  const _detectedAt: string = result.detectedAt;
 
-      expect(filtered['validation']).toBeDefined();  // 0.95 ≥ 0.7 ✓
-      expect(filtered['database']).toBeDefined();    // 0.70 ≥ 0.7 ✓ (edge case)
-      expect(filtered['auth']).toBeDefined();        // 0.80 ≥ 0.7 ✓
-    });
-
-    it('excludes patterns < threshold', () => {
-      const patterns: Partial<Record<string, PatternConfidence>> = {
-        validation: { library: 'pydantic', confidence: 0.95, evidence: [] },
-        database: { library: 'sqlalchemy', confidence: 0.68, evidence: [] },
-        auth: { library: 'jwt', confidence: 0.45, evidence: [] },
-      };
-
-      const filtered = filterByConfidence(patterns, 0.7);
-
-      expect(filtered['validation']).toBeDefined();    // 0.95 ≥ 0.7 ✓
-      expect(filtered['database']).toBeUndefined();    // 0.68 < 0.7 ✗
-      expect(filtered['auth']).toBeUndefined();        // 0.45 < 0.7 ✗
-    });
-  });
+  // Prevents unused variable warnings
+  expect(_type).toBeDefined();
+  expect(_conf).toBeDefined();
+  expect(_indicators).toBeDefined();
+  expect(_version).toBeDefined();
+  expect(_detectedAt).toBeDefined();
 });
 ```
 
-**Key patterns demonstrated:**
-1. **Nested describe blocks** — Organize by function/feature, then by test case
-2. **Partial type for test data** — `Partial<Record<string, PatternConfidence>>` avoids full object construction
-3. **Inline comments as assertions** — `// 0.95 ≥ 0.7 ✓` documents expected behavior
-4. **Edge case testing** — Explicitly test threshold boundary (0.70 exactly at threshold)
-5. **toBeDefined/toBeUndefined** — Test presence/absence in filtered object
+**Purpose:** Validates CLI can access all required fields from analyzer's `AnalysisResult` type — if analyzer renames a field, this test fails at compile time, not runtime
 
-**E2E test example** showing real CLI execution and file verification
+**E2E test example** from `packages/cli/tests/e2e/init-flow.test.ts` (lines 40-80):
 
-From `packages/cli/tests/e2e/init-flow.test.ts` (lines 40-129):
 ```typescript
-it('creates all 36 files in .ana/ (24 static + 8 generated + 2 JSON + 2 hooks)', async () => {
+it('creates all 40 files in .ana/ (27 static + 8 generated + 2 JSON + 3 hooks)', async () => {
   // Run ana init with --skip-analysis (faster, deterministic)
   await execFileAsync('node', [cliPath, 'init', '--skip-analysis'], {
     cwd: tmpProject,
@@ -579,31 +505,118 @@ it('creates all 36 files in .ana/ (24 static + 8 generated + 2 JSON + 2 hooks)',
     expect(exists, `Generated file missing: ${file}`).toBe(true);
   }
 
-  // Verify .meta.json
-  const metaExists = await fileExists(path.join(anaPath, '.meta.json'));
-  expect(metaExists).toBe(true);
-
-  const metaContent = await fs.readFile(path.join(anaPath, '.meta.json'), 'utf-8');
-  const meta = JSON.parse(metaContent);
-  expect(meta.setupStatus).toBe('pending');
-  expect(meta.version).toBe('1.0.0');
-
   // Count total files in .ana/
   const allFiles = await findAllFiles(anaPath);
-  // 8 generated + 24 copied + 2 JSON + 2 hooks = 36
-  expect(allFiles.length).toBe(36);
+  // 8 generated + 27 copied + 2 JSON + 3 hooks = 40
+  expect(allFiles.length).toBe(40);
 }, 30000); // 30s timeout
 ```
 
-**Key patterns demonstrated:**
-1. **Real CLI execution** — `execFileAsync('node', [cliPath, 'init', '--skip-analysis'])` spawns real process
-2. **Array-driven assertions** — Loop through expected dirs/files to verify creation
-3. **Custom error messages** — `expect(exists, \`Directory missing: ${dir}\`).toBe(true)` for debugging
-4. **File content verification** — Read JSON, parse, verify structure
-5. **Recursive file counting** — Verify total file count with helper function
-6. **Extended timeout** — `30000` (30s) for slower E2E operations
-7. **Helper functions** — `dirExists`, `fileExists`, `findAllFiles` extracted to bottom of file
+**E2E test characteristics:**
+1. **Real CLI execution** — `execFileAsync` runs actual compiled binary
+2. **Isolated environment** — Temp directory per test
+3. **End-to-end validation** — Checks filesystem state after command completes
+4. **Descriptive expectations** — Custom failure messages (`Directory missing: ${dir}`)
+5. **Extended timeout** — 30s timeout for slow operations (default is 5s)
+6. **Helper functions** — `dirExists`, `fileExists`, `findAllFiles` encapsulate common checks
+
+**Performance test example** from `packages/analyzer/tests/analyzers/patterns/integration.test.ts` (lines 160-195):
+
+```typescript
+describe('Performance validation', () => {
+  it('completes pattern inference within budget (<10s)', async () => {
+    const mockAnalysis: AnalysisResult = {
+      projectType: 'python',
+      framework: 'fastapi',
+      confidence: { projectType: 0.95, framework: 0.90 },
+      indicators: { projectType: [], framework: [] },
+      detectedAt: new Date().toISOString(),
+      version: '0.1.0',
+      parsed: {
+        files: Array.from({ length: 20 }, (_, i) => ({
+          file: `file${i}.py`,
+          language: 'python',
+          functions: [],
+          classes: [],
+          imports: [{ module: 'pydantic', names: ['BaseModel'], line: 1 }],
+          decorators: [],
+          parseTime: 0,
+          parseMethod: 'cached' as const,
+          errors: 0,
+        })),
+        totalParsed: 20,
+        cacheHits: 20,
+        cacheMisses: 0,
+      },
+    };
+
+    const start = Date.now();
+    const patterns = await inferPatterns('.', mockAnalysis);
+    const duration = Date.now() - start;
+
+    // Should complete quickly (dependency reading + confirmation)
+    expect(duration).toBeLessThan(10000);  // <10s
+    expect(patterns).toBeDefined();
+  });
+});
+```
+
+**Performance test pattern:**
+1. **Setup realistic data** — 20 parsed files with imports (typical scenario)
+2. **Measure execution time** — `Date.now()` before and after
+3. **Assert performance budget** — `expect(duration).toBeLessThan(10000)`
+4. **Validate correctness too** — Not just fast, but also returns valid data
+
+**Edge case testing example** from `packages/cli/tests/utils/validators.test.ts` (lines 137-165):
+
+```typescript
+describe('validateCrossReferences — BF5 with no patterns', () => {
+  let tempDir: string;
+  let anaPath: string;
+
+  beforeEach(async () => {
+    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'validators-test-'));
+    anaPath = tempDir;
+    await fs.mkdir(path.join(anaPath, 'context'), { recursive: true });
+  });
+
+  afterEach(async () => {
+    await fs.rm(tempDir, { recursive: true, force: true });
+  });
+
+  it('passes when snapshot is null (skips cross-reference check)', async () => {
+    // Create minimal patterns.md
+    await fs.writeFile(
+      path.join(anaPath, 'context/patterns.md'),
+      '# Patterns\n\nNo patterns detected by analyzer.\n'
+    );
+    await fs.writeFile(
+      path.join(anaPath, 'context/project-overview.md'),
+      '# Project Overview\n\n**Framework:** None detected\n'
+    );
+
+    // @ts-expect-error - testing null snapshot
+    const errors = await validateCrossReferences(anaPath, null);
+    expect(errors).toEqual([]);
+  });
+});
+```
+
+**Edge case testing pattern:**
+1. **Scenario-based grouping** — "BF5 with no patterns" describes specific edge case
+2. **Real file system** — Creates actual files to test validation logic
+3. **Explicit null testing** — Tests handling of unexpected inputs
+4. **Validation focus** — Tests error collection, not just success paths
+
+**Test writing guidelines (inferred from examples):**
+1. **One assertion per logical concept** — Multiple `expect()` calls OK if testing related aspects
+2. **Descriptive test names** — "cache invalidates when file is modified" vs "test cache"
+3. **AAA pattern** — Arrange (Given), Act (When), Assert (Then)
+4. **Real implementations preferred** — Use mocks only when necessary
+5. **Clean up after yourself** — `afterEach` removes temp files/directories
+6. **Test both happy and sad paths** — Verify success cases and error handling
+7. **Use TypeScript strictly** — Explicit types for test data, catch regressions at compile time
 
 ---
 
-*Last updated: 2026-03-21*
+*Last updated: 2026-03-22T15:56:15.803Z*

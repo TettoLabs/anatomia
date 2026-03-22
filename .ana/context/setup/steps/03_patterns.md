@@ -68,6 +68,8 @@ Before finishing, verify:
   <if_not_found>Write: "Not detected — no authentication patterns found."</if_not_found>
 </target>
 
+Note: For patterns where intent is unclear (e.g., no error tracking service, no rate limiting, no centralized logging), tag as **Unexamined** with a note about what this means at scale. Example: "**Unexamined:** No rate limiting detected — may cause issues under load. Was this intentional?"
+
 <target name="testing">
   Search: Test files, fixtures, mocks, test utilities
   Files: tests/**/**, __tests__/**/**, *.test.*, *.spec.*

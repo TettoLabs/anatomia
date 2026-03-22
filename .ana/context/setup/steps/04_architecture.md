@@ -57,6 +57,8 @@ Before finishing, verify:
   <if_not_found>Write: "Not yet documented — add via teach mode"</if_not_found>
 </target>
 
+Note: For each trade-off where the user did NOT confirm the rationale via Q&A, tag as **Unexamined** instead of **Detected**. Add: "Was this intentional?" Example: "**Unexamined:** No database indexes on frequently-queried columns — was this intentional?"
+
 ## Structure
 
 - 4 H2 sections: Architecture Pattern, System Boundaries, Design Decisions, Trade-Offs

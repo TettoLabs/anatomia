@@ -56,8 +56,21 @@ const PLACEHOLDER_PATTERNS = [
   /\[FILL/i,
 ];
 
-/** Citation regex pattern */
-const CITATION_REGEX = /Example from `([^`]+)`(?: \(lines (\d+)-(\d+)\))?:/g;
+/** Citation regex patterns — match various formats the writer uses
+ *
+ * These patterns are intentionally strict to avoid false positives:
+ * - First pattern: requires trailing colon (code block follows) OR line numbers
+ * - Second pattern: parenthetical format, requires line numbers
+ *
+ * Casual mentions like "see `.ana/`" or "run `git status`" are NOT citations.
+ */
+const CITATION_PATTERNS = [
+  // "Example from `file` (lines X-Y):" or "From `file`:" (colon required if no line numbers)
+  /(?:Example |From |from )`([^`]+)` \(lines? (\d+)(?:-(\d+))?\)/g,
+  /(?:Example |From |from )`([^`]+)`:/g,
+  // "(from `file`, lines X-Y)" - parenthetical format, line numbers required
+  /\(from `([^`]+)`,? lines? (\d+)(?:-(\d+))?\)/g,
+];
 
 /** Result types for JSON output */
 interface LineCountResult {
@@ -173,6 +186,30 @@ function checkScaffoldMarkers(content: string): ScaffoldMarkersResult {
 }
 
 /**
+ * Check if a path looks like a real file citation that should be validated
+ *
+ * Returns true for paths we should validate (full relative paths to files).
+ * Returns false for things we should skip:
+ * - Directories (end with /)
+ * - Commands (contain spaces, start with git)
+ * - Bare filenames without directory path (e.g., "test.yml" instead of ".github/workflows/test.yml")
+ *   These are often shorthand references and would cause false positives.
+ */
+function isValidFilePath(filePath: string): boolean {
+  // Skip directories (ending with /)
+  if (filePath.endsWith('/')) return false;
+  // Skip git commands and other shell commands
+  if (filePath.startsWith('git ')) return false;
+  // Skip paths with spaces (likely commands)
+  if (filePath.includes(' ')) return false;
+  // Only validate paths that have directory separators (full relative paths)
+  // Bare filenames like "test.yml" or "package.json" are skipped as they're
+  // often shorthand references and would need fuzzy matching to validate
+  if (!filePath.includes('/')) return false;
+  return true;
+}
+
+/**
  * Check citation validity
  */
 async function checkCitations(content: string, projectRoot: string): Promise<CitationsResult> {
@@ -180,50 +217,66 @@ async function checkCitations(content: string, projectRoot: string): Promise<Cit
   let total = 0;
   let verified = 0;
 
-  // Reset regex lastIndex for fresh matching
-  const regex = new RegExp(CITATION_REGEX.source, 'g');
-  let match;
+  for (const pattern of CITATION_PATTERNS) {
+    const regex = new RegExp(pattern.source, 'g');
+    let match;
 
-  while ((match = regex.exec(content)) !== null) {
-    total++;
-    const filePath = match[1];
-    const startLine = match[2] ? parseInt(match[2], 10) : null;
-    const endLine = match[3] ? parseInt(match[3], 10) : null;
+    while ((match = regex.exec(content)) !== null) {
+      const filePath = match[1];
 
-    // Resolve file path relative to project root
-    const fullPath = path.join(projectRoot, filePath);
-
-    try {
-      const fileContent = await fs.readFile(fullPath, 'utf-8');
-      const fileLines = fileContent.split('\n').length;
-
-      // If line numbers specified, verify they're in range
-      if (startLine !== null && endLine !== null) {
-        if (endLine > fileLines) {
-          failed.push({
-            claim: filePath,
-            file: filePath,
-            reason: `line range out of bounds (file has ${fileLines} lines)`,
-          });
-          continue;
-        }
+      // Skip non-file citations (commands, directories, etc.)
+      if (!isValidFilePath(filePath)) {
+        continue;
       }
 
-      verified++;
-    } catch {
-      failed.push({
-        claim: filePath,
-        file: filePath,
-        reason: 'file not found',
-      });
+      total++;
+      const startLine = match[2] ? parseInt(match[2], 10) : null;
+      const endLine = match[3] ? parseInt(match[3], 10) : null;
+
+      const fullPath = path.join(projectRoot, filePath);
+
+      try {
+        const fileContent = await fs.readFile(fullPath, 'utf-8');
+        const fileLines = fileContent.split('\n').length;
+
+        if (startLine !== null && endLine !== null) {
+          if (endLine > fileLines) {
+            failed.push({
+              claim: filePath,
+              file: filePath,
+              reason: `line range out of bounds (file has ${fileLines} lines)`,
+            });
+            continue;
+          }
+        }
+
+        verified++;
+      } catch {
+        failed.push({
+          claim: filePath,
+          file: filePath,
+          reason: 'file not found',
+        });
+      }
+    }
+  }
+
+  // Deduplicate (same file may be cited by multiple patterns)
+  const seen = new Set<string>();
+  const uniqueFailed: FailedCitation[] = [];
+  for (const f of failed) {
+    const key = `${f.file}:${f.reason}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      uniqueFailed.push(f);
     }
   }
 
   return {
     total,
     verified,
-    failed,
-    pass: failed.length === 0,
+    failed: uniqueFailed,
+    pass: uniqueFailed.length === 0,
   };
 }
 

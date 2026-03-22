@@ -54,6 +54,7 @@ BECAUSE: Downstream modes treat code-verified facts differently from inferences.
 - **User confirmed:** [claim] — User validated via Q&A
 - **User stated:** [claim] — User provided, not verified
 - **Inferred:** [claim] — Your judgment, not mechanically verified
+- **Unexamined:** [pattern] — Detected from code but intent is unknown. The code works this way, but nobody confirmed whether that's how it SHOULD work. Use for trade-offs, architectural decisions, and patterns where the developer may not have consciously chosen the approach.
 
 ---
 

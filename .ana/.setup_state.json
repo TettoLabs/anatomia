@@ -1,24 +1,25 @@
 {
-  "setup_id": "setup_20260321_1",
-  "tier": "guided",
+  "setup_id": "setup-20260322-155615",
+  "tier": "quick",
   "phase": "complete",
-  "started_at": "2026-03-21T00:00:00.000Z",
+  "started_at": "2026-03-22T15:56:15Z",
+  "completed_at": "2026-03-22T15:58:00Z",
   "exploration": {
     "status": "completed",
     "file": ".ana/.setup_exploration.md"
   },
   "questions": {
-    "status": "completed",
-    "count": 4
+    "status": "skipped",
+    "count": 0
   },
   "files": {
-    "project-overview.md": { "status": "completed", "verified": true },
-    "conventions.md": { "status": "completed", "verified": true },
-    "patterns.md": { "status": "completed", "verified": true },
-    "architecture.md": { "status": "completed", "verified": true },
-    "testing.md": { "status": "completed", "verified": true },
-    "workflow.md": { "status": "completed", "verified": true },
-    "debugging.md": { "status": "completed", "verified": true }
+    "project-overview.md": { "status": "completed", "verified": true, "lines": 638 },
+    "conventions.md": { "status": "completed", "verified": true, "lines": 764 },
+    "patterns.md": { "status": "completed", "verified": true, "lines": 851 },
+    "architecture.md": { "status": "completed", "verified": true, "lines": 650 },
+    "testing.md": { "status": "completed", "verified": true, "lines": 622 },
+    "workflow.md": { "status": "completed", "verified": true, "lines": 802 },
+    "debugging.md": { "status": "completed", "verified": true, "lines": 606 }
   },
   "verification": {
     "status": "completed"
