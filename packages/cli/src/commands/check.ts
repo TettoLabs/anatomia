@@ -25,13 +25,13 @@ interface FileConfig {
 
 /** File configurations indexed by filename (without .md) */
 const FILE_CONFIGS: Record<string, FileConfig> = {
-  'project-overview': { minLines: 300, maxLines: 500, expectedHeaders: 4 },
-  'conventions': { minLines: 400, maxLines: 600, expectedHeaders: 4 },
-  'patterns': { minLines: 800, maxLines: 1200, expectedHeaders: 6 },
-  'architecture': { minLines: 300, maxLines: 500, expectedHeaders: 4 },
-  'testing': { minLines: 400, maxLines: 600, expectedHeaders: 6 },
-  'workflow': { minLines: 600, maxLines: 800, expectedHeaders: 6 },
-  'debugging': { minLines: 300, maxLines: 500, expectedHeaders: 5 },
+  'project-overview': { minLines: 200, maxLines: 700, expectedHeaders: 4 },
+  'conventions': { minLines: 300, maxLines: 850, expectedHeaders: 4 },
+  'patterns': { minLines: 550, maxLines: 1400, expectedHeaders: 6 },
+  'architecture': { minLines: 200, maxLines: 700, expectedHeaders: 4 },
+  'testing': { minLines: 250, maxLines: 850, expectedHeaders: 6 },
+  'workflow': { minLines: 400, maxLines: 1000, expectedHeaders: 6 },
+  'debugging': { minLines: 200, maxLines: 700, expectedHeaders: 5 },
 };
 
 /** All context files to check */
@@ -341,7 +341,8 @@ export function createCheckCommand(): Command {
       try {
         if (filename) {
           // Single file mode
-          const normalizedFilename = filename.endsWith('.md') ? filename : `${filename}.md`;
+          let normalizedFilename = filename.endsWith('.md') ? filename : `${filename}.md`;
+          normalizedFilename = normalizedFilename.replace(/^\.ana\/context\//, '');
 
           // Check file exists
           const filePath = path.join(contextPath, normalizedFilename);
