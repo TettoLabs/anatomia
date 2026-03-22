@@ -171,6 +171,10 @@ export const initCommand = new Command('init')
         await fs.rename(preflight.stateBackup, stateDir);
       }
 
+      // Clean up any .ana/ created by analyzer cache during Phase 2
+      // (ASTCache creates .ana/.state/cache/ in project root during parsing)
+      await fs.rm(anaPath, { recursive: true, force: true });
+
       // SUCCESS: Atomic rename
       await atomicRename(tmpAnaPath, anaPath);
 
