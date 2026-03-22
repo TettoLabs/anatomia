@@ -15,6 +15,7 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
+import type { SymbolEntry, SymbolIndex } from './index.js';
 
 /** Per-file configuration for validation */
 interface FileConfig {
@@ -210,12 +211,127 @@ function isValidFilePath(filePath: string): boolean {
 }
 
 /**
+ * Load symbol index if available
+ */
+async function loadSymbolIndex(projectRoot: string): Promise<SymbolEntry[] | null> {
+  const indexPath = path.join(projectRoot, '.ana', '.state', 'symbol-index.json');
+  try {
+    const content = await fs.readFile(indexPath, 'utf-8');
+    const index: SymbolIndex = JSON.parse(content);
+    return index.symbols;
+  } catch {
+    // No index available - fall back to file-only checks
+    return null;
+  }
+}
+
+/**
+ * Check if file is a source code file that would have symbols indexed
+ */
+function isIndexedSourceFile(filePath: string): boolean {
+  const ext = filePath.split('.').pop()?.toLowerCase();
+  const sourceExtensions = ['ts', 'tsx', 'js', 'jsx', 'py', 'go'];
+  return sourceExtensions.includes(ext || '');
+}
+
+/**
+ * Check if file path is in a directory excluded from symbol indexing
+ */
+function isInExcludedDirectory(filePath: string): boolean {
+  const excludedPatterns = [
+    /^node_modules\//,
+    /\/node_modules\//,
+    /^dist\//,
+    /\/dist\//,
+    /^\.next\//,
+    /\/\.next\//,
+    /^coverage\//,
+    /\/coverage\//,
+    /^tests?\//,
+    /\/tests?\//,
+    /\/__tests__\//,
+    /\.test\./,
+    /\.spec\./,
+  ];
+  return excludedPatterns.some((pattern) => pattern.test(filePath));
+}
+
+/**
+ * Extract symbol name from citation text (conservative)
+ *
+ * Only extracts when there's a clear, explicit pattern like:
+ * - "the `functionName` function from `file`"
+ * - "`ClassName` class from `file`"
+ *
+ * Returns null (skip symbol verification) when uncertain.
+ * Conservative approach: missed fabrication < false positive blocking legitimate citations.
+ */
+function extractCitedSymbol(fullMatch: string, filePath: string): string | null {
+  // Only attempt symbol extraction for source files
+  if (!isIndexedSourceFile(filePath)) {
+    return null;
+  }
+
+  // Skip files in excluded directories (tests, node_modules, etc.)
+  if (isInExcludedDirectory(filePath)) {
+    return null;
+  }
+
+  // Only match very explicit patterns where a backticked identifier
+  // is immediately followed by "function", "method", or "class"
+  // Pattern: `symbolName` function/method/class from `file`
+  const explicitPattern = /`([A-Za-z_][A-Za-z0-9_]*)`\s+(?:function|method|class)\s+from\s+`/i;
+  const match = fullMatch.match(explicitPattern);
+  if (match) {
+    return match[1];
+  }
+
+  // Don't try to extract symbols from other patterns - too risky for false positives
+  return null;
+}
+
+/**
+ * Check if a symbol exists in the index for a given file
+ */
+function findSymbolInFile(
+  symbolIndex: SymbolEntry[],
+  symbolName: string,
+  filePath: string,
+  citedStartLine: number | null
+): { found: boolean; nearLine: boolean } {
+  const fileSymbols = symbolIndex.filter((s) => s.file === filePath);
+
+  // Look for exact name match
+  const matches = fileSymbols.filter((s) => s.name === symbolName);
+
+  if (matches.length === 0) {
+    return { found: false, nearLine: false };
+  }
+
+  // If no line number cited, just check existence
+  if (citedStartLine === null) {
+    return { found: true, nearLine: true };
+  }
+
+  // Check if any match is within ±20 lines of cited line
+  const LINE_TOLERANCE = 20;
+  const nearLine = matches.some(
+    (s) => Math.abs(s.line - citedStartLine) <= LINE_TOLERANCE
+  );
+
+  return { found: true, nearLine };
+}
+
+/**
  * Check citation validity
  */
 async function checkCitations(content: string, projectRoot: string): Promise<CitationsResult> {
   const failed: FailedCitation[] = [];
   let total = 0;
   let verified = 0;
+
+  // Load symbol index if available
+  const symbolIndex = await loadSymbolIndex(projectRoot);
 
   for (const pattern of CITATION_PATTERNS) {
     const regex = new RegExp(pattern.source, 'g');
@@ -247,6 +363,41 @@ async function checkCitations(content: string, projectRoot: string): Promise<Cit
               reason: `line range out of bounds (file has ${fileLines} lines)`,
             });
             continue;
+          }
+        }
+
+        // If symbol index available, try to verify symbol name
+        if (symbolIndex) {
+          // Get more context around the match for symbol extraction
+          const matchStart = Math.max(0, match.index - 100);
+          const contextBefore = content.substring(matchStart, match.index + match[0].length);
+          const citedSymbol = extractCitedSymbol(contextBefore, filePath);
+
+          if (citedSymbol) {
+            const { found, nearLine } = findSymbolInFile(
+              symbolIndex,
+              citedSymbol,
+              filePath,
+              startLine
+            );
+
+            if (!found) {
+              failed.push({
+                claim: `${citedSymbol} in ${filePath}`,
+                file: filePath,
+                reason: `symbol '${citedSymbol}' not found in file`,
+              });
+              continue;
+            }
+
+            if (!nearLine && startLine !== null) {
+              failed.push({
+                claim: `${citedSymbol} in ${filePath}`,
+                file: filePath,
+                reason: `symbol '${citedSymbol}' not found near line ${startLine}`,
+              });
+              continue;
+            }
           }
         }
 

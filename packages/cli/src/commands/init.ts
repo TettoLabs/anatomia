@@ -56,6 +56,7 @@ import {
   AGENT_FILES,
   META_VERSION,
 } from '../constants.js';
+import { buildSymbolIndex } from './index.js';
 
 /** Command options */
 interface InitCommandOptions {
@@ -159,6 +160,7 @@ export const initCommand = new Command('init')
       await copyHookScripts(tmpAnaPath);
       await createMetaJson(tmpAnaPath, analysisResult, setupMode);
       await storeSnapshot(tmpAnaPath, analysisResult);
+      await buildSymbolIndexSafe(cwd, tmpAnaPath);
 
       // Restore .state/ if --force was used
       if (preflight.stateBackup) {
@@ -898,6 +900,31 @@ async function storeSnapshot(
   await fs.writeFile(snapshotPath, JSON.stringify(analysis, null, 2), 'utf-8');
 
   spinner.succeed('Stored analyzer snapshot');
+}
+
+/**
+ * Build symbol index with graceful failure handling
+ *
+ * Symbol index is optional - if it fails, citation verification
+ * will fall back to file-only checks.
+ *
+ * @param cwd - Project root directory
+ * @param tmpAnaPath - Temp .ana/ path (writes to .state/)
+ */
+async function buildSymbolIndexSafe(cwd: string, tmpAnaPath: string): Promise<void> {
+  const spinner = ora('Building symbol index...').start();
+
+  try {
+    const statePath = path.join(tmpAnaPath, '.state');
+    const index = await buildSymbolIndex(cwd, statePath);
+    spinner.succeed(`Symbol index built (${index.symbols.length} symbols from ${index.files_parsed} files)`);
+  } catch (error) {
+    // Symbol index is optional - warn but don't fail init
+    spinner.warn('Symbol index generation failed — citation verification will use file-only checks');
+    if (error instanceof Error) {
+      console.log(chalk.gray(`  Reason: ${error.message}`));
+    }
+  }
 }
 
 /**

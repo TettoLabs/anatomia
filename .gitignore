@@ -37,3 +37,4 @@ test-results/
 *.tmp
 .temp/
 master_plan/
+.ana/.state/cache/

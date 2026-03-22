@@ -21,6 +21,7 @@ import {
 } from '../utils/validators.js';
 import { VALID_SETUP_TIERS, META_VERSION } from '../constants.js';
 import { createCheckCommand } from './check.js';
+import { createIndexCommand } from './index.js';
 
 interface SetupCompleteOptions {
   mode?: string;
@@ -42,6 +43,9 @@ export const setupCommand = new Command('setup').description(
 
 /** Add 'check' subcommand */
 setupCommand.addCommand(createCheckCommand());
+
+/** Add 'index' subcommand */
+setupCommand.addCommand(createIndexCommand());
 
 /** Add 'complete' subcommand */
 setupCommand
