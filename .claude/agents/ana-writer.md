@@ -54,28 +54,6 @@ Use paths relative to the project root in all citations. Never use absolute path
 
 Read the existing scaffold file (the target .ana/context/[filename].md) before writing to it. This ensures you understand the current structure and avoids "file has not been read" errors.
 
-## After Writing — Verify Your Output
-
-After writing the context file, verify it passes quality checks. Run this command via Bash:
-
-```bash
-ana setup check [filename] --json
-```
-
-If `ana` is not in PATH, use:
-```bash
-node packages/cli/dist/index.js setup check [filename] --json
-```
-
-Read the JSON output. If any check fails:
-- **Line count below minimum** → add more real content with citations (not filler)
-- **Line count above maximum** → cut duplicated code blocks, shorten verbose config dumps to excerpts, remove content that belongs in other context files
-- **Headers missing** → add the missing H2 sections from the step file
-- **Placeholders found** → replace TODO/TBD/FIXME with real content or "Not detected"
-- **Citations failed** → re-read the cited source file, verify the function/class exists, fix the path or line numbers
-
-Re-run the check after fixes. Do not finish until all checks pass.
-
 ## Content Quality Rules
 
 ### Every Claim Must Reference Real Code

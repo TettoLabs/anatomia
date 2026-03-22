@@ -88,6 +88,45 @@ function createEmptyAnalysisResult(): AnalysisResult {
   } as AnalysisResult;
 }
 
+/**
+ * Ask for setup tier selection
+ *
+ * Prompts user to choose quick/guided/complete tier.
+ * Defaults to guided for non-interactive environments.
+ *
+ * @param options - Command options
+ * @returns Selected setup tier
+ */
+async function askSetupTier(options: InitCommandOptions): Promise<string> {
+  // Default for non-interactive environments
+  if (!process.stdout.isTTY || !process.stdin.isTTY) {
+    return 'guided';
+  }
+
+  console.log(chalk.cyan('\nSetup tier:'));
+  console.log(chalk.gray('  1. Quick     — ~2 min, no questions, uses detected data only'));
+  console.log(chalk.gray('  2. Guided    — ~5 min, asks 5-7 questions to improve accuracy'));
+  console.log(chalk.gray('  3. Complete  — ~15 min, thorough Q&A for maximum accuracy'));
+  console.log();
+
+  // Simple stdin read for single character
+  const readline = await import('node:readline');
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+
+  const answer = await new Promise<string>((resolve) => {
+    rl.question(chalk.cyan('  Choose (1/2/3, default 2): '), (ans) => {
+      rl.close();
+      resolve(ans.trim());
+    });
+  });
+
+  const tierMap: Record<string, string> = { '1': 'quick', '2': 'guided', '3': 'complete' };
+  const setupMode = tierMap[answer] || 'guided';
+  console.log(chalk.green(`  → ${setupMode} tier selected\n`));
+
+  return setupMode;
+}
+
 /** Create init command */
 export const initCommand = new Command('init')
   .description('Initialize .ana/ context framework')
@@ -103,6 +142,9 @@ export const initCommand = new Command('init')
       return; // Exit already handled in validation
     }
 
+    // Ask for setup tier (before Phase 2)
+    const setupMode = await askSetupTier(options);
+
     // Phase 2-9: Atomic operation
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ana-init-'));
     const tmpAnaPath = path.join(tmpDir, '.ana');
@@ -115,7 +157,7 @@ export const initCommand = new Command('init')
       await generateScaffolds(tmpAnaPath, analysisResult, cwd);
       await copyStaticFilesWithVerification(tmpAnaPath);
       await copyHookScripts(tmpAnaPath);
-      await createMetaJson(tmpAnaPath, analysisResult);
+      await createMetaJson(tmpAnaPath, analysisResult, setupMode);
       await storeSnapshot(tmpAnaPath, analysisResult);
 
       // Restore .state/ if --force was used
@@ -569,7 +611,7 @@ async function copyHookScripts(tmpAnaPath: string): Promise<void> {
   await fs.mkdir(hooksDir, { recursive: true });
 
   // Hook scripts to copy
-  const hookScripts = ['verify-context-file.sh', 'quality-gate.sh'];
+  const hookScripts = ['verify-context-file.sh', 'quality-gate.sh', 'subagent-verify.sh'];
 
   for (const script of hookScripts) {
     const sourcePath = path.join(templatesDir, '.ana/hooks', script);
@@ -582,7 +624,7 @@ async function copyHookScripts(tmpAnaPath: string): Promise<void> {
     await fs.chmod(destPath, 0o755);
   }
 
-  spinner.succeed('Copied hook scripts (2 files, executable)');
+  spinner.succeed('Copied hook scripts (3 files, executable)');
 }
 
 /**
@@ -799,16 +841,18 @@ function getTemplatesDir(): string {
  *
  * Creates framework metadata file with initial state:
  * - setupStatus: 'pending' (setup not run yet)
- * - setupMode: null (set by ana setup complete)
+ * - setupMode: from user selection
  * - framework: from analyzer
  * - analyzerVersion: from analyzer
  *
  * @param tmpAnaPath - Temp .ana/ path
  * @param analysisResult - Analyzer result or null
+ * @param setupMode - User-selected setup tier
  */
 async function createMetaJson(
   tmpAnaPath: string,
-  analysisResult: AnalysisResult | null
+  analysisResult: AnalysisResult | null,
+  setupMode: string
 ): Promise<void> {
   const spinner = ora('Creating .meta.json...').start();
 
@@ -819,7 +863,7 @@ async function createMetaJson(
     createdAt: new Date().toISOString(),
     setupStatus: 'pending',
     setupCompletedAt: null,
-    setupMode: null,
+    setupMode,
     framework: analysis.framework,
     analyzerVersion: analysis.version,
     lastEvolve: null,

@@ -138,13 +138,15 @@ function checkHeaders(content: string, config: FileConfig): HeadersResult {
 }
 
 /**
- * Check for placeholder markers
+ * Check for placeholder markers (skip matches inside fenced code blocks)
  */
 function checkPlaceholders(content: string): PlaceholdersResult {
+  // Remove fenced code blocks before checking
+  const contentWithoutCodeBlocks = content.replace(/```[\s\S]*?```/g, '');
   const markers: string[] = [];
 
   for (const pattern of PLACEHOLDER_PATTERNS) {
-    const matches = content.match(new RegExp(pattern.source, 'gi'));
+    const matches = contentWithoutCodeBlocks.match(new RegExp(pattern.source, 'gi'));
     if (matches) {
       markers.push(...matches);
     }
@@ -158,10 +160,12 @@ function checkPlaceholders(content: string): PlaceholdersResult {
 }
 
 /**
- * Check for scaffold markers
+ * Check for scaffold markers (skip matches inside fenced code blocks)
  */
 function checkScaffoldMarkers(content: string): ScaffoldMarkersResult {
-  const matches = content.match(/<!-- SCAFFOLD/g) || [];
+  // Remove fenced code blocks before checking
+  const contentWithoutCodeBlocks = content.replace(/```[\s\S]*?```/g, '');
+  const matches = contentWithoutCodeBlocks.match(/<!-- SCAFFOLD/g) || [];
   return {
     count: matches.length,
     pass: matches.length === 0,

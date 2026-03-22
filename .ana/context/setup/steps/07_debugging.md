@@ -52,8 +52,6 @@ Before finishing, verify:
   <if_not_found>Write: "Not yet documented — add failures as they occur via teach mode"</if_not_found>
 </target>
 
-Note: If the explorer detected fragile patterns that the user did not mention in Q&A, tag them as **Unexamined** and note: "Detected from code — user has not confirmed whether this is a known issue." Example: "**Unexamined:** Uncaught promise rejections in several async handlers — detected from code, user has not confirmed whether this is a known issue."
-
 <target name="observability">
   Search: APM and monitoring tools in dependencies
   Files: package.json for newrelic, datadog, prometheus

@@ -1,0 +1,14 @@
+{
+  "projectType": "unknown",
+  "framework": null,
+  "confidence": {
+    "projectType": 0,
+    "framework": 0
+  },
+  "indicators": {
+    "projectType": [],
+    "framework": []
+  },
+  "detectedAt": "2026-03-22T03:27:48.548Z",
+  "version": "0.0.0"
+}

@@ -3,7 +3,7 @@
  *
  * Tests actual command execution in temp project directory.
  * Validates all files/directories created correctly:
- * - .ana/ with 36 files (34 original + 2 hook scripts)
+ * - .ana/ with 37 files (34 original + 3 hook scripts)
  * - .claude/ with settings.json and agents/ directory (4 agent files)
  */
 
@@ -37,7 +37,7 @@ describe('ana init E2E', () => {
     await fs.rm(tmpProject, { recursive: true, force: true });
   });
 
-  it('creates all 36 files in .ana/ (24 static + 8 generated + 2 JSON + 2 hooks)', async () => {
+  it('creates all 37 files in .ana/ (24 static + 8 generated + 2 JSON + 3 hooks)', async () => {
     // Run ana init with --skip-analysis (faster, deterministic)
     await execFileAsync('node', [cliPath, 'init', '--skip-analysis'], {
       cwd: tmpProject,
@@ -94,8 +94,8 @@ describe('ana init E2E', () => {
       expect(exists, `Mode file missing: ${file}`).toBe(true);
     }
 
-    // Verify hook scripts (2) — Step 2 addition
-    const hookScripts = ['hooks/verify-context-file.sh', 'hooks/quality-gate.sh'];
+    // Verify hook scripts (3) — Step 2 + 7.3 additions
+    const hookScripts = ['hooks/verify-context-file.sh', 'hooks/quality-gate.sh', 'hooks/subagent-verify.sh'];
 
     for (const script of hookScripts) {
       const exists = await fileExists(path.join(anaPath, script));
@@ -125,8 +125,8 @@ describe('ana init E2E', () => {
 
     // Count total files in .ana/
     const allFiles = await findAllFiles(anaPath);
-    // 8 generated + 24 copied + 2 JSON + 2 hooks = 36
-    expect(allFiles.length).toBe(36);
+    // 8 generated + 24 copied + 2 JSON + 3 hooks = 37
+    expect(allFiles.length).toBe(37);
 
     // Verify .claude/ directory was also created (outside .ana/)
     const claudePath = path.join(tmpProject, '.claude');

@@ -1,37 +1,47 @@
 # Setup Tier: Guided
 
-Balanced setup with 5-7 targeted questions based on confidence thresholds.
+Balanced setup with 5 targeted questions. No improvisation, no paraphrasing, no skipping.
 
 ---
 
-## Question Selection
+## Questions (ask ALL in order, do not skip, do not rephrase)
 
-Read exploration results from `.ana/.setup_exploration.md`. Select questions based on confidence scores:
+Present each question with Ana's guess from the question-formulator. Always show the guess even when confidence is high — this builds trust.
 
-### Always Ask (2 questions)
-1. **Batch confirmation** — "Here's what I found. Type 1 if correct, or tell me what's different."
-2. **Goal** — "What's your goal with this codebase? (Understand / Fix / Extend / Refactor)"
+### Q1: Project purpose (always ask)
+"What does this project do and what problem does it solve?"
+→ Relevant to: project-overview.md
 
-### Confidence-Based (ask if threshold not met)
-3. **Best code** — "Point me to your best code (file or folder)" — Ask if pattern confidence < 0.85
-4. **Tech debt** — "What's fragile? Known tech debt?" — Ask if overall confidence < 0.7
-5. **Deployment** — "How does code get to production?" — Ask if deployment confidence < 0.4
-6. **Future direction** — "What's coming next?" — Ask if architecture confidence < 0.5
+### Q2: Target users (always ask)
+"Who uses this — what kind of developer or team, and what's their context?"
+→ Relevant to: project-overview.md, architecture.md
 
-### Always Ask (2 questions)
-7. **Venting** — "What keeps breaking or frustrates you?" — Tribal knowledge, can never infer
-8. **Anything else** — "Anything else I should know?" — Escape valve, user can say 'not sure'
+### Q3: Architecture rationale (always ask)
+"Why is the codebase structured this way? Were there deliberate architecture choices, or did it evolve organically?"
+→ Relevant to: architecture.md
+
+### Q4: Pain points (always ask)
+"What parts of the codebase tend to break, cause confusion, or need the most debugging?"
+→ Relevant to: debugging.md, patterns.md
+
+### Q5: Deployment and release (always ask)
+"How do you deploy and release? Any environments, CI/CD, or manual steps?"
+→ Relevant to: workflow.md
+
+After all 5 questions, ask:
+"Anything else I should know about this project that wouldn't be obvious from the code?"
+→ Relevant to: any file as appropriate. If user says "no" or skips, proceed to writing.
 
 ---
 
 ## Question Presentation
 
-For each selected question:
+For each question:
 
 1. Invoke ana-question-formulator: "Formulate answer for: [question text]"
 2. Present to user:
    ```
-   Question X of Y: [question text]
+   Question X of 5: [question text]
 
    Ana's guess: [formulator's answer]
    Confidence: [score]
@@ -47,26 +57,15 @@ For each selected question:
    - What to incorporate (confirmed guess, user correction, or skipped)
 
 ### Answer Validation
-For questions 3-6 (confidence-based), validate user answers against codebase before storing. See setup.md Step 5 for the validation protocol.
-
----
-
-## Confidence Thresholds
-
-| Threshold | Meaning |
-|-----------|---------|
-| 0.9+ | Config-confirmed, skip question |
-| 0.7-0.9 | Strong evidence, consider skipping |
-| 0.4-0.7 | Weak evidence, ask question |
-| < 0.4 | Must ask, cannot infer |
+For user answers, validate against codebase before storing. See setup.md Step 5 for the validation protocol.
 
 ---
 
 ## Expected Question Count
 
-- Minimum: 4 (batch + goal + venting + escape)
-- Maximum: 8 (all questions)
-- Typical: 5-6 for most projects
+- Exactly 5 numbered questions
+- Plus 1 open-ended closer ("Anything else?")
+- Total: 6 interactions maximum
 
 ---
 
