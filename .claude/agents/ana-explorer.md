@@ -87,6 +87,26 @@ Look for repeated patterns across multiple files:
 - CI/CD complexity (simple vs multi-stage)
 - Documentation completeness
 
+### Git & Development Workflow Signals
+
+Run these commands and record the output in your exploration findings:
+
+1. **Recent commit history:** `git log --oneline -20` — Record the 20 most recent commit messages. Note patterns: are commits conventional (feat:, fix:, chore:)? Are they descriptive or vague ("fix stuff")? Are there merge commits indicating PR workflow?
+
+2. **Branch structure:** `git branch -a` — Record all branches. Note: Is there a develop/staging branch? Feature branch naming convention? How many active branches?
+
+3. **Contributor count:** `git shortlog -sn --no-merges | head -10` — Record top contributors and commit counts. Solo developer vs team?
+
+4. **CI/CD presence:** Check for `.github/workflows/`, `.gitlab-ci.yml`, `.circleci/`, `Jenkinsfile`, `bitbucket-pipelines.yml`. Record what exists and what the workflows do (read the YAML).
+
+5. **Git hooks:** Check for `.husky/`, `.git/hooks/`, `lefthook.yml`, `lint-staged` in package.json. Record what pre-commit/pre-push checks exist.
+
+6. **Merge commit frequency:** `git log --oneline --merges -10` — If merge commits exist, the team uses PRs. If zero merge commits in last 100 commits, it's likely direct-push workflow.
+
+If `git log` fails (no `.git/` directory), note "No git repository detected" and skip this section.
+
+Record all findings under a "## Development Workflow" heading in your exploration output.
+
 ## Output Format
 
 Structure your `.ana/.setup_exploration.md` document with H2 sections matching the areas above:
@@ -113,6 +133,13 @@ _Generated: [timestamp]_
   - Evidence: `src/errors/AppError.ts`, `src/middleware/errorHandler.ts`
   - Confidence: 0.85
 ...
+
+## Development Workflow
+- **Branching:** Feature branches with `feature/` prefix — Confidence: 0.8
+- **PR process:** Merge commits detected, using PR workflow — Confidence: 0.85
+- **CI/CD:** GitHub Actions with lint, test, build stages — Confidence: 0.95
+- **Commit convention:** Conventional commits (feat:, fix:, chore:) — Confidence: 0.9
+- **Pre-commit:** Husky + lint-staged for linting — Confidence: 0.9
 ```
 
 ## Constraints

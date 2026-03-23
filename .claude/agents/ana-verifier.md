@@ -80,11 +80,11 @@ _Generated: [timestamp]_
 
 ## CLI Verification
 
-Also run `ana setup check [filename] --json` for each file and include the output in your report.
+Also run the check command for each file and include the output in your report.
 
 Example:
 ```bash
-ana setup check .ana/context/patterns.md --json
+bash .ana/hooks/run-check.sh patterns.md --json
 ```
 
 Include both the JSON output and a human-readable interpretation.

@@ -289,6 +289,9 @@ describe('Scenario B — analyzer returned no/minimal data', () => {
 
       const snapshot = createScenarioBSnapshot();
       snapshot.framework = 'nextjs';
+      // When analyzer returns a real framework name, give it non-zero confidence
+      // so BF6 check is not skipped
+      snapshot.confidence = { projectType: 0, framework: 0.7 };
       const errors = await validateCrossReferences(anaPath, snapshot as never);
 
       const bf6Errors = errors.filter(e => e.rule === 'BF6');

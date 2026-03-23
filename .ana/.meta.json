@@ -1,11 +1,11 @@
 {
   "version": "1.0.0",
-  "createdAt": "2026-03-22T15:56:15.819Z",
-  "setupStatus": "pending",
-  "setupCompletedAt": null,
-  "setupMode": "quick",
+  "createdAt": "2026-03-23T20:38:22.888Z",
+  "setupStatus": "complete",
+  "setupCompletedAt": "2026-03-23T21:42:35.523Z",
+  "setupMode": "guided",
   "framework": null,
-  "analyzerVersion": "0.0.0",
+  "analyzerVersion": "0.1.0",
   "lastEvolve": null,
   "lastHealth": null,
   "sessionCount": 0

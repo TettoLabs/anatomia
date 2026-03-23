@@ -287,7 +287,10 @@ export async function validateStructure(anaPath: string): Promise<ValidationErro
     const content = await fs.readFile(filePath, 'utf-8');
 
     // BF1: Check scaffold marker removed
-    if (content.includes(SCAFFOLD_MARKER)) {
+    // Strip fenced code blocks first to avoid false positives from code citations
+    // (e.g., test files that check for the scaffold marker string)
+    const contentWithoutCodeBlocks = content.replace(/```[\s\S]*?```/g, '');
+    if (contentWithoutCodeBlocks.includes(SCAFFOLD_MARKER)) {
       errors.push({
         type: 'BLOCKING',
         rule: 'BF1',
@@ -399,10 +402,20 @@ export async function validateCrossReferences(
   }
 
   // BF6: Framework consistency
-  // Special case: if analyzer detected nothing (unknown project type + null framework),
-  // skip the cross-reference check with a warning (not blocking error).
-  // This is Scenario B: analyzer pipeline returned no data.
-  if (snapshot.projectType === 'unknown' && snapshot.framework === null) {
+  // Skip the cross-reference check when analyzer returned no meaningful framework data.
+  // This is Scenario B: analyzer pipeline returned no data or low-confidence results.
+  // The writer is MORE accurate than the analyzer in these cases — don't penalize it.
+  //
+  // Skip when analyzer framework is null, "none", or "unknown".
+  // But if analyzer returned a specific framework name (like "nextjs", "fastapi"),
+  // still perform the check even with low confidence - it's a comparison point.
+  const analyzerFramework = snapshot.framework?.toLowerCase() || null;
+  const analyzerReturnedNoFramework =
+    analyzerFramework === null ||
+    analyzerFramework === 'none' ||
+    analyzerFramework === 'unknown';
+
+  if (analyzerReturnedNoFramework) {
     // Log warning but don't add to errors - handled in calling code as soft warning
     console.log('\x1b[33m  ⚠ Analyzer did not detect framework (known limitation). Skipping framework cross-reference.\x1b[0m');
     return errors;

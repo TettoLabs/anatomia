@@ -56,25 +56,25 @@ Read the existing scaffold file (the target .ana/context/[filename].md) before w
 
 ## After Writing — Verify Your Output
 
-After writing the context file, verify it passes quality checks. Run this command via Bash:
+After writing the context file, verify it passes quality checks:
 
 ```bash
-ana setup check [filename] --json
+bash .ana/hooks/run-check.sh [filename] --json
 ```
 
-If `ana` is not in PATH, use:
-```bash
-node packages/cli/dist/index.js setup check [filename] --json
-```
+**IMPORTANT:** Do NOT redirect stderr. If the command fails, you need to see the error. Never use `2>/dev/null` with this command.
 
 Read the JSON output. If any check fails:
 - **Line count below minimum** → add more real content with citations (not filler)
-- **Line count above maximum** → cut duplicated code blocks, shorten verbose config dumps to excerpts, remove content that belongs in other context files
+- **Line count above maximum** → cut duplicated code blocks, shorten verbose config dumps
 - **Headers missing** → add the missing H2 sections from the step file
+- **Scaffold markers found** → remove any `<!-- SCAFFOLD` lines
 - **Placeholders found** → replace TODO/TBD/FIXME with real content or "Not detected"
-- **Citations failed** → re-read the cited source file, verify the function/class exists, fix the path or line numbers
+- **Citations failed** → re-read the cited source file, fix the path or line numbers
 
 Re-run the check after fixes. Do not finish until all checks pass.
+
+If the check script cannot run (node not found), report the error clearly. Do NOT claim verification passed if the check did not execute.
 
 ## Content Quality Rules
 
@@ -104,6 +104,15 @@ Never present calculated estimates as measured facts. If you compute a number fr
 **Wrong:** "5-10ms per parser × 20 files = 100-200ms saved"
 **Right:** "**Inferred:** Parser reuse likely saves startup time (~100-200ms estimated, not measured)"
 
+### No Self-Assessment in Output
+Do NOT include statements about your own work quality in context files. No:
+- "All patterns detected in this codebase, zero fabrications"
+- "All citations verified"
+- "Comprehensive coverage of..."
+- Any claim about completeness or accuracy
+
+Context files document the PROJECT, not your performance. Quality claims belong in the verification report, not in the content.
+
 ### Avoid Cross-File Duplication
 Each context file owns specific content. If a code block is better documented in another file, reference it instead of quoting the same code again.
 
@@ -124,10 +133,23 @@ Tag your information sources so readers know the confidence level:
 - **User confirmed:** [claim] — User validated via Q&A
 - **User stated:** [claim] — User provided, not verified against code
 - **Inferred:** [claim] — Your judgment, not mechanically verified
-- **Unexamined:** [pattern] — Detected but intent unknown
+- **Unexamined:** [pattern] — Detected from code but intent is unknown. The code works this way, but nobody confirmed whether that's how it SHOULD work.
+
+**RULE: If the Q&A log has zero entries (Quick tier) or no entry relevant to a specific pattern, you MUST use Unexamined for architectural decisions, trade-offs, and non-obvious patterns.** Examples:
+  - Singleton pattern on a class → Unexamined (was this intentional?)
+  - No rate limiting detected → Unexamined (acceptable for a CLI tool, but flag it)
+  - Mixed file naming conventions → Unexamined (drift or intentional?)
+
+Only use "Detected" for objective facts that don't involve design intent (file exists, dependency version, config value). Anything involving WHY or WHETHER gets Unexamined when there's no user confirmation.
 
 ### Trust Stack Integrity
 Only use "User confirmed" when the Q&A log has an explicit entry where the user confirmed this specific claim. Only use "User stated" when the Q&A log has the user's exact words on this topic. If the Q&A log has no relevant entry, use "Detected" (from code) or "Inferred" (your judgment). Never guess what the user would have said.
+
+### What Counts as User Confirmation
+- **User confirmed** = the Q&A log has an entry where the user explicitly said "yes" or provided this information
+- **User stated** = the Q&A log has the user's own words on this topic
+- **NEVER treat documentation files (CONTRIBUTING.md, README.md) as user confirmation.** Documentation is code — tag it as "Detected"
+- **If the Q&A log is empty (Quick tier), you MUST NOT use "User confirmed" or "User stated" anywhere.** Every tag must be "Detected", "Inferred", or "Unexamined"
 
 ### Example:
 ```markdown

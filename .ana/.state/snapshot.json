@@ -1,14 +1,199 @@
 {
-  "projectType": "unknown",
+  "projectType": "node",
   "framework": null,
   "confidence": {
-    "projectType": 0,
+    "projectType": 0.95,
     "framework": 0
   },
   "indicators": {
-    "projectType": [],
+    "projectType": [
+      "package.json",
+      "pnpm-lock.yaml"
+    ],
     "framework": []
   },
-  "detectedAt": "2026-03-22T15:56:15.819Z",
-  "version": "0.0.0"
+  "detectedAt": "2026-03-23T20:38:22.854Z",
+  "version": "0.1.0",
+  "structure": {
+    "directories": {
+      ".github": "Unknown",
+      ".github/workflows": "Unknown",
+      "master_plan": "Unknown",
+      "master_plan/CORE_DOCS": "Unknown",
+      "master_plan/IMPLEMENTATION": "Unknown",
+      "packages": "Unknown",
+      "packages/analyzer": "Unknown",
+      "packages/analyzer/.ana": "Unknown",
+      "packages/analyzer/.ana/.state": "Unknown",
+      "packages/analyzer/.ana/.state/cache": "Unknown",
+      "packages/analyzer/docs": "Documentation",
+      "packages/analyzer/src": "Source code",
+      "packages/analyzer/src/analyzers": "Unknown",
+      "packages/analyzer/src/analyzers/conventions": "Unknown",
+      "packages/analyzer/src/cache": "Unknown",
+      "packages/analyzer/src/detectors": "Unknown",
+      "packages/analyzer/src/detectors/node": "Unknown",
+      "packages/analyzer/src/detectors/python": "Unknown",
+      "packages/analyzer/src/errors": "Unknown",
+      "packages/analyzer/src/parsers": "Unknown",
+      "packages/analyzer/src/parsers/go": "Unknown",
+      "packages/analyzer/src/parsers/node": "Unknown",
+      "packages/analyzer/src/parsers/php": "Unknown",
+      "packages/analyzer/src/parsers/python": "Unknown",
+      "packages/analyzer/src/parsers/ruby": "Unknown",
+      "packages/analyzer/src/parsers/rust": "Unknown",
+      "packages/analyzer/src/sampling": "Unknown",
+      "packages/analyzer/src/types": "Unknown",
+      "packages/analyzer/src/utils": "Utility functions",
+      "packages/analyzer/tests": "Tests",
+      "packages/analyzer/tests/analyzers": "Unknown",
+      "packages/analyzer/tests/analyzers/patterns": "Unknown",
+      "packages/analyzer/tests/cache": "Unknown",
+      "packages/analyzer/tests/conventions": "Unknown",
+      "packages/analyzer/tests/detectors": "Unknown",
+      "packages/analyzer/tests/fixtures": "Unknown",
+      "packages/analyzer/tests/fixtures/go": "Unknown",
+      "packages/analyzer/tests/fixtures/node": "Unknown",
+      "packages/analyzer/tests/fixtures/php": "Unknown",
+      "packages/analyzer/tests/fixtures/python": "Unknown",
+      "packages/analyzer/tests/fixtures/ruby": "Unknown",
+      "packages/analyzer/tests/fixtures/rust": "Unknown",
+      "packages/analyzer/tests/integration": "Unknown",
+      "packages/analyzer/tests/parsers": "Unknown",
+      "packages/analyzer/tests/performance": "Unknown",
+      "packages/cli": "Unknown",
+      "packages/cli/.ana": "Unknown",
+      "packages/cli/.ana/.state": "Unknown",
+      "packages/cli/.ana/.state/cache": "Unknown",
+      "packages/cli/docs": "Documentation",
+      "packages/cli/src": "Source code",
+      "packages/cli/src/commands": "Unknown",
+      "packages/cli/src/utils": "Utility functions",
+      "packages/cli/templates": "Unknown",
+      "packages/cli/templates/.ana": "Unknown",
+      "packages/cli/templates/.ana/hooks": "Unknown",
+      "packages/cli/templates/.claude": "Unknown",
+      "packages/cli/templates/.claude/agents": "Unknown",
+      "packages/cli/templates/context": "Unknown",
+      "packages/cli/templates/context/setup": "Unknown",
+      "packages/cli/templates/modes": "Unknown",
+      "packages/cli/tests": "Tests",
+      "packages/cli/tests/cleanup": "Unknown",
+      "packages/cli/tests/commands": "Unknown",
+      "packages/cli/tests/contract": "Unknown",
+      "packages/cli/tests/e2e": "End-to-end tests",
+      "packages/cli/tests/performance": "Unknown",
+      "packages/cli/tests/scaffolds": "Unknown",
+      "packages/cli/tests/scaffolds/__snapshots__": "Unknown",
+      "packages/cli/tests/templates": "Unknown",
+      "packages/cli/tests/utils": "Utility functions",
+      "packages/generator": "Unknown",
+      "packages/generator/src": "Source code",
+      "tests": "Tests",
+      "tests/analyzers": "Unknown",
+      "tests/analyzers/patterns": "Unknown",
+      "tests/analyzers/patterns/fixtures": "Unknown",
+      "website": "Unknown",
+      "website/app": "Application code",
+      "website/colors": "Unknown",
+      "website/components": "UI components",
+      "website/components/ui": "Unknown",
+      "website/public": "Public static files"
+    },
+    "entryPoints": [],
+    "testLocation": "tests/",
+    "architecture": "monolith",
+    "directoryTree": "anatomia/\n      src/\n      src/\n      src/\n    app/\n      tests/\n      tests/\n  tests/\n      docs/\n      docs/\n  .github/\n    workflows/\n  master_plan/\n    CORE_DOCS/\n    IMPLEMENTATION/\n  packages/\n    analyzer/\n      .ana/\n        .state/\n          cache/\n        analyzers/\n          conventions/\n        cache/\n        detectors/\n          node/\n          python/\n        errors/\n        parsers/\n          go/\n          node/\n          php/\n          python/\n          ruby/\n          rust/\n        sampling/\n        types/\n        utils/\n        analyzers/\n          patterns/\n        cache/\n        conventions/\n  ... 43 more directories\n",
+    "configFiles": [
+      ".gitignore",
+      "README.md",
+      "LICENSE",
+      "package.json",
+      "eslint.config.mjs"
+    ],
+    "confidence": {
+      "entryPoints": 0,
+      "testLocation": 1,
+      "architecture": 0.7,
+      "overall": 0.425
+    }
+  },
+  "parsed": {
+    "files": [],
+    "totalParsed": 0,
+    "cacheHits": 0,
+    "cacheMisses": 0
+  },
+  "patterns": {
+    "errorHandling": {
+      "library": "exceptions",
+      "variant": "generic",
+      "confidence": 0.75,
+      "evidence": [
+        "node uses exception-based error handling"
+      ]
+    },
+    "sampledFiles": 0,
+    "detectionTime": 0,
+    "threshold": 0.7
+  },
+  "conventions": {
+    "naming": {
+      "files": {
+        "majority": "unknown",
+        "confidence": 0,
+        "mixed": true,
+        "distribution": {},
+        "sampleSize": 0
+      },
+      "functions": {
+        "majority": "unknown",
+        "confidence": 0,
+        "mixed": true,
+        "distribution": {},
+        "sampleSize": 0
+      },
+      "classes": {
+        "majority": "unknown",
+        "confidence": 0,
+        "mixed": true,
+        "distribution": {},
+        "sampleSize": 0
+      },
+      "variables": {
+        "majority": "unknown",
+        "confidence": 0,
+        "mixed": true,
+        "distribution": {},
+        "sampleSize": 0
+      },
+      "constants": {
+        "majority": "unknown",
+        "confidence": 0,
+        "mixed": true,
+        "distribution": {},
+        "sampleSize": 0
+      }
+    },
+    "imports": {
+      "style": "mixed",
+      "confidence": 0,
+      "distribution": {
+        "absolute": 0,
+        "relative": 0
+      }
+    },
+    "docstrings": {
+      "format": "none",
+      "confidence": 0.95,
+      "coverage": 0
+    },
+    "indentation": {
+      "style": "spaces",
+      "width": 4,
+      "confidence": 0.5
+    },
+    "sampledFiles": 0,
+    "detectionTime": 2
+  }
 }

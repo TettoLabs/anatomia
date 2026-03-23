@@ -6,48 +6,215 @@
 
 ## Project Identity
 
-**Language:** Unknown
+**Language:** JavaScript/TypeScript
 **Framework:** None detected
 
 ### Detection Confidence
 
-- Project type: 0.00
+- Project type: 0.95
 - Framework: 0.00
 
 ### Detection Indicators
 
 **Project type indicators:**
-- None found
+- package.json
+- pnpm-lock.yaml
 
 **Framework indicators:**
 - None found
 
-**Analyzer version:** 0.0.0
-**Detected at:** 2026-03-22T15:56:15.801Z
+**Analyzer version:** 0.1.0
+**Detected at:** 2026-03-23T20:38:22.854Z
 
 ---
 
 ## Directory Structure
 
-*Structure analysis not performed or unavailable*
+### Architecture Pattern
+
+**Pattern:** monolith
+**Confidence:** 0.70
+
+### Entry Points
+
+None detected
+
+### Test Location
+
+**Location:** tests/
+
+### Key Directories
+
+- **.github:** Unknown
+- **.github/workflows:** Unknown
+- **master_plan:** Unknown
+- **master_plan/CORE_DOCS:** Unknown
+- **master_plan/IMPLEMENTATION:** Unknown
+- **packages:** Unknown
+- **packages/analyzer:** Unknown
+- **packages/analyzer/.ana:** Unknown
+- **packages/analyzer/.ana/.state:** Unknown
+- **packages/analyzer/.ana/.state/cache:** Unknown
+- **packages/analyzer/docs:** Documentation
+- **packages/analyzer/src:** Source code
+- **packages/analyzer/src/analyzers:** Unknown
+- **packages/analyzer/src/analyzers/conventions:** Unknown
+- **packages/analyzer/src/cache:** Unknown
+- **packages/analyzer/src/detectors:** Unknown
+- **packages/analyzer/src/detectors/node:** Unknown
+- **packages/analyzer/src/detectors/python:** Unknown
+- **packages/analyzer/src/errors:** Unknown
+- **packages/analyzer/src/parsers:** Unknown
+- **packages/analyzer/src/parsers/go:** Unknown
+- **packages/analyzer/src/parsers/node:** Unknown
+- **packages/analyzer/src/parsers/php:** Unknown
+- **packages/analyzer/src/parsers/python:** Unknown
+- **packages/analyzer/src/parsers/ruby:** Unknown
+- **packages/analyzer/src/parsers/rust:** Unknown
+- **packages/analyzer/src/sampling:** Unknown
+- **packages/analyzer/src/types:** Unknown
+- **packages/analyzer/src/utils:** Utility functions
+- **packages/analyzer/tests:** Tests
+- **packages/analyzer/tests/analyzers:** Unknown
+- **packages/analyzer/tests/analyzers/patterns:** Unknown
+- **packages/analyzer/tests/cache:** Unknown
+- **packages/analyzer/tests/conventions:** Unknown
+- **packages/analyzer/tests/detectors:** Unknown
+- **packages/analyzer/tests/fixtures:** Unknown
+- **packages/analyzer/tests/fixtures/go:** Unknown
+- **packages/analyzer/tests/fixtures/node:** Unknown
+- **packages/analyzer/tests/fixtures/php:** Unknown
+- **packages/analyzer/tests/fixtures/python:** Unknown
+- **packages/analyzer/tests/fixtures/ruby:** Unknown
+- **packages/analyzer/tests/fixtures/rust:** Unknown
+- **packages/analyzer/tests/integration:** Unknown
+- **packages/analyzer/tests/parsers:** Unknown
+- **packages/analyzer/tests/performance:** Unknown
+- **packages/cli:** Unknown
+- **packages/cli/.ana:** Unknown
+- **packages/cli/.ana/.state:** Unknown
+- **packages/cli/.ana/.state/cache:** Unknown
+- **packages/cli/docs:** Documentation
+- **packages/cli/src:** Source code
+- **packages/cli/src/commands:** Unknown
+- **packages/cli/src/utils:** Utility functions
+- **packages/cli/templates:** Unknown
+- **packages/cli/templates/.ana:** Unknown
+- **packages/cli/templates/.ana/hooks:** Unknown
+- **packages/cli/templates/.claude:** Unknown
+- **packages/cli/templates/.claude/agents:** Unknown
+- **packages/cli/templates/context:** Unknown
+- **packages/cli/templates/context/setup:** Unknown
+- **packages/cli/templates/modes:** Unknown
+- **packages/cli/tests:** Tests
+- **packages/cli/tests/cleanup:** Unknown
+- **packages/cli/tests/commands:** Unknown
+- **packages/cli/tests/contract:** Unknown
+- **packages/cli/tests/e2e:** End-to-end tests
+- **packages/cli/tests/performance:** Unknown
+- **packages/cli/tests/scaffolds:** Unknown
+- **packages/cli/tests/scaffolds/__snapshots__:** Unknown
+- **packages/cli/tests/templates:** Unknown
+- **packages/cli/tests/utils:** Utility functions
+- **packages/generator:** Unknown
+- **packages/generator/src:** Source code
+- **tests:** Tests
+- **tests/analyzers:** Unknown
+- **tests/analyzers/patterns:** Unknown
+- **tests/analyzers/patterns/fixtures:** Unknown
+- **website:** Unknown
+- **website/app:** Application code
+- **website/colors:** Unknown
+- **website/components:** UI components
+- **website/components/ui:** Unknown
+- **website/public:** Public static files
+
+### Config Files
+
+- .gitignore
+- README.md
+- LICENSE
+- package.json
+- eslint.config.mjs
 
 ---
 
 ## Detected Patterns
 
-*Pattern inference not performed or unavailable*
+### Error Handling
+
+**Library:** exceptions (generic)
+**Confidence:** 0.75
+
+**Evidence:**
+- node uses exception-based error handling
+
+### Validation
+
+**Pattern:** Not detected
+
+### Database
+
+**Pattern:** Not detected
+
+### Authentication
+
+**Pattern:** Not detected
+
+### Testing
+
+**Pattern:** Not detected
+
+### Detection Metadata
+
+- Files sampled: 0
+- Detection time: 0ms
+- Confidence threshold: 0.7
 
 ---
 
 ## Coding Conventions
 
-*Convention detection not performed or unavailable*
+### Naming Conventions
+
+**Files:** unknown (confidence: 0.00, mixed)
+  Distribution: 
+**Variables:** unknown (confidence: 0.00, mixed)
+  Distribution: 
+**Functions:** unknown (confidence: 0.00, mixed)
+  Distribution: 
+**Classes:** unknown (confidence: 0.00, mixed)
+  Distribution: 
+**Constants:** unknown (confidence: 0.00, mixed)
+  Distribution: 
+
+### Import Conventions
+
+**Style:** mixed (confidence: 0.00)
+**Distribution:** absolute: 0%, relative: 0%
+
+### Indentation
+
+**Style:** spaces (4 spaces)
+**Confidence:** 0.50 (from code analysis)
+
+### Detection Metadata
+
+- Files sampled: 0
+- Detection time: 2ms
 
 ---
 
 ## Codebase Statistics
 
-*Parsing not performed or unavailable*
+### Overview
+
+- **Files parsed:** 0
+- **Functions found:** 0
+- **Classes found:** 0
+
+### Parse Metrics
+
 
 ---
 
@@ -57,7 +224,12 @@
 
 ### Pre-populated by Analyzer
 
-- *(No pre-populated data available)*
+- ✅ 1 pattern(s) detected
+- ✅ Naming conventions detected
+- ✅ Import style detected
+- ✅ Indentation style detected
+- ✅ Architecture pattern: monolith
+- ✅ Test location: tests/
 
 ### Requires User Input
 

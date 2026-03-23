@@ -55,10 +55,37 @@ Before finishing, verify:
 </target>
 
 <target name="database">
-  Search: ORM models, query builders, repository patterns, database access functions
-  Files: **/repositories/**, **/db/**, **/models/**, **/queries/**
-  Extract: Query functions, model definitions, transaction patterns
-  <if_not_found>Write: "Not detected — no database access patterns found."</if_not_found>
+  Search: ORM config files, schema definitions, migration directories
+  Files: prisma/schema.prisma, drizzle.config.ts, prisma/migrations/, src/**/*schema*, src/**/*model*
+
+  If Prisma detected:
+  - Extract ALL model definitions with fields, types, and relations from prisma/schema.prisma
+  - Note which models have @@index and which DON'T (flag missing indexes as Unexamined)
+  - Note onDelete cascade rules on relations (flag missing onDelete as Unexamined)
+  - Check for soft delete pattern (deletedAt field) — is it consistent across models?
+  - Check migration strategy: does package.json have "prisma migrate dev" or "prisma db push"?
+  - Check for raw SQL: grep for prisma.$queryRaw or prisma.$executeRaw
+
+  If Drizzle detected:
+  - Extract schema definitions from drizzle config
+  - Note index definitions and missing indexes
+
+  <if_not_found>Write: "No database/ORM detected — project may use external APIs or raw file storage."</if_not_found>
+</target>
+
+<target name="payments">
+  Search: Payment SDK dependencies, webhook handlers, subscription logic
+  Files: package.json (stripe, lemon-squeezy, paddle), src/**/webhook*, src/**/stripe*, src/**/payment*, app/api/webhook*/**
+
+  If Stripe detected:
+  - Find webhook handler (typically /api/webhook/route.ts or /api/stripe/route.ts)
+  - Check: does it call stripe.webhooks.constructEvent() for signature verification? (flag missing as Unexamined CRITICAL)
+  - Check: does it handle idempotency (checking event ID before processing)? (flag missing as Unexamined)
+  - Check: which subscription lifecycle events are handled? (customer.subscription.updated, invoice.payment_failed, etc.)
+  - Check: are price IDs hardcoded or in config?
+  - Find customer portal implementation (GDPR compliance)
+
+  <if_not_found>Write: "No payment integration detected."</if_not_found>
 </target>
 
 <target name="auth">

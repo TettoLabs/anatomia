@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-22T21:19:11.990Z",
+  "generated": "2026-03-23T20:38:23.098Z",
   "files_parsed": 152,
   "symbols": [
     {
@@ -10,6 +10,13 @@
       "exported": true
     },
     {
+      "name": "main",
+      "type": "function",
+      "file": "packages/cli/src/index.ts",
+      "line": 37,
+      "exported": false
+    },
+    {
       "name": "analyze",
       "type": "function",
       "file": "packages/analyzer/src/index.ts",
@@ -17,10 +24,661 @@
       "exported": true
     },
     {
-      "name": "main",
+      "name": "countDetectedPatterns",
       "type": "function",
-      "file": "packages/cli/src/index.ts",
-      "line": 37,
+      "file": "packages/cli/src/utils/validators.ts",
+      "line": 42,
+      "exported": true
+    },
+    {
+      "name": "getDocumentedPatternSections",
+      "type": "function",
+      "file": "packages/cli/src/utils/validators.ts",
+      "line": 70,
+      "exported": true
+    },
+    {
+      "name": "getMissingPatterns",
+      "type": "function",
+      "file": "packages/cli/src/utils/validators.ts",
+      "line": 84,
+      "exported": true
+    },
+    {
+      "name": "extractFrameworkFromContent",
+      "type": "function",
+      "file": "packages/cli/src/utils/validators.ts",
+      "line": 128,
+      "exported": true
+    },
+    {
+      "name": "getProjectName",
+      "type": "function",
+      "file": "packages/cli/src/utils/validators.ts",
+      "line": 165,
+      "exported": true
+    },
+    {
+      "name": "fileExists",
+      "type": "function",
+      "file": "packages/cli/src/utils/validators.ts",
+      "line": 218,
+      "exported": true
+    },
+    {
+      "name": "validateStructure",
+      "type": "function",
+      "file": "packages/cli/src/utils/validators.ts",
+      "line": 241,
+      "exported": true
+    },
+    {
+      "name": "validateContent",
+      "type": "function",
+      "file": "packages/cli/src/utils/validators.ts",
+      "line": 324,
+      "exported": true
+    },
+    {
+      "name": "validateCrossReferences",
+      "type": "function",
+      "file": "packages/cli/src/utils/validators.ts",
+      "line": 368,
+      "exported": true
+    },
+    {
+      "name": "validateQuality",
+      "type": "function",
+      "file": "packages/cli/src/utils/validators.ts",
+      "line": 450,
+      "exported": true
+    },
+    {
+      "name": "isMultiPattern",
+      "type": "function",
+      "file": "packages/cli/src/utils/scaffold-generators.ts",
+      "line": 34,
+      "exported": false
+    },
+    {
+      "name": "generateProjectOverviewScaffold",
+      "type": "function",
+      "file": "packages/cli/src/utils/scaffold-generators.ts",
+      "line": 52,
+      "exported": true
+    },
+    {
+      "name": "generateArchitectureScaffold",
+      "type": "function",
+      "file": "packages/cli/src/utils/scaffold-generators.ts",
+      "line": 124,
+      "exported": true
+    },
+    {
+      "name": "generatePatternsScaffold",
+      "type": "function",
+      "file": "packages/cli/src/utils/scaffold-generators.ts",
+      "line": 171,
+      "exported": true
+    },
+    {
+      "name": "generateConventionsScaffold",
+      "type": "function",
+      "file": "packages/cli/src/utils/scaffold-generators.ts",
+      "line": 266,
+      "exported": true
+    },
+    {
+      "name": "generateWorkflowScaffold",
+      "type": "function",
+      "file": "packages/cli/src/utils/scaffold-generators.ts",
+      "line": 371,
+      "exported": true
+    },
+    {
+      "name": "generateTestingScaffold",
+      "type": "function",
+      "file": "packages/cli/src/utils/scaffold-generators.ts",
+      "line": 439,
+      "exported": true
+    },
+    {
+      "name": "generateDebuggingScaffold",
+      "type": "function",
+      "file": "packages/cli/src/utils/scaffold-generators.ts",
+      "line": 504,
+      "exported": true
+    },
+    {
+      "name": "isMultiPattern",
+      "type": "function",
+      "file": "packages/cli/src/utils/format-analysis-brief.ts",
+      "line": 32,
+      "exported": false
+    },
+    {
+      "name": "formatAnalysisBrief",
+      "type": "function",
+      "file": "packages/cli/src/utils/format-analysis-brief.ts",
+      "line": 54,
+      "exported": true
+    },
+    {
+      "name": "formatProjectIdentity",
+      "type": "function",
+      "file": "packages/cli/src/utils/format-analysis-brief.ts",
+      "line": 74,
+      "exported": false
+    },
+    {
+      "name": "formatDirectoryStructure",
+      "type": "function",
+      "file": "packages/cli/src/utils/format-analysis-brief.ts",
+      "line": 124,
+      "exported": false
+    },
+    {
+      "name": "formatDetectedPatterns",
+      "type": "function",
+      "file": "packages/cli/src/utils/format-analysis-brief.ts",
+      "line": 191,
+      "exported": false
+    },
+    {
+      "name": "formatCodingConventions",
+      "type": "function",
+      "file": "packages/cli/src/utils/format-analysis-brief.ts",
+      "line": 289,
+      "exported": false
+    },
+    {
+      "name": "formatCodebaseStatistics",
+      "type": "function",
+      "file": "packages/cli/src/utils/format-analysis-brief.ts",
+      "line": 388,
+      "exported": false
+    },
+    {
+      "name": "selectHighActivityFiles",
+      "type": "function",
+      "file": "packages/cli/src/utils/format-analysis-brief.ts",
+      "line": 448,
+      "exported": false
+    },
+    {
+      "name": "formatSetupRecommendations",
+      "type": "function",
+      "file": "packages/cli/src/utils/format-analysis-brief.ts",
+      "line": 464,
+      "exported": false
+    },
+    {
+      "name": "FileWriter",
+      "type": "class",
+      "file": "packages/cli/src/utils/file-writer.ts",
+      "line": 26,
+      "exported": true
+    },
+    {
+      "name": "exists",
+      "type": "method",
+      "file": "packages/cli/src/utils/file-writer.ts",
+      "line": 32,
+      "exported": false
+    },
+    {
+      "name": "createDir",
+      "type": "method",
+      "file": "packages/cli/src/utils/file-writer.ts",
+      "line": 46,
+      "exported": false
+    },
+    {
+      "name": "writeFile",
+      "type": "method",
+      "file": "packages/cli/src/utils/file-writer.ts",
+      "line": 64,
+      "exported": false
+    },
+    {
+      "name": "readFile",
+      "type": "method",
+      "file": "packages/cli/src/utils/file-writer.ts",
+      "line": 92,
+      "exported": false
+    },
+    {
+      "name": "removeDir",
+      "type": "method",
+      "file": "packages/cli/src/utils/file-writer.ts",
+      "line": 108,
+      "exported": false
+    },
+    {
+      "name": "joinPath",
+      "type": "method",
+      "file": "packages/cli/src/utils/file-writer.ts",
+      "line": 124,
+      "exported": false
+    },
+    {
+      "name": "getCwd",
+      "type": "method",
+      "file": "packages/cli/src/utils/file-writer.ts",
+      "line": 132,
+      "exported": false
+    },
+    {
+      "name": "displayProjectType",
+      "type": "function",
+      "file": "packages/cli/src/utils/analysis-helpers.ts",
+      "line": 20,
+      "exported": true
+    },
+    {
+      "name": "formatCategoryName",
+      "type": "function",
+      "file": "packages/cli/src/utils/analysis-helpers.ts",
+      "line": 48,
+      "exported": true
+    },
+    {
+      "name": "isValidSetupTier",
+      "type": "function",
+      "file": "packages/cli/src/commands/setup.ts",
+      "line": 35,
+      "exported": false
+    },
+    {
+      "name": "displayValidationFailures",
+      "type": "function",
+      "file": "packages/cli/src/commands/setup.ts",
+      "line": 170,
+      "exported": false
+    },
+    {
+      "name": "generateEntryMd",
+      "type": "function",
+      "file": "packages/cli/src/commands/setup.ts",
+      "line": 192,
+      "exported": false
+    },
+    {
+      "name": "getTemplatesDir",
+      "type": "function",
+      "file": "packages/cli/src/commands/setup.ts",
+      "line": 240,
+      "exported": false
+    },
+    {
+      "name": "generateClaudeMd",
+      "type": "function",
+      "file": "packages/cli/src/commands/setup.ts",
+      "line": 263,
+      "exported": false
+    },
+    {
+      "name": "updateMetaJson",
+      "type": "function",
+      "file": "packages/cli/src/commands/setup.ts",
+      "line": 339,
+      "exported": false
+    },
+    {
+      "name": "isValidMode",
+      "type": "function",
+      "file": "packages/cli/src/commands/mode.ts",
+      "line": 108,
+      "exported": false
+    },
+    {
+      "name": "printAvailableModes",
+      "type": "function",
+      "file": "packages/cli/src/commands/mode.ts",
+      "line": 115,
+      "exported": false
+    },
+    {
+      "name": "createEmptyAnalysisResult",
+      "type": "function",
+      "file": "packages/cli/src/commands/init.ts",
+      "line": 82,
+      "exported": false
+    },
+    {
+      "name": "askSetupTier",
+      "type": "function",
+      "file": "packages/cli/src/commands/init.ts",
+      "line": 102,
+      "exported": false
+    },
+    {
+      "name": "validateInitPreconditions",
+      "type": "function",
+      "file": "packages/cli/src/commands/init.ts",
+      "line": 217,
+      "exported": false
+    },
+    {
+      "name": "dirExists",
+      "type": "function",
+      "file": "packages/cli/src/commands/init.ts",
+      "line": 294,
+      "exported": false
+    },
+    {
+      "name": "runAnalyzer",
+      "type": "function",
+      "file": "packages/cli/src/commands/init.ts",
+      "line": 313,
+      "exported": false
+    },
+    {
+      "name": "displayDetectionSummary",
+      "type": "function",
+      "file": "packages/cli/src/commands/init.ts",
+      "line": 359,
+      "exported": false
+    },
+    {
+      "name": "createDirectoryStructure",
+      "type": "function",
+      "file": "packages/cli/src/commands/init.ts",
+      "line": 409,
+      "exported": false
+    },
+    {
+      "name": "generateAnalysisMd",
+      "type": "function",
+      "file": "packages/cli/src/commands/init.ts",
+      "line": 443,
+      "exported": false
+    },
+    {
+      "name": "generateScaffolds",
+      "type": "function",
+      "file": "packages/cli/src/commands/init.ts",
+      "line": 474,
+      "exported": false
+    },
+    {
+      "name": "getCliVersion",
+      "type": "function",
+      "file": "packages/cli/src/commands/init.ts",
+      "line": 516,
+      "exported": false
+    },
+    {
+      "name": "copyStaticFilesWithVerification",
+      "type": "function",
+      "file": "packages/cli/src/commands/init.ts",
+      "line": 548,
+      "exported": false
+    },
+    {
+      "name": "copyAndVerifyFile",
+      "type": "function",
+      "file": "packages/cli/src/commands/init.ts",
+      "line": 600,
+      "exported": false
+    },
+    {
+      "name": "copyHookScripts",
+      "type": "function",
+      "file": "packages/cli/src/commands/init.ts",
+      "line": 634,
+      "exported": false
+    },
+    {
+      "name": "createClaudeConfiguration",
+      "type": "function",
+      "file": "packages/cli/src/commands/init.ts",
+      "line": 669,
+      "exported": false
+    },
+    {
+      "name": "copyAgentFiles",
+      "type": "function",
+      "file": "packages/cli/src/commands/init.ts",
+      "line": 740,
+      "exported": false
+    },
+    {
+      "name": "fileExists",
+      "type": "function",
+      "file": "packages/cli/src/commands/init.ts",
+      "line": 762,
+      "exported": false
+    },
+    {
+      "name": "mergeHooksSettings",
+      "type": "function",
+      "file": "packages/cli/src/commands/init.ts",
+      "line": 781,
+      "exported": false
+    },
+    {
+      "name": "hookEntryMatches",
+      "type": "function",
+      "file": "packages/cli/src/commands/init.ts",
+      "line": 831,
+      "exported": false
+    },
+    {
+      "name": "getTemplatesDir",
+      "type": "function",
+      "file": "packages/cli/src/commands/init.ts",
+      "line": 857,
+      "exported": false
+    },
+    {
+      "name": "createMetaJson",
+      "type": "function",
+      "file": "packages/cli/src/commands/init.ts",
+      "line": 882,
+      "exported": false
+    },
+    {
+      "name": "storeSnapshot",
+      "type": "function",
+      "file": "packages/cli/src/commands/init.ts",
+      "line": 919,
+      "exported": false
+    },
+    {
+      "name": "buildSymbolIndexSafe",
+      "type": "function",
+      "file": "packages/cli/src/commands/init.ts",
+      "line": 942,
+      "exported": false
+    },
+    {
+      "name": "writeCliPath",
+      "type": "function",
+      "file": "packages/cli/src/commands/init.ts",
+      "line": 966,
+      "exported": false
+    },
+    {
+      "name": "atomicRename",
+      "type": "function",
+      "file": "packages/cli/src/commands/init.ts",
+      "line": 1001,
+      "exported": false
+    },
+    {
+      "name": "displaySuccessMessage",
+      "type": "function",
+      "file": "packages/cli/src/commands/init.ts",
+      "line": 1026,
+      "exported": false
+    },
+    {
+      "name": "detectLanguage",
+      "type": "function",
+      "file": "packages/cli/src/commands/index.ts",
+      "line": 43,
+      "exported": false
+    },
+    {
+      "name": "extractTSSymbols",
+      "type": "function",
+      "file": "packages/cli/src/commands/index.ts",
+      "line": 65,
+      "exported": false
+    },
+    {
+      "name": "visit",
+      "type": "function",
+      "file": "packages/cli/src/commands/index.ts",
+      "line": 73,
+      "exported": false
+    },
+    {
+      "name": "extractPythonSymbols",
+      "type": "function",
+      "file": "packages/cli/src/commands/index.ts",
+      "line": 172,
+      "exported": false
+    },
+    {
+      "name": "visit",
+      "type": "function",
+      "file": "packages/cli/src/commands/index.ts",
+      "line": 180,
+      "exported": false
+    },
+    {
+      "name": "extractGoSymbols",
+      "type": "function",
+      "file": "packages/cli/src/commands/index.ts",
+      "line": 232,
+      "exported": false
+    },
+    {
+      "name": "visit",
+      "type": "function",
+      "file": "packages/cli/src/commands/index.ts",
+      "line": 240,
+      "exported": false
+    },
+    {
+      "name": "buildSymbolIndex",
+      "type": "function",
+      "file": "packages/cli/src/commands/index.ts",
+      "line": 317,
+      "exported": true
+    },
+    {
+      "name": "createIndexCommand",
+      "type": "function",
+      "file": "packages/cli/src/commands/index.ts",
+      "line": 425,
+      "exported": true
+    },
+    {
+      "name": "checkLineCount",
+      "type": "function",
+      "file": "packages/cli/src/commands/check.ts",
+      "line": 134,
+      "exported": false
+    },
+    {
+      "name": "checkHeaders",
+      "type": "function",
+      "file": "packages/cli/src/commands/check.ts",
+      "line": 147,
+      "exported": false
+    },
+    {
+      "name": "checkPlaceholders",
+      "type": "function",
+      "file": "packages/cli/src/commands/check.ts",
+      "line": 174,
+      "exported": false
+    },
+    {
+      "name": "checkScaffoldMarkers",
+      "type": "function",
+      "file": "packages/cli/src/commands/check.ts",
+      "line": 198,
+      "exported": false
+    },
+    {
+      "name": "isValidFilePath",
+      "type": "function",
+      "file": "packages/cli/src/commands/check.ts",
+      "line": 218,
+      "exported": false
+    },
+    {
+      "name": "loadSymbolIndex",
+      "type": "function",
+      "file": "packages/cli/src/commands/check.ts",
+      "line": 235,
+      "exported": false
+    },
+    {
+      "name": "isIndexedSourceFile",
+      "type": "function",
+      "file": "packages/cli/src/commands/check.ts",
+      "line": 250,
+      "exported": false
+    },
+    {
+      "name": "isInExcludedDirectory",
+      "type": "function",
+      "file": "packages/cli/src/commands/check.ts",
+      "line": 259,
+      "exported": false
+    },
+    {
+      "name": "extractCitedSymbol",
+      "type": "function",
+      "file": "packages/cli/src/commands/check.ts",
+      "line": 288,
+      "exported": false
+    },
+    {
+      "name": "findSymbolInFile",
+      "type": "function",
+      "file": "packages/cli/src/commands/check.ts",
+      "line": 315,
+      "exported": false
+    },
+    {
+      "name": "checkCitations",
+      "type": "function",
+      "file": "packages/cli/src/commands/check.ts",
+      "line": 347,
+      "exported": false
+    },
+    {
+      "name": "checkFile",
+      "type": "function",
+      "file": "packages/cli/src/commands/check.ts",
+      "line": 458,
+      "exported": false
+    },
+    {
+      "name": "displayFileResult",
+      "type": "function",
+      "file": "packages/cli/src/commands/check.ts",
+      "line": 491,
+      "exported": false
+    },
+    {
+      "name": "createCheckCommand",
+      "type": "function",
+      "file": "packages/cli/src/commands/check.ts",
+      "line": 551,
+      "exported": true
+    },
+    {
+      "name": "formatHumanReadable",
+      "type": "function",
+      "file": "packages/cli/src/commands/analyze.ts",
+      "line": 106,
       "exported": false
     },
     {
@@ -161,6 +819,13 @@
       "type": "function",
       "file": "packages/analyzer/src/types/conventions.ts",
       "line": 255,
+      "exported": true
+    },
+    {
+      "name": "sampleFiles",
+      "type": "function",
+      "file": "packages/analyzer/src/sampling/fileSampler.ts",
+      "line": 56,
       "exported": true
     },
     {
@@ -563,10 +1228,17 @@
       "exported": true
     },
     {
-      "name": "detectProjectType",
+      "name": "exists",
       "type": "function",
       "file": "packages/analyzer/src/detectors/projectType.ts",
       "line": 21,
+      "exported": false
+    },
+    {
+      "name": "detectProjectType",
+      "type": "function",
+      "file": "packages/analyzer/src/detectors/projectType.ts",
+      "line": 36,
       "exported": true
     },
     {
@@ -630,6 +1302,69 @@
       "type": "function",
       "file": "packages/analyzer/src/detectors/framework.ts",
       "line": 123,
+      "exported": false
+    },
+    {
+      "name": "ASTCache",
+      "type": "class",
+      "file": "packages/analyzer/src/cache/astCache.ts",
+      "line": 77,
+      "exported": true
+    },
+    {
+      "name": "setCacheDir",
+      "type": "method",
+      "file": "packages/analyzer/src/cache/astCache.ts",
+      "line": 93,
+      "exported": false
+    },
+    {
+      "name": "constructor",
+      "type": "method",
+      "file": "packages/analyzer/src/cache/astCache.ts",
+      "line": 102,
+      "exported": false
+    },
+    {
+      "name": "get",
+      "type": "method",
+      "file": "packages/analyzer/src/cache/astCache.ts",
+      "line": 116,
+      "exported": false
+    },
+    {
+      "name": "set",
+      "type": "method",
+      "file": "packages/analyzer/src/cache/astCache.ts",
+      "line": 164,
+      "exported": false
+    },
+    {
+      "name": "clear",
+      "type": "method",
+      "file": "packages/analyzer/src/cache/astCache.ts",
+      "line": 191,
+      "exported": false
+    },
+    {
+      "name": "getStats",
+      "type": "method",
+      "file": "packages/analyzer/src/cache/astCache.ts",
+      "line": 207,
+      "exported": false
+    },
+    {
+      "name": "getCacheKey",
+      "type": "method",
+      "file": "packages/analyzer/src/cache/astCache.ts",
+      "line": 225,
+      "exported": false
+    },
+    {
+      "name": "getMtime",
+      "type": "method",
+      "file": "packages/analyzer/src/cache/astCache.ts",
+      "line": 236,
       "exported": false
     },
     {
@@ -864,699 +1599,6 @@
       "exported": true
     },
     {
-      "name": "sampleFiles",
-      "type": "function",
-      "file": "packages/analyzer/src/sampling/fileSampler.ts",
-      "line": 56,
-      "exported": true
-    },
-    {
-      "name": "ASTCache",
-      "type": "class",
-      "file": "packages/analyzer/src/cache/astCache.ts",
-      "line": 77,
-      "exported": true
-    },
-    {
-      "name": "constructor",
-      "type": "method",
-      "file": "packages/analyzer/src/cache/astCache.ts",
-      "line": 87,
-      "exported": false
-    },
-    {
-      "name": "get",
-      "type": "method",
-      "file": "packages/analyzer/src/cache/astCache.ts",
-      "line": 100,
-      "exported": false
-    },
-    {
-      "name": "set",
-      "type": "method",
-      "file": "packages/analyzer/src/cache/astCache.ts",
-      "line": 148,
-      "exported": false
-    },
-    {
-      "name": "clear",
-      "type": "method",
-      "file": "packages/analyzer/src/cache/astCache.ts",
-      "line": 175,
-      "exported": false
-    },
-    {
-      "name": "getStats",
-      "type": "method",
-      "file": "packages/analyzer/src/cache/astCache.ts",
-      "line": 191,
-      "exported": false
-    },
-    {
-      "name": "getCacheKey",
-      "type": "method",
-      "file": "packages/analyzer/src/cache/astCache.ts",
-      "line": 209,
-      "exported": false
-    },
-    {
-      "name": "getMtime",
-      "type": "method",
-      "file": "packages/analyzer/src/cache/astCache.ts",
-      "line": 220,
-      "exported": false
-    },
-    {
-      "name": "countDetectedPatterns",
-      "type": "function",
-      "file": "packages/cli/src/utils/validators.ts",
-      "line": 42,
-      "exported": true
-    },
-    {
-      "name": "getDocumentedPatternSections",
-      "type": "function",
-      "file": "packages/cli/src/utils/validators.ts",
-      "line": 70,
-      "exported": true
-    },
-    {
-      "name": "getMissingPatterns",
-      "type": "function",
-      "file": "packages/cli/src/utils/validators.ts",
-      "line": 84,
-      "exported": true
-    },
-    {
-      "name": "extractFrameworkFromContent",
-      "type": "function",
-      "file": "packages/cli/src/utils/validators.ts",
-      "line": 128,
-      "exported": true
-    },
-    {
-      "name": "getProjectName",
-      "type": "function",
-      "file": "packages/cli/src/utils/validators.ts",
-      "line": 165,
-      "exported": true
-    },
-    {
-      "name": "fileExists",
-      "type": "function",
-      "file": "packages/cli/src/utils/validators.ts",
-      "line": 218,
-      "exported": true
-    },
-    {
-      "name": "validateStructure",
-      "type": "function",
-      "file": "packages/cli/src/utils/validators.ts",
-      "line": 241,
-      "exported": true
-    },
-    {
-      "name": "validateContent",
-      "type": "function",
-      "file": "packages/cli/src/utils/validators.ts",
-      "line": 324,
-      "exported": true
-    },
-    {
-      "name": "validateCrossReferences",
-      "type": "function",
-      "file": "packages/cli/src/utils/validators.ts",
-      "line": 368,
-      "exported": true
-    },
-    {
-      "name": "validateQuality",
-      "type": "function",
-      "file": "packages/cli/src/utils/validators.ts",
-      "line": 441,
-      "exported": true
-    },
-    {
-      "name": "isMultiPattern",
-      "type": "function",
-      "file": "packages/cli/src/utils/scaffold-generators.ts",
-      "line": 34,
-      "exported": false
-    },
-    {
-      "name": "generateProjectOverviewScaffold",
-      "type": "function",
-      "file": "packages/cli/src/utils/scaffold-generators.ts",
-      "line": 52,
-      "exported": true
-    },
-    {
-      "name": "generateArchitectureScaffold",
-      "type": "function",
-      "file": "packages/cli/src/utils/scaffold-generators.ts",
-      "line": 124,
-      "exported": true
-    },
-    {
-      "name": "generatePatternsScaffold",
-      "type": "function",
-      "file": "packages/cli/src/utils/scaffold-generators.ts",
-      "line": 171,
-      "exported": true
-    },
-    {
-      "name": "generateConventionsScaffold",
-      "type": "function",
-      "file": "packages/cli/src/utils/scaffold-generators.ts",
-      "line": 266,
-      "exported": true
-    },
-    {
-      "name": "generateWorkflowScaffold",
-      "type": "function",
-      "file": "packages/cli/src/utils/scaffold-generators.ts",
-      "line": 371,
-      "exported": true
-    },
-    {
-      "name": "generateTestingScaffold",
-      "type": "function",
-      "file": "packages/cli/src/utils/scaffold-generators.ts",
-      "line": 439,
-      "exported": true
-    },
-    {
-      "name": "generateDebuggingScaffold",
-      "type": "function",
-      "file": "packages/cli/src/utils/scaffold-generators.ts",
-      "line": 504,
-      "exported": true
-    },
-    {
-      "name": "isMultiPattern",
-      "type": "function",
-      "file": "packages/cli/src/utils/format-analysis-brief.ts",
-      "line": 32,
-      "exported": false
-    },
-    {
-      "name": "formatAnalysisBrief",
-      "type": "function",
-      "file": "packages/cli/src/utils/format-analysis-brief.ts",
-      "line": 54,
-      "exported": true
-    },
-    {
-      "name": "formatProjectIdentity",
-      "type": "function",
-      "file": "packages/cli/src/utils/format-analysis-brief.ts",
-      "line": 74,
-      "exported": false
-    },
-    {
-      "name": "formatDirectoryStructure",
-      "type": "function",
-      "file": "packages/cli/src/utils/format-analysis-brief.ts",
-      "line": 124,
-      "exported": false
-    },
-    {
-      "name": "formatDetectedPatterns",
-      "type": "function",
-      "file": "packages/cli/src/utils/format-analysis-brief.ts",
-      "line": 191,
-      "exported": false
-    },
-    {
-      "name": "formatCodingConventions",
-      "type": "function",
-      "file": "packages/cli/src/utils/format-analysis-brief.ts",
-      "line": 289,
-      "exported": false
-    },
-    {
-      "name": "formatCodebaseStatistics",
-      "type": "function",
-      "file": "packages/cli/src/utils/format-analysis-brief.ts",
-      "line": 388,
-      "exported": false
-    },
-    {
-      "name": "selectHighActivityFiles",
-      "type": "function",
-      "file": "packages/cli/src/utils/format-analysis-brief.ts",
-      "line": 445,
-      "exported": false
-    },
-    {
-      "name": "formatSetupRecommendations",
-      "type": "function",
-      "file": "packages/cli/src/utils/format-analysis-brief.ts",
-      "line": 461,
-      "exported": false
-    },
-    {
-      "name": "FileWriter",
-      "type": "class",
-      "file": "packages/cli/src/utils/file-writer.ts",
-      "line": 26,
-      "exported": true
-    },
-    {
-      "name": "exists",
-      "type": "method",
-      "file": "packages/cli/src/utils/file-writer.ts",
-      "line": 32,
-      "exported": false
-    },
-    {
-      "name": "createDir",
-      "type": "method",
-      "file": "packages/cli/src/utils/file-writer.ts",
-      "line": 46,
-      "exported": false
-    },
-    {
-      "name": "writeFile",
-      "type": "method",
-      "file": "packages/cli/src/utils/file-writer.ts",
-      "line": 64,
-      "exported": false
-    },
-    {
-      "name": "readFile",
-      "type": "method",
-      "file": "packages/cli/src/utils/file-writer.ts",
-      "line": 92,
-      "exported": false
-    },
-    {
-      "name": "removeDir",
-      "type": "method",
-      "file": "packages/cli/src/utils/file-writer.ts",
-      "line": 108,
-      "exported": false
-    },
-    {
-      "name": "joinPath",
-      "type": "method",
-      "file": "packages/cli/src/utils/file-writer.ts",
-      "line": 124,
-      "exported": false
-    },
-    {
-      "name": "getCwd",
-      "type": "method",
-      "file": "packages/cli/src/utils/file-writer.ts",
-      "line": 132,
-      "exported": false
-    },
-    {
-      "name": "displayProjectType",
-      "type": "function",
-      "file": "packages/cli/src/utils/analysis-helpers.ts",
-      "line": 20,
-      "exported": true
-    },
-    {
-      "name": "formatCategoryName",
-      "type": "function",
-      "file": "packages/cli/src/utils/analysis-helpers.ts",
-      "line": 48,
-      "exported": true
-    },
-    {
-      "name": "isValidSetupTier",
-      "type": "function",
-      "file": "packages/cli/src/commands/setup.ts",
-      "line": 35,
-      "exported": false
-    },
-    {
-      "name": "displayValidationFailures",
-      "type": "function",
-      "file": "packages/cli/src/commands/setup.ts",
-      "line": 150,
-      "exported": false
-    },
-    {
-      "name": "generateEntryMd",
-      "type": "function",
-      "file": "packages/cli/src/commands/setup.ts",
-      "line": 172,
-      "exported": false
-    },
-    {
-      "name": "getTemplatesDir",
-      "type": "function",
-      "file": "packages/cli/src/commands/setup.ts",
-      "line": 216,
-      "exported": false
-    },
-    {
-      "name": "updateMetaJson",
-      "type": "function",
-      "file": "packages/cli/src/commands/setup.ts",
-      "line": 240,
-      "exported": false
-    },
-    {
-      "name": "isValidMode",
-      "type": "function",
-      "file": "packages/cli/src/commands/mode.ts",
-      "line": 108,
-      "exported": false
-    },
-    {
-      "name": "printAvailableModes",
-      "type": "function",
-      "file": "packages/cli/src/commands/mode.ts",
-      "line": 115,
-      "exported": false
-    },
-    {
-      "name": "createEmptyAnalysisResult",
-      "type": "function",
-      "file": "packages/cli/src/commands/init.ts",
-      "line": 81,
-      "exported": false
-    },
-    {
-      "name": "askSetupTier",
-      "type": "function",
-      "file": "packages/cli/src/commands/init.ts",
-      "line": 101,
-      "exported": false
-    },
-    {
-      "name": "validateInitPreconditions",
-      "type": "function",
-      "file": "packages/cli/src/commands/init.ts",
-      "line": 206,
-      "exported": false
-    },
-    {
-      "name": "dirExists",
-      "type": "function",
-      "file": "packages/cli/src/commands/init.ts",
-      "line": 283,
-      "exported": false
-    },
-    {
-      "name": "runAnalyzer",
-      "type": "function",
-      "file": "packages/cli/src/commands/init.ts",
-      "line": 302,
-      "exported": false
-    },
-    {
-      "name": "displayDetectionSummary",
-      "type": "function",
-      "file": "packages/cli/src/commands/init.ts",
-      "line": 348,
-      "exported": false
-    },
-    {
-      "name": "createDirectoryStructure",
-      "type": "function",
-      "file": "packages/cli/src/commands/init.ts",
-      "line": 398,
-      "exported": false
-    },
-    {
-      "name": "generateAnalysisMd",
-      "type": "function",
-      "file": "packages/cli/src/commands/init.ts",
-      "line": 421,
-      "exported": false
-    },
-    {
-      "name": "generateScaffolds",
-      "type": "function",
-      "file": "packages/cli/src/commands/init.ts",
-      "line": 452,
-      "exported": false
-    },
-    {
-      "name": "getCliVersion",
-      "type": "function",
-      "file": "packages/cli/src/commands/init.ts",
-      "line": 494,
-      "exported": false
-    },
-    {
-      "name": "copyStaticFilesWithVerification",
-      "type": "function",
-      "file": "packages/cli/src/commands/init.ts",
-      "line": 520,
-      "exported": false
-    },
-    {
-      "name": "copyAndVerifyFile",
-      "type": "function",
-      "file": "packages/cli/src/commands/init.ts",
-      "line": 572,
-      "exported": false
-    },
-    {
-      "name": "copyHookScripts",
-      "type": "function",
-      "file": "packages/cli/src/commands/init.ts",
-      "line": 606,
-      "exported": false
-    },
-    {
-      "name": "createClaudeConfiguration",
-      "type": "function",
-      "file": "packages/cli/src/commands/init.ts",
-      "line": 641,
-      "exported": false
-    },
-    {
-      "name": "copyAgentFiles",
-      "type": "function",
-      "file": "packages/cli/src/commands/init.ts",
-      "line": 712,
-      "exported": false
-    },
-    {
-      "name": "fileExists",
-      "type": "function",
-      "file": "packages/cli/src/commands/init.ts",
-      "line": 734,
-      "exported": false
-    },
-    {
-      "name": "mergeHooksSettings",
-      "type": "function",
-      "file": "packages/cli/src/commands/init.ts",
-      "line": 753,
-      "exported": false
-    },
-    {
-      "name": "hookEntryMatches",
-      "type": "function",
-      "file": "packages/cli/src/commands/init.ts",
-      "line": 803,
-      "exported": false
-    },
-    {
-      "name": "getTemplatesDir",
-      "type": "function",
-      "file": "packages/cli/src/commands/init.ts",
-      "line": 829,
-      "exported": false
-    },
-    {
-      "name": "createMetaJson",
-      "type": "function",
-      "file": "packages/cli/src/commands/init.ts",
-      "line": 854,
-      "exported": false
-    },
-    {
-      "name": "storeSnapshot",
-      "type": "function",
-      "file": "packages/cli/src/commands/init.ts",
-      "line": 891,
-      "exported": false
-    },
-    {
-      "name": "buildSymbolIndexSafe",
-      "type": "function",
-      "file": "packages/cli/src/commands/init.ts",
-      "line": 914,
-      "exported": false
-    },
-    {
-      "name": "atomicRename",
-      "type": "function",
-      "file": "packages/cli/src/commands/init.ts",
-      "line": 939,
-      "exported": false
-    },
-    {
-      "name": "displaySuccessMessage",
-      "type": "function",
-      "file": "packages/cli/src/commands/init.ts",
-      "line": 964,
-      "exported": false
-    },
-    {
-      "name": "detectLanguage",
-      "type": "function",
-      "file": "packages/cli/src/commands/index.ts",
-      "line": 43,
-      "exported": false
-    },
-    {
-      "name": "extractTSSymbols",
-      "type": "function",
-      "file": "packages/cli/src/commands/index.ts",
-      "line": 65,
-      "exported": false
-    },
-    {
-      "name": "visit",
-      "type": "function",
-      "file": "packages/cli/src/commands/index.ts",
-      "line": 73,
-      "exported": false
-    },
-    {
-      "name": "extractPythonSymbols",
-      "type": "function",
-      "file": "packages/cli/src/commands/index.ts",
-      "line": 172,
-      "exported": false
-    },
-    {
-      "name": "visit",
-      "type": "function",
-      "file": "packages/cli/src/commands/index.ts",
-      "line": 180,
-      "exported": false
-    },
-    {
-      "name": "extractGoSymbols",
-      "type": "function",
-      "file": "packages/cli/src/commands/index.ts",
-      "line": 232,
-      "exported": false
-    },
-    {
-      "name": "visit",
-      "type": "function",
-      "file": "packages/cli/src/commands/index.ts",
-      "line": 240,
-      "exported": false
-    },
-    {
-      "name": "buildSymbolIndex",
-      "type": "function",
-      "file": "packages/cli/src/commands/index.ts",
-      "line": 317,
-      "exported": true
-    },
-    {
-      "name": "createIndexCommand",
-      "type": "function",
-      "file": "packages/cli/src/commands/index.ts",
-      "line": 425,
-      "exported": true
-    },
-    {
-      "name": "checkLineCount",
-      "type": "function",
-      "file": "packages/cli/src/commands/check.ts",
-      "line": 132,
-      "exported": false
-    },
-    {
-      "name": "checkHeaders",
-      "type": "function",
-      "file": "packages/cli/src/commands/check.ts",
-      "line": 145,
-      "exported": false
-    },
-    {
-      "name": "checkPlaceholders",
-      "type": "function",
-      "file": "packages/cli/src/commands/check.ts",
-      "line": 157,
-      "exported": false
-    },
-    {
-      "name": "checkScaffoldMarkers",
-      "type": "function",
-      "file": "packages/cli/src/commands/check.ts",
-      "line": 179,
-      "exported": false
-    },
-    {
-      "name": "isValidFilePath",
-      "type": "function",
-      "file": "packages/cli/src/commands/check.ts",
-      "line": 199,
-      "exported": false
-    },
-    {
-      "name": "loadSymbolIndex",
-      "type": "function",
-      "file": "packages/cli/src/commands/check.ts",
-      "line": 216,
-      "exported": false
-    },
-    {
-      "name": "extractCitedSymbol",
-      "type": "function",
-      "file": "packages/cli/src/commands/check.ts",
-      "line": 236,
-      "exported": false
-    },
-    {
-      "name": "findSymbolInFile",
-      "type": "function",
-      "file": "packages/cli/src/commands/check.ts",
-      "line": 256,
-      "exported": false
-    },
-    {
-      "name": "checkCitations",
-      "type": "function",
-      "file": "packages/cli/src/commands/check.ts",
-      "line": 288,
-      "exported": false
-    },
-    {
-      "name": "checkFile",
-      "type": "function",
-      "file": "packages/cli/src/commands/check.ts",
-      "line": 397,
-      "exported": false
-    },
-    {
-      "name": "displayFileResult",
-      "type": "function",
-      "file": "packages/cli/src/commands/check.ts",
-      "line": 430,
-      "exported": false
-    },
-    {
-      "name": "createCheckCommand",
-      "type": "function",
-      "file": "packages/cli/src/commands/check.ts",
-      "line": 487,
-      "exported": true
-    },
-    {
-      "name": "formatHumanReadable",
-      "type": "function",
-      "file": "packages/cli/src/commands/analyze.ts",
-      "line": 106,
-      "exported": false
-    },
-    {
       "name": "parseRequirementsTxt",
       "type": "function",
       "file": "packages/analyzer/src/parsers/python/requirements.ts",
@@ -1592,34 +1634,6 @@
       "exported": true
     },
     {
-      "name": "detectFlask",
-      "type": "function",
-      "file": "packages/analyzer/src/detectors/python/flask.ts",
-      "line": 18,
-      "exported": true
-    },
-    {
-      "name": "detectFastAPI",
-      "type": "function",
-      "file": "packages/analyzer/src/detectors/python/fastapi.ts",
-      "line": 40,
-      "exported": true
-    },
-    {
-      "name": "detectDjango",
-      "type": "function",
-      "file": "packages/analyzer/src/detectors/python/django.ts",
-      "line": 27,
-      "exported": true
-    },
-    {
-      "name": "detectPythonCli",
-      "type": "function",
-      "file": "packages/analyzer/src/detectors/python/cli.ts",
-      "line": 15,
-      "exported": true
-    },
-    {
       "name": "detectReact",
       "type": "function",
       "file": "packages/analyzer/src/detectors/node/react.ts",
@@ -1652,6 +1666,34 @@
       "type": "function",
       "file": "packages/analyzer/src/detectors/node/express.ts",
       "line": 21,
+      "exported": true
+    },
+    {
+      "name": "detectFlask",
+      "type": "function",
+      "file": "packages/analyzer/src/detectors/python/flask.ts",
+      "line": 18,
+      "exported": true
+    },
+    {
+      "name": "detectFastAPI",
+      "type": "function",
+      "file": "packages/analyzer/src/detectors/python/fastapi.ts",
+      "line": 40,
+      "exported": true
+    },
+    {
+      "name": "detectDjango",
+      "type": "function",
+      "file": "packages/analyzer/src/detectors/python/django.ts",
+      "line": 27,
+      "exported": true
+    },
+    {
+      "name": "detectPythonCli",
+      "type": "function",
+      "file": "packages/analyzer/src/detectors/python/cli.ts",
+      "line": 15,
       "exported": true
     },
     {
@@ -1844,20 +1886,6 @@
       "exported": true
     },
     {
-      "name": "HomePage",
-      "type": "function",
-      "file": "website/app/page.tsx",
-      "line": 5,
-      "exported": true
-    },
-    {
-      "name": "RootLayout",
-      "type": "function",
-      "file": "website/app/layout.tsx",
-      "line": 31,
-      "exported": true
-    },
-    {
       "name": "ThemeToggle",
       "type": "function",
       "file": "website/components/ThemeToggle.tsx",
@@ -1956,6 +1984,20 @@
       "exported": true
     },
     {
+      "name": "HomePage",
+      "type": "function",
+      "file": "website/app/page.tsx",
+      "line": 5,
+      "exported": true
+    },
+    {
+      "name": "RootLayout",
+      "type": "function",
+      "file": "website/app/layout.tsx",
+      "line": 31,
+      "exported": true
+    },
+    {
       "name": "ButtonLink",
       "type": "function",
       "file": "website/components/ui/Button.tsx",
@@ -1973,630 +2015,658 @@
       "name": "displayProjectType",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 77,
+      "line": 78,
       "exported": false
     },
     {
       "name": "formatCategoryName",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 90,
+      "line": 91,
       "exported": false
     },
     {
       "name": "isMultiPattern",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 102,
+      "line": 103,
       "exported": false
     },
     {
       "name": "formatAnalysisBrief",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 105,
+      "line": 106,
       "exported": false
     },
     {
       "name": "formatProjectIdentity",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 115,
+      "line": 116,
       "exported": false
     },
     {
       "name": "formatDirectoryStructure",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 160,
+      "line": 161,
       "exported": false
     },
     {
       "name": "formatDetectedPatterns",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 210,
+      "line": 211,
       "exported": false
     },
     {
       "name": "formatCodingConventions",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 292,
+      "line": 293,
       "exported": false
     },
     {
       "name": "formatCodebaseStatistics",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 369,
+      "line": 370,
       "exported": false
     },
     {
       "name": "selectHighActivityFiles",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 416,
+      "line": 417,
       "exported": false
     },
     {
       "name": "formatSetupRecommendations",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 419,
+      "line": 420,
       "exported": false
     },
     {
       "name": "isMultiPattern2",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 486,
+      "line": 487,
       "exported": false
     },
     {
       "name": "generateProjectOverviewScaffold",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 489,
+      "line": 490,
       "exported": false
     },
     {
       "name": "generateArchitectureScaffold",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 565,
+      "line": 566,
       "exported": false
     },
     {
       "name": "generatePatternsScaffold",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 609,
+      "line": 610,
       "exported": false
     },
     {
       "name": "generateConventionsScaffold",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 702,
+      "line": 703,
       "exported": false
     },
     {
       "name": "generateWorkflowScaffold",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 795,
+      "line": 796,
       "exported": false
     },
     {
       "name": "generateTestingScaffold",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 857,
+      "line": 858,
       "exported": false
     },
     {
       "name": "generateDebuggingScaffold",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 926,
+      "line": 927,
       "exported": false
     },
     {
       "name": "countDetectedPatterns",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 973,
+      "line": 974,
       "exported": false
     },
     {
       "name": "getDocumentedPatternSections",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 985,
+      "line": 986,
       "exported": false
     },
     {
       "name": "getMissingPatterns",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 989,
+      "line": 990,
       "exported": false
     },
     {
       "name": "extractFrameworkFromContent",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1012,
+      "line": 1013,
       "exported": false
     },
     {
       "name": "getProjectName",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1024,
+      "line": 1025,
       "exported": false
     },
     {
       "name": "fileExists",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1055,
+      "line": 1056,
       "exported": false
     },
     {
       "name": "validateStructure",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1063,
+      "line": 1064,
       "exported": false
     },
     {
       "name": "validateContent",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1118,
+      "line": 1119,
       "exported": false
     },
     {
       "name": "validateCrossReferences",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1143,
+      "line": 1144,
       "exported": false
     },
     {
       "name": "validateQuality",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1185,
+      "line": 1190,
       "exported": false
     },
     {
       "name": "detectLanguage",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1242,
+      "line": 1247,
       "exported": false
     },
     {
       "name": "extractTSSymbols",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1260,
+      "line": 1265,
       "exported": false
     },
     {
       "name": "visit",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1263,
+      "line": 1268,
       "exported": false
     },
     {
       "name": "extractPythonSymbols",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1346,
+      "line": 1351,
       "exported": false
     },
     {
       "name": "visit",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1349,
+      "line": 1354,
       "exported": false
     },
     {
       "name": "extractGoSymbols",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1389,
+      "line": 1394,
       "exported": false
     },
     {
       "name": "visit",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1392,
+      "line": 1397,
       "exported": false
     },
     {
       "name": "buildSymbolIndex",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1452,
+      "line": 1457,
       "exported": false
     },
     {
       "name": "createIndexCommand",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1530,
+      "line": 1535,
       "exported": false
     },
     {
       "name": "createEmptyAnalysisResult",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1563,
+      "line": 1568,
       "exported": false
     },
     {
       "name": "askSetupTier",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1573,
+      "line": 1578,
       "exported": false
     },
     {
       "name": "validateInitPreconditions",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1634,
+      "line": 1644,
       "exported": false
     },
     {
       "name": "dirExists",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1682,
+      "line": 1692,
       "exported": false
     },
     {
       "name": "runAnalyzer",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1690,
+      "line": 1700,
       "exported": false
     },
     {
       "name": "displayDetectionSummary",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1717,
+      "line": 1727,
       "exported": false
     },
     {
       "name": "createDirectoryStructure",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1743,
+      "line": 1753,
       "exported": false
     },
     {
       "name": "generateAnalysisMd",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1753,
+      "line": 1772,
       "exported": false
     },
     {
       "name": "generateScaffolds",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1762,
+      "line": 1781,
       "exported": false
     },
     {
       "name": "getCliVersion",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1786,
+      "line": 1805,
       "exported": false
     },
     {
       "name": "copyStaticFilesWithVerification",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1796,
+      "line": 1817,
       "exported": false
     },
     {
       "name": "copyAndVerifyFile",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1826,
+      "line": 1847,
       "exported": false
     },
     {
       "name": "copyHookScripts",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1841,
+      "line": 1862,
       "exported": false
     },
     {
       "name": "createClaudeConfiguration",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1855,
+      "line": 1876,
       "exported": false
     },
     {
       "name": "copyAgentFiles",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1896,
+      "line": 1917,
       "exported": false
     },
     {
       "name": "fileExists2",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1907,
+      "line": 1928,
       "exported": false
     },
     {
       "name": "mergeHooksSettings",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1915,
+      "line": 1936,
       "exported": false
     },
     {
       "name": "hookEntryMatches",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1937,
+      "line": 1958,
       "exported": false
     },
     {
       "name": "getTemplatesDir",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1945,
+      "line": 1966,
       "exported": false
     },
     {
       "name": "createMetaJson",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1951,
+      "line": 1972,
       "exported": false
     },
     {
       "name": "storeSnapshot",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1970,
+      "line": 1991,
       "exported": false
     },
     {
       "name": "buildSymbolIndexSafe",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1977,
+      "line": 1998,
+      "exported": false
+    },
+    {
+      "name": "writeCliPath",
+      "type": "function",
+      "file": "packages/cli/dist/index.js",
+      "line": 2011,
       "exported": false
     },
     {
       "name": "atomicRename",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1990,
+      "line": 2025,
       "exported": false
     },
     {
       "name": "displaySuccessMessage",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2002,
+      "line": 2037,
       "exported": false
     },
     {
       "name": "exists",
       "type": "method",
       "file": "packages/cli/dist/index.js",
-      "line": 2034,
+      "line": 2069,
       "exported": false
     },
     {
       "name": "createDir",
       "type": "method",
       "file": "packages/cli/dist/index.js",
-      "line": 2047,
+      "line": 2082,
       "exported": false
     },
     {
       "name": "writeFile",
       "type": "method",
       "file": "packages/cli/dist/index.js",
-      "line": 2064,
+      "line": 2099,
       "exported": false
     },
     {
       "name": "readFile",
       "type": "method",
       "file": "packages/cli/dist/index.js",
-      "line": 2083,
+      "line": 2118,
       "exported": false
     },
     {
       "name": "removeDir",
       "type": "method",
       "file": "packages/cli/dist/index.js",
-      "line": 2098,
+      "line": 2133,
       "exported": false
     },
     {
       "name": "joinPath",
       "type": "method",
       "file": "packages/cli/dist/index.js",
-      "line": 2113,
+      "line": 2148,
       "exported": false
     },
     {
       "name": "getCwd",
       "type": "method",
       "file": "packages/cli/dist/index.js",
-      "line": 2120,
+      "line": 2155,
       "exported": false
     },
     {
       "name": "isValidMode",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2182,
+      "line": 2217,
       "exported": false
     },
     {
       "name": "printAvailableModes",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2185,
+      "line": 2220,
       "exported": false
     },
     {
       "name": "formatHumanReadable",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2255,
+      "line": 2290,
       "exported": false
     },
     {
       "name": "checkLineCount",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2339,
+      "line": 2374,
       "exported": false
     },
     {
       "name": "checkHeaders",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2348,
+      "line": 2383,
       "exported": false
     },
     {
       "name": "checkPlaceholders",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2356,
+      "line": 2402,
       "exported": false
     },
     {
       "name": "checkScaffoldMarkers",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2372,
+      "line": 2419,
       "exported": false
     },
     {
       "name": "isValidFilePath",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2380,
+      "line": 2427,
       "exported": false
     },
     {
       "name": "loadSymbolIndex",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2387,
+      "line": 2434,
+      "exported": false
+    },
+    {
+      "name": "isIndexedSourceFile",
+      "type": "function",
+      "file": "packages/cli/dist/index.js",
+      "line": 2444,
+      "exported": false
+    },
+    {
+      "name": "isInExcludedDirectory",
+      "type": "function",
+      "file": "packages/cli/dist/index.js",
+      "line": 2449,
       "exported": false
     },
     {
       "name": "extractCitedSymbol",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2397,
+      "line": 2467,
       "exported": false
     },
     {
       "name": "findSymbolInFile",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2409,
+      "line": 2481,
       "exported": false
     },
     {
       "name": "checkCitations",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2424,
+      "line": 2496,
       "exported": false
     },
     {
       "name": "checkFile",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2509,
+      "line": 2583,
       "exported": false
     },
     {
       "name": "displayFileResult",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2533,
+      "line": 2607,
       "exported": false
     },
     {
       "name": "createCheckCommand",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2574,
+      "line": 2651,
       "exported": false
     },
     {
       "name": "isValidSetupTier",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2665,
+      "line": 2742,
       "exported": false
     },
     {
       "name": "displayValidationFailures",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2736,
+      "line": 2829,
       "exported": false
     },
     {
       "name": "generateEntryMd",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2745,
+      "line": 2838,
       "exported": false
     },
     {
       "name": "getTemplatesDir2",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2759,
+      "line": 2854,
+      "exported": false
+    },
+    {
+      "name": "generateClaudeMd",
+      "type": "function",
+      "file": "packages/cli/dist/index.js",
+      "line": 2861,
       "exported": false
     },
     {
       "name": "updateMetaJson",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2766,
+      "line": 2908,
       "exported": false
     },
     {
       "name": "main",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2821,
+      "line": 2963,
       "exported": false
     },
     {
@@ -3153,6 +3223,384 @@
       "exported": false
     },
     {
+      "name": "ASTCache",
+      "type": "class",
+      "file": "packages/analyzer/dist/cache/astCache.js",
+      "line": 3,
+      "exported": true
+    },
+    {
+      "name": "setCacheDir",
+      "type": "method",
+      "file": "packages/analyzer/dist/cache/astCache.js",
+      "line": 8,
+      "exported": false
+    },
+    {
+      "name": "constructor",
+      "type": "method",
+      "file": "packages/analyzer/dist/cache/astCache.js",
+      "line": 11,
+      "exported": false
+    },
+    {
+      "name": "get",
+      "type": "method",
+      "file": "packages/analyzer/dist/cache/astCache.js",
+      "line": 14,
+      "exported": false
+    },
+    {
+      "name": "set",
+      "type": "method",
+      "file": "packages/analyzer/dist/cache/astCache.js",
+      "line": 40,
+      "exported": false
+    },
+    {
+      "name": "clear",
+      "type": "method",
+      "file": "packages/analyzer/dist/cache/astCache.js",
+      "line": 53,
+      "exported": false
+    },
+    {
+      "name": "getStats",
+      "type": "method",
+      "file": "packages/analyzer/dist/cache/astCache.js",
+      "line": 62,
+      "exported": false
+    },
+    {
+      "name": "getCacheKey",
+      "type": "method",
+      "file": "packages/analyzer/dist/cache/astCache.js",
+      "line": 69,
+      "exported": false
+    },
+    {
+      "name": "getMtime",
+      "type": "method",
+      "file": "packages/analyzer/dist/cache/astCache.js",
+      "line": 73,
+      "exported": false
+    },
+    {
+      "name": "mapDirectoriesToPurposes",
+      "type": "function",
+      "file": "packages/analyzer/dist/analyzers/structure.js",
+      "line": 64,
+      "exported": false
+    },
+    {
+      "name": "isLayeredArchitecture",
+      "type": "function",
+      "file": "packages/analyzer/dist/analyzers/structure.js",
+      "line": 72,
+      "exported": false
+    },
+    {
+      "name": "isDomainDriven",
+      "type": "function",
+      "file": "packages/analyzer/dist/analyzers/structure.js",
+      "line": 94,
+      "exported": false
+    },
+    {
+      "name": "isMicroservices",
+      "type": "function",
+      "file": "packages/analyzer/dist/analyzers/structure.js",
+      "line": 112,
+      "exported": false
+    },
+    {
+      "name": "getPackageJsonEntry",
+      "type": "function",
+      "file": "packages/analyzer/dist/analyzers/structure.js",
+      "line": 171,
+      "exported": false
+    },
+    {
+      "name": "analyzeStructure",
+      "type": "function",
+      "file": "packages/analyzer/dist/analyzers/structure.js",
+      "line": 205,
+      "exported": true
+    },
+    {
+      "name": "findEntryPoints",
+      "type": "function",
+      "file": "packages/analyzer/dist/analyzers/structure.js",
+      "line": 236,
+      "exported": true
+    },
+    {
+      "name": "classifyArchitecture",
+      "type": "function",
+      "file": "packages/analyzer/dist/analyzers/structure.js",
+      "line": 385,
+      "exported": true
+    },
+    {
+      "name": "findPytestLocation",
+      "type": "function",
+      "file": "packages/analyzer/dist/analyzers/structure.js",
+      "line": 429,
+      "exported": false
+    },
+    {
+      "name": "findJestVitestLocation",
+      "type": "function",
+      "file": "packages/analyzer/dist/analyzers/structure.js",
+      "line": 445,
+      "exported": false
+    },
+    {
+      "name": "findGoTestLocation",
+      "type": "function",
+      "file": "packages/analyzer/dist/analyzers/structure.js",
+      "line": 480,
+      "exported": false
+    },
+    {
+      "name": "findRustTestLocation",
+      "type": "function",
+      "file": "packages/analyzer/dist/analyzers/structure.js",
+      "line": 487,
+      "exported": false
+    },
+    {
+      "name": "findTestLocations",
+      "type": "function",
+      "file": "packages/analyzer/dist/analyzers/structure.js",
+      "line": 494,
+      "exported": true
+    },
+    {
+      "name": "buildAsciiTree",
+      "type": "function",
+      "file": "packages/analyzer/dist/analyzers/structure.js",
+      "line": 509,
+      "exported": true
+    },
+    {
+      "name": "findConfigFiles",
+      "type": "function",
+      "file": "packages/analyzer/dist/analyzers/structure.js",
+      "line": 541,
+      "exported": true
+    },
+    {
+      "name": "detectFromDependencies",
+      "type": "function",
+      "file": "packages/analyzer/dist/analyzers/patterns.js",
+      "line": 6,
+      "exported": true
+    },
+    {
+      "name": "readNodeDevDependencies",
+      "type": "function",
+      "file": "packages/analyzer/dist/analyzers/patterns.js",
+      "line": 45,
+      "exported": false
+    },
+    {
+      "name": "detectValidationPattern",
+      "type": "function",
+      "file": "packages/analyzer/dist/analyzers/patterns.js",
+      "line": 58,
+      "exported": false
+    },
+    {
+      "name": "detectDatabasePattern",
+      "type": "function",
+      "file": "packages/analyzer/dist/analyzers/patterns.js",
+      "line": 110,
+      "exported": false
+    },
+    {
+      "name": "detectAuthPattern",
+      "type": "function",
+      "file": "packages/analyzer/dist/analyzers/patterns.js",
+      "line": 181,
+      "exported": false
+    },
+    {
+      "name": "detectTestingPattern",
+      "type": "function",
+      "file": "packages/analyzer/dist/analyzers/patterns.js",
+      "line": 248,
+      "exported": false
+    },
+    {
+      "name": "detectErrorHandlingPattern",
+      "type": "function",
+      "file": "packages/analyzer/dist/analyzers/patterns.js",
+      "line": 305,
+      "exported": false
+    },
+    {
+      "name": "inferPatterns",
+      "type": "function",
+      "file": "packages/analyzer/dist/analyzers/patterns.js",
+      "line": 347,
+      "exported": true
+    },
+    {
+      "name": "confirmPatternsWithTreeSitter",
+      "type": "function",
+      "file": "packages/analyzer/dist/analyzers/patterns.js",
+      "line": 391,
+      "exported": true
+    },
+    {
+      "name": "confirmValidationPattern",
+      "type": "function",
+      "file": "packages/analyzer/dist/analyzers/patterns.js",
+      "line": 401,
+      "exported": false
+    },
+    {
+      "name": "confirmErrorHandlingPattern",
+      "type": "function",
+      "file": "packages/analyzer/dist/analyzers/patterns.js",
+      "line": 472,
+      "exported": false
+    },
+    {
+      "name": "confirmDatabasePattern",
+      "type": "function",
+      "file": "packages/analyzer/dist/analyzers/patterns.js",
+      "line": 513,
+      "exported": false
+    },
+    {
+      "name": "confirmAuthPattern",
+      "type": "function",
+      "file": "packages/analyzer/dist/analyzers/patterns.js",
+      "line": 598,
+      "exported": false
+    },
+    {
+      "name": "confirmTestingPattern",
+      "type": "function",
+      "file": "packages/analyzer/dist/analyzers/patterns.js",
+      "line": 638,
+      "exported": false
+    },
+    {
+      "name": "detectMultipleDatabasePatterns",
+      "type": "function",
+      "file": "packages/analyzer/dist/analyzers/patterns.js",
+      "line": 661,
+      "exported": true
+    },
+    {
+      "name": "filterByConfidence",
+      "type": "function",
+      "file": "packages/analyzer/dist/analyzers/patterns.js",
+      "line": 733,
+      "exported": true
+    },
+    {
+      "name": "interpretConfidence",
+      "type": "function",
+      "file": "packages/analyzer/dist/analyzers/patterns.js",
+      "line": 742,
+      "exported": true
+    },
+    {
+      "name": "calculateECE",
+      "type": "function",
+      "file": "packages/analyzer/dist/analyzers/patterns.js",
+      "line": 774,
+      "exported": true
+    },
+    {
+      "name": "detectRustFramework",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/rust.js",
+      "line": 1,
+      "exported": true
+    },
+    {
+      "name": "exists",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/projectType.js",
+      "line": 3,
+      "exported": false
+    },
+    {
+      "name": "detectProjectType",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/projectType.js",
+      "line": 12,
+      "exported": true
+    },
+    {
+      "name": "detectMonorepo",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/monorepo.js",
+      "line": 6,
+      "exported": true
+    },
+    {
+      "name": "discoverPackages",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/monorepo.js",
+      "line": 132,
+      "exported": false
+    },
+    {
+      "name": "shouldSkipDirectory",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/monorepo.js",
+      "line": 164,
+      "exported": false
+    },
+    {
+      "name": "detectGoFramework",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/go.js",
+      "line": 1,
+      "exported": true
+    },
+    {
+      "name": "detectFramework",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/framework.js",
+      "line": 16,
+      "exported": true
+    },
+    {
+      "name": "detectPythonFramework",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/framework.js",
+      "line": 30,
+      "exported": false
+    },
+    {
+      "name": "detectNodeFramework",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/framework.js",
+      "line": 46,
+      "exported": false
+    },
+    {
+      "name": "detectGoFrameworkFromProject",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/framework.js",
+      "line": 65,
+      "exported": false
+    },
+    {
+      "name": "detectRustFrameworkFromProject",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/framework.js",
+      "line": 69,
+      "exported": false
+    },
+    {
       "name": "resolveWasmPath",
       "type": "function",
       "file": "packages/analyzer/dist/parsers/treeSitter.js",
@@ -3426,468 +3874,6 @@
       "exported": true
     },
     {
-      "name": "detectRustFramework",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/rust.js",
-      "line": 1,
-      "exported": true
-    },
-    {
-      "name": "detectProjectType",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/projectType.js",
-      "line": 1,
-      "exported": true
-    },
-    {
-      "name": "detectMonorepo",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/monorepo.js",
-      "line": 6,
-      "exported": true
-    },
-    {
-      "name": "discoverPackages",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/monorepo.js",
-      "line": 132,
-      "exported": false
-    },
-    {
-      "name": "shouldSkipDirectory",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/monorepo.js",
-      "line": 164,
-      "exported": false
-    },
-    {
-      "name": "detectGoFramework",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/go.js",
-      "line": 1,
-      "exported": true
-    },
-    {
-      "name": "detectFramework",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/framework.js",
-      "line": 16,
-      "exported": true
-    },
-    {
-      "name": "detectPythonFramework",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/framework.js",
-      "line": 30,
-      "exported": false
-    },
-    {
-      "name": "detectNodeFramework",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/framework.js",
-      "line": 46,
-      "exported": false
-    },
-    {
-      "name": "detectGoFrameworkFromProject",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/framework.js",
-      "line": 65,
-      "exported": false
-    },
-    {
-      "name": "detectRustFrameworkFromProject",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/framework.js",
-      "line": 69,
-      "exported": false
-    },
-    {
-      "name": "mapDirectoriesToPurposes",
-      "type": "function",
-      "file": "packages/analyzer/dist/analyzers/structure.js",
-      "line": 64,
-      "exported": false
-    },
-    {
-      "name": "isLayeredArchitecture",
-      "type": "function",
-      "file": "packages/analyzer/dist/analyzers/structure.js",
-      "line": 72,
-      "exported": false
-    },
-    {
-      "name": "isDomainDriven",
-      "type": "function",
-      "file": "packages/analyzer/dist/analyzers/structure.js",
-      "line": 94,
-      "exported": false
-    },
-    {
-      "name": "isMicroservices",
-      "type": "function",
-      "file": "packages/analyzer/dist/analyzers/structure.js",
-      "line": 112,
-      "exported": false
-    },
-    {
-      "name": "getPackageJsonEntry",
-      "type": "function",
-      "file": "packages/analyzer/dist/analyzers/structure.js",
-      "line": 171,
-      "exported": false
-    },
-    {
-      "name": "analyzeStructure",
-      "type": "function",
-      "file": "packages/analyzer/dist/analyzers/structure.js",
-      "line": 205,
-      "exported": true
-    },
-    {
-      "name": "findEntryPoints",
-      "type": "function",
-      "file": "packages/analyzer/dist/analyzers/structure.js",
-      "line": 236,
-      "exported": true
-    },
-    {
-      "name": "classifyArchitecture",
-      "type": "function",
-      "file": "packages/analyzer/dist/analyzers/structure.js",
-      "line": 385,
-      "exported": true
-    },
-    {
-      "name": "findPytestLocation",
-      "type": "function",
-      "file": "packages/analyzer/dist/analyzers/structure.js",
-      "line": 429,
-      "exported": false
-    },
-    {
-      "name": "findJestVitestLocation",
-      "type": "function",
-      "file": "packages/analyzer/dist/analyzers/structure.js",
-      "line": 445,
-      "exported": false
-    },
-    {
-      "name": "findGoTestLocation",
-      "type": "function",
-      "file": "packages/analyzer/dist/analyzers/structure.js",
-      "line": 480,
-      "exported": false
-    },
-    {
-      "name": "findRustTestLocation",
-      "type": "function",
-      "file": "packages/analyzer/dist/analyzers/structure.js",
-      "line": 487,
-      "exported": false
-    },
-    {
-      "name": "findTestLocations",
-      "type": "function",
-      "file": "packages/analyzer/dist/analyzers/structure.js",
-      "line": 494,
-      "exported": true
-    },
-    {
-      "name": "buildAsciiTree",
-      "type": "function",
-      "file": "packages/analyzer/dist/analyzers/structure.js",
-      "line": 509,
-      "exported": true
-    },
-    {
-      "name": "findConfigFiles",
-      "type": "function",
-      "file": "packages/analyzer/dist/analyzers/structure.js",
-      "line": 541,
-      "exported": true
-    },
-    {
-      "name": "detectFromDependencies",
-      "type": "function",
-      "file": "packages/analyzer/dist/analyzers/patterns.js",
-      "line": 6,
-      "exported": true
-    },
-    {
-      "name": "readNodeDevDependencies",
-      "type": "function",
-      "file": "packages/analyzer/dist/analyzers/patterns.js",
-      "line": 45,
-      "exported": false
-    },
-    {
-      "name": "detectValidationPattern",
-      "type": "function",
-      "file": "packages/analyzer/dist/analyzers/patterns.js",
-      "line": 58,
-      "exported": false
-    },
-    {
-      "name": "detectDatabasePattern",
-      "type": "function",
-      "file": "packages/analyzer/dist/analyzers/patterns.js",
-      "line": 110,
-      "exported": false
-    },
-    {
-      "name": "detectAuthPattern",
-      "type": "function",
-      "file": "packages/analyzer/dist/analyzers/patterns.js",
-      "line": 181,
-      "exported": false
-    },
-    {
-      "name": "detectTestingPattern",
-      "type": "function",
-      "file": "packages/analyzer/dist/analyzers/patterns.js",
-      "line": 248,
-      "exported": false
-    },
-    {
-      "name": "detectErrorHandlingPattern",
-      "type": "function",
-      "file": "packages/analyzer/dist/analyzers/patterns.js",
-      "line": 305,
-      "exported": false
-    },
-    {
-      "name": "inferPatterns",
-      "type": "function",
-      "file": "packages/analyzer/dist/analyzers/patterns.js",
-      "line": 347,
-      "exported": true
-    },
-    {
-      "name": "confirmPatternsWithTreeSitter",
-      "type": "function",
-      "file": "packages/analyzer/dist/analyzers/patterns.js",
-      "line": 391,
-      "exported": true
-    },
-    {
-      "name": "confirmValidationPattern",
-      "type": "function",
-      "file": "packages/analyzer/dist/analyzers/patterns.js",
-      "line": 401,
-      "exported": false
-    },
-    {
-      "name": "confirmErrorHandlingPattern",
-      "type": "function",
-      "file": "packages/analyzer/dist/analyzers/patterns.js",
-      "line": 472,
-      "exported": false
-    },
-    {
-      "name": "confirmDatabasePattern",
-      "type": "function",
-      "file": "packages/analyzer/dist/analyzers/patterns.js",
-      "line": 513,
-      "exported": false
-    },
-    {
-      "name": "confirmAuthPattern",
-      "type": "function",
-      "file": "packages/analyzer/dist/analyzers/patterns.js",
-      "line": 598,
-      "exported": false
-    },
-    {
-      "name": "confirmTestingPattern",
-      "type": "function",
-      "file": "packages/analyzer/dist/analyzers/patterns.js",
-      "line": 638,
-      "exported": false
-    },
-    {
-      "name": "detectMultipleDatabasePatterns",
-      "type": "function",
-      "file": "packages/analyzer/dist/analyzers/patterns.js",
-      "line": 661,
-      "exported": true
-    },
-    {
-      "name": "filterByConfidence",
-      "type": "function",
-      "file": "packages/analyzer/dist/analyzers/patterns.js",
-      "line": 733,
-      "exported": true
-    },
-    {
-      "name": "interpretConfidence",
-      "type": "function",
-      "file": "packages/analyzer/dist/analyzers/patterns.js",
-      "line": 742,
-      "exported": true
-    },
-    {
-      "name": "calculateECE",
-      "type": "function",
-      "file": "packages/analyzer/dist/analyzers/patterns.js",
-      "line": 774,
-      "exported": true
-    },
-    {
-      "name": "ASTCache",
-      "type": "class",
-      "file": "packages/analyzer/dist/cache/astCache.js",
-      "line": 3,
-      "exported": true
-    },
-    {
-      "name": "constructor",
-      "type": "method",
-      "file": "packages/analyzer/dist/cache/astCache.js",
-      "line": 7,
-      "exported": false
-    },
-    {
-      "name": "get",
-      "type": "method",
-      "file": "packages/analyzer/dist/cache/astCache.js",
-      "line": 10,
-      "exported": false
-    },
-    {
-      "name": "set",
-      "type": "method",
-      "file": "packages/analyzer/dist/cache/astCache.js",
-      "line": 36,
-      "exported": false
-    },
-    {
-      "name": "clear",
-      "type": "method",
-      "file": "packages/analyzer/dist/cache/astCache.js",
-      "line": 49,
-      "exported": false
-    },
-    {
-      "name": "getStats",
-      "type": "method",
-      "file": "packages/analyzer/dist/cache/astCache.js",
-      "line": 58,
-      "exported": false
-    },
-    {
-      "name": "getCacheKey",
-      "type": "method",
-      "file": "packages/analyzer/dist/cache/astCache.js",
-      "line": 65,
-      "exported": false
-    },
-    {
-      "name": "getMtime",
-      "type": "method",
-      "file": "packages/analyzer/dist/cache/astCache.js",
-      "line": 69,
-      "exported": false
-    },
-    {
-      "name": "parseRequirementsTxt",
-      "type": "function",
-      "file": "packages/analyzer/dist/parsers/python/requirements.js",
-      "line": 1,
-      "exported": true
-    },
-    {
-      "name": "parsePyprojectToml",
-      "type": "function",
-      "file": "packages/analyzer/dist/parsers/python/pyproject.js",
-      "line": 1,
-      "exported": true
-    },
-    {
-      "name": "parsePipfile",
-      "type": "function",
-      "file": "packages/analyzer/dist/parsers/python/Pipfile.js",
-      "line": 1,
-      "exported": true
-    },
-    {
-      "name": "parsePackageLock",
-      "type": "function",
-      "file": "packages/analyzer/dist/parsers/node/packageLock.js",
-      "line": 1,
-      "exported": true
-    },
-    {
-      "name": "parsePackageJson",
-      "type": "function",
-      "file": "packages/analyzer/dist/parsers/node/package.js",
-      "line": 1,
-      "exported": true
-    },
-    {
-      "name": "detectFlask",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/python/flask.js",
-      "line": 5,
-      "exported": true
-    },
-    {
-      "name": "detectFastAPI",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/python/fastapi.js",
-      "line": 3,
-      "exported": true
-    },
-    {
-      "name": "detectDjango",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/python/django.js",
-      "line": 4,
-      "exported": true
-    },
-    {
-      "name": "detectPythonCli",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/python/cli.js",
-      "line": 1,
-      "exported": true
-    },
-    {
-      "name": "detectReact",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/node/react.js",
-      "line": 3,
-      "exported": true
-    },
-    {
-      "name": "detectOtherNodeFrameworks",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/node/other.js",
-      "line": 1,
-      "exported": true
-    },
-    {
-      "name": "detectNextjs",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/node/nextjs.js",
-      "line": 3,
-      "exported": true
-    },
-    {
-      "name": "detectNestjs",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/node/nestjs.js",
-      "line": 4,
-      "exported": true
-    },
-    {
-      "name": "detectExpress",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/node/express.js",
-      "line": 3,
-      "exported": true
-    },
-    {
       "name": "analyzeTypeHints",
       "type": "function",
       "file": "packages/analyzer/dist/analyzers/conventions/typeHints.js",
@@ -4074,6 +4060,104 @@
       "type": "function",
       "file": "packages/analyzer/dist/analyzers/conventions/docstrings.js",
       "line": 23,
+      "exported": true
+    },
+    {
+      "name": "detectFlask",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/python/flask.js",
+      "line": 5,
+      "exported": true
+    },
+    {
+      "name": "detectFastAPI",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/python/fastapi.js",
+      "line": 3,
+      "exported": true
+    },
+    {
+      "name": "detectDjango",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/python/django.js",
+      "line": 4,
+      "exported": true
+    },
+    {
+      "name": "detectPythonCli",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/python/cli.js",
+      "line": 1,
+      "exported": true
+    },
+    {
+      "name": "detectReact",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/node/react.js",
+      "line": 3,
+      "exported": true
+    },
+    {
+      "name": "detectOtherNodeFrameworks",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/node/other.js",
+      "line": 1,
+      "exported": true
+    },
+    {
+      "name": "detectNextjs",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/node/nextjs.js",
+      "line": 3,
+      "exported": true
+    },
+    {
+      "name": "detectNestjs",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/node/nestjs.js",
+      "line": 4,
+      "exported": true
+    },
+    {
+      "name": "detectExpress",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/node/express.js",
+      "line": 3,
+      "exported": true
+    },
+    {
+      "name": "parseRequirementsTxt",
+      "type": "function",
+      "file": "packages/analyzer/dist/parsers/python/requirements.js",
+      "line": 1,
+      "exported": true
+    },
+    {
+      "name": "parsePyprojectToml",
+      "type": "function",
+      "file": "packages/analyzer/dist/parsers/python/pyproject.js",
+      "line": 1,
+      "exported": true
+    },
+    {
+      "name": "parsePipfile",
+      "type": "function",
+      "file": "packages/analyzer/dist/parsers/python/Pipfile.js",
+      "line": 1,
+      "exported": true
+    },
+    {
+      "name": "parsePackageLock",
+      "type": "function",
+      "file": "packages/analyzer/dist/parsers/node/packageLock.js",
+      "line": 1,
+      "exported": true
+    },
+    {
+      "name": "parsePackageJson",
+      "type": "function",
+      "file": "packages/analyzer/dist/parsers/node/package.js",
+      "line": 1,
       "exported": true
     }
   ]

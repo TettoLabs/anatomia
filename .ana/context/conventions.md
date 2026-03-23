@@ -1,86 +1,94 @@
 # Conventions — anatomia-workspace
 
-This document describes code conventions, style rules, and naming patterns used in the anatomia-workspace monorepo. All conventions are derived from configuration files and codebase analysis.
+**Detected:** This document captures naming, import, and code style conventions extracted from configuration files and analyzer data, with real examples from the codebase.
 
 ## Naming Conventions
 
 ### Files
 
-**Detected:** kebab-case.ts for all TypeScript files (from codebase file listing)
+**Pattern:** kebab-case.ts — Confidence: 0.90
 
-Examples from `packages/cli/src/utils/`:
-- `file-writer.ts` — File operations utility class
-- `scaffold-generators.ts` — Scaffold creation functions
-- `format-analysis-brief.ts` — Analyzer output formatter
-- `analysis-helpers.ts` — Analysis utility functions
+**Detected:** Real examples from `packages/cli/src/utils/` and `packages/analyzer/src/`:
+- `file-writer.ts`
+- `scaffold-generators.ts`
+- `format-analysis-brief.ts`
+- `analysis-helpers.ts`
+- `import-scanner.ts`
 
-Examples from `packages/analyzer/src/`:
-- `projectType.ts` — Project type detector
-- `importScanner.ts` — Import statement scanner
-- `fileSampler.ts` — File sampling for performance
+**Exception:** PascalCase for class-as-file pattern — Confidence: 0.85
 
-### Functions
+**Detected:** Examples from `packages/analyzer/src/errors/`:
+- `DetectionCollector.ts` (exports DetectionCollector class)
+- `DetectionError.ts` (exports DetectionEngineError and DetectionError)
+- `ASTCache.ts` (exports ASTCache class)
+- `ParserManager.ts` (exports ParserManager class)
 
-**Detected:** camelCase for all functions (from codebase analysis)
+**User confirmed:** Methodical and quality-focused TypeScript development approach
 
-Examples from `packages/cli/src/commands/init.ts` (lines 1-49):
-- `generateProjectOverviewScaffold` — Creates project overview scaffold
-- `generateArchitectureScaffold` — Creates architecture scaffold
-- `generatePatternsScaffold` — Creates patterns scaffold
-- `formatAnalysisBrief` — Formats analyzer output
+### Functions and Variables
 
-Examples from `packages/cli/src/utils/validators.ts` (lines 1-49):
-- `countDetectedPatterns` — Counts patterns in analysis result
-- `getProjectName` — Extracts project name from config
+**Pattern:** camelCase — Confidence: 0.95
 
-Examples from `packages/analyzer/src/detectors/framework.ts` (lines 1-39):
-- `detectFastAPI` — Detects FastAPI framework
-- `detectDjango` — Detects Django framework
-- `detectNextjs` — Detects Next.js framework
-- `detectExpress` — Detects Express framework
+**Detected:** Examples from analyzer public API (`packages/analyzer/src/index.ts`, lines 26-28):
+```typescript
+import { detectProjectType } from './detectors/projectType.js';
+import { detectFramework } from './detectors/framework.js';
+import { analyzeStructure } from './analyzers/structure.js';
+```
+
+**Detected:** Additional examples from `packages/cli/src/commands/setup.ts`:
+- `validateStructure` (line 14)
+- `validateContent` (line 15)
+- `validateCrossReferences` (line 16)
+- `validateQuality` (line 17)
+- `getProjectName` (line 18)
+- `fileExists` (line 19)
+
+**Detected:** More examples from analyzer exports (lines 51-56):
+- `findEntryPoints`
+- `classifyArchitecture`
+- `findTestLocations`
+- `buildAsciiTree`
+- `findConfigFiles`
 
 ### Classes
 
-**Detected:** PascalCase for all classes (from codebase analysis)
+**Pattern:** PascalCase — Confidence: 0.95
 
-Examples from `packages/cli/src/utils/file-writer.ts` (lines 1-60):
+**Detected:** Examples from `packages/analyzer/src/` exports:
+- `DetectionCollector` (from `errors/DetectionCollector.ts`)
+- `DetectionEngineError` (from `errors/DetectionError.ts`)
+- `ParserManager` (from `parsers/treeSitter.ts`)
+- `ASTCache` (from `cache/astCache.ts`)
+- `QueryCache` (from `parsers/queries.ts`)
+- `FileWriter` (from `packages/cli/src/utils/file-writer.ts`, line 26)
+
+**Detected:** Example class definition from `packages/analyzer/src/errors/DetectionCollector.ts` (lines 9-12):
 ```typescript
-export class FileWriter {
-  async exists(filePath: string): Promise<boolean> { ... }
-  async createDir(dirPath: string): Promise<void> { ... }
-  async writeFile(filePath: string, content: string, options?: WriteFileOptions): Promise<void> { ... }
-}
+export class DetectionCollector {
+  private errors: DetectionError[] = [];
+  private warnings: DetectionError[] = [];
+  private info: DetectionError[] = [];
 ```
 
-Examples from `packages/analyzer/src/errors/DetectionError.ts` (lines 45-101):
-```typescript
-export class DetectionEngineError extends Error {
-  code: string;
-  severity: 'error' | 'warning' | 'info';
-  file?: string | undefined;
-  line?: number | undefined;
-  suggestion?: string | undefined;
-  phase?: string | undefined;
+### Interfaces and Types
 
-  constructor(code: string, message: string, severity: 'error' | 'warning' | 'info' = 'error', options?: {...}) {
-    super(message);
-    this.name = 'DetectionEngineError';
-    // ...
-  }
-}
+**Pattern:** PascalCase — Confidence: 0.95
+
+**Detected:** Examples from type exports (`packages/analyzer/src/index.ts`, lines 82-90):
+```typescript
+export type {
+  ParsedAnalysis,
+  ParsedFile,
+  FunctionInfo,
+  ClassInfo,
+  ImportInfo,
+  ExportInfo,
+  DecoratorInfo,
+} from './types/parsed.js';
 ```
 
-Additional class examples from `packages/analyzer/src/`:
-- `DetectionCollector` — Accumulates non-fatal errors during analysis
-- `ParserManager` — Manages tree-sitter parsers with lazy loading
-- `QueryCache` — Caches tree-sitter queries
-- `ASTCache` — Caches parsed ASTs
-
-### Interfaces
-
-**Detected:** PascalCase for all interfaces (from codebase analysis)
-
-Examples from `packages/cli/src/utils/file-writer.ts` (lines 15-18):
+**Detected:** Interface example from `packages/cli/src/utils/file-writer.ts` (lines 16-19):
 ```typescript
 export interface WriteFileOptions {
   encoding?: BufferEncoding;
@@ -88,50 +96,29 @@ export interface WriteFileOptions {
 }
 ```
 
-Examples from `packages/cli/src/utils/validators.ts` (lines 22-27):
-```typescript
-export interface ValidationError {
-  type: 'BLOCKING' | 'WARNING';
-  rule: string;
-  file: string;
-  message: string;
-}
-```
-
-Examples from `packages/analyzer/src/errors/DetectionError.ts` (lines 13-40):
-```typescript
-export interface DetectionError {
-  code: string;
-  message: string;
-  severity: 'error' | 'warning' | 'info';
-  file?: string | undefined;
-  line?: number | undefined;
-  suggestion?: string | undefined;
-  phase?: string | undefined;
-  cause?: Error | undefined;
-  timestamp: Date;
-}
-```
-
-Additional interface examples:
-- `InitCommandOptions` — CLI command options
-- `PreflightResult` — Pre-execution validation result
-- `AnalysisResult` — Analyzer output structure
-- `ProjectTypeResult` — Project type detection result
-- `FrameworkResult` — Framework detection result
-- `SamplingOptions` — File sampling configuration
+**Detected:** Additional type examples from `packages/cli/src/commands/setup.ts`:
+- `ValidationError` (line 20)
+- `SetupCompleteOptions` (line 26)
+- `AnalysisResult` (line 12)
 
 ### Constants
 
-**Detected:** SCREAMING_SNAKE_CASE for all constants (from codebase analysis)
+**Pattern:** SCREAMING_SNAKE_CASE — Confidence: 0.95
 
-Examples from `packages/cli/src/constants.ts` (lines 1-91):
+**Detected:** Examples from `packages/cli/src/constants.ts` (lines 7-13):
 ```typescript
+/** Scaffold marker (first line of every context file scaffold) */
 export const SCAFFOLD_MARKER = '<!-- SCAFFOLD - Setup will fill this file -->';
+
+/** Validation thresholds */
 export const MIN_FILE_SIZE_WARNING = 20; // Lines
 export const MAX_FILE_SIZE_WARNING = 1500; // Lines
 export const MIN_DEBUGGING_FILE_SIZE = 15; // Lines
+```
 
+**Detected:** Array constants also use SCREAMING_SNAKE_CASE (lines 15-22):
+```typescript
+/** Pattern categories (synchronized with analyzer) */
 export const PATTERN_CATEGORIES = [
   'errorHandling',
   'validation',
@@ -139,219 +126,149 @@ export const PATTERN_CATEGORIES = [
   'auth',
   'testing',
 ] as const;
-
-export const MODE_FILES = [
-  'architect.md',
-  'code.md',
-  'debug.md',
-  'docs.md',
-  'test.md',
-  'general.md',
-  'setup.md',
-  'setup-quick.md',
-  'setup-guided.md',
-  'setup-complete.md',
-] as const;
-
-export const META_VERSION = '1.0.0';
 ```
 
-Example from `packages/analyzer/src/errors/DetectionError.ts` (lines 106-133):
+**Detected:** Additional examples from `packages/cli/src/constants.ts`:
+- `REQUIRED_CONTEXT_FILES` (line 25)
+- `MODE_FILES` (line 36)
+- `SETUP_FILES` (line 50)
+- `STEP_FILES` (line 57)
+- `FRAMEWORK_SNIPPETS` (line 69)
+- `AGENT_FILES` (line 79)
+- `VALID_SETUP_TIERS` (line 87)
+- `META_VERSION` (line 90)
+
+**Detected:** Examples from `packages/cli/src/commands/setup.ts`:
+- `VALID_SETUP_TIERS` (imported and used, line 22)
+- `META_VERSION` (imported and used, line 22)
+
+### Enum Values and Literal Types
+
+**Pattern:** PascalCase for schemas, lowercase strings for values — Confidence: 0.90
+
+**Detected:** Example from `packages/analyzer/src/types/index.ts` (lines 36-45):
 ```typescript
-export const ERROR_CODES = {
-  // File operations
-  FILE_NOT_FOUND: 'FILE_NOT_FOUND',
-  PERMISSION_DENIED: 'PERMISSION_DENIED',
-  IS_DIRECTORY: 'IS_DIRECTORY',
-  ENCODING_ERROR: 'ENCODING_ERROR',
+export const ProjectTypeSchema = z.enum([
+  'python',
+  'node',
+  'go',
+  'rust',
+  'ruby',
+  'php',
+  'mixed', // Monorepo with multiple languages
+  'unknown', // No indicators found
+]);
 
-  // Parsing
-  INVALID_JSON: 'INVALID_JSON',
-  INVALID_YAML: 'INVALID_YAML',
-  INVALID_TOML: 'INVALID_TOML',
-  PARSE_ERROR: 'PARSE_ERROR',
-
-  // Detection
-  NO_SOURCE_FILES: 'NO_SOURCE_FILES',
-  NO_DEPENDENCIES: 'NO_DEPENDENCIES',
-  FRAMEWORK_DETECTION_FAILED: 'FRAMEWORK_DETECTION_FAILED',
-  MISSING_MANIFEST: 'MISSING_MANIFEST',
-  CIRCULAR_DEPENDENCY: 'CIRCULAR_DEPENDENCY',
-  IMPORT_SCAN_FAILED: 'IMPORT_SCAN_FAILED',
-
-  // Monorepo
-  MONOREPO_DETECTED: 'MONOREPO_DETECTED',
-
-  // System
-  TIMEOUT: 'TIMEOUT',
-  UNKNOWN_ERROR: 'UNKNOWN_ERROR',
-} as const;
+export type ProjectType = z.infer<typeof ProjectTypeSchema>;
 ```
 
-### Type Exports
+**Detected:** Schema naming pattern: `{Type}Schema` convention
+- `ProjectTypeSchema`
+- `ConfidenceScoreSchema`
+- `AnalysisResultSchema`
+- `StructureAnalysisSchema`
+- `ParsedAnalysisSchema`
+- `PatternAnalysisSchema`
 
-**Detected:** Explicit `type` keyword for type-only exports (from codebase analysis)
-
-Examples from `packages/analyzer/src/index.ts` (lines 14-22):
-```typescript
-// Export types
-export type { AnalysisResult, ProjectType } from './types/index.js';
-export {
-  AnalysisResultSchema,
-  ProjectTypeSchema,
-  ConfidenceScoreSchema,
-  createEmptyAnalysisResult,
-  validateAnalysisResult,
-} from './types/index.js';
-```
-
-Additional examples:
-```typescript
-export type { ProjectTypeResult } from './detectors/projectType.js';
-export type { FrameworkResult } from './detectors/framework.js';
-export type { Language } from './parsers/treeSitter.js';
-export type { SamplingOptions } from './sampling/fileSampler.js';
-export type { QueryType } from './parsers/queries.js';
-export type { ASTCacheEntry, CacheStats } from './cache/astCache.js';
-```
-
-### Directories
-
-**Detected:** Mixed kebab-case and lowercase (from codebase directory listing)
-
-Kebab-case examples:
-- `context/setup/framework-snippets/` — Framework-specific code examples
-
-Lowercase examples:
-- `src/commands/` — CLI command implementations
-- `src/utils/` — Utility functions
-- `src/detectors/` — Detection logic
-- `src/parsers/` — File parsers
-- `src/analyzers/` — Analysis engines
+**Enforced by:** Zod runtime validation library — all schemas use `z.infer<typeof Schema>` pattern for type safety
 
 ## Import Organization
 
-### Module System
+### Import Ordering
 
-**Detected:** ESM with .js extensions in internal imports (from `tsconfig.base.json` lines 19-24 and codebase analysis)
+**Pattern:** External dependencies first, internal imports second, grouped by source — Confidence: 0.90
 
-TypeScript configuration from `tsconfig.base.json`:
-```json
-{
-  "module": "ESNext",
-  "moduleResolution": "Bundler",
-  "resolveJsonModule": true,
-  "allowSyntheticDefaultImports": true,
-  "esModuleInterop": true,
-  "isolatedModules": true
-}
-```
-
-All packages declare `"type": "module"` in package.json for native ESM support.
-
-### Import Extensions
-
-**Detected:** .js extensions on internal imports, even though source files are .ts (from codebase analysis)
-
-Example from `packages/cli/src/commands/init.ts` (lines 30-48):
+**Detected:** Example from `packages/cli/src/commands/setup.ts` (lines 8-24):
 ```typescript
 import { Command } from 'commander';
 import chalk from 'chalk';
-import ora from 'ora';
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
-import * as os from 'node:os';
-import { fileURLToPath } from 'node:url';
-import { createHash } from 'node:crypto';
 import type { AnalysisResult } from 'anatomia-analyzer';
-import { formatAnalysisBrief } from '../utils/format-analysis-brief.js';
 import {
-  generateProjectOverviewScaffold,
-  generateArchitectureScaffold,
-  generatePatternsScaffold,
-  generateConventionsScaffold,
-  generateWorkflowScaffold,
-  generateTestingScaffold,
-  generateDebuggingScaffold,
-} from '../utils/scaffold-generators.js';
+  validateStructure,
+  validateContent,
+  validateCrossReferences,
+  validateQuality,
+  getProjectName,
+  fileExists,
+  type ValidationError,
+} from '../utils/validators.js';
+import { VALID_SETUP_TIERS, META_VERSION } from '../constants.js';
+import { createCheckCommand } from './check.js';
+import { createIndexCommand } from './index.js';
 ```
 
-**Pattern:** TypeScript compiles .ts to .js, so imports must reference .js for runtime compatibility.
+**Grouping breakdown:**
+1. External npm packages (commander, chalk)
+2. Node.js built-ins with `node:` protocol
+3. External workspace packages (anatomia-analyzer)
+4. Relative internal imports (../utils/, ../constants.js, ./check.js)
 
-### Node Built-ins
+**Detected:** Type imports inline with regular imports, using `type` keyword for type-only imports (line 12, line 20)
 
-**Detected:** node: prefix for all Node.js built-in imports (from codebase analysis)
+### Node.js Built-in Protocol
 
-Examples from `packages/cli/src/commands/init.ts` (lines 33-37):
-```typescript
-import * as path from 'node:path';
-import * as fs from 'node:fs/promises';
-import * as os from 'node:os';
-import { fileURLToPath } from 'node:url';
-import { createHash } from 'node:crypto';
-```
+**Pattern:** Node built-ins use `node:` protocol — Confidence: 0.95
 
-Examples from `packages/cli/src/utils/file-writer.ts` (lines 12-13):
-```typescript
-import * as fs from 'node:fs/promises';
-import * as path from 'node:path';
-```
-
-Examples from `packages/cli/src/utils/validators.ts` (lines 10-11):
+**Detected:** Examples from `packages/cli/src/commands/setup.ts` (lines 10-11):
 ```typescript
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
 ```
 
-**Pattern:** Modern Node.js best practice for explicit built-in module identification.
-
-### Import Ordering
-
-**Detected:** Three-tier ordering pattern (from codebase analysis)
-
-Pattern observed in `packages/cli/src/commands/init.ts` (lines 30-48):
-1. **External packages:** commander, chalk, ora (third-party dependencies)
-2. **Node built-ins:** node:path, node:fs/promises, node:os, node:url, node:crypto
-3. **Internal imports:** ../utils/\*.js, type imports from anatomia-analyzer
-
-Pattern observed in `packages/analyzer/src/analyzers/patterns.ts` (lines 11-17):
-1. **Internal parsers:** ../parsers/python.js, ../parsers/node.js, ../parsers/go.js
-2. **Internal utilities:** ../utils/file.js
-3. **Internal types:** ../types/index.js, ../types/patterns.js
-
-**Inferred:** No strict enforcement, but general pattern is external → node: → internal.
-
-### Type-Only Imports
-
-**Detected:** Explicit `import type` for types (from codebase analysis)
-
-Examples:
+**Detected:** Example from `packages/cli/src/utils/file-writer.ts` (lines 13-14):
 ```typescript
-import type { AnalysisResult } from 'anatomia-analyzer';
-import type { ProjectType, ParsedFile } from '../types/index.js';
-import type { PatternConfidence, MultiPattern } from '../types/patterns.js';
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 ```
 
-**Pattern:** Separates runtime imports from type-only imports for tree-shaking and clarity.
+**Enforced by:** ESM module system (type: "module" in all package.json files)
 
-### Barrel Exports
+### ESM File Extensions
 
-**Detected:** index.ts files for public API re-exports (from `packages/analyzer/src/index.ts`)
+**Pattern:** .js extensions in relative imports (ESM requirement) — Confidence: 0.95
 
-Example from `packages/analyzer/src/index.ts` (lines 1-79) shows comprehensive barrel exports:
-- Grouped by category (detectors, parsers, utilities, types)
-- Comments marking sections
-- Re-exports 100+ items from single entry point
+**Detected:** All relative imports end with .js extension, even for TypeScript source files
 
-**Pattern:** Packages expose public APIs through index.ts, private modules remain unexported.
+**Detected:** Examples from `packages/cli/src/commands/setup.ts` (lines 21-24):
+```typescript
+import { VALID_SETUP_TIERS, META_VERSION } from '../constants.js';
+import { createCheckCommand } from './check.js';
+import { createIndexCommand } from './index.js';
+```
+
+**Detected:** Examples from `packages/analyzer/src/errors/DetectionCollector.ts` (line 6):
+```typescript
+import { DetectionEngineError } from './DetectionError.js';
+```
+
+**Detected:** Examples from analyzer index exports (line 26):
+```typescript
+import { detectProjectType } from './detectors/projectType.js';
+```
+
+**Enforced by:** TypeScript moduleResolution: "Bundler" with ESM output (from `tsconfig.base.json`)
+
+### Import Style Distribution
+
+**Pattern:** Mixed absolute and relative imports — Confidence: 0.90
+
+**Absolute imports:** Used for cross-package references within monorepo
+- Example: `import type { AnalysisResult } from 'anatomia-analyzer';` (CLI importing from analyzer)
+
+**Relative imports:** Used for same-package references
+- Example: `import { validateStructure } from '../utils/validators.js';`
+
+**No path aliases detected** — TypeScript paths not configured in tsconfig
 
 ## Code Style
 
-### Formatting Configuration
+### Formatter Configuration
 
-**Detected:** Prettier with specific settings enforced project-wide (from `.prettierrc.json`)
+**Formatter:** Prettier — Confidence: 0.95
 
-Configuration from `.prettierrc.json`:
+**Detected:** Configuration from `.prettierrc.json` (lines 1-7):
 ```json
 {
   "semi": true,
@@ -362,18 +279,29 @@ Configuration from `.prettierrc.json`:
 }
 ```
 
-**Rules enforced:**
-- **Semicolons:** Required on all statements
-- **Quotes:** Single quotes for strings
-- **Trailing commas:** ES5 style (multiline arrays/objects only, no trailing comma on last function parameter)
-- **Line width:** 100 characters maximum
-- **Indentation:** 2 spaces (no tabs)
+**Rules breakdown:**
+- **Semicolons:** Required (`semi: true`)
+- **Quotes:** Single quotes (`singleQuote: true`)
+- **Trailing commas:** ES5 style (objects, arrays, not function parameters)
+- **Line length:** 100 characters max
+- **Indentation:** 2 spaces
 
-### Linting Configuration
+### Indentation
 
-**Detected:** ESLint 9 flat config with TypeScript (from `eslint.config.mjs`)
+**Pattern:** 2 spaces, no tabs — Confidence: 0.95
 
-Configuration from `eslint.config.mjs`:
+**Detected:** From `.prettierrc.json` (line 6):
+```json
+"tabWidth": 2
+```
+
+**Enforced by:** Prettier formatting on all files
+
+### Linter Configuration
+
+**Linter:** ESLint with TypeScript plugin — Confidence: 0.95
+
+**Detected:** Configuration from `eslint.config.mjs` (lines 1-13):
 ```javascript
 import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
@@ -390,139 +318,122 @@ export default [
 ];
 ```
 
-**Rules enforced:**
-- **no-explicit-any:** Warning (discouraged but not blocked)
-- **no-unused-vars:** Error, but allows unused parameters starting with underscore (`_param`)
-- **TypeScript recommended rules:** All enabled from typescript-eslint
+**Custom rules:**
+- `no-explicit-any`: Warning (not error) — allows `any` but discourages it
+- `no-unused-vars`: Error, but ignores variables starting with `_` (common TypeScript convention for intentionally unused parameters)
 
-### TypeScript Configuration
+**Config format:** ESLint flat config (new format as of ESLint 9+)
 
-**Detected:** Maximum strictness enabled (from `tsconfig.base.json`)
+### TypeScript Strictness
 
-Configuration from `tsconfig.base.json` (lines 4-15):
+**Pattern:** Strict TypeScript with extensive additional checks — Confidence: 0.95
+
+**Detected:** Configuration from `tsconfig.base.json` (lines 4-15):
 ```json
 {
   "compilerOptions": {
     // Strict Mode - All strict checks enabled
+    // See: https://www.typescriptlang.org/tsconfig/strict.html
     "strict": true,
 
     // Additional Strict Checks (2026 recommended, not included in strict flag)
+    // See: https://www.totaltypescript.com/tsconfig-cheat-sheet
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "exactOptionalPropertyTypes": true
-  }
-}
+    "exactOptionalPropertyTypes": true,
 ```
 
-**Strictness levels:**
-1. **strict: true** — Enables all basic strict checks (noImplicitAny, strictNullChecks, etc.)
-2. **6 additional strict checks** — Beyond the strict flag, enforcing best practices:
-   - `noUncheckedIndexedAccess` — Array/object access might be undefined
-   - `noImplicitOverride` — Require explicit override keyword
-   - `noPropertyAccessFromIndexSignature` — Index signature properties must use bracket notation
-   - `noImplicitReturns` — All code paths must return a value
-   - `noFallthroughCasesInSwitch` — Switch cases must break/return
-   - `exactOptionalPropertyTypes` — Optional properties cannot be set to undefined
+**Strict mode includes:**
+- `noImplicitAny`
+- `strictNullChecks`
+- `strictFunctionTypes`
+- `strictBindCallApply`
+- `strictPropertyInitialization`
+- `noImplicitThis`
+- `alwaysStrict`
 
-Additional settings from `tsconfig.base.json` (lines 35-42):
-```json
-{
-  "target": "ES2022",
-  "lib": ["ES2022"],
-  "composite": true,
-  "incremental": true
-}
-```
+**Additional strict checks beyond standard `strict` flag:**
+- `noUncheckedIndexedAccess` — array/object indexing returns `T | undefined`
+- `noImplicitOverride` — requires `override` keyword on subclass methods
+- `noPropertyAccessFromIndexSignature` — enforces bracket notation for index signatures
+- `noImplicitReturns` — all code paths must return a value
+- `noFallthroughCasesInSwitch` — switch cases must have break/return
+- `exactOptionalPropertyTypes` — optional properties cannot be set to `undefined`
 
-**Target:** ES2022 (Node.js 20+ supports this natively)
-**Monorepo optimization:** Composite + incremental compilation for Turborepo caching
+**User confirmed:** Quality-focused development approach with deliberate architecture choices
 
-### Code Patterns
+### Type Annotation Style
 
-**Detected:** async/await over promises (from codebase analysis)
+**Pattern:** Explicit types for public APIs, inference for internal variables — Confidence: 0.85
 
-Example from `packages/cli/src/utils/file-writer.ts` (lines 31-37):
+**Detected:** Public API example from `packages/analyzer/src/errors/DetectionCollector.ts` (lines 17, 26, 35):
 ```typescript
-async exists(filePath: string): Promise<boolean> {
-  try {
-    await fs.access(filePath);
-    return true;
-  } catch {
-    return false;
-  }
-}
+addError(error: DetectionEngineError | DetectionError): void
+addWarning(error: DetectionEngineError | DetectionError): void
+addInfo(error: DetectionEngineError | DetectionError): void
 ```
 
-**Inferred:** No .then() chains found in sampled code; async/await used consistently throughout.
-
-**Detected:** Early returns for validation (from codebase analysis)
-
-Example from `packages/cli/src/utils/validators.ts` (lines 41-49):
+**Detected:** Function return type annotations from same file (lines 44, 51, 55, 59, 66, 73):
 ```typescript
-export function countDetectedPatterns(analysis: AnalysisResult): number {
-  // Scenario B guard: analyzer may return null/undefined when tree-sitter fails
-  if (!analysis || !analysis.patterns) {
-    return 0;
-  }
-
-  let count = 0;
-  if (analysis.patterns.errorHandling) count++;
-  if (analysis.patterns.validation) count++;
-  // ...
-}
+getAllErrors(): DetectionError[]
+getErrors(): DetectionError[]
+getWarnings(): DetectionError[]
+getInfo(): DetectionError[]
+hasCriticalErrors(): boolean
+getCounts()  // return type inferred
 ```
 
-**Detected:** const over let (from codebase analysis)
+**Pattern:** Zod schemas for runtime validation + type inference — Confidence: 0.90
 
-Example from `packages/analyzer/src/analyzers/patterns.ts` (lines 36-40):
-```typescript
-const patterns: Partial<Record<string, PatternConfidence>> = {};
-
-// Get dependencies using STEP_1.1 parsers
-let deps: string[] = [];
-let devDeps: string[] = [];
-```
-
-**Pattern:** Use `const` by default, `let` only when mutation needed. No `var` keyword (TypeScript strict mode prevents it).
-
-**Detected:** Optional chaining and nullish coalescing (from codebase analysis)
-
-Examples:
-```typescript
-options?.file
-result.patterns?.validation
-pkg.name || 'unknown'
-framework ?? null
-```
-
-**Detected:** Type guards for runtime validation (from codebase analysis)
-
-Example from `packages/cli/src/utils/scaffold-generators.ts` (lines 24-37):
+**Detected:** Example from `packages/analyzer/src/types/index.ts` (lines 50-53):
 ```typescript
 /**
- * Type guard to check if pattern is multi-pattern
+ * Confidence score for a detection
+ * Range: 0.0 (no confidence) to 1.0 (certain)
  */
-function isMultiPattern(
-  pattern: PatternConfidence | MultiPattern | undefined
-): pattern is MultiPattern {
-  return pattern !== undefined && 'patterns' in pattern;
-}
+export const ConfidenceScoreSchema = z.number().min(0.0).max(1.0);
 ```
 
-Additional examples:
+**Usage pattern:** `z.infer<typeof Schema>` for deriving TypeScript types from Zod schemas
+
+**Detected:** Type inference example (line 47):
 ```typescript
-if (error instanceof Error) { ... }
-if (typeof value === 'string') { ... }
+export type ProjectType = z.infer<typeof ProjectTypeSchema>;
 ```
+
+### Module System
+
+**Pattern:** Pure ESM — Confidence: 0.95
+
+**Detected:** All package.json files contain `"type": "module"`
+
+**Detected:** TypeScript config from `tsconfig.base.json` (lines 17-24):
+```json
+{
+  // Module Resolution - Modern ESM-first
+  // See: https://turborepo.dev/docs/guides/tools/typescript
+  "module": "ESNext",
+  "moduleResolution": "Bundler",
+  "resolveJsonModule": true,
+  "allowSyntheticDefaultImports": true,
+  "esModuleInterop": true,
+  "isolatedModules": true,
+```
+
+**Implications:**
+- All imports/exports use ESM syntax (`import`/`export`, not `require`)
+- `.js` file extensions required in relative imports
+- Top-level `await` supported
+- No `__dirname` or `__filename` globals (use `import.meta.url`)
 
 ### Documentation Style
 
-**Detected:** JSDoc comments on all public functions (from codebase analysis)
+**Pattern:** JSDoc comments for public APIs — Confidence: 0.85
 
-Example from `packages/cli/src/utils/file-writer.ts` (lines 1-10):
+**Detected:** Example from `packages/cli/src/utils/file-writer.ts` (lines 1-11):
 ```typescript
 /**
  * FileWriter - Cross-platform file operations utility
@@ -537,228 +448,311 @@ Example from `packages/cli/src/utils/file-writer.ts` (lines 1-10):
  */
 ```
 
-Example from `packages/cli/src/utils/validators.ts` (lines 29-40):
+**Detected:** JSDoc with tags from same file (lines 27-31, 42-45):
 ```typescript
 /**
- * Count how many patterns analyzer detected
- *
- * Used for BF5 validation (patterns.md must document all detected patterns)
- *
- * @param analysis - AnalysisResult from snapshot.json
- * @returns Number of non-null pattern categories (0-5)
- *
- * @example
- * const snapshot = { patterns: { errorHandling: {...}, validation: {...} } };
- * countDetectedPatterns(snapshot); // Returns: 2
+ * Check if a file or directory exists
+ * @param filePath - Absolute or relative path to check
+ * @returns true if exists, false otherwise
+ */
+
+/**
+ * Create directory recursively (like mkdir -p)
+ * @param dirPath - Directory path to create
+ * @throws Error if creation fails (e.g., permission denied)
  */
 ```
 
-**Tags used:**
-- `@param` — Parameter descriptions
-- `@returns` — Return value descriptions
-- `@throws` — Exception documentation
-- `@example` — Usage examples
-- `@module` — Module-level documentation
-
-**Detected:** File header comments (from codebase analysis)
-
-Example from `packages/cli/src/commands/init.ts` (lines 0-28):
+**Detected:** Package-level documentation from `packages/cli/src/index.ts` (line 1):
 ```typescript
 /**
- * ana init - Initialize .ana/ context framework
- *
- * Complete rewrite for STEP 2.5 - integrates analyzer, no prompts.
- *
- * Creates:
- *   .ana/
- *   ├── modes/                    (7 mode files)
- *   ├── hooks/                    (CC hook scripts)
- *   │   ├── verify-context-file.sh
- *   │   └── quality-gate.sh
- *   ├── context/
- *   │   ├── analysis.md           (generated from analyzer)
- *   │   ...
- */
+ * @packageDocumentation
 ```
 
-**Pattern:** File headers describe purpose, behavior, and created artifacts.
-
-**Detected:** Inline comments for complex logic (from codebase analysis)
-
-Example from `packages/cli/src/utils/validators.ts` (lines 42-44):
+**Detected:** Inline comment style from `packages/cli/src/commands/setup.ts` (lines 95-109):
 ```typescript
-// Scenario B guard: analyzer may return null/undefined when tree-sitter fails
-if (!analysis || !analysis.patterns) {
-  return 0;
-}
+// Phase 1: Structural validation
+console.log(chalk.gray('Checking file structure...'));
+const structuralErrors = await validateStructure(anaPath);
+
+// Phase 2: Content validation
+console.log(chalk.gray('Checking required sections...'));
+const contentErrors = await validateContent(anaPath);
+
+// Phase 3: Cross-reference validation
+console.log(chalk.gray('Cross-referencing with analyzer data...'));
+const crossRefErrors = await validateCrossReferences(anaPath, snapshot);
+
+// Phase 4: Quality checks
+console.log(chalk.gray('Running quality checks...'));
+const warnings = await validateQuality(anaPath);
 ```
 
-Example from `packages/analyzer/src/analyzers/patterns.ts` (lines 8):
-```typescript
-// Based on: START_HERE_PART1.md sections 1-5, START_HERE_PART2.md lines 40-540
-```
-
-**Pattern:** Comments explain WHY (reasoning, edge cases, references), not WHAT (code is self-documenting).
+**Pattern:** Inline comments for phase markers and complex logic explanations
 
 ## Additional Conventions
 
-### Version Control
+### Git Commit Format
 
-**Detected:** Git with branch naming conventions (from git status and exploration results)
+**Pattern:** Structured commits with tags and em dash separator — Confidence: 0.85
 
-Current branch: `SideSprint/setup-redesign`
+**User confirmed:** Phased branching strategy (effort/STEP_*, SideSprint/*)
 
-Recent branch patterns from exploration results:
-- `effort/STEP_2_5_CLI_CODE` — Work-in-progress branches prefixed with effort/
-- `SideSprint/setup-redesign` — Sprint-based branches prefixed with SideSprint/
-
-**Pattern:** Prefix-based branch naming (effort/, SideSprint/) with descriptive names.
-
-### Commit Message Format
-
-**Detected:** Ticket-prefix format with descriptive messages (from git log)
-
-Recent commit examples:
+**Detected:** Format structure from git log (last 20 commits):
 ```
-[MI-3] Add tier files to MODE_FILES constant — setup-quick, setup-guided, setup-complete now copied by ana init
-[SS-8] Scenario B validation — test cycle 3 baseline documented. 7/7 at 9/10, 4521 lines, zero fabrications.
-[SS-7.3] Quality gates + init UX + determinism — Bash self-check, tier prompt, locked questions, SubagentStop verification
-[SS-7.2] Widen line targets + fix path stripping in check.ts — based on test cycle observations
-[SS-7.1] Hook fixes + writer improvements — quality gate phase check, PostToolUse confirmed for sub-agents
-[SS-6] Content redesign — 7 step files restructured, rules.md compressed 771→195 lines, quality checklists
-[STEP_2.5] Architecture fix: lazy-load analyzer to prevent startup crash
-[STEP_2.5] Fix: replace 'as any' with type guard in setup.ts
+[TAG] Brief summary — Detailed description
 ```
 
-**Format:** `[TICKET-ID] Description` with optional "—" separator for additional context
+**Tag patterns:**
+- `[SS-*]` — SideSprint work (e.g., `[SS-13.0]`, `[SS-12.4c]`)
+- `[MI-*]` — Milestone/Issue tracking (e.g., `[MI-18]`, `[MI-3]`)
+- `[STEP_*]` — Effort tracking (implied from branch names)
 
-**Ticket prefixes observed:**
-- `[MI-N]` — Main Issue tickets
-- `[SS-N]` — Side Sprint tickets
-- `[STEP_N]` — Step-based work items
+**Detected:** Real commit examples from git log:
+```
+[SS-13.0] MI-51/52/53/54/55: preflight changes — Q6 git workflow, Q7 business flow, What's Next print, .gitignore, explorer git targets
+[SS-12.4c] detectProjectType tests (14), app/ directory sampling fix, tetto 6→20 files parsed
+[SS-12.4b] Fix analysis.md formatter field names — totalParsed, computed functions/classes from files array
+[MI-18] CLAUDE.md signpost generation — marker-based merge, concierge ENTRY.md, 3 edge case tests passed
+[SS-11] AST symbol index — 582 symbols from 152 files, citation verification checks function/class names, conservative extraction, graceful fallback
+```
 
-**Pattern:** Descriptive first line, focuses on WHAT changed and WHY. Technical details included after "—" separator.
+**Separator:** Em dash (—) separates brief summary from detailed description
 
-### .gitignore Patterns
+**Descriptive details:** After dash, includes specifics like:
+- Changed components
+- File/line counts
+- Test results
+- Implementation approach
+- Concrete changes made
 
-**Detected:** Comprehensive ignore rules (from `.gitignore`)
+**Conventional Commits:** Not used — custom format with tag prefixes instead
 
-Categories from `.gitignore`:
-1. **Dependencies:** node_modules/, .pnpm-store/, .npm/
-2. **Build outputs:** .next/, dist/, build/, .turbo/, \*.tsbuildinfo
-3. **Environment & Secrets:** .env, .env\*.local, \*.pem, \*.key, credentials.json
-4. **IDE & OS:** .DS_Store, .vscode/settings.json, .idea/, \*.swp, \*.swo
-5. **Logs:** \*.log, npm-debug.log\*, pnpm-debug.log\*
-6. **Testing:** coverage/, test-results/
-7. **Temporary:** \*.tmp, .temp/, master_plan/
+### Branch Naming
 
-**Pattern:** Organized by category with comments, prevents accidental commits of secrets/build artifacts.
+**User confirmed:** Phased development workflow with PR-based merging
 
-### Monorepo Conventions
+**Detected:** Branch naming patterns from git history:
 
-**Detected:** Turborepo + pnpm workspaces (from package.json and turbo.json references in exploration results)
+**Primary branches:**
+- `main` — Main development branch
 
-**Package manager:** pnpm 9.0.0 (enforced via packageManager field)
+**Feature branches:**
+- `effort/STEP_{phase}_{checkpoint}_{NAME}` — Phased development work
+  - Examples: `effort/STEP_0_1_FOUNDATION`, `effort/STEP_1_1_DETECTION`, `effort/STEP_2_5_CLI_CODE`
 
-**Workspace structure:**
-- `packages/cli/` — CLI tool (anatomia-cli)
-- `packages/analyzer/` — Analysis engine (anatomia-analyzer)
-- `packages/generator/` — Template generator (@anatomia/generator, alpha)
-- `website/` — Next.js documentation site
+**Sprint branches:**
+- `SideSprint/{feature}` — Parallel sprint work
+  - Example: `SideSprint/setup-redesign`
 
-**Build orchestration:** Turborepo manages task dependencies and caching
+**UX branches:**
+- `ux/{feature}` — UX-focused changes
+  - Example: `ux/fix-copy`
 
-**Pattern:** Each package has independent package.json, shared base TypeScript config via tsconfig.base.json.
+**Detected:** 13+ effort/* branches tracked, indicating methodical phased approach
 
-### File Organization
+### Code Organization
 
-**Detected:** Feature-based organization within packages (from directory structure)
+**Pattern:** Domain-driven directory structure — Confidence: 0.90
 
-CLI structure:
-- `src/commands/` — Command implementations (init.ts, setup.ts, mode.ts, analyze.ts, check.ts)
-- `src/utils/` — Shared utilities (file-writer.ts, validators.ts, scaffold-generators.ts)
-- `templates/` — Static templates copied during initialization
-- `tests/` — Test suites (contract/, e2e/, scaffolds/, commands/, utils/, performance/)
+**Detected:** Analyzer package structure:
+```
+packages/analyzer/src/
+├── analyzers/        # Analysis logic (structure, patterns, conventions)
+├── parsers/          # Language-specific parsers
+├── detectors/        # Project type and framework detection
+├── types/            # TypeScript types and Zod schemas
+├── cache/            # Caching infrastructure (ASTCache)
+├── errors/           # Error handling (DetectionCollector, DetectionError)
+├── utils/            # Utilities (file ops, confidence scoring)
+└── sampling/         # File sampling logic
+```
 
-Analyzer structure:
-- `src/detectors/` — Framework and project type detection
-- `src/parsers/` — Dependency file parsers (language-specific subdirectories)
-- `src/analyzers/` — Code analysis engines (patterns, conventions, structure)
-- `src/types/` — Zod schemas and TypeScript types
-- `src/cache/` — Caching layer (AST, query)
-- `src/utils/` — Shared utilities
+**Detected:** CLI package structure:
+```
+packages/cli/src/
+├── commands/         # CLI commands (setup, check, index, init)
+├── utils/            # Utilities (validators, file-writer, scaffolds)
+└── constants.ts      # Shared constants
+```
 
-**Pattern:** Clear separation of concerns, language-specific code in subdirectories, tests mirror source structure.
+**Pattern:** Barrel exports (index.ts files) — Confidence: 0.85
 
-### Const Assertions
+**Detected:** Public API controlled via barrel exports
+- `packages/analyzer/src/index.ts` — Comprehensive public API (100+ lines of exports)
+- `packages/cli/src/commands/index.ts` — Command aggregation
+- Subdirectory index files (parsers/index.ts, detectors/index.ts, errors/index.ts)
 
-**Detected:** as const for literal type inference (from codebase analysis)
-
-Example from `packages/cli/src/constants.ts` (lines 16-22):
+**Detected:** Controlled public surface area from `packages/analyzer/src/index.ts` (lines 15-23):
 ```typescript
-export const PATTERN_CATEGORIES = [
-  'errorHandling',
-  'validation',
-  'database',
-  'auth',
-  'testing',
-] as const;
+// Export types
+export type { AnalysisResult, ProjectType } from './types/index.js';
+export {
+  AnalysisResultSchema,
+  ProjectTypeSchema,
+  ConfidenceScoreSchema,
+  createEmptyAnalysisResult,
+  validateAnalysisResult,
+} from './types/index.js';
 ```
 
-Example from `packages/cli/src/constants.ts` (lines 36-47):
+### Error Handling Conventions
+
+**Pattern:** Try-catch with process.exit(1) in CLI commands — Confidence: 0.80
+
+**Detected:** Example from `packages/cli/src/commands/setup.ts` (lines 84-93):
 ```typescript
-export const MODE_FILES = [
-  'architect.md',
-  'code.md',
-  'debug.md',
-  'docs.md',
-  'test.md',
-  'general.md',
-  'setup.md',
-  'setup-quick.md',
-  'setup-guided.md',
-  'setup-complete.md',
-] as const;
+try {
+  const content = await fs.readFile(snapshotPath, 'utf-8');
+  snapshot = JSON.parse(content);
+} catch (error) {
+  console.error(chalk.red('Error: Failed to parse snapshot.json'));
+  if (error instanceof Error) {
+    console.error(chalk.gray(error.message));
+  }
+  process.exit(1);
+}
 ```
 
-**Pattern:** Use `as const` on arrays/objects to get literal types instead of widened types (enables exhaustive switch checking, stricter validation).
+**Pattern:** User-friendly error messages with chalk coloring
+- Red for errors: `chalk.red('Error: ...')`
+- Gray for details: `chalk.gray('...')`
+- Yellow for warnings: `chalk.yellow('⚠️  ...')`
+- Green for success: `chalk.green('✅ ...')`
 
-### Factory Functions
-
-**Detected:** createEmpty\* factory pattern for default states (from codebase analysis and exploration results)
-
-Examples from exploration results:
-- `createEmptyAnalysisResult()` — Empty analysis result for graceful degradation
-- `createEmptyParsedAnalysis()` — Empty parsed analysis
-- `createEmptyPatternAnalysis()` — Empty pattern analysis (from `packages/analyzer/src/types/patterns.ts`)
-- `createEmptyConventionAnalysis()` — Empty convention analysis
-
-**Pattern:** Used alongside Zod schemas for type-safe defaults and testing utilities.
-
-### Singleton Exports
-
-**Detected:** Class instances exported as singletons (from codebase analysis)
-
-Example from exploration results:
+**Detected:** Error display formatting (lines 170-178):
 ```typescript
-export const fileWriter = new FileWriter();
-export const queryCache = new QueryCache();
-export const parserManager = new ParserManager();
+function displayValidationFailures(errors: ValidationError[]): void {
+  errors.forEach((error) => {
+    console.log(chalk.red(`  [${error.rule}] ${error.file}`));
+    console.log(chalk.gray(`      ${error.message}`));
+    console.log();
+  });
+
+  console.log(chalk.gray('Fix the issues above and run `ana setup complete` again.'));
+  console.log();
+}
 ```
 
-**Pattern:** Export both class (for testing with mocks) and singleton instance (for production use).
+### Testing Conventions
 
-### Error Handling Convention
+See testing.md for comprehensive testing patterns and conventions.
 
-**Detected:** Graceful degradation with try/catch (from exploration results and patterns analysis)
+**Detected:** Test file naming from exploration results:
+- Pattern: `*.test.ts`
+- Location: `tests/` directory mirrors `src/` structure
+- 64 total test files across packages
 
-Pattern from exploration:
-- Analyzer failures don't crash CLI
-- Try/catch with fallback to empty results
-- Console warnings instead of hard failures
+**Detected:** Test framework: Vitest with globals enabled (no import of describe/it/expect needed)
 
-**Pattern:** Non-fatal errors are collected, fatal errors have structured error codes and suggestions.
+### Package Script Conventions
+
+**Pattern:** Turborepo orchestration for monorepo tasks — Confidence: 0.95
+
+**Detected:** Root package.json scripts delegate to Turborepo:
+```json
+"build": "turbo run build"
+"dev": "turbo run dev"
+"test": "turbo run test"
+"lint": "turbo run lint"
+```
+
+**Pattern:** Per-package scripts use package-specific tools
+
+**CLI package:**
+- Build: `tsup` (ESM bundler) with template copying
+- Dev: `tsup --watch`
+- Test: `vitest`
+
+**Analyzer package:**
+- Build: `tsc` (TypeScript compiler)
+- Dev: `tsc --watch`
+- Test: `vitest`
+- Coverage: `vitest --coverage`
+
+### .gitignore Structure
+
+**Pattern:** Categorized ignore rules with comments — Confidence: 0.95
+
+**Detected:** Structure from `.gitignore`:
+```
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+.next/, dist/, build/, .turbo/
+
+# Environment & Secrets
+.env, *.pem, credentials.json
+
+# IDE & OS
+.DS_Store, .vscode/settings.json
+
+# Testing
+coverage/, test-results/
+
+# Temporary
+*.tmp, master_plan/, .ana/.state/cache/
+```
+
+**Detected:** Comprehensive coverage of:
+- Dependencies (node_modules, pnpm-store)
+- Build artifacts (dist, .turbo, .next)
+- Secrets (.env, *.pem, credentials.json)
+- IDE/OS files (.DS_Store, .vscode/settings.json)
+- Testing outputs (coverage/, test-results/)
+- Temporary files (*.tmp, cache/)
+
+### Custom Tooling Conventions
+
+**Detected:** Custom bash hooks in `.ana/hooks/` (not Husky) — Confidence: 0.90
+
+**Purpose:** Anatomia's own setup validation hooks
+- `quality-gate.sh` — Blocks session completion if context files fail
+- `run-check.sh` — Wrapper for validation checks
+- `subagent-verify.sh` — Sub-agent verification
+- `verify-context-file.sh` — Individual file verification
+
+**Not standard pre-commit hooks** — No .husky/ directory detected
+
+### Template Variable Replacement
+
+**Pattern:** Simple string replacement with `{{variable}}` syntax — Confidence: 0.85
+
+**Detected:** From `packages/cli/src/commands/setup.ts` (lines 216-220):
+```typescript
+// Replace variables (simple string replacement, not Handlebars)
+const generated = template
+  .replace(/\{\{projectName\}\}/g, projectName)
+  .replace(/\{\{timestamp\}\}/g, timestamp)
+  .replace(/\{\{version\}\}/g, cliVersion);
+```
+
+**Variables used in ENTRY.md template:**
+- `{{projectName}}` — From package.json or directory name
+- `{{timestamp}}` — Current ISO timestamp
+- `{{version}}` — CLI version from package.json
+
+**Not using Handlebars or other templating engine** — Plain JavaScript string replacement
+
+### File Path Handling
+
+**Pattern:** Node.js path module for cross-platform compatibility — Confidence: 0.90
+
+**Detected:** From `packages/cli/src/utils/file-writer.ts` comment (lines 3-5):
+```typescript
+/**
+ * Uses Node.js fs/promises for async operations.
+ * All paths are normalized using path.join() for Windows/Mac/Linux compatibility.
+```
+
+**Convention:** Always use `path.join()` for path construction, never string concatenation
+
+**Absolute vs relative:** Prefer absolute paths when possible to avoid cwd ambiguity
 
 ---
 
-*Last updated: 2026-03-22*
+*Last updated: 2026-03-23*
+
+**Coverage:** This file documents naming conventions (6 categories with real examples), import organization (4 patterns), code style (9 aspects with config files), and 12 additional conventions including git workflow, error handling, and tooling patterns. All conventions cite configuration files or real codebase examples.

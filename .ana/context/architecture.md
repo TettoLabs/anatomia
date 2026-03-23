@@ -1,258 +1,49 @@
-# Architecture
-
-This document explains WHY Anatomia is designed this way — the architectural decisions, system boundaries, and trade-offs that shape the codebase.
+# Architecture — anatomia-workspace
 
 ## Architecture Pattern
 
-**Type:** Layered monorepo with package separation — confidence 0.95
+**Type:** Modular monorepo with analyzer/CLI separation — Confidence: 0.95
 
-**Detected:** Three-layer architecture with clear separation of concerns (from monorepo structure):
+**User confirmed:** "Deliberately architected following written technical spec, phased MVP approach, analyzer/CLI separation by design" (from Q&A)
 
-1. **CLI Layer** (`packages/cli/`) - User interface and orchestration
-2. **Analyzer Layer** (`packages/analyzer/`) - Core analysis engine
-3. **Website Layer** (`website/`) - Documentation and marketing
+**Detected:** Turborepo monorepo with 3 packages organized by domain responsibility (from `pnpm-workspace.yaml`, `turbo.json`)
 
-**Detected:** The analyzer is designed as a standalone library that the CLI consumes (from `packages/analyzer/package.json`):
-```json
-{
-  "name": "anatomia-analyzer",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "sideEffects": false
-}
-```
-
-**Detected:** CLI depends on analyzer as a published package (from `packages/cli/package.json`):
-```json
-{
-  "dependencies": {
-    "anatomia-analyzer": "^0.1.0"
-  }
-}
-```
-
-**Inferred:** This separation enables:
-- Independent versioning and releases
-- Analyzer reuse in other tools
-- Clear responsibility boundaries
-- Parallel development of CLI features and analyzer capabilities
-
-**Detected:** Turborepo orchestrates build dependencies (from `turbo.json` lines 4-6):
-```json
-{
-  "build": {
-    "dependsOn": ["^build"],
-    "outputs": ["dist/**", ".next/**"]
-  }
-}
-```
-
-The `^build` dependency ensures packages build in topological order — analyzer builds before CLI that depends on it.
-
-### Monorepo Organization
-
-**Detected:** pnpm workspace with 3 packages + website (from `pnpm-workspace.yaml` lines 1-3):
+Example from `pnpm-workspace.yaml`:
 ```yaml
 packages:
   - 'packages/*'
   - 'website'
 ```
 
-**Detected:** Shared TypeScript configuration via base config (from exploration, tsconfig.base.json reference):
-- All packages extend `tsconfig.base.json`
-- Consistent strictness across monorepo
-- ES2022 target, ESM module system
-
-**Detected:** Turborepo caching for build optimization (from `turbo.json` lines 31-37):
+Example from `turbo.json` (lines 1-8):
 ```json
 {
-  "globalDependencies": [
-    "tsconfig.base.json",
-    "pnpm-lock.yaml"
-  ],
-  "globalEnv": [
-    "NODE_ENV"
-  ]
-}
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**"],
+      "env": ["NODE_ENV"]
+    },
 ```
 
-**Inferred:** Global dependencies trigger cache invalidation when base config or lockfile changes, ensuring builds stay synchronized.
+### Package Structure
 
-### Analyzer Pipeline Architecture
+**Detected:** 3 core packages with clear separation of concerns:
 
-**Detected:** Seven-phase analysis pipeline with progressive enhancement (from `packages/analyzer/src/index.ts` lines 158-166):
-```typescript
-/**
- * Orchestrates all detection phases:
- * 1. Monorepo detection (STEP_1.1)
- * 2. Project type detection (STEP_1.1)
- * 3. Framework detection (STEP_1.1)
- * 4. Structure analysis (STEP_1.2)
- * 5. Tree-sitter parsing (STEP_1.3)
- * 6. Pattern inference (STEP_2.1)
- * 7. Convention detection (STEP_2.2 - NEW)
- */
-```
+1. **packages/analyzer** — Pure analysis engine (71 .ts files)
+   - Zero CLI dependencies
+   - Domain: Code parsing, pattern detection, AST analysis
+   - Consumed by: CLI package
 
-**Detected:** Each phase is optional via skip flags (from `packages/analyzer/src/index.ts` lines 143-152):
-```typescript
-export interface AnalyzeOptions {
-  skipImportScan?: boolean;
-  skipMonorepo?: boolean;
-  skipStructure?: boolean;
-  skipParsing?: boolean;      // Skip tree-sitter parsing (STEP_1.3)
-  skipPatterns?: boolean;     // Skip pattern inference (STEP_2.1)
-  skipConventions?: boolean;  // Skip convention detection (STEP_2.2 - NEW)
-  maxFiles?: number;          // Max files to parse (default: 20)
-  strictMode?: boolean;
-  verbose?: boolean;
-}
-```
+2. **packages/cli** — User-facing commands (14 .ts files)
+   - Depends on: analyzer package
+   - Domain: Commands, user interaction, file I/O
 
-**Inferred:** Progressive enhancement allows fast basic detection or deep analysis depending on needs. Each phase builds on previous results.
+3. **packages/generator** — Template generation (alpha)
+   - Domain: Markdown template interpolation
 
-**Detected:** Graceful degradation on analyzer failure (from `packages/analyzer/src/index.ts` lines 269-275):
-```typescript
-} catch (error) {
-  // Critical failure - return empty result
-  if (options.strictMode) {
-    throw error;
-  }
-  return createEmptyAnalysisResult();
-}
-```
-
-**Detected:** CLI continues even if analyzer fails (from exploration results):
-> "Graceful degradation" — Confidence: 0.9
-> Evidence: packages/cli/src/commands/init.ts lines 330-339
-> Pattern: Analyzer failures don't crash CLI, creates empty scaffolds instead
-
-**Inferred:** This design prioritizes availability over completeness — better to generate minimal scaffolds than crash on analysis errors.
-
-### CLI Command Architecture
-
-**Detected:** Commander.js command pattern with separate command files (from `packages/cli/src/index.ts` lines 21-32):
-```typescript
-const program = new Command();
-
-program
-  .name('ana')
-  .description('Auto-generated AI context for codebases')
-  .version('0.1.0', '-v, --version', 'Display version number');
-
-// Register commands
-program.addCommand(initCommand);
-program.addCommand(modeCommand);
-program.addCommand(analyzeCommand);
-program.addCommand(setupCommand);
-```
-
-**Detected:** Each command in separate file with exported Command instance (from `packages/cli/src/index.ts` line 16):
-```typescript
-import { initCommand } from './commands/init.js';
-```
-
-**Inferred:** Modular command structure allows independent command development without bloating main entry point.
-
-**Detected:** Async command handler support (from `packages/cli/src/index.ts` lines 35-40):
-```typescript
-// CRITICAL: Use parseAsync() not parse() for async action handlers
-// See: https://github.com/tj/commander.js#async-action-handlers
-async function main(): Promise<void> {
-  try {
-    await program.parseAsync(process.argv);
-```
-
-**Detected:** Global error handling at program level (from `packages/cli/src/index.ts` lines 40-45):
-```typescript
-} catch (error) {
-  if (error instanceof Error) {
-    console.error(`Error: ${error.message}`);
-  }
-  process.exit(1);
-}
-```
-
-### Tree-sitter Parser Architecture
-
-**Detected:** Singleton parser manager for parser reuse (from `packages/analyzer/src/parsers/treeSitter.ts` lines 43-61):
-```typescript
-/**
- * Parser manager singleton
- *
- * Creates tree-sitter parsers once per language, reuses for all files.
- * Prevents expensive parser initialization (5-10ms) on every file.
- *
- * Pattern: Singleton with getInstance() - ensures one global instance
- *
- * Performance: Saves 100-200ms over 20 files (5-10ms × 20 files avoided)
- */
-export class ParserManager {
-  private static instance: ParserManager;
-  private parsers = new Map<Language, Parser>();
-
-  /**
-   * Private constructor - prevents direct instantiation
-   * Forces use of getInstance() for singleton pattern
-   */
-  private constructor() {}
-```
-
-**Detected:** Five languages supported (from `packages/analyzer/src/parsers/treeSitter.ts` line 40):
-```typescript
-export type Language = 'python' | 'typescript' | 'tsx' | 'javascript' | 'go';
-```
-
-**Detected:** Native module loading via CommonJS require (from `packages/analyzer/src/parsers/treeSitter.ts` lines 18-26):
-```typescript
-import { createRequire } from 'node:module';
-const require = createRequire(import.meta.url);
-
-// Import using require for native modules (they use CommonJS)
-import Parser from 'tree-sitter';
-const Python = require('tree-sitter-python');
-const TypeScriptGrammar = require('tree-sitter-typescript');
-const JavaScript = require('tree-sitter-javascript');
-const Go = require('tree-sitter-go');
-```
-
-**Inferred:** Mixed ESM/CommonJS approach handles tree-sitter's native modules while maintaining ESM in rest of codebase.
-
-## System Boundaries
-
-### Internal Components
-
-**CLI Package** (`packages/cli/`)
-- **Purpose:** User-facing tool for initializing and managing .ana/ context
-- **Entry point:** `dist/index.js` (from package.json bin field)
-- **Key responsibilities:**
-  - Command orchestration via Commander.js
-  - Analyzer integration and result formatting
-  - File generation (scaffolds, modes, hooks)
-  - User interaction (spinners, colored output)
-  - Validation and verification
-
-**Detected:** CLI exports binary command (from `packages/cli/package.json` lines 5-7):
-```json
-{
-  "bin": {
-    "ana": "./dist/index.js"
-  }
-}
-```
-
-**Analyzer Package** (`packages/analyzer/`)
-- **Purpose:** Code analysis engine for project detection
-- **Entry point:** `dist/index.js` (library export)
-- **Key responsibilities:**
-  - Project type detection (Python, Node, Go, Rust, Ruby, PHP)
-  - Framework detection (FastAPI, Next.js, Django, etc.)
-  - Structure analysis (entry points, architecture patterns, test locations)
-  - Tree-sitter AST parsing
-  - Pattern inference (error handling, validation, database, auth, testing)
-  - Convention detection (naming, imports, formatting)
-
-**Detected:** Analyzer exports comprehensive API (from `packages/analyzer/src/index.ts` lines 15-130, barrel export pattern):
+Example from `packages/analyzer/src/index.ts` (lines 15-23):
 ```typescript
 // Export types
 export type { AnalysisResult, ProjectType } from './types/index.js';
@@ -263,388 +54,574 @@ export {
   createEmptyAnalysisResult,
   validateAnalysisResult,
 } from './types/index.js';
+```
+
+Example from `packages/cli/src/commands/setup.ts` (lines 8-21):
+```typescript
+import { Command } from 'commander';
+import chalk from 'chalk';
+import * as path from 'node:path';
+import * as fs from 'node:fs/promises';
+import type { AnalysisResult } from 'anatomia-analyzer';
+import {
+  validateStructure,
+  validateContent,
+  validateCrossReferences,
+  validateQuality,
+  getProjectName,
+  fileExists,
+  type ValidationError,
+} from '../utils/validators.js';
+```
+
+### Architecture Flow
+
+**Detected:** Unidirectional dependency flow:
+
+```
+CLI (anatomia-cli)
+  ↓ imports
+Analyzer (anatomia-analyzer)
+  ↓ no external dependencies (just tree-sitter, zod)
+Pure functions
+```
+
+**Trade-off:** Clean boundaries vs extra package overhead. Worth it for:
+- Analyzer reusable by other tools
+- Independent versioning (CLI 0.2.0, analyzer 0.1.0)
+- Clear test isolation (different coverage thresholds)
+
+**Detected:** Task dependency graph in `turbo.json` (lines 4-5):
+```json
+"build": {
+  "dependsOn": ["^build"],
+```
+
+The `^build` syntax means "build this package's dependencies first" — enforces analyzer → CLI build order.
+
+### Why This Pattern
+
+**User stated:** "Deliberately architected monorepo with intentional design choices documented in master_plan/IMPLEMENTATION/TECHNICAL_ARCHITECTURE.md. Planned 'MVP phased approach' with separate analyzer and CLI packages, strict TypeScript with Zod schemas + custom error collectors." (from Q&A)
+
+**Detected:** 2,166-line technical specification at `master_plan/IMPLEMENTATION/TECHNICAL_ARCHITECTURE.md` defines the entire system design before implementation.
+
+**Inferred:** The analyzer/CLI split enables:
+- Analyzer as standalone library (importable by other tools)
+- CLI focused on UX (commander, chalk, ora for user interaction)
+- Analyzer focused on correctness (strict TypeScript, Zod validation)
+
+### Alternatives Considered
+
+**Unexamined:** No documentation of why this was chosen over:
+- Single package (simpler, but mixes concerns)
+- Full microservices (over-engineered for CLI tool)
+- Separate repos (harder to coordinate changes)
+
+## System Boundaries
+
+### Internal Components
+
+**Detected:** Core components organized by responsibility:
+
+#### 1. Analyzer Engine (packages/analyzer/src/)
+
+**Domain directories:**
+- `analyzers/` — High-level analysis (structure, patterns)
+- `parsers/` — Tree-sitter integration, dependency file readers
+- `detectors/` — Project type, framework, monorepo detection
+- `cache/` — AST cache, query cache (performance optimization)
+- `errors/` — Custom error classes with collector pattern
+- `types/` — Zod schemas for runtime validation
+- `sampling/` — File sampling to avoid parsing entire codebases
+
+Example from `packages/analyzer/src/index.ts` (lines 26-57):
+```typescript
+// Import for internal use
+import { detectProjectType } from './detectors/projectType.js';
+import { detectFramework } from './detectors/framework.js';
+import { analyzeStructure } from './analyzers/structure.js';
 
 // Export detectors
 export { detectProjectType } from './detectors/projectType.js';
 export type { ProjectTypeResult } from './detectors/projectType.js';
 export { detectFramework } from './detectors/framework.js';
 export type { FrameworkResult } from './detectors/framework.js';
+
+// Export parsers (placeholders for CP1)
+export {
+  readPythonDependencies,
+  readNodeDependencies,
+  readGoDependencies,
+  readRustDependencies,
+  readRubyDependencies,
+  readPhpDependencies,
+} from './parsers/index.js';
+
+// Export utilities
+export { exists, readFile, isDirectory, joinPath } from './utils/file.js';
+
+// Export structure analysis functions (STEP_1.2)
+export {
+  analyzeStructure,
+  findEntryPoints,
+  classifyArchitecture,
+  findTestLocations,
+  buildAsciiTree,
+  findConfigFiles,
+} from './analyzers/structure.js';
 ```
 
-**Website Package** (`website/`)
-- **Purpose:** Documentation and marketing site
-- **Framework:** Next.js 16 App Router
-- **Key responsibilities:**
-  - Product documentation
-  - Installation guides
-  - API reference
-  - Example projects
+**Detected:** Barrel exports pattern — controlled public API surface via `src/index.ts`, hiding implementation details.
 
-**Generator Package** (`packages/generator/`)
-- **Purpose:** Template generation engine (alpha, internal use)
-- **Status:** Not yet published to npm (version 0.1.0-alpha)
-- **Inferred:** Likely handles dynamic scaffold generation logic
+#### 2. CLI Commands (packages/cli/src/commands/)
+
+**Commands implemented:**
+- `setup` — Multi-phase setup validation (structure, content, cross-refs, quality)
+- `check` — Individual context file validation
+- `index` — Symbol index generation
+
+Example from `packages/cli/src/commands/setup.ts` (lines 95-100):
+```typescript
+// Phase 1: Structural validation
+console.log(chalk.gray('Checking file structure...'));
+const structuralErrors = await validateStructure(anaPath);
+
+// Phase 2: Content validation
+console.log(chalk.gray('Checking required sections...'));
+```
+
+**Unexamined:** 4-phase validation approach (structure → content → cross-refs → quality) was chosen, but no documentation of why 4 phases vs 1 comprehensive pass. Likely for clear error messages and fail-fast on structural issues.
+
+#### 3. Build Orchestration (Turborepo)
+
+**Detected:** Task pipeline with caching (from `turbo.json`):
+- Build depends on upstream packages building first
+- Tests depend on build completing
+- Outputs cached: `dist/**`, `coverage/**`, `.next/**`
+- Global dependencies tracked: `tsconfig.base.json`, `pnpm-lock.yaml`
+
+Example from `turbo.json` (lines 31-34):
+```json
+"globalDependencies": [
+  "tsconfig.base.json",
+  "pnpm-lock.yaml"
+],
+```
+
+**Inferred:** Any change to shared tsconfig or lockfile invalidates all caches — conservative but correct.
 
 ### External Services
 
-**Detected:** No external service dependencies found in package.json files.
+**Detected:** No external services (from package.json dependencies, exploration findings)
 
-**Detected:** Tool operates entirely on local filesystem — no API calls, databases, or third-party services.
+**Evidence:**
+- No database libraries (Prisma, TypeORM, Sequelize)
+- No auth providers (Auth0, Clerk, Supabase Auth)
+- No cloud SDKs (AWS SDK, Google Cloud, Azure)
+- No payment processors (Stripe, PayPal)
+- No email services (SendGrid, Postmark)
+
+**Pattern:** Local-first CLI tool. All operations are filesystem-based.
+
+**Future:** Technical architecture document describes optional Supabase integration for MVP3 (cloud sync, pattern sharing), but not implemented yet.
+
+### External Dependencies
+
+**Detected:** Minimal, focused external dependencies:
+
+**CLI package (packages/cli/package.json):**
+- `commander@12.0.0` — Command parsing
+- `chalk@5.3.0` — Terminal colors
+- `ora@8.0.0` — Spinners
+- `glob@10.3.0` — File pattern matching
+- `anatomia-analyzer` — Internal analyzer package
+
+**Analyzer package (packages/analyzer/package.json):**
+- `web-tree-sitter@0.25.10` — AST parsing (multi-language)
+- `zod@4.3.6` — Runtime validation + type inference
+- `js-yaml@4.1.1` — YAML parsing (for frontmatter)
+
+**Inferred:** Dependency choices prioritize:
+- Stability (chalk, commander are mature)
+- Performance (tree-sitter is fastest parser)
+- Type safety (Zod for runtime validation)
 
 ### Data Stores
 
-**Detected:** Filesystem-based persistence only.
+**Detected:** Filesystem-only storage:
 
-**Key data locations:**
-- `.ana/` - Generated context framework
-  - `modes/` - 7 mode files (architect, code, debug, docs, review, onboard, test)
-  - `context/` - 7 context files (project-overview, architecture, patterns, conventions, workflow, testing, debugging)
-  - `hooks/` - Claude Code verification hooks
-  - `.meta.json` - Framework metadata
-  - `.state/snapshot.json` - Analyzer baseline results
+**Git-tracked:**
+- `.ana/context/*.md` — Generated context files
+- `.ana/modes/*.md` — Mode definitions
+- `.ana/.meta.json` — Setup metadata
 
-**Detected:** Metadata structure (from `packages/cli/src/commands/init.ts` line 57):
-```typescript
-META_VERSION,
+**Gitignored:**
+- `.ana/.state/cache/` — AST caches
+- `.ana/.state/snapshot.json` — Analysis snapshot
+- `.ana/.state/symbol-index.json` — Symbol index
+
+Example from `.gitignore`:
+```
+.ana/.state/cache/
 ```
 
-**Detected:** Snapshot persists analyzer results (from `packages/cli/src/commands/init.ts` line 24):
-```typescript
-*   └── .state/
-*       └── snapshot.json         (analyzer baseline)
-```
+**Trade-off:** File-based vs database:
+- ✓ Zero infrastructure setup
+- ✓ Works offline
+- ✓ Git-trackable (see what changed)
+- ✗ No ACID guarantees
+- ✗ No concurrent access control
 
-**Inferred:** Snapshot enables:
-- Detection drift tracking
-- Baseline comparison for quality checks
-- Reproducible analysis results
-
-### Dependencies
-
-**CLI Runtime Dependencies** (5 total):
-- `anatomia-analyzer` ^0.1.0 - Analysis engine
-- `chalk` ^5.3.0 - Terminal colors
-- `commander` ^12.0.0 - CLI framework
-- `glob` ^10.3.0 - File pattern matching
-- `ora` ^8.0.0 - Terminal spinners
-
-**Analyzer Runtime Dependencies** (8 total):
-- `chalk` ^5.3.0 - Colored output
-- `glob` ^10.3.0 - File globbing
-- `js-yaml` ^4.1.1 - YAML parsing
-- `tree-sitter` 0.25.0 - AST parsing core
-- `tree-sitter-go` 0.25.0 - Go grammar
-- `tree-sitter-javascript` 0.25.0 - JavaScript grammar
-- `tree-sitter-python` 0.25.0 - Python grammar
-- `tree-sitter-typescript` 0.23.2 - TypeScript/TSX grammar
-- `zod` ^4.3.6 - Schema validation
-
-**Inferred:** Minimal dependency footprint reduces:
-- Installation time
-- Security surface area
-- Version conflict risk
-- Bundle size
-
-**Detected:** No framework dependencies (Express, FastAPI, React in analyzer/CLI) — these are detection targets, not runtime dependencies.
-
-### Build Dependencies
-
-**Detected:** Shared build tooling across packages (from root `package.json`):
-```json
-{
-  "devDependencies": {
-    "turbo": "^2.3.0",
-    "typescript": "^5.7.0",
-    "prettier": "^3.4.0",
-    "eslint": "^9.0.0"
-  }
-}
-```
-
-**Detected:** Package-specific build tools (from exploration):
-- CLI: tsup (fast TypeScript bundler)
-- Analyzer: tsc (TypeScript compiler only)
-- Generator: tsc
-- Website: next build
-
-**Inferred:** CLI uses tsup for optimized bundling while analyzer uses plain tsc for library compilation with type definitions.
+**User confirmed:** Acceptable for CLI tool with single-user local operation.
 
 ## Design Decisions
 
-### Decision: Separate analyzer as independent package
+### Decision 1: Monorepo with Turborepo
 
-**Context:** Analyzer could have been internal to CLI package.
+**Context:** Need to share types between analyzer and CLI, coordinate releases.
 
-**Rationale:**
-- **Detected:** Analyzer published separately to npm as `anatomia-analyzer` (from package.json files)
-- **Inferred:** Enables third-party tools to use analysis engine without CLI overhead
-- **Inferred:** Allows independent versioning — analyzer updates don't require CLI updates
-- **Inferred:** Clearer testing boundaries — analyzer tests run in isolation
+**Decision:** Use Turborepo monorepo with pnpm workspaces.
 
-**Trade-offs:**
-- **Gain:** Reusability, modularity, independent releases
-- **Cost:** Monorepo coordination overhead, two packages to maintain
-- **Unexamined:** Is the analyzer currently used by any external tools? If not, was separate package premature?
+**Detected:** `pnpm-workspace.yaml` defines workspace, `turbo.json` orchestrates builds.
 
-### Decision: Tree-sitter for AST parsing instead of language-specific parsers
+**Rationale (Inferred):** Enables:
+- Shared TypeScript config (`tsconfig.base.json`)
+- Type-safe cross-package imports
+- Single `pnpm install` for all packages
+- Parallel builds with caching
 
-**Context:** Could use Python's `ast` module, TypeScript's compiler API, etc.
+**Alternative considered (Unexamined):** Lerna or Nx not mentioned. Turborepo likely chosen for speed and simplicity.
 
-**Rationale:**
-- **Detected:** Single unified API for 5 languages (from `packages/analyzer/src/parsers/treeSitter.ts`)
-- **Detected:** Query-based extraction pattern consistent across languages
-- **Inferred:** Adding new languages requires only grammar package, not new parser integration
-- **Inferred:** Native performance via tree-sitter's C implementation
+**Evidence:** GitHub Actions CI runs `pnpm build` once, Turbo handles dependency ordering (from `.github/workflows/test.yml`).
 
-**Trade-offs:**
-- **Gain:** Unified API, multi-language support, performance
-- **Cost:** Native module complexity (CommonJS require in ESM codebase), less mature than language-native parsers
-- **Unexamined:** Do query results match quality of language-specific parsers for edge cases?
+### Decision 2: Tree-sitter for AST Parsing
 
-**Detected:** Performance optimization via singleton pattern (from `packages/analyzer/src/parsers/treeSitter.ts` lines 48-50):
+**Context:** Need to parse TypeScript, Python, Go, Rust, Ruby, PHP code for pattern detection.
+
+**Decision:** Use web-tree-sitter instead of language-specific parsers.
+
+**Detected:** `web-tree-sitter@0.25.10` in analyzer dependencies.
+
+**Rationale (from technical architecture doc):**
+> "tree-sitter - AST parsing (Python, TS, Go, Rust)"
+> "Fast development, npm ecosystem (tree-sitter bindings, file ops)"
+
+**Trade-off:** Single parser for all languages vs language-specific parsers:
+- ✓ Consistent API across languages
+- ✓ Fast incremental parsing
+- ✓ Battle-tested (used by GitHub, Atom)
+- ✗ WASM binary (requires initialization, manual memory management)
+- ✗ Query syntax learning curve
+
+**User confirmed:** "Tree-sitter WASM parsing and memory management (requires explicit init and tree.delete())" is a known pain point (from Q&A).
+
+Example pain point (Unexamined): Need to call `tree.delete()` manually to avoid memory leaks in long-running processes.
+
+### Decision 3: Zod for Runtime Validation
+
+**Context:** TypeScript provides compile-time types, but analyzer outputs need runtime validation.
+
+**Decision:** Use Zod schemas with type inference.
+
+**Detected:** All analyzer types defined with Zod schemas in `packages/analyzer/src/types/index.ts`.
+
+Example from exploration findings:
 ```typescript
-/**
- * Pattern: Singleton with getInstance() - ensures one global instance
- *
- * Performance: Saves 100-200ms over 20 files (5-10ms × 20 files avoided)
- */
+export const ConfidenceScoreSchema = z.number().min(0.0).max(1.0);
+export type ConfidenceScore = z.infer<typeof ConfidenceScoreSchema>;
 ```
 
-### Decision: Graceful degradation instead of strict failure
+**Rationale (Inferred):**
+- Single source of truth (schema = runtime validator + TypeScript type)
+- Catch bugs at package boundary (CLI consuming analyzer)
+- Self-documenting (schema shows constraints)
 
-**Context:** Analyzer errors could crash the CLI.
+**Alternative considered (Unexamined):** io-ts, Yup, AJV not mentioned. Zod likely chosen for TypeScript-first API.
 
-**Rationale:**
-- **Detected:** Empty scaffolds generated if analyzer fails (from exploration)
-- **Detected:** Optional strictMode throws errors instead (from `packages/analyzer/src/index.ts` line 271)
-- **Inferred:** User gets usable .ana/ structure even on analysis failure
-- **Inferred:** Better to have empty scaffolds users can fill than block initialization
+### Decision 4: Graceful Degradation with Error Collector
 
-**Trade-offs:**
-- **Gain:** Availability, user experience, works in edge cases
-- **Cost:** Silent failures may confuse users, harder to debug analyzer issues
-- **Mitigation:** Verbose mode and strict mode available for debugging
+**Context:** Analysis should continue even if some files fail to parse.
 
-### Decision: Turborepo for monorepo orchestration
+**Decision:** DetectionCollector class accumulates errors without halting execution.
 
-**Context:** Could use Nx, Lerna, or manual scripts.
+**Detected:** `packages/analyzer/src/errors/DetectionCollector.ts` (lines 9-60):
+```typescript
+export class DetectionCollector {
+  private errors: DetectionError[] = [];
+  private warnings: DetectionError[] = [];
+  private info: DetectionError[] = [];
 
-**Rationale:**
-- **Detected:** Turborepo configured with task pipelines (from `turbo.json`)
-- **Detected:** Dependency-aware builds via `^build` notation
-- **Detected:** Aggressive caching for build/test/lint tasks
-- **Inferred:** Minimal configuration compared to Nx
-- **Inferred:** Fast incremental builds for local development
+  /**
+   * Add error (blocks functionality)
+   */
+  addError(error: DetectionEngineError | DetectionError): void {
+    const detectionError =
+      error instanceof DetectionEngineError ? error.toDetectionError() : error;
+    this.errors.push(detectionError);
+  }
 
-**Trade-offs:**
-- **Gain:** Fast builds, simple config, good DX
-- **Cost:** Less flexible than Nx, fewer features (no affected commands visible in config)
-- **Unexamined:** Does caching work reliably across CI and local? Any cache invalidation issues observed?
+  /**
+   * Add warning (concerning but continues)
+   */
+  addWarning(error: DetectionEngineError | DetectionError): void {
+    const detectionError =
+      error instanceof DetectionEngineError ? error.toDetectionError() : error;
+    this.warnings.push(detectionError);
+  }
+```
 
-### Decision: pnpm over npm/yarn
+**Rationale (Inferred):**
+- Don't fail entire analysis if one file is malformed
+- Distinguish severity (error vs warning vs info)
+- Return partial results with error context
 
-**Context:** Three major package managers available.
+**Trade-off:** Silent failures possible if errors not checked. Mitigated by severity tracking and explicit error inspection.
 
-**Rationale:**
-- **Detected:** Strict pnpm requirement (from `package.json` line 23):
+**User confirmed:** "Graceful degradation can make failures silent" is a known debugging pain point (from Q&A).
+
+### Decision 5: ESM-Only with .js Extensions
+
+**Context:** Modern Node.js supports ESM natively.
+
+**Decision:** Use `type: "module"` in all package.json files, `.js` extensions in imports.
+
+**Detected:** All packages have `"type": "module"` (from exploration).
+
+Example from exploration findings:
+```typescript
+import { validateStructure, ... } from '../utils/validators.js';
+import { VALID_SETUP_TIERS, META_VERSION } from '../constants.js';
+```
+
+**Rationale (Inferred):**
+- Future-proof (ESM is JavaScript standard)
+- Top-level await support
+- Better tree-shaking
+
+**Trade-off:** `.js` extensions in TypeScript imports look wrong but are required:
+- TypeScript compiles `.ts` → `.js`
+- ESM requires file extensions in imports
+- Must import `.js` even though source is `.ts`
+
+**Alternative considered (Unexamined):** CommonJS would avoid `.js` extension issue but is legacy.
+
+### Decision 6: Strict TypeScript Configuration
+
+**Context:** Need type safety across packages.
+
+**Decision:** Enable all strict checks + extra safety flags.
+
+**Detected:** From `tsconfig.base.json` (via exploration):
 ```json
-{
-  "packageManager": "pnpm@9.0.0"
-}
+"strict": true,
+"noUncheckedIndexedAccess": true,
+"noImplicitOverride": true,
+"noPropertyAccessFromIndexSignature": true,
+"noImplicitReturns": true,
+"noFallthroughCasesInSwitch": true,
+"exactOptionalPropertyTypes": true
 ```
-- **Detected:** pnpm-workspace.yaml defines workspace structure
-- **Inferred:** pnpm's hard linking saves disk space in monorepo
-- **Inferred:** Stricter dependency resolution prevents phantom dependencies
 
-**Trade-offs:**
-- **Gain:** Faster installs, less disk usage, stricter correctness
-- **Cost:** Contributors must install pnpm, less familiar than npm
-- **Unexamined:** Has strict resolution caused any compatibility issues with dependencies?
+**Rationale (Inferred):**
+- Catch bugs at compile time
+- Force explicit error handling
+- Prevent index access bugs (`array[i]` could be undefined)
 
-### Decision: ESM-only module system
+**Trade-off:** More verbose code (`array[i]!` or optional chaining required) but fewer runtime errors.
 
-**Context:** Could support CommonJS or dual exports.
+**Evidence:** Project maturity — high test coverage (80-85% thresholds), multi-OS CI, suggests strictness is valued over speed.
 
-**Rationale:**
-- **Detected:** All packages declare `"type": "module"` (from package.json files)
-- **Detected:** Imports use .js extensions (from exploration)
-- **Detected:** Node built-ins use node: prefix (from exploration)
-- **Inferred:** Modern Node.js best practices
-- **Inferred:** Aligns with TypeScript 5.x ESM improvements
+### Decision 7: Multi-Phase Validation in Setup
 
-**Trade-offs:**
-- **Gain:** Cleaner imports, future-proof, standard alignment
-- **Cost:** Node.js 20+ required, no CommonJS fallback for older tools
-- **Mitigation:** Engines field enforces `node >= 20.0.0`
+**Context:** Setup validation needs to check structure, content, cross-references, quality.
 
-**Detected:** Mixed ESM/CommonJS for tree-sitter native modules (from `packages/analyzer/src/parsers/treeSitter.ts`):
+**Decision:** 4 separate validation phases run sequentially.
+
+**Detected:** From `packages/cli/src/commands/setup.ts` (lines 95-100):
 ```typescript
-import { createRequire } from 'node:module';
-const require = createRequire(import.meta.url);
+// Phase 1: Structural validation
+console.log(chalk.gray('Checking file structure...'));
+const structuralErrors = await validateStructure(anaPath);
+
+// Phase 2: Content validation
+console.log(chalk.gray('Checking required sections...'));
 ```
 
-**Inferred:** Pragmatic exception for native modules that only export CommonJS.
+**Rationale (Inferred):**
+- Fail fast (structural errors block content validation)
+- Clear user feedback (4 progress messages)
+- Separation of concerns (each phase is independent function)
 
-### Decision: Zod for runtime validation
+**Unexamined:** Why 4 phases specifically? Could be 2 (structure + semantics) or 6 (more granular). Likely based on feedback needs.
 
-**Context:** Could use TypeScript types only, or alternatives like Yup, io-ts.
+### Decision 8: Coverage Thresholds by Package
 
-**Rationale:**
-- **Detected:** All analyzer types have Zod schemas (from `packages/analyzer/src/types/index.ts`)
-- **Detected:** Runtime validation via `.parse()` throws ZodError
-- **Inferred:** Validates analyzer output against expected structure
-- **Inferred:** TypeScript types derived from Zod schemas (single source of truth)
+**Context:** Analyzer is core logic, CLI is user-facing.
 
-**Trade-offs:**
-- **Gain:** Runtime safety, schema as documentation, type derivation
-- **Cost:** Bundle size increase, runtime validation overhead
-- **Unexamined:** Is validation overhead measurable in analyzer performance? Are errors surfaced clearly to users?
+**Decision:** Higher coverage for analyzer (85%) than CLI (80%).
 
-### Decision: Maximum TypeScript strictness
+**Detected:** From exploration findings (vitest.config.ts in each package):
+- CLI: 80% lines/functions
+- Analyzer: 85% lines/functions
 
-**Context:** Could use default strict mode or looser settings.
+**Rationale (Inferred):**
+- Analyzer errors affect all consumers (bugs propagate)
+- CLI errors are visible to users (easier to catch in manual testing)
+- 5% difference signals priority without being dogmatic
 
-**Rationale:**
-- **Detected:** Strict mode plus 6 additional checks (from exploration):
-  - `noUncheckedIndexedAccess`
-  - `noImplicitOverride`
-  - `noPropertyAccessFromIndexSignature`
-  - `noImplicitReturns`
-  - `noFallthroughCasesInSwitch`
-  - `exactOptionalPropertyTypes`
-- **Inferred:** Catches more bugs at compile time
-- **Inferred:** Forces explicit handling of undefined/null cases
-
-**Trade-offs:**
-- **Gain:** Fewer runtime errors, safer refactoring
-- **Cost:** More verbose code (type guards, assertions), slower development
-- **Unexamined:** Has strictness caught significant bugs, or just added ceremony?
-
-### Decision: Console-based logging over structured logging
-
-**Context:** Could use Winston, Pino, or other structured loggers.
-
-**Rationale:**
-- **Detected:** 137 console.log/error/warn calls across CLI (from exploration)
-- **Detected:** Chalk for colors, Ora for spinners
-- **Inferred:** CLI is interactive tool, not long-running service
-- **Inferred:** Human-readable output more valuable than machine-parseable logs
-
-**Trade-offs:**
-- **Gain:** Simple implementation, great UX with colors/spinners, no dependencies
-- **Cost:** No log levels, no structured data, harder to debug in CI
-- **Unexamined:** Would structured logs help debug CI failures?
-
-### Decision: File sampling with 20-file default limit
-
-**Context:** Could parse all files or use different sampling strategy.
-
-**Rationale:**
-- **Detected:** maxFiles option with default 20 (from `packages/analyzer/src/index.ts` line 150)
-- **Detected:** File sampling implementation (from exploration)
-- **Inferred:** Balances accuracy vs speed for large codebases
-- **Inferred:** 20 files sufficient to detect patterns in most projects
-
-**Trade-offs:**
-- **Gain:** Fast analysis on large projects, predictable performance
-- **Cost:** May miss patterns in unsampled files
-- **Unexamined:** Is 20 the right default? Should sampling be stratified (e.g., ensure test files included)?
+**Trade-off:** Arbitrary thresholds vs measured risk. These are reasonable but not scientifically derived.
 
 ## Trade-Offs
 
-### Optimized for: Development speed and user experience
+### What We Optimized For
+
+**1. Correctness over speed**
+
+**Detected:** Strict TypeScript, Zod validation, high test coverage, 4-phase validation.
+
+**User confirmed:** "Methodical and quality-focused" team approach (from Q&A).
 
 **Evidence:**
-- Graceful degradation prioritizes availability over correctness
-- Console-based logging optimizes for human readability
-- Minimal dependencies reduce installation friction
-- Empty scaffolds let users start immediately
+- All strict TypeScript checks enabled
+- Runtime validation with Zod (performance cost)
+- Multi-phase validation (slower but clearer errors)
 
-**Sacrificed:**
-- Complete analysis coverage (file sampling limit)
-- Structured observability (no logging library)
-- Backward compatibility (Node 20+ only, ESM only)
+**2. Modularity over simplicity**
 
-**Why acceptable:**
-- Target users are developers with modern tooling
-- CLI use case is interactive, not production service
-- Fast iteration more valuable than comprehensive detection
+**Detected:** 3-package monorepo instead of single package.
 
-### Optimized for: Modularity and reusability
+**Trade-off:** More complex setup (Turborepo, workspace configuration) but cleaner boundaries.
 
-**Evidence:**
-- Analyzer as separate package enables third-party use
-- Monorepo structure allows independent versioning
-- Barrel exports provide clean public APIs
-- Tree-sitter abstraction supports multi-language
+**Rationale (Inferred):** Enables analyzer reuse by other tools, independent versioning.
 
-**Sacrificed:**
-- Simpler single-package architecture
-- Faster initial development (monorepo coordination)
-- Some duplicate dependencies (chalk in both packages)
+**3. Type safety over flexibility**
 
-**Why acceptable:**
-- Enables future ecosystem growth around analyzer
-- Clearer boundaries improve testability
-- Independent releases allow patch updates without full rebuild
+**Detected:** Explicit types everywhere, no `any`, Zod schemas for runtime.
 
-### Optimized for: Type safety and correctness
+**Example:** `noUncheckedIndexedAccess` forces all array access to account for undefined.
 
-**Evidence:**
-- Maximum TypeScript strictness catches more bugs
-- Zod schemas validate runtime data
-- ESM-only reduces module system complexity
-- Parser singleton prevents initialization bugs
+**Trade-off:** More verbose code but fewer runtime errors.
 
-**Sacrificed:**
-- Development velocity (more type annotations needed)
-- Bundle size (Zod validation runtime)
-- Backward compatibility (older Node.js versions)
+**4. Developer experience over user onboarding**
 
-**Why acceptable:**
-- Tool generates code context — errors would mislead AI
-- Better to fail early than generate incorrect scaffolds
-- Target users have modern Node.js
+**Detected:** CLI uses commander, chalk, ora for nice UX. Analyzer uses tree-sitter (requires WASM setup).
 
-### Unexamined: Performance vs accuracy
+**Trade-off:** Users need Node 20+, tree-sitter WASM binaries. But developers get fast, multi-language parsing.
 
-**Question:** Is 20-file sampling sufficient for pattern detection?
+**User confirmed:** "Tree-sitter WASM parsing and memory management" is a pain point (from Q&A).
 
-**Evidence:**
-- Default maxFiles: 20
-- ParserManager saves ~100-200ms
-- No benchmarks visible for detection accuracy vs sample size
+### What We Sacrificed
 
-**Why matters:** Undersampling could miss critical patterns, but oversampling degrades UX.
+**1. Simplicity**
 
-**Next steps:** Add telemetry to track detection confidence vs sample size in real projects.
+**Cost:** Monorepo adds complexity (Turborepo config, workspace setup, task dependencies).
 
-### Unexamined: Monorepo coordination overhead
+**Why acceptable:** Team is small (solo/2 people) and technically skilled. Can handle the complexity for long-term benefits.
 
-**Question:** Do separate packages provide enough value vs coordination cost?
+**User confirmed:** "Solo/small teams using AI-assisted development workflows, quality-focused TypeScript developers" (from Q&A).
 
-**Evidence:**
-- Analyzer published separately to npm
-- No visible external consumers yet
-- CLI always depends on latest analyzer version
+**2. Performance (in some areas)**
 
-**Why matters:** If analyzer not reused externally, separate package adds complexity without benefit.
+**Cost:** Runtime validation with Zod, 4-phase validation, strict TypeScript compilation.
 
-**Next steps:** Track external analyzer usage, consider merging packages if unused after 6 months.
+**Why acceptable:** CLI tool runs locally, not latency-sensitive. Correctness more important than milliseconds.
 
-### Unexamined: Cache invalidation reliability
+**Unexamined:** No benchmarks for validation overhead. Likely negligible for typical codebases.
 
-**Question:** Does Turborepo caching work correctly across environments?
+**3. Backward compatibility**
 
-**Evidence:**
-- Global dependencies tracked (tsconfig, lockfile)
-- Output caching enabled for build/test/lint tasks
-- No documented cache issues
+**Cost:** ESM-only, Node 20+ requirement, strict TypeScript.
 
-**Why matters:** Bad caching breaks CI or causes stale local builds.
+**Why acceptable:** Modern greenfield project. Target users are early adopters with modern toolchains.
 
-**Next steps:** Add cache debugging to CI, monitor for "clean fixes it" bug reports.
+**Detected:** `"engines": { "node": ">=20.0.0" }` in package.json (from exploration).
+
+**4. Immediate feature completeness**
+
+**Cost:** Generator package in alpha, federation features planned but not implemented.
+
+**Why acceptable:** Phased MVP approach. Ship analyzer + CLI first, add federation later.
+
+**User confirmed:** "Phased MVP approach, analyzer/CLI separation by design" (from Q&A).
+
+**Detected:** Implementation status comments in analyzer:
+```typescript
+/**
+ * Implementation status:
+ * - CP0: Types and infrastructure ✓
+ * - CP1: Dependency parsers (planned)
+ * - CP2: Framework detection (planned)
+ * - CP3: Edge case handling (planned)
+ * - CP4: CLI integration (planned)
+ */
+```
+
+### Technical Debt
+
+**1. WASM memory management**
+
+**Debt:** Tree-sitter requires manual `tree.delete()` calls, explicit parser initialization.
+
+**User confirmed:** "Tree-sitter WASM parsing and memory management (requires explicit init and tree.delete())" (from Q&A).
+
+**Mitigation:** ParserManager class centralizes lifecycle management.
+
+**Unexamined:** No automated cleanup or finalizers. Risk of memory leaks in long-running processes.
+
+**2. Silent graceful degradation**
+
+**Debt:** Errors collected but might not be surfaced to users.
+
+**User confirmed:** "Graceful degradation can make failures silent" (from Q&A).
+
+**Mitigation:** DetectionCollector tracks severity, CLI checks error counts.
+
+**Unexamined:** No metrics on how often partial results are returned with hidden errors.
+
+**3. 4-phase validation complexity**
+
+**Debt:** Setup validation has 4 sequential phases (structure, content, cross-refs, quality).
+
+**User confirmed:** "Multi-phase validation complexity" is a pain point (from Q&A).
+
+**Trade-off:** Clear error messages vs execution complexity. Chosen clarity over simplicity.
+
+**Unexamined:** Could phases be parallelized? Likely not — content validation requires structure to be valid first.
+
+**4. Monorepo detection fallback strategies**
+
+**Debt:** 6 fallback strategies for monorepo detection (from exploration).
+
+**User confirmed:** "Monorepo detection fallbacks" is a pain point (from Q&A).
+
+**Rationale (Inferred):** Different monorepo tools (Turborepo, Nx, Lerna, pnpm workspaces, Yarn workspaces) require different detection logic.
+
+**Unexamined:** Which fallback is most common? Are all 6 necessary, or could some be dropped?
+
+### Future Trade-Off Decisions
+
+**1. Federation (MVP2+)**
+
+**Upcoming decision:** File-based vs network-based node communication.
+
+**Technical architecture specifies:** File-based (write to `.ana/federation/inbox/*.json`).
+
+**Trade-off:** Zero infrastructure but slower, async, human-in-loop vs real-time but requires networking.
+
+**2. Cloud sync (MVP3+)**
+
+**Upcoming decision:** Local-first vs cloud-enabled by default.
+
+**Technical architecture specifies:** Opt-in Supabase sync.
+
+**Trade-off:** Privacy/offline vs collaboration features.
+
+**3. Plugin system (Post-MVP3)**
+
+**Upcoming decision:** Extensibility vs security.
+
+**Unexamined:** How to sandbox plugins? Load order? Version compatibility?
 
 ---
 
-*Last updated: 2026-03-22*
+*Last updated: 2026-03-23*

@@ -2,605 +2,461 @@
 
 ## Logging
 
-**Detected:** Console-based output with chalk colors — no structured logging library
+**Detected:** CLI uses chalk for colored console output (from `packages/cli/package.json`) — Confidence: 0.95
 
-The CLI uses direct `console.log()`, `console.error()`, and `console.warn()` calls for all output (from packages/cli/src/commands/):
-- 136 console statements across 5 command files (check.ts: 24, mode.ts: 23, setup.ts: 35, init.ts: 47, analyze.ts: 7)
-- chalk ^5.3.0 for colored output (packages/cli/package.json line 52)
-- ora ^8.0.0 for terminal spinners (packages/cli/package.json line 55)
+No structured logging library detected. The CLI uses direct console output with chalk for formatting.
 
-### Output Conventions
-
-**Detected:** Color-coded severity system (from packages/cli/src/commands/):
+Example from `packages/cli/src/commands/setup.ts` (lines 62-70):
 
 ```typescript
-// Success messages (green checkmarks)
-console.log(chalk.green(`${result.file}: 5/5 checks passed`));
+console.log(chalk.blue('\n🔍 Validating setup...\n'));
 
-// Errors (red text)
-console.error(chalk.red('Error: .ana/context/ directory not found'));
-
-// Warnings (yellow text)
-console.log(chalk.yellow('  Setup will work but scaffolds will have no pre-populated data'));
-
-// Details/context (gray text)
-console.log(chalk.gray(`  Reason: ${error.message}`));
+// Check .ana/ exists
+if (!(await fileExists(anaPath))) {
+  console.error(chalk.red('Error: .ana/ directory not found'));
+  console.error(
+    chalk.gray('Run `ana init` first to create .ana/ structure.')
+  );
+  process.exit(1);
+}
 ```
 
-Example from `packages/cli/src/commands/check.ts` (lines 271-285):
+**Color conventions:**
+- `chalk.blue()` → Informational headers
+- `chalk.gray()` → Progress/status messages
+- `chalk.red()` → Errors and failures
+- `chalk.yellow()` → Warnings
+- `chalk.green()` → Success messages
 
-```typescript
-const lineIcon = result.line_count.pass ? chalk.green('✓') : chalk.red('✗');
-console.log(`${lineIcon} Line count: ${result.line_count.count} lines`);
+**Unexamined:** No log levels, no file-based logging. Appropriate for CLI tool but lacks verbose/quiet modes.
 
-const headerIcon = result.headers.pass ? chalk.green('✓') : chalk.red('✗');
-console.log(`${headerIcon} Required headers: ${result.headers.found.length}/${result.headers.required.length}`);
-```
-
-### Spinner Pattern
-
-**Detected:** Ora spinners for long operations (from packages/cli/src/commands/init.ts):
-
-```typescript
-// Start operation
-const spinner = ora('Creating directory structure...').start();
-
-// Success outcome
-spinner.succeed('Directory structure created');
-
-// Warning (non-fatal)
-spinner.warn('Analyzer failed — continuing with empty scaffolds');
-```
-
-Spinner examples from init.ts (lines 323, 330, 407, 438, 485):
-- Analysis: "Analyzing codebase..." → succeed/warn
-- Generation: "Generating scaffolds..." → succeed with line count
-- File ops: "Copying static files..." → succeed with file count
-
-### No Structured Logging
-
-**Detected:** No logging library dependencies
-
-From `packages/cli/package.json` (lines 50-56) and `packages/analyzer/package.json` (lines 59-69):
-- No winston, pino, bunyan, or similar frameworks
-- No log levels beyond console methods
-- No log file persistence or rotation
-
-**Inferred:** Logging design prioritizes human-readable CLI output over machine-parseable logs, appropriate for developer-facing terminal tool.
-
-### Debug Mode
-
-**Detected:** Verbose option for analyzer (from AnalyzeOptions type):
-
-The `AnalyzeOptions` interface includes a `verbose?: boolean` field enabling diagnostic output during analysis.
+**Recommendation:** Add `--verbose` and `--quiet` flags for debug/error-only output.
 
 ## Error Tracing
 
-**Detected:** Custom error classes with structured data (from packages/analyzer/src/errors/DetectionError.ts)
-
-### Error Interface
+**Detected:** Custom error classes with structured fields (from `packages/analyzer/src/errors/DetectionError.ts`)
 
 Example from `packages/analyzer/src/errors/DetectionError.ts` (lines 13-40):
 
 ```typescript
 export interface DetectionError {
-  /** Machine-readable error code */
   code: string;
-  /** User-friendly message */
   message: string;
-  /** Severity level */
   severity: 'error' | 'warning' | 'info';
-  /** File that caused error (optional) */
   file?: string | undefined;
-  /** Line number in file (optional) */
   line?: number | undefined;
-  /** How to resolve (optional) */
   suggestion?: string | undefined;
-  /** Detection phase that failed (optional) */
   phase?: string | undefined;
-  /** Underlying error (optional) */
   cause?: Error | undefined;
-  /** When error occurred */
   timestamp: Date;
 }
 ```
 
-### DetectionEngineError Class
-
-Example from `packages/analyzer/src/errors/DetectionError.ts` (lines 45-80):
+**Detected:** Error collector pattern for graceful degradation (from `packages/analyzer/src/errors/DetectionCollector.ts`, lines 9-69):
 
 ```typescript
-export class DetectionEngineError extends Error {
-  code: string;
-  severity: 'error' | 'warning' | 'info';
-  file?: string | undefined;
-  line?: number | undefined;
-  suggestion?: string | undefined;
-  phase?: string | undefined;
-
-  constructor(
-    code: string,
-    message: string,
-    severity: 'error' | 'warning' | 'info' = 'error',
-    options?: {
-      file?: string;
-      line?: number;
-      suggestion?: string;
-      phase?: string;
-      cause?: Error;
-    }
-  ) {
-    super(message);
-    this.name = 'DetectionEngineError';
-    this.code = code;
-    this.severity = severity;
-    this.file = options?.file;
-    this.line = options?.line;
-    this.suggestion = options?.suggestion;
-    this.phase = options?.phase;
-    if (options?.cause) {
-      this.cause = options.cause;
-    }
-    // Maintain proper stack trace
-    Error.captureStackTrace(this, this.constructor);
-  }
-}
-```
-
-**Detected:** Stack trace capture using `Error.captureStackTrace(this, this.constructor)` from Node.js best practices (line 79)
-
-### Error Code Registry
-
-**Detected:** 18 error codes in ERROR_CODES constant (from packages/analyzer/src/errors/DetectionError.ts lines 106-133):
-
-```typescript
-export const ERROR_CODES = {
-  // File operations
-  FILE_NOT_FOUND: 'FILE_NOT_FOUND',
-  PERMISSION_DENIED: 'PERMISSION_DENIED',
-  IS_DIRECTORY: 'IS_DIRECTORY',
-  ENCODING_ERROR: 'ENCODING_ERROR',
-  // Parsing
-  INVALID_JSON: 'INVALID_JSON',
-  INVALID_YAML: 'INVALID_YAML',
-  INVALID_TOML: 'INVALID_TOML',
-  PARSE_ERROR: 'PARSE_ERROR',
-  // Detection
-  NO_SOURCE_FILES: 'NO_SOURCE_FILES',
-  NO_DEPENDENCIES: 'NO_DEPENDENCIES',
-  FRAMEWORK_DETECTION_FAILED: 'FRAMEWORK_DETECTION_FAILED',
-  MISSING_MANIFEST: 'MISSING_MANIFEST',
-  CIRCULAR_DEPENDENCY: 'CIRCULAR_DEPENDENCY',
-  IMPORT_SCAN_FAILED: 'IMPORT_SCAN_FAILED',
-  // System
-  TIMEOUT: 'TIMEOUT',
-  UNKNOWN_ERROR: 'UNKNOWN_ERROR',
-} as const;
-```
-
-### Error Collector Pattern
-
-**Detected:** Non-fatal error aggregation (from packages/analyzer/src/errors/DetectionCollector.ts lines 1-47):
-
-```typescript
-/**
- * Collects errors during detection process
- * Enables graceful degradation with error aggregation
- */
 export class DetectionCollector {
   private errors: DetectionError[] = [];
   private warnings: DetectionError[] = [];
   private info: DetectionError[] = [];
 
   addError(error: DetectionEngineError | DetectionError): void {
-    const detectionError =
-      error instanceof DetectionEngineError ? error.toDetectionError() : error;
-    this.errors.push(detectionError);
+    // Adds to errors array (blocks functionality)
   }
 
   addWarning(error: DetectionEngineError | DetectionError): void {
-    const detectionError =
-      error instanceof DetectionEngineError ? error.toDetectionError() : error;
-    this.warnings.push(detectionError);
+    // Adds to warnings array (continues execution)
   }
 
   hasCriticalErrors(): boolean {
     return this.errors.length > 0;
   }
-
-  getCounts() {
-    return {
-      errors: this.errors.length,
-      warnings: this.warnings.length,
-      info: this.info.length,
-      total: this.getAllErrors().length,
-    };
-  }
 }
 ```
 
-**Inferred:** Collector pattern allows analysis to proceed when non-critical components fail, accumulating diagnostics for final report instead of failing fast.
+**Pattern:** Three-tier severity system (error, warning, info) allows partial success.
 
-### CLI Error Handling
+**User confirmed:** Silent graceful degradation can make failures hard to diagnose.
 
-**Detected:** Graceful degradation in init command (from packages/cli/src/commands/init.ts lines 329-339):
+**No error tracking service detected** — No Sentry, Bugsnag, or Rollbar dependencies.
+
+## Common Failure Modes
+
+**User confirmed:** These four areas cause the most debugging time.
+
+### Failure: WASM Memory Management
+
+**Symptom:** Memory leaks or crashes when parsing many files
+
+**Cause:** Tree-sitter WASM parsers allocate memory that JavaScript GC cannot free. Each `parser.parse()` creates a tree requiring manual `tree.delete()`.
+
+**User confirmed:** WASM parsing and memory management requires explicit initialization and cleanup.
+
+**Detected:** Critical cleanup pattern (from `packages/analyzer/src/parsers/treeSitter.ts`, lines 967-971):
 
 ```typescript
+try {
+  // Extract elements using queries
+  let functions = extractFunctions(tree, content, language);
+  let classes = extractClasses(tree, content, language);
+  // ... more extraction ...
+  return result;
+} finally {
+  // CRITICAL: Free WASM memory
+  tree.delete();
+}
+```
+
+**Diagnosis:**
+1. Check if `tree.delete()` is called in finally block after parsing
+2. Run with `node --expose-gc` to confirm WASM leak vs JS leak
+3. Check for early returns that skip finally block
+4. In tests, verify ParserManager.resetFull() between suites
+
+**Fix:**
+- Always call `tree.delete()` in finally block
+- Never store tree objects long-term — extract and delete immediately
+- Use try-finally for all parsing operations
+
+**Prevention:**
+- Code comment at every parse call: "// CRITICAL: Free WASM memory"
+- Memory profiling in CI for large file test suites
+
+**Detected:** Parser initialization requirement (from `packages/analyzer/src/parsers/treeSitter.ts`, lines 141-180):
+
+```typescript
+async initialize(): Promise<void> {
+  if (this.initialized) return;
+
+  // Initialize WASM runtime
+  await TSParser.init({ locateFile(scriptName: string) { ... } });
+
+  // Pre-load all grammars
+  for (const [lang, [pkg, wasm]] of Object.entries(grammarPaths)) {
+    const wasmPath = resolveWasmPath(pkg, wasm);
+    const language = await TSLanguage.load(wasmPath);
+    this.languages.set(lang, language);
+  }
+
+  this.initialized = true;
+}
+```
+
+**CRITICAL:** Must call `ParserManager.initialize()` once before any parsing, or all parse operations fail.
+
+### Failure: Multi-Phase Validation Complexity
+
+**Symptom:** Validation fails but error message doesn't clearly indicate which phase or what to fix
+
+**Cause:** Setup runs 4 sequential phases (structural, content, cross-reference, quality). Errors aggregated without clear phase context.
+
+**User confirmed:** Multi-phase validation complexity makes failures hard to trace.
+
+**Detected:** Four validation phases (from `packages/cli/src/commands/setup.ts`, lines 95-112):
+
+```typescript
+// Phase 1: Structural validation
+console.log(chalk.gray('Checking file structure...'));
+const structuralErrors = await validateStructure(anaPath);
+
+// Phase 2: Content validation
+console.log(chalk.gray('Checking required sections...'));
+const contentErrors = await validateContent(anaPath);
+
+// Phase 3: Cross-reference validation
+console.log(chalk.gray('Cross-referencing with analyzer data...'));
+const crossRefErrors = await validateCrossReferences(anaPath, snapshot);
+
+// Phase 4: Quality checks
+console.log(chalk.gray('Running quality checks...'));
+const warnings = await validateQuality(anaPath);
+
+const allErrors = [...structuralErrors, ...contentErrors, ...crossRefErrors];
+```
+
+**Diagnosis:**
+1. Check error.rule field to determine which phase failed
+2. If cross-reference fails, compare snapshot.json with context files
+3. If quality fails, check file size and section count
+4. Run `ana setup check [filename]` to validate individual files
+
+**Fix:**
+- Run `ana setup check` for isolated file validation
+- Re-run `ana init` if structural validation fails (missing files)
+- Check .ana/.meta.json setupStatus field
+
+### Failure: Silent Graceful Degradation
+
+**Symptom:** Analysis completes with partial results without clearly indicating what was skipped
+
+**Cause:** DetectionCollector accumulates errors/warnings without halting. Detector failures logged as warnings, analysis continues with incomplete data.
+
+**User confirmed:** Silent graceful degradation can make failures hard to diagnose.
+
+**Detected:** Graceful failure in monorepo detection (from `packages/analyzer/src/detectors/monorepo.ts`, lines 62-77):
+
+```typescript
+try {
+  const content = await readFile(pnpmPath);
+  const config = yaml.load(content) as { packages?: string[] };
+  // ... process config ...
+  return { isMonorepo: true, tool: 'pnpm', workspacePatterns: patterns };
 } catch (error) {
-  spinner.warn('Analyzer failed — continuing with empty scaffolds');
-  console.log(chalk.yellow('  Setup will work but scaffolds will have no pre-populated data'));
+  collector.addWarning(
+    new DetectionEngineError(
+      ERROR_CODES.INVALID_YAML,
+      'Failed to parse pnpm-workspace.yaml',
+      'warning',
+      { suggestion: 'Check YAML syntax with yamllint' }
+    )
+  );
+  // Continue to next detector
+}
+```
 
-  if (error instanceof Error) {
-    console.log(chalk.gray(`  Reason: ${error.message}`));
+**Diagnosis:**
+1. Check snapshot.json for empty/null fields (e.g., `framework: null`)
+2. Enable verbose logging to see DetectionCollector warnings
+3. Check DetectionCollector.getCounts() for warning count
+
+**Fix:**
+- Add `strictMode` option to fail fast on errors (already implemented in analyzer)
+- Review warnings before accepting partial results
+- Re-run after fixing environment issues (missing files, permissions)
+
+### Failure: Monorepo Detection Fallbacks
+
+**Symptom:** Monorepo not detected, wrong tool detected, or incomplete package discovery
+
+**Cause:** 6-layer fallback strategy (pnpm → turbo → nx → lerna → npm workspaces → recursive scan). Earlier detector failures can cascade to wrong results.
+
+**User confirmed:** Monorepo detection with 6 fallback strategies can fail in subtle ways.
+
+**Detected:** Six-layer detection priority (from `packages/analyzer/src/detectors/monorepo.ts`, lines 24-260):
+
+1. pnpm-workspace.yaml (pnpm)
+2. turbo.json (Turborepo)
+3. nx.json (Nx)
+4. lerna.json (Lerna)
+5. package.json workspaces (npm/yarn)
+6. Recursive package.json scan (fallback)
+
+**Detected:** Recursive scan with depth limit (from `packages/analyzer/src/detectors/monorepo.ts`, lines 262-276):
+
+```typescript
+async function discoverPackages(
+  rootPath: string,
+  collector: DetectionCollector,
+  depth: number = 0,
+  maxDepth: number = 4,
+  visited: Set<string> = new Set()
+): Promise<string[]> {
+  if (depth > maxDepth || visited.has(rootPath)) {
+    return [];
   }
-  console.log();
-
-  return null;
+  // ... scan directories, recurse into subdirectories ...
 }
 ```
 
-**Detected:** Analyzer failures don't crash the CLI. The init command creates empty scaffolds instead of aborting.
+**Diagnosis:**
+1. Check snapshot.json monorepo field for detected tool
+2. Verify config files exist and are valid (pnpm-workspace.yaml, turbo.json)
+3. Run `yamllint` or `jsonlint` on config files
+4. Check for permission errors preventing traversal
+5. Verify maxDepth (4 levels) is sufficient
 
-Pattern: Try/catch with spinner.warn() instead of spinner.fail(), allowing setup to complete with degraded functionality.
-
-### No Error Tracking Service
-
-**Detected:** No Sentry, Bugsnag, Rollbar, or similar service
-
-From dependency analysis:
-- No error tracking dependencies in packages/cli/package.json
-- No error tracking dependencies in packages/analyzer/package.json
-
-**Inferred:** As a CLI tool run locally by developers, remote error tracking may not be necessary. Errors are visible immediately in terminal output.
-
-## Failure Modes
-
-### TypeScript Compilation Failures
-
-**Symptom:** Build fails with type errors
-**Cause:** TypeScript strict mode with 6 additional strictness flags
-**Diagnosis:** Check compiler output for type error locations. Strict mode catches: noUncheckedIndexedAccess, noImplicitOverride, noPropertyAccessFromIndexSignature, noImplicitReturns, noFallthroughCasesInSwitch, exactOptionalPropertyTypes
-**Fix:** Address type errors — strict mode is intentional, don't disable checks
-**Prevention:** Run `pnpm build` before committing
-
-### Tree-sitter Parser Failures
-
-**Symptom:** Analysis produces empty results or missing pattern data
-**Cause:** Tree-sitter parsing fails silently on malformed code or unsupported syntax
-**Diagnosis:** Check if analyzer returns null/undefined for patterns (exploration results line 43-46). Enable verbose mode. Check file encoding (tree-sitter expects UTF-8)
-**Fix:** Parser failures trigger graceful degradation — empty scaffolds are created
-**Prevention:** Test on sample codebases with known good structure
-
-Example from `packages/cli/src/utils/validators.ts` (lines 43-46):
-
-```typescript
-// Scenario B guard: analyzer may return null/undefined when tree-sitter fails
-if (!analysis || !analysis.patterns) {
-  return 0;
-}
-```
-
-### Test Coverage Threshold Failures
-
-**Symptom:** CI fails on coverage check
-**Cause:** Code changes drop coverage below thresholds (80% lines, 75% branches, 80% functions, 80% statements)
-**Diagnosis:** Run `pnpm test:coverage` locally. Check coverage report in coverage/ directory (HTML format). Identify uncovered lines in v8 report
-**Fix:** Add test cases for uncovered code paths
-**Prevention:** Check coverage before pushing
-
-Thresholds from `packages/cli/vitest.config.ts` (lines 17-22):
-
-```typescript
-thresholds: {
-  lines: 80,
-  branches: 75,
-  functions: 80,
-  statements: 80,
-},
-```
-
-### CI Matrix Test Failures
-
-**Symptom:** Tests pass locally but fail on specific OS or Node version in CI
-**Cause:** Platform-specific file path handling, line ending differences, or Node.js API changes
-**Diagnosis:** Check GitHub Actions logs for failing OS/Node combination. Matrix tests: ubuntu/windows/macos × Node 20/22. fail-fast: false means all combinations run
-**Fix:** Test locally on matching OS/Node version or add platform-specific handling
-**Prevention:** Use node:path for cross-platform paths, configure git line endings
-
-From `.github/workflows/test.yml` (lines 14-18):
-
-```yaml
-strategy:
-  fail-fast: false  # CRITICAL: Run all combinations even if one fails
-  matrix:
-    os: [ubuntu-latest, windows-latest, macos-latest]
-    node-version: [20, 22]
-```
-
-### Validation Check Failures
-
-**Symptom:** `ana setup check [file]` reports blocking failures (BF1-BF6) or warnings (SW1-SW4)
-**Cause:** Context file doesn't meet quality standards
-**Diagnosis:** Run `ana setup check [filename] --json` for structured output
-
-From `packages/cli/src/utils/validators.ts` (lines 22-28):
-
-```typescript
-export interface ValidationError {
-  type: 'BLOCKING' | 'WARNING';
-  rule: string;
-  file: string;
-  message: string;
-}
-```
-
-Common failures:
-- Line count below minimum threshold
-- Required H2 headers missing
-- Scaffold markers not removed during setup
-- Citations reference non-existent files
-- Cross-reference mismatches (patterns.md vs analyzer snapshot)
-
-**Fix:** Address each validation error — blocking failures must be fixed
-**Prevention:** Run check command after writing context files
-
-### AST Cache Corruption
-
-**Symptom:** Analysis produces inconsistent results between runs
-**Cause:** Corrupted cache entries in .ana/.state/cache/
-**Diagnosis:** Check mtime-based invalidation logic. Cache mismatches if file.mtimeMs !== cached.mtimeMs
-**Fix:** Delete .ana/.state/cache/ directory to force re-parsing
-**Prevention:** Cache invalidation is automatic via mtime checks
-
-From `packages/analyzer/src/cache/astCache.ts` (lines 30-39):
-
-```typescript
-export interface ASTCacheEntry {
-  mtimeMs: number;                    // File modification timestamp (invalidation key)
-  functions: FunctionInfo[];          // Extracted functions
-  classes: ClassInfo[];               // Extracted classes
-  imports: ImportInfo[];              // Extracted imports
-  exports?: ExportInfo[];             // TypeScript/JavaScript only
-  decorators?: DecoratorInfo[];       // Python/TypeScript only
-  parseTime: number;                  // Parse duration (for metrics)
-  cachedAt: string;                   // ISO timestamp (debugging)
-}
-```
-
-### Monorepo Detection Issues
-
-**Symptom:** Analyzer treats monorepo root incorrectly
-**Cause:** MONOREPO_DETECTED error code triggered
-**Diagnosis:** Check if workspace root has package.json with workspaces field. Verify pnpm-workspace.yaml or lerna.json presence
-**Fix:** Run analysis from individual package directory, not monorepo root
-**Prevention:** Document monorepo usage in project README
+**Fix:**
+- Fix syntax errors in monorepo config files
+- Grant read permissions to all project directories
+- Increase maxDepth if packages nested deeper than 4 levels
 
 ## Debugging Workflow
 
 ### Local Development
 
-**Detected:** Development workflow from package.json scripts
-
-From `packages/cli/package.json` (lines 43-48):
-
-```json
-"scripts": {
-  "build": "tsup && cp -r templates dist/",
-  "dev": "tsup --watch",
-  "test": "vitest",
-  "lint": "eslint src/",
-  "lint:fix": "eslint src/ --fix"
-}
-```
-
-Steps:
-1. **Build:** `pnpm build` — Compiles TypeScript to dist/
-2. **Watch mode:** `pnpm dev` — Auto-rebuild on changes
-3. **Test:** `pnpm test` — Vitest in watch mode
-4. **Type check:** TypeScript compiler catches errors at compile time
-5. **Lint:** `pnpm lint` — ESLint with typescript-eslint rules
-
-### CLI Debugging
-
-**Detected:** Direct execution via tsx (from packages/cli/package.json devDependencies line 64):
+**Detected:** tsx for running TypeScript directly (from `packages/cli/package.json`)
 
 ```bash
-# Run CLI without building
-tsx packages/cli/src/index.ts [command]
+# Watch mode development
+cd packages/cli && pnpm dev  # tsup watch
+cd packages/analyzer && pnpm dev  # tsc watch
 
-# Or test built version
-node packages/cli/dist/index.js [command]
+# Link CLI for local testing
+cd packages/cli && npm link
+
+# Debug TypeScript directly
+tsx packages/cli/src/index.ts init
+tsx packages/cli/src/index.ts setup complete
+
+# Run tests
+pnpm test  # All packages
+cd packages/analyzer && pnpm test:coverage  # With coverage
 ```
 
-**Inferred:** tsx allows running TypeScript directly during development, avoiding build step for faster iteration.
+**Unexamined:** No .vscode/launch.json detected. Developers debug via console.log or tsx.
 
-### Analyzer Debugging
-
-**Detected:** Contract tests verify API stability (from packages/cli/tests/contract/analyzer-contract.test.ts)
-
-Pattern: Contract tests ensure analyzer exports remain stable across versions, catching breaking API changes.
+**Recommendation:** Add .vscode/launch.json.example for VSCode debugging.
 
 ### Test Debugging
 
-**Detected:** Vitest configuration (from packages/cli/vitest.config.ts):
+**Detected:** Vitest with high coverage thresholds (CLI: 80%, Analyzer: 85%)
 
-```typescript
-export default defineConfig({
-  test: {
-    globals: true,              // describe/it/expect available without imports
-    environment: 'node',        // Node.js test environment
-    include: ['tests/**/*.test.ts'],
-  },
-});
+```bash
+# Watch mode
+cd packages/analyzer && pnpm test
+
+# Specific file
+pnpm test parsers/treeSitter.test.ts
+
+# Verbose output
+pnpm test --reporter=verbose
+
+# Coverage report
+pnpm test:coverage
+# Open coverage/index.html
 ```
 
-Test workflow:
-1. **Run specific test:** `vitest tests/scaffolds/patterns.test.ts`
-2. **Run with filter:** `vitest -t "pattern name"`
-3. **Watch mode:** `vitest` (default)
-4. **Coverage:** `pnpm test:coverage` (analyzer only)
+### End User Debugging
 
-### Error Investigation
+**Context:** CLI tool distributed via npm, runs on users' machines.
 
-**Detected:** Error fields for debugging
+```bash
+# Validate context files
+ana setup check
+ana setup check patterns.md
 
-When investigating failures:
-1. **error.message** — User-friendly description
-2. **error.code** — Machine-readable code from ERROR_CODES
-3. **error.file and error.line** — Location context if available
-4. **error.suggestion** — Resolution guidance if provided
-5. **error.cause** — Underlying error for chained failures
-6. **error.phase** — Which detection phase failed
+# Inspect analyzer output
+cat .ana/.state/snapshot.json | jq .
 
-Example from `packages/cli/src/commands/analyze.ts` (lines 90-92):
+# Fresh start
+rm -rf .ana && ana init
 
-```typescript
-console.error(chalk.red(`\nError: ${error.message}`));
-if (options.verbose) {
-  console.error(chalk.gray(error.stack));
-}
+# Common issues:
+# - Missing package.json → cannot detect project type
+# - File permissions → cannot read source files
+# - WASM init failure → parsers unavailable
 ```
 
-### Validation Debugging
+**Unexamined:** No error reporting mechanism. Users file GitHub issues manually.
 
-**Detected:** Check command provides JSON output for programmatic validation
-
-Validation check categories (from packages/cli/src/commands/check.ts):
-1. **Line count:** Within min/max thresholds
-2. **Headers:** Required H2 sections present
-3. **Scaffold markers:** Removed after setup
-4. **Citations:** Referenced files exist, line numbers valid
-
-### CI/CD Debugging
-
-**Detected:** GitHub Actions test workflow (from .github/workflows/test.yml)
-
-CI workflow from `.github/workflows/test.yml` (lines 35-42):
-
-```yaml
-- name: Install dependencies
-  run: pnpm install --frozen-lockfile
-
-- name: Build packages
-  run: pnpm build
-
-- name: Run tests
-  run: pnpm test --run
-```
-
-Debugging steps:
-1. **Check job logs** — Each matrix combination has separate logs
-2. **Compare failing combinations** — Identify OS/Node-specific issues
-3. **Review coverage** — Ubuntu + Node 20 uploads to Codecov
-4. **Verify lockfile** — `--frozen-lockfile` ensures reproducible installs
+**Recommendation:** Add `ana doctor` command to check Node version, WASM parsers, permissions, and output diagnostic report.
 
 ## Observability
 
-### No APM Tools
+**No APM detected** — No Sentry, Datadog, New Relic, Prometheus dependencies.
 
-**Detected:** No observability dependencies in any package
+**Context:** Local CLI tool, traditional APM not applicable.
 
-From dependency analysis:
-- No Datadog APM
-- No New Relic agent
-- No Sentry SDK
-- No Prometheus client
-- No OpenTelemetry instrumentation
+**Unexamined:** No telemetry. Maintainers have no visibility into command usage, failure rates, or performance across users.
 
-**Inferred:** CLI tools typically don't need APM — each invocation is short-lived, runs locally, and output is visible in terminal.
+**Recommendation:** Opt-in telemetry (anonymous usage, crash reports, feature metrics).
 
-### Test Coverage as Quality Metric
+**Development observability:**
 
-**Detected:** Coverage thresholds enforced (from packages/cli/vitest.config.ts lines 8-23):
+1. **Git history as audit log:**
+   - Commit format: [TAG] Brief — Details
+   - Branch structure: effort/STEP_*, SideSprint/*
+   - GitHub Actions CI logs
+
+2. **Test coverage as health metric:**
+   - Codecov integration
+   - 80-85% coverage thresholds
+
+3. **Turborepo cache:**
+   - .turbo/ caches build outputs
+   - Cache hits = stable builds
+
+**Detected:** GitHub Actions multi-platform CI (from exploration):
+- 3 OS (Ubuntu, Windows, macOS)
+- 2 Node versions (20, 22)
+- Frozen lockfile enforced
+- Coverage uploaded to Codecov
+
+**Metrics available:**
+- Test pass rate across matrix
+- Coverage trends
+- Build time trends
+- Dependency update frequency
+
+## Security Posture
+
+**Note:** All findings tagged **Unexamined** unless user confirmed in Q&A.
+
+### Input Validation
+
+**Unexamined:** File paths use Node.js path utilities without additional sanitization. No path traversal protection.
+
+**Risk:** Low — CLI runs with user's permissions, cannot escalate. Worst case is performance from analyzing huge directories.
+
+### Secrets Detection
+
+**Detected:** .gitignore includes `.env`, `*.pem`, `credentials.json`
+
+**Unexamined:** No active scanning for committed secrets (API keys, tokens).
+
+**Recommendation:** Add pre-commit hook with git-secrets or gitleaks.
+
+### Dependency Security
+
+**Unexamined:** No automated dependency vulnerability scanning in CI.
+
+**Detected:** pnpm lockfile pins exact versions, prevents supply chain drift.
+
+**Recommendation:** Add Dependabot and `pnpm audit` to CI.
+
+### Error Information Leakage
+
+**Detected:** Error messages include file paths and stack traces.
+
+**Context:** Appropriate for CLI tool used by developers. Not a concern like it would be for web apps.
+
+### WASM Security
+
+**Unexamined:** Tree-sitter WASM parsers run in Node WASM runtime. No sandboxing beyond WASM memory isolation.
+
+**Detected:** WASM files loaded from node_modules (from `packages/analyzer/src/parsers/treeSitter.ts`, lines 56-74):
 
 ```typescript
-coverage: {
-  provider: 'v8',
-  reporter: ['text', 'json', 'html'],
-  exclude: [
-    'dist/**',
-    '**/*.test.ts',
-    'src/test-*.ts',
-    'src/index.ts',
-  ],
-  thresholds: {
-    lines: 80,
-    branches: 75,
-    functions: 80,
-    statements: 80,
-  },
-},
-```
-
-Coverage tracking:
-- **Lines:** 80% minimum
-- **Branches:** 75% minimum
-- **Functions:** 80% minimum
-- **Statements:** 80% minimum
-- **Provider:** v8 (native Node.js coverage)
-- **Reporters:** text, json, html
-
-**Detected:** Codecov integration from .github/workflows/test.yml (lines 44-50):
-
-```yaml
-- name: Upload coverage (Ubuntu + Node 20 only)
-  if: matrix.os == 'ubuntu-latest' && matrix.node-version == 20
-  uses: codecov/codecov-action@v4
-  with:
-    files: ./packages/cli/coverage/coverage-final.json
-    fail_ci_if_error: false
-```
-
-### AST Cache Performance
-
-**Detected:** Cache statistics tracking (from packages/analyzer/src/cache/astCache.ts lines 42-48):
-
-```typescript
-export interface CacheStats {
-  hits: number;      // Cache hits (fast path)
-  misses: number;    // Cache misses (slow path - had to parse)
-  files: number;     // Files in memory cache
+function resolveWasmPath(packageName: string, wasmFileName: string): string {
+  const candidates = [
+    join(__dirname, '..', '..', 'node_modules', packageName, wasmFileName),
+    join(__dirname, '..', '..', '..', '..', 'node_modules', packageName, wasmFileName),
+  ];
+  // ... check candidates, throw if not found ...
 }
 ```
 
-**Detected:** Performance documented (from packages/analyzer/src/cache/astCache.ts line 7):
+**Unexamined:** No integrity checks (checksum verification) on WASM files. Relies on npm package integrity.
 
-> Performance: 80-90% speedup on second run (500ms → 50-100ms for 20 files)
+### File System Access
 
-### Build Performance
+**Unexamined:** CLI has full read/write access to user's filesystem (inherits user permissions). No sandboxing.
 
-**Detected:** Turborepo caching for monorepo builds
+**Context:** Appropriate for CLI tool. Users expect filesystem access. Sandboxing would break functionality.
 
-From turbo.json:
-- Task cache in .turbo/ directory
-- Output caching for dist/** and .next/** directories
-- Dependency graph optimization (dependsOn: ["^build"])
-- Global dependencies tracked (tsconfig.base.json, pnpm-lock.yaml)
+**Unexamined:** No audit log of file operations.
 
-**Inferred:** `turbo build` shows cache hit/miss summary, providing build performance visibility.
+**Recommendation:** Add `--dry-run` mode:
+```bash
+ana setup complete --dry-run  # Show what would be written
+ana init --dry-run            # Show files to be created
+```
 
-### No Metrics Collection
+### Summary
 
-**Detected:** No metrics libraries in dependencies
+**Key insight:** Traditional web security concerns (rate limiting, CORS, SQL injection) don't apply. Security model:
 
-- No statsd client
-- No Prometheus client
-- No custom metrics implementation
+1. **User is developer** — error details are helpful, not leakage
+2. **Local execution** — no network attack surface
+3. **User permissions** — runs with user's filesystem access
+4. **Dependency trust** — relies on npm ecosystem (same as any Node project)
 
-**Inferred:** For a local CLI tool, structured metrics may be unnecessary. Terminal spinners and console output provide sufficient visibility.
-
-### Recommendations for Production Scale
-
-If Anatomia grows to process very large codebases or run as a service:
-
-1. **Structured logging** — Consider pino for JSON-formatted logs with log levels
-2. **Error tracking** — Sentry for stack trace aggregation and error trends
-3. **Performance tracing** — OpenTelemetry for distributed tracing
-4. **Metrics** — Prometheus for analysis duration, cache hit rates, error rates
-5. **Health checks** — Health endpoints if running as a service
-
-**Current state is appropriate:** Simple console output with colors is ideal for developer-facing CLI tools.
+**Appropriate measures for this context:**
+- Dependency vulnerability scanning
+- Secrets scanning in commits
+- Input validation for paths (future)
+- Dry-run mode (future)
 
 ---
 
-*Last updated: 2026-03-22T16:30:00.000Z*
+*Last updated: 2026-03-23*

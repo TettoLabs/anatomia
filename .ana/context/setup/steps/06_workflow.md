@@ -76,6 +76,26 @@ Before finishing, verify:
   <if_not_found>Write: "No .env.example — recommend creating one"</if_not_found>
 </target>
 
+<target name="local_setup">
+  Search: Environment configuration, Docker setup, seed scripts, dev server configuration
+  Files: .env.example, .env.local.example, docker-compose.yml, Dockerfile, package.json scripts
+
+  Extract:
+  - All scripts from package.json with one-line description of what each does
+  - Docker/docker-compose presence and what services they define
+  - .env.example contents: list every required env var with description if available
+  - Seed script location (prisma db seed, custom seed.ts)
+  - Required third-party accounts (look for STRIPE_*, OPENAI_*, AUTH_*, DATABASE_URL patterns in .env.example)
+  - Dev server command and port
+  - "git clone to running app" step sequence
+
+  <if_not_found>
+  Flag: no .env.example as Unexamined ("New developers have no guide for required environment variables")
+  Flag: no seed script as gap
+  Construct setup sequence from package.json scripts and config files.
+  </if_not_found>
+</target>
+
 ## Structure
 
 - 6 H2 sections: Git Workflow, Commit Conventions, Pull Request Process, CI/CD Pipeline, Deployment, Environment Management

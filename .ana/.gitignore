@@ -1,0 +1,7 @@
+# Anatomia runtime state — local to each developer
+.state/
+.setup_qa_log.md
+.setup_exploration.md
+.setup_verification.md
+.setup_state.json
+.setup_tier

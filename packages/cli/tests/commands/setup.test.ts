@@ -219,6 +219,7 @@ describe('validators', () => {
       const snapshot: AnalysisResult = {
         ...createEmptyAnalysisResult(),
         framework: 'fastapi',
+        confidence: { projectType: 0.5, framework: 0.8 },
       };
 
       // project-overview.md says different framework

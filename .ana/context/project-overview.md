@@ -1,22 +1,35 @@
-# Project Overview — anatomia-workspace
+# Project Overview — Anatomia
 
 ## What This Project Is
 
-**Purpose:** Auto-generated AI context framework for codebases
+**Purpose:** CLI tool that automatically generates AI context documentation for codebases by analyzing source code structure, patterns, and architecture. Solves the problem of repeatedly re-explaining project patterns to AI assistants in every conversation.
 
-**Detected:** TypeScript monorepo (from `package.json`, `pnpm-workspace.yaml`)
+**User confirmed:** CLI tool for generating AI context documentation to onboard AI assistants to codebases
 
-**Target users:** Development teams using AI assistants (Claude, GitHub Copilot, etc.) who need to communicate project patterns consistently across conversations
+**Target users:** Solo developers and small engineering teams (2-5 people) who work with Claude Code or AI-assisted development workflows, building TypeScript/Node.js applications in monorepo setups. Methodical and quality-focused developers.
 
-**Problem solved:** AI assistants currently require re-explaining project patterns in every new conversation. Anatomia generates a `.ana/` folder with mode files that capture architectural decisions, coding patterns, conventions, and testing strategies. Developers reference these files (@.ana/modes/code.md) to ensure AI writes code matching team standards.
+**User confirmed:** Target users are solo/small teams using AI-assisted development workflows, quality-focused TypeScript developers
 
-**Current focus:** Setup redesign with analyzer-driven context generation
+**Current focus:** Redesigning the setup system to use analyzer-driven scaffolding and guided Q&A (active work on `SideSprint/setup-redesign` branch)
 
-From `README.md` line 3:
-> Auto-generated AI context for codebases.
+**Detected:** From `packages/cli/package.json` (lines 2-4):
+```json
+"name": "anatomia-cli",
+"version": "0.2.0",
+"description": "AI context framework with analyzer-driven setup"
+```
 
-From `README.md` lines 12-19:
+**Detected:** Binary command name from `packages/cli/package.json` (lines 5-7):
+```json
+"bin": {
+  "ana": "./dist/index.js"
+}
+```
+
+**Detected:** From `README.md` (lines 10-19):
 ```markdown
+## What is this?
+
 Anatomia generates `.ana/` folders that help AI assistants understand your project. Instead of re-explaining your patterns every conversation, reference mode files in chat.
 
 **Example:**
@@ -27,29 +40,58 @@ Anatomia generates `.ana/` folders that help AI assistants understand your proje
 AI reads your patterns and writes code that matches your team's standards.
 ```
 
-**Domain:** Developer tooling — CLI tools for AI-assisted development workflows
+**Value proposition:** Instead of manually documenting patterns in every AI conversation, developers run `ana init` once, fill context files, then reference mode files (`.ana/modes/*.md`) in chat. AI assistants read the standardized context and produce code matching team conventions.
 
-**Published packages:**
-- `anatomia-cli` (v0.2.0) — CLI tool with commands for init, setup, mode selection, and analysis
-- `anatomia-analyzer` (v0.1.0) — Code analysis engine using tree-sitter for multi-language AST parsing
+**Domain:** Developer tooling, code analysis, AI-assisted development
+
+**Organization:** TettoLabs
+
+**Detected:** From `packages/cli/package.json` (line 34):
+```json
+"author": "TettoLabs"
+```
 
 **Repository:** https://github.com/TettoLabs/anatomia
 
-**Detected:** Dogfooding detected — project uses its own `.ana/` context framework at root (from `.ana/` directory presence)
-
-**Detected:** Claude Code integration — `.claude/settings.json` and agents configured for AI-assisted development (from `.claude/` directory)
+**Detected:** From `packages/cli/package.json` (lines 25-28):
+```json
+"repository": {
+  "type": "git",
+  "url": "git+https://github.com/TettoLabs/anatomia.git",
+  "directory": "packages/cli"
+}
+```
 
 ## Tech Stack
 
 ### Core Technologies
 
-**Language:** TypeScript 5.7.0
+**Language:** TypeScript 5.7.0 with strict mode enabled
 
-**Detected:** All packages use `"type": "module"` in package.json (lines 9 of `packages/cli/package.json`, line 7 of `packages/analyzer/package.json`)
+**Detected:** From `package.json` (line 15):
+```json
+"typescript": "^5.7.0"
+```
 
-**Runtime:** Node.js 20+
+**Detected:** Strict TypeScript configuration from `tsconfig.base.json` (lines 4-15):
+```json
+"compilerOptions": {
+  // Strict Mode - All strict checks enabled
+  "strict": true,
 
-From `package.json` lines 19-21:
+  // Additional Strict Checks (2026 recommended, not included in strict flag)
+  "noUncheckedIndexedAccess": true,
+  "noImplicitOverride": true,
+  "noPropertyAccessFromIndexSignature": true,
+  "noImplicitReturns": true,
+  "noFallthroughCasesInSwitch": true,
+  "exactOptionalPropertyTypes": true
+}
+```
+
+**Runtime:** Node.js 20+ (required minimum)
+
+**Detected:** From `package.json` (lines 19-21):
 ```json
 "engines": {
   "node": ">=20.0.0",
@@ -57,89 +99,35 @@ From `package.json` lines 19-21:
 }
 ```
 
-**Package manager:** pnpm 9.0.0
+**Module system:** ESM (ECMAScript modules) — all packages use `"type": "module"`, import/export syntax, .js extensions in relative imports
 
-**Detected:** From `package.json` line 23:
+**Detected:** From `packages/cli/package.json` (line 9):
+```json
+"type": "module"
+```
+
+**Package manager:** pnpm 9.0.0 with workspaces
+
+**Detected:** From `package.json` (line 23):
 ```json
 "packageManager": "pnpm@9.0.0"
 ```
 
-**Monorepo tool:** Turborepo 2.3.0
+**Detected:** Workspace configuration from `pnpm-workspace.yaml` (lines 1-3):
+```yaml
+packages:
+  - 'packages/*'
+  - 'website'
+```
 
-**Detected:** From root `package.json` line 14:
+**Monorepo orchestration:** Turborepo 2.3.0 for build caching and task pipelines
+
+**Detected:** From `package.json` (line 14):
 ```json
 "turbo": "^2.3.0"
 ```
 
-### TypeScript Configuration
-
-**Target:** ES2022
-
-**Strictness:** Maximum — strict mode + 6 additional checks
-
-From `tsconfig.base.json` lines 6-15:
-```json
-"strict": true,
-
-// Additional Strict Checks (2026 recommended, not included in strict flag)
-// See: https://www.totaltypescript.com/tsconfig-cheat-sheet
-"noUncheckedIndexedAccess": true,
-"noImplicitOverride": true,
-"noPropertyAccessFromIndexSignature": true,
-"noImplicitReturns": true,
-"noFallthroughCasesInSwitch": true,
-"exactOptionalPropertyTypes": true,
-```
-
-**Module system:** ESM with bundler resolution
-
-From `tsconfig.base.json` lines 19-20:
-```json
-"module": "ESNext",
-"moduleResolution": "Bundler",
-```
-
-### Key Dependencies
-
-**CLI package dependencies** (from `packages/cli/package.json` lines 50-56):
-
-- **commander** (^12.0.0) — Command-line interface framework
-- **chalk** (^5.3.0) — Terminal string styling with colors
-- **ora** (^8.0.0) — Terminal spinner animations for async operations
-- **glob** (^10.3.0) — File pattern matching
-- **anatomia-analyzer** (^0.1.0) — Internal code analysis engine
-
-**Analyzer package dependencies** (from `packages/analyzer/package.json` lines 59-69):
-
-- **tree-sitter** (0.25.0) — AST parsing core library
-- **tree-sitter-go** (0.25.0) — Go language parser
-- **tree-sitter-javascript** (0.25.0) — JavaScript language parser
-- **tree-sitter-python** (0.25.0) — Python language parser
-- **tree-sitter-typescript** (0.23.2) — TypeScript language parser
-- **zod** (^4.3.6) — Runtime schema validation and type inference
-- **chalk** (^5.3.0) — Terminal output coloring
-- **glob** (^10.3.0) — File pattern matching
-- **js-yaml** (^4.1.1) — YAML parsing for config files
-
-### Build Tools
-
-**CLI build:** tsup (bundles TypeScript with template copying)
-
-From `packages/cli/package.json` line 44:
-```json
-"build": "tsup && cp -r templates dist/"
-```
-
-**Analyzer build:** tsc (TypeScript compiler)
-
-From `packages/analyzer/package.json` line 46:
-```json
-"build": "tsc"
-```
-
-**Turborepo tasks:** build, dev, test, lint, clean, type-check
-
-From `turbo.json` lines 3-29:
+**Detected:** Build pipeline from `turbo.json` (lines 3-30):
 ```json
 "tasks": {
   "build": {
@@ -171,30 +159,149 @@ From `turbo.json` lines 3-29:
 }
 ```
 
-### Development Tools
+### Key Dependencies
 
-**Formatter:** Prettier 3.4.0 — 2 spaces, single quotes, semicolons, 100 char width
+**CLI package** (`anatomia-cli`):
 
-**Linter:** ESLint 9.0.0 with flat config (eslint.config.mjs)
-
-**Test framework:** Vitest 2.0.0 (CLI), 4.0.18 (analyzer)
-
-**Development runner:** tsx 4.21.0 — Run TypeScript directly without compilation
-
-### Deployment
-
-**Distribution:** npm packages
-
-**CLI binary:** `ana` command (from `packages/cli/package.json` lines 5-7):
+**Detected:** From `packages/cli/package.json` (lines 50-56):
 ```json
-"bin": {
-  "ana": "./dist/index.js"
+"dependencies": {
+  "anatomia-analyzer": "workspace:*",
+  "chalk": "^5.3.0",
+  "commander": "^12.0.0",
+  "glob": "^10.3.0",
+  "ora": "^8.0.0"
 }
 ```
 
-**Install:** `npm install -g anatomia-cli`
+- **commander** (12.0.0) — CLI argument parsing and command routing
+- **chalk** (5.3.0) — Colored terminal output for user-facing messages
+- **ora** (8.0.0) — Terminal spinners for long-running operations
+- **glob** (10.3.0) — File pattern matching for template operations
+- **anatomia-analyzer** (workspace package) — Code analysis engine
 
-**No container deployment detected** — Tool runs locally as CLI, no Docker/Kubernetes configuration found
+**Analyzer package** (`anatomia-analyzer`):
+
+**Detected:** From `packages/analyzer/package.json` (lines 59-65):
+```json
+"dependencies": {
+  "chalk": "^5.3.0",
+  "glob": "^10.3.0",
+  "js-yaml": "^4.1.1",
+  "web-tree-sitter": "0.25.10",
+  "zod": "^4.3.6"
+}
+```
+
+- **web-tree-sitter** (0.25.10) — WASM-based AST parsing for multi-language code analysis
+- **zod** (4.3.6) — Runtime type validation with TypeScript inference
+- **js-yaml** (4.1.1) — YAML parsing for config files
+- **glob** (10.3.0) — File discovery and pattern matching
+- **chalk** (5.3.0) — Error message formatting
+
+**Detected:** Optional tree-sitter grammars from `packages/analyzer/package.json` (lines 66-71):
+```json
+"optionalDependencies": {
+  "tree-sitter-go": "0.25.0",
+  "tree-sitter-javascript": "0.25.0",
+  "tree-sitter-python": "0.25.0",
+  "tree-sitter-typescript": "0.23.2"
+}
+```
+
+### Build Tools
+
+**CLI:** tsup (ESM bundler for Node.js) — fast esbuild-based bundler
+
+**Detected:** From `packages/cli/package.json` (line 44):
+```json
+"build": "tsup && cp -r templates dist/"
+```
+
+**Analyzer:** tsc (TypeScript compiler) — standard TypeScript compilation
+
+**Detected:** From `packages/analyzer/package.json` (line 46):
+```json
+"build": "tsc"
+```
+
+**Target:** ES2022 (Node 20+ supports ES2022 natively)
+
+**Detected:** From `tsconfig.base.json` (lines 36-37):
+```json
+"target": "ES2022",
+"lib": ["ES2022"]
+```
+
+### Testing Stack
+
+**Framework:** Vitest (2.0.0 for CLI, 4.0.18 for analyzer)
+
+**Detected:** From `packages/cli/package.json` (line 66):
+```json
+"vitest": "^2.0.0"
+```
+
+**Detected:** From `packages/analyzer/package.json` (line 57):
+```json
+"vitest": "^4.0.18"
+```
+
+**Coverage provider:** v8
+
+**Detected:** From `packages/cli/vitest.config.ts` (line 9):
+```typescript
+provider: 'v8'
+```
+
+**Coverage thresholds:**
+
+**Detected:** CLI thresholds from `packages/cli/vitest.config.ts` (lines 17-22):
+```typescript
+thresholds: {
+  lines: 80,
+  branches: 75,
+  functions: 80,
+  statements: 80,
+}
+```
+
+**Detected:** Analyzer thresholds from `packages/analyzer/vitest.config.ts` (lines 16-21):
+```typescript
+thresholds: {
+  lines: 85,
+  branches: 80,
+  functions: 85,
+  statements: 85,
+}
+```
+
+- **CLI:** 80% lines, 75% branches, 80% functions, 80% statements
+- **Analyzer:** 85% lines, 80% branches, 85% functions, 85% statements
+
+### Tooling
+
+**Linter:** ESLint 10.1.0 with flat config format (@typescript-eslint plugin)
+
+**Detected:** From `packages/cli/package.json` (lines 59-60):
+```json
+"@typescript-eslint/eslint-plugin": "^8.57.1",
+"@typescript-eslint/parser": "^8.57.1"
+```
+
+**Formatter:** Prettier 3.4.0
+
+**Detected:** From `package.json` (line 16):
+```json
+"prettier": "^3.4.0"
+```
+
+**Development runtime:** tsx for running TypeScript directly
+
+**Detected:** From `packages/cli/package.json` (line 64):
+```json
+"tsx": "^4.21.0"
+```
 
 ## Directory Structure
 
@@ -203,66 +310,60 @@ From `turbo.json` lines 3-29:
 ```
 anatomia/
 ├── packages/
-│   ├── cli/              # CLI tool package (anatomia-cli v0.2.0)
+│   ├── cli/              # Main CLI tool (anatomia-cli v0.2.0)
 │   ├── analyzer/         # Code analysis engine (anatomia-analyzer v0.1.0)
-│   └── generator/        # Template generation (internal, alpha v0.1.0-alpha)
-├── website/              # Next.js documentation site
+│   └── generator/        # Template generator (alpha, not published)
+├── website/              # Next.js documentation site (not yet active)
 ├── tests/                # Root-level integration tests
 ├── .ana/                 # Anatomia's own context (dogfooding)
-├── .claude/              # Claude Code configuration
-├── .github/              # CI/CD workflows
-└── master_plan/          # Planning documents (gitignored)
+├── .claude/              # Claude Code agent definitions
+│   └── agents/           # ana-explorer, ana-writer, ana-verifier, ana-question-formulator
+├── .github/workflows/    # GitHub Actions CI configuration
+└── master_plan/          # Product planning docs (vision, architecture)
 ```
 
-**Detected:** 3 packages + 1 website in monorepo (from `README.md` lines 47-55, confirmed by filesystem)
+**Detected:** From `README.md` (lines 46-55):
+```markdown
+## Project Structure
 
-### packages/cli/ — CLI Tool
-
-**Purpose:** Command-line interface for Anatomia framework
-
-From `packages/cli/package.json` line 4:
-```json
-"description": "AI context framework with analyzer-driven setup"
+```
+anatomia/
+├── packages/
+│   ├── cli/          # CLI tool
+│   └── analyzer/     # Code analysis engine
+└── website/          # Documentation
+```
 ```
 
-**Structure:**
+### CLI Package Structure (`packages/cli/`)
+
 ```
-packages/cli/
+cli/
 ├── src/
-│   ├── index.ts              # Entry point with Commander.js setup
-│   ├── commands/             # Command implementations
-│   │   ├── init.ts           # Initialize .ana/ directory
-│   │   ├── setup.ts          # Interactive context generation
-│   │   ├── mode.ts           # Reference mode files
-│   │   ├── analyze.ts        # Run analyzer standalone
-│   │   └── check.ts          # Validate context files
-│   ├── utils/                # Utilities
-│   │   ├── file-writer.ts    # File operations with verification
-│   │   ├── validators.ts     # Content and structure validation
-│   │   ├── scaffold-generators.ts  # Generate empty scaffolds
-│   │   └── format-analysis-brief.ts  # Format analyzer output
-│   └── constants.ts          # Shared constants (markers, files, thresholds)
-├── templates/                # Static templates
-│   ├── modes/                # Mode files (architect, code, debug, docs, test)
-│   ├── context/              # Context scaffolds (7 files)
-│   ├── hooks/                # Verification hooks (shell scripts)
-│   └── claude/               # Claude Code configuration
-├── tests/                    # Test suites
-│   ├── contract/             # Analyzer API contract tests
-│   ├── e2e/                  # End-to-end tests
-│   ├── scaffolds/            # Scaffold generation tests (10 files)
-│   ├── commands/             # Command tests
-│   ├── utils/                # Utility tests
-│   ├── templates/            # Template tests
-│   ├── performance/          # Performance benchmarks
-│   └── cleanup/              # Cleanup tests
-├── dist/                     # Build output (compiled JS)
-└── docs/                     # CLI documentation
+│   ├── index.ts          # CLI entry point with commander setup
+│   ├── commands/         # Command implementations (init, mode, analyze, setup)
+│   │   ├── init.ts       # Initialize .ana/ structure
+│   │   ├── mode.ts       # Reference mode files
+│   │   ├── analyze.ts    # Run analyzer and display results
+│   │   └── setup.ts      # Guided setup with Q&A and scaffolding
+│   ├── utils/            # Utility functions (validators, formatters, file-writer)
+│   └── constants.ts      # Shared constants
+├── templates/            # Template files copied to user projects
+│   ├── .ana/             # Context structure templates
+│   │   ├── hooks/        # Quality gate bash scripts
+│   │   └── modes/        # Task mode templates
+│   └── context/          # Context file templates (7 files)
+├── tests/                # Vitest tests mirroring src/ structure
+│   ├── commands/         # Command tests
+│   ├── scaffolds/        # Scaffold generator tests
+│   ├── contract/         # Analyzer contract tests
+│   ├── e2e/              # End-to-end tests
+│   └── performance/      # Performance benchmarks
+├── dist/                 # Build output (gitignored)
+└── docs/                 # Package documentation
 ```
 
-**Entry point:** `packages/cli/src/index.ts`
-
-From `packages/cli/src/index.ts` lines 1-26:
+**Detected:** Entry point from `packages/cli/src/index.ts` (lines 1-49):
 ```typescript
 #!/usr/bin/env node
 
@@ -290,349 +391,294 @@ program
   .name('ana')
   .description('Auto-generated AI context for codebases')
   .version('0.1.0', '-v, --version', 'Display version number');
+
+// Register commands
+program.addCommand(initCommand);
+program.addCommand(modeCommand);
+program.addCommand(analyzeCommand);
+program.addCommand(setupCommand);
+
+// Parse arguments with async support
+// CRITICAL: Use parseAsync() not parse() for async action handlers
+async function main(): Promise<void> {
+  try {
+    await program.parseAsync(process.argv);
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error(`Error: ${error.message}`);
+    }
+    process.exit(1);
+  }
+}
+
+main();
 ```
 
-**Key commands:**
-- `ana init` — Create .ana/ directory with scaffolds and mode files
-- `ana setup` — Interactive context generation with analyzer
-- `ana mode <name>` — Display mode file content
-- `ana analyze` — Run analyzer without setup
-- `ana setup check <file>` — Validate context file quality
+### Analyzer Package Structure (`packages/analyzer/`)
 
-### packages/analyzer/ — Analysis Engine
+```
+analyzer/
+├── src/
+│   ├── index.ts          # Public API exports
+│   ├── analyzers/        # High-level analyzers (structure, dependencies, patterns, conventions)
+│   │   ├── conventions/  # Naming, formatting, import style analysis
+│   │   └── patterns/     # Error handling, validation, auth pattern detection
+│   ├── detectors/        # Project type detection (Node, Python, Go, etc.)
+│   │   ├── node/         # Node/npm/yarn detection
+│   │   └── python/       # Python/pip detection
+│   ├── parsers/          # Language-specific AST parsers
+│   │   ├── go/           # Go parser
+│   │   ├── node/         # JavaScript/TypeScript parser
+│   │   ├── php/          # PHP parser
+│   │   ├── python/       # Python parser
+│   │   ├── ruby/         # Ruby parser
+│   │   └── rust/         # Rust parser
+│   ├── cache/            # AST and query caching (ParserManager, ASTCache, QueryCache)
+│   ├── sampling/         # File sampling strategies
+│   ├── errors/           # Custom error classes (DetectionError, DetectionCollector)
+│   ├── types/            # Zod schemas and TypeScript types
+│   └── utils/            # Helper functions
+├── tests/                # Vitest tests (64 test files total)
+│   ├── fixtures/         # Test fixtures by language (go/, node/, python/, ruby/, rust/, php/)
+│   ├── analyzers/        # Analyzer tests
+│   ├── detectors/        # Detector tests
+│   ├── parsers/          # Parser tests
+│   ├── integration/      # Integration tests
+│   └── performance/      # Performance tests
+├── dist/                 # Build output (gitignored)
+└── docs/                 # Package documentation
+```
 
-**Purpose:** Multi-language code analysis using tree-sitter AST parsing
+### Special Directories
 
-From `packages/analyzer/package.json` line 4:
+**.ana/** — Anatomia's own context (dogfooding the CLI)
+
+**Detected:** Self-referential setup showing how the tool documents itself. Contains context files for patterns, conventions, architecture, testing, workflow, debugging, and analysis.
+
+**.claude/** — Claude Code agent definitions
+
+**Detected:** Custom agents for the setup process:
+- `ana-explorer.md` — Explores codebase and generates exploration results
+- `ana-writer.md` — Writes individual context files with verified citations
+- `ana-verifier.md` — Validates context files against quality checks
+- `ana-question-formulator.md` — Generates Q&A questions for user
+
+**master_plan/** — Product planning and vision documents
+
+**Detected:** Contains technical architecture specs (2,166+ lines), implementation roadmaps, and core product documents. Shows deliberate architectural planning.
+
+### Entry Points
+
+**CLI binary:** `packages/cli/dist/index.js` (invoked as `ana` command)
+
+**Detected:** From `packages/cli/package.json` (lines 5-7):
 ```json
-"description": "Code analysis engine for Anatomia"
+"bin": {
+  "ana": "./dist/index.js"
+}
 ```
 
-**Structure:**
-```
-packages/analyzer/
-├── src/
-│   ├── index.ts              # Library entry with analyze() orchestrator
-│   ├── detectors/            # Project type and framework detection
-│   │   ├── projectType.ts    # Detect language (node/python/go/rust/ruby/php)
-│   │   ├── framework.ts      # Detect framework (nextjs/fastapi/django/etc)
-│   │   └── monorepo.ts       # Detect monorepo tools (turborepo/nx/lerna)
-│   ├── analyzers/            # Code analysis modules
-│   │   ├── structure.ts      # Directory structure, entry points, architecture
-│   │   ├── patterns.ts       # Infer error handling, validation, database patterns
-│   │   └── conventions/      # Naming, imports, documentation conventions
-│   │       ├── index.ts
-│   │       ├── naming.ts
-│   │       └── imports.ts
-│   ├── parsers/              # Tree-sitter parsing
-│   │   ├── treeSitter.ts     # ParserManager, parseFile, detectLanguage
-│   │   ├── queries.ts        # QueryCache with predefined AST queries
-│   │   └── index.ts          # Dependency parsers (package.json, pyproject.toml, etc)
-│   ├── types/                # Zod schemas and TypeScript types
-│   │   ├── index.ts          # AnalysisResult, ProjectType schemas
-│   │   ├── parsed.ts         # ParsedAnalysis, FunctionInfo, ClassInfo
-│   │   ├── patterns.ts       # PatternAnalysis, PatternConfidence
-│   │   └── conventions.ts    # ConventionAnalysis, NamingConvention
-│   ├── cache/                # Caching system
-│   │   └── astCache.ts       # ASTCache with TTL and stats tracking
-│   ├── sampling/             # File sampling for performance
-│   │   └── fileSampler.ts    # Sample files for analysis (default: 20 files)
-│   ├── errors/               # Error handling
-│   │   ├── DetectionError.ts # DetectionEngineError with codes and severity
-│   │   └── DetectionCollector.ts  # Accumulate non-fatal errors
-│   └── utils/                # Utilities
-│       └── file.ts           # File system helpers
-├── tests/                    # Test suites
-├── dist/                     # Build output
-└── docs/                     # API documentation
+**CLI commands:**
+- `ana init` — Initialize `.ana/` folder structure with templates
+- `ana setup` — Run guided setup with analyzer-driven scaffolding and Q&A
+- `ana mode <name>` — Display a mode file for referencing in AI chat
+- `ana analyze` — Run code analysis and display results
+
+**Analyzer entry:** `packages/analyzer/dist/index.js` — Public API for code analysis
+
+**Detected:** From `packages/analyzer/package.json` (lines 5-6):
+```json
+"main": "./dist/index.js",
+"types": "./dist/index.d.ts"
 ```
 
-**Entry point:** `packages/analyzer/src/index.ts`
+### Build Outputs
 
-From `packages/analyzer/src/index.ts` lines 182-276 (analyze function):
-```typescript
-/**
- * Analyze a project directory and return detection results
- *
- * Orchestrates all detection phases:
- * 1. Monorepo detection (STEP_1.1)
- * 2. Project type detection (STEP_1.1)
- * 3. Framework detection (STEP_1.1)
- * 4. Structure analysis (STEP_1.2)
- * 5. Tree-sitter parsing (STEP_1.3)
- * 6. Pattern inference (STEP_2.1)
- * 7. Convention detection (STEP_2.2 - NEW)
- *
- * @param rootPath - Absolute path to project root
- * @param options - Analysis options
- * @returns Analysis results with project type, framework, structure, parsed code, patterns, and conventions
- *
- * @example
- * ```typescript
- * const result = await analyze('/path/to/project');
- * console.log(result.projectType);             // 'python' | 'node' | etc.
- * console.log(result.framework);               // 'fastapi' | 'nextjs' | etc.
- * console.log(result.structure?.entryPoints);  // ['app/main.py']
- * console.log(result.parsed?.files.length);    // 15 (STEP_1.3)
- * console.log(result.patterns?.validation);    // { library: 'pydantic', confidence: 0.95, ... } (STEP_2.1)
- * console.log(result.conventions?.naming);     // { files: {...}, functions: {...}, ... } (STEP_2.2 - NEW)
- * ```
- */
-export async function analyze(
-  rootPath: string,
-  options: AnalyzeOptions = {}
-): Promise<import('./types/index.js').AnalysisResult>
-```
+**dist/** — TypeScript compilation output (gitignored in all packages)
 
-**Supported languages:** TypeScript, JavaScript, Python, Go (via tree-sitter)
+**Detected:** tsup generates `dist/` for CLI (bundled), tsc generates `dist/` for analyzer (unbundled)
 
-**Analysis phases:**
-1. Monorepo detection (turborepo/nx/lerna)
-2. Project type detection (node/python/go/rust/ruby/php)
-3. Framework detection (nextjs/react/fastapi/django/gin/etc)
-4. Structure analysis (entry points, architecture, test locations)
-5. Tree-sitter AST parsing (functions, classes, imports, exports)
-6. Pattern inference (error handling, validation, database, auth, testing)
-7. Convention detection (naming, imports, documentation, code style)
+**.turbo/** — Turborepo cache (gitignored)
 
-### packages/generator/ — Template Generation
+**Detected:** Stores task output hashes and cached build artifacts for faster rebuilds
 
-**Purpose:** Internal template generation engine (alpha)
+**coverage/** — Vitest coverage reports (gitignored)
 
-**Detected:** Alpha status from `package.json` version 0.1.0-alpha
-
-**Structure:**
-```
-packages/generator/
-├── src/
-│   └── index.ts              # Generation logic
-└── dist/                     # Build output
-```
-
-**Status:** Not fully explored — internal tool, not published to npm
-
-### website/ — Documentation Site
-
-**Purpose:** Next.js documentation site
-
-**Structure:**
-```
-website/
-├── app/                      # Next.js 16 App Router pages
-├── components/               # React components
-├── public/                   # Static assets
-└── .next/                    # Next.js build cache
-```
-
-**Framework:** Next.js 16 with App Router
-
-**Not fully explored** — Documentation site details not in analyzer scope
-
-### .ana/ — Dogfooding Context
-
-**Purpose:** Anatomia's own context framework (project uses its own tool)
-
-**Detected:** Presence of `.ana/` directory at root with full structure
-
-**Structure:**
-```
-.ana/
-├── ENTRY.md                  # Project orientation file
-├── modes/                    # Mode files
-│   ├── architect.md
-│   ├── code.md
-│   ├── debug.md
-│   ├── docs.md
-│   └── test.md
-├── context/                  # Context files
-│   ├── project-overview.md
-│   ├── patterns.md
-│   ├── architecture.md
-│   ├── conventions.md
-│   ├── testing.md
-│   ├── workflow.md
-│   ├── debugging.md
-│   └── analysis.md
-│   └── setup/                # Setup system files
-│       ├── rules.md
-│       └── steps/            # Step-by-step instructions
-├── hooks/                    # Verification hooks
-│   ├── verify-context-file.sh
-│   ├── quality-gate.sh
-│   └── subagent-verify.sh
-└── .state/                   # State tracking
-    └── snapshot.json
-```
-
-### .claude/ — Claude Code Configuration
-
-**Purpose:** AI assistant configuration for Claude Code
-
-**Detected:** `.claude/settings.json` and agents directory
-
-**Structure:**
-```
-.claude/
-├── settings.json             # Claude Code settings
-└── agents/                   # Agent definitions
-    └── ana-writer.md         # Writer agent prompt
-```
-
-### Root Configuration Files
-
-**Build system:** `turbo.json` — Turborepo task definitions
-
-**TypeScript:** `tsconfig.base.json` — Shared TypeScript config
-
-**Workspace:** `pnpm-workspace.yaml` — pnpm workspace definition
-
-**Linting:** `eslint.config.mjs` — ESLint flat config
-
-**Formatting:** `.prettierrc.json` — Prettier configuration
-
-**Git:** `.gitignore` — Ignore patterns (node_modules, dist, .env, coverage, .DS_Store, master_plan)
-
-**CI/CD:** `.github/workflows/test.yml` — GitHub Actions test workflow
-
-### Build Artifacts (Gitignored)
-
-**dist/** — TypeScript compiled output (per package)
-
-**.next/** — Next.js build cache (website)
-
-**.turbo/** — Turborepo cache
-
-**node_modules/** — Dependencies
-
-**coverage/** — Test coverage reports
+**Detected:** Generated by v8 coverage provider, includes text/json/html reports
 
 ## Current Status
 
 ### Development Stage
 
-**Version:** Pre-1.0 (CLI v0.2.0, Analyzer v0.1.0, Generator v0.1.0-alpha)
+**Maturity:** Alpha/early beta — actively developed with structured phased approach
 
-**Detected:** Semantic versioning indicates early/mid development stage
+**User confirmed:** Phased branching (effort/STEP_*, SideSprint/*), PR workflow with merge commits, structured commit tags
 
-**Status:** Active development
+**Version:** 0.2.0 (CLI), 0.1.0 (analyzer)
 
-**Detected:** Recent commits (last commit 2026-03-22), current branch `SideSprint/setup-redesign` indicates ongoing sprint work
-
-**Current focus:** Setup redesign with analyzer-driven context generation
-
-**Detected:** From recent commit messages (lines from git log):
-```
-c74b3cc [MI-3] Add tier files to MODE_FILES constant — setup-quick, setup-guided, setup-complete now copied by ana init
-7961f4f [SS-8] Scenario B validation — test cycle 3 baseline documented. 7/7 at 9/10, 4521 lines, zero fabrications. Empty scaffolds, explorer-only discovery. No tree-sitter errors visible to user.
-c83c5f2 [SS-7.3] Quality gates + init UX + determinism — Bash self-check, tier prompt, locked questions, SubagentStop verification, Unexamined tag, PATH fixes, check.ts false positive fix
-```
-
-### What's Working
-
-**Published to npm:** anatomia-cli and anatomia-analyzer packages are live
-
-**CLI commands functional:**
-- `ana init` — Creates .ana/ directory with scaffolds and templates
-- `ana mode` — Displays mode file content
-- `ana analyze` — Runs standalone analysis
-
-**Analyzer capabilities:**
-- Multi-language detection (TypeScript, Python, Go, JavaScript)
-- Framework detection (Next.js, React, FastAPI, Django, Gin, etc.)
-- Monorepo detection (Turborepo, Nx, Lerna)
-- Tree-sitter AST parsing for code structure
-- Pattern inference (error handling, validation, database, testing)
-- Convention detection (naming, imports, documentation)
-
-**CI/CD operational:** GitHub Actions with matrix testing (ubuntu/windows/macos × Node 20/22)
-
-**Detected:** From `.github/workflows/test.yml` (not read in this session but referenced in exploration results)
-
-**Test coverage:** 80/75/80/80 thresholds configured
-
-**Detected:** From vitest.config.ts coverage thresholds (referenced in exploration results)
-
-### What's In Progress
-
-**Setup redesign:** Current sprint work (branch: SideSprint/setup-redesign)
-
-**Detected:** Git status shows modifications to:
-- `.ana/context/` files (7 files modified)
-- `.ana/context/setup/` files (rules.md, steps/*.md)
-- `.claude/agents/ana-writer.md`
-
-**Quality gates:** Verification hooks and validation system being enhanced
-
-**Detected:** Recent commits reference "quality gates", "SubagentStop verification", "check.ts false positive fix"
-
-**Setup tiers:** Quick/guided/complete setup modes being added
-
-**Detected:** Untracked files in git status:
-```
-?? .ana/modes/setup-complete.md
-?? .ana/modes/setup-guided.md
-?? .ana/modes/setup-quick.md
-```
-
-### Known Constraints
-
-**Pre-1.0 API stability:** Analyzer API may change (contract tests help mitigate breaking changes)
-
-**Detected:** Contract tests exist at `packages/cli/tests/contract/analyzer-contract.test.ts`
-
-**File sampling limit:** Default 20 files parsed to control performance
-
-**Detected:** From analyzer source code comments (referenced in exploration results)
-
-**No changelog:** No CHANGELOG.md detected for tracking version history
-
-**Single developer project:** 2 contributors (Ryan Smith 111 commits, TettoLabs 2 commits)
-
-**Detected:** From git log contributor counts
-
-### Quality Practices
-
-**Test coverage tracking:** Codecov integration, 80% line coverage threshold
-
-**Code style enforcement:** Prettier + ESLint configured
-
-**TypeScript strict mode:** Maximum strictness (strict + 6 additional checks)
-
-**CI/CD:** Multi-platform testing (ubuntu/windows/macos)
-
-**Documentation:** README, CONTRIBUTING.md, JSDoc comments, package documentation
-
-**Dogfooding:** Project uses its own .ana/ framework for documentation
-
-### Repository Health
-
-**Commits:** 113 commits
-
-**Detected:** From git log
-
-**Branch strategy:** Prefix-based naming (effort/, SideSprint/, MI-*)
-
-**Commit format:** [TICKET-ID] Description with context
-
-**Detected:** From recent commits — [MI-3], [SS-8], [SS-7.3], [SS-7.2], [SS-7.1]
-
-**Organization:** TettoLabs
-
-**Detected:** From package.json author fields and repository URLs
+**Detected:** From package.json files showing pre-1.0 versions
 
 **License:** MIT
 
-**Detected:** From package.json license fields
+**Detected:** From `packages/cli/package.json` (line 10):
+```json
+"license": "MIT"
+```
 
-### Next Steps (Inferred)
+### Active Work (as of 2026-03-23)
 
-**Inferred:** Based on current branch and commit messages:
+**Current branch:** `SideSprint/setup-redesign`
 
-1. Complete setup redesign with tier system (quick/guided/complete)
-2. Stabilize quality gates and verification hooks
-3. Test scenario validation for analyzer-driven setup
-4. Move towards 1.0 release (API stabilization)
+**Recent focus:** Redesigning setup command to use analyzer-driven scaffolding with guided Q&A system. Recent commits include:
+
+**Detected:** From git status and exploration results:
+- [SS-13.0] Preflight changes for MI-51-55 (Q6 git workflow, Q7 business flow, .gitignore, explorer git targets)
+- [SS-12.4c] detectProjectType tests (14 tests), app/ directory sampling fix
+- [SS-12.4] Analyzer detectProjectType() implementation
+- [SS-11] AST symbol index (582 symbols from 152 files)
+
+**Inferred:** The "SS-" prefix indicates "SideSprint" work, showing parallel development stream alongside main effort/* branches
+
+### What's Working
+
+**Core functionality:**
+- ✅ `ana init` command — generates `.ana/` folder with 10 template files
+- ✅ Multi-language AST parsing (TypeScript, JavaScript, Python, Go via tree-sitter WASM)
+- ✅ Project type detection (Node, Python, Go with 6 fallback strategies)
+- ✅ Dependency analysis (package.json, requirements.txt, go.mod)
+- ✅ Pattern detection (error handling, validation, testing patterns)
+- ✅ Convention analysis (naming, formatting, import organization)
+- ✅ Symbol indexing (582 symbols from 152 files demonstrated)
+- ✅ Multi-OS CI testing (Windows, macOS, Linux × Node 20, 22)
+- ✅ Monorepo setup with pnpm + Turborepo
+- ✅ High test coverage (80-85% thresholds enforced)
+
+**Detected:** Exploration results show extensive analyzer capabilities with confidence scores 0.85-0.95 for most detections
+
+### What's In Progress
+
+**Active development:**
+- 🚧 Setup command redesign (analyzer-driven, guided Q&A, quote-then-write protocol)
+- 🚧 Context file verification system (quality gates, citation validation)
+- 🚧 CLAUDE.md signpost generation (marker-based merge for AI orientation)
+- 🚧 Improved monorepo detection (6 fallback strategies being refined)
+
+**Detected:** From recent commit messages showing iterative improvements to setup system, verification hooks, and analyzer detection accuracy
+
+**User confirmed:** Pain points are WASM memory management, multi-phase validation complexity, silent graceful degradation, monorepo detection fallbacks
+
+### Known Limitations
+
+**Detected:** From exploration findings and user confirmation:
+
+1. **Tree-sitter WASM complexity** — Requires explicit initialization and manual memory management (tree.delete() calls), can cause subtle bugs if not handled correctly
+
+2. **4-phase validation complexity** — Setup command has structural, content, cross-reference, and quality validation phases that can be hard to debug
+
+3. **Silent failures** — Graceful degradation pattern (DetectionCollector accumulates errors without halting) can make failures invisible unless explicitly checked
+
+4. **Monorepo detection edge cases** — 6 fallback strategies indicate detection complexity, still being refined
+
+5. **Website not active** — Documentation site exists in codebase but not yet deployed/functional
+
+**Detected:** From `README.md` showing website/ directory but no live site link
+
+### Distribution
+
+**npm packages:**
+- `anatomia-cli` — Published to npm registry
+- `anatomia-analyzer` — Published to npm registry (also usable as library)
+
+**Detected:** From `packages/cli/package.json` (lines 25-32):
+```json
+"repository": {
+  "type": "git",
+  "url": "git+https://github.com/TettoLabs/anatomia.git",
+  "directory": "packages/cli"
+},
+"homepage": "https://github.com/TettoLabs/anatomia",
+"bugs": {
+  "url": "https://github.com/TettoLabs/anatomia/issues"
+}
+```
+
+**Installation:** `npm install -g anatomia-cli`
+
+**Detected:** From `README.md` (lines 24-27):
+```bash
+## Install
+
+```bash
+npm install -g anatomia-cli
+```
+```
+
+**User confirmed:** CI via GitHub Actions for testing, manual npm publish for releases, no deployment environments (CLI tool)
+
+### Team and Contributors
+
+**Organization:** TettoLabs
+
+**Primary contributor:** Ryan Smith
+
+**Team size:** Solo/small team (2 identities in git history)
+
+**Detected:** From exploration results showing 2 contributors (Ryan Smith, TettoLabs org account)
+
+**User confirmed:** Target users are solo/small teams using AI-assisted development workflows, quality-focused TypeScript developers
+
+### Development Workflow
+
+**Branch strategy:**
+- `main` — Main integration branch
+- `effort/STEP_{phase}_{checkpoint}_{name}` — Phased development branches (STEP_0_* through STEP_2_*)
+- `SideSprint/*` — Parallel feature work (e.g., setup-redesign)
+- `ux/*` — UX improvements (e.g., fix-copy)
+
+**Detected:** From exploration results listing 13 effort/* branches and active SideSprint branch
+
+**Commit format:** `[TAG] Brief — Details`
+- Tags: SS-* (SideSprint), MI-* (Milestone/Issue), STEP_* (effort tracking)
+- Structured with em dash separator
+
+**Detected:** From exploration results showing consistent commit message format across recent history
+
+**PR workflow:** Pull request-based with merge commits to main
+
+**Detected:** From exploration results mentioning "Merge pull request #4" commits
+
+**User confirmed:** Phased branching (effort/STEP_*, SideSprint/*), PR workflow with merge commits, structured commit tags, GitHub Actions CI matrix
+
+### Quality Standards
+
+**TypeScript strictness:** Maximal — strict mode plus 6 additional strict checks
+
+**Detected:** From `tsconfig.base.json` showing all strict flags enabled
+
+**Test coverage:** 80-85% enforced via CI
+
+**Detected:** From vitest config files showing coverage thresholds
+
+**Multi-platform testing:** 3 operating systems × 2 Node versions = 6 CI jobs
+
+**Detected:** From exploration results describing GitHub Actions test matrix
+
+**Code quality:** ESLint + Prettier enforced, JSDoc for public APIs
+
+**Detected:** From exploration results showing comprehensive linting/formatting setup
+
+### Codebase Metrics
+
+**Total TypeScript lines:** ~29,339 (packages only)
+
+**Source files:** 71 .ts files in src/ directories
+
+**Test files:** 64 .test.ts files
+
+**Detected:** From exploration results showing comprehensive code analysis
+
+**Inferred:** Test-to-source ratio (~0.9) indicates strong testing discipline
 
 ---
 
-*Generated by Anatomia v0.2.0 on 2026-03-22*
+*Generated by Anatomia v0.2.0 on 2026-03-23*

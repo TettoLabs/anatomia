@@ -79,7 +79,13 @@ Invoke ana-writer in two batches. Include "User's goal: [goal]" in each invocati
 7. ana-writer → debugging.md (read: .ana/context/setup/steps/07_debugging.md)
 
 ### 7. Verify
-Run `ana setup check [file] --json` for each file. Pass the citations array to ana-verifier as claims to check. Save report to `.ana/.setup_verification.md`.
+Invoke ana-verifier to check citations. The verifier will return its report as text.
+
+**You MUST then write the verifier's complete response to `.ana/.setup_verification.md` using the Write tool.** This is the audit trail. Do not skip this step. Example:
+
+```
+Write the verifier's full report to .ana/.setup_verification.md
+```
 
 ### 8. Complete
 Show summary: files written, line counts, verification findings. Tell user to run `ana setup complete`.
