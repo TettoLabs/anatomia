@@ -11,6 +11,7 @@
 
 # Resolve script location (works regardless of CWD)
 HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_ROOT="$(cd "$HOOK_DIR/../.." && pwd)"
 
 # Read JSON from stdin (CC passes tool_input with file path)
 INPUT=$(cat)
@@ -43,11 +44,17 @@ FILENAME=$(basename "$FILE_PATH")
 RESULT=$(bash "$HOOK_DIR/run-check.sh" "$FILENAME" --json 2>&1)
 CHECK_EXIT=$?
 
+# Write results to a per-file check result on disk — NO stdout
+# This prevents broadcast to parallel agents via additionalContext
+RESULT_DIR="$PROJECT_ROOT/.ana/.state"
+mkdir -p "$RESULT_DIR"
+RESULT_FILE="$RESULT_DIR/check_result_${FILENAME}"
+
 if [ $CHECK_EXIT -eq 0 ]; then
-  echo "{\"additionalContext\": \"✓ Verification passed: $FILENAME\"}"
+  echo "PASS" > "$RESULT_FILE"
 else
-  # Extract failure details from JSON (if available)
-  echo "{\"additionalContext\": \"⚠ VERIFICATION FAILED: $FILENAME — Run 'ana setup check $FILENAME' for details. Fix issues before proceeding.\"}"
+  echo "FAIL" > "$RESULT_FILE"
+  echo "$RESULT" >> "$RESULT_FILE"
 fi
 
 exit 0

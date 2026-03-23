@@ -216,8 +216,9 @@ describe('ana init', () => {
       expect(verifyContent).toContain('#!/bin/bash');
       expect(verifyContent).toContain('PostToolUse hook');
       expect(verifyContent).toContain('.ana/context/');
-      expect(verifyContent).toContain('ana setup check');
-      expect(verifyContent).toContain('additionalContext');
+      expect(verifyContent).toContain('run-check.sh');
+      // additionalContext removed from output, but comment explains why (no stdout broadcast)
+      expect(verifyContent).toContain('NO stdout');
       // Verify jq parsing with grep fallback
       expect(verifyContent).toContain('jq -r');
       expect(verifyContent).toContain('.tool_input.file_path');

@@ -6,48 +6,56 @@
 HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "$HOOK_DIR/../.." && pwd)"
 
-# Find recently modified context files (last 60 seconds)
 CONTEXT_DIR="$PROJECT_ROOT/.ana/context"
 if [ ! -d "$CONTEXT_DIR" ]; then
   exit 0
 fi
 
-FAILURES=""
-for file in "$CONTEXT_DIR"/*.md; do
-  [ -f "$file" ] || continue
-  filename=$(basename "$file")
+# Parse the assigned file from the sub-agent's last message
+INPUT=$(cat)
 
-  # Skip files not modified in last 60 seconds
-  if [ "$(uname)" = "Darwin" ]; then
-    mod_time=$(stat -f %m "$file")
-  else
-    mod_time=$(stat -c %Y "$file")
-  fi
-  now=$(date +%s)
-  age=$(( now - mod_time ))
-  if [ $age -gt 60 ]; then
-    continue
-  fi
-
-  # Run check using the wrapper script
-  RESULT=$(bash "$HOOK_DIR/run-check.sh" "$filename" --json 2>&1)
-  CHECK_EXIT=$?
-
-  # Check if overall passed (check both exit code and JSON content)
-  if [ $CHECK_EXIT -ne 0 ]; then
-    FAILURES="$FAILURES\n⚠ $filename FAILED verification:\n$RESULT\n"
-  else
-    PASSED=$(echo "$RESULT" | grep -o '"overall":[[:space:]]*true' | head -1)
-    if [ -z "$PASSED" ]; then
-      FAILURES="$FAILURES\n⚠ $filename FAILED verification:\n$RESULT\n"
+# Try to extract filename from last_assistant_message
+ASSIGNED_FILE=""
+LAST_MSG=$(echo "$INPUT" | jq -r '.last_assistant_message // empty' 2>/dev/null)
+if [ -n "$LAST_MSG" ]; then
+  # Look for context filenames mentioned in the agent's final message
+  for candidate in project-overview.md conventions.md patterns.md architecture.md testing.md workflow.md debugging.md; do
+    if echo "$LAST_MSG" | grep -q "$candidate"; then
+      ASSIGNED_FILE="$candidate"
+      break
     fi
-  fi
-done
+  done
+fi
 
-if [ -n "$FAILURES" ]; then
-  echo -e "$FAILURES" >&2
-  echo "Fix the failing checks before finishing." >&2
-  exit 2
+# Fallback: most recently modified context file
+if [ -z "$ASSIGNED_FILE" ]; then
+  if [ "$(uname)" = "Darwin" ]; then
+    ASSIGNED_FILE=$(ls -t "$CONTEXT_DIR"/*.md 2>/dev/null | head -1 | xargs basename 2>/dev/null)
+  else
+    ASSIGNED_FILE=$(ls -t "$CONTEXT_DIR"/*.md 2>/dev/null | head -1 | xargs -r basename 2>/dev/null)
+  fi
+fi
+
+# If still nothing, skip (not a writer agent)
+if [ -z "$ASSIGNED_FILE" ] || [ ! -f "$CONTEXT_DIR/$ASSIGNED_FILE" ]; then
+  exit 0
+fi
+
+# Run check on ONLY this agent's file
+RESULT=$(bash "$HOOK_DIR/run-check.sh" "$ASSIGNED_FILE" --json 2>&1)
+CHECK_EXIT=$?
+
+# Write detailed results to disk for the writer to read
+RESULT_DIR="$PROJECT_ROOT/.ana/.state"
+mkdir -p "$RESULT_DIR"
+echo "$RESULT" > "$RESULT_DIR/check_result_${ASSIGNED_FILE}"
+
+if [ $CHECK_EXIT -ne 0 ]; then
+  PASSED=$(echo "$RESULT" | grep -o '"overall":[[:space:]]*true' | head -1)
+  if [ -z "$PASSED" ]; then
+    echo "Check failed for $ASSIGNED_FILE. Read .ana/.state/check_result_${ASSIGNED_FILE} for details." >&2
+    exit 2
+  fi
 fi
 
 exit 0
