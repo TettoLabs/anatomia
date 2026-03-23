@@ -417,6 +417,17 @@ async function createDirectoryStructure(tmpAnaPath: string): Promise<void> {
   await fs.mkdir(path.join(tmpAnaPath, 'context/setup/framework-snippets'), { recursive: true });
   await fs.mkdir(path.join(tmpAnaPath, '.state'), { recursive: true });
 
+  // Create .gitignore for runtime state files
+  const gitignoreContent = `# Anatomia runtime state — local to each developer
+.state/
+.setup_qa_log.md
+.setup_exploration.md
+.setup_verification.md
+.setup_state.json
+.setup_tier
+`;
+  await fs.writeFile(path.join(tmpAnaPath, '.gitignore'), gitignoreContent, 'utf-8');
+
   spinner.succeed('Directory structure created');
 }
 

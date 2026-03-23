@@ -125,8 +125,14 @@ describe('ana init E2E', () => {
 
     // Count total files in .ana/
     const allFiles = await findAllFiles(anaPath);
-    // 8 generated + 27 copied + 2 JSON + 4 hooks + 1 symbol-index.json + 1 cli-path = 43
-    expect(allFiles.length).toBe(43);
+    // 8 generated + 27 copied + 2 JSON + 4 hooks + 1 symbol-index.json + 1 cli-path + 1 .gitignore = 44
+    expect(allFiles.length).toBe(44);
+
+    // Verify .gitignore exists and excludes runtime state
+    const gitignorePath = path.join(anaPath, '.gitignore');
+    const gitignoreContent = await fs.readFile(gitignorePath, 'utf-8');
+    expect(gitignoreContent).toContain('.state/');
+    expect(gitignoreContent).toContain('.setup_qa_log.md');
 
     // Verify .claude/ directory was also created (outside .ana/)
     const claudePath = path.join(tmpProject, '.claude');
