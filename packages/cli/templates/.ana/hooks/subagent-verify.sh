@@ -37,7 +37,7 @@ for file in "$CONTEXT_DIR"/*.md; do
   if [ $CHECK_EXIT -ne 0 ]; then
     FAILURES="$FAILURES\n⚠ $filename FAILED verification:\n$RESULT\n"
   else
-    PASSED=$(echo "$RESULT" | grep -o '"overall":true' | head -1)
+    PASSED=$(echo "$RESULT" | grep -o '"overall":[[:space:]]*true' | head -1)
     if [ -z "$PASSED" ]; then
       FAILURES="$FAILURES\n⚠ $filename FAILED verification:\n$RESULT\n"
     fi

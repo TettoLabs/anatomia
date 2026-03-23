@@ -399,6 +399,15 @@ export async function validateCrossReferences(
   }
 
   // BF6: Framework consistency
+  // Special case: if analyzer detected nothing (unknown project type + null framework),
+  // skip the cross-reference check with a warning (not blocking error).
+  // This is Scenario B: analyzer pipeline returned no data.
+  if (snapshot.projectType === 'unknown' && snapshot.framework === null) {
+    // Log warning but don't add to errors - handled in calling code as soft warning
+    console.log('\x1b[33m  ⚠ Analyzer did not detect framework (known limitation). Skipping framework cross-reference.\x1b[0m');
+    return errors;
+  }
+
   const overviewPath = path.join(anaPath, 'context/project-overview.md');
 
   try {
