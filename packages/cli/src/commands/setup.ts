@@ -330,7 +330,7 @@ async function generateClaudeMd(cwd: string, anaPath: string): Promise<void> {
  * Sets:
  * - setupStatus: 'complete'
  * - setupCompletedAt: current timestamp
- * - setupMode: Priority: CLI --mode flag (highest) → .setup_tier file → error (no inference)
+ * - setupMode: Priority: CLI --mode flag (highest) → .setup_tier file → existing .meta.json setupMode → error
  *
  * @param anaPath - Path to .ana/ directory
  * @param cwd - Project root
@@ -389,7 +389,11 @@ async function updateMetaJson(
         process.exit(1);
       }
     }
-    // Priority 3: Error if no handoff file
+    // Priority 3: Existing setupMode from .meta.json (re-running setup complete)
+    else if (meta.setupMode && isValidSetupTier(meta.setupMode)) {
+      setupMode = meta.setupMode;
+    }
+    // Priority 4: Error if no source available
     else {
       console.error(chalk.red('Error: Cannot determine setup tier.'));
       console.error(chalk.gray('Setup should have written .ana/.setup_tier file.'));
