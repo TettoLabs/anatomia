@@ -77,9 +77,10 @@ export async function sampleFiles(
     files.push(...structure.entryPoints);
   }
 
-  // Tier 2: src/ directory sampling (application code)
+  // Tier 2: src/ and app/ directory sampling (application code)
+  // app/ is for Next.js App Router projects (majority of target market)
   try {
-    const srcPattern = 'src/**/*.{ts,tsx,js,jsx,py,go}';
+    const srcPattern = '{src,app}/**/*.{ts,tsx,js,jsx,py,go}';
     const srcFiles = await glob(srcPattern, {
       cwd: projectRoot,
       absolute: false,  // Return relative paths
