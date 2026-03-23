@@ -133,7 +133,11 @@ setupCommand
     console.log(chalk.gray('Generating ENTRY.md...'));
     await generateEntryMd(anaPath, cwd);
 
-    // Phase 6: Update .meta.json
+    // Phase 6: Generate/update CLAUDE.md
+    console.log(chalk.gray('Updating CLAUDE.md...'));
+    await generateClaudeMd(cwd, anaPath);
+
+    // Phase 7: Update .meta.json
     console.log(chalk.gray('Updating .meta.json...'));
     await updateMetaJson(anaPath, cwd, options);
 
@@ -227,6 +231,81 @@ function getTemplatesDir(): string {
   return isBuilt
     ? path.join(__dirname, 'templates') // dist/ → dist/templates/
     : path.join(__dirname, '..', '..', 'templates'); // src/commands/ → templates/
+}
+
+/**
+ * Generate or update CLAUDE.md with Anatomia section
+ *
+ * Merge strategy:
+ * 1. If marker found: replace section between markers
+ * 2. If no marker: append section at end
+ * 3. If no file: create with section only
+ *
+ * @param cwd - Project root directory
+ * @param anaPath - Path to .ana/ directory
+ */
+async function generateClaudeMd(cwd: string, anaPath: string): Promise<void> {
+  const claudeMdPath = path.join(cwd, 'CLAUDE.md');
+  const contextDir = path.join(anaPath, 'context');
+
+  // Count verified context files
+  let contextFileCount = 0;
+  try {
+    const files = await fs.readdir(contextDir);
+    contextFileCount = files.filter((f) => f.endsWith('.md')).length;
+  } catch {
+    contextFileCount = 7; // default
+  }
+
+  const today = new Date().toISOString().split('T')[0];
+
+  const anatomiaSection = [
+    '<!-- Anatomia Context Framework — do not edit this section -->',
+    `<!-- Last setup: ${today} | Run \`ana setup\` to update -->`,
+    '',
+    `This project uses Anatomia for AI context management (${contextFileCount} verified context files).`,
+    '',
+    'Available modes: @.ana/modes/code.md · @.ana/modes/debug.md · @.ana/modes/test.md · @.ana/modes/architect.md',
+    '',
+    'For full context and all modes: @.ana/ENTRY.md',
+    '<!-- End Anatomia section -->',
+  ].join('\n');
+
+  const startMarker = '<!-- Anatomia Context Framework';
+  const endMarker = '<!-- End Anatomia section -->';
+
+  let finalContent: string;
+
+  try {
+    const existing = await fs.readFile(claudeMdPath, 'utf-8');
+    const startIdx = existing.indexOf(startMarker);
+    const endIdx = existing.indexOf(endMarker);
+
+    if (startIdx !== -1 && endIdx !== -1) {
+      // Replace existing Anatomia section
+      finalContent =
+        existing.substring(0, startIdx) +
+        anatomiaSection +
+        existing.substring(endIdx + endMarker.length);
+    } else {
+      // Append to existing file
+      finalContent = existing.trimEnd() + '\n\n' + anatomiaSection + '\n';
+    }
+  } catch {
+    // No existing file — create new
+    finalContent = anatomiaSection + '\n';
+  }
+
+  try {
+    await fs.writeFile(claudeMdPath, finalContent, 'utf-8');
+    console.log(chalk.green('  ✅ CLAUDE.md updated (Anatomia section)'));
+  } catch (error) {
+    // CLAUDE.md is nice-to-have, not a gate
+    console.log(chalk.yellow('  ⚠️  Could not update CLAUDE.md (non-fatal)'));
+    if (error instanceof Error) {
+      console.log(chalk.gray(`     ${error.message}`));
+    }
+  }
 }
 
 /**

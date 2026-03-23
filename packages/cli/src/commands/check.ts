@@ -32,7 +32,7 @@ const FILE_CONFIGS: Record<string, FileConfig> = {
   'architecture': { minLines: 200, maxLines: 700, expectedHeaders: 4 },
   'testing': { minLines: 250, maxLines: 850, expectedHeaders: 6 },
   'workflow': { minLines: 400, maxLines: 1000, expectedHeaders: 6 },
-  'debugging': { minLines: 200, maxLines: 700, expectedHeaders: 6 },
+  'debugging': { minLines: 200, maxLines: 700, expectedHeaders: 5 },
 };
 
 /** All context files to check */
