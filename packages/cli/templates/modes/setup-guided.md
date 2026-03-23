@@ -160,11 +160,14 @@ For user answers, validate against codebase before storing. See setup.md Step 5 
 
 Re-read `.ana/.setup_exploration.md` before presenting trade-offs to ensure exploration findings are fresh in context.
 
-After all questions are answered, review the exploration results for security and architecture concerns. Look for findings tagged with high confidence that involve:
+After all questions are answered, review the exploration results for ANY concerns the explorer found — security, architecture, design trade-offs, or risk. These are examples, not a complete list:
 - Missing security measures (rate limiting, auth on routes, webhook verification)
 - Missing data safety (no database transactions, no backup strategy)
 - Missing observability (no error tracking, no monitoring)
-- Architectural choices that may be unintentional
+- Architectural complexity (multiple fallback strategies, multi-phase pipelines, graceful degradation that silences errors, manual memory management)
+- Design decisions with unclear rationale or no documented justification
+
+Present any finding from exploration that a senior engineer would want to confirm was intentional. CLI tools, libraries, and infrastructure projects have trade-offs too — not just web apps.
 
 Present the top 3-5 findings to the user:
 

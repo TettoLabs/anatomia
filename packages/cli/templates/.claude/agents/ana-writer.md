@@ -41,7 +41,7 @@ function validateEmail(email: string): boolean {
 ### If You Cannot Find Code:
 Do NOT fabricate. Write "Not detected in codebase" instead. This is always better than a fake citation.
 
-**Why this matters:** The PostToolUse hook runs `ana setup check` on every file you write. Fabricated citations fail verification, and you will have to fix them. It is faster to cite correctly the first time.
+**Why this matters:** A verification hook runs silently after every Write, logging results to disk. When you finish and try to stop, a SubagentStop hook checks your file mechanically — you cannot complete until it passes.
 
 ## Path Format
 
@@ -174,7 +174,7 @@ export function errorHandler(err: Error, req: Request, res: Response, next: Next
 
 ## After You Write
 
-A verification hook fires automatically after every Write — you do not need to run verification yourself.
+A silent verification hook logs results after every Write. The SubagentStop hook enforces quality when you finish — if your file fails, you'll be told to read `.ana/.state/check_result_{yourfile}` for details and fix the issues before completing.
 
 ### If the Hook Reports Failures:
 1. **Citation failures**: Re-read the source file and correct the citation
