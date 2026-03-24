@@ -24,7 +24,7 @@
 - None found
 
 **Analyzer version:** 0.1.0
-**Detected at:** 2026-03-23T20:38:22.854Z
+**Detected at:** 2026-03-24T01:04:18.935Z
 
 ---
 
@@ -167,7 +167,7 @@ None detected
 
 ### Detection Metadata
 
-- Files sampled: 0
+- Files sampled: 15
 - Detection time: 0ms
 - Confidence threshold: 0.7
 
@@ -177,12 +177,10 @@ None detected
 
 ### Naming Conventions
 
-**Files:** unknown (confidence: 0.00, mixed)
-  Distribution: 
+**Files:** PascalCase (confidence: 1.00)
 **Variables:** unknown (confidence: 0.00, mixed)
   Distribution: 
-**Functions:** unknown (confidence: 0.00, mixed)
-  Distribution: 
+**Functions:** camelCase (confidence: 0.85)
 **Classes:** unknown (confidence: 0.00, mixed)
   Distribution: 
 **Constants:** unknown (confidence: 0.00, mixed)
@@ -190,18 +188,18 @@ None detected
 
 ### Import Conventions
 
-**Style:** mixed (confidence: 0.00)
-**Distribution:** absolute: 0%, relative: 0%
+**Style:** relative (confidence: 1.00)
+**Distribution:** absolute: 0%, relative: 100%
 
 ### Indentation
 
-**Style:** spaces (4 spaces)
-**Confidence:** 0.50 (from code analysis)
+**Style:** spaces (2 spaces)
+**Confidence:** 1.00 (from config file)
 
 ### Detection Metadata
 
-- Files sampled: 0
-- Detection time: 2ms
+- Files sampled: 15
+- Detection time: 19ms
 
 ---
 
@@ -209,12 +207,23 @@ None detected
 
 ### Overview
 
-- **Files parsed:** 0
-- **Functions found:** 0
+- **Files parsed:** 15
+- **Functions found:** 31
 - **Classes found:** 0
 
 ### Parse Metrics
 
+- Cache hit rate: 0.0%
+
+### High-Activity Files
+
+*Files with most functions (likely core logic):*
+
+- **undefined** — 9 functions, 0 classes
+- **undefined** — 5 functions, 0 classes
+- **undefined** — 3 functions, 0 classes
+- **undefined** — 2 functions, 0 classes
+- **undefined** — 2 functions, 0 classes
 
 ---
 

@@ -3,13 +3,17 @@
  *
  * Uses STEP_1.2 entry point detection to prioritize files:
  * - Tier 1: Entry points (highest value - always parse)
- * - Tier 2: src/ directory (application code)
+ * - Tier 2: All source files (universal ** discovery - works for monorepos, flat projects, any structure)
  * - Tier 3: Root level files (simple projects)
  *
  * Excludes:
  * - Test files (using structure.testLocation)
- * - Build outputs (dist/, build/, .next/, target/)
+ * - Build outputs (dist/, build/, out/, .next/, .nuxt/, .svelte-kit/, target/)
  * - Dependencies (node_modules, vendor/, venv/)
+ * - Cache (__pycache__, .pytest_cache/, coverage/)
+ * - Anatomia/Claude files (.ana/, .claude/)
+ * - Type declarations (*.d.ts)
+ * - Bundled/minified (*.min.js, *.bundle.js)
  *
  * Limit: Max 20 files (performance budget ≤5s)
  */
@@ -31,13 +35,16 @@ export interface SamplingOptions {
  *
  * Three-tier sampling:
  * 1. Entry points (confidence ≥ minConfidence) - ALWAYS parse
- * 2. src/ directory files - Sample 10-15 application code files
+ * 2. All source files - Sample 10-15 application code files (universal ** discovery)
  * 3. Root level files - Sample 3-5 for simple projects
  *
  * Excludes:
  * - Tests (using structure.testLocation)
- * - Build outputs (dist/, build/, .next/, target/)
+ * - Build outputs (dist/, build/, out/, .next/, .nuxt/, .svelte-kit/, target/)
  * - Dependencies (node_modules, vendor/, venv/)
+ * - Cache (__pycache__, .pytest_cache/, coverage/)
+ * - Anatomia/Claude files (.ana/, .claude/)
+ * - Type declarations (*.d.ts), bundled/minified files
  *
  * @param projectRoot - Absolute path to project root
  * @param analysis - AnalysisResult with structure field from STEP_1.2
@@ -77,23 +84,41 @@ export async function sampleFiles(
     files.push(...structure.entryPoints);
   }
 
-  // Tier 2: src/ and app/ directory sampling (application code)
-  // app/ is for Next.js App Router projects (majority of target market)
+  // Tier 2: All source files (universal discovery)
+  // Uses ** pattern like symbol index - works for monorepos, flat projects, any structure
   try {
-    const srcPattern = '{src,app}/**/*.{ts,tsx,js,jsx,py,go}';
+    const srcPattern = '**/*.{ts,tsx,js,jsx,py,go}';
     const srcFiles = await glob(srcPattern, {
       cwd: projectRoot,
       absolute: false,  // Return relative paths
       ignore: [
+        // Dependencies
         '**/node_modules/**',
-        '**/dist/**',
-        '**/build/**',
-        '**/.next/**',
-        '**/target/**',
+        '**/vendor/**',
         '**/venv/**',
         '**/.venv/**',
-        '**/vendor/**',
+        // Build outputs
+        '**/dist/**',
+        '**/build/**',
+        '**/out/**',
+        '**/.next/**',
+        '**/.nuxt/**',
+        '**/.svelte-kit/**',
+        '**/target/**',
+        // Cache
         '**/__pycache__/**',
+        '**/.pytest_cache/**',
+        '**/coverage/**',
+        // Anatomia/Claude files
+        '**/.ana/**',
+        '**/.claude/**',
+        // Type declarations (structure scan handles these)
+        '**/*.d.ts',
+        // Version control
+        '**/.git/**',
+        // Bundled/minified
+        '**/*.min.js',
+        '**/*.bundle.js',
       ],
     });
 
@@ -121,7 +146,7 @@ export async function sampleFiles(
 
     files.push(...sampled);
   } catch {
-    // src/ directory doesn't exist, skip tier 2
+    // No source files found, skip tier 2
   }
 
   // Tier 3: Root level files (simple projects)

@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-23T20:38:23.098Z",
+  "generated": "2026-03-24T01:04:19.252Z",
   "files_parsed": 152,
   "symbols": [
     {
@@ -76,21 +76,21 @@
       "name": "validateContent",
       "type": "function",
       "file": "packages/cli/src/utils/validators.ts",
-      "line": 324,
+      "line": 327,
       "exported": true
     },
     {
       "name": "validateCrossReferences",
       "type": "function",
       "file": "packages/cli/src/utils/validators.ts",
-      "line": 368,
+      "line": 371,
       "exported": true
     },
     {
       "name": "validateQuality",
       "type": "function",
       "file": "packages/cli/src/utils/validators.ts",
-      "line": 450,
+      "line": 463,
       "exported": true
     },
     {
@@ -825,8 +825,211 @@
       "name": "sampleFiles",
       "type": "function",
       "file": "packages/analyzer/src/sampling/fileSampler.ts",
-      "line": 56,
+      "line": 63,
       "exported": true
+    },
+    {
+      "name": "formatError",
+      "type": "function",
+      "file": "packages/analyzer/src/errors/formatter.ts",
+      "line": 12,
+      "exported": true
+    },
+    {
+      "name": "formatAllErrors",
+      "type": "function",
+      "file": "packages/analyzer/src/errors/formatter.ts",
+      "line": 48,
+      "exported": true
+    },
+    {
+      "name": "formatErrorSummary",
+      "type": "function",
+      "file": "packages/analyzer/src/errors/formatter.ts",
+      "line": 82,
+      "exported": true
+    },
+    {
+      "name": "DetectionEngineError",
+      "type": "class",
+      "file": "packages/analyzer/src/errors/DetectionError.ts",
+      "line": 45,
+      "exported": true
+    },
+    {
+      "name": "constructor",
+      "type": "method",
+      "file": "packages/analyzer/src/errors/DetectionError.ts",
+      "line": 53,
+      "exported": false
+    },
+    {
+      "name": "toDetectionError",
+      "type": "method",
+      "file": "packages/analyzer/src/errors/DetectionError.ts",
+      "line": 85,
+      "exported": false
+    },
+    {
+      "name": "DetectionCollector",
+      "type": "class",
+      "file": "packages/analyzer/src/errors/DetectionCollector.ts",
+      "line": 9,
+      "exported": true
+    },
+    {
+      "name": "addError",
+      "type": "method",
+      "file": "packages/analyzer/src/errors/DetectionCollector.ts",
+      "line": 17,
+      "exported": false
+    },
+    {
+      "name": "addWarning",
+      "type": "method",
+      "file": "packages/analyzer/src/errors/DetectionCollector.ts",
+      "line": 26,
+      "exported": false
+    },
+    {
+      "name": "addInfo",
+      "type": "method",
+      "file": "packages/analyzer/src/errors/DetectionCollector.ts",
+      "line": 35,
+      "exported": false
+    },
+    {
+      "name": "getAllErrors",
+      "type": "method",
+      "file": "packages/analyzer/src/errors/DetectionCollector.ts",
+      "line": 44,
+      "exported": false
+    },
+    {
+      "name": "getErrors",
+      "type": "method",
+      "file": "packages/analyzer/src/errors/DetectionCollector.ts",
+      "line": 51,
+      "exported": false
+    },
+    {
+      "name": "getWarnings",
+      "type": "method",
+      "file": "packages/analyzer/src/errors/DetectionCollector.ts",
+      "line": 55,
+      "exported": false
+    },
+    {
+      "name": "getInfo",
+      "type": "method",
+      "file": "packages/analyzer/src/errors/DetectionCollector.ts",
+      "line": 59,
+      "exported": false
+    },
+    {
+      "name": "hasCriticalErrors",
+      "type": "method",
+      "file": "packages/analyzer/src/errors/DetectionCollector.ts",
+      "line": 66,
+      "exported": false
+    },
+    {
+      "name": "getCounts",
+      "type": "method",
+      "file": "packages/analyzer/src/errors/DetectionCollector.ts",
+      "line": 73,
+      "exported": false
+    },
+    {
+      "name": "clear",
+      "type": "method",
+      "file": "packages/analyzer/src/errors/DetectionCollector.ts",
+      "line": 85,
+      "exported": false
+    },
+    {
+      "name": "detectRustFramework",
+      "type": "function",
+      "file": "packages/analyzer/src/detectors/rust.ts",
+      "line": 13,
+      "exported": true
+    },
+    {
+      "name": "exists",
+      "type": "function",
+      "file": "packages/analyzer/src/detectors/projectType.ts",
+      "line": 21,
+      "exported": false
+    },
+    {
+      "name": "detectProjectType",
+      "type": "function",
+      "file": "packages/analyzer/src/detectors/projectType.ts",
+      "line": 36,
+      "exported": true
+    },
+    {
+      "name": "detectMonorepo",
+      "type": "function",
+      "file": "packages/analyzer/src/detectors/monorepo.ts",
+      "line": 35,
+      "exported": true
+    },
+    {
+      "name": "discoverPackages",
+      "type": "function",
+      "file": "packages/analyzer/src/detectors/monorepo.ts",
+      "line": 265,
+      "exported": false
+    },
+    {
+      "name": "shouldSkipDirectory",
+      "type": "function",
+      "file": "packages/analyzer/src/detectors/monorepo.ts",
+      "line": 330,
+      "exported": false
+    },
+    {
+      "name": "detectGoFramework",
+      "type": "function",
+      "file": "packages/analyzer/src/detectors/go.ts",
+      "line": 15,
+      "exported": true
+    },
+    {
+      "name": "detectFramework",
+      "type": "function",
+      "file": "packages/analyzer/src/detectors/framework.ts",
+      "line": 49,
+      "exported": true
+    },
+    {
+      "name": "detectPythonFramework",
+      "type": "function",
+      "file": "packages/analyzer/src/detectors/framework.ts",
+      "line": 70,
+      "exported": false
+    },
+    {
+      "name": "detectNodeFramework",
+      "type": "function",
+      "file": "packages/analyzer/src/detectors/framework.ts",
+      "line": 92,
+      "exported": false
+    },
+    {
+      "name": "detectGoFrameworkFromProject",
+      "type": "function",
+      "file": "packages/analyzer/src/detectors/framework.ts",
+      "line": 118,
+      "exported": false
+    },
+    {
+      "name": "detectRustFrameworkFromProject",
+      "type": "function",
+      "file": "packages/analyzer/src/detectors/framework.ts",
+      "line": 123,
+      "exported": false
     },
     {
       "name": "resolveWasmPath",
@@ -1100,209 +1303,6 @@
       "file": "packages/analyzer/src/parsers/go.ts",
       "line": 52,
       "exported": true
-    },
-    {
-      "name": "formatError",
-      "type": "function",
-      "file": "packages/analyzer/src/errors/formatter.ts",
-      "line": 12,
-      "exported": true
-    },
-    {
-      "name": "formatAllErrors",
-      "type": "function",
-      "file": "packages/analyzer/src/errors/formatter.ts",
-      "line": 48,
-      "exported": true
-    },
-    {
-      "name": "formatErrorSummary",
-      "type": "function",
-      "file": "packages/analyzer/src/errors/formatter.ts",
-      "line": 82,
-      "exported": true
-    },
-    {
-      "name": "DetectionEngineError",
-      "type": "class",
-      "file": "packages/analyzer/src/errors/DetectionError.ts",
-      "line": 45,
-      "exported": true
-    },
-    {
-      "name": "constructor",
-      "type": "method",
-      "file": "packages/analyzer/src/errors/DetectionError.ts",
-      "line": 53,
-      "exported": false
-    },
-    {
-      "name": "toDetectionError",
-      "type": "method",
-      "file": "packages/analyzer/src/errors/DetectionError.ts",
-      "line": 85,
-      "exported": false
-    },
-    {
-      "name": "DetectionCollector",
-      "type": "class",
-      "file": "packages/analyzer/src/errors/DetectionCollector.ts",
-      "line": 9,
-      "exported": true
-    },
-    {
-      "name": "addError",
-      "type": "method",
-      "file": "packages/analyzer/src/errors/DetectionCollector.ts",
-      "line": 17,
-      "exported": false
-    },
-    {
-      "name": "addWarning",
-      "type": "method",
-      "file": "packages/analyzer/src/errors/DetectionCollector.ts",
-      "line": 26,
-      "exported": false
-    },
-    {
-      "name": "addInfo",
-      "type": "method",
-      "file": "packages/analyzer/src/errors/DetectionCollector.ts",
-      "line": 35,
-      "exported": false
-    },
-    {
-      "name": "getAllErrors",
-      "type": "method",
-      "file": "packages/analyzer/src/errors/DetectionCollector.ts",
-      "line": 44,
-      "exported": false
-    },
-    {
-      "name": "getErrors",
-      "type": "method",
-      "file": "packages/analyzer/src/errors/DetectionCollector.ts",
-      "line": 51,
-      "exported": false
-    },
-    {
-      "name": "getWarnings",
-      "type": "method",
-      "file": "packages/analyzer/src/errors/DetectionCollector.ts",
-      "line": 55,
-      "exported": false
-    },
-    {
-      "name": "getInfo",
-      "type": "method",
-      "file": "packages/analyzer/src/errors/DetectionCollector.ts",
-      "line": 59,
-      "exported": false
-    },
-    {
-      "name": "hasCriticalErrors",
-      "type": "method",
-      "file": "packages/analyzer/src/errors/DetectionCollector.ts",
-      "line": 66,
-      "exported": false
-    },
-    {
-      "name": "getCounts",
-      "type": "method",
-      "file": "packages/analyzer/src/errors/DetectionCollector.ts",
-      "line": 73,
-      "exported": false
-    },
-    {
-      "name": "clear",
-      "type": "method",
-      "file": "packages/analyzer/src/errors/DetectionCollector.ts",
-      "line": 85,
-      "exported": false
-    },
-    {
-      "name": "detectRustFramework",
-      "type": "function",
-      "file": "packages/analyzer/src/detectors/rust.ts",
-      "line": 13,
-      "exported": true
-    },
-    {
-      "name": "exists",
-      "type": "function",
-      "file": "packages/analyzer/src/detectors/projectType.ts",
-      "line": 21,
-      "exported": false
-    },
-    {
-      "name": "detectProjectType",
-      "type": "function",
-      "file": "packages/analyzer/src/detectors/projectType.ts",
-      "line": 36,
-      "exported": true
-    },
-    {
-      "name": "detectMonorepo",
-      "type": "function",
-      "file": "packages/analyzer/src/detectors/monorepo.ts",
-      "line": 35,
-      "exported": true
-    },
-    {
-      "name": "discoverPackages",
-      "type": "function",
-      "file": "packages/analyzer/src/detectors/monorepo.ts",
-      "line": 265,
-      "exported": false
-    },
-    {
-      "name": "shouldSkipDirectory",
-      "type": "function",
-      "file": "packages/analyzer/src/detectors/monorepo.ts",
-      "line": 330,
-      "exported": false
-    },
-    {
-      "name": "detectGoFramework",
-      "type": "function",
-      "file": "packages/analyzer/src/detectors/go.ts",
-      "line": 15,
-      "exported": true
-    },
-    {
-      "name": "detectFramework",
-      "type": "function",
-      "file": "packages/analyzer/src/detectors/framework.ts",
-      "line": 49,
-      "exported": true
-    },
-    {
-      "name": "detectPythonFramework",
-      "type": "function",
-      "file": "packages/analyzer/src/detectors/framework.ts",
-      "line": 70,
-      "exported": false
-    },
-    {
-      "name": "detectNodeFramework",
-      "type": "function",
-      "file": "packages/analyzer/src/detectors/framework.ts",
-      "line": 92,
-      "exported": false
-    },
-    {
-      "name": "detectGoFrameworkFromProject",
-      "type": "function",
-      "file": "packages/analyzer/src/detectors/framework.ts",
-      "line": 118,
-      "exported": false
-    },
-    {
-      "name": "detectRustFrameworkFromProject",
-      "type": "function",
-      "file": "packages/analyzer/src/detectors/framework.ts",
-      "line": 123,
-      "exported": false
     },
     {
       "name": "ASTCache",
@@ -1599,38 +1599,31 @@
       "exported": true
     },
     {
-      "name": "parseRequirementsTxt",
+      "name": "detectFlask",
       "type": "function",
-      "file": "packages/analyzer/src/parsers/python/requirements.ts",
-      "line": 43,
-      "exported": true
-    },
-    {
-      "name": "parsePyprojectToml",
-      "type": "function",
-      "file": "packages/analyzer/src/parsers/python/pyproject.ts",
+      "file": "packages/analyzer/src/detectors/python/flask.ts",
       "line": 18,
       "exported": true
     },
     {
-      "name": "parsePipfile",
+      "name": "detectFastAPI",
       "type": "function",
-      "file": "packages/analyzer/src/parsers/python/Pipfile.ts",
-      "line": 13,
+      "file": "packages/analyzer/src/detectors/python/fastapi.ts",
+      "line": 40,
       "exported": true
     },
     {
-      "name": "parsePackageLock",
+      "name": "detectDjango",
       "type": "function",
-      "file": "packages/analyzer/src/parsers/node/packageLock.ts",
-      "line": 8,
+      "file": "packages/analyzer/src/detectors/python/django.ts",
+      "line": 27,
       "exported": true
     },
     {
-      "name": "parsePackageJson",
+      "name": "detectPythonCli",
       "type": "function",
-      "file": "packages/analyzer/src/parsers/node/package.ts",
-      "line": 52,
+      "file": "packages/analyzer/src/detectors/python/cli.ts",
+      "line": 15,
       "exported": true
     },
     {
@@ -1669,31 +1662,38 @@
       "exported": true
     },
     {
-      "name": "detectFlask",
+      "name": "parseRequirementsTxt",
       "type": "function",
-      "file": "packages/analyzer/src/detectors/python/flask.ts",
+      "file": "packages/analyzer/src/parsers/python/requirements.ts",
+      "line": 43,
+      "exported": true
+    },
+    {
+      "name": "parsePyprojectToml",
+      "type": "function",
+      "file": "packages/analyzer/src/parsers/python/pyproject.ts",
       "line": 18,
       "exported": true
     },
     {
-      "name": "detectFastAPI",
+      "name": "parsePipfile",
       "type": "function",
-      "file": "packages/analyzer/src/detectors/python/fastapi.ts",
-      "line": 40,
+      "file": "packages/analyzer/src/parsers/python/Pipfile.ts",
+      "line": 13,
       "exported": true
     },
     {
-      "name": "detectDjango",
+      "name": "parsePackageLock",
       "type": "function",
-      "file": "packages/analyzer/src/detectors/python/django.ts",
-      "line": 27,
+      "file": "packages/analyzer/src/parsers/node/packageLock.ts",
+      "line": 8,
       "exported": true
     },
     {
-      "name": "detectPythonCli",
+      "name": "parsePackageJson",
       "type": "function",
-      "file": "packages/analyzer/src/detectors/python/cli.ts",
-      "line": 15,
+      "file": "packages/analyzer/src/parsers/node/package.ts",
+      "line": 52,
       "exported": true
     },
     {
@@ -2197,476 +2197,476 @@
       "name": "validateContent",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1119,
+      "line": 1120,
       "exported": false
     },
     {
       "name": "validateCrossReferences",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1144,
+      "line": 1145,
       "exported": false
     },
     {
       "name": "validateQuality",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1190,
+      "line": 1193,
       "exported": false
     },
     {
       "name": "detectLanguage",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1247,
+      "line": 1250,
       "exported": false
     },
     {
       "name": "extractTSSymbols",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1265,
+      "line": 1268,
       "exported": false
     },
     {
       "name": "visit",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1268,
+      "line": 1271,
       "exported": false
     },
     {
       "name": "extractPythonSymbols",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1351,
+      "line": 1354,
       "exported": false
     },
     {
       "name": "visit",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1354,
+      "line": 1357,
       "exported": false
     },
     {
       "name": "extractGoSymbols",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1394,
+      "line": 1397,
       "exported": false
     },
     {
       "name": "visit",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1397,
+      "line": 1400,
       "exported": false
     },
     {
       "name": "buildSymbolIndex",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1457,
+      "line": 1460,
       "exported": false
     },
     {
       "name": "createIndexCommand",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1535,
+      "line": 1538,
       "exported": false
     },
     {
       "name": "createEmptyAnalysisResult",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1568,
+      "line": 1571,
       "exported": false
     },
     {
       "name": "askSetupTier",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1578,
+      "line": 1581,
       "exported": false
     },
     {
       "name": "validateInitPreconditions",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1644,
+      "line": 1647,
       "exported": false
     },
     {
       "name": "dirExists",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1692,
+      "line": 1695,
       "exported": false
     },
     {
       "name": "runAnalyzer",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1700,
+      "line": 1703,
       "exported": false
     },
     {
       "name": "displayDetectionSummary",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1727,
+      "line": 1730,
       "exported": false
     },
     {
       "name": "createDirectoryStructure",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1753,
+      "line": 1756,
       "exported": false
     },
     {
       "name": "generateAnalysisMd",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1772,
+      "line": 1775,
       "exported": false
     },
     {
       "name": "generateScaffolds",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1781,
+      "line": 1784,
       "exported": false
     },
     {
       "name": "getCliVersion",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1805,
+      "line": 1808,
       "exported": false
     },
     {
       "name": "copyStaticFilesWithVerification",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1817,
+      "line": 1820,
       "exported": false
     },
     {
       "name": "copyAndVerifyFile",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1847,
+      "line": 1850,
       "exported": false
     },
     {
       "name": "copyHookScripts",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1862,
+      "line": 1865,
       "exported": false
     },
     {
       "name": "createClaudeConfiguration",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1876,
+      "line": 1879,
       "exported": false
     },
     {
       "name": "copyAgentFiles",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1917,
+      "line": 1920,
       "exported": false
     },
     {
       "name": "fileExists2",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1928,
+      "line": 1931,
       "exported": false
     },
     {
       "name": "mergeHooksSettings",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1936,
+      "line": 1939,
       "exported": false
     },
     {
       "name": "hookEntryMatches",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1958,
+      "line": 1961,
       "exported": false
     },
     {
       "name": "getTemplatesDir",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1966,
+      "line": 1969,
       "exported": false
     },
     {
       "name": "createMetaJson",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1972,
+      "line": 1975,
       "exported": false
     },
     {
       "name": "storeSnapshot",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1991,
+      "line": 1994,
       "exported": false
     },
     {
       "name": "buildSymbolIndexSafe",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 1998,
+      "line": 2001,
       "exported": false
     },
     {
       "name": "writeCliPath",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2011,
+      "line": 2014,
       "exported": false
     },
     {
       "name": "atomicRename",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2025,
+      "line": 2028,
       "exported": false
     },
     {
       "name": "displaySuccessMessage",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2037,
+      "line": 2040,
       "exported": false
     },
     {
       "name": "exists",
       "type": "method",
       "file": "packages/cli/dist/index.js",
-      "line": 2069,
+      "line": 2072,
       "exported": false
     },
     {
       "name": "createDir",
       "type": "method",
       "file": "packages/cli/dist/index.js",
-      "line": 2082,
+      "line": 2085,
       "exported": false
     },
     {
       "name": "writeFile",
       "type": "method",
       "file": "packages/cli/dist/index.js",
-      "line": 2099,
+      "line": 2102,
       "exported": false
     },
     {
       "name": "readFile",
       "type": "method",
       "file": "packages/cli/dist/index.js",
-      "line": 2118,
+      "line": 2121,
       "exported": false
     },
     {
       "name": "removeDir",
       "type": "method",
       "file": "packages/cli/dist/index.js",
-      "line": 2133,
+      "line": 2136,
       "exported": false
     },
     {
       "name": "joinPath",
       "type": "method",
       "file": "packages/cli/dist/index.js",
-      "line": 2148,
+      "line": 2151,
       "exported": false
     },
     {
       "name": "getCwd",
       "type": "method",
       "file": "packages/cli/dist/index.js",
-      "line": 2155,
+      "line": 2158,
       "exported": false
     },
     {
       "name": "isValidMode",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2217,
+      "line": 2220,
       "exported": false
     },
     {
       "name": "printAvailableModes",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2220,
+      "line": 2223,
       "exported": false
     },
     {
       "name": "formatHumanReadable",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2290,
+      "line": 2293,
       "exported": false
     },
     {
       "name": "checkLineCount",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2374,
+      "line": 2377,
       "exported": false
     },
     {
       "name": "checkHeaders",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2383,
+      "line": 2386,
       "exported": false
     },
     {
       "name": "checkPlaceholders",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2402,
+      "line": 2405,
       "exported": false
     },
     {
       "name": "checkScaffoldMarkers",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2419,
+      "line": 2422,
       "exported": false
     },
     {
       "name": "isValidFilePath",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2427,
+      "line": 2430,
       "exported": false
     },
     {
       "name": "loadSymbolIndex",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2434,
+      "line": 2437,
       "exported": false
     },
     {
       "name": "isIndexedSourceFile",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2444,
+      "line": 2447,
       "exported": false
     },
     {
       "name": "isInExcludedDirectory",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2449,
+      "line": 2452,
       "exported": false
     },
     {
       "name": "extractCitedSymbol",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2467,
+      "line": 2470,
       "exported": false
     },
     {
       "name": "findSymbolInFile",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2481,
+      "line": 2484,
       "exported": false
     },
     {
       "name": "checkCitations",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2496,
+      "line": 2499,
       "exported": false
     },
     {
       "name": "checkFile",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2583,
+      "line": 2586,
       "exported": false
     },
     {
       "name": "displayFileResult",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2607,
+      "line": 2610,
       "exported": false
     },
     {
       "name": "createCheckCommand",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2651,
+      "line": 2654,
       "exported": false
     },
     {
       "name": "isValidSetupTier",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2742,
+      "line": 2745,
       "exported": false
     },
     {
       "name": "displayValidationFailures",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2829,
+      "line": 2832,
       "exported": false
     },
     {
       "name": "generateEntryMd",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2838,
+      "line": 2841,
       "exported": false
     },
     {
       "name": "getTemplatesDir2",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2854,
+      "line": 2857,
       "exported": false
     },
     {
       "name": "generateClaudeMd",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2861,
+      "line": 2864,
       "exported": false
     },
     {
       "name": "updateMetaJson",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2908,
+      "line": 2911,
       "exported": false
     },
     {
       "name": "main",
       "type": "function",
       "file": "packages/cli/dist/index.js",
-      "line": 2963,
+      "line": 2968,
       "exported": false
     },
     {
@@ -3286,6 +3286,90 @@
       "exported": false
     },
     {
+      "name": "detectRustFramework",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/rust.js",
+      "line": 1,
+      "exported": true
+    },
+    {
+      "name": "exists",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/projectType.js",
+      "line": 3,
+      "exported": false
+    },
+    {
+      "name": "detectProjectType",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/projectType.js",
+      "line": 12,
+      "exported": true
+    },
+    {
+      "name": "detectMonorepo",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/monorepo.js",
+      "line": 6,
+      "exported": true
+    },
+    {
+      "name": "discoverPackages",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/monorepo.js",
+      "line": 132,
+      "exported": false
+    },
+    {
+      "name": "shouldSkipDirectory",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/monorepo.js",
+      "line": 164,
+      "exported": false
+    },
+    {
+      "name": "detectGoFramework",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/go.js",
+      "line": 1,
+      "exported": true
+    },
+    {
+      "name": "detectFramework",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/framework.js",
+      "line": 16,
+      "exported": true
+    },
+    {
+      "name": "detectPythonFramework",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/framework.js",
+      "line": 30,
+      "exported": false
+    },
+    {
+      "name": "detectNodeFramework",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/framework.js",
+      "line": 46,
+      "exported": false
+    },
+    {
+      "name": "detectGoFrameworkFromProject",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/framework.js",
+      "line": 65,
+      "exported": false
+    },
+    {
+      "name": "detectRustFrameworkFromProject",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/framework.js",
+      "line": 69,
+      "exported": false
+    },
+    {
       "name": "mapDirectoriesToPurposes",
       "type": "function",
       "file": "packages/analyzer/dist/analyzers/structure.js",
@@ -3515,90 +3599,6 @@
       "file": "packages/analyzer/dist/analyzers/patterns.js",
       "line": 774,
       "exported": true
-    },
-    {
-      "name": "detectRustFramework",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/rust.js",
-      "line": 1,
-      "exported": true
-    },
-    {
-      "name": "exists",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/projectType.js",
-      "line": 3,
-      "exported": false
-    },
-    {
-      "name": "detectProjectType",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/projectType.js",
-      "line": 12,
-      "exported": true
-    },
-    {
-      "name": "detectMonorepo",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/monorepo.js",
-      "line": 6,
-      "exported": true
-    },
-    {
-      "name": "discoverPackages",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/monorepo.js",
-      "line": 132,
-      "exported": false
-    },
-    {
-      "name": "shouldSkipDirectory",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/monorepo.js",
-      "line": 164,
-      "exported": false
-    },
-    {
-      "name": "detectGoFramework",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/go.js",
-      "line": 1,
-      "exported": true
-    },
-    {
-      "name": "detectFramework",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/framework.js",
-      "line": 16,
-      "exported": true
-    },
-    {
-      "name": "detectPythonFramework",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/framework.js",
-      "line": 30,
-      "exported": false
-    },
-    {
-      "name": "detectNodeFramework",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/framework.js",
-      "line": 46,
-      "exported": false
-    },
-    {
-      "name": "detectGoFrameworkFromProject",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/framework.js",
-      "line": 65,
-      "exported": false
-    },
-    {
-      "name": "detectRustFrameworkFromProject",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/framework.js",
-      "line": 69,
-      "exported": false
     },
     {
       "name": "resolveWasmPath",
@@ -3874,6 +3874,69 @@
       "exported": true
     },
     {
+      "name": "detectFlask",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/python/flask.js",
+      "line": 5,
+      "exported": true
+    },
+    {
+      "name": "detectFastAPI",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/python/fastapi.js",
+      "line": 3,
+      "exported": true
+    },
+    {
+      "name": "detectDjango",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/python/django.js",
+      "line": 4,
+      "exported": true
+    },
+    {
+      "name": "detectPythonCli",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/python/cli.js",
+      "line": 1,
+      "exported": true
+    },
+    {
+      "name": "detectReact",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/node/react.js",
+      "line": 3,
+      "exported": true
+    },
+    {
+      "name": "detectOtherNodeFrameworks",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/node/other.js",
+      "line": 1,
+      "exported": true
+    },
+    {
+      "name": "detectNextjs",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/node/nextjs.js",
+      "line": 3,
+      "exported": true
+    },
+    {
+      "name": "detectNestjs",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/node/nestjs.js",
+      "line": 4,
+      "exported": true
+    },
+    {
+      "name": "detectExpress",
+      "type": "function",
+      "file": "packages/analyzer/dist/detectors/node/express.js",
+      "line": 3,
+      "exported": true
+    },
+    {
       "name": "analyzeTypeHints",
       "type": "function",
       "file": "packages/analyzer/dist/analyzers/conventions/typeHints.js",
@@ -4060,69 +4123,6 @@
       "type": "function",
       "file": "packages/analyzer/dist/analyzers/conventions/docstrings.js",
       "line": 23,
-      "exported": true
-    },
-    {
-      "name": "detectFlask",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/python/flask.js",
-      "line": 5,
-      "exported": true
-    },
-    {
-      "name": "detectFastAPI",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/python/fastapi.js",
-      "line": 3,
-      "exported": true
-    },
-    {
-      "name": "detectDjango",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/python/django.js",
-      "line": 4,
-      "exported": true
-    },
-    {
-      "name": "detectPythonCli",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/python/cli.js",
-      "line": 1,
-      "exported": true
-    },
-    {
-      "name": "detectReact",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/node/react.js",
-      "line": 3,
-      "exported": true
-    },
-    {
-      "name": "detectOtherNodeFrameworks",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/node/other.js",
-      "line": 1,
-      "exported": true
-    },
-    {
-      "name": "detectNextjs",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/node/nextjs.js",
-      "line": 3,
-      "exported": true
-    },
-    {
-      "name": "detectNestjs",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/node/nestjs.js",
-      "line": 4,
-      "exported": true
-    },
-    {
-      "name": "detectExpress",
-      "type": "function",
-      "file": "packages/analyzer/dist/detectors/node/express.js",
-      "line": 3,
       "exported": true
     },
     {

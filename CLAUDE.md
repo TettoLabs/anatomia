@@ -1,5 +1,5 @@
 <!-- Anatomia Context Framework — do not edit this section -->
-<!-- Last setup: 2026-03-23 | Run `ana setup` to update -->
+<!-- Last setup: 2026-03-24 | Run `ana setup` to update -->
 
 This project uses Anatomia for AI context management (7 verified context files).
 
