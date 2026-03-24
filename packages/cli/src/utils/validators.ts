@@ -40,7 +40,8 @@ export interface ValidationError {
  * countDetectedPatterns(snapshot); // Returns: 2
  */
 export function countDetectedPatterns(analysis: AnalysisResult): number {
-  if (!analysis.patterns) {
+  // Scenario B guard: analyzer may return null/undefined when tree-sitter fails
+  if (!analysis || !analysis.patterns) {
     return 0;
   }
 
@@ -84,7 +85,8 @@ export function getMissingPatterns(
   analysis: AnalysisResult,
   documented: string[]
 ): string[] {
-  if (!analysis.patterns) {
+  // Scenario B guard: analyzer may return null/undefined when tree-sitter fails
+  if (!analysis || !analysis.patterns) {
     return [];
   }
 
@@ -132,8 +134,10 @@ export function extractFrameworkFromContent(content: string): string | null {
 
   const framework = match[1].trim();
 
-  // Normalize: "None detected" → null
-  if (framework === 'None detected' || framework === 'None') {
+  // Normalize: "None detected", "None", "none" → null
+  // Scenario B: analyzer may return framework: "none" as a string
+  const frameworkLower = framework.toLowerCase();
+  if (framework === 'None detected' || framework === 'None' || frameworkLower === 'none') {
     return null;
   }
 
@@ -221,7 +225,7 @@ export async function fileExists(filePath: string): Promise<boolean> {
 }
 
 // inferSetupModeFromQuality() REMOVED - executive decision: no inference
-// Priority: CLI --mode flag → .setup_tier file → error (no fallback)
+// Priority: CLI --mode flag → .setup_tier file → existing .meta.json setupMode → error
 
 /**
  * Validate structural requirements (BF1, BF2, BF3)
@@ -283,7 +287,10 @@ export async function validateStructure(anaPath: string): Promise<ValidationErro
     const content = await fs.readFile(filePath, 'utf-8');
 
     // BF1: Check scaffold marker removed
-    if (content.includes(SCAFFOLD_MARKER)) {
+    // Strip fenced code blocks first to avoid false positives from code citations
+    // (e.g., test files that check for the scaffold marker string)
+    const contentWithoutCodeBlocks = content.replace(/```[\s\S]*?```/g, '');
+    if (contentWithoutCodeBlocks.includes(SCAFFOLD_MARKER)) {
       errors.push({
         type: 'BLOCKING',
         rule: 'BF1',
@@ -367,6 +374,12 @@ export async function validateCrossReferences(
 ): Promise<ValidationError[]> {
   const errors: ValidationError[] = [];
 
+  // Scenario B guard: skip all cross-reference checks if snapshot is null/undefined
+  // This happens when tree-sitter fails and analyzer returns no data
+  if (!snapshot) {
+    return errors;
+  }
+
   // BF5: Pattern count check
   const detectedCount = countDetectedPatterns(snapshot);
   const patternsPath = path.join(anaPath, 'context/patterns.md');
@@ -389,12 +402,33 @@ export async function validateCrossReferences(
   }
 
   // BF6: Framework consistency
+  // Skip the cross-reference check when analyzer returned no meaningful framework data.
+  // This is Scenario B: analyzer pipeline returned no data or low-confidence results.
+  // The writer is MORE accurate than the analyzer in these cases — don't penalize it.
+  //
+  // Skip when analyzer framework is null, "none", or "unknown".
+  // But if analyzer returned a specific framework name (like "nextjs", "fastapi"),
+  // still perform the check even with low confidence - it's a comparison point.
+  const analyzerFramework = snapshot.framework?.toLowerCase() || null;
+  const analyzerReturnedNoFramework =
+    analyzerFramework === null ||
+    analyzerFramework === 'none' ||
+    analyzerFramework === 'unknown';
+
+  if (analyzerReturnedNoFramework) {
+    // Log warning but don't add to errors - handled in calling code as soft warning
+    console.log('\x1b[33m  ⚠ Analyzer did not detect framework (known limitation). Skipping framework cross-reference.\x1b[0m');
+    return errors;
+  }
+
   const overviewPath = path.join(anaPath, 'context/project-overview.md');
 
   try {
     const overviewContent = await fs.readFile(overviewPath, 'utf-8');
     const overviewFramework = extractFrameworkFromContent(overviewContent);
-    const snapshotFramework = snapshot.framework?.toLowerCase() || null;
+    // Scenario B: normalize "none" to null (analyzer may return framework: "none")
+    const rawSnapshotFramework = snapshot.framework?.toLowerCase() || null;
+    const snapshotFramework = rawSnapshotFramework === 'none' ? null : rawSnapshotFramework;
 
     // Both should be null or both should match
     if (overviewFramework !== snapshotFramework) {

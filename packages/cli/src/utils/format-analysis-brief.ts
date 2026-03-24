@@ -396,18 +396,21 @@ function formatCodebaseStatistics(analysis: AnalysisResult): string {
 
   const parsed = analysis.parsed;
 
-  output += '### Overview\n\n';
-  output += `- **Files parsed:** ${parsed.totalFiles ?? 0}\n`;
-  output += `- **Functions found:** ${parsed.totalFunctions ?? 0}\n`;
-  output += `- **Classes found:** ${parsed.totalClasses ?? 0}\n\n`;
+  // Compute totals from files array
+  const totalFunctions = parsed.files.reduce((sum, f) => sum + (f.functions?.length ?? 0), 0);
+  const totalClasses = parsed.files.reduce((sum, f) => sum + (f.classes?.length ?? 0), 0);
 
-  // Parse metrics
+  output += '### Overview\n\n';
+  output += `- **Files parsed:** ${parsed.totalParsed}\n`;
+  output += `- **Functions found:** ${totalFunctions}\n`;
+  output += `- **Classes found:** ${totalClasses}\n\n`;
+
+  // Parse metrics (compute cache hit rate from hits/misses)
   output += '### Parse Metrics\n\n';
-  if (parsed.parseTime !== undefined) {
-    output += `- Parse time: ${parsed.parseTime}ms\n`;
-  }
-  if (parsed.cacheHitRate !== undefined) {
-    output += `- Cache hit rate: ${(parsed.cacheHitRate * 100).toFixed(1)}%\n`;
+  const totalCacheOps = parsed.cacheHits + parsed.cacheMisses;
+  if (totalCacheOps > 0) {
+    const cacheHitRate = parsed.cacheHits / totalCacheOps;
+    output += `- Cache hit rate: ${(cacheHitRate * 100).toFixed(1)}%\n`;
   }
   output += '\n';
 

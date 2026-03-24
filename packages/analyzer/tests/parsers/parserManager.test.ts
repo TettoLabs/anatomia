@@ -1,7 +1,13 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { ParserManager } from '../../src/parsers/treeSitter.js';
 
 describe('ParserManager', () => {
+  const manager = ParserManager.getInstance();
+
+  beforeAll(async () => {
+    await manager.initialize();
+  });
+
   it('getInstance returns singleton', () => {
     const instance1 = ParserManager.getInstance();
     const instance2 = ParserManager.getInstance();
@@ -9,8 +15,11 @@ describe('ParserManager', () => {
     expect(instance1).toBe(instance2);  // Same instance
   });
 
+  it('isInitialized returns true after initialization', () => {
+    expect(manager.isInitialized()).toBe(true);
+  });
+
   it('creates Python parser', () => {
-    const manager = ParserManager.getInstance();
     const parser = manager.getParser('python');
 
     expect(parser).toBeDefined();
@@ -18,14 +27,12 @@ describe('ParserManager', () => {
   });
 
   it('creates TypeScript parser', () => {
-    const manager = ParserManager.getInstance();
     const parser = manager.getParser('typescript');
 
     expect(parser).toBeDefined();
   });
 
   it('creates TSX parser (separate from TypeScript)', () => {
-    const manager = ParserManager.getInstance();
     const tsParser = manager.getParser('typescript');
     const tsxParser = manager.getParser('tsx');
 
@@ -35,21 +42,18 @@ describe('ParserManager', () => {
   });
 
   it('creates JavaScript parser', () => {
-    const manager = ParserManager.getInstance();
     const parser = manager.getParser('javascript');
 
     expect(parser).toBeDefined();
   });
 
   it('creates Go parser', () => {
-    const manager = ParserManager.getInstance();
     const parser = manager.getParser('go');
 
     expect(parser).toBeDefined();
   });
 
   it('reuses parser for same language', () => {
-    const manager = ParserManager.getInstance();
     const parser1 = manager.getParser('python');
     const parser2 = manager.getParser('python');
 
@@ -57,9 +61,28 @@ describe('ParserManager', () => {
   });
 
   it('throws on unsupported language', () => {
-    const manager = ParserManager.getInstance();
-
     // @ts-expect-error Testing invalid language
     expect(() => manager.getParser('ruby')).toThrow('Unsupported language');
+  });
+
+  it('getLanguage returns pre-loaded language', () => {
+    const pythonLang = manager.getLanguage('python');
+
+    expect(pythonLang).toBeDefined();
+    // Language should have types array (grammar metadata)
+    expect(Array.isArray(pythonLang.types)).toBe(true);
+  });
+
+  it('WASM locateFile works - Language.load succeeds after Parser.init', () => {
+    // SS-10 verification: If locateFile is broken, this would fail
+    // The beforeAll already called initialize() which loads all languages
+    // Verify each language was loaded successfully
+    const languages = ['python', 'typescript', 'tsx', 'javascript', 'go'] as const;
+
+    for (const lang of languages) {
+      const loaded = manager.getLanguage(lang);
+      expect(loaded).toBeDefined();
+      expect(loaded.name).toBeDefined(); // WASM Language has name property
+    }
   });
 });

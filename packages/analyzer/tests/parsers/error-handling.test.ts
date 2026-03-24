@@ -1,11 +1,15 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { parseFile } from '../../src/parsers/treeSitter.js';
+import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
+import { parseFile, ParserManager } from '../../src/parsers/treeSitter.js';
 import { writeFile, mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
 describe('Error handling', () => {
   let testDir: string;
+
+  beforeAll(async () => {
+    await ParserManager.getInstance().initialize();
+  });
 
   beforeEach(async () => {
     testDir = join(tmpdir(), `ana-test-errors-${Date.now()}`);

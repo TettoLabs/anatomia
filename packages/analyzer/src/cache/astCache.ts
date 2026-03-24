@@ -79,13 +79,29 @@ export class ASTCache {
   private cacheDir: string;
   private stats = { hits: 0, misses: 0 };
 
+  /** Static override for cache directory (used during init to write to temp) */
+  private static cacheOverrideDir: string | null = null;
+
+  /**
+   * Set cache directory override
+   *
+   * Used during `ana init` to write cache to temp directory instead of
+   * project root (avoids creating .ana/ before atomic rename).
+   *
+   * @param dir - Override directory, or null to reset
+   */
+  static setCacheDir(dir: string | null): void {
+    ASTCache.cacheOverrideDir = dir;
+  }
+
   /**
    * Create cache instance
    *
    * @param projectRoot - Absolute path to project root
    */
   constructor(projectRoot: string) {
-    this.cacheDir = join(projectRoot, '.ana/.state/cache');
+    // Use override if set, otherwise default
+    this.cacheDir = ASTCache.cacheOverrideDir || join(projectRoot, '.ana/.state/cache');
   }
 
   /**

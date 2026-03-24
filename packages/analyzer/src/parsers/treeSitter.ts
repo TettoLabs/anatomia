@@ -10,34 +10,68 @@
  *
  * Implementation status:
  * - CP0: Types and ParserManager ✓
- * - CP1: Query system and extraction (planned)
- * - CP2: Caching layer (planned)
- * - CP3: Integration with analyze() (planned)
+ * - CP1: Query system and extraction ✓
+ * - CP2: Caching layer ✓
+ * - CP3: Integration with analyze() ✓
+ * - SS-10: WASM migration ✓
  */
 
-import { createRequire } from 'node:module';
-const require = createRequire(import.meta.url);
+import { accessSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import {
+  Parser as TSParser,
+  Language as TSLanguage,
+  type Tree,
+  type Node as TSNode,
+} from 'web-tree-sitter';
 
-// Import using require for native modules (they use CommonJS)
-import Parser from 'tree-sitter';
-const Python = require('tree-sitter-python');
-const TypeScriptGrammar = require('tree-sitter-typescript');
-const JavaScript = require('tree-sitter-javascript');
-const Go = require('tree-sitter-go');
-
-// Extract typescript and tsx grammars
-const { typescript, tsx } = TypeScriptGrammar;
-
-import type { Tree, SyntaxNode } from 'tree-sitter';
 import type { ParsedFile, FunctionInfo, ClassInfo, ImportInfo, DecoratorInfo, ExportInfo, ParsedAnalysis } from '../types/parsed.js';
-import { queryCache } from './queries.js';
 import { readFile, joinPath } from '../utils/file.js';
 import type { ASTCache } from '../cache/astCache.js';
 import { ASTCache as ASTCacheClass } from '../cache/astCache.js';
 import { sampleFiles } from '../sampling/fileSampler.js';
 import type { AnalysisResult } from '../types/index.js';
+// Import queryCache - NO circular dependency since queries.ts doesn't import from here
+import { queryCache } from './queries.js';
+
+// Re-export types from web-tree-sitter for consumers
+export type { Tree } from 'web-tree-sitter';
+// Alias SyntaxNode to web-tree-sitter's Node for backwards compatibility
+export type SyntaxNode = TSNode;
 
 export type Language = 'python' | 'typescript' | 'tsx' | 'javascript' | 'go';
+
+// Get current module directory for path construction
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
+ * Resolve WASM file path without loading grammar package modules
+ *
+ * DO NOT use require.resolve() on grammar packages — they have native tree-sitter
+ * as peer deps, and any resolution through their module graph triggers native loading.
+ *
+ * Instead: Walk up from our module location and check known node_modules paths directly.
+ */
+function resolveWasmPath(packageName: string, wasmFileName: string): string {
+  const candidates = [
+    // packages/analyzer/node_modules/<pkg>/<file>.wasm
+    join(__dirname, '..', '..', 'node_modules', packageName, wasmFileName),
+    // monorepo root node_modules/<pkg>/<file>.wasm (pnpm hoists)
+    join(__dirname, '..', '..', '..', '..', 'node_modules', packageName, wasmFileName),
+  ];
+
+  for (const candidate of candidates) {
+    try {
+      accessSync(candidate);
+      return candidate;
+    } catch {
+      continue;
+    }
+  }
+
+  throw new Error(`WASM file not found: ${packageName}/${wasmFileName}. Checked: ${candidates.join(', ')}`);
+}
 
 /**
  * Parser manager singleton
@@ -49,19 +83,32 @@ export type Language = 'python' | 'typescript' | 'tsx' | 'javascript' | 'go';
  *
  * Performance: Saves 100-200ms over 20 files (5-10ms × 20 files avoided)
  *
+ * WASM Migration (SS-10):
+ * - Must call initialize() once before any parsing
+ * - Grammars are pre-loaded during initialization
+ * - getParser() is sync after initialization
+ *
  * @example
  * ```typescript
  * const manager = ParserManager.getInstance();
+ * await manager.initialize(); // Required once before parsing
  * const pythonParser = manager.getParser('python');
  *
  * // Reuse parser for multiple files
  * const tree1 = pythonParser.parse(file1Code);
+ * // ... extract data from tree1 ...
+ * tree1.delete(); // CRITICAL: Free WASM memory
+ *
  * const tree2 = pythonParser.parse(file2Code);
+ * // ... extract data from tree2 ...
+ * tree2.delete();
  * ```
  */
 export class ParserManager {
   private static instance: ParserManager;
-  private parsers = new Map<Language, Parser>();
+  private parsers = new Map<Language, TSParser>();
+  private languages = new Map<Language, TSLanguage>();
+  private initialized = false;
 
   /**
    * Private constructor - prevents direct instantiation
@@ -84,58 +131,129 @@ export class ParserManager {
   }
 
   /**
+   * Initialize WASM parser runtime and pre-load all grammars
+   *
+   * MUST be called once before any parsing operations.
+   * Safe to call multiple times (idempotent).
+   *
+   * @throws Error if TSParser.init() or Language.load() fails
+   */
+  async initialize(): Promise<void> {
+    if (this.initialized) return;
+
+    // Initialize WASM runtime with explicit path resolution
+    // Use direct path construction to avoid loading any modules
+    await TSParser.init({
+      locateFile(scriptName: string) {
+        const candidates = [
+          join(__dirname, '..', '..', 'node_modules', 'web-tree-sitter', scriptName),
+          join(__dirname, '..', '..', '..', '..', 'node_modules', 'web-tree-sitter', scriptName),
+        ];
+        for (const c of candidates) {
+          try {
+            accessSync(c);
+            return c;
+          } catch {
+            continue;
+          }
+        }
+        throw new Error(`WASM runtime not found: ${scriptName}`);
+      }
+    } as any); // Cast to any - web-tree-sitter types reference undefined EmscriptenModule
+
+    // Pre-load all grammars
+    const grammarPaths: Record<Language, [string, string]> = {
+      python: ['tree-sitter-python', 'tree-sitter-python.wasm'],
+      javascript: ['tree-sitter-javascript', 'tree-sitter-javascript.wasm'],
+      typescript: ['tree-sitter-typescript', 'tree-sitter-typescript.wasm'],
+      tsx: ['tree-sitter-typescript', 'tree-sitter-tsx.wasm'],
+      go: ['tree-sitter-go', 'tree-sitter-go.wasm'],
+    };
+
+    for (const [lang, [pkg, wasm]] of Object.entries(grammarPaths) as [Language, [string, string]][]) {
+      const wasmPath = resolveWasmPath(pkg, wasm);
+      const language = await TSLanguage.load(wasmPath);
+      this.languages.set(lang, language);
+    }
+
+    this.initialized = true;
+  }
+
+  /**
+   * Check if ParserManager has been initialized
+   */
+  isInitialized(): boolean {
+    return this.initialized;
+  }
+
+  /**
+   * Get pre-loaded Language object for a language
+   *
+   * Used by QueryCache to create queries against the language.
+   *
+   * @param language - Language name
+   * @returns Loaded WASM Language object
+   * @throws Error if not initialized or language unsupported
+   */
+  getLanguage(language: Language): TSLanguage {
+    if (!this.initialized) {
+      throw new Error('ParserManager not initialized — call initialize() first');
+    }
+    const lang = this.languages.get(language);
+    if (!lang) {
+      throw new Error(`Unsupported language: ${language}`);
+    }
+    return lang;
+  }
+
+  /**
    * Get parser for language
    *
    * Returns cached parser if exists, creates new parser if first time.
    * Each language has separate parser (cannot share).
    *
    * @param language - Language to parse
-   * @returns Parser instance with language set
+   * @returns TSParser instance with language set
    *
-   * @throws Error if language unsupported
+   * @throws Error if not initialized or language unsupported
    */
-  getParser(language: Language): Parser {
+  getParser(language: Language): TSParser {
+    if (!this.initialized) {
+      throw new Error('ParserManager not initialized — call initialize() first');
+    }
+
     if (!this.parsers.has(language)) {
-      const parser = new Parser();
-      parser.setLanguage(this.getGrammar(language));
+      const parser = new TSParser();
+      const lang = this.languages.get(language);
+      if (!lang) {
+        throw new Error(`Unsupported language: ${language}`);
+      }
+      parser.setLanguage(lang);
       this.parsers.set(language, parser);
     }
     return this.parsers.get(language)!;
   }
 
   /**
-   * Load grammar for language
-   *
-   * CRITICAL: tree-sitter-typescript exports TWO grammars (typescript and tsx)
-   * Other grammars export single default grammar.
-   *
-   * @param language - Language name
-   * @returns Grammar object for parser.setLanguage()
-   */
-  private getGrammar(language: Language): any {
-    switch (language) {
-      case 'python':
-        return Python;
-      case 'typescript':
-        return typescript;  // From named import
-      case 'tsx':
-        return tsx;  // From named import (DIFFERENT from typescript)
-      case 'javascript':
-        return JavaScript;
-      case 'go':
-        return Go;
-      default:
-        throw new Error(`Unsupported language: ${language}`);
-    }
-  }
-
-  /**
    * Reset parsers (for testing)
    *
    * Clears parser cache. Useful in tests to ensure clean state.
+   * NOTE: Does not reset initialized flag - grammars stay loaded.
    */
   reset(): void {
     this.parsers.clear();
+  }
+
+  /**
+   * Full reset including initialization state (for testing)
+   *
+   * Clears parser cache AND resets initialization state.
+   * After calling this, initialize() must be called again before parsing.
+   */
+  resetFull(): void {
+    this.parsers.clear();
+    this.languages.clear();
+    this.initialized = false;
   }
 }
 
@@ -201,8 +319,8 @@ export function detectLanguage(filePath: string): Language | null {
  * @param node - Function name node
  * @returns true if function has async keyword
  */
-function checkIfAsync(node: SyntaxNode): boolean {
-  let current: SyntaxNode | null = node.parent;
+function checkIfAsync(node: TSNode): boolean {
+  let current: TSNode | null = node.parent;
 
   while (current) {
     // Check if we're at function definition level
@@ -212,8 +330,9 @@ function checkIfAsync(node: SyntaxNode): boolean {
       current.type === 'arrow_function' // Arrow functions
     ) {
       // Look for async keyword in children
-      for (const child of current.children) {
-        if (child.type === 'async') {
+      for (let i = 0; i < current.childCount; i++) {
+        const child = current.child(i);
+        if (child && child.type === 'async') {
           return true;
         }
       }
@@ -252,7 +371,8 @@ export function extractFunctions(
   language: string
 ): FunctionInfo[] {
   try {
-    const query = queryCache.getQuery(language as any, 'functions');
+    const tsLang = parserManager.getLanguage(language as Language);
+    const query = queryCache.getQuery(language as Language, 'functions', tsLang);
     const captures = query.captures(tree.rootNode);
 
     const functions: FunctionInfo[] = [];
@@ -302,9 +422,9 @@ export function extractFunctions(
  * @param classNode - Class name node from query capture
  * @returns Array of superclass names
  */
-function extractSuperclasses(classNode: SyntaxNode): string[] {
+function extractSuperclasses(classNode: TSNode): string[] {
   const superclasses: string[] = [];
-  let current: SyntaxNode | null = classNode.parent;
+  let current: TSNode | null = classNode.parent;
 
   while (current) {
     if (
@@ -313,13 +433,16 @@ function extractSuperclasses(classNode: SyntaxNode): string[] {
     ) {
       // Python: superclasses in argument_list
       // TypeScript: superclass in heritage clause
-      for (const child of current.children) {
-        if (child.type === 'argument_list' || child.type === 'class_heritage') {
+      for (let i = 0; i < current.childCount; i++) {
+        const child = current.child(i);
+        if (child && (child.type === 'argument_list' || child.type === 'class_heritage')) {
           // Extract identifier nodes from arguments/heritage
-          const identifiers = child.children.filter((c: SyntaxNode) =>
-            c.type === 'identifier' || c.type === 'type_identifier'
-          );
-          superclasses.push(...identifiers.map(id => id.text));
+          for (let j = 0; j < child.childCount; j++) {
+            const c = child.child(j);
+            if (c && (c.type === 'identifier' || c.type === 'type_identifier')) {
+              superclasses.push(c.text);
+            }
+          }
         }
       }
       break;
@@ -336,9 +459,9 @@ function extractSuperclasses(classNode: SyntaxNode): string[] {
  * @param classNode - Class name node
  * @returns Array of method names
  */
-function extractMethods(classNode: SyntaxNode): string[] {
+function extractMethods(classNode: TSNode): string[] {
   const methods: string[] = [];
-  let current: SyntaxNode | null = classNode.parent;
+  let current: TSNode | null = classNode.parent;
 
   while (current) {
     if (
@@ -346,19 +469,30 @@ function extractMethods(classNode: SyntaxNode): string[] {
       current.type === 'class_declaration'
     ) {
       // Find class body
-      const body = current.children.find((c: SyntaxNode) => c.type === 'block' || c.type === 'class_body');
+      let body: TSNode | null = null;
+      for (let i = 0; i < current.childCount; i++) {
+        const c = current.child(i);
+        if (c && (c.type === 'block' || c.type === 'class_body')) {
+          body = c;
+          break;
+        }
+      }
+
       if (body) {
         // Extract function/method definitions from body
-        for (const child of body.children) {
+        for (let i = 0; i < body.childCount; i++) {
+          const child = body.child(i);
           if (
-            child.type === 'function_definition' ||  // Python
-            child.type === 'method_definition'       // TypeScript/JavaScript
+            child &&
+            (child.type === 'function_definition' ||  // Python
+             child.type === 'method_definition')      // TypeScript/JavaScript
           ) {
-            const nameNode = child.children.find((c: SyntaxNode) =>
-              c.type === 'identifier' || c.type === 'property_identifier'
-            );
-            if (nameNode) {
-              methods.push(nameNode.text);
+            for (let j = 0; j < child.childCount; j++) {
+              const nameNode = child.child(j);
+              if (nameNode && (nameNode.type === 'identifier' || nameNode.type === 'property_identifier')) {
+                methods.push(nameNode.text);
+                break;
+              }
             }
           }
         }
@@ -392,7 +526,8 @@ export function extractClasses(
   language: string
 ): ClassInfo[] {
   try {
-    const query = queryCache.getQuery(language as any, 'classes');
+    const tsLang = parserManager.getLanguage(language as Language);
+    const query = queryCache.getQuery(language as Language, 'classes', tsLang);
     const captures = query.captures(tree.rootNode);
 
     const classes: ClassInfo[] = [];
@@ -454,7 +589,8 @@ export function extractImports(
   language: string
 ): ImportInfo[] {
   try {
-    const query = queryCache.getQuery(language as any, 'imports');
+    const tsLang = parserManager.getLanguage(language as Language);
+    const query = queryCache.getQuery(language as Language, 'imports', tsLang);
     const captures = query.captures(tree.rootNode);
 
     const imports: ImportInfo[] = [];
@@ -533,7 +669,8 @@ export function extractDecorators(
   }
 
   try {
-    const query = queryCache.getQuery(language as any, 'decorators');
+    const tsLang = parserManager.getLanguage(language as Language);
+    const query = queryCache.getQuery(language as Language, 'decorators', tsLang);
     const captures = query.captures(tree.rootNode);
 
     const decorators: DecoratorInfo[] = [];
@@ -666,7 +803,8 @@ function extractExports(
   language: string
 ): ExportInfo[] {
   try {
-    const query = queryCache.getQuery(language as any, 'exports');
+    const tsLang = parserManager.getLanguage(language as Language);
+    const query = queryCache.getQuery(language as Language, 'exports', tsLang);
     const captures = query.captures(tree.rootNode);
 
     return captures.slice(0, 10).map((capture: any) => ({
@@ -688,15 +826,18 @@ function extractExports(
  * @param node - Root node or any node
  * @returns Count of ERROR nodes in subtree
  */
-function countErrors(node: SyntaxNode): number {
+function countErrors(node: TSNode): number {
   let count = 0;
 
   if (node.type === 'ERROR') {
     count++;
   }
 
-  for (const child of node.children) {
-    count += countErrors(child);
+  for (let i = 0; i < node.childCount; i++) {
+    const child = node.child(i);
+    if (child) {
+      count += countErrors(child);
+    }
   }
 
   return count;
@@ -750,63 +891,84 @@ export async function parseFile(
   const content = await readFile(filePath);
 
   // Get parser for language
-  const parser = parserManager.getParser(language as any);
+  const parser = parserManager.getParser(language as Language);
 
   // Parse code → tree
   const startTime = performance.now();
   const tree = parser.parse(content);
   const parseTime = performance.now() - startTime;
 
-  // Extract elements using queries (from CP1)
-  let functions = extractFunctions(tree, content, language);
-  let classes = extractClasses(tree, content, language);
-  const imports = extractImports(tree, content, language);
-  const decorators = extractDecorators(tree, content, language);
-
-  // Link decorators to functions/classes
-  functions = linkDecoratorsToFunctions(functions, decorators);
-  classes = linkDecoratorsToClasses(classes, decorators);
-
-  // Count ERROR nodes
-  const errorCount = countErrors(tree.rootNode);
-
-  const result: ParsedFile = {
-    file: filePath,
-    language,
-    functions,
-    classes,
-    imports,
-    exports: language === 'typescript' || language === 'javascript' || language === 'tsx'
-      ? extractExports(tree, content, language)
-      : undefined,
-    decorators: language === 'python' || language === 'typescript' || language === 'tsx'
-      ? decorators
-      : undefined,
-    parseTime,
-    parseMethod: 'tree-sitter',
-    errors: errorCount,
-  };
-
-  // Store in cache for next run (CP2 integration)
-  if (cache) {
-    const cacheData: any = {
-      functions: result.functions,
-      classes: result.classes,
-      imports: result.imports,
-      parseTime: result.parseTime,
+  // Handle parse failure (null tree)
+  if (!tree) {
+    return {
+      file: filePath,
+      language,
+      functions: [],
+      classes: [],
+      imports: [],
+      exports: undefined,
+      decorators: undefined,
+      parseTime,
+      parseMethod: 'tree-sitter',
+      errors: 1, // Parse failed entirely
     };
-
-    if (result.exports !== undefined) {
-      cacheData.exports = result.exports;
-    }
-    if (result.decorators !== undefined) {
-      cacheData.decorators = result.decorators;
-    }
-
-    await cache.set(filePath, cacheData);
   }
 
-  return result;
+  try {
+    // Extract elements using queries (from CP1)
+    let functions = extractFunctions(tree, content, language);
+    let classes = extractClasses(tree, content, language);
+    const imports = extractImports(tree, content, language);
+    const decorators = extractDecorators(tree, content, language);
+
+    // Link decorators to functions/classes
+    functions = linkDecoratorsToFunctions(functions, decorators);
+    classes = linkDecoratorsToClasses(classes, decorators);
+
+    // Count ERROR nodes
+    const errorCount = countErrors(tree.rootNode);
+
+    const result: ParsedFile = {
+      file: filePath,
+      language,
+      functions,
+      classes,
+      imports,
+      exports: language === 'typescript' || language === 'javascript' || language === 'tsx'
+        ? extractExports(tree, content, language)
+        : undefined,
+      decorators: language === 'python' || language === 'typescript' || language === 'tsx'
+        ? decorators
+        : undefined,
+      parseTime,
+      parseMethod: 'tree-sitter',
+      errors: errorCount,
+    };
+
+    // Store in cache for next run (CP2 integration)
+    if (cache) {
+      const cacheData: any = {
+        functions: result.functions,
+        classes: result.classes,
+        imports: result.imports,
+        parseTime: result.parseTime,
+      };
+
+      if (result.exports !== undefined) {
+        cacheData.exports = result.exports;
+      }
+      if (result.decorators !== undefined) {
+        cacheData.decorators = result.decorators;
+      }
+
+      await cache.set(filePath, cacheData);
+    }
+
+    return result;
+  } finally {
+    // CRITICAL: Free WASM memory
+    tree.delete();
+  }
 }
 
 /**
@@ -836,6 +998,11 @@ export async function parseProjectFiles(
     return undefined;
   }
 
+  // Ensure parser is initialized
+  if (!parserManager.isInitialized()) {
+    await parserManager.initialize();
+  }
+
   // Initialize cache
   const cache = new ASTCacheClass(projectRoot);
 
@@ -855,7 +1022,7 @@ export async function parseProjectFiles(
     };
   }
 
-  // Parse files sequentially (worker threads incompatible with native bindings)
+  // Parse files sequentially (worker threads incompatible with WASM)
   const parsedFiles: ParsedFile[] = [];
 
   for (const relativeFile of filesToParse) {

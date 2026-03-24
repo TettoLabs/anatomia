@@ -6,6 +6,9 @@
  * Creates:
  *   .ana/
  *   ├── modes/                    (7 mode files)
+ *   ├── hooks/                    (CC hook scripts)
+ *   │   ├── verify-context-file.sh
+ *   │   └── quality-gate.sh
  *   ├── context/
  *   │   ├── analysis.md           (generated from analyzer)
  *   │   ├── project-overview.md   (scaffold with 40% pre-pop)
@@ -19,6 +22,10 @@
  *   ├── .meta.json                (framework metadata)
  *   └── .state/
  *       └── snapshot.json         (analyzer baseline)
+ *
+ *   .claude/
+ *   ├── settings.json             (hooks configuration)
+ *   └── agents/                   (empty - agents come in Step 3)
  */
 
 import { Command } from 'commander';
@@ -30,6 +37,7 @@ import * as os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import type { AnalysisResult } from 'anatomia-analyzer';
+import { dirname } from 'node:path';
 import { formatAnalysisBrief } from '../utils/format-analysis-brief.js';
 import {
   generateProjectOverviewScaffold,
@@ -46,8 +54,10 @@ import {
   SETUP_FILES,
   STEP_FILES,
   FRAMEWORK_SNIPPETS,
+  AGENT_FILES,
   META_VERSION,
 } from '../constants.js';
+import { buildSymbolIndex } from './index.js';
 
 /** Command options */
 interface InitCommandOptions {
@@ -80,6 +90,45 @@ function createEmptyAnalysisResult(): AnalysisResult {
   } as AnalysisResult;
 }
 
+/**
+ * Ask for setup tier selection
+ *
+ * Prompts user to choose quick/guided/complete tier.
+ * Defaults to guided for non-interactive environments.
+ *
+ * @param options - Command options
+ * @returns Selected setup tier
+ */
+async function askSetupTier(options: InitCommandOptions): Promise<string> {
+  // Default for non-interactive environments
+  if (!process.stdout.isTTY || !process.stdin.isTTY) {
+    return 'guided';
+  }
+
+  console.log(chalk.cyan('\nSetup tier:'));
+  console.log(chalk.gray('  1. Quick     — ~2 min, no questions, uses detected data only'));
+  console.log(chalk.gray('  2. Guided    — ~5 min, asks 5-7 questions to improve accuracy'));
+  console.log(chalk.gray('  3. Complete  — ~15 min, thorough Q&A for maximum accuracy'));
+  console.log();
+
+  // Simple stdin read for single character
+  const readline = await import('node:readline');
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+
+  const answer = await new Promise<string>((resolve) => {
+    rl.question(chalk.cyan('  Choose (1/2/3, default 2): '), (ans) => {
+      rl.close();
+      resolve(ans.trim());
+    });
+  });
+
+  const tierMap: Record<string, string> = { '1': 'quick', '2': 'guided', '3': 'complete' };
+  const setupMode = tierMap[answer] || 'guided';
+  console.log(chalk.green(`  → ${setupMode} tier selected\n`));
+
+  return setupMode;
+}
+
 /** Create init command */
 export const initCommand = new Command('init')
   .description('Initialize .ana/ context framework')
@@ -95,19 +144,34 @@ export const initCommand = new Command('init')
       return; // Exit already handled in validation
     }
 
+    // Ask for setup tier (before Phase 2)
+    const setupMode = await askSetupTier(options);
+
     // Phase 2-9: Atomic operation
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ana-init-'));
     const tmpAnaPath = path.join(tmpDir, '.ana');
 
     try {
+      // Set ASTCache to write to temp directory during analysis
+      // (prevents creating .ana/ in project root before atomic rename)
+      const { ASTCache } = await import('anatomia-analyzer');
+      const tmpCacheDir = path.join(tmpAnaPath, '.state', 'cache');
+      ASTCache.setCacheDir(tmpCacheDir);
+
       // All operations in temp directory
       const analysisResult = await runAnalyzer(cwd, options);
+
+      // Reset cache override after analysis
+      ASTCache.setCacheDir(null);
       await createDirectoryStructure(tmpAnaPath);
       await generateAnalysisMd(tmpAnaPath, analysisResult, cwd);
       await generateScaffolds(tmpAnaPath, analysisResult, cwd);
       await copyStaticFilesWithVerification(tmpAnaPath);
-      await createMetaJson(tmpAnaPath, analysisResult);
+      await copyHookScripts(tmpAnaPath);
+      await createMetaJson(tmpAnaPath, analysisResult, setupMode);
       await storeSnapshot(tmpAnaPath, analysisResult);
+      await buildSymbolIndexSafe(cwd, tmpAnaPath);
+      await writeCliPath(tmpAnaPath);
 
       // Restore .state/ if --force was used
       if (preflight.stateBackup) {
@@ -120,6 +184,9 @@ export const initCommand = new Command('init')
 
       // SUCCESS: Atomic rename
       await atomicRename(tmpAnaPath, anaPath);
+
+      // Create .claude/ configuration (outside temp directory - handles merge)
+      await createClaudeConfiguration(cwd);
 
       // Display success
       displaySuccessMessage(analysisResult);
@@ -350,6 +417,17 @@ async function createDirectoryStructure(tmpAnaPath: string): Promise<void> {
   await fs.mkdir(path.join(tmpAnaPath, 'context/setup/framework-snippets'), { recursive: true });
   await fs.mkdir(path.join(tmpAnaPath, '.state'), { recursive: true });
 
+  // Create .gitignore for runtime state files
+  const gitignoreContent = `# Anatomia runtime state — local to each developer
+.state/
+.setup_qa_log.md
+.setup_exploration.md
+.setup_verification.md
+.setup_state.json
+.setup_tier
+`;
+  await fs.writeFile(path.join(tmpAnaPath, '.gitignore'), gitignoreContent, 'utf-8');
+
   spinner.succeed('Directory structure created');
 }
 
@@ -437,7 +515,13 @@ async function generateScaffolds(
  */
 async function getCliVersion(): Promise<string> {
   try {
-    const pkgPath = new URL('../../package.json', import.meta.url);
+    // Detect bundle vs dev context
+    const moduleUrl = new URL('.', import.meta.url);
+    const isBundle = !moduleUrl.pathname.includes('/src/');
+    const pkgPath = isBundle
+      ? new URL('../package.json', import.meta.url) // dist/index.js → ../package.json = cli/package.json
+      : new URL('../../package.json', import.meta.url); // src/commands/init.ts → ../../package.json = cli/package.json
+
     const content = await fs.readFile(pkgPath, 'utf-8');
     const pkg = JSON.parse(content);
     return pkg.version || '0.2.0';
@@ -541,6 +625,223 @@ async function copyAndVerifyFile(
 }
 
 /**
+ * Copy hook scripts to .ana/hooks/
+ *
+ * Copies hook scripts and sets executable permissions.
+ *
+ * @param tmpAnaPath - Temp .ana/ path
+ */
+async function copyHookScripts(tmpAnaPath: string): Promise<void> {
+  const spinner = ora('Copying hook scripts...').start();
+
+  const templatesDir = getTemplatesDir();
+  const hooksDir = path.join(tmpAnaPath, 'hooks');
+
+  // Create hooks directory
+  await fs.mkdir(hooksDir, { recursive: true });
+
+  // Hook scripts to copy
+  const hookScripts = ['run-check.sh', 'verify-context-file.sh', 'quality-gate.sh', 'subagent-verify.sh'];
+
+  for (const script of hookScripts) {
+    const sourcePath = path.join(templatesDir, '.ana/hooks', script);
+    const destPath = path.join(hooksDir, script);
+
+    // Copy with verification
+    await copyAndVerifyFile(sourcePath, destPath, `.ana/hooks/${script}`);
+
+    // Set executable permissions (chmod +x)
+    await fs.chmod(destPath, 0o755);
+  }
+
+  spinner.succeed('Copied hook scripts (4 files, executable)');
+}
+
+/**
+ * Create .claude/ configuration
+ *
+ * Creates .claude/ directory with settings.json, agents/ directory, and agent files.
+ * If .claude/ already exists, merges our hooks into existing settings.json.
+ * Agent files are copied without overwriting existing ones (merge-not-overwrite).
+ *
+ * @param cwd - Project root directory
+ */
+async function createClaudeConfiguration(cwd: string): Promise<void> {
+  const spinner = ora('Creating .claude/ configuration...').start();
+
+  const claudePath = path.join(cwd, '.claude');
+  const settingsPath = path.join(claudePath, 'settings.json');
+  const agentsPath = path.join(claudePath, 'agents');
+  const templatesDir = getTemplatesDir();
+
+  // Load our template settings
+  const templateSettingsPath = path.join(templatesDir, '.claude/settings.json');
+  const templateContent = await fs.readFile(templateSettingsPath, 'utf-8');
+  const templateSettings = JSON.parse(templateContent);
+
+  const claudeExists = await dirExists(claudePath);
+
+  if (!claudeExists) {
+    // First run: create everything fresh
+    await fs.mkdir(claudePath, { recursive: true });
+    await fs.mkdir(agentsPath, { recursive: true });
+    await fs.writeFile(settingsPath, JSON.stringify(templateSettings, null, 2), 'utf-8');
+
+    // Copy all agent files
+    await copyAgentFiles(agentsPath, templatesDir);
+
+    spinner.succeed('Created .claude/ configuration');
+    return;
+  }
+
+  // .claude/ exists - handle merge
+  const settingsExists = await fileExists(settingsPath);
+
+  if (!settingsExists) {
+    // settings.json doesn't exist - create it
+    await fs.writeFile(settingsPath, JSON.stringify(templateSettings, null, 2), 'utf-8');
+  } else {
+    // settings.json exists - try to merge our hooks
+    try {
+      const existingContent = await fs.readFile(settingsPath, 'utf-8');
+      const existingSettings = JSON.parse(existingContent);
+      const mergedSettings = mergeHooksSettings(existingSettings, templateSettings);
+      await fs.writeFile(settingsPath, JSON.stringify(mergedSettings, null, 2), 'utf-8');
+    } catch {
+      // Malformed JSON - warn and overwrite with our defaults
+      console.log(
+        chalk.yellow('\n  Warning: existing .claude/settings.json is malformed, overwriting with Anatomia defaults')
+      );
+      await fs.writeFile(settingsPath, JSON.stringify(templateSettings, null, 2), 'utf-8');
+    }
+  }
+
+  // Create agents/ if it doesn't exist
+  const agentsExists = await dirExists(agentsPath);
+  if (!agentsExists) {
+    await fs.mkdir(agentsPath, { recursive: true });
+  }
+
+  // Copy agent files (merge-not-overwrite)
+  await copyAgentFiles(agentsPath, templatesDir);
+
+  spinner.succeed('Created .claude/ configuration (merged)');
+}
+
+/**
+ * Copy agent files to .claude/agents/
+ *
+ * Copies agent definition files from templates without overwriting existing ones.
+ * This allows user customizations to persist across re-init.
+ *
+ * @param agentsPath - Path to .claude/agents/ directory
+ * @param templatesDir - Path to CLI templates directory
+ */
+async function copyAgentFiles(agentsPath: string, templatesDir: string): Promise<void> {
+  for (const agentFile of AGENT_FILES) {
+    const sourcePath = path.join(templatesDir, '.claude/agents', agentFile);
+    const destPath = path.join(agentsPath, agentFile);
+
+    // Check if file already exists (don't overwrite)
+    const exists = await fileExists(destPath);
+    if (exists) {
+      // Skip - don't overwrite existing agent files
+      continue;
+    }
+
+    // Copy with verification
+    await copyAndVerifyFile(sourcePath, destPath, `.claude/agents/${agentFile}`);
+  }
+}
+
+/**
+ * Check if file exists
+ * @param filePath - Path to check
+ * @returns true if file exists
+ */
+async function fileExists(filePath: string): Promise<boolean> {
+  try {
+    const stats = await fs.stat(filePath);
+    return stats.isFile();
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Merge Anatomia hooks into existing settings
+ *
+ * Appends our hooks alongside existing ones without duplicates.
+ * Uses the hook command path as the unique identifier.
+ *
+ * @param existing - Existing settings.json content
+ * @param template - Our template settings
+ * @returns Merged settings object
+ */
+function mergeHooksSettings(
+  existing: Record<string, unknown>,
+  template: Record<string, unknown>
+): Record<string, unknown> {
+  // Start with existing settings
+  const merged = { ...existing };
+
+  // Ensure hooks object exists
+  if (!merged.hooks || typeof merged.hooks !== 'object') {
+    merged.hooks = {};
+  }
+
+  const mergedHooks = merged.hooks as Record<string, unknown[]>;
+  const templateHooks = (template.hooks || {}) as Record<string, unknown[]>;
+
+  // Merge each hook type (PostToolUse, Stop, etc.)
+  for (const hookType of Object.keys(templateHooks)) {
+    const templateHookArray = templateHooks[hookType] as HookEntry[];
+    const existingHookArray = (mergedHooks[hookType] || []) as HookEntry[];
+
+    // Merge each hook entry
+    for (const templateEntry of templateHookArray) {
+      const isDuplicate = existingHookArray.some((existingEntry) =>
+        hookEntryMatches(existingEntry, templateEntry)
+      );
+
+      if (!isDuplicate) {
+        existingHookArray.push(templateEntry);
+      }
+    }
+
+    mergedHooks[hookType] = existingHookArray;
+  }
+
+  return merged;
+}
+
+/** Hook entry type for merge logic */
+interface HookEntry {
+  matcher?: string;
+  hooks?: Array<{ type: string; command: string; timeout?: number }>;
+}
+
+/**
+ * Check if two hook entries match (by command path)
+ *
+ * @param a - First hook entry
+ * @param b - Second hook entry
+ * @returns true if entries match
+ */
+function hookEntryMatches(a: HookEntry, b: HookEntry): boolean {
+  // Different matchers = different entries
+  if (a.matcher !== b.matcher) {
+    return false;
+  }
+
+  // Check if any command in a matches any command in b
+  const aCommands = (a.hooks || []).map((h) => h.command);
+  const bCommands = (b.hooks || []).map((h) => h.command);
+
+  return bCommands.some((cmd) => aCommands.includes(cmd));
+}
+
+/**
  * Get templates directory (handles dev vs built contexts)
  *
  * Build structure (verified):
@@ -570,16 +871,18 @@ function getTemplatesDir(): string {
  *
  * Creates framework metadata file with initial state:
  * - setupStatus: 'pending' (setup not run yet)
- * - setupMode: null (set by ana setup complete)
+ * - setupMode: from user selection
  * - framework: from analyzer
  * - analyzerVersion: from analyzer
  *
  * @param tmpAnaPath - Temp .ana/ path
  * @param analysisResult - Analyzer result or null
+ * @param setupMode - User-selected setup tier
  */
 async function createMetaJson(
   tmpAnaPath: string,
-  analysisResult: AnalysisResult | null
+  analysisResult: AnalysisResult | null,
+  setupMode: string
 ): Promise<void> {
   const spinner = ora('Creating .meta.json...').start();
 
@@ -590,7 +893,7 @@ async function createMetaJson(
     createdAt: new Date().toISOString(),
     setupStatus: 'pending',
     setupCompletedAt: null,
-    setupMode: null,
+    setupMode,
     framework: analysis.framework,
     analyzerVersion: analysis.version,
     lastEvolve: null,
@@ -625,6 +928,65 @@ async function storeSnapshot(
   await fs.writeFile(snapshotPath, JSON.stringify(analysis, null, 2), 'utf-8');
 
   spinner.succeed('Stored analyzer snapshot');
+}
+
+/**
+ * Build symbol index with graceful failure handling
+ *
+ * Symbol index is optional - if it fails, citation verification
+ * will fall back to file-only checks.
+ *
+ * @param cwd - Project root directory
+ * @param tmpAnaPath - Temp .ana/ path (writes to .state/)
+ */
+async function buildSymbolIndexSafe(cwd: string, tmpAnaPath: string): Promise<void> {
+  const spinner = ora('Building symbol index...').start();
+
+  try {
+    const statePath = path.join(tmpAnaPath, '.state');
+    const index = await buildSymbolIndex(cwd, statePath);
+    spinner.succeed(`Symbol index built (${index.symbols.length} symbols from ${index.files_parsed} files)`);
+  } catch (error) {
+    // Symbol index is optional - warn but don't fail init
+    spinner.warn('Symbol index generation failed — citation verification will use file-only checks');
+    if (error instanceof Error) {
+      console.log(chalk.gray(`  Reason: ${error.message}`));
+    }
+  }
+}
+
+/**
+ * Write CLI path for hook scripts to find the CLI
+ *
+ * Writes absolute paths to node binary and CLI entry point.
+ * Used by run-check.sh to invoke ana commands from external projects.
+ *
+ * @param tmpAnaPath - Temp .ana/ path
+ */
+async function writeCliPath(tmpAnaPath: string): Promise<void> {
+  const stateDir = path.join(tmpAnaPath, '.state');
+  await fs.mkdir(stateDir, { recursive: true });
+
+  // Get CLI entry point path (handles both dev and built contexts)
+  // import.meta.url points to the currently executing file
+  const moduleUrl = fileURLToPath(import.meta.url);
+  const moduleDir = dirname(moduleUrl);
+
+  // In bundled context: dist/index.js → dist/index.js is the entry
+  // In dev context: src/commands/init.ts → go up to find index.ts
+  const isBundle = !moduleDir.includes('/src/');
+  const cliEntry = isBundle
+    ? moduleUrl // dist/index.js IS the entry
+    : path.join(moduleDir, '..', 'index.js'); // src/commands/init.ts → src/index.js (compiled)
+
+  // Store node executable path
+  const nodeExec = process.execPath;
+
+  await fs.writeFile(
+    path.join(stateDir, 'cli-path'),
+    JSON.stringify({ node: nodeExec, cli: cliEntry }),
+    'utf-8'
+  );
 }
 
 /**
@@ -669,6 +1031,8 @@ function displaySuccessMessage(analysisResult: AnalysisResult | null): void {
   console.log('  • 7 context scaffolds (with analyzer data)');
   console.log('  • analysis.md');
   console.log('  • Setup files (orchestrator, templates, rules, 8 steps)');
+  console.log('  • Hook scripts (.ana/hooks/)');
+  console.log('  • Claude Code config (.claude/)');
   console.log();
 
   console.log(chalk.bold('Next: ') + 'Run this in Claude Code:');

@@ -17,7 +17,7 @@ import { join } from 'node:path';
 import type { ParsedFile } from '../../types/parsed.js';
 import type { NamingStyle } from '../../types/conventions.js';
 import { queryCache } from '../../parsers/queries.js';
-import { parserManager } from '../../parsers/treeSitter.js';
+import { parserManager, type Language } from '../../parsers/treeSitter.js';
 
 /**
  * Language keywords to filter out (not user-defined names)
@@ -283,15 +283,21 @@ export async function extractVariables(
     const { language } = file;
 
     // Get parser and query for this language
-    const parser = parserManager.getParser(language as any);
+    // Skip if parserManager not initialized or language unsupported
+    if (!parserManager.isInitialized()) continue;
 
-    if (!parser) continue;
+    let parser;
+    try {
+      parser = parserManager.getParser(language as Language);
+    } catch {
+      continue;
+    }
 
     // Check if variables query exists for this language
-    const languageQueries = queryCache as any;
     let variableQuery;
     try {
-      variableQuery = queryCache.getQuery(language as any, 'variables');
+      const tsLang = parserManager.getLanguage(language as Language);
+      variableQuery = queryCache.getQuery(language as Language, 'variables', tsLang);
     } catch {
       // Language doesn't have variables query, skip
       continue;
@@ -309,31 +315,41 @@ export async function extractVariables(
 
     // Parse and run query
     const tree = parser.parse(content);
-    const captures = variableQuery.captures(tree.rootNode);
 
-    // Extract variable names from captures
-    for (const capture of captures) {
-      const varName = capture.node.text;
-      if (varName) {
-        variables.push(varName);
-      }
-    }
+    // Skip if parse failed
+    if (!tree) continue;
 
-    // For Go, also run shortVars query
-    if (language === 'go') {
-      try {
-        const shortVarQuery = queryCache.getQuery('go' as any, 'shortVars');
-        const shortCaptures = shortVarQuery.captures(tree.rootNode);
+    try {
+      const captures = variableQuery.captures(tree.rootNode);
 
-        for (const capture of shortCaptures) {
-          const varName = capture.node.text;
-          if (varName) {
-            variables.push(varName);
-          }
+      // Extract variable names from captures
+      for (const capture of captures) {
+        const varName = capture.node.text;
+        if (varName) {
+          variables.push(varName);
         }
-      } catch {
-        // shortVars query not available, skip
       }
+
+      // For Go, also run shortVars query
+      if (language === 'go') {
+        try {
+          const goLang = parserManager.getLanguage('go');
+          const shortVarQuery = queryCache.getQuery('go', 'shortVars', goLang);
+          const shortCaptures = shortVarQuery.captures(tree.rootNode);
+
+          for (const capture of shortCaptures) {
+            const varName = capture.node.text;
+            if (varName) {
+              variables.push(varName);
+            }
+          }
+        } catch {
+          // shortVars query not available, skip
+        }
+      }
+    } finally {
+      // CRITICAL: Free WASM memory (SS-10)
+      tree.delete();
     }
   }
 

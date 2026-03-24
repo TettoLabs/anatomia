@@ -20,6 +20,8 @@ import {
   type ValidationError,
 } from '../utils/validators.js';
 import { VALID_SETUP_TIERS, META_VERSION } from '../constants.js';
+import { createCheckCommand } from './check.js';
+import { createIndexCommand } from './index.js';
 
 interface SetupCompleteOptions {
   mode?: string;
@@ -38,6 +40,12 @@ function isValidSetupTier(tier: string): tier is typeof VALID_SETUP_TIERS[number
 export const setupCommand = new Command('setup').description(
   'Setup-related commands'
 );
+
+/** Add 'check' subcommand */
+setupCommand.addCommand(createCheckCommand());
+
+/** Add 'index' subcommand */
+setupCommand.addCommand(createIndexCommand());
 
 /** Add 'complete' subcommand */
 setupCommand
@@ -125,13 +133,33 @@ setupCommand
     console.log(chalk.gray('Generating ENTRY.md...'));
     await generateEntryMd(anaPath, cwd);
 
-    // Phase 6: Update .meta.json
+    // Phase 6: Generate/update CLAUDE.md
+    console.log(chalk.gray('Updating CLAUDE.md...'));
+    await generateClaudeMd(cwd, anaPath);
+
+    // Phase 7: Update .meta.json
     console.log(chalk.gray('Updating .meta.json...'));
     await updateMetaJson(anaPath, cwd, options);
 
     // Success
     console.log(chalk.green('\n✅ Setup complete!\n'));
     console.log('Framework is ready. Reference @.ana/ENTRY.md to begin.');
+    console.log();
+
+    // What's Next guidance
+    console.log(chalk.bold('📋 What\'s Next\n'));
+    console.log('  1. Commit your context:');
+    console.log('     git add .ana/ CLAUDE.md && git commit -m "Add Anatomia context framework"');
+    console.log();
+    console.log('  2. Start your next session:');
+    console.log('     Open Claude Code and load @.ana/ENTRY.md — Ana will greet you');
+    console.log('     and suggest the right mode for your task.');
+    console.log();
+    console.log('  3. Share with your team:');
+    console.log('     Push to your branch. Teammates get the same context on pull.');
+    console.log('     Each person can re-run setup to add their own Q&A responses.');
+    console.log();
+    console.log(chalk.dim('  💡 Context stays accurate with: ana diff (coming soon)'));
     console.log();
   });
 
@@ -165,8 +193,12 @@ async function generateEntryMd(anaPath: string, cwd: string): Promise<void> {
   // Get project name (priority: package.json → pyproject.toml → go.mod → dirname)
   const projectName = await getProjectName(cwd);
 
-  // Get CLI version
-  const cliPkgPath = new URL('../../package.json', import.meta.url);
+  // Get CLI version - detect bundle vs dev context
+  const moduleUrl = new URL('.', import.meta.url);
+  const isBundle = !moduleUrl.pathname.includes('/src/');
+  const cliPkgPath = isBundle
+    ? new URL('../package.json', import.meta.url) // dist/index.js → ../package.json = cli/package.json
+    : new URL('../../package.json', import.meta.url); // src/commands/setup.ts → ../../package.json = cli/package.json
   const cliPkgContent = await fs.readFile(cliPkgPath, 'utf-8');
   const cliPkg = JSON.parse(cliPkgContent);
   const cliVersion = cliPkg.version || '0.2.0';
@@ -218,12 +250,87 @@ function getTemplatesDir(): string {
 }
 
 /**
+ * Generate or update CLAUDE.md with Anatomia section
+ *
+ * Merge strategy:
+ * 1. If marker found: replace section between markers
+ * 2. If no marker: append section at end
+ * 3. If no file: create with section only
+ *
+ * @param cwd - Project root directory
+ * @param anaPath - Path to .ana/ directory
+ */
+async function generateClaudeMd(cwd: string, anaPath: string): Promise<void> {
+  const claudeMdPath = path.join(cwd, 'CLAUDE.md');
+  const contextDir = path.join(anaPath, 'context');
+
+  // Count verified context files
+  let contextFileCount = 0;
+  try {
+    const files = await fs.readdir(contextDir);
+    contextFileCount = files.filter((f) => f.endsWith('.md') && f !== 'analysis.md').length;
+  } catch {
+    contextFileCount = 7; // default
+  }
+
+  const today = new Date().toISOString().split('T')[0];
+
+  const anatomiaSection = [
+    '<!-- Anatomia Context Framework — do not edit this section -->',
+    `<!-- Last setup: ${today} | Run \`ana setup\` to update -->`,
+    '',
+    `This project uses Anatomia for AI context management (${contextFileCount} verified context files).`,
+    '',
+    'Available modes: @.ana/modes/code.md · @.ana/modes/debug.md · @.ana/modes/test.md · @.ana/modes/architect.md',
+    '',
+    'For full context and all modes: @.ana/ENTRY.md',
+    '<!-- End Anatomia section -->',
+  ].join('\n');
+
+  const startMarker = '<!-- Anatomia Context Framework';
+  const endMarker = '<!-- End Anatomia section -->';
+
+  let finalContent: string;
+
+  try {
+    const existing = await fs.readFile(claudeMdPath, 'utf-8');
+    const startIdx = existing.indexOf(startMarker);
+    const endIdx = existing.indexOf(endMarker);
+
+    if (startIdx !== -1 && endIdx !== -1) {
+      // Replace existing Anatomia section
+      finalContent =
+        existing.substring(0, startIdx) +
+        anatomiaSection +
+        existing.substring(endIdx + endMarker.length);
+    } else {
+      // Append to existing file
+      finalContent = existing.trimEnd() + '\n\n' + anatomiaSection + '\n';
+    }
+  } catch {
+    // No existing file — create new
+    finalContent = anatomiaSection + '\n';
+  }
+
+  try {
+    await fs.writeFile(claudeMdPath, finalContent, 'utf-8');
+    console.log(chalk.green('  ✅ CLAUDE.md updated (Anatomia section)'));
+  } catch (error) {
+    // CLAUDE.md is nice-to-have, not a gate
+    console.log(chalk.yellow('  ⚠️  Could not update CLAUDE.md (non-fatal)'));
+    if (error instanceof Error) {
+      console.log(chalk.gray(`     ${error.message}`));
+    }
+  }
+}
+
+/**
  * Update .meta.json after successful validation
  *
  * Sets:
  * - setupStatus: 'complete'
  * - setupCompletedAt: current timestamp
- * - setupMode: Priority: CLI --mode flag (highest) → .setup_tier file → error (no inference)
+ * - setupMode: Priority: CLI --mode flag (highest) → .setup_tier file → existing .meta.json setupMode → error
  *
  * @param anaPath - Path to .ana/ directory
  * @param cwd - Project root
@@ -282,7 +389,11 @@ async function updateMetaJson(
         process.exit(1);
       }
     }
-    // Priority 3: Error if no handoff file
+    // Priority 3: Existing setupMode from .meta.json (re-running setup complete)
+    else if (meta.setupMode && isValidSetupTier(meta.setupMode)) {
+      setupMode = meta.setupMode;
+    }
+    // Priority 4: Error if no source available
     else {
       console.error(chalk.red('Error: Cannot determine setup tier.'));
       console.error(chalk.gray('Setup should have written .ana/.setup_tier file.'));

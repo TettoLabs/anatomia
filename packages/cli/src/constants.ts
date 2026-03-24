@@ -41,6 +41,9 @@ export const MODE_FILES = [
   'test.md',
   'general.md',
   'setup.md',
+  'setup-quick.md',
+  'setup-guided.md',
+  'setup-complete.md',
 ] as const;
 
 /** Setup files */
@@ -70,6 +73,14 @@ export const FRAMEWORK_SNIPPETS = [
   'express.md',
   'go.md',
   'generic.md',
+] as const;
+
+/** Agent definition files */
+export const AGENT_FILES = [
+  'ana-explorer.md',
+  'ana-question-formulator.md',
+  'ana-writer.md',
+  'ana-verifier.md',
 ] as const;
 
 /** Valid setupMode tiers */
