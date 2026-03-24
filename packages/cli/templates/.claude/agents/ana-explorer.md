@@ -142,6 +142,33 @@ _Generated: [timestamp]_
 - **Pre-commit:** Husky + lint-staged for linting — Confidence: 0.9
 ```
 
+## Directory Exclusions
+
+NEVER read, glob, or grep into these directories. Skip them entirely:
+- node_modules/
+- dist/
+- build/
+- out/
+- .next/
+- .nuxt/
+- .svelte-kit/
+- coverage/
+- __pycache__/
+- .pytest_cache/
+- target/
+- vendor/
+- .venv/
+- venv/
+- .git/
+- .ana/.state/
+
+When using Glob, always use ignore patterns:
+**/*.{ts,tsx,js,jsx} with ignore: ['**/node_modules/**', '**/dist/**', '**/.next/**', '**/build/**', '**/coverage/**', '**/target/**', '**/vendor/**']
+
+When using Grep, always add: --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.next --exclude-dir=build --exclude-dir=coverage
+
+This is critical for monorepos and projects with large dependency trees. Without exclusions, exploration takes 30+ minutes instead of 10.
+
 ## Constraints
 
 - You ONLY write to `.ana/.setup_exploration.md`
