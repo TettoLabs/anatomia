@@ -20,7 +20,7 @@ ASSIGNED_FILE=""
 if [ -n "$LAST_MSG" ]; then
   # Look for context filenames mentioned in the agent's final message
   for candidate in project-overview.md conventions.md patterns.md architecture.md testing.md workflow.md debugging.md; do
-    if echo "$LAST_MSG" | grep -q "$candidate"; then
+    if echo "$LAST_MSG" | grep -q "\.ana/context/$candidate"; then
       ASSIGNED_FILE="$candidate"
       break
     fi
