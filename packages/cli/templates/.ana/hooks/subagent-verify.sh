@@ -15,12 +15,6 @@ fi
 INPUT=$(cat)
 LAST_MSG=$(echo "$INPUT" | jq -r '.last_assistant_message // empty' 2>/dev/null)
 
-# Skip if this is the explorer agent (not a writer)
-# Explorer mentions .setup_exploration.md; writers mention context files directly
-if echo "$LAST_MSG" | grep -q '\.setup_exploration\.md'; then
-  exit 0
-fi
-
 # Try to extract filename from last_assistant_message
 ASSIGNED_FILE=""
 if [ -n "$LAST_MSG" ]; then
