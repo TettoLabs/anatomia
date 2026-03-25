@@ -160,7 +160,11 @@ NEVER read, glob, or grep into these directories. Skip them entirely:
 - .venv/
 - venv/
 - .git/
-- .ana/.state/
+- .ana/
+- .turbo/
+- .cache/
+- .parcel-cache/
+- .expo/
 
 When using Glob, always use ignore patterns:
 **/*.{ts,tsx,js,jsx} with ignore: ['**/node_modules/**', '**/dist/**', '**/.next/**', '**/build/**', '**/coverage/**', '**/target/**', '**/vendor/**']

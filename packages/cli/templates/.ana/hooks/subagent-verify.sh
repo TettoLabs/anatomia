@@ -13,10 +13,16 @@ fi
 
 # Parse the assigned file from the sub-agent's last message
 INPUT=$(cat)
+LAST_MSG=$(echo "$INPUT" | jq -r '.last_assistant_message // empty' 2>/dev/null)
+
+# Skip if this is the explorer agent (not a writer)
+# Explorer mentions .setup_exploration.md; writers mention context files directly
+if echo "$LAST_MSG" | grep -q '\.setup_exploration\.md'; then
+  exit 0
+fi
 
 # Try to extract filename from last_assistant_message
 ASSIGNED_FILE=""
-LAST_MSG=$(echo "$INPUT" | jq -r '.last_assistant_message // empty' 2>/dev/null)
 if [ -n "$LAST_MSG" ]; then
   # Look for context filenames mentioned in the agent's final message
   for candidate in project-overview.md conventions.md patterns.md architecture.md testing.md workflow.md debugging.md; do
