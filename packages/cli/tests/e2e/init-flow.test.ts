@@ -3,8 +3,9 @@
  *
  * Tests actual command execution in temp project directory.
  * Validates all files/directories created correctly:
- * - .ana/ with 40 files (34 original + 3 tier files + 3 hook scripts)
- * - .claude/ with settings.json and agents/ directory (4 agent files)
+ * - .ana/ with 47 files (modes, context, docs, plans, hooks, state)
+ * - .claude/ with settings.json, agents/ (5 files), and skills/ (5 dirs)
+ * - CLAUDE.md at project root
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -37,7 +38,7 @@ describe('ana init E2E', () => {
     await fs.rm(tmpProject, { recursive: true, force: true });
   });
 
-  it('creates all 40 files in .ana/ (27 static + 8 generated + 2 JSON + 3 hooks)', async () => {
+  it('creates all 47 files in .ana/ (modes, context, docs, plans, hooks, state)', async () => {
     // Run ana init with --skip-analysis (faster, deterministic)
     await execFileAsync('node', [cliPath, 'init', '--skip-analysis'], {
       cwd: tmpProject,
@@ -45,7 +46,7 @@ describe('ana init E2E', () => {
 
     const anaPath = path.join(tmpProject, '.ana');
 
-    // Verify directories (7 including hooks/)
+    // Verify directories (10 including new docs/ and plans/)
     const dirs = [
       'modes',
       'hooks',
@@ -53,6 +54,9 @@ describe('ana init E2E', () => {
       'context/setup',
       'context/setup/steps',
       'context/setup/framework-snippets',
+      'docs',
+      'plans/active',
+      'plans/complete',
       '.state',
     ];
 
@@ -78,7 +82,7 @@ describe('ana init E2E', () => {
       expect(exists, `Generated file missing: ${file}`).toBe(true);
     }
 
-    // Verify copied mode files (7)
+    // Verify copied mode files (10)
     const modeFiles = [
       'modes/architect.md',
       'modes/code.md',
@@ -87,6 +91,9 @@ describe('ana init E2E', () => {
       'modes/test.md',
       'modes/general.md',
       'modes/setup.md',
+      'modes/setup-quick.md',
+      'modes/setup-guided.md',
+      'modes/setup-complete.md',
     ];
 
     for (const file of modeFiles) {
@@ -94,8 +101,13 @@ describe('ana init E2E', () => {
       expect(exists, `Mode file missing: ${file}`).toBe(true);
     }
 
-    // Verify hook scripts (3) — Step 2 + 7.3 additions
-    const hookScripts = ['hooks/verify-context-file.sh', 'hooks/quality-gate.sh', 'hooks/subagent-verify.sh'];
+    // Verify hook scripts (4)
+    const hookScripts = [
+      'hooks/verify-context-file.sh',
+      'hooks/quality-gate.sh',
+      'hooks/run-check.sh',
+      'hooks/subagent-verify.sh',
+    ];
 
     for (const script of hookScripts) {
       const exists = await fileExists(path.join(anaPath, script));
@@ -105,6 +117,16 @@ describe('ana init E2E', () => {
       const stats = await fs.stat(path.join(anaPath, script));
       expect(stats.mode & 0o111).toBeGreaterThan(0);
     }
+
+    // Verify SCHEMAS.md
+    const schemasExists = await fileExists(path.join(anaPath, 'docs/SCHEMAS.md'));
+    expect(schemasExists).toBe(true);
+
+    // Verify .gitkeep files in plan directories
+    const activeGitkeepExists = await fileExists(path.join(anaPath, 'plans/active/.gitkeep'));
+    const completeGitkeepExists = await fileExists(path.join(anaPath, 'plans/complete/.gitkeep'));
+    expect(activeGitkeepExists).toBe(true);
+    expect(completeGitkeepExists).toBe(true);
 
     // Verify .meta.json
     const metaExists = await fileExists(path.join(anaPath, '.meta.json'));
@@ -119,14 +141,10 @@ describe('ana init E2E', () => {
     const snapshotExists = await fileExists(path.join(anaPath, '.state/snapshot.json'));
     expect(snapshotExists).toBe(true);
 
-    // Verify ENTRY.md NOT created (setup complete creates it)
-    const entryExists = await fileExists(path.join(anaPath, 'ENTRY.md'));
-    expect(entryExists).toBe(false);
-
     // Count total files in .ana/
+    // 8 generated + 10 modes + 3 setup + 8 steps + 6 snippets + 4 hooks + 1 SCHEMAS + 2 .gitkeep + 2 JSON + 1 symbol-index + 1 cli-path + 1 .gitignore = 47
     const allFiles = await findAllFiles(anaPath);
-    // 8 generated + 27 copied + 2 JSON + 4 hooks + 1 symbol-index.json + 1 cli-path + 1 .gitignore = 44
-    expect(allFiles.length).toBe(44);
+    expect(allFiles.length).toBe(47);
 
     // Verify .gitignore exists and excludes runtime state
     const gitignorePath = path.join(anaPath, '.gitignore');
@@ -143,12 +161,13 @@ describe('ana init E2E', () => {
     const settingsExists = await fileExists(path.join(claudePath, 'settings.json'));
     expect(settingsExists).toBe(true);
 
-    // Verify .claude/agents/ directory with 4 agent files
+    // Verify .claude/agents/ directory with 5 agent files
     const agentsExists = await dirExists(path.join(claudePath, 'agents'));
     expect(agentsExists).toBe(true);
 
-    // Verify all 4 agent files exist (Step 3)
+    // Verify all 5 agent files exist
     const agentFiles = [
+      'ana.md',
       'ana-explorer.md',
       'ana-question-formulator.md',
       'ana-writer.md',
@@ -160,12 +179,29 @@ describe('ana init E2E', () => {
       expect(agentExists, `Agent file missing: ${agentFile}`).toBe(true);
     }
 
-    // Verify agent files have valid frontmatter
-    for (const agentFile of agentFiles) {
-      const content = await fs.readFile(path.join(claudePath, 'agents', agentFile), 'utf-8');
-      expect(content.startsWith('---'), `${agentFile} should have frontmatter`).toBe(true);
-      expect(content).toContain('model: sonnet');
+    // Verify .claude/skills/ directory with 5 skill directories
+    const skillsExists = await dirExists(path.join(claudePath, 'skills'));
+    expect(skillsExists).toBe(true);
+
+    const skillDirs = [
+      'testing-standards',
+      'coding-standards',
+      'git-workflow',
+      'deployment',
+      'design-principles',
+    ];
+
+    for (const skillDir of skillDirs) {
+      const skillFileExists = await fileExists(path.join(claudePath, 'skills', skillDir, 'SKILL.md'));
+      expect(skillFileExists, `Skill file missing: ${skillDir}/SKILL.md`).toBe(true);
     }
+
+    // Verify CLAUDE.md at project root
+    const claudeMdExists = await fileExists(path.join(tmpProject, 'CLAUDE.md'));
+    expect(claudeMdExists).toBe(true);
+
+    const claudeMdContent = await fs.readFile(path.join(tmpProject, 'CLAUDE.md'), 'utf-8');
+    expect(claudeMdContent).toContain('claude --agent ana');
   }, 30000); // 30s timeout
 
   it('--force preserves .state/ directory', async () => {

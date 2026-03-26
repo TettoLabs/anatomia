@@ -64,14 +64,14 @@ describe('ana init', () => {
   });
 
   describe('template inventory', () => {
-    it('all 35 template files exist in CLI package', async () => {
+    it('all 46 template files exist in CLI package', async () => {
       // Get templates directory using same logic as init.ts
       const __filename = fileURLToPath(import.meta.url);
       const __dirname = path.dirname(__filename);
       const templatesDir = path.join(__dirname, '..', '..', 'templates');
 
       const expectedFiles = [
-        // 7 mode files + 3 tier files = 10
+        // 10 mode files
         'modes/architect.md',
         'modes/code.md',
         'modes/debug.md',
@@ -86,8 +86,6 @@ describe('ana init', () => {
         'context/setup/SETUP_GUIDE.md',
         'context/setup/templates.md',
         'context/setup/rules.md',
-        // 1 ENTRY template (stored, not copied to .ana/)
-        'ENTRY.md',
         // 8 step files
         'context/setup/steps/00_explore_codebase.md',
         'context/setup/steps/01_project_overview.md',
@@ -104,19 +102,34 @@ describe('ana init', () => {
         'context/setup/framework-snippets/express.md',
         'context/setup/framework-snippets/go.md',
         'context/setup/framework-snippets/generic.md',
-        // 2 hook scripts (Step 2)
+        // 4 hook scripts
         '.ana/hooks/verify-context-file.sh',
         '.ana/hooks/quality-gate.sh',
-        // 1 settings template (Step 2)
+        '.ana/hooks/run-check.sh',
+        '.ana/hooks/subagent-verify.sh',
+        // SCHEMAS.md and plan directories
+        '.ana/docs/SCHEMAS.md',
+        '.ana/plans/active/.gitkeep',
+        '.ana/plans/complete/.gitkeep',
+        // 1 settings template
         '.claude/settings.json',
-        // 4 agent files (Step 3)
+        // 5 agent files
+        '.claude/agents/ana.md',
         '.claude/agents/ana-explorer.md',
         '.claude/agents/ana-question-formulator.md',
         '.claude/agents/ana-writer.md',
         '.claude/agents/ana-verifier.md',
+        // 5 skill files
+        '.claude/skills/testing-standards/SKILL.md',
+        '.claude/skills/coding-standards/SKILL.md',
+        '.claude/skills/git-workflow/SKILL.md',
+        '.claude/skills/deployment/SKILL.md',
+        '.claude/skills/design-principles/SKILL.md',
+        // CLAUDE.md entry point
+        'CLAUDE.md',
       ];
 
-      expect(expectedFiles).toHaveLength(35); // 28 + 4 agents + 3 tier files
+      expect(expectedFiles).toHaveLength(46);
 
       for (const file of expectedFiles) {
         const filePath = path.join(templatesDir, file);
@@ -290,7 +303,7 @@ describe('ana init', () => {
       expect(settings.hooks.Stop[0].hooks[0].timeout).toBe(120);
     });
 
-    it('creates .claude/agents/ directory with 4 agent files', async () => {
+    it('creates .claude/agents/ directory with 5 agent files', async () => {
       const claudePath = path.join(tmpDir, '.claude');
       const agentsPath = path.join(claudePath, 'agents');
 
@@ -304,6 +317,7 @@ describe('ana init', () => {
 
       // Copy agent files
       const agentFiles = [
+        'ana.md',
         'ana-explorer.md',
         'ana-question-formulator.md',
         'ana-writer.md',
@@ -319,9 +333,10 @@ describe('ana init', () => {
       const exists = await dirExists(agentsPath);
       expect(exists).toBe(true);
 
-      // Should have 4 agent files
+      // Should have 5 agent files
       const files = await fs.readdir(agentsPath);
-      expect(files).toHaveLength(4);
+      expect(files).toHaveLength(5);
+      expect(files).toContain('ana.md');
       expect(files).toContain('ana-explorer.md');
       expect(files).toContain('ana-question-formulator.md');
       expect(files).toContain('ana-writer.md');
@@ -334,6 +349,7 @@ describe('ana init', () => {
       const templatesDir = path.join(__dirname, '..', '..', 'templates');
 
       const agentFiles = [
+        'ana.md',
         'ana-explorer.md',
         'ana-question-formulator.md',
         'ana-writer.md',
@@ -354,11 +370,16 @@ describe('ana init', () => {
         // Check required fields
         expect(frontmatter).toContain('name:');
         expect(frontmatter).toContain('model:');
-        expect(frontmatter).toContain('tools:');
         expect(frontmatter).toContain('description:');
 
-        // Check all agents use sonnet model
-        expect(frontmatter).toContain('model: sonnet');
+        // ana.md uses memory: instead of tools:, sub-agents use tools:
+        if (agentFile === 'ana.md') {
+          expect(frontmatter).toContain('model: opus');
+          expect(frontmatter).toContain('memory:');
+        } else {
+          expect(frontmatter).toContain('model: sonnet');
+          expect(frontmatter).toContain('tools:');
+        }
       }
     });
 
@@ -376,6 +397,7 @@ describe('ana init', () => {
 
       // Copy agent files (first init)
       const agentFiles = [
+        'ana.md',
         'ana-explorer.md',
         'ana-question-formulator.md',
         'ana-writer.md',
@@ -396,9 +418,9 @@ describe('ana init', () => {
         expect(exists).toBe(true);
       }
 
-      // Should still have exactly 4 files, not 8
+      // Should still have exactly 5 files, not 10
       const files = await fs.readdir(agentsPath);
-      expect(files).toHaveLength(4);
+      expect(files).toHaveLength(5);
     });
 
     it('agent files have correct tools for their role', async () => {

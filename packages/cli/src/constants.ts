@@ -77,10 +77,20 @@ export const FRAMEWORK_SNIPPETS = [
 
 /** Agent definition files */
 export const AGENT_FILES = [
+  'ana.md',
   'ana-explorer.md',
   'ana-question-formulator.md',
   'ana-writer.md',
   'ana-verifier.md',
+] as const;
+
+/** Skill directories (each contains SKILL.md) */
+export const SKILL_DIRS = [
+  'testing-standards',
+  'coding-standards',
+  'git-workflow',
+  'deployment',
+  'design-principles',
 ] as const;
 
 /** Valid setupMode tiers */

@@ -5,10 +5,12 @@
  *
  * Creates:
  *   .ana/
- *   ├── modes/                    (7 mode files)
+ *   ├── modes/                    (10 mode files)
  *   ├── hooks/                    (CC hook scripts)
  *   │   ├── verify-context-file.sh
- *   │   └── quality-gate.sh
+ *   │   ├── quality-gate.sh
+ *   │   ├── run-check.sh
+ *   │   └── subagent-verify.sh
  *   ├── context/
  *   │   ├── analysis.md           (generated from analyzer)
  *   │   ├── project-overview.md   (scaffold with 40% pre-pop)
@@ -19,13 +21,31 @@
  *   │   ├── testing.md            (scaffold with 50% pre-pop)
  *   │   ├── debugging.md          (scaffold with 5% pre-pop)
  *   │   └── setup/                (setup files)
+ *   ├── docs/
+ *   │   └── SCHEMAS.md            (artifact schema reference)
+ *   ├── plans/
+ *   │   ├── active/               (in-progress work)
+ *   │   └── complete/             (completed cycles)
  *   ├── .meta.json                (framework metadata)
  *   └── .state/
  *       └── snapshot.json         (analyzer baseline)
  *
  *   .claude/
  *   ├── settings.json             (hooks configuration)
- *   └── agents/                   (empty - agents come in Step 3)
+ *   ├── agents/
+ *   │   ├── ana.md                (main Ana agent)
+ *   │   ├── ana-explorer.md
+ *   │   ├── ana-question-formulator.md
+ *   │   ├── ana-writer.md
+ *   │   └── ana-verifier.md
+ *   └── skills/
+ *       ├── testing-standards/SKILL.md
+ *       ├── coding-standards/SKILL.md
+ *       ├── git-workflow/SKILL.md
+ *       ├── deployment/SKILL.md
+ *       └── design-principles/SKILL.md
+ *
+ *   CLAUDE.md                     (project entry point)
  */
 
 import { Command } from 'commander';
@@ -55,6 +75,7 @@ import {
   STEP_FILES,
   FRAMEWORK_SNIPPETS,
   AGENT_FILES,
+  SKILL_DIRS,
   META_VERSION,
 } from '../constants.js';
 import { buildSymbolIndex } from './index.js';
@@ -415,7 +436,14 @@ async function createDirectoryStructure(tmpAnaPath: string): Promise<void> {
   await fs.mkdir(path.join(tmpAnaPath, 'context/setup'), { recursive: true });
   await fs.mkdir(path.join(tmpAnaPath, 'context/setup/steps'), { recursive: true });
   await fs.mkdir(path.join(tmpAnaPath, 'context/setup/framework-snippets'), { recursive: true });
+  await fs.mkdir(path.join(tmpAnaPath, 'docs'), { recursive: true });
+  await fs.mkdir(path.join(tmpAnaPath, 'plans/active'), { recursive: true });
+  await fs.mkdir(path.join(tmpAnaPath, 'plans/complete'), { recursive: true });
   await fs.mkdir(path.join(tmpAnaPath, '.state'), { recursive: true });
+
+  // Create .gitkeep files for empty plan directories
+  await fs.writeFile(path.join(tmpAnaPath, 'plans/active/.gitkeep'), '', 'utf-8');
+  await fs.writeFile(path.join(tmpAnaPath, 'plans/complete/.gitkeep'), '', 'utf-8');
 
   // Create .gitignore for runtime state files
   const gitignoreContent = `# Anatomia runtime state — local to each developer
@@ -550,14 +578,14 @@ async function copyStaticFilesWithVerification(tmpAnaPath: string): Promise<void
 
   const templatesDir = getTemplatesDir();
 
-  // 7 mode files
+  // 10 mode files
   for (const file of MODE_FILES) {
     const sourcePath = path.join(templatesDir, 'modes', file);
     const destPath = path.join(tmpAnaPath, 'modes', file);
     await copyAndVerifyFile(sourcePath, destPath, `modes/${file}`);
   }
 
-  // 3 setup files (ENTRY.md stays in templates, not copied to .ana/)
+  // 3 setup files
   const setupFiles = [
     { source: 'context/setup/SETUP_GUIDE.md', dest: 'context/setup/SETUP_GUIDE.md' },
     { source: 'context/setup/templates.md', dest: 'context/setup/templates.md' },
@@ -584,7 +612,12 @@ async function copyStaticFilesWithVerification(tmpAnaPath: string): Promise<void
     await copyAndVerifyFile(sourcePath, destPath, `context/setup/framework-snippets/${file}`);
   }
 
-  spinner.succeed('Copied and verified 24 static files');
+  // SCHEMAS.md
+  const schemasSource = path.join(templatesDir, '.ana/docs/SCHEMAS.md');
+  const schemasDest = path.join(tmpAnaPath, 'docs/SCHEMAS.md');
+  await copyAndVerifyFile(schemasSource, schemasDest, '.ana/docs/SCHEMAS.md');
+
+  spinner.succeed('Copied and verified 28 static files');
 }
 
 /**
@@ -660,9 +693,10 @@ async function copyHookScripts(tmpAnaPath: string): Promise<void> {
 /**
  * Create .claude/ configuration
  *
- * Creates .claude/ directory with settings.json, agents/ directory, and agent files.
+ * Creates .claude/ directory with settings.json, agents/ directory, agent files,
+ * skills directories, and CLAUDE.md at project root.
  * If .claude/ already exists, merges our hooks into existing settings.json.
- * Agent files are copied without overwriting existing ones (merge-not-overwrite).
+ * Agent/skill files are copied without overwriting existing ones (merge-not-overwrite).
  *
  * @param cwd - Project root directory
  */
@@ -672,6 +706,7 @@ async function createClaudeConfiguration(cwd: string): Promise<void> {
   const claudePath = path.join(cwd, '.claude');
   const settingsPath = path.join(claudePath, 'settings.json');
   const agentsPath = path.join(claudePath, 'agents');
+  const skillsPath = path.join(claudePath, 'skills');
   const templatesDir = getTemplatesDir();
 
   // Load our template settings
@@ -685,10 +720,17 @@ async function createClaudeConfiguration(cwd: string): Promise<void> {
     // First run: create everything fresh
     await fs.mkdir(claudePath, { recursive: true });
     await fs.mkdir(agentsPath, { recursive: true });
+    await fs.mkdir(skillsPath, { recursive: true });
     await fs.writeFile(settingsPath, JSON.stringify(templateSettings, null, 2), 'utf-8');
 
     // Copy all agent files
     await copyAgentFiles(agentsPath, templatesDir);
+
+    // Copy all skill files
+    await copySkillFiles(skillsPath, templatesDir);
+
+    // Copy CLAUDE.md to project root
+    await copyClaudeMd(cwd, templatesDir);
 
     spinner.succeed('Created .claude/ configuration');
     return;
@@ -722,8 +764,20 @@ async function createClaudeConfiguration(cwd: string): Promise<void> {
     await fs.mkdir(agentsPath, { recursive: true });
   }
 
+  // Create skills/ if it doesn't exist
+  const skillsExists = await dirExists(skillsPath);
+  if (!skillsExists) {
+    await fs.mkdir(skillsPath, { recursive: true });
+  }
+
   // Copy agent files (merge-not-overwrite)
   await copyAgentFiles(agentsPath, templatesDir);
+
+  // Copy skill files (merge-not-overwrite)
+  await copySkillFiles(skillsPath, templatesDir);
+
+  // Copy CLAUDE.md to project root (merge-not-overwrite)
+  await copyClaudeMd(cwd, templatesDir);
 
   spinner.succeed('Created .claude/ configuration (merged)');
 }
@@ -752,6 +806,59 @@ async function copyAgentFiles(agentsPath: string, templatesDir: string): Promise
     // Copy with verification
     await copyAndVerifyFile(sourcePath, destPath, `.claude/agents/${agentFile}`);
   }
+}
+
+/**
+ * Copy skill files to .claude/skills/
+ *
+ * Copies skill definition files from templates without overwriting existing ones.
+ * Each skill lives in its own directory with a SKILL.md file.
+ *
+ * @param skillsPath - Path to .claude/skills/ directory
+ * @param templatesDir - Path to CLI templates directory
+ */
+async function copySkillFiles(skillsPath: string, templatesDir: string): Promise<void> {
+  for (const skillDir of SKILL_DIRS) {
+    const destDir = path.join(skillsPath, skillDir);
+    const destPath = path.join(destDir, 'SKILL.md');
+
+    // Check if file already exists (don't overwrite)
+    const exists = await fileExists(destPath);
+    if (exists) {
+      // Skip - don't overwrite existing skill files
+      continue;
+    }
+
+    // Create skill directory
+    await fs.mkdir(destDir, { recursive: true });
+
+    // Copy with verification
+    const sourcePath = path.join(templatesDir, '.claude/skills', skillDir, 'SKILL.md');
+    await copyAndVerifyFile(sourcePath, destPath, `.claude/skills/${skillDir}/SKILL.md`);
+  }
+}
+
+/**
+ * Copy CLAUDE.md to project root
+ *
+ * Copies CLAUDE.md entry point without overwriting existing one.
+ *
+ * @param cwd - Project root directory
+ * @param templatesDir - Path to CLI templates directory
+ */
+async function copyClaudeMd(cwd: string, templatesDir: string): Promise<void> {
+  const destPath = path.join(cwd, 'CLAUDE.md');
+
+  // Check if file already exists (don't overwrite)
+  const exists = await fileExists(destPath);
+  if (exists) {
+    // Skip - don't overwrite existing CLAUDE.md
+    return;
+  }
+
+  // Copy with verification
+  const sourcePath = path.join(templatesDir, 'CLAUDE.md');
+  await copyAndVerifyFile(sourcePath, destPath, 'CLAUDE.md');
 }
 
 /**
@@ -1027,19 +1134,22 @@ function displaySuccessMessage(analysisResult: AnalysisResult | null): void {
   console.log(chalk.green('\n✅ .ana/ framework initialized\n'));
 
   console.log(chalk.bold('Created:'));
-  console.log('  • 7 mode files');
+  console.log('  • 10 mode files');
   console.log('  • 7 context scaffolds (with analyzer data)');
   console.log('  • analysis.md');
   console.log('  • Setup files (orchestrator, templates, rules, 8 steps)');
   console.log('  • Hook scripts (.ana/hooks/)');
-  console.log('  • Claude Code config (.claude/)');
+  console.log('  • SCHEMAS.md artifact reference (.ana/docs/)');
+  console.log('  • Plan directories (.ana/plans/)');
+  console.log('  • Ana agent + 4 sub-agents (.claude/agents/)');
+  console.log('  • 5 team-editable skills (.claude/skills/)');
+  console.log('  • CLAUDE.md entry point');
   console.log();
 
   console.log(chalk.bold('Next: ') + 'Run this in Claude Code:');
-  console.log(chalk.cyan('  @.ana/modes/setup.md'));
+  console.log(chalk.cyan('  claude --agent ana'));
   console.log();
 
-  console.log(chalk.gray('Setup will detect your project maturity and guide you through'));
-  console.log(chalk.gray('filling context files (~2-15 min depending on tier).'));
+  console.log(chalk.gray('Ana will help you scope, plan, build, and verify changes.'));
   console.log();
 }
