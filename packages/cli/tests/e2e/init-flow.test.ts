@@ -161,13 +161,14 @@ describe('ana init E2E', () => {
     const settingsExists = await fileExists(path.join(claudePath, 'settings.json'));
     expect(settingsExists).toBe(true);
 
-    // Verify .claude/agents/ directory with 5 agent files
+    // Verify .claude/agents/ directory with 6 agent files
     const agentsExists = await dirExists(path.join(claudePath, 'agents'));
     expect(agentsExists).toBe(true);
 
-    // Verify all 5 agent files exist
+    // Verify all 6 agent files exist
     const agentFiles = [
       'ana.md',
+      'ana-plan.md',
       'ana-explorer.md',
       'ana-question-formulator.md',
       'ana-writer.md',

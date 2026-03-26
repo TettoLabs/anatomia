@@ -78,6 +78,7 @@ export const FRAMEWORK_SNIPPETS = [
 /** Agent definition files */
 export const AGENT_FILES = [
   'ana.md',
+  'ana-plan.md',
   'ana-explorer.md',
   'ana-question-formulator.md',
   'ana-writer.md',

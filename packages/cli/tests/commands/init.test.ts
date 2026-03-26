@@ -113,8 +113,9 @@ describe('ana init', () => {
         '.ana/plans/complete/.gitkeep',
         // 1 settings template
         '.claude/settings.json',
-        // 5 agent files
+        // 6 agent files
         '.claude/agents/ana.md',
+        '.claude/agents/ana-plan.md',
         '.claude/agents/ana-explorer.md',
         '.claude/agents/ana-question-formulator.md',
         '.claude/agents/ana-writer.md',
@@ -129,7 +130,7 @@ describe('ana init', () => {
         'CLAUDE.md',
       ];
 
-      expect(expectedFiles).toHaveLength(46);
+      expect(expectedFiles).toHaveLength(47);
 
       for (const file of expectedFiles) {
         const filePath = path.join(templatesDir, file);
@@ -303,7 +304,7 @@ describe('ana init', () => {
       expect(settings.hooks.Stop[0].hooks[0].timeout).toBe(120);
     });
 
-    it('creates .claude/agents/ directory with 5 agent files', async () => {
+    it('creates .claude/agents/ directory with 6 agent files', async () => {
       const claudePath = path.join(tmpDir, '.claude');
       const agentsPath = path.join(claudePath, 'agents');
 
@@ -318,6 +319,7 @@ describe('ana init', () => {
       // Copy agent files
       const agentFiles = [
         'ana.md',
+        'ana-plan.md',
         'ana-explorer.md',
         'ana-question-formulator.md',
         'ana-writer.md',
@@ -333,10 +335,11 @@ describe('ana init', () => {
       const exists = await dirExists(agentsPath);
       expect(exists).toBe(true);
 
-      // Should have 5 agent files
+      // Should have 6 agent files
       const files = await fs.readdir(agentsPath);
-      expect(files).toHaveLength(5);
+      expect(files).toHaveLength(6);
       expect(files).toContain('ana.md');
+      expect(files).toContain('ana-plan.md');
       expect(files).toContain('ana-explorer.md');
       expect(files).toContain('ana-question-formulator.md');
       expect(files).toContain('ana-writer.md');
@@ -350,6 +353,7 @@ describe('ana init', () => {
 
       const agentFiles = [
         'ana.md',
+        'ana-plan.md',
         'ana-explorer.md',
         'ana-question-formulator.md',
         'ana-writer.md',
@@ -372,10 +376,16 @@ describe('ana init', () => {
         expect(frontmatter).toContain('model:');
         expect(frontmatter).toContain('description:');
 
-        // ana.md uses memory: instead of tools:, sub-agents use tools:
+        // ana.md and ana-plan.md use opus, have no tools: field
+        // ana.md has memory:, ana-plan.md has neither memory: nor tools:
+        // sub-agents use sonnet and have tools:
         if (agentFile === 'ana.md') {
           expect(frontmatter).toContain('model: opus');
           expect(frontmatter).toContain('memory:');
+        } else if (agentFile === 'ana-plan.md') {
+          expect(frontmatter).toContain('model: opus');
+          expect(frontmatter).not.toContain('tools:');
+          expect(frontmatter).not.toContain('memory:');
         } else {
           expect(frontmatter).toContain('model: sonnet');
           expect(frontmatter).toContain('tools:');
@@ -398,6 +408,7 @@ describe('ana init', () => {
       // Copy agent files (first init)
       const agentFiles = [
         'ana.md',
+        'ana-plan.md',
         'ana-explorer.md',
         'ana-question-formulator.md',
         'ana-writer.md',
@@ -418,9 +429,9 @@ describe('ana init', () => {
         expect(exists).toBe(true);
       }
 
-      // Should still have exactly 5 files, not 10
+      // Should still have exactly 6 files, not 12
       const files = await fs.readdir(agentsPath);
-      expect(files).toHaveLength(5);
+      expect(files).toHaveLength(6);
     });
 
     it('agent files have correct tools for their role', async () => {
