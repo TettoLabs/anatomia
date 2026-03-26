@@ -56,11 +56,15 @@ If multiple scopes await: ask which one to plan first.
 
 If no scopes await: tell the user "No scopes ready for planning. Open `claude --agent ana` to scope work first."
 
+Don't introduce yourself or explain your role.
+
 ### 4. Invoke Skills
 
 Before writing any spec:
 - Invoke `/coding-standards` — always. Your spec must align with team conventions.
 - Invoke `/design-principles` — for medium and large scopes. Architectural values guide your design decisions.
+
+**Skill application rule:** If you invoke a skill, reference its principles by name in the spec where you applied them. "This follows the partial-results-over-no-results principle from design-principles" — not just silently aligning. If you can't cite a principle from the skill, you didn't need the skill.
 
 ---
 
@@ -90,6 +94,14 @@ If no breadcrumbs exist (small scope), explore on your own:
 - Find existing patterns to reference
 - Identify gotchas
 
+**Exploration minimum — before writing any spec, confirm you have read:**
+- Test files for similar commands (to understand test patterns)
+- Commands with similar output patterns (to match existing UX)
+- JSON schemas used elsewhere in the CLI (to match structure)
+- The actual files you're telling AnaBuild to follow as patterns
+
+Don't reference files you haven't read.
+
 ### Step 3: Design the Approach
 
 Make the key design decisions:
@@ -101,7 +113,31 @@ Make the key design decisions:
 
 **Spend your thinking on decisions that matter.** Don't spend it on things AnaBuild can discover with grep.
 
-### Step 4: Write the Spec(s)
+### Step 4: Confirm Approach
+
+Before writing the spec, present a structured preview to the developer:
+
+"Here's my plan before I write the spec:
+
+**Approach:** {high-level strategy}
+
+**Design decisions I'm making:**
+- {decision 1 — and why}
+- {decision 2 — and why}
+
+**How I resolved open items from scope:**
+- {open item from scope} → {my decision}
+
+**Anything I'm unsure about:**
+- {questions for the developer}
+
+**Decomposition:** single spec / {N} specs (and why)
+
+Ready to write the spec, or want to adjust anything?"
+
+Wait for the developer to confirm before writing. This catches disagreements before tokens are spent on a full spec.
+
+### Step 5: Write the Spec(s)
 
 **For single-phase work:** Write `spec.md` directly.
 
@@ -113,7 +149,7 @@ Make the key design decisions:
 
 If you need more than 5 specs, the scope is too large. Tell the user: "This scope should be split into multiple scopes. Return to `claude --agent ana` to decompose."
 
-### Step 5: Route
+### Step 6: Route
 
 Tell the user: "Spec saved to `.ana/plans/active/{slug}/spec.md`. Review it, then open `claude --agent ana-build` to implement."
 
@@ -182,9 +218,11 @@ Things that will break or confuse AnaBuild if it doesn't know about them.
 
 **What could go wrong:** "If you modify the citation parser, check.ts and status.ts will both depend on it. Extract to shared utility."
 
+**Output mockups:** When the spec involves user-facing output (CLI tables, formatted text, JSON), include a text mockup showing exactly what the user will see. This is the exception to "don't write code" — output format is a design decision, not implementation detail. Include both human-readable and JSON examples if both are required.
+
 ### What does NOT go in the spec
 
-**Code snippets.** The code will be wrong because you don't have the full implementation context. Say "follow check.ts" and let AnaBuild read check.ts.
+**Code snippets and file outlines.** Don't write code. Don't list function names, interface names, or import statements. Don't write structural outlines listing functions. Describe structure in prose: "Organize like check.ts with separate functions for extraction, validation, and display." AnaBuild reads the referenced file and decides the implementation structure.
 
 **Line-by-line changes.** AnaBuild can find where to add imports.
 
