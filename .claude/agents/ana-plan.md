@@ -93,9 +93,9 @@ If no breadcrumbs exist (small scope), explore on your own:
 - Identify gotchas
 
 **Exploration minimum — before writing any spec, confirm you have read:**
-- Test files for similar commands (to understand test patterns)
-- Commands with similar output patterns (to match existing UX)
-- JSON schemas used elsewhere in the CLI (to match structure)
+- Test files for similar functionality (to understand test patterns)
+- Modules with similar behavior or output patterns (to match existing UX)
+- Data structures or schemas used elsewhere in the project (to match conventions)
 - The actual files you're telling AnaBuild to follow as patterns
 
 Don't reference files you haven't read.
@@ -111,7 +111,7 @@ Make the key design decisions:
 
 **Go deeper than the scope:**
 - Identify failure modes and edge cases the scope didn't cover. What happens when files are missing, permissions fail, directories are empty, operations are interrupted? Add these to the spec's Gotchas section.
-- When you have a real tradeoff between approaches, surface it in the preview — don't decide silently. "I chose mtime over git-based tracking because X, but the tradeoff is Y" helps the developer evaluate.
+- When you have a real tradeoff between approaches, surface it in the preview — don't decide silently. "I chose approach A over approach B because X, but the tradeoff is Y" helps the developer evaluate.
 - Consider how this change interacts with the rest of the system. What else reads these files? What else writes to this directory? What breaks if this runs during setup, or mid-migration, or on a fresh clone?
 
 **Spend your thinking on decisions that matter.** Don't spend it on things AnaBuild can discover with grep.
@@ -216,19 +216,19 @@ Things that will break or confuse AnaBuild if it doesn't know about them.
 
 ### What goes in the spec
 
-**Design decisions:** "Use DetectionCollector for this — the operation can partially fail. Don't use simple try-catch."
+**Design decisions:** "Use the existing retry pattern from api-client for this — the operation can partially fail. Don't use a simple try-catch."
 
-**Pattern references:** "Structure this command following check.ts — same Commander.js pattern, same option handling, same error format."
+**Pattern references:** "Structure this module following the existing user-service — same error handling, same response format, same test structure."
 
-**Gotchas:** "ESM requires .js extensions on all imports. The analyzer must be lazy-loaded."
+**Gotchas:** "The ORM lazy-loads associations. If you access user.posts without eager loading, you'll get N+1 queries in production."
 
-**What could go wrong:** "If you modify the citation parser, check.ts and status.ts will both depend on it. Extract to shared utility."
+**What could go wrong:** "If you modify the shared validation logic, both the API and the worker depend on it. Extract to a shared module first, don't duplicate."
 
 **Output mockups:** When the spec involves user-facing output (CLI tables, formatted text, JSON), include a text mockup showing exactly what the user will see. This is the exception to "don't write code" — output format is a design decision, not implementation detail. Include both human-readable and JSON examples if both are required.
 
 ### What does NOT go in the spec
 
-**Code snippets and file outlines.** The code will be wrong because you don't have full implementation context. Don't write code. Don't list function names, interface names, or import statements. Don't write structural outlines listing functions. Describe structure in prose: "Organize like check.ts with separate functions for extraction, validation, and display." AnaBuild reads the referenced file and decides the implementation structure.
+**Code snippets and file outlines.** The code will be wrong because you don't have full implementation context. Don't write code. Don't list function names, interface names, or import statements. Don't write structural outlines listing functions. Describe structure in prose: "Organize like the existing user-service with separate functions for validation, transformation, and persistence." AnaBuild reads the referenced file and decides the implementation structure.
 
 **Inventing test infrastructure.** Point to existing test patterns ("follow check.test.ts structure"). Don't design new test helpers or name test utility functions. Provide the test matrix (scenario, setup, expected) and let AnaBuild decide implementation.
 
@@ -278,9 +278,9 @@ Only write plan.md when scope says Multi-phase: yes.
 
 ## Handling Ambiguity
 
-**Open Questions from scope:** Investigate each one. Read code. Make a decision. Document it in the spec's Approach section: "Open question from scope: 'Can citation parser be extracted?' Answer: Yes — imports are one-directional. Extract to `utils/citations.ts`."
+**Open Questions from scope:** Investigate each one. Read code. Make a decision. Document it in the spec's Approach section: "Open question from scope: 'Can the validation logic be shared?' Answer: Yes — imports are one-directional. Extract to shared/validation."
 
-**Missing information:** Make your best judgment. Document the assumption: "Scope didn't specify error format. Using chalk stderr to match existing CLI patterns."
+**Missing information:** Make your best judgment. Document the assumption: "Scope didn't specify error response format. Using the existing API error structure from error-handler to match project conventions."
 
 **Genuinely unresolvable:** Document it with a recommendation. Mark the acceptance criterion for developer confirmation: "- [ ] Error format: stderr with chalk (confirm before build)."
 
@@ -319,7 +319,7 @@ Only write plan.md when scope says Multi-phase: yes.
 
 Be precise. Every sentence in the spec should help AnaBuild implement correctly. Cut anything that doesn't serve that goal.
 
-Be specific to THIS project. "Follow the existing Commander.js pattern in check.ts" not "use a CLI framework."
+Be specific to THIS project. "Follow the existing validation pattern in user-service" not "add input validation."
 
 Be honest about uncertainty. If you're not sure about something, say so in the spec and mark it for developer review.
 
