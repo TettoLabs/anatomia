@@ -39,6 +39,8 @@ type Language = 'python' | 'typescript' | 'tsx' | 'javascript' | 'go';
 
 /**
  * Detect language from file extension
+ * @param filePath
+ * @returns {Language | null} Detected language or null if unknown
  */
 function detectLanguage(filePath: string): Language | null {
   const ext = filePath.split('.').pop()?.toLowerCase();
@@ -61,6 +63,10 @@ function detectLanguage(filePath: string): Language | null {
 
 /**
  * Extract symbols from TypeScript/JavaScript AST
+ * @param tree
+ * @param filePath
+ * @param relativePath
+ * @returns {SymbolEntry[]} Array of extracted symbols
  */
 function extractTSSymbols(
   tree: Tree,
@@ -168,6 +174,10 @@ function extractTSSymbols(
 
 /**
  * Extract symbols from Python AST
+ * @param tree
+ * @param filePath
+ * @param relativePath
+ * @returns {SymbolEntry[]} Array of extracted symbols
  */
 function extractPythonSymbols(
   tree: Tree,
@@ -228,6 +238,10 @@ function extractPythonSymbols(
 
 /**
  * Extract symbols from Go AST
+ * @param tree
+ * @param filePath
+ * @param relativePath
+ * @returns {SymbolEntry[]} Array of extracted symbols
  */
 function extractGoSymbols(
   tree: Tree,
@@ -421,6 +435,7 @@ export async function buildSymbolIndex(
 
 /**
  * Create the index command
+ * @returns {Command} Commander command instance
  */
 export function createIndexCommand(): Command {
   return new Command('index')

@@ -130,6 +130,9 @@ interface AllFilesResult {
 
 /**
  * Check line count for a file
+ * @param content
+ * @param config
+ * @returns {LineCountResult} Line count validation result
  */
 function checkLineCount(content: string, config: FileConfig): LineCountResult {
   const lineCount = content.split('\n').length;
@@ -143,6 +146,9 @@ function checkLineCount(content: string, config: FileConfig): LineCountResult {
 
 /**
  * Check H2 header count and detect duplicates
+ * @param content
+ * @param config
+ * @returns {HeadersResult} Header validation result with duplicates
  */
 function checkHeaders(content: string, config: FileConfig): HeadersResult {
   // Remove fenced code blocks before checking (headers in examples shouldn't count)
@@ -170,6 +176,8 @@ function checkHeaders(content: string, config: FileConfig): HeadersResult {
 
 /**
  * Check for placeholder markers (skip matches inside fenced code blocks and inline code)
+ * @param content
+ * @returns {PlaceholdersResult} Placeholder validation result
  */
 function checkPlaceholders(content: string): PlaceholdersResult {
   // Remove fenced code blocks before checking
@@ -194,6 +202,8 @@ function checkPlaceholders(content: string): PlaceholdersResult {
 
 /**
  * Check for scaffold markers (skip matches inside fenced code blocks)
+ * @param content
+ * @returns {ScaffoldMarkersResult} Scaffold marker validation result
  */
 function checkScaffoldMarkers(content: string): ScaffoldMarkersResult {
   // Remove fenced code blocks before checking
@@ -214,6 +224,8 @@ function checkScaffoldMarkers(content: string): ScaffoldMarkersResult {
  * - Commands (contain spaces, start with git)
  * - Bare filenames without directory path (e.g., "test.yml" instead of ".github/workflows/test.yml")
  *   These are often shorthand references and would cause false positives.
+ * @param filePath
+ * @returns {boolean} True if path should be validated
  */
 function isValidFilePath(filePath: string): boolean {
   // Skip directories (ending with /)
@@ -231,6 +243,8 @@ function isValidFilePath(filePath: string): boolean {
 
 /**
  * Load symbol index if available
+ * @param projectRoot
+ * @returns {Promise<SymbolEntry[] | null>} Symbol entries or null if unavailable
  */
 async function loadSymbolIndex(projectRoot: string): Promise<SymbolEntry[] | null> {
   const indexPath = path.join(projectRoot, '.ana', '.state', 'symbol-index.json');
@@ -246,6 +260,8 @@ async function loadSymbolIndex(projectRoot: string): Promise<SymbolEntry[] | nul
 
 /**
  * Check if file is a source code file that would have symbols indexed
+ * @param filePath
+ * @returns {boolean} True if file is an indexed source file
  */
 function isIndexedSourceFile(filePath: string): boolean {
   const ext = filePath.split('.').pop()?.toLowerCase();
@@ -255,6 +271,8 @@ function isIndexedSourceFile(filePath: string): boolean {
 
 /**
  * Check if file path is in a directory excluded from symbol indexing
+ * @param filePath
+ * @returns {boolean} True if file is in an excluded directory
  */
 function isInExcludedDirectory(filePath: string): boolean {
   const excludedPatterns = [
@@ -284,6 +302,9 @@ function isInExcludedDirectory(filePath: string): boolean {
  *
  * Returns null (skip symbol verification) when uncertain.
  * Conservative approach: missed fabrication < false positive blocking legitimate citations.
+ * @param fullMatch
+ * @param filePath
+ * @returns {string | null} Symbol name or null if uncertain
  */
 function extractCitedSymbol(fullMatch: string, filePath: string): string | null {
   // Only attempt symbol extraction for source files
@@ -311,6 +332,11 @@ function extractCitedSymbol(fullMatch: string, filePath: string): string | null 
 
 /**
  * Check if a symbol exists in the index for a given file
+ * @param symbolIndex
+ * @param symbolName
+ * @param filePath
+ * @param citedStartLine
+ * @returns {{ found: boolean; nearLine: boolean }} Symbol existence and line proximity
  */
 function findSymbolInFile(
   symbolIndex: SymbolEntry[],
@@ -343,6 +369,9 @@ function findSymbolInFile(
 
 /**
  * Check citation validity
+ * @param content
+ * @param projectRoot
+ * @returns {Promise<CitationsResult>} Citation validation result
  */
 async function checkCitations(content: string, projectRoot: string): Promise<CitationsResult> {
   const failed: FailedCitation[] = [];
@@ -454,6 +483,10 @@ async function checkCitations(content: string, projectRoot: string): Promise<Cit
 
 /**
  * Run all checks on a single file
+ * @param filename
+ * @param contextPath
+ * @param projectRoot
+ * @returns {Promise<FileCheckResult>} Complete file validation result
  */
 async function checkFile(filename: string, contextPath: string, projectRoot: string): Promise<FileCheckResult> {
   const baseName = filename.replace('.md', '');
@@ -487,6 +520,8 @@ async function checkFile(filename: string, contextPath: string, projectRoot: str
 
 /**
  * Display human-readable results for a single file
+ * @param result
+ * @returns {void}
  */
 function displayFileResult(result: FileCheckResult): void {
   console.log(chalk.bold(`\n${result.file}`));
@@ -547,6 +582,7 @@ function displayFileResult(result: FileCheckResult): void {
 
 /**
  * Create the check command
+ * @returns {Command} Commander command instance
  */
 export function createCheckCommand(): Command {
   return new Command('check')
