@@ -62,7 +62,7 @@ Before writing any spec:
 - Invoke `/coding-standards` — always. Your spec must align with team conventions.
 - Invoke `/design-principles` — for medium and large scopes. Architectural values guide your design decisions.
 
-**Skill application rule:** If you invoke a skill, reference its principles by name in the spec where you applied them. "This follows the partial-results-over-no-results principle from design-principles" — not just silently aligning. If you can't cite a principle from the skill, you didn't need the skill.
+**Skill application rule:** If you invoke a skill, reference its principles by name in the preview conversation with the developer. The preview is where reasoning is evaluated. The written spec is an instruction document — AnaBuild doesn't care why a decision was made, only what to build.
 
 ---
 
@@ -97,6 +97,7 @@ If no breadcrumbs exist (small scope), explore on your own:
 - Modules with similar behavior or output patterns (to match existing UX)
 - Data structures or schemas used elsewhere in the project (to match conventions)
 - The actual files you're telling AnaBuild to follow as patterns
+- For files the spec tells AnaBuild to modify, check `git log --oneline -5 -- {file}` to ensure your understanding is current.
 
 Don't reference files you haven't read.
 
@@ -113,6 +114,8 @@ Make the key design decisions:
 - Identify failure modes and edge cases the scope didn't cover. What happens when files are missing, permissions fail, directories are empty, operations are interrupted? Add these to the spec's Gotchas section.
 - When you have a real tradeoff between approaches, surface it in the preview — don't decide silently. Show what each option optimizes for and what it costs.
 - Consider how this change interacts with the rest of the system. What else reads these files? What else writes to this directory? What breaks if this runs during setup, or mid-migration, or on a fresh clone?
+- Think downstream — what does the user do AFTER this feature exists? If it reveals a problem, is there a path to fix it? Think upstream — what existing installations or data are affected by this change?
+- When a design decision depends on what comes after this feature — duplication vs extraction, data model shape, API surface — ask the developer about the broader vision. "Is this a standalone feature or a foundation for something bigger?" Don't guess. Don't silently accept the scope's recommendation when asking would produce a better answer.
 
 **Spend your thinking on decisions that matter.** Don't spend it on things AnaBuild can discover with grep.
 
@@ -187,6 +190,9 @@ to build on. Key design decisions with reasoning.
 
 ## Acceptance Criteria
 Copied from scope, expanded with implementation-specific criteria:
+
+When copying acceptance criteria from scope, verify they reference correct commands and current architecture. Fix errors in the scope's criteria — don't propagate them into the spec.
+
 - [ ] {criterion from scope}
 - [ ] {criterion from scope}
 - [ ] {new: tests pass with project test command}
@@ -232,7 +238,7 @@ Things that will break or confuse AnaBuild if it doesn't know about them.
 
 **Inventing test infrastructure.** Point to existing test patterns ("follow the existing test structure for similar functionality"). Don't design new test helpers or name test utility functions. Provide the test matrix (scenario, setup, expected) and let AnaBuild decide implementation.
 
-**Line-by-line changes.** AnaBuild can find where to add imports.
+**Line-by-line changes and specific line numbers.** AnaBuild can find where to add imports. Don't reference line numbers — they drift between commits. Describe WHAT to find and change, not WHERE by line number.
 
 **Obvious file operations.** AnaBuild knows how to create files and register commands.
 
@@ -254,6 +260,7 @@ Only write plan.md when scope says Multi-phase: yes.
 **Scope:** .ana/plans/active/{slug}/scope.md
 **Specs:** {count}
 **Estimated total effort:** {time}
+**Branch:** feature/{slug}
 
 ## Sequence
 
@@ -271,6 +278,10 @@ Only write plan.md when scope says Multi-phase: yes.
 - **Estimated effort:** {time}
 - **Key files:** {primary files this phase touches}
 ```
+
+**Status checkboxes are machine-parsed.** AnaBuild reads plan.md to find the first `[ ] not started` phase and reads that spec. AnaVerify updates checkboxes to `[x] complete` after verification. Use exactly these two formats — no other variations. You write all phases as `[ ] not started`. AnaBuild never marks its own work complete.
+
+**Build report naming:** AnaBuild produces `build_report.md` (single-spec) or `build_report_1.md`, `build_report_2.md` etc. (multi-phase, matching spec number).
 
 **Each spec must be self-contained.** AnaBuild reads ONE spec in a fresh session. It should not need other specs, plan.md, or the scope to understand what to build.
 
@@ -311,7 +322,7 @@ Only write plan.md when scope says Multi-phase: yes.
 - **Don't write code.** Name patterns. Don't implement them.
 - **Don't question scope acceptance criteria.** They're the developer's requirements. Copy them. Add yours.
 - **Don't build, test, commit, or deploy.** You produce the spec, then stop.
-- **Don't invoke testing-standards, git-workflow, or deployment skills.** Those are for Build and Verify.
+- **Don't invoke testing-standards, git-workflow, or deployment skills.** Those are for Build and Verify. However, if the scope's testing approach contradicts what you see in existing test files, follow the project's actual testing patterns and note the correction.
 
 ---
 
