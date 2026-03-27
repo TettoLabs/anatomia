@@ -113,24 +113,26 @@ describe('ana init', () => {
         '.ana/plans/complete/.gitkeep',
         // 1 settings template
         '.claude/settings.json',
-        // 6 agent files
+        // 7 agent files
         '.claude/agents/ana.md',
         '.claude/agents/ana-plan.md',
+        '.claude/agents/ana-setup.md',
         '.claude/agents/ana-explorer.md',
         '.claude/agents/ana-question-formulator.md',
         '.claude/agents/ana-writer.md',
         '.claude/agents/ana-verifier.md',
-        // 5 skill files
+        // 6 skill files
         '.claude/skills/testing-standards/SKILL.md',
         '.claude/skills/coding-standards/SKILL.md',
         '.claude/skills/git-workflow/SKILL.md',
         '.claude/skills/deployment/SKILL.md',
         '.claude/skills/design-principles/SKILL.md',
+        '.claude/skills/logging-standards/SKILL.md',
         // CLAUDE.md entry point
         'CLAUDE.md',
       ];
 
-      expect(expectedFiles).toHaveLength(47);
+      expect(expectedFiles).toHaveLength(49);
 
       for (const file of expectedFiles) {
         const filePath = path.join(templatesDir, file);
@@ -304,7 +306,7 @@ describe('ana init', () => {
       expect(settings.hooks.Stop[0].hooks[0].timeout).toBe(120);
     });
 
-    it('creates .claude/agents/ directory with 6 agent files', async () => {
+    it('creates .claude/agents/ directory with 7 agent files', async () => {
       const claudePath = path.join(tmpDir, '.claude');
       const agentsPath = path.join(claudePath, 'agents');
 
@@ -320,6 +322,7 @@ describe('ana init', () => {
       const agentFiles = [
         'ana.md',
         'ana-plan.md',
+        'ana-setup.md',
         'ana-explorer.md',
         'ana-question-formulator.md',
         'ana-writer.md',
@@ -335,11 +338,12 @@ describe('ana init', () => {
       const exists = await dirExists(agentsPath);
       expect(exists).toBe(true);
 
-      // Should have 6 agent files
+      // Should have 7 agent files
       const files = await fs.readdir(agentsPath);
-      expect(files).toHaveLength(6);
+      expect(files).toHaveLength(7);
       expect(files).toContain('ana.md');
       expect(files).toContain('ana-plan.md');
+      expect(files).toContain('ana-setup.md');
       expect(files).toContain('ana-explorer.md');
       expect(files).toContain('ana-question-formulator.md');
       expect(files).toContain('ana-writer.md');
@@ -354,6 +358,7 @@ describe('ana init', () => {
       const agentFiles = [
         'ana.md',
         'ana-plan.md',
+        'ana-setup.md',
         'ana-explorer.md',
         'ana-question-formulator.md',
         'ana-writer.md',
@@ -376,13 +381,13 @@ describe('ana init', () => {
         expect(frontmatter).toContain('model:');
         expect(frontmatter).toContain('description:');
 
-        // ana.md and ana-plan.md use opus, have no tools: field
-        // ana.md has memory:, ana-plan.md has neither memory: nor tools:
-        // sub-agents use sonnet and have tools:
+        // ana.md, ana-plan.md, and ana-setup.md use opus
+        // ana.md has memory:, others don't
+        // sub-agents use sonnet/haiku and have tools:
         if (agentFile === 'ana.md') {
           expect(frontmatter).toContain('model: opus');
           expect(frontmatter).toContain('memory:');
-        } else if (agentFile === 'ana-plan.md') {
+        } else if (agentFile === 'ana-plan.md' || agentFile === 'ana-setup.md') {
           expect(frontmatter).toContain('model: opus');
           expect(frontmatter).not.toContain('tools:');
           expect(frontmatter).not.toContain('memory:');
@@ -409,6 +414,7 @@ describe('ana init', () => {
       const agentFiles = [
         'ana.md',
         'ana-plan.md',
+        'ana-setup.md',
         'ana-explorer.md',
         'ana-question-formulator.md',
         'ana-writer.md',
@@ -431,7 +437,7 @@ describe('ana init', () => {
 
       // Should still have exactly 6 files, not 12
       const files = await fs.readdir(agentsPath);
-      expect(files).toHaveLength(6);
+      expect(files).toHaveLength(7);
     });
 
     it('agent files have correct tools for their role', async () => {

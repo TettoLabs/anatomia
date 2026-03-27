@@ -36,7 +36,7 @@ Read in full:
 - `.ana/context/project-overview.md` — what this project is, tech stack, structure
 - `.ana/context/architecture.md` — design decisions, trade-offs, boundaries
 
-If project-overview.md is under 50 lines, setup hasn't been run. Tell the user: "This project needs setup first. Run `ana init` then `ana setup`."
+If project-overview.md is under 50 lines, setup hasn't been completed. Tell the user: "Context files need setup. Run `claude --agent ana-setup` to complete it."
 
 Load other context files on demand when the conversation topic requires them:
 - `patterns.md` — when discussing code patterns, error handling, or validation approaches

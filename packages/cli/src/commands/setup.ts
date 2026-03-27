@@ -143,23 +143,13 @@ setupCommand
 
     // Success
     console.log(chalk.green('\n✅ Setup complete!\n'));
-    console.log('Framework is ready. Reference @.ana/ENTRY.md to begin.');
+    console.log('Context files are verified and ready.');
     console.log();
 
-    // What's Next guidance
-    console.log(chalk.bold('📋 What\'s Next\n'));
-    console.log('  1. Commit your context:');
-    console.log('     git add .ana/ CLAUDE.md && git commit -m "Add Anatomia context framework"');
+    console.log(chalk.bold('Next: ') + 'claude --agent ana');
     console.log();
-    console.log('  2. Start your next session:');
-    console.log('     Open Claude Code and load @.ana/ENTRY.md — Ana will greet you');
-    console.log('     and suggest the right mode for your task.');
-    console.log();
-    console.log('  3. Share with your team:');
-    console.log('     Push to your branch. Teammates get the same context on pull.');
-    console.log('     Each person can re-run setup to add their own Q&A responses.');
-    console.log();
-    console.log(chalk.dim('  💡 Context stays accurate with: ana diff (coming soon)'));
+
+    console.log(chalk.gray('Ana now knows your codebase. She will help you scope, plan, build, and verify changes.'));
     console.log();
   });
 

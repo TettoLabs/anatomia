@@ -2,7 +2,7 @@
 
 This project uses Anatomia for AI-assisted development.
 
-**Start here:** `claude --agent ana`
+**Ready to work?** `claude --agent ana`
 
 Ana knows this codebase. She'll help you scope, plan, build, and verify changes.
 

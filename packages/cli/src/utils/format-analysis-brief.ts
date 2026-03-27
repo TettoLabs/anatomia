@@ -529,7 +529,7 @@ function formatSetupRecommendations(analysis: AnalysisResult): string {
   // Next steps
   output += '### Next Steps\n\n';
   output += '1. Review the detected patterns and conventions above\n';
-  output += '2. Run `@.ana/modes/setup.md` in Claude Code\n';
+  output += '2. Run `claude --agent ana-setup`\n';
   output += '3. Setup will ask targeted questions based on your project maturity\n';
   output += '4. After setup, run `ana setup complete` to validate and activate\n\n';
 

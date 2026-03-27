@@ -4,8 +4,9 @@
  * Tests actual command execution in temp project directory.
  * Validates all files/directories created correctly:
  * - .ana/ with 47 files (modes, context, docs, plans, hooks, state)
- * - .claude/ with settings.json, agents/ (5 files), and skills/ (5 dirs)
+ * - .claude/ with settings.json, agents/ (7 files), and skills/ (6 dirs)
  * - CLAUDE.md at project root
+ * Total: 49 files
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -161,14 +162,15 @@ describe('ana init E2E', () => {
     const settingsExists = await fileExists(path.join(claudePath, 'settings.json'));
     expect(settingsExists).toBe(true);
 
-    // Verify .claude/agents/ directory with 6 agent files
+    // Verify .claude/agents/ directory with 7 agent files
     const agentsExists = await dirExists(path.join(claudePath, 'agents'));
     expect(agentsExists).toBe(true);
 
-    // Verify all 6 agent files exist
+    // Verify all 7 agent files exist
     const agentFiles = [
       'ana.md',
       'ana-plan.md',
+      'ana-setup.md',
       'ana-explorer.md',
       'ana-question-formulator.md',
       'ana-writer.md',
@@ -180,7 +182,7 @@ describe('ana init E2E', () => {
       expect(agentExists, `Agent file missing: ${agentFile}`).toBe(true);
     }
 
-    // Verify .claude/skills/ directory with 5 skill directories
+    // Verify .claude/skills/ directory with 6 skill directories
     const skillsExists = await dirExists(path.join(claudePath, 'skills'));
     expect(skillsExists).toBe(true);
 
@@ -190,6 +192,7 @@ describe('ana init E2E', () => {
       'git-workflow',
       'deployment',
       'design-principles',
+      'logging-standards',
     ];
 
     for (const skillDir of skillDirs) {

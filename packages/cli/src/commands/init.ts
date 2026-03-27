@@ -34,16 +34,19 @@
  *   ├── settings.json             (hooks configuration)
  *   ├── agents/
  *   │   ├── ana.md                (main Ana agent)
- *   │   ├── ana-explorer.md
+ *   │   ├── ana-plan.md           (spec generator)
+ *   │   ├── ana-setup.md          (interactive setup orchestrator)
+ *   │   ├── ana-explorer.md       (codebase scanner)
  *   │   ├── ana-question-formulator.md
- *   │   ├── ana-writer.md
- *   │   └── ana-verifier.md
+ *   │   ├── ana-writer.md         (context file writer)
+ *   │   └── ana-verifier.md       (citation verifier)
  *   └── skills/
  *       ├── testing-standards/SKILL.md
  *       ├── coding-standards/SKILL.md
  *       ├── git-workflow/SKILL.md
  *       ├── deployment/SKILL.md
- *       └── design-principles/SKILL.md
+ *       ├── design-principles/SKILL.md
+ *       └── logging-standards/SKILL.md
  *
  *   CLAUDE.md                     (project entry point)
  */
@@ -270,7 +273,7 @@ async function validateInitPreconditions(
 
       if (meta.setupStatus === 'pending') {
         console.log('Setup is incomplete. Options:\n');
-        console.log('  1. Resume setup: @.ana/modes/setup.md');
+        console.log('  1. Resume setup: `claude --agent ana-setup`');
         console.log('  2. Start over: ana init --force\n');
       } else if (meta.setupStatus === 'complete') {
         console.log('Framework already set up. Options:\n');
@@ -1134,22 +1137,20 @@ function displaySuccessMessage(analysisResult: AnalysisResult | null): void {
   console.log(chalk.green('\n✅ .ana/ framework initialized\n'));
 
   console.log(chalk.bold('Created:'));
-  console.log('  • 10 mode files');
   console.log('  • 7 context scaffolds (with analyzer data)');
-  console.log('  • analysis.md');
-  console.log('  • Setup files (orchestrator, templates, rules, 8 steps)');
-  console.log('  • Hook scripts (.ana/hooks/)');
+  console.log('  • Ana agent + setup agent + 4 sub-agents (.claude/agents/)');
+  console.log('  • 6 team-editable skills (.claude/skills/)');
   console.log('  • SCHEMAS.md artifact reference (.ana/docs/)');
   console.log('  • Plan directories (.ana/plans/)');
-  console.log('  • Ana agent + 4 sub-agents (.claude/agents/)');
-  console.log('  • 5 team-editable skills (.claude/skills/)');
+  console.log('  • Hook scripts (.ana/hooks/)');
   console.log('  • CLAUDE.md entry point');
   console.log();
 
-  console.log(chalk.bold('Next: ') + 'Run this in Claude Code:');
-  console.log(chalk.cyan('  claude --agent ana'));
+  console.log(chalk.bold('Next: ') + 'Complete setup in Claude Code:');
+  console.log(chalk.cyan('  claude --agent ana-setup'));
   console.log();
 
-  console.log(chalk.gray('Ana will help you scope, plan, build, and verify changes.'));
+  console.log(chalk.gray('Setup fills your context files through codebase exploration and targeted questions (~5-15 min).'));
+  console.log(chalk.gray('After setup: claude --agent ana'));
   console.log();
 }

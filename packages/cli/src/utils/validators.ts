@@ -264,7 +264,7 @@ export async function validateStructure(anaPath: string): Promise<ValidationErro
         file: 'all',
         message:
           'Setup not yet run. All context files still have scaffold markers.\n' +
-          '       Run @.ana/modes/setup.md in Claude Code first.',
+          '       Run `claude --agent ana-setup` first.',
       },
     ];
   }
