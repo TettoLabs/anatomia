@@ -50,7 +50,7 @@ ls .ana/plans/active/ 2>/dev/null
 
 ### 3. Respond
 
-If work is found: name it and confirm before starting. "Found spec for {name}. Ready to build?"
+If work is found: summarize what the spec will build (the file changes at a high level) and confirm before starting. "Found spec for {name}. This will: {1-line per major file change}. Ready to build?"
 
 If resuming after verify failure: "Found verify report for {name} with failures. Ready to fix?"
 
@@ -74,15 +74,15 @@ Read the spec in full. Extract:
 
 Before modifying ANY file, read it first. Before following ANY pattern reference, read the referenced file. Don't modify files you haven't read. Don't follow patterns you haven't verified exist.
 
+Read test files for similar functionality. If the spec's Testing Strategy references existing test files or test patterns, read them now — before you start writing any code or tests. Understanding test patterns is part of pre-flight.
+
 If the spec references a file that doesn't exist, STOP. Report it: "Spec references `{file}` which does not exist. Cannot proceed without guidance." Don't improvise a replacement.
 
 ### 3. Run Baseline Tests
 
 Before writing any code, establish the baseline:
 
-```bash
-pnpm build && pnpm test -- --run
-```
+Run the build and test commands from your loaded testing-standards and coding-standards skills. Look for a Commands section with exact runnable commands. If no commands are documented in skills, discover them from the project's build configuration (package.json scripts, Makefile targets, pyproject.toml, Cargo.toml).
 
 Record the results: how many tests, how many passed, how many failed.
 
@@ -143,7 +143,9 @@ Co-authored-by: Ana <build@anatomia.dev>
 Co-authored-by: Ana <build@anatomia.dev>
 ```
 
-Tests should pass for whatever is committed. Don't commit broken intermediate states.
+Stage only the files you created or modified for this spec. Use `git add {specific files}` — never `git add -A` or `git add .`. If unsure which files you changed, run `git diff --name-only` and stage only files from the spec's File Changes section plus your test files.
+
+Tests should pass for whatever is committed. Don't commit broken intermediate states. This applies to EVERY commit, not just the first one. Each file change section in the spec is typically one logical unit. Tests for that section are part of the same unit. Don't bundle the entire remaining spec into one final commit.
 
 ---
 
@@ -192,6 +194,10 @@ Read every file before editing it. Read every pattern file before following it. 
 
 If the spec says "follow the pattern in `{file}`" and that file doesn't exist, don't improvise. Report it. If the spec says "modify `{function}` in `{file}`" and that function doesn't exist, don't create it elsewhere. Report it. Improvisation is how agents build "technically competent, socially disruptive" code.
 
+### 7. Scope Lint to Your Files
+
+Fix lint only in files you created or modified for this spec. Pre-existing lint errors in other files are not your responsibility. Run the lint command from your skills targeting only your changed files, not the entire source directory. If pre-existing lint errors block the overall lint check, note them in the build report under Open Issues: "Pre-existing lint errors in {files} — not introduced by this build."
+
 ---
 
 ## Build Report Format
@@ -217,6 +223,8 @@ Each one documented with reasoning.
 (parse, validate, execute) matching user-service's structure."
 
 ## Deviations from Spec
+Ambiguity resolutions count as deviations. If the spec was unclear and you made a judgment call, document it here: what was ambiguous, what you chose, why. Also document additions beyond the spec — if you added error handling, edge cases, or features the spec didn't explicitly request, document them so AnaVerify can evaluate. 'None' means the spec was completely unambiguous AND you followed it exactly.
+
 Anything built differently from what the spec said, with reasoning.
 If no deviations: "None. Spec followed exactly."
 
@@ -260,7 +268,11 @@ Anything unfinished, concerning, or needing human review.
 If none: "None. All acceptance criteria addressed."
 ```
 
+Test results must include complete test runner output with individual test file results, not just the summary line. If output exceeds 100 lines, paste the summary section showing each test file and note the total count for reproduction via verification commands.
+
 **The build report is proof, not claims.** Test output is pasted, not summarized. Git history is real, not described. Baseline comparison is mechanical. AnaVerify reads this and independently verifies — your report must survive that scrutiny.
+
+If you include an acceptance criteria checklist in the report, use these markers: ✅ Verified (tested or manually confirmed with evidence) | 🔨 Implemented (code exists but not independently verified) | ❌ Not addressed. Do not mark ✅ for criteria you didn't actually test or confirm.
 
 ---
 
