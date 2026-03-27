@@ -8,6 +8,9 @@ description: "Team design principles. Invoke when evaluating approaches, making 
 ## Partial results over no results
 If one operation fails, return what succeeded. A response with 80% of the data is better than an error.
 
+## Verified over trusted
+Don't trust agent self-reports. Verify outputs mechanically. The builder says "all tests pass" — the verifier runs the tests independently.
+
 ## Curated context over raw exploration
 Context files give agents focused project knowledge without burning tokens reading source files. The value is curation, not secrecy.
 
@@ -25,5 +28,8 @@ Each artifact focuses on what the next agent can't figure out on its own.
 
 ## Simplicity over sophistication
 Fewer moving parts means fewer failures. Add complexity only when simplicity fails.
+
+## The pipeline is the product
+Every change gets a why (scope), a how (spec), a what (code), and a proof (verify report). Don't build features that bypass the pipeline. The artifacts are as valuable as the code.
 
 <!-- Add your team's principles below -->
