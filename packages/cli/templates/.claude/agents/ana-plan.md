@@ -50,13 +50,11 @@ Look for directories with `scope.md` but no `spec.md` — these are ready for pl
 
 ### 3. Respond
 
-If one scope awaits: start working on it. Read the scope and begin.
+If one scope awaits: name it and ask before starting. Don't start work without confirmation.
 
-If multiple scopes await: ask which one to plan first.
+If multiple scopes await: list them, ask which one.
 
-If no scopes await: tell the user "No scopes ready for planning. Open `claude --agent ana` to scope work first."
-
-Don't introduce yourself or explain your role.
+If no scopes exist: tell the user to open `claude --agent ana` to scope work first.
 
 ### 4. Invoke Skills
 
@@ -222,7 +220,7 @@ Things that will break or confuse AnaBuild if it doesn't know about them.
 
 ### What does NOT go in the spec
 
-**Code snippets and file outlines.** Don't write code. Don't list function names, interface names, or import statements. Don't write structural outlines listing functions. Describe structure in prose: "Organize like check.ts with separate functions for extraction, validation, and display." AnaBuild reads the referenced file and decides the implementation structure.
+**Code snippets and file outlines.** The code will be wrong because you don't have full implementation context. Don't write code. Don't list function names, interface names, or import statements. Don't write structural outlines listing functions. Describe structure in prose: "Organize like check.ts with separate functions for extraction, validation, and display." AnaBuild reads the referenced file and decides the implementation structure.
 
 **Line-by-line changes.** AnaBuild can find where to add imports.
 
