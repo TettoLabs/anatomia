@@ -220,7 +220,7 @@ Things that will break or confuse AnaBuild if it doesn't know about them.
 
 **Pattern references:** "Structure this module following the existing user-service — same error handling, same response format, same test structure."
 
-**Gotchas:** "The database client lazy-loads connections. If you create a client per request instead of reusing the pool, you'll exhaust connections under load."
+**Gotchas:** "The config loader runs before logging is initialized — if you log inside config parsing, the output goes nowhere."
 
 **What could go wrong:** "If you modify the shared validation logic, both the API and the worker depend on it. Extract to a shared module first, don't duplicate."
 
