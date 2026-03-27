@@ -300,7 +300,7 @@ program.addCommand(setupCommand);
 2. **Structure analysis** — Directory tree generation with purpose annotations
 3. **Dependency parsing** — Multi-language dependency extraction (Node, Python, Go, Rust, Ruby, PHP)
 4. **Pattern detection** — Error handling, validation, testing patterns
-5. **CLI commands** — `ana init`, `ana setup`, `ana analyze`, `ana mode`
+5. **CLI commands** — `ana init`, `ana analyze`, `ana mode`, `ana setup check`, `ana setup complete`
 6. **Template system** — Mode files and context scaffolds with variable substitution
 7. **Validation** — Multi-phase validator with blocking/warning separation
 8. **AST parsing** — Tree-sitter integration with in-memory caching
