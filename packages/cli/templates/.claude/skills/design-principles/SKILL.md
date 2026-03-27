@@ -11,8 +11,8 @@ Graceful degradation is the core pattern. If one detector fails, return what suc
 ## Verified over trusted
 Every claim Ana makes must be traceable to code. Generated context files are verified against the actual codebase — wrong line numbers, renamed functions, deleted files are caught mechanically. Trust stack tags (Detected, User confirmed, Inferred, Unexamined) exist because "the AI said so" is not a source. This principle extends to the pipeline: AnaVerify doesn't trust AnaBuild's self-report.
 
-## Non-inferable content only
-Don't extract what the LLM already knows from reading code. Focus on intent, rationale, constraints, tribal knowledge, and Unexamined trade-offs — things the model cannot discover by reading files. ETH Zurich proved that LLM-generated context containing discoverable info degrades performance. Our context helps because it contains what the model CAN'T figure out on its own.
+## Curated context over raw exploration
+Context files give agents focused project knowledge without burning tokens reading source files. A 30-token summary of the auth architecture is more useful than 15K tokens of raw source code — higher signal, survives attention degradation in long contexts, and leaves the context window available for the actual task. Context files should include anything that helps agents work faster and more accurately, whether or not it's technically discoverable from code. The value is curation, not secrecy.
 
 ## File-based state, no database
 State lives on disk as markdown and JSON. File existence IS the state machine. Version-controllable. Inspectable with `cat`. No database to configure, migrate, or corrupt. `.ana/plans/active/{slug}/scope.md` exists means the task is scoped. No ORM. No connection string. No migration.
@@ -31,3 +31,9 @@ Think Build Verify isn't a suggestion — it's the value proposition. Every chan
 
 ## Simplicity over sophistication
 Four agents, not twenty-eight. Seven context files, not unlimited. One pipeline, not configurable workflows. Fewer moving parts means fewer failures, easier debugging, faster onboarding. Add complexity only when simplicity fails — and prove it failed first.
+
+## Confirm before acting
+Both Ana and AnaPlan preview their output before writing artifacts. Scope preview before scope.md. Approach preview before spec.md. The pipeline is collaborative — human judgment at every handoff is worth the friction. This is a deliberate choice against fully autonomous pipelines. The developer's confirmation catches misunderstandings that no amount of prompt engineering prevents.
+
+## Spend tokens on what the next consumer can't discover
+Scopes don't contain implementation detail — AnaPlan discovers that by reading code. Specs don't contain code snippets — AnaBuild writes the code. Each artifact focuses on what the next agent in the pipeline can't figure out on its own. This prevents bloat, reduces context waste, and keeps every artifact focused on its unique value.

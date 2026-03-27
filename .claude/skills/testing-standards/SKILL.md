@@ -28,6 +28,9 @@ Vitest across all packages. Config at `packages/*/vitest.config.ts`. Run with `p
 - Use fixtures in `tests/fixtures/` for codebase simulation
 - Scaffold tests verify generated files match expected structure
 
+## Specs and Tests
+Don't invent test infrastructure in specs. Point to existing test patterns by referencing the test file to follow. AnaBuild reads the actual test files and decides helpers, utilities, and structure. Specs provide the test matrix (scenario, setup, expected result) — not the implementation.
+
 ## Before Marking Complete
 ```bash
 pnpm test          # All packages, all tests

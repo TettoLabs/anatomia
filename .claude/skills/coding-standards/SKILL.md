@@ -41,3 +41,13 @@ All commits from AnaBuild include:
 ```
 Co-authored-by: Ana <build@anatomia.dev>
 ```
+
+## Gotchas
+- Analyzer must be lazy-loaded — WASM bindings crash if imported at module level. Use dynamic `import()`.
+- Citation patterns live in `packages/cli/src/commands/check.ts` lines 68-74 (4 regex patterns). Reuse these for anything that parses citations.
+- `isValidFilePath` helper in `check.ts` lines 218-230 filters out directories, commands, and bare filenames. Reuse for anything that validates file references.
+- Context files are in `.ana/context/`, not `.ana/modes/`. Common mistake.
+- tsup `clean: true` wipes the templates directory. The build script handles this with a post-build copy step — don't change the build order.
+
+## Quality Bar
+Would a senior engineer at a YC company look at this output and trust it enough to merge without reviewing? That's the bar for every commit.
