@@ -18,6 +18,7 @@ export function LandingFooter() {
         {/* Logo and license */}
         <div className="flex items-center gap-3">
           <Link href="/" className="flex items-center no-underline" aria-label="Anatomia home">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/favicon.svg"
               alt="Anatomia"

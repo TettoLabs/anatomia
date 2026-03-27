@@ -1,7 +1,6 @@
 "use client";
 
 import { TetrisCorner } from "./TetrisCorner";
-import { CounterBlur } from "./CounterBlur";
 import { IndustryTicker } from "./IndustryTicker";
 
 const analysisMetrics = [

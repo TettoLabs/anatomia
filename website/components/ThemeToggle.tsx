@@ -10,7 +10,6 @@ export function ThemeToggle() {
 
   // Avoid hydration mismatch - standard Next.js pattern
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 

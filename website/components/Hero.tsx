@@ -2,7 +2,6 @@
 
 import { motion } from "motion/react";
 import { Download, Github } from "lucide-react";
-import { BracketRevealLogo } from "./BracketRevealLogo";
 
 export function Hero() {
   return (

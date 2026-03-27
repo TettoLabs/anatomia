@@ -67,6 +67,7 @@ export function LandingNav() {
     >
       {/* Logo - Favicon icon only */}
       <Link href="/" className="flex items-center no-underline" aria-label="Anatomia home">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/favicon.svg"
           alt="Anatomia"
@@ -141,6 +142,7 @@ export function LandingNav() {
           {/* Header with logo and close button */}
           <div className="flex justify-between items-center px-4 py-4 border-b" style={{ borderColor: 'var(--border-light)' }}>
             <Link href="/" className="flex items-center no-underline" onClick={() => setIsOpen(false)} aria-label="Anatomia home">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/favicon.svg"
                 alt="Anatomia"
