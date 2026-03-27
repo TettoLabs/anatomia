@@ -74,3 +74,21 @@ All three must pass. No exceptions. CI runs the same checks across the full OS/N
 - **Shared test helpers:** When command test files exceed 5+, extract common helpers (`runCommand`, `createContextFile`, `createTempProject`) to `tests/helpers/`. Not worth it yet.
 - **CLI coverage command:** Add `"test:coverage": "vitest --coverage"` to CLI package.json to match analyzer.
 - **Align thresholds:** Consider raising CLI thresholds to match analyzer (85/80/85/85) as test coverage matures.
+
+## Commands
+```bash
+# Build (all packages)
+pnpm build
+
+# Test (CLI package, non-watch mode)
+pnpm --filter anatomia-cli test -- --run
+
+# Test (specific test file)
+pnpm --filter anatomia-cli test -- --run {path}
+
+# Lint (all source)
+pnpm lint
+
+# Lint (specific files only)
+cd packages/cli && pnpm eslint {files}
+```
