@@ -80,6 +80,7 @@ export const AGENT_FILES = [
   'ana.md',
   'ana-plan.md',
   'ana-setup.md',
+  'ana-build.md',
   'ana-explorer.md',
   'ana-question-formulator.md',
   'ana-writer.md',

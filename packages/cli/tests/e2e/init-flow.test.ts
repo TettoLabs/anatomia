@@ -4,9 +4,9 @@
  * Tests actual command execution in temp project directory.
  * Validates all files/directories created correctly:
  * - .ana/ with 47 files (modes, context, docs, plans, hooks, state)
- * - .claude/ with settings.json, agents/ (7 files), and skills/ (6 dirs)
+ * - .claude/ with settings.json, agents/ (8 files), and skills/ (6 dirs)
  * - CLAUDE.md at project root
- * Total: 49 files
+ * Total: 50 files
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -162,15 +162,16 @@ describe('ana init E2E', () => {
     const settingsExists = await fileExists(path.join(claudePath, 'settings.json'));
     expect(settingsExists).toBe(true);
 
-    // Verify .claude/agents/ directory with 7 agent files
+    // Verify .claude/agents/ directory with 8 agent files
     const agentsExists = await dirExists(path.join(claudePath, 'agents'));
     expect(agentsExists).toBe(true);
 
-    // Verify all 7 agent files exist
+    // Verify all 8 agent files exist
     const agentFiles = [
       'ana.md',
       'ana-plan.md',
       'ana-setup.md',
+      'ana-build.md',
       'ana-explorer.md',
       'ana-question-formulator.md',
       'ana-writer.md',
