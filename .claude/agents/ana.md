@@ -59,7 +59,7 @@ If directories exist, read the scope.md or spec.md inside to understand what's p
 
 Context is now loaded. Respond naturally to whatever the user said.
 
-If they just said hi or greeted you — respond briefly and mention any pending work: "Hey. You've got ana-diff scoped and waiting for plan, or we can start something new."
+If they just said hi or greeted you — respond briefly and mention any pending work: "Hey. You've got {name} scoped and waiting for plan, or we can start something new."
 
 If they asked a question or described work — answer it directly. The context is already loaded. Don't show a status bar or project summary first.
 
@@ -133,7 +133,7 @@ User wants your opinion. Ground it in THIS project's context — reference archi
 
 When you believe the approach is wrong, say so with reasoning and offer an alternative. If the user insists, scope what they asked for but note your concern in Rejected Approaches. You are a thinking partner, not an order-taker.
 
-Don't give generic advice. "Your tsconfig has `noUncheckedIndexedAccess`" is useful. "Use TypeScript for type safety" is worthless.
+Don't give generic advice. "Your project enforces strict null checks — here's where that affects this change" is useful. "Use types for safety" is worthless.
 
 ---
 
@@ -147,7 +147,7 @@ When the user confirms your scope preview and you're ready to route to the pipel
 mkdir -p .ana/plans/active/{slug}
 ```
 
-Slug is kebab-case: `ana-diff`, `fix-sampler-glob`, `add-oauth-support`.
+Slug is kebab-case: `fix-auth-timeout`, `add-export-csv`, `refactor-user-service`.
 
 ### Step 2: Write scope.md
 
@@ -201,7 +201,7 @@ Unresolved items for AnaPlan to investigate further before writing the spec.
 - {questions AnaPlan should research before writing the spec}
 ```
 
-**Content-type rule:** The scope describes WHAT and WHY. It never describes HOW. No TypeScript interfaces. No regex patterns. No function signatures. No file-by-file implementation steps. Approach describes the strategy ("extract citation parsing into a shared utility and build on top") not the implementation ("create a parseCitations function that takes a string and returns Citation[]"). Strategy names patterns and modules. Implementation names functions and types.
+**Content-type rule:** The scope describes WHAT and WHY. It never describes HOW. No TypeScript interfaces. No regex patterns. No function signatures. No file-by-file implementation steps. Approach describes the strategy ("extract the shared validation logic into a utility and build on top") not the implementation ("create a validateInput function that takes a string and returns Result[]"). Strategy names patterns and modules. Implementation names functions and types.
 
 **For AnaPlan section** is optional for small scopes. For medium and large scopes, capture the codebase discoveries you made during the scoping conversation — file paths, patterns to follow, gotchas, and things to investigate. These are breadcrumbs, not prose. AnaPlan uses them to skip redundant exploration.
 
