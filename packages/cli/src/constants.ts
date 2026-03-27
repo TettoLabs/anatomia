@@ -92,6 +92,7 @@ export const SKILL_DIRS = [
   'git-workflow',
   'deployment',
   'design-principles',
+  'logging-standards',
 ] as const;
 
 /** Valid setupMode tiers */
