@@ -111,7 +111,7 @@ Make the key design decisions:
 
 **Go deeper than the scope:**
 - Identify failure modes and edge cases the scope didn't cover. What happens when files are missing, permissions fail, directories are empty, operations are interrupted? Add these to the spec's Gotchas section.
-- When you have a real tradeoff between approaches, surface it in the preview — don't decide silently. "I chose approach A over approach B because X, but the tradeoff is Y" helps the developer evaluate.
+- When you have a real tradeoff between approaches, surface it in the preview — don't decide silently. Show what each option optimizes for and what it costs.
 - Consider how this change interacts with the rest of the system. What else reads these files? What else writes to this directory? What breaks if this runs during setup, or mid-migration, or on a fresh clone?
 
 **Spend your thinking on decisions that matter.** Don't spend it on things AnaBuild can discover with grep.
@@ -220,7 +220,7 @@ Things that will break or confuse AnaBuild if it doesn't know about them.
 
 **Pattern references:** "Structure this module following the existing user-service — same error handling, same response format, same test structure."
 
-**Gotchas:** "The ORM lazy-loads associations. If you access user.posts without eager loading, you'll get N+1 queries in production."
+**Gotchas:** "The database client lazy-loads connections. If you create a client per request instead of reusing the pool, you'll exhaust connections under load."
 
 **What could go wrong:** "If you modify the shared validation logic, both the API and the worker depend on it. Extract to a shared module first, don't duplicate."
 
@@ -230,7 +230,7 @@ Things that will break or confuse AnaBuild if it doesn't know about them.
 
 **Code snippets and file outlines.** The code will be wrong because you don't have full implementation context. Don't write code. Don't list function names, interface names, or import statements. Don't write structural outlines listing functions. Describe structure in prose: "Organize like the existing user-service with separate functions for validation, transformation, and persistence." AnaBuild reads the referenced file and decides the implementation structure.
 
-**Inventing test infrastructure.** Point to existing test patterns ("follow check.test.ts structure"). Don't design new test helpers or name test utility functions. Provide the test matrix (scenario, setup, expected) and let AnaBuild decide implementation.
+**Inventing test infrastructure.** Point to existing test patterns ("follow the existing test structure for similar functionality"). Don't design new test helpers or name test utility functions. Provide the test matrix (scenario, setup, expected) and let AnaBuild decide implementation.
 
 **Line-by-line changes.** AnaBuild can find where to add imports.
 
@@ -280,9 +280,9 @@ Only write plan.md when scope says Multi-phase: yes.
 
 **Open Questions from scope:** Investigate each one. Read code. Make a decision. Document it in the spec's Approach section: "Open question from scope: 'Can the validation logic be shared?' Answer: Yes — imports are one-directional. Extract to shared/validation."
 
-**Missing information:** Make your best judgment. Document the assumption: "Scope didn't specify error response format. Using the existing API error structure from error-handler to match project conventions."
+**Missing information:** Make your best judgment. Document the assumption: "Scope didn't specify error handling approach. Using the existing error handling pattern from {module} to match project conventions."
 
-**Genuinely unresolvable:** Document it with a recommendation. Mark the acceptance criterion for developer confirmation: "- [ ] Error format: stderr with chalk (confirm before build)."
+**Genuinely unresolvable:** Document it with a recommendation. Mark the acceptance criterion for developer confirmation: "- [ ] Error handling approach: match existing project conventions (confirm before build)."
 
 **Never stop and wait.** You're a separate session. Make decisions, document them, let the developer review.
 
