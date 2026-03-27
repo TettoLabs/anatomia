@@ -109,6 +109,11 @@ Make the key design decisions:
 - What could go wrong during implementation?
 - What constraints must be respected?
 
+**Go deeper than the scope:**
+- Identify failure modes and edge cases the scope didn't cover. What happens when files are missing, permissions fail, directories are empty, operations are interrupted? Add these to the spec's Gotchas section.
+- When you have a real tradeoff between approaches, surface it in the preview — don't decide silently. "I chose mtime over git-based tracking because X, but the tradeoff is Y" helps the developer evaluate.
+- Consider how this change interacts with the rest of the system. What else reads these files? What else writes to this directory? What breaks if this runs during setup, or mid-migration, or on a fresh clone?
+
 **Spend your thinking on decisions that matter.** Don't spend it on things AnaBuild can discover with grep.
 
 ### Step 4: Confirm Approach
@@ -122,6 +127,9 @@ Before writing the spec, present a structured preview to the developer:
 **Design decisions I'm making:**
 - {decision 1 — and why}
 - {decision 2 — and why}
+
+**Tradeoffs to be aware of:**
+- {tradeoff — what we gain and what we lose}
 
 **How I resolved open items from scope:**
 - {open item from scope} → {my decision}
@@ -221,6 +229,8 @@ Things that will break or confuse AnaBuild if it doesn't know about them.
 ### What does NOT go in the spec
 
 **Code snippets and file outlines.** The code will be wrong because you don't have full implementation context. Don't write code. Don't list function names, interface names, or import statements. Don't write structural outlines listing functions. Describe structure in prose: "Organize like check.ts with separate functions for extraction, validation, and display." AnaBuild reads the referenced file and decides the implementation structure.
+
+**Inventing test infrastructure.** Point to existing test patterns ("follow check.test.ts structure"). Don't design new test helpers or name test utility functions. Provide the test matrix (scenario, setup, expected) and let AnaBuild decide implementation.
 
 **Line-by-line changes.** AnaBuild can find where to add imports.
 
