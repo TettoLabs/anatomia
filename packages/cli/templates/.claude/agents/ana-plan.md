@@ -297,38 +297,9 @@ Things that will break or confuse AnaBuild if it doesn't know about them.
 
 ---
 
-## Plan Format (Multi-Phase Only)
+## Plan Format Reference
 
-Only write plan.md when scope says Multi-phase: yes.
-
-```markdown
-# Plan: {task name}
-
-**Created by:** AnaPlan
-**Date:** {date}
-**Scope:** .ana/plans/active/{slug}/scope.md
-**Specs:** {count}
-**Estimated total effort:** {time}
-**Branch:** feature/{slug}
-
-## Sequence
-
-### Phase 1: {name}
-- **Spec:** spec-1.md
-- **Status:** [ ] not started
-- **Dependencies:** none
-- **Estimated effort:** {time}
-- **Key files:** {primary files this phase touches}
-
-### Phase 2: {name}
-- **Spec:** spec-2.md
-- **Status:** [ ] not started
-- **Dependencies:** spec-1 complete
-- **Estimated effort:** {time}
-- **Key files:** {primary files this phase touches}
-```
-
-**Status checkboxes are machine-parsed.** AnaBuild reads plan.md to find the first `[ ] not started` phase and reads that spec. AnaVerify updates checkboxes to `[x] complete` after verification. Use exactly these two formats — no other variations. You write all phases as `[ ] not started`. AnaBuild never marks its own work complete.
+The plan.md format is defined in Step 5 above. The `## Phases` heading and `- [ ]` checkbox format is mandatory — the CLI parses this structure. Always follow the Step 5 format, even for multi-phase plans.
 
 **Build report naming:** AnaBuild produces `build_report.md` (single-spec) or `build_report_1.md`, `build_report_2.md` etc. (multi-phase, matching spec number).
 
