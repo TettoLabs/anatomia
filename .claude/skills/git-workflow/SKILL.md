@@ -50,7 +50,7 @@ All three must pass. Not enforced by hooks — manual discipline. CI catches fai
 ## After Merge
 - Delete the feature branch.
 - Verify CI passes on main after merge.
-- Move plan to complete: `mv .ana/plans/active/{slug} .ana/plans/complete/{slug}`
+- Move plan to complete: `mv .ana/plans/active/{slug} .ana/plans/completed/{slug}`
 
 ## For AnaBuild
 - **First spec:** Create the branch from main. `git checkout main && git pull && git checkout -b {type}/{slug}`
@@ -65,7 +65,7 @@ All three must pass. Not enforced by hooks — manual discipline. CI catches fai
 - **Plan complete:** After ALL specs pass, create the PR from branch to main.
 - **PR body:** Include scope, spec (or plan.md for multi-phase), and build report references.
 - **Merge:** Merge commit, not squash. Verify CI passes on main after merge.
-- **Cleanup:** Delete the branch. Move `.ana/plans/active/{slug}` to `.ana/plans/complete/{slug}`.
+- **Cleanup:** Delete the branch. Move `.ana/plans/active/{slug}` to `.ana/plans/completed/{slug}`.
 - **If verify fails:** Report issues in verify_report.md. Don't touch the branch. Developer opens AnaBuild to fix.
 
 ## Multi-Phase Workflow

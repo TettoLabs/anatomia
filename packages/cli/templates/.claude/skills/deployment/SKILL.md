@@ -14,7 +14,7 @@ description: "Team deployment and release standards. Invoke after verification p
 ## Moving to Complete
 After merge and any releasing:
 ```bash
-mv .ana/plans/active/{slug} .ana/plans/complete/{slug}
+mv .ana/plans/active/{slug} .ana/plans/completed/{slug}
 ```
 This preserves the full artifact trail.
 

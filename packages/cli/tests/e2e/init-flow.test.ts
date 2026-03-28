@@ -57,7 +57,7 @@ describe('ana init E2E', () => {
       'context/setup/framework-snippets',
       'docs',
       'plans/active',
-      'plans/complete',
+      'plans/completed',
       '.state',
     ];
 
@@ -125,7 +125,7 @@ describe('ana init E2E', () => {
 
     // Verify .gitkeep files in plan directories
     const activeGitkeepExists = await fileExists(path.join(anaPath, 'plans/active/.gitkeep'));
-    const completeGitkeepExists = await fileExists(path.join(anaPath, 'plans/complete/.gitkeep'));
+    const completeGitkeepExists = await fileExists(path.join(anaPath, 'plans/completed/.gitkeep'));
     expect(activeGitkeepExists).toBe(true);
     expect(completeGitkeepExists).toBe(true);
 

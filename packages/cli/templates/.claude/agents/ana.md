@@ -225,7 +225,7 @@ Four agents. Each reads ONLY its input artifact.
 
 **AnaBuild** (`claude --agent ana-build`) — Reads spec.md. Produces working code + build_report.md: what was built, tests written, implementation decisions, files changed. Creates branch, commits, opens PR. Follows the spec.
 
-**AnaVerify** (`claude --agent ana-verify`) — Reads spec.md + build_report.md. Produces verify_report.md: pass/fail per acceptance criterion, regression check, edge cases tested. Does NOT fix code — reports only. If PASS: merges the PR, verifies CI, moves artifacts to `.ana/plans/complete/{slug}/`. If FAIL: user opens ana-build to fix, then re-verifies.
+**AnaVerify** (`claude --agent ana-verify`) — Reads spec.md + build_report.md. Produces verify_report.md: pass/fail per acceptance criterion, regression check, edge cases tested. Does NOT fix code — reports only. If PASS: merges the PR, verifies CI, moves artifacts to `.ana/plans/completed/{slug}/`. If FAIL: user opens ana-build to fix, then re-verifies.
 
 ```
 Ana → AnaPlan → AnaBuild → AnaVerify
@@ -246,7 +246,7 @@ On startup, check `.ana/plans/active/`. Mention the most relevant item in one li
 - Spec exists, no build → "{name} has a spec. Open `claude --agent ana-build`."
 - Failed verify → "{name} verify found issues. Open `claude --agent ana-build` to fix."
 
-Check `.ana/plans/complete/` when scoping similar work — reference what previous cycles touched.
+Check `.ana/plans/completed/` when scoping similar work — reference what previous cycles touched.
 
 ---
 
@@ -285,7 +285,7 @@ Not everything is a task. Sometimes the user wants to understand, discuss, explo
 
 **Active plans:** `.ana/plans/active/{slug}/` containing scope.md → spec.md → build_report.md → verify_report.md
 
-**Completed plans:** `.ana/plans/complete/{slug}/`
+**Completed plans:** `.ana/plans/completed/{slug}/`
 
 **Trust stack tags:** Detected (code-verified), User confirmed (validated in setup), User stated (provided, not verified), Inferred (AI judgment), Unexamined (detected but intent unknown — nobody confirmed this is how it SHOULD work)
 

@@ -441,12 +441,12 @@ async function createDirectoryStructure(tmpAnaPath: string): Promise<void> {
   await fs.mkdir(path.join(tmpAnaPath, 'context/setup/framework-snippets'), { recursive: true });
   await fs.mkdir(path.join(tmpAnaPath, 'docs'), { recursive: true });
   await fs.mkdir(path.join(tmpAnaPath, 'plans/active'), { recursive: true });
-  await fs.mkdir(path.join(tmpAnaPath, 'plans/complete'), { recursive: true });
+  await fs.mkdir(path.join(tmpAnaPath, 'plans/completed'), { recursive: true });
   await fs.mkdir(path.join(tmpAnaPath, '.state'), { recursive: true });
 
   // Create .gitkeep files for empty plan directories
   await fs.writeFile(path.join(tmpAnaPath, 'plans/active/.gitkeep'), '', 'utf-8');
-  await fs.writeFile(path.join(tmpAnaPath, 'plans/complete/.gitkeep'), '', 'utf-8');
+  await fs.writeFile(path.join(tmpAnaPath, 'plans/completed/.gitkeep'), '', 'utf-8');
 
   // Create .gitignore for runtime state files
   const gitignoreContent = `# Anatomia runtime state — local to each developer
@@ -1001,6 +1001,7 @@ async function createMetaJson(
   const meta = {
     version: META_VERSION,
     createdAt: new Date().toISOString(),
+    artifactBranch: 'main',
     setupStatus: 'pending',
     setupCompletedAt: null,
     setupMode,
