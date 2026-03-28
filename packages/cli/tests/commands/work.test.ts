@@ -1,12 +1,13 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fs from 'node:fs/promises';
+import * as fsSync from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
 import { execSync } from 'node:child_process';
-import { getWorkStatus } from '../../src/commands/work.js';
+import { getWorkStatus, completeWork } from '../../src/commands/work.js';
 
 /**
- * Tests for `ana work status` command
+ * Tests for `ana work status` and `ana work complete` commands
  *
  * Uses temp directories with real git repos for isolation.
  */
@@ -412,6 +413,266 @@ describe('ana work status', () => {
       execSync('git config user.name "Test"', { cwd: tempDir, stdio: 'ignore' });
 
       expect(() => getWorkStatus({ json: false })).toThrow();
+    });
+  });
+
+  describe('ana work complete', () => {
+    /**
+     * Helper to create a merged project scenario
+     */
+    async function createMergedProject(options: {
+      slug: string;
+      phases?: number;
+      verifyResults?: string[];
+      merged?: boolean;
+      branchDeleted?: boolean;
+    }): Promise<void> {
+      const phases = options.phases || 1;
+      const verifyResults = options.verifyResults || Array(phases).fill('PASS');
+      const merged = options.merged !== false;
+      const slug = options.slug;
+
+      // Init git
+      execSync('git init', { cwd: tempDir, stdio: 'ignore' });
+      execSync('git config user.email "test@test.com"', { cwd: tempDir, stdio: 'ignore' });
+      execSync('git config user.name "Test"', { cwd: tempDir, stdio: 'ignore' });
+
+      // Create .ana/.meta.json
+      const anaDir = path.join(tempDir, '.ana');
+      await fs.mkdir(anaDir, { recursive: true });
+      await fs.writeFile(
+        path.join(anaDir, '.meta.json'),
+        JSON.stringify({ artifactBranch: 'main' }),
+        'utf-8'
+      );
+
+      // Initial commit
+      execSync('git add -A && git commit -m "init"', { cwd: tempDir, stdio: 'ignore' });
+      execSync('git branch -M main', { cwd: tempDir, stdio: 'ignore' });
+
+      // Create slug directory with artifacts on main
+      const slugPath = path.join(tempDir, '.ana', 'plans', 'active', slug);
+      await fs.mkdir(slugPath, { recursive: true });
+
+      // Create scope and plan
+      await fs.writeFile(path.join(slugPath, 'scope.md'), '# Scope', 'utf-8');
+
+      let planContent = '# Plan\n## Phases\n';
+      const specs: string[] = [];
+      for (let i = 0; i < phases; i++) {
+        const phaseNum = i + 1;
+        const specFile = phases === 1 ? 'spec.md' : `spec-${phaseNum}.md`;
+        specs.push(specFile);
+        planContent += `- [ ] Phase ${phaseNum}\n  Spec: ${specFile}\n`;
+        await fs.writeFile(path.join(slugPath, specFile), `# Spec ${phaseNum}`, 'utf-8');
+      }
+      await fs.writeFile(path.join(slugPath, 'plan.md'), planContent, 'utf-8');
+
+      execSync('git add -A && git commit -m "add planning"', { cwd: tempDir, stdio: 'ignore' });
+
+      // Create feature branch
+      execSync(`git checkout -b feature/${slug}`, { cwd: tempDir, stdio: 'ignore' });
+
+      // Add build and verify reports
+      for (let i = 0; i < phases; i++) {
+        const phaseNum = i + 1;
+        const buildFile = phases === 1 ? 'build_report.md' : `build_report_${phaseNum}.md`;
+        const verifyFile = phases === 1 ? 'verify_report.md' : `verify_report_${phaseNum}.md`;
+
+        await fs.writeFile(path.join(slugPath, buildFile), '# Build Report', 'utf-8');
+        await fs.writeFile(
+          path.join(slugPath, verifyFile),
+          `# Verify Report\n\n**Result:** ${verifyResults[i]}`,
+          'utf-8'
+        );
+      }
+
+      execSync('git add -A && git commit -m "add reports"', { cwd: tempDir, stdio: 'ignore' });
+
+      // Merge to main if requested
+      if (merged) {
+        execSync('git checkout main', { cwd: tempDir, stdio: 'ignore' });
+        execSync(`git merge --no-ff feature/${slug} -m "merge"`, { cwd: tempDir, stdio: 'ignore' });
+
+        // Delete branch if requested
+        if (options.branchDeleted) {
+          execSync(`git branch -d feature/${slug}`, { cwd: tempDir, stdio: 'ignore' });
+        }
+      } else {
+        // Go back to main but don't merge
+        execSync('git checkout main', { cwd: tempDir, stdio: 'ignore' });
+      }
+    }
+
+    describe('happy path', () => {
+      it('completes single-spec work with PASS', async () => {
+        await createMergedProject({ slug: 'test-slug', phases: 1 });
+
+        await completeWork('test-slug');
+
+        // Verify directory moved
+        const activePath = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug');
+        const completedPath = path.join(tempDir, '.ana', 'plans', 'completed', 'test-slug');
+        expect(fsSync.existsSync(activePath)).toBe(false);
+        expect(fsSync.existsSync(completedPath)).toBe(true);
+
+        // Verify all files present
+        expect(fsSync.existsSync(path.join(completedPath, 'scope.md'))).toBe(true);
+        expect(fsSync.existsSync(path.join(completedPath, 'plan.md'))).toBe(true);
+        expect(fsSync.existsSync(path.join(completedPath, 'spec.md'))).toBe(true);
+        expect(fsSync.existsSync(path.join(completedPath, 'build_report.md'))).toBe(true);
+        expect(fsSync.existsSync(path.join(completedPath, 'verify_report.md'))).toBe(true);
+      });
+
+      it('completes multi-spec work (3 phases) with all PASS', async () => {
+        await createMergedProject({ slug: 'test-slug', phases: 3 });
+
+        await completeWork('test-slug');
+
+        const completedPath = path.join(tempDir, '.ana', 'plans', 'completed', 'test-slug');
+        expect(fsSync.existsSync(completedPath)).toBe(true);
+        expect(fsSync.existsSync(path.join(completedPath, 'verify_report_1.md'))).toBe(true);
+        expect(fsSync.existsSync(path.join(completedPath, 'verify_report_2.md'))).toBe(true);
+        expect(fsSync.existsSync(path.join(completedPath, 'verify_report_3.md'))).toBe(true);
+      });
+
+      it('succeeds even if feature branch was already deleted', async () => {
+        await createMergedProject({ slug: 'test-slug', phases: 1, branchDeleted: true });
+
+        await completeWork('test-slug');
+
+        const completedPath = path.join(tempDir, '.ana', 'plans', 'completed', 'test-slug');
+        expect(fsSync.existsSync(completedPath)).toBe(true);
+      });
+    });
+
+    describe('branch validation', () => {
+      it('errors when not on artifact branch', async () => {
+        await createMergedProject({ slug: 'test-slug', merged: false });
+        execSync('git checkout feature/test-slug', { cwd: tempDir, stdio: 'ignore' });
+
+        await expect(completeWork('test-slug')).rejects.toThrow();
+      });
+
+      it('succeeds when on artifact branch', async () => {
+        await createMergedProject({ slug: 'test-slug', phases: 1 });
+
+        await expect(completeWork('test-slug')).resolves.not.toThrow();
+      });
+    });
+
+    describe('slug validation', () => {
+      it('errors when slug not in active', async () => {
+        await createMergedProject({ slug: 'other-slug', phases: 1 });
+
+        await expect(completeWork('nonexistent')).rejects.toThrow();
+      });
+
+      it('exits successfully when slug already completed', async () => {
+        await createMergedProject({ slug: 'test-slug', phases: 1 });
+
+        // Complete once
+        await completeWork('test-slug');
+
+        // Try to complete again - will exit(0) which throws in tests
+        // Just verify it throws (exit throws in test environment)
+        await expect(completeWork('test-slug')).rejects.toThrow();
+      });
+    });
+
+    describe('merge validation', () => {
+      it('errors when feature branch not merged', async () => {
+        await createMergedProject({ slug: 'test-slug', merged: false });
+
+        await expect(completeWork('test-slug')).rejects.toThrow();
+      });
+    });
+
+    describe('verify report validation', () => {
+      it('errors when verify report missing', async () => {
+        await createMergedProject({ slug: 'test-slug', phases: 1 });
+
+        // Delete verify report
+        const slugPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug');
+        await fs.rm(path.join(slugPath, 'verify_report.md'));
+
+        await expect(completeWork('test-slug')).rejects.toThrow();
+      });
+
+      it('errors when verify report shows FAIL', async () => {
+        await createMergedProject({ slug: 'test-slug', phases: 1, verifyResults: ['FAIL'] });
+
+        await expect(completeWork('test-slug')).rejects.toThrow();
+      });
+
+      it('errors when verify report has no Result line', async () => {
+        await createMergedProject({ slug: 'test-slug', phases: 1 });
+
+        const slugPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug');
+        await fs.writeFile(path.join(slugPath, 'verify_report.md'), '# Verify\n\nLooks good!', 'utf-8');
+
+        await expect(completeWork('test-slug')).rejects.toThrow();
+      });
+
+      it('errors when multi-spec phase 2 has no verify report', async () => {
+        await createMergedProject({ slug: 'test-slug', phases: 3 });
+
+        // Delete phase 2 verify report
+        const slugPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug');
+        await fs.rm(path.join(slugPath, 'verify_report_2.md'));
+
+        await expect(completeWork('test-slug')).rejects.toThrow();
+      });
+
+      it('errors when multi-spec phase 1 shows FAIL', async () => {
+        await createMergedProject({ slug: 'test-slug', phases: 2, verifyResults: ['FAIL', 'PASS'] });
+
+        await expect(completeWork('test-slug')).rejects.toThrow();
+      });
+
+      it('succeeds when all phases show PASS', async () => {
+        await createMergedProject({ slug: 'test-slug', phases: 2, verifyResults: ['PASS', 'PASS'] });
+
+        await completeWork('test-slug');
+
+        const completedPath = path.join(tempDir, '.ana', 'plans', 'completed', 'test-slug');
+        expect(fsSync.existsSync(completedPath)).toBe(true);
+      });
+    });
+
+    describe('git operations', () => {
+      it('creates correct commit message', async () => {
+        await createMergedProject({ slug: 'test-slug', phases: 1 });
+
+        await completeWork('test-slug');
+
+        const message = execSync('git log -1 --pretty=%B', { cwd: tempDir, encoding: 'utf-8' }).trim();
+        expect(message).toBe('[test-slug] Complete — archived to plans/completed\n\nCo-authored-by: Ana <build@anatomia.dev>');
+      });
+    });
+
+    describe('edge cases', () => {
+      it('errors when no plan.md exists', async () => {
+        await createMergedProject({ slug: 'test-slug', phases: 1 });
+
+        const slugPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug');
+        await fs.rm(path.join(slugPath, 'plan.md'));
+
+        await expect(completeWork('test-slug')).rejects.toThrow();
+      });
+
+      it('errors when not a git repo', async () => {
+        // Create temp dir without git
+        const anaDir = path.join(tempDir, '.ana');
+        await fs.mkdir(anaDir, { recursive: true });
+        await fs.writeFile(
+          path.join(anaDir, '.meta.json'),
+          JSON.stringify({ artifactBranch: 'main' }),
+          'utf-8'
+        );
+
+        await expect(completeWork('test-slug')).rejects.toThrow();
+      });
     });
   });
 });

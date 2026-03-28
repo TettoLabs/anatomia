@@ -14,6 +14,7 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import { execSync } from 'node:child_process';
 import * as fs from 'node:fs';
+import * as fsPromises from 'node:fs/promises';
 import * as path from 'node:path';
 import { readArtifactBranch, getCurrentBranch } from './artifact.js';
 
@@ -645,6 +646,175 @@ export function getWorkStatus(options: { json?: boolean }): void {
 }
 
 /**
+ * Complete a work item after PR merge
+ *
+ * @param slug - Work item slug to complete
+ */
+export async function completeWork(slug: string): Promise<void> {
+  // 1. Read artifactBranch from .meta.json
+  const artifactBranch = readArtifactBranch();
+
+  // 2. Get current branch
+  const currentBranch = getCurrentBranch();
+  if (!currentBranch) {
+    console.error(chalk.red('Error: Not a git repository.'));
+    process.exit(1);
+  }
+
+  // 3. Verify on artifact branch
+  if (currentBranch !== artifactBranch) {
+    console.error(chalk.red(`Error: You're on \`${currentBranch}\`. Switch to \`${artifactBranch}\` to complete work.`));
+    console.error(chalk.gray('The PR should be merged before completing.'));
+    console.error(chalk.gray(`Run: git checkout ${artifactBranch} && git pull`));
+    process.exit(1);
+  }
+
+  // 4. Pull latest to get merged content
+  try {
+    // Check if remote exists first
+    const remotes = execSync('git remote', { stdio: 'pipe', encoding: 'utf-8' }).trim();
+    if (remotes) {
+      execSync('git pull --rebase', { stdio: 'pipe', encoding: 'utf-8' });
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : '';
+    if (errorMessage.includes('conflict') || errorMessage.includes('Cannot rebase')) {
+      console.error(chalk.red('Error: Pull failed due to conflicts. Resolve conflicts and try again.'));
+      process.exit(1);
+    }
+  }
+
+  // 5. Verify slug directory exists
+  const activePath = path.join(process.cwd(), '.ana', 'plans', 'active', slug);
+  const completedPath = path.join(process.cwd(), '.ana', 'plans', 'completed', slug);
+
+  if (!fs.existsSync(activePath)) {
+    // Check if already completed
+    if (fs.existsSync(completedPath)) {
+      console.log(chalk.gray(`Work item \`${slug}\` was already completed.`));
+      process.exit(0);
+    }
+    console.error(chalk.red(`Error: No active work found for \`${slug}\`.`));
+    process.exit(1);
+  }
+
+  // 6. Verify feature branch was merged (optional - branch might be deleted)
+  const featureBranchExists = getFeatureBranch(slug);
+  if (featureBranchExists) {
+    try {
+      execSync(`git merge-base --is-ancestor feature/${slug} HEAD`, { stdio: 'pipe' });
+    } catch {
+      console.error(chalk.red(`Error: \`feature/${slug}\` has not been merged into \`${artifactBranch}\`.`));
+      console.error(chalk.gray('Merge the PR first, then run this command again.'));
+      process.exit(1);
+    }
+  }
+
+  // 7. Read plan.md to determine phases
+  const planPath = path.join(activePath, 'plan.md');
+  if (!fs.existsSync(planPath)) {
+    console.error(chalk.red(`Error: No plan.md found for \`${slug}\`. Cannot determine phases.`));
+    process.exit(1);
+  }
+
+  const planContent = fs.readFileSync(planPath, 'utf-8');
+  const { total: totalPhases, specs } = countPhases(planContent);
+
+  if (specs.length === 0) {
+    console.error(chalk.red(`Error: No phases found in plan.md for \`${slug}\`.`));
+    process.exit(1);
+  }
+
+  // 8. Verify ALL verify reports exist with PASS
+  for (let i = 0; i < specs.length; i++) {
+    const phaseNum = i + 1;
+    const specFile = specs[i];
+
+    // Determine verify report filename
+    let verifyReportFile: string;
+    if (specFile === 'spec.md') {
+      verifyReportFile = 'verify_report.md';
+    } else {
+      const match = specFile.match(/spec-(\d+)\.md/);
+      if (match) {
+        verifyReportFile = `verify_report_${match[1]}.md`;
+      } else {
+        console.error(chalk.red(`Error: Unexpected spec filename: ${specFile}`));
+        process.exit(1);
+      }
+    }
+
+    const verifyReportPath = path.join(activePath, verifyReportFile);
+
+    // Check if verify report exists
+    if (!fs.existsSync(verifyReportPath)) {
+      console.error(chalk.red(`Error: Phase ${phaseNum} has no verify report. Cannot complete.`));
+      console.error(chalk.gray('Run `claude --agent ana-verify` to verify first.'));
+      process.exit(1);
+    }
+
+    // Read and check result
+    const verifyContent = fs.readFileSync(verifyReportPath, 'utf-8');
+    const result = getVerifyResult(verifyContent);
+
+    if (result === 'FAIL') {
+      console.error(chalk.red(`Error: Phase ${phaseNum} verification failed (Result: FAIL).`));
+      console.error(chalk.gray('Fix issues and re-verify before completing.'));
+      process.exit(1);
+    }
+
+    if (result === 'unknown') {
+      console.error(chalk.red(`Error: Phase ${phaseNum} verify report has no Result line.`));
+      console.error(chalk.gray("Verify report must include '**Result:** PASS' or '**Result:** FAIL'."));
+      process.exit(1);
+    }
+  }
+
+  // 9. Move the directory
+  const completedDir = path.join(process.cwd(), '.ana', 'plans', 'completed');
+  await fsPromises.mkdir(completedDir, { recursive: true });
+  await fsPromises.cp(activePath, completedPath, { recursive: true });
+  await fsPromises.rm(activePath, { recursive: true, force: true });
+
+  // 10. Stage and commit
+  try {
+    execSync('git add .ana/plans/active/ .ana/plans/completed/', { stdio: 'pipe' });
+    const commitMessage = `[${slug}] Complete — archived to plans/completed\n\nCo-authored-by: Ana <build@anatomia.dev>`;
+    execSync(`git commit -m "${commitMessage}"`, { stdio: 'pipe' });
+  } catch (error) {
+    console.error(chalk.red(`Error: Failed to commit. ${error instanceof Error ? error.message : 'Unknown error'}`));
+    process.exit(1);
+  }
+
+  // 11. Push
+  try {
+    execSync('git push', { stdio: 'pipe' });
+  } catch {
+    console.error(chalk.yellow('Warning: Push failed. Changes committed locally. Run `git push` manually.'));
+    // Don't exit - commit succeeded
+  }
+
+  // 12. Delete feature branch (cleanup)
+  try {
+    execSync(`git branch -d feature/${slug}`, { stdio: 'pipe' });
+  } catch {
+    // Silently continue if branch doesn't exist or was already deleted
+  }
+
+  try {
+    execSync(`git push origin --delete feature/${slug}`, { stdio: 'pipe' });
+  } catch {
+    // Silently continue if remote branch doesn't exist or was already deleted
+  }
+
+  // 13. Print summary
+  console.log(chalk.green(`✓ Completed \`${slug}\``));
+  console.log(chalk.gray(`  Archived to .ana/plans/completed/${slug}/`));
+  console.log(chalk.gray('  Feature branch cleaned up.'));
+  console.log(chalk.gray(`  ${totalPhases} phase${totalPhases === 1 ? '' : 's'} verified.`));
+}
+
+/**
  * Command definition for work management
  */
 export const workCommand = new Command('work')
@@ -657,4 +827,12 @@ const statusCommand = new Command('status')
     getWorkStatus(options);
   });
 
+const completeCommand = new Command('complete')
+  .description('Archive completed work after PR merge')
+  .argument('<slug>', 'Work item slug to complete')
+  .action(async (slug: string) => {
+    await completeWork(slug);
+  });
+
 workCommand.addCommand(statusCommand);
+workCommand.addCommand(completeCommand);
