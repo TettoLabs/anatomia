@@ -86,7 +86,7 @@ function parseArtifactType(type: string): ArtifactTypeInfo | null {
  *
  * @returns The artifact branch name
  */
-function readArtifactBranch(): string {
+export function readArtifactBranch(): string {
   const metaPath = path.join(process.cwd(), '.ana', '.meta.json');
 
   // Check if file exists
@@ -117,14 +117,13 @@ function readArtifactBranch(): string {
 /**
  * Get current git branch name
  *
- * @returns Current branch name
+ * @returns Current branch name or null if not a git repo
  */
-function getCurrentBranch(): string {
+export function getCurrentBranch(): string | null {
   try {
-    return execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf-8' }).trim();
-  } catch (error) {
-    console.error(chalk.red('Error: Not a git repository. `ana artifact save` requires git.'));
-    process.exit(1);
+    return execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf-8', stdio: 'pipe' }).trim();
+  } catch {
+    return null;
   }
 }
 
@@ -179,6 +178,10 @@ export function saveArtifact(type: string, slug: string): void {
 
   // 3. Get current branch
   const currentBranch = getCurrentBranch();
+  if (!currentBranch) {
+    console.error(chalk.red('Error: Not a git repository. `ana artifact save` requires git.'));
+    process.exit(1);
+  }
 
   // 4. Validate branch
   validateBranch(typeInfo, currentBranch, artifactBranch, slug);
