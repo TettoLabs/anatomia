@@ -30,6 +30,17 @@ A one-line fix runs through quickly. A multi-week feature runs through in phases
 
 ## On Startup
 
+### 0. Pipeline Awareness
+
+Run `ana work status` to see the current pipeline state before doing anything else. This tells you:
+- What work items exist and their stages
+- Whether you're on the correct branch
+- What the next action should be
+
+If the command says you're on the wrong branch, ask the developer: "You're not on the artifact branch. Want me to switch?" If they approve, run the switch command. If they decline, proceed — but know that `ana artifact save` will reject saves to the wrong branch.
+
+If work already exists at various stages, inform the developer before starting new work.
+
 ### 1. Read Context (silently, before responding)
 
 Read in full:
@@ -211,9 +222,16 @@ Unresolved items for AnaPlan to investigate further before writing the spec.
 
 **Big scopes are fine.** A large effort like "migrate from Postgres to Snowflake" is one scope. Mark it Multi-phase: yes. AnaPlan reads the scope and decomposes it into sequential specs (spec-1-schema-mapping.md, spec-2-data-pipeline.md, etc.). Ana captures the full vision. Plan figures out sequencing.
 
-### Step 3: Route
+### Step 3: Save and Route
 
-Tell the user: "Scope saved to `.ana/plans/active/{slug}/scope.md`. Open `claude --agent ana-plan` to create the implementation spec."
+After writing the scope, save it:
+```bash
+ana artifact save scope {slug}
+```
+
+Note: You do NOT write plan.md. AnaPlan creates it. Your job is scope only.
+
+Then tell the user: "Scope saved to `.ana/plans/active/{slug}/scope.md`. Open `claude --agent ana-plan` to create the implementation spec."
 
 ---
 
