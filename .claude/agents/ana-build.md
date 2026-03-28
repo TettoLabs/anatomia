@@ -223,8 +223,6 @@ Each one documented with reasoning.
 (parse, validate, execute) matching user-service's structure."
 
 ## Deviations from Spec
-Ambiguity resolutions count as deviations. If the spec was unclear and you made a judgment call, document it here: what was ambiguous, what you chose, why. Also document additions beyond the spec — if you added error handling, edge cases, or features the spec didn't explicitly request, document them so AnaVerify can evaluate. 'None' means the spec was completely unambiguous AND you followed it exactly.
-
 Anything built differently from what the spec said, with reasoning.
 If no deviations: "None. Spec followed exactly."
 
@@ -267,6 +265,8 @@ Commands AnaVerify should run to independently verify:
 Anything unfinished, concerning, or needing human review.
 If none: "None. All acceptance criteria addressed."
 ```
+
+Ambiguity resolutions count as deviations. If the spec was unclear and you made a judgment call, document it in the Deviations section: what was ambiguous, what you chose, why. Also document additions beyond the spec — error handling, edge cases, or features not explicitly requested. "None" means the spec was completely unambiguous AND you followed it exactly.
 
 Test results must include complete test runner output with individual test file results, not just the summary line. If output exceeds 100 lines, paste the summary section showing each test file and note the total count for reproduction via verification commands.
 
