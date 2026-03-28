@@ -10,11 +10,13 @@ Create a new `context` command group with `status` subcommand following the exis
 
 **Pattern to follow:** Structure the command file like `work.ts` — parent command with subcommands defined inline, `execSync` for git operations, separate display function for human output.
 
+Using filesystem mtime for v1. Git commit date is a stronger signal but adds complexity — consider for v2.
+
 **Key design decisions:**
 
 1. **Git operations via `execSync`** — Use `node:child_process` directly, matching the existing pattern in `work.ts`. No external dependencies.
 
-2. **Per-file staleness detection** — Run `git log --oneline --since="<file-mtime>" -- packages/` for each setup file. Count commits to determine staleness. More accurate than global oldest-file approach.
+2. **Per-file staleness detection** — Run `git log --oneline --since="<file-mtime>"` for each setup file (no path filter — tracks all repo activity). Count commits to determine staleness. Future enhancement: make tracked paths configurable in `.meta.json`.
 
 3. **`lastHealth` schema** — Store an object in `.meta.json`:
    ```
@@ -43,11 +45,30 @@ Create a new `context` command group with `status` subcommand following the exis
 **Why:** New functionality requires new command file. Following existing patterns ensures consistency.
 
 **Implementation notes:**
-- Define the 7 setup files as a constant (same list as in `check.ts` lines 39-47)
+- Import `SETUP_CONTEXT_FILES` from `../constants.js` (see new constants.ts file change below)
+- Use `fs.readdir` with `withFileTypes: true`, filter to `entry.isFile()` and `.md` extension
 - Use `fs.stat()` for mtime, calculate age in days/hours
-- For each setup file, run `git log --oneline --since="<ISO-date>" -- packages/` and count output lines
+- For each setup file, run `git log --oneline --since="<ISO-date>"` (no path filter) and count output lines
 - Consider a file "stale" when commits > 0 (any activity since file was updated)
 - Display uses chalk with same visual language as `check.ts`: green ✓ for present, red ✗ for missing, yellow ⚠ for stale
+
+### `packages/cli/src/constants.ts` (create)
+
+**What changes:** New file exporting shared constants, starting with `SETUP_CONTEXT_FILES`.
+
+**Why:** The list of 7 setup files is currently hardcoded in `check.ts` (lines 39-47). Adding a second consumer (`context.ts`) would duplicate the list. Extract now to prevent drift and follow DRY principle.
+
+**Contents:**
+- `SETUP_CONTEXT_FILES`: Array of the 7 setup-generated context file names
+- Export as named constant for import by both `check.ts` and `context.ts`
+
+### `packages/cli/src/commands/check.ts` (modify)
+
+**What changes:** Import `SETUP_CONTEXT_FILES` from `../constants.js` instead of defining `ALL_CONTEXT_FILES` inline.
+
+**Pattern to follow:** Existing import patterns at top of file.
+
+**Why:** Eliminates duplication — single source of truth for the file list.
 
 ### `packages/cli/src/index.ts` (modify)
 
@@ -95,16 +116,19 @@ Implementation criteria:
 |----------|-------|----------|
 | All 7 setup files present, no git activity | Create files with recent mtime | All ✓, no warnings |
 | Missing 2 setup files | Create 5 of 7 | 5 ✓, 2 ✗, exit 0 |
-| Setup files with commits since | Create files, add commits to packages/ | ⚠ warnings with commit count |
+| Setup files with commits since | Create files, add commits after | ⚠ warnings with commit count |
 | Other files present (analysis.md) | Add analysis.md | Shown in "Other files" section |
 | No .ana/context/ directory | Don't create it | Error message, exit 1 |
 | Not a git repo | No `git init` | Age shown, no staleness, no crash |
-| JSON output | `--json` flag | Valid JSON with correct structure |
+| JSON output | `--json` flag | Valid JSON with mtime (no age strings) |
+| Directory in context folder | Add setup/ subdirectory | Filtered out, not shown |
 
 **Edge cases:**
 - Empty `.ana/context/` directory (no files at all)
 - Files with very old mtime (months old)
-- Git repo with no commits to packages/ ever
+- Git repo with no commits ever
+- Non-.md files in context directory (should be filtered out)
+- Subdirectories in context directory (should be filtered out)
 
 ## Dependencies
 
@@ -128,9 +152,11 @@ Implementation criteria:
 
 **Context directory location:** It's `.ana/context/`, not `.ana/modes/`. Common mistake per coding standards.
 
-**The 7 setup files:** Use the exact same list as `check.ts` lines 39-47. Don't hardcode a different list.
+**The 7 setup files:** Import from `constants.ts`. Do not duplicate the list.
 
-**JSON output structure:** Match the internal data structure exactly. The human display and JSON output should derive from the same data, just formatted differently. See `work.ts` `StatusOutput` interface and how both `printHumanReadable` and JSON stringify use the same `output` object.
+**Directory filtering:** The `.ana/context/` directory may contain subdirectories (e.g., `setup/`). Use `readdir` with `withFileTypes: true` and filter to `entry.isFile()` before processing. Also filter to `.md` extension to exclude `.DS_Store` and other non-markdown files.
+
+**JSON output structure:** Match the internal data structure exactly. The human display and JSON output should derive from the same data, just formatted differently. See `work.ts` `StatusOutput` interface and how both `printHumanReadable` and JSON stringify use the same `output` object. JSON contains raw data (mtime timestamps), human output contains formatted strings (age).
 
 ## Output Mockups
 
@@ -184,7 +210,6 @@ Consider re-running setup or manually updating affected files.
     {
       "file": "project-overview.md",
       "exists": true,
-      "age": "2 days ago",
       "mtime": "2026-03-26T10:00:00.000Z",
       "commitsSince": 0,
       "stale": false
@@ -192,7 +217,6 @@ Consider re-running setup or manually updating affected files.
     {
       "file": "patterns.md",
       "exists": false,
-      "age": null,
       "mtime": null,
       "commitsSince": null,
       "stale": false
@@ -202,7 +226,6 @@ Consider re-running setup or manually updating affected files.
     {
       "file": "analysis.md",
       "exists": true,
-      "age": "1 day ago",
       "mtime": "2026-03-27T12:00:00.000Z"
     }
   ],
@@ -215,3 +238,5 @@ Consider re-running setup or manually updating affected files.
   }
 }
 ```
+
+Note: JSON output contains raw `mtime` timestamps only — no computed `age` strings. Consumers compute display-friendly age from mtime themselves. This keeps machine output as pure data.
