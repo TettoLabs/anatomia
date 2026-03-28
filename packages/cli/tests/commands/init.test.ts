@@ -64,7 +64,7 @@ describe('ana init', () => {
   });
 
   describe('template inventory', () => {
-    it('all 46 template files exist in CLI package', async () => {
+    it('all 47 template files exist in CLI package', async () => {
       // Get templates directory using same logic as init.ts
       const __filename = fileURLToPath(import.meta.url);
       const __dirname = path.dirname(__filename);
@@ -113,11 +113,12 @@ describe('ana init', () => {
         '.ana/plans/completed/.gitkeep',
         // 1 settings template
         '.claude/settings.json',
-        // 8 agent files
+        // 9 agent files
         '.claude/agents/ana.md',
         '.claude/agents/ana-plan.md',
         '.claude/agents/ana-setup.md',
         '.claude/agents/ana-build.md',
+        '.claude/agents/ana-verify.md',
         '.claude/agents/ana-explorer.md',
         '.claude/agents/ana-question-formulator.md',
         '.claude/agents/ana-writer.md',
@@ -133,7 +134,7 @@ describe('ana init', () => {
         'CLAUDE.md',
       ];
 
-      expect(expectedFiles).toHaveLength(50);
+      expect(expectedFiles).toHaveLength(51);
 
       for (const file of expectedFiles) {
         const filePath = path.join(templatesDir, file);

@@ -36,6 +36,8 @@
  *   │   ├── ana.md                (main Ana agent)
  *   │   ├── ana-plan.md           (spec generator)
  *   │   ├── ana-setup.md          (interactive setup orchestrator)
+ *   │   ├── ana-build.md          (builder agent)
+ *   │   ├── ana-verify.md         (quality gate agent)
  *   │   ├── ana-explorer.md       (codebase scanner)
  *   │   ├── ana-question-formulator.md
  *   │   ├── ana-writer.md         (context file writer)
