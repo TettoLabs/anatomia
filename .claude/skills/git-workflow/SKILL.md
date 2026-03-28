@@ -6,11 +6,10 @@ description: "Anatomia git workflow. Invoke when creating branches, committing c
 # Git Workflow — Anatomia
 
 ## Branching
-- All branches created from `main`.
+- All branches created from the artifact branch (configured in `.ana/.meta.json`).
 - One branch per scope (single-spec) or per plan (multi-spec). Branch lives until all specs complete.
-- Naming: `{type}/{slug}` where type is `feature/`, `fix/`, or `refactor/`.
-- Slug matches the plan directory: `feature/ana-status` → `.ana/plans/active/ana-status/`
-- Examples: `feature/ana-status`, `fix/sampler-glob`, `refactor/citation-parser`
+- Naming: `feature/{slug}` — matches the plan directory slug.
+- Example: `feature/ana-status` → `.ana/plans/active/ana-status/`
 
 ## Commits
 - Format: `[{slug}] {description}` for single-spec work.
@@ -43,13 +42,13 @@ All three must pass. Not enforced by hooks — manual discipline. CI catches fai
   Spec: .ana/plans/active/{slug}/spec.md
   Build report: .ana/plans/active/{slug}/build_report.md
   ```
-- PR targets `main`.
+- PR targets the artifact branch (see `.ana/.meta.json` `artifactBranch` field, default: `main`).
 - CI must pass (GitHub Actions: Linux/Mac/Windows × Node 20/22).
 - Merge strategy: merge commit (not squash). Preserves commit history for bisect and forensics.
 
 ## After Merge
 - Delete the feature branch.
-- Verify CI passes on main after merge.
+- Verify CI passes on artifact branch after merge.
 - Complete the work: `ana work complete {slug}`
 
 ## For AnaBuild
@@ -63,24 +62,24 @@ All three must pass. Not enforced by hooks — manual discipline. CI catches fai
 
 ## For AnaVerify
 - **Per-spec verification:** After each spec, verify on the branch. Update plan.md phase checkbox. Don't merge yet.
-- **Plan complete:** After ALL specs pass, create the PR from branch to main.
+- **Plan complete:** After ALL specs pass, create the PR from branch to artifact branch.
 - **PR body:** Include scope, spec (or plan.md for multi-phase), and build report references.
-- **Merge:** Merge commit, not squash. Verify CI passes on main after merge.
+- **Merge:** Merge commit, not squash. Verify CI passes on artifact branch after merge.
 - **Cleanup:** After developer merges the PR, developer runs `ana work complete {slug}` to archive and clean up.
 - **If verify fails:** Report issues in verify_report.md. Don't touch the branch. Developer opens AnaBuild to fix.
 
 ## Multi-Phase Workflow
 ```
-feature/{slug} created from main (AnaBuild, spec-1)
+feature/{slug} created from artifact branch (AnaBuild, spec-1)
   ├── [slug:s1] commits...
   ├── AnaVerify: spec-1 PASS → plan.md phase 1 ✅
-  ├── Rebase on main (AnaBuild, spec-2)
+  ├── AnaBuild resumes feature/{slug} (spec-2)
   ├── [slug:s2] commits...
   ├── AnaVerify: spec-2 PASS → plan.md phase 2 ✅
-  ├── Rebase on main (AnaBuild, spec-3)
+  ├── AnaBuild resumes feature/{slug} (spec-3)
   ├── [slug:s3] commits...
   ├── AnaVerify: spec-3 PASS → plan.md phase 3 ✅
-  └── AnaVerify: all phases complete → PR → merge → cleanup
+  └── AnaVerify: all phases complete → PR → developer merges → ana work complete
 ```
 
 ## Future: Staging Branch

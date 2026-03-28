@@ -65,9 +65,9 @@ Unresolved items for AnaPlan to investigate further.
 
 ---
 
-## plan.md — AnaPlan (multi-phase only)
+## plan.md — AnaPlan
 
-Written by AnaPlan when scope is marked Multi-phase: yes. Tracks sequencing and progress across multiple specs. Not created for single-phase work.
+Written by AnaPlan. Tracks phases and maps them to spec files. Always written, even for single-spec work.
 
 ```markdown
 # Plan: {task name}
@@ -75,32 +75,25 @@ Written by AnaPlan when scope is marked Multi-phase: yes. Tracks sequencing and 
 **Created by:** AnaPlan
 **Date:** {date}
 **Scope:** .ana/plans/active/{slug}/scope.md
-**Specs:** {count}
-**Estimated total effort:** {time}
+**Branch:** feature/{slug}
 
-## Sequence
+## Phases
 
-### Phase 1: {name}
-- **Spec:** spec-1.md
-- **Status:** [ ] not started
-- **Dependencies:** none
-- **Estimated effort:** {time}
-- **Key files:** {primary files this phase touches}
-
-### Phase 2: {name}
-- **Spec:** spec-2.md
-- **Status:** [ ] not started
-- **Dependencies:** spec-1 complete
-- **Estimated effort:** {time}
-- **Key files:** {primary files this phase touches}
+- [ ] {phase 1 description}
+  - Spec: spec.md
+- [ ] {phase 2 description}
+  - Spec: spec-2.md
+  - Depends on: Phase 1
 ```
 
 **Rules:**
-- Only created for multi-phase work (scope has Multi-phase: yes)
-- Each phase maps to exactly one spec file
-- Dependencies are explicit — which prior specs must complete first
-- Status checkboxes updated by AnaVerify when each phase passes
-- For single-phase work, skip plan.md entirely — just scope.md → spec.md
+- Always written by AnaPlan, even for single-spec work
+- The `## Phases` heading and `- [ ]` checkbox format is mandatory — the CLI parses this structure
+- The `Spec:` line (with capital S, no asterisks) maps phases to spec files
+- Each phase is a checkbox `- [ ]` that AnaVerify updates to `- [x]` after verification
+- Single-spec example: one phase with `Spec: spec.md`
+- Multi-spec example: multiple phases with `Spec: spec-1.md`, `Spec: spec-2.md`, etc.
+- Dependencies are expressed with `Depends on:` lines (optional)
 
 ---
 
@@ -212,39 +205,61 @@ Written by AnaVerify after adversarial testing and review.
 ```markdown
 # Verify Report: {task name}
 
+**Result:** PASS
+
 **Created by:** AnaVerify
 **Date:** {date}
 **Spec:** .ana/plans/active/{slug}/spec.md
 
 ## Acceptance Criteria Results
-- [x] PASS: {criterion} — {evidence}
-- [x] PASS: {criterion} — {evidence}
-- [ ] FAIL: {criterion} — {what's wrong}
+- ✅ PASS: {criterion} — {evidence}
+- ✅ PASS: {criterion} — {evidence}
+- ⚠️ PARTIAL: {criterion} — {what's partially done}
 
 ## Regression Check
-- **Existing test suite:** PASS / FAIL ({N} tests, {N} passed)
-- **Regressions found:** {list or "none"}
+- **Existing test suite:** PASS ({N} tests, {N} passed)
+- **Regressions found:** none
 
 ## Edge Cases Tested
 - {edge case} — {result}
 - {edge case} — {result}
 
 ## Issues Found
-- **{severity: critical/warning/note}:** {description} in `{file}` — {details}
+None
 
-## Recommendation
-**PASS** / **FAIL** / **PARTIAL**
+## Summary
+{2-3 sentence overall assessment}
+```
 
-If FAIL or PARTIAL, specific items to fix:
+Or for failures:
+
+```markdown
+# Verify Report: {task name}
+
+**Result:** FAIL
+
+**Created by:** AnaVerify
+**Date:** {date}
+**Spec:** .ana/plans/active/{slug}/spec.md
+
+## Acceptance Criteria Results
+- ✅ PASS: {criterion} — {evidence}
+- ❌ FAIL: {criterion} — {what's wrong and what needs fixing}
+
+## Issues Found
+- **Critical:** {description} in `{file}` — {details}
+
+## Items to Fix
 1. {what to fix}
 2. {what to fix}
 ```
 
 **Rules:**
+- The `**Result:**` line is mandatory and machine-parsed by `ana work status` and `ana work complete`. It must appear near the top of the file (line 3). Case-insensitive: PASS or FAIL only.
 - AnaVerify reads the spec and the code independently. It does NOT trust the build report's self-assessment.
-- Every acceptance criterion gets a PASS or FAIL with evidence — not just "looks good."
-- FAIL means the user should open `claude --agent ana-build` to fix the listed items, then re-run verify.
-- PARTIAL means core functionality works but edge cases or non-critical criteria failed.
+- Every acceptance criterion gets ✅ PASS, ❌ FAIL, or ⚠️ PARTIAL with evidence.
+- Overall Result is binary: PASS or FAIL. If ANY criterion is ❌ FAIL, the Result is FAIL.
+- FAIL means the developer should open `claude --agent ana-build` to fix the listed items, then re-run verify.
 - AnaVerify never fixes code. It reports only.
 
 ---
@@ -260,4 +275,4 @@ verify_report.md    → check recommendation: PASS = done, FAIL = back to build
 
 File existence IS the state machine. No separate status file needed.
 
-When a task is complete (verify passes), the developer moves the directory from `.ana/plans/active/{slug}/` to `.ana/plans/complete/{slug}/`. The four artifacts together form the permanent record: intent, plan, implementation, proof.
+When a task is complete (verify passes), the developer runs `ana work complete {slug}` which archives the directory from `.ana/plans/active/{slug}/` to `.ana/plans/completed/{slug}/` and cleans up the feature branch. The four artifacts together form the permanent record: intent, plan, implementation, proof.

@@ -60,11 +60,7 @@ Do not load all 7 upfront. If context files contradict what you see in actual so
 
 ### 2. Check State (silently)
 
-```bash
-ls .ana/plans/active/ 2>/dev/null
-```
-
-If directories exist, read the scope.md or spec.md inside to understand what's pending.
+Check `.ana/plans/active/` for pending work. If directories exist, read the scope.md or spec.md inside to understand what's pending.
 
 ### 3. Respond
 
@@ -243,12 +239,12 @@ Four agents. Each reads ONLY its input artifact.
 
 **AnaBuild** (`claude --agent ana-build`) — Reads spec.md. Produces working code + build_report.md: what was built, tests written, implementation decisions, files changed. Creates branch, commits, opens PR. Follows the spec.
 
-**AnaVerify** (`claude --agent ana-verify`) — Reads spec.md + build_report.md. Produces verify_report.md: pass/fail per acceptance criterion, regression check, edge cases tested. Does NOT fix code — reports only. If PASS: merges the PR, verifies CI, moves artifacts to `.ana/plans/completed/{slug}/`. If FAIL: user opens ana-build to fix, then re-verifies.
+**AnaVerify** (`claude --agent ana-verify`) — Reads spec.md + build_report.md. Produces verify_report.md: pass/fail per acceptance criterion, regression check, edge cases tested. Does NOT fix code — reports only. If PASS: creates PR from feature branch to artifact branch. Developer reviews and merges. If FAIL: developer opens ana-build to fix, then re-verifies.
 
 ```
 Ana → AnaPlan → AnaBuild → AnaVerify
                                  |
-                          PASS → merge PR → complete
+                          PASS → create PR → developer merges → ana work complete
                           FAIL → AnaBuild fixes → re-verify
 ```
 
@@ -258,11 +254,15 @@ The four artifacts (scope, spec, build report, verify report) form the permanent
 
 ## State Awareness
 
-On startup, check `.ana/plans/active/`. Mention the most relevant item in one line:
+`ana work status` (run in Step 0) provides complete pipeline state. Use its output to inform the developer. Common situations:
 
-- Scope exists, no spec → "{name} is scoped. Open `claude --agent ana-plan`."
-- Spec exists, no build → "{name} has a spec. Open `claude --agent ana-build`."
-- Failed verify → "{name} verify found issues. Open `claude --agent ana-build` to fix."
+- No active work → "Nothing in the pipeline. What are we working on?"
+- Scope exists, no plan → "{name} is scoped. Open `claude --agent ana-plan`."
+- Plan + spec exist, no build → "{name} has a spec. Open `claude --agent ana-build`."
+- Build in progress → "{name} build started. Open `claude --agent ana-build` to resume."
+- Ready for verify → "{name} is built. Open `claude --agent ana-verify`."
+- Needs fixes → "{name} verify found issues. Open `claude --agent ana-build` to fix."
+- Ready to merge → "{name} is verified. Review the PR, merge, then run `ana work complete {slug}`."
 
 Check `.ana/plans/completed/` when scoping similar work — reference what previous cycles touched.
 

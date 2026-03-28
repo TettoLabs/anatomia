@@ -7,9 +7,9 @@ description: "Anatomia deployment and release standards. Invoke after verificati
 
 ## After AnaVerify Passes
 AnaVerify handles merge mechanics (see git-workflow skill for details):
-1. Create PR from feature branch to main
+1. Create PR from feature branch to artifact branch
 2. Merge as merge commit (not squash)
-3. Verify CI passes on main after merge
+3. Verify CI passes on artifact branch after merge
 4. Delete the feature branch
 5. Run `ana work complete {slug}` to archive and clean up
 
@@ -32,14 +32,14 @@ Current packages:
 
 ## If Something Breaks After Merge
 1. Revert the merge commit: `git revert -m 1 {merge-sha}`
-2. Push the revert to main
+2. Push the revert to artifact branch
 3. Verify Vercel redeploys with the revert (automatic)
 4. Open `claude --agent ana` to scope the fix — it goes through the pipeline again
 
 No hotfix branches. No direct patches. Fixes go through Think → Plan → Build → Verify like everything else.
 
 ## For AnaVerify
-- You merge PRs. You never publish to npm.
-- After merge, verify CI passes on main. If CI fails, report it — don't attempt to fix.
-- Move the plan directory to complete only after confirmed CI pass.
+- You create PRs. The developer merges. You never publish to npm.
+- After merge, verify CI passes on artifact branch. If CI fails, report it — don't attempt to fix.
+- After developer merges, developer runs `ana work complete {slug}` to archive.
 - If website files were changed, note in the verify report that Vercel deployment should be checked.

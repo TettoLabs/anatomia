@@ -25,7 +25,7 @@
  *   │   └── SCHEMAS.md            (artifact schema reference)
  *   ├── plans/
  *   │   ├── active/               (in-progress work)
- *   │   └── complete/             (completed cycles)
+ *   │   └── completed/            (completed cycles)
  *   ├── .meta.json                (framework metadata)
  *   └── .state/
  *       └── snapshot.json         (analyzer baseline)
@@ -566,11 +566,12 @@ async function getCliVersion(): Promise<string> {
 /**
  * Phase 6: Copy static files with SHA-256 verification
  *
- * Copies 24 static template files from CLI templates/ to .ana/:
- * - 7 mode files
+ * Copies 28 static template files from CLI templates/ to .ana/:
+ * - 10 mode files
  * - 3 setup files (SETUP_GUIDE.md, templates.md, rules.md)
  * - 8 step files
  * - 6 framework-snippets
+ * - 1 SCHEMAS.md
  *
  * ENTRY.md template stays in CLI package (used by ana setup complete).
  *
@@ -1141,7 +1142,7 @@ function displaySuccessMessage(analysisResult: AnalysisResult | null): void {
 
   console.log(chalk.bold('Created:'));
   console.log('  • 7 context scaffolds (with analyzer data)');
-  console.log('  • Ana agent + setup agent + 4 sub-agents (.claude/agents/)');
+  console.log('  • 9 agents — Ana, AnaPlan, AnaBuild, AnaVerify, Setup + 4 sub-agents (.claude/agents/)');
   console.log('  • 6 team-editable skills (.claude/skills/)');
   console.log('  • SCHEMAS.md artifact reference (.ana/docs/)');
   console.log('  • Plan directories (.ana/plans/)');

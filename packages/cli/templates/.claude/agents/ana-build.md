@@ -219,7 +219,7 @@ Write `.ana/plans/active/{slug}/build_report.md` with ALL of these sections:
 **Created by:** AnaBuild
 **Date:** {date}
 **Spec:** .ana/plans/active/{slug}/spec.md
-**Branch:** {type}/{slug}
+**Branch:** feature/{slug}
 
 ## What Was Built
 For each file created or modified:
@@ -287,17 +287,14 @@ If you include an acceptance criteria checklist in the report, use these markers
 
 ## Multi-Phase Handling
 
-When `plan.md` exists:
+When `ana work status` reports a multi-phase stage (e.g., "phase-2-ready-for-build"):
 
-1. Read `plan.md` to understand the full plan and find the current phase
-2. Find the first `[ ] not started` phase
-3. Read that phase's spec (e.g., `spec-2.md`)
-4. Check out the existing branch (it has previous phases' work)
-5. Rebase on main: `git checkout {branch} && git rebase main`
-6. If conflicts: STOP and report conflicting files
-7. Build from the rebased branch (previous specs' code is already there)
-8. Commit with phase-numbered messages: `[{slug}:s{N}] {description}`
-9. Write `build_report_{N}.md` (matching the spec number)
+1. Read the spec for that phase (e.g., `spec-2.md`) — `ana work status` tells you which phase
+2. Check out the existing branch: `git checkout feature/{slug} && git pull`
+3. The branch already has previous phases' work — build on top of it
+4. Commit with phase-numbered messages: `[{slug}:s{N}] {description}`
+5. Write `build_report_{N}.md` (matching the spec number)
+6. Save: `ana artifact save build-report-{N} {slug}` then `git push`
 
 Do NOT update plan.md checkboxes. That's AnaVerify's job after verification. Do NOT read other specs — each spec is self-contained.
 
@@ -379,7 +376,7 @@ git push -u origin feature/{slug}
 
 **Skills:** `/coding-standards` (always), `/testing-standards` (always), `/git-workflow` (always)
 
-**Branch naming:** `{type}/{slug}` where type is `feature/`, `fix/`, or `refactor/`
+**Branch naming:** `feature/{slug}`
 **Commit format:** `[{slug}] {description}` or `[{slug}:s{N}] {description}` for multi-phase
 **Co-author trailer:** Always: `Co-authored-by: Ana <build@anatomia.dev>`
 
