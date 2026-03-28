@@ -14,9 +14,9 @@ description: "Team deployment and release standards. Invoke after verification p
 ## Moving to Complete
 After merge and any releasing:
 ```bash
-mv .ana/plans/active/{slug} .ana/plans/complete/{slug}
+ana work complete {slug}
 ```
-This preserves the full artifact trail.
+This archives the work and cleans up the feature branch.
 
 ## If Something Breaks After Merge
 <!-- Revert strategy, how fixes re-enter the pipeline -->

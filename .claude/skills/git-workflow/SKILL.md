@@ -50,22 +50,23 @@ All three must pass. Not enforced by hooks — manual discipline. CI catches fai
 ## After Merge
 - Delete the feature branch.
 - Verify CI passes on main after merge.
-- Move plan to complete: `mv .ana/plans/active/{slug} .ana/plans/complete/{slug}`
+- Complete the work: `ana work complete {slug}`
 
 ## For AnaBuild
-- **First spec:** Create the branch from main. `git checkout main && git pull && git checkout -b {type}/{slug}`
-- **Subsequent specs (multi-phase):** Rebase on main first. `git checkout {type}/{slug} && git rebase main`. If conflicts, surface to developer — don't auto-resolve.
-- **After verify failure:** Stay on the same branch. Fix commits use the same slug and spec prefix. Just more commits.
-- **Commit granularity:** You decide the boundaries. The spec doesn't dictate when to commit. Rule: one logical unit per commit, tests pass for what's committed.
+- **Ready for build:** `git checkout {artifactBranch} && git pull && git checkout -b feature/{slug}`
+- **Build in progress (resume):** `git checkout feature/{slug} && git pull`. Check `git log` to see what's done.
+- **Needs fixes (failed verify):** `git checkout feature/{slug} && git pull`. Read verify report, fix what failed.
+- **Commit granularity:** One logical unit per commit. Tests pass for what's committed.
+- **Save build report:** `ana artifact save build-report {slug}` then `git push -u origin feature/{slug}`
 - **Don't create PRs.** That's AnaVerify's job.
-- **Don't merge.** That's AnaVerify's job.
+- **Don't merge.** That's the developer's job after AnaVerify creates the PR.
 
 ## For AnaVerify
 - **Per-spec verification:** After each spec, verify on the branch. Update plan.md phase checkbox. Don't merge yet.
 - **Plan complete:** After ALL specs pass, create the PR from branch to main.
 - **PR body:** Include scope, spec (or plan.md for multi-phase), and build report references.
 - **Merge:** Merge commit, not squash. Verify CI passes on main after merge.
-- **Cleanup:** Delete the branch. Move `.ana/plans/active/{slug}` to `.ana/plans/complete/{slug}`.
+- **Cleanup:** After developer merges the PR, developer runs `ana work complete {slug}` to archive and clean up.
 - **If verify fails:** Report issues in verify_report.md. Don't touch the branch. Developer opens AnaBuild to fix.
 
 ## Multi-Phase Workflow

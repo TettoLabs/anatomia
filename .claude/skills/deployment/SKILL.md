@@ -11,7 +11,7 @@ AnaVerify handles merge mechanics (see git-workflow skill for details):
 2. Merge as merge commit (not squash)
 3. Verify CI passes on main after merge
 4. Delete the feature branch
-5. Move `.ana/plans/active/{slug}` to `.ana/plans/complete/{slug}`
+5. Run `ana work complete {slug}` to archive and clean up
 
 ## Website Deployment
 The `website/` directory auto-deploys via Vercel on push to main. No configuration file in the repo — Vercel is connected directly to the GitHub repo. Check the Vercel dashboard for deployment status if website files were touched. No agent action needed.

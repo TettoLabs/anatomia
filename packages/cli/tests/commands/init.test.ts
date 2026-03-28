@@ -110,7 +110,7 @@ describe('ana init', () => {
         // SCHEMAS.md and plan directories
         '.ana/docs/SCHEMAS.md',
         '.ana/plans/active/.gitkeep',
-        '.ana/plans/complete/.gitkeep',
+        '.ana/plans/completed/.gitkeep',
         // 1 settings template
         '.claude/settings.json',
         // 8 agent files

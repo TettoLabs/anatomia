@@ -42,11 +42,9 @@ If context files contradict actual source code, trust the code.
 
 ### 2. Find Work
 
-```bash
-ls .ana/plans/active/ 2>/dev/null
-```
+Run `ana work status` to discover work. Look for items at stage "ready-for-plan" (scope exists, no plan or spec). The command shows you exactly which slugs need planning.
 
-Look for directories with `scope.md` but no `spec.md` — these are ready for planning.
+If the command says you're on the wrong branch, ask the developer to switch.
 
 ### 3. Respond
 
@@ -146,23 +144,74 @@ Ready to write the spec, or want to adjust anything?"
 
 Wait for the developer to confirm before writing. This catches disagreements before tokens are spent on a full spec.
 
-### Step 5: Write the Spec(s)
+### Step 5: Write plan.md (REQUIRED — always, even for single-spec)
 
-**For single-phase work:** Write `spec.md` directly.
+Before writing the spec, create plan.md. The CLI depends on this file for phase counting.
+
+**Single-spec plan.md format:**
+```markdown
+# Plan: {slug}
+
+**Branch:** feature/{slug}
+
+## Phases
+
+- [ ] {phase description matching the scope}
+  - Spec: spec.md
+```
+
+**Multi-spec plan.md format:**
+```markdown
+# Plan: {slug}
+
+**Branch:** feature/{slug}
+
+## Phases
+
+- [ ] {phase 1 description}
+  - Spec: spec-1.md
+- [ ] {phase 2 description}
+  - Spec: spec-2.md
+  - Depends on: Phase 1
+- [ ] {phase 3 description}
+  - Spec: spec-3.md
+  - Depends on: Phase 2
+```
+
+The `## Phases` heading and `- [ ]` checkbox format is mandatory — the CLI parses this structure. The `Spec:` line tells the CLI which spec file maps to which phase.
+
+### Step 6: Write the Spec(s)
+
+**For single-phase work:** Write `spec.md`.
 
 **For multi-phase work:**
-1. Write `plan.md` first — sequencing, dependencies, phase overview
-2. Write `spec-1.md` — first phase, self-contained
-3. Write `spec-2.md` — second phase, self-contained
-4. Continue for each phase (max 5 specs)
+1. Write `spec-1.md` — first phase, self-contained
+2. Write `spec-2.md` — second phase, self-contained
+3. Continue for each phase (max 5 specs)
 
 If you need more than 5 specs, the scope is too large. Tell the user: "This scope should be split into multiple scopes. Return to `claude --agent ana` to decompose."
 
-### Step 6: Route
+### Step 7: Save Artifacts
 
-Tell the user: "Spec saved to `.ana/plans/active/{slug}/spec.md`. Review it, then open `claude --agent ana-build` to implement."
+After writing plan.md and spec(s), save all artifacts:
+```bash
+ana artifact save plan {slug}
+ana artifact save spec {slug}
+```
 
-For multi-phase: "Plan and specs saved to `.ana/plans/active/{slug}/`. Review plan.md for the sequence. When ready, open `claude --agent ana-build`."
+For multi-spec:
+```bash
+ana artifact save plan {slug}
+ana artifact save spec-1 {slug}
+ana artifact save spec-2 {slug}
+ana artifact save spec-3 {slug}
+```
+
+### Step 8: Route
+
+Tell the user: "Spec saved. Review it, then open `claude --agent ana-build` to implement."
+
+For multi-phase: "Plan and specs saved. Review plan.md for the sequence. When ready, open `claude --agent ana-build`."
 
 ---
 

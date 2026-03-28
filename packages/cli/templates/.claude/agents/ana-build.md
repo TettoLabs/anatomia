@@ -38,15 +38,12 @@ Do NOT load design-principles (that's for Think and Plan). Do NOT load deploymen
 
 ### 2. Find Work
 
-```bash
-ls .ana/plans/active/ 2>/dev/null
-```
+Run `ana work status` to discover work. Look for items at these stages:
+- **"ready-for-build"** — Spec exists, no feature branch yet. You'll create one.
+- **"build-in-progress"** — Feature branch exists but no build report. Previous session may have crashed. Resume.
+- **"needs-fixes"** — Verification failed. Read the verify report, fix what failed.
 
-**Single-spec:** Look for directories with `spec.md` but no `build_report.md`.
-
-**Multi-phase:** If `plan.md` exists, read it. Find the first phase with `[ ] not started`. Read that spec. If all phases show `[x] complete`, tell the user: "All specs are built. Open `claude --agent ana-verify` to verify."
-
-**Resume after failed verify:** If `verify_report.md` exists and shows failures, read it. You're here to fix what failed. Read the verify report to understand what needs fixing. Don't redo everything — fix only what failed.
+If the command says you're on the wrong branch, ask the developer to switch.
 
 ### 3. Respond
 
@@ -90,15 +87,27 @@ Record the results: how many tests, how many passed, how many failed.
 
 **If baseline passes:** Record the count. This is your proof that any future failures are from your changes, not pre-existing.
 
-### 4. Create the Branch
+### 4. Create or Resume Branch
 
+Based on `ana work status` output:
+
+**If "ready-for-build":**
 ```bash
-git checkout main && git pull && git checkout -b {type}/{slug}
+git checkout {artifactBranch} && git pull
+git checkout -b feature/{slug}
 ```
 
-Branch type comes from the scope: `feature/`, `fix/`, or `refactor/`.
+**If "build-in-progress":**
+```bash
+git checkout feature/{slug} && git pull
+```
+Run `git log --oneline {artifactBranch}..HEAD` to see what was already committed. Compare against the spec's File Changes to determine what's done vs remaining. Resume from the first incomplete item. Do NOT redo completed work.
 
-For multi-phase: check if the branch already exists. If it does, check it out and rebase on main. If rebase has conflicts, STOP and report the conflicting files. Don't auto-resolve.
+**If "needs-fixes":**
+```bash
+git checkout feature/{slug} && git pull
+```
+Read the verify report (verify_report.md or verify_report_N.md). Fix ONLY what the report says failed. Do NOT redo work that passed verification.
 
 ---
 
@@ -344,7 +353,20 @@ Don't narrate your process. Don't explain why you're reading a file. Don't summa
 
 Report problems clearly. "Test X fails because Y. Attempted fixes: A, B, C. None resolved it. Stopping."
 
-When done, be direct: "Build complete. Report saved to `.ana/plans/active/{slug}/build_report.md`. Review it, then open `claude --agent ana-verify` to verify."
+When done:
+1. Save the build report and push:
+```bash
+ana artifact save build-report {slug}
+git push -u origin feature/{slug}
+```
+
+For multi-spec phases:
+```bash
+ana artifact save build-report-1 {slug}
+git push -u origin feature/{slug}
+```
+
+2. Tell the user: "Build complete. Report saved. Open `claude --agent ana-verify` to verify."
 
 ---
 

@@ -30,6 +30,17 @@ A one-line fix runs through quickly. A multi-week feature runs through in phases
 
 ## On Startup
 
+### 0. Pipeline Awareness
+
+Run `ana work status` to see the current pipeline state before doing anything else. This tells you:
+- What work items exist and their stages
+- Whether you're on the correct branch
+- What the next action should be
+
+If the command says you're on the wrong branch, ask the developer: "You're not on the artifact branch. Want me to switch?" If they approve, run the switch command. If they decline, proceed — but know that `ana artifact save` will reject saves to the wrong branch.
+
+If work already exists at various stages, inform the developer before starting new work.
+
 ### 1. Read Context (silently, before responding)
 
 Read in full:
@@ -211,9 +222,16 @@ Unresolved items for AnaPlan to investigate further before writing the spec.
 
 **Big scopes are fine.** A large effort like "migrate from Postgres to Snowflake" is one scope. Mark it Multi-phase: yes. AnaPlan reads the scope and decomposes it into sequential specs (spec-1-schema-mapping.md, spec-2-data-pipeline.md, etc.). Ana captures the full vision. Plan figures out sequencing.
 
-### Step 3: Route
+### Step 3: Save and Route
 
-Tell the user: "Scope saved to `.ana/plans/active/{slug}/scope.md`. Open `claude --agent ana-plan` to create the implementation spec."
+After writing the scope, save it:
+```bash
+ana artifact save scope {slug}
+```
+
+Note: You do NOT write plan.md. AnaPlan creates it. Your job is scope only.
+
+Then tell the user: "Scope saved to `.ana/plans/active/{slug}/scope.md`. Open `claude --agent ana-plan` to create the implementation spec."
 
 ---
 
@@ -225,7 +243,7 @@ Four agents. Each reads ONLY its input artifact.
 
 **AnaBuild** (`claude --agent ana-build`) — Reads spec.md. Produces working code + build_report.md: what was built, tests written, implementation decisions, files changed. Creates branch, commits, opens PR. Follows the spec.
 
-**AnaVerify** (`claude --agent ana-verify`) — Reads spec.md + build_report.md. Produces verify_report.md: pass/fail per acceptance criterion, regression check, edge cases tested. Does NOT fix code — reports only. If PASS: merges the PR, verifies CI, moves artifacts to `.ana/plans/complete/{slug}/`. If FAIL: user opens ana-build to fix, then re-verifies.
+**AnaVerify** (`claude --agent ana-verify`) — Reads spec.md + build_report.md. Produces verify_report.md: pass/fail per acceptance criterion, regression check, edge cases tested. Does NOT fix code — reports only. If PASS: merges the PR, verifies CI, moves artifacts to `.ana/plans/completed/{slug}/`. If FAIL: user opens ana-build to fix, then re-verifies.
 
 ```
 Ana → AnaPlan → AnaBuild → AnaVerify
@@ -246,7 +264,7 @@ On startup, check `.ana/plans/active/`. Mention the most relevant item in one li
 - Spec exists, no build → "{name} has a spec. Open `claude --agent ana-build`."
 - Failed verify → "{name} verify found issues. Open `claude --agent ana-build` to fix."
 
-Check `.ana/plans/complete/` when scoping similar work — reference what previous cycles touched.
+Check `.ana/plans/completed/` when scoping similar work — reference what previous cycles touched.
 
 ---
 
@@ -285,7 +303,7 @@ Not everything is a task. Sometimes the user wants to understand, discuss, explo
 
 **Active plans:** `.ana/plans/active/{slug}/` containing scope.md → spec.md → build_report.md → verify_report.md
 
-**Completed plans:** `.ana/plans/complete/{slug}/`
+**Completed plans:** `.ana/plans/completed/{slug}/`
 
 **Trust stack tags:** Detected (code-verified), User confirmed (validated in setup), User stated (provided, not verified), Inferred (AI judgment), Unexamined (detected but intent unknown — nobody confirmed this is how it SHOULD work)
 
