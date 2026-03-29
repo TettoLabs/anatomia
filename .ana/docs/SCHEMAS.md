@@ -97,6 +97,29 @@ Written by AnaPlan. Tracks phases and maps them to spec files. Always written, e
 
 ---
 
+## test_skeleton.ts — AnaPlan → AnaBuild
+
+Written by AnaPlan (Step 7). Read by AnaBuild (Pre-Flight item 6). Checked by AnaVerify (Step 3e).
+
+**Purpose:** TDD contract — assertions define expected behavior. Builder implements setup and makes tests pass. Builder may NOT modify planner-written assertions.
+
+**Stored at:** `.ana/plans/active/{slug}/test_skeleton.ts` (or language-appropriate extension: `.py`, `.rs`, etc.)
+
+**Saved with:** `ana artifact save test-skeleton {slug}`
+
+**Format:** Not compilable. Contains:
+- `describe`/`it` blocks (or language equivalent) matching acceptance criteria
+- `expect()` assertions defining expected behavior
+- Comment placeholders for setup code
+- Comment placeholders for imports
+
+**Contract rules:**
+- Builder CAN: implement setup/teardown, add new tests, add assertions within existing blocks
+- Builder CANNOT: modify/remove planner-written `expect()` assertions or `it()` blocks
+- Violations must be documented as Deviations in build report
+
+---
+
 ## spec.md — AnaPlan → AnaBuild
 
 Written by AnaPlan after reading the scope. Describes HOW in full implementation detail.
@@ -143,12 +166,12 @@ Performance, security, compatibility, or backward-compatibility requirements.
 ```
 
 **Rules:**
-- This IS the implementation blueprint. TypeScript interfaces, schemas, function signatures belong here.
+- This IS the implementation blueprint, but at a STRATEGIC level. Name the patterns to follow. Reference existing files as examples. Don't write code.
 - Every file that will be created or modified must be listed with what changes and why.
 - Acceptance criteria are the contract between Plan and Build. AnaBuild checks them off. AnaVerify verifies them.
 - AnaBuild follows this spec. It doesn't redesign or second-guess.
 
-**Detail level:** Specs describe HOW at a strategic level. Name the patterns to follow, the files to mirror, the constraints to respect. Don't write code snippets or line-by-line changes — AnaBuild reads the actual codebase and is capable of finding imports, creating files, and following established patterns. Spend spec tokens on WHAT COULD GO WRONG and WHAT DESIGN DECISIONS WERE MADE, not on things AnaBuild can discover in 2 seconds with grep.
+**Detail level:** Specs describe WHAT to build and which patterns to follow. Name the pattern. Reference existing files to mirror. Warn about gotchas. Don't write code snippets, function signatures, interfaces, or line-by-line changes — AnaBuild reads the actual codebase and is capable of finding imports, creating files, and following established patterns. Spend spec tokens on WHAT COULD GO WRONG and WHAT DESIGN DECISIONS WERE MADE, not on things AnaBuild can discover in 2 seconds with grep.
 
 ---
 

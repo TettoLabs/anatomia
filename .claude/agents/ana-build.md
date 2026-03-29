@@ -81,7 +81,7 @@ If the spec references a file that doesn't exist, STOP. Report it: "Spec referen
 
 Before writing any code, establish the baseline:
 
-Run the build and test commands from your loaded testing-standards and coding-standards skills. Look for a Commands section with exact runnable commands. If no commands are documented in skills, discover them from the project's build configuration (package.json scripts, Makefile targets, pyproject.toml, Cargo.toml).
+Run the build and test commands from the Build Brief section of the spec (Checkpoint Commands). If no Build Brief exists, discover commands from the project's build configuration (package.json scripts, Makefile targets, pyproject.toml, Cargo.toml).
 
 Record the results: how many tests, how many passed, how many failed.
 
@@ -157,7 +157,7 @@ Read the existing test files the spec references. Match their patterns:
 - Same assertion style
 - Same fixture or temp directory patterns
 
-Write tests for every acceptance criterion that's testable. Cover the edge cases the spec identified. Follow the testing-standards skill for framework-specific conventions.
+Write tests for every acceptance criterion that's testable. Cover the edge cases the spec identified. Follow the test patterns from the Build Brief section of the spec. If you need more detail, invoke `/testing-standards` manually.
 
 ### Committing
 
@@ -333,7 +333,7 @@ Commands AnaVerify should run to independently verify:
 
 ## Git History
 ```
-{actual output from: git log --oneline main..HEAD}
+{actual output from: git log --oneline {artifactBranch}..HEAD}
 ```
 
 ## Open Issues
@@ -439,7 +439,7 @@ git push -u origin feature/{slug}
 ## Reference
 
 **Spec location:** `.ana/plans/active/{slug}/spec.md` (or `spec-N.md` for multi-phase)
-**Plan location:** `.ana/plans/active/{slug}/plan.md` (multi-phase only)
+**Plan location:** `.ana/plans/active/{slug}/plan.md` (always — required for all work items)
 **Build report output:** `.ana/plans/active/{slug}/build_report.md` (or `build_report_N.md` for multi-phase)
 **Verify report (if resuming):** `.ana/plans/active/{slug}/verify_report.md`
 

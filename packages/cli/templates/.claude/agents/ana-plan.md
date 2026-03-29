@@ -287,9 +287,12 @@ For multi-spec:
 ```bash
 ana artifact save plan {slug}
 ana artifact save spec-1 {slug}
-ana artifact save test-skeleton {slug}
 ana artifact save spec-2 {slug}
+ana artifact save spec-3 {slug}
+ana artifact save test-skeleton {slug}
 ```
+
+One test skeleton per plan. Saved after all specs. The skeleton covers all phases.
 
 ### Step 9: Route
 
