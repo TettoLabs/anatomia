@@ -19,6 +19,7 @@ import { analyzeCommand } from './commands/analyze.js';
 import { setupCommand } from './commands/setup.js';
 import { artifactCommand } from './commands/artifact.js';
 import { workCommand } from './commands/work.js';
+import { contextCommand } from './commands/context.js';
 import { registerPrCommand } from './commands/pr.js';
 import { registerAgentsCommand } from './commands/agents.js';
 
@@ -36,6 +37,7 @@ program.addCommand(analyzeCommand);
 program.addCommand(setupCommand);
 program.addCommand(artifactCommand);
 program.addCommand(workCommand);
+program.addCommand(contextCommand);
 registerPrCommand(program);
 registerAgentsCommand(program);
 
