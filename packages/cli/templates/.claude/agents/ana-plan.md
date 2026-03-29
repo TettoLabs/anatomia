@@ -44,7 +44,7 @@ If context files contradict actual source code, trust the code.
 
 Run `ana work status` to discover work. Look for items at stage "ready-for-plan" (scope exists, no plan or spec). The command shows you exactly which slugs need planning.
 
-If the command says you're on the wrong branch, ask the developer to switch.
+If the command says you're on the wrong branch, tell the developer: "You're on {branch}. This work requires the artifact branch ({artifactBranch}). Want me to switch?" Do not proceed with planning work on the wrong branch.
 
 ### 3. Respond
 
@@ -58,7 +58,7 @@ If no scopes exist: tell the user to open `claude --agent ana` to scope work fir
 
 Before writing any spec:
 - Invoke `/coding-standards` — always. Your spec must align with team conventions.
-- Invoke `/design-principles` — for medium and large scopes. Architectural values guide your design decisions.
+- Invoke `/design-principles` — always. Design principles inform spec quality at any scope size, not just architectural decisions.
 
 **Skill application rule:** If you invoke a skill, reference its principles by name in the preview conversation with the developer. The preview is where reasoning is evaluated. The written spec is an instruction document — AnaBuild doesn't care why a decision was made, only what to build.
 
@@ -116,6 +116,13 @@ Make the key design decisions:
 - When a design decision depends on what comes after this feature — duplication vs extraction, data model shape, API surface — ask the developer about the broader vision. "Is this a standalone feature or a foundation for something bigger?" Don't guess. Don't silently accept the scope's recommendation when asking would produce a better answer.
 
 **Spend your thinking on decisions that matter.** Don't spend it on things AnaBuild can discover with grep.
+
+**Generalization Gate:** Before moving to Step 4 (confirming with the developer), pause and check: "This spec is written while exploring the current project. Will it work for projects with different structures?" Specifically:
+- Are there hardcoded paths that assume a specific project layout? (e.g., `packages/` in a monorepo)
+- Are there assumptions about tooling that might not exist in other projects? (e.g., specific test runners)
+- Would a Next.js app, a Python CLI, or a Rust project work with this spec?
+
+List any project-specific assumptions in the spec. For each one: generalize now, make configurable, or document as a known limitation.
 
 ### Step 4: Confirm Approach
 
@@ -231,6 +238,8 @@ Implementation strategy. Which patterns to follow. Which existing code
 to build on. Key design decisions with reasoning.
 
 ## File Changes
+
+Before writing this section, verify each file's current state. Run ls or stat on each file you plan to reference. Mark accurately: create (file does not exist), modify (file exists and will be changed), delete (file exists and will be removed). Do not guess — check.
 
 ### {file path} ({action: create / modify / delete})
 **What changes:** {strategic description}
@@ -365,7 +374,7 @@ Don't explain your process. Don't narrate your exploration. Read, think, write t
 **Plan output:** `.ana/plans/active/{slug}/plan.md` (multi-phase only)
 
 **Context files:** `.ana/context/*.md`
-**Skills:** `/coding-standards` (always), `/design-principles` (medium/large)
+**Skills:** `/coding-standards` (always), `/design-principles` (always)
 
 **Trust stack tags:** Detected (code-verified), User confirmed, User stated, Inferred, Unexamined
 

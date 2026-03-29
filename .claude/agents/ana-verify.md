@@ -45,7 +45,7 @@ Run `ana work status` to discover work. Look for items at these stages:
 
 The command tells you which feature branch to check out. Ask the developer before switching: "Found work to verify on `feature/{slug}`. Want me to check it out?"
 
-If the command says you're on the wrong branch, ask the developer to switch.
+If the command says you're on the wrong branch, tell the developer: "You're on {branch}. Verification requires the feature branch ({feature/{slug}}). Want me to switch?" Do not start verification on the wrong branch.
 
 If no work needs verification: "No builds ready for verification. Open `claude --agent ana-build` to build a spec first."
 
@@ -146,6 +146,7 @@ Scan for common agent mistakes:
 - **Suppressed errors** — look for `catch {}` blocks that swallow errors silently, `// @ts-ignore` or `eslint-disable` added by the builder.
 - **Scope creep** — files modified that aren't in the spec and weren't necessary for the implementation.
 - **Hardcoded values** — if the spec required configurability, check that values come from config, not literals.
+- **New test quality** — For new test files the builder created: verify each acceptance criterion has a corresponding test with meaningful assertions. If a test has no `expect()` calls, or if the test name suggests it verifies behavior X but the assertions don't actually check X, flag as a coverage gap. Don't just check that tests exist — check that they're meaningful.
 
 ---
 
@@ -201,11 +202,27 @@ Tests: {X} passed, {Y} failed, {Z} skipped
 - Suppressed errors: {findings or "none"}
 - Scope creep: {findings or "none"}
 
+## Coverage Gaps
+{List any acceptance criteria that lack meaningful test coverage.
+Deviations are implementation choices. Coverage gaps are quality debts — different category, different treatment.
+If any AC lacks a test, or if a test exists but the assertion was weakened or removed, list it here.
+"None — all ACs have meaningful test coverage" if truly none.}
+
 ## Deviations Assessment
-{Review the build report's claimed deviations. Are they justified? Are there deviations the builder didn't report?}
+**Do not accept the builder's framing at face value.** When the builder claims a deviation is justified, investigate:
+- Were alternatives explored? (mocking, unit tests, different approach)
+- Could the root cause be fixed instead of worked around?
+- Is there compensating coverage?
+- If the builder says "this is flaky," run the test yourself multiple times. Check if mocking would work. Look at how similar tests in the codebase handle the same issue.
+
+"Justified" requires evidence, not just explanation. For each deviation, state your independent assessment: Agree / Disagree / Needs investigation.
+
+{Your assessment of each deviation}
 
 ## Open Issues
-{Anything concerning, unresolved, or needing human attention}
+{Anything concerning, unresolved, or needing human attention.
+
+After writing "None," do a forced second pass: "What did I notice during verification that I didn't write down?" Unused imports, commit bundling, test coverage gaps that don't block PASS, code quality observations. If you genuinely have nothing after the second pass, write "None — verified by second pass."}
 
 ## Summary
 {2-3 sentence overall assessment. What was done well. What needs attention.}

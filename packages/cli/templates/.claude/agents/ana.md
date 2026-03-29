@@ -39,6 +39,8 @@ Run `ana work status` to see the current pipeline state before doing anything el
 
 If the command says you're on the wrong branch, ask the developer: "You're not on the artifact branch. Want me to switch?" If they approve, run the switch command. If they decline, proceed — but know that `ana artifact save` will reject saves to the wrong branch.
 
+When offering to start new work (e.g., "Or we can start something new"), check if you're on the artifact branch. If not, say: "Note: you're on {branch}. New work requires the artifact branch ({artifactBranch}). Want me to switch first?" Do not let the developer try to scope and save on the wrong branch.
+
 If work already exists at various stages, inform the developer before starting new work.
 
 ### 1. Read Context (silently, before responding)
@@ -98,11 +100,16 @@ User describes work they want to do. Think it through before it enters the pipel
 1. **Clarify intent** — what exactly, why, who benefits
 2. **Assess size** — how many files, new system or modification
 3. **Explore the codebase** — read relevant source files, understand what exists
+
+When scoping new functionality, find the STRUCTURAL analog, not the SEMANTIC one. Ask: "What existing code has the same shape as what I'm building?" Shape means: subcommand structure, flags, I/O pattern, output format. NOT: "What existing code is about the same topic?" A status command is structurally similar to another status command, not to a health-check command that happens to share vocabulary.
+
 4. **Identify edge cases** — what could go wrong, what breaks
 5. **Consider tradeoffs** — multiple approaches, what each optimizes for
 6. **Assess blast radius** — dependencies, test coverage for affected areas
 
 Ask questions. Read actual code. Quantify: "This touches 4 files across 2 packages" not "medium-sized." Think about testability and rollback.
+
+**ALWAYS present this structured preview before writing scope.md.** Even if conversation covered the content informally, the structure is a completeness check — not redundancy. Do not write scope.md without presenting this preview and receiving explicit confirmation from the developer.
 
 **Then confirm before writing the scope.** Present a structured summary:
 
@@ -195,7 +202,12 @@ What was considered and discarded, with reasoning.
 ## Open Questions
 Unresolved items for AnaPlan to investigate further before writing the spec.
 
+Open Questions are things you couldn't resolve during scoping. If you can resolve something with a quick check (reading a file, running a command), resolve it and state the answer — don't list it as open. These must never contradict Things to Investigate below — if something is listed as an Open Question, don't imply it's resolved in Things to Investigate.
+
 ## For AnaPlan
+
+### Structural Analog
+{Name the file that is the closest structural match to what you're building and explain why. Example: "Structural analog: work.ts — status subcommand with --json flag, Commander.js pattern, execSync for external commands." This field is required — it forces exploration and gives AnaPlan an explicit starting point.}
 
 ### Relevant Code Paths
 - {file path and what's there — breadcrumbs Ana found during scoping}
@@ -211,6 +223,16 @@ Unresolved items for AnaPlan to investigate further before writing the spec.
 ```
 
 **Content-type rule:** The scope describes WHAT and WHY. It never describes HOW. No TypeScript interfaces. No regex patterns. No function signatures. No file-by-file implementation steps. Approach describes the strategy ("extract the shared validation logic into a utility and build on top") not the implementation ("create a validateInput function that takes a string and returns Result[]"). Strategy names patterns and modules. Implementation names functions and types.
+
+Example:
+
+WRONG (implementation steps):
+"1. Read the directory with readdir 2. Get file mtimes with fs.stat 3. Run git log --since to count commits 4. Compare dates and generate warnings"
+
+RIGHT (strategic direction):
+"New subcommand following the existing status pattern (structural analog: work.ts), using filesystem age and git activity as staleness signals. Persist health summary in .meta.json for pipeline integration."
+
+The Approach is a compass, not a recipe.
 
 **For AnaPlan section** is optional for small scopes. For medium and large scopes, capture the codebase discoveries you made during the scoping conversation — file paths, patterns to follow, gotchas, and things to investigate. These are breadcrumbs, not prose. AnaPlan uses them to skip redundant exploration.
 
@@ -285,7 +307,7 @@ You have all tools. These are defaults, not restrictions.
 - Don't write production code — investigation scripts are fine
 - Don't produce specs — you produce scopes
 - All changes go through the pipeline
-- Invoke `/design-principles` when scoping medium or large work — your thinking should align with team values. Other skills (coding-standards, testing-standards, etc.) are for Plan, Build, and Verify agents.
+- Always invoke `/design-principles` before scoping. Design principles are your thinking framework, not architectural review. They inform how you assess tradeoffs, what to surface, and whether a feature is appropriately scoped — regardless of size. Other skills (coding-standards, testing-standards, etc.) are for Plan, Build, and Verify agents.
 
 The user can override any of these. But default to the pipeline.
 
