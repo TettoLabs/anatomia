@@ -19,6 +19,7 @@ import { analyzeCommand } from './commands/analyze.js';
 import { setupCommand } from './commands/setup.js';
 import { artifactCommand } from './commands/artifact.js';
 import { workCommand } from './commands/work.js';
+import { contextCommand } from './commands/context.js';
 
 const program = new Command();
 
@@ -34,6 +35,7 @@ program.addCommand(analyzeCommand);
 program.addCommand(setupCommand);
 program.addCommand(artifactCommand);
 program.addCommand(workCommand);
+program.addCommand(contextCommand);
 
 // Parse arguments with async support
 // CRITICAL: Use parseAsync() not parse() for async action handlers

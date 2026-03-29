@@ -16,6 +16,7 @@ import chalk from 'chalk';
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
 import type { SymbolEntry, SymbolIndex } from './index.js';
+import { SETUP_CONTEXT_FILES } from '../constants.js';
 
 /** Per-file configuration for validation */
 interface FileConfig {
@@ -36,15 +37,7 @@ const FILE_CONFIGS: Record<string, FileConfig> = {
 };
 
 /** All context files to check */
-const ALL_CONTEXT_FILES = [
-  'project-overview.md',
-  'conventions.md',
-  'patterns.md',
-  'architecture.md',
-  'testing.md',
-  'workflow.md',
-  'debugging.md',
-];
+const ALL_CONTEXT_FILES = SETUP_CONTEXT_FILES;
 
 /** Placeholder patterns to detect (case-insensitive) */
 const PLACEHOLDER_PATTERNS = [
