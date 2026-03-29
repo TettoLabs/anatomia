@@ -274,26 +274,13 @@ Run `ana work status` again. The CLI tells you what's next based on the current 
 
 **If PASS and all phases verified (or single-spec):**
 
-Create a PR from the feature branch to the artifact branch:
+Create a PR using the toolbelt command:
 
 ```bash
-gh pr create --base {artifactBranch} --head feature/{slug} \
-  --title "[{slug}] {brief description from scope}" \
-  --body "{PR description}"
+ana pr create {slug}
 ```
 
-PR description should include:
-- Summary of what was built (from build report)
-- Number of phases completed
-- Total tests added
-- Verification result (PASS for all phases)
-- Link to spec: `.ana/plans/active/{slug}/spec.md`
-
-If `gh` CLI is not available, push the branch and provide the URL:
-```bash
-git push origin feature/{slug}
-```
-Then tell the developer: "Push complete. Create a PR from `feature/{slug}` → `{artifactBranch}` at: `https://github.com/{org}/{repo}/compare/{artifactBranch}...feature/{slug}`"
+The command extracts the PR body from pipeline artifacts (build report's PR Summary, verify result, test counts) and creates the PR deterministically.
 
 After PR creation:
 "All verified. PR created for review. After merging, run: `ana work complete {slug}`"
