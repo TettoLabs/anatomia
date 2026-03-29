@@ -103,7 +103,13 @@ describe('ana artifact save', () => {
 
     it('parses plan type correctly', async () => {
       await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
-      await createArtifact('test-slug', 'plan.md');
+      const validPlan = `# Plan: test
+
+## Phases
+
+- [ ] Phase 1
+  - Spec: spec.md`;
+      await createArtifact('test-slug', 'plan.md', validPlan);
 
       saveArtifact('plan', 'test-slug');
 
@@ -153,7 +159,12 @@ describe('ana artifact save', () => {
 
     it('parses verify-report type correctly', async () => {
       await createTestProject({ artifactBranch: 'main', currentBranch: 'feature/test-slug' });
-      await createArtifact('test-slug', 'verify_report.md');
+      const validReport = `# Verify Report
+
+**Result:** PASS
+
+Content...`;
+      await createArtifact('test-slug', 'verify_report.md', validReport);
 
       saveArtifact('verify-report', 'test-slug');
 
@@ -163,7 +174,12 @@ describe('ana artifact save', () => {
 
     it('parses verify-report-N type correctly', async () => {
       await createTestProject({ artifactBranch: 'main', currentBranch: 'feature/test-slug' });
-      await createArtifact('test-slug', 'verify_report_3.md');
+      const validReport = `# Verify Report
+
+**Result:** PASS
+
+Content...`;
+      await createArtifact('test-slug', 'verify_report_3.md', validReport);
 
       saveArtifact('verify-report-3', 'test-slug');
 
@@ -209,7 +225,10 @@ describe('ana artifact save', () => {
 
     it('allows verify-report save on feature branch', async () => {
       await createTestProject({ artifactBranch: 'main', currentBranch: 'feature/test-slug' });
-      await createArtifact('test-slug', 'verify_report.md');
+      const validReport = `# Verify Report
+
+**Result:** PASS`;
+      await createArtifact('test-slug', 'verify_report.md', validReport);
 
       expect(() => saveArtifact('verify-report', 'test-slug')).not.toThrow();
     });
@@ -261,8 +280,17 @@ describe('ana artifact save', () => {
   describe('special cases', () => {
     it('verify-report save also stages plan.md if it exists', async () => {
       await createTestProject({ artifactBranch: 'main', currentBranch: 'feature/test-slug' });
-      await createArtifact('test-slug', 'verify_report.md');
-      await createArtifact('test-slug', 'plan.md', '# Plan\n- [x] Phase 1');
+      const validReport = `# Verify Report
+
+**Result:** PASS`;
+      await createArtifact('test-slug', 'verify_report.md', validReport);
+      const validPlan = `# Plan
+
+## Phases
+
+- [x] Phase 1
+  - Spec: spec.md`;
+      await createArtifact('test-slug', 'plan.md', validPlan);
 
       saveArtifact('verify-report', 'test-slug');
 
@@ -273,7 +301,10 @@ describe('ana artifact save', () => {
 
     it('verify-report save succeeds even if plan.md does not exist', async () => {
       await createTestProject({ artifactBranch: 'main', currentBranch: 'feature/test-slug' });
-      await createArtifact('test-slug', 'verify_report.md');
+      const validReport = `# Verify Report
+
+**Result:** PASS`;
+      await createArtifact('test-slug', 'verify_report.md', validReport);
 
       expect(() => saveArtifact('verify-report', 'test-slug')).not.toThrow();
       expect(isFileCommitted('.ana/plans/active/test-slug/verify_report.md')).toBe(true);
@@ -317,6 +348,160 @@ describe('ana artifact save', () => {
       );
 
       expect(() => saveArtifact('scope', 'test-slug')).toThrow();
+    });
+  });
+
+  describe('empty commit handling', () => {
+    it('exits successfully when no changes to save', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      await createArtifact('test-slug', 'scope.md', '# Test Content');
+
+      // First save
+      saveArtifact('scope', 'test-slug');
+      expect(isFileCommitted('.ana/plans/active/test-slug/scope.md')).toBe(true);
+
+      // Second save without changes should exit gracefully
+      expect(() => saveArtifact('scope', 'test-slug')).toThrow();
+    });
+  });
+
+  describe('create vs update messages', () => {
+    it('uses plain message for first save', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      await createArtifact('test-slug', 'scope.md');
+
+      saveArtifact('scope', 'test-slug');
+
+      const message = getLastCommitMessage();
+      expect(message).toContain('[test-slug] Scope');
+      expect(message).not.toContain('Update:');
+    });
+
+    it('uses Update: prefix for re-save', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      await createArtifact('test-slug', 'scope.md', '# Original');
+
+      // First save
+      saveArtifact('scope', 'test-slug');
+
+      // Modify and re-save
+      await fs.writeFile(
+        path.join(tempDir, '.ana/plans/active/test-slug/scope.md'),
+        '# Modified',
+        'utf-8'
+      );
+      saveArtifact('scope', 'test-slug');
+
+      const message = getLastCommitMessage();
+      expect(message).toContain('[test-slug] Update: Scope');
+    });
+  });
+
+  describe('plan format validation', () => {
+    it('accepts valid plan.md', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      const validPlan = `# Plan: test
+
+## Phases
+
+- [ ] Phase 1
+  - Spec: spec.md`;
+      await createArtifact('test-slug', 'plan.md', validPlan);
+
+      expect(() => saveArtifact('plan', 'test-slug')).not.toThrow();
+    });
+
+    it('rejects plan.md without ## Phases heading', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      const invalidPlan = `# Plan: test
+
+- [ ] Phase 1
+  - Spec: spec.md`;
+      await createArtifact('test-slug', 'plan.md', invalidPlan);
+
+      expect(() => saveArtifact('plan', 'test-slug')).toThrow();
+    });
+
+    it('rejects plan.md without checkboxes', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      const invalidPlan = `# Plan: test
+
+## Phases
+
+Just a plain description`;
+      await createArtifact('test-slug', 'plan.md', invalidPlan);
+
+      expect(() => saveArtifact('plan', 'test-slug')).toThrow();
+    });
+
+    it('rejects plan.md with checkbox but no Spec reference', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      const invalidPlan = `# Plan: test
+
+## Phases
+
+- [ ] Phase 1
+  - Description: something`;
+      await createArtifact('test-slug', 'plan.md', invalidPlan);
+
+      expect(() => saveArtifact('plan', 'test-slug')).toThrow();
+    });
+  });
+
+  describe('verify report validation', () => {
+    it('accepts valid verify report with Result in first 10 lines', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'feature/test-slug' });
+      const validReport = `# Verify Report
+
+**Result:** PASS
+
+Other content...`;
+      await createArtifact('test-slug', 'verify_report.md', validReport);
+
+      expect(() => saveArtifact('verify-report', 'test-slug')).not.toThrow();
+    });
+
+    it('rejects verify report without Result line', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'feature/test-slug' });
+      const invalidReport = `# Verify Report
+
+Some content without result`;
+      await createArtifact('test-slug', 'verify_report.md', invalidReport);
+
+      expect(() => saveArtifact('verify-report', 'test-slug')).toThrow();
+    });
+
+    it('rejects verify report with Result after line 10', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'feature/test-slug' });
+      const invalidReport = `# Verify Report
+
+Line 2
+Line 3
+Line 4
+Line 5
+Line 6
+Line 7
+Line 8
+Line 9
+Line 10
+Line 11
+**Result:** PASS`;
+      await createArtifact('test-slug', 'verify_report.md', invalidReport);
+
+      expect(() => saveArtifact('verify-report', 'test-slug')).toThrow();
+    });
+  });
+
+  describe('test-skeleton type', () => {
+    it('parses test-skeleton type correctly', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      await createArtifact('test-slug', 'test_skeleton.ts', '// Test skeleton');
+
+      saveArtifact('test-skeleton', 'test-slug');
+
+      const message = getLastCommitMessage();
+      expect(message).toContain('[test-slug] Test skeleton');
+      expect(isFileCommitted('.ana/plans/active/test-slug/test_skeleton.ts')).toBe(true);
     });
   });
 });

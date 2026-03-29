@@ -14,7 +14,7 @@
 
 import { Command } from 'commander';
 import chalk from 'chalk';
-import { execSync } from 'node:child_process';
+import { execSync, spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
@@ -25,17 +25,18 @@ interface ArtifactTypeInfo {
   category: 'planning' | 'build-verify';
   fileName: string;
   displayName: string;
+  baseType: string;
 }
 
 /**
  * Parse artifact type string and extract metadata
  *
- * @param type - Raw type string (e.g., "scope", "spec-2", "build-report", "verify-report-1")
+ * @param type - Raw type string (e.g., "scope", "spec-2", "build-report", "verify-report-1", "test-skeleton")
  * @returns Parsed artifact information
  */
 function parseArtifactType(type: string): ArtifactTypeInfo | null {
   // Match valid types with optional number suffix
-  const match = type.match(/^(scope|plan|spec|build-report|verify-report)(?:-(\d+))?$/);
+  const match = type.match(/^(scope|plan|spec|test-skeleton|build-report|verify-report)(?:-(\d+))?$/);
 
   if (!match) {
     return null;
@@ -54,6 +55,8 @@ function parseArtifactType(type: string): ArtifactTypeInfo | null {
     fileName = `${baseType}.md`;
   } else if (baseType === 'spec') {
     fileName = number ? `spec-${number}.md` : 'spec.md';
+  } else if (baseType === 'test-skeleton') {
+    fileName = 'test_skeleton.ts';
   } else if (baseType === 'build-report') {
     fileName = number ? `build_report_${number}.md` : 'build_report.md';
   } else if (baseType === 'verify-report') {
@@ -70,6 +73,8 @@ function parseArtifactType(type: string): ArtifactTypeInfo | null {
     displayName = 'Plan';
   } else if (baseType === 'spec') {
     displayName = number ? `Spec ${number}` : 'Spec';
+  } else if (baseType === 'test-skeleton') {
+    displayName = 'Test skeleton';
   } else if (baseType === 'build-report') {
     displayName = number ? `Build report ${number}` : 'Build report';
   } else if (baseType === 'verify-report') {
@@ -78,7 +83,7 @@ function parseArtifactType(type: string): ArtifactTypeInfo | null {
     displayName = type;
   }
 
-  return { category, fileName, displayName };
+  return { category, fileName, displayName, baseType };
 }
 
 /**
@@ -128,6 +133,63 @@ export function getCurrentBranch(): string | null {
 }
 
 /**
+ * Validate plan.md format
+ *
+ * @param filePath - Path to plan.md
+ * @returns Error message if invalid, null if valid
+ */
+function validatePlanFormat(filePath: string): string | null {
+  const content = fs.readFileSync(filePath, 'utf-8');
+
+  // Check for ## Phases heading
+  if (!content.includes('## Phases')) {
+    return "Missing '## Phases' heading. Plan must contain a '## Phases' section with checkbox items.";
+  }
+
+  // Check for at least one checkbox
+  const checkboxPattern = /- \[([ x])\]/;
+  if (!checkboxPattern.test(content)) {
+    return "No checkbox items found. Plan must contain at least one '- [ ]' or '- [x]' checkbox.";
+  }
+
+  // Check that checkbox lines contain Spec: reference
+  const lines = content.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (checkboxPattern.test(line)) {
+      // Check this line and next 2 lines for Spec: reference
+      const nextLines = lines.slice(i, i + 3).join('\n');
+      if (!nextLines.includes('Spec:')) {
+        return `Checkbox item "${line.trim()}" is missing a 'Spec:' reference. Each phase must reference its spec file.`;
+      }
+    }
+  }
+
+  return null; // valid
+}
+
+/**
+ * Validate verify report format
+ *
+ * @param filePath - Path to verify_report.md
+ * @returns Error message if invalid, null if valid
+ */
+function validateVerifyReportFormat(filePath: string): string | null {
+  const content = fs.readFileSync(filePath, 'utf-8');
+  const lines = content.split('\n');
+
+  // Check first 10 lines for Result line
+  const firstTenLines = lines.slice(0, 10).join('\n');
+  const resultPattern = /\*\*Result:\*\*\s*(PASS|FAIL)/i;
+
+  if (!resultPattern.test(firstTenLines)) {
+    return "Missing '**Result:** PASS' or '**Result:** FAIL' in the first 10 lines.\nThe Result line is machine-parsed by the pipeline. It must be present.";
+  }
+
+  return null; // valid
+}
+
+/**
  * Validate that we're on the correct branch for this artifact type
  *
  * @param typeInfo - Parsed artifact type information
@@ -169,7 +231,7 @@ export function saveArtifact(type: string, slug: string): void {
   const typeInfo = parseArtifactType(type);
   if (!typeInfo) {
     console.error(chalk.red(`Error: Unknown artifact type \`${type}\`.`));
-    console.error(chalk.gray('Valid types: scope, plan, spec, spec-N, build-report, build-report-N, verify-report, verify-report-N'));
+    console.error(chalk.gray('Valid types: scope, plan, spec, spec-N, test-skeleton, build-report, build-report-N, verify-report, verify-report-N'));
     process.exit(1);
   }
 
@@ -195,6 +257,31 @@ export function saveArtifact(type: string, slug: string): void {
     console.error(chalk.gray('Write the file first, then run this command.'));
     process.exit(1);
   }
+
+  // 6a. Validate format for plan and verify-report
+  if (typeInfo.baseType === 'plan') {
+    const error = validatePlanFormat(filePath);
+    if (error) {
+      console.error(chalk.red(`Error: plan.md format invalid.\n${error}`));
+      console.error(chalk.dim("Run 'ana work status' to see the expected format."));
+      process.exit(1);
+    }
+  }
+
+  if (typeInfo.baseType === 'verify-report') {
+    const error = validateVerifyReportFormat(filePath);
+    if (error) {
+      console.error(chalk.red(`Error: verify_report.md format invalid.\n${error}`));
+      process.exit(1);
+    }
+  }
+
+  // 6b. Check if file is tracked (before staging, for create vs update message)
+  const projectRoot = process.cwd();
+  const isTracked = spawnSync('git', ['ls-files', '--error-unmatch', filePath], {
+    cwd: projectRoot,
+    stdio: 'pipe'
+  }).status === 0;
 
   // 7. Pull before commit (artifact branch only)
   if (typeInfo.category === 'planning') {
@@ -233,8 +320,17 @@ export function saveArtifact(type: string, slug: string): void {
     process.exit(1);
   }
 
+  // 8a. Check if there are staged changes
+  const diffResult = spawnSync('git', ['diff', '--staged', '--quiet'], { cwd: projectRoot });
+  if (diffResult.status === 0) {
+    // status 0 means no differences — nothing to commit
+    console.log(chalk.yellow('No changes to save — artifact is already up to date.'));
+    process.exit(0);
+  }
+
   // 9. Commit
-  const commitMessage = `[${slug}] ${typeInfo.displayName}\n\nCo-authored-by: Ana <build@anatomia.dev>`;
+  const prefix = isTracked ? 'Update: ' : '';
+  const commitMessage = `[${slug}] ${prefix}${typeInfo.displayName}\n\nCo-authored-by: Ana <build@anatomia.dev>`;
   try {
     execSync(`git commit -m "${commitMessage}"`, { stdio: 'pipe' });
   } catch (error) {
@@ -268,7 +364,7 @@ export const artifactCommand = new Command('artifact')
 
 const saveCommand = new Command('save')
   .description('Commit a pipeline artifact to the correct branch')
-  .argument('<type>', 'Artifact type: scope, plan, spec, spec-N, build-report, build-report-N, verify-report, verify-report-N')
+  .argument('<type>', 'Artifact type: scope, plan, spec, spec-N, test-skeleton, build-report, build-report-N, verify-report, verify-report-N')
   .argument('<slug>', 'Work item slug (e.g., add-status-command)')
   .action((type: string, slug: string) => {
     saveArtifact(type, slug);
