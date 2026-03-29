@@ -4,8 +4,6 @@
  * Used by: format-analysis-brief.ts, scaffold-generators.ts
  */
 
-import { PATTERN_CATEGORIES } from '../constants.js';
-
 /**
  * Convert projectType to human-readable display name
  *

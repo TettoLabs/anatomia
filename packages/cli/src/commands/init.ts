@@ -76,7 +76,6 @@ import {
 import { getProjectName } from '../utils/validators.js';
 import {
   MODE_FILES,
-  SETUP_FILES,
   STEP_FILES,
   FRAMEWORK_SNIPPETS,
   AGENT_FILES,
@@ -122,10 +121,10 @@ function createEmptyAnalysisResult(): AnalysisResult {
  * Prompts user to choose quick/guided/complete tier.
  * Defaults to guided for non-interactive environments.
  *
- * @param options - Command options
+ * @param _options - Command options (unused)
  * @returns Selected setup tier
  */
-async function askSetupTier(options: InitCommandOptions): Promise<string> {
+async function askSetupTier(_options: InitCommandOptions): Promise<string> {
   // Default for non-interactive environments
   if (!process.stdout.isTTY || !process.stdin.isTTY) {
     return 'guided';
@@ -471,12 +470,12 @@ async function createDirectoryStructure(tmpAnaPath: string): Promise<void> {
  *
  * @param tmpAnaPath - Temp .ana/ path
  * @param analysisResult - Analyzer result or null
- * @param cwd - Project root (for projectName)
+ * @param _cwd - Project root (unused)
  */
 async function generateAnalysisMd(
   tmpAnaPath: string,
   analysisResult: AnalysisResult | null,
-  cwd: string
+  _cwd: string
 ): Promise<void> {
   const spinner = ora('Generating analysis.md...').start();
 
@@ -1135,9 +1134,9 @@ async function atomicRename(tmpAnaPath: string, anaPath: string): Promise<void> 
  *
  * Shows what was created and next steps.
  *
- * @param analysisResult - Analyzer result (may be null)
+ * @param _analysisResult - Analyzer result (unused)
  */
-function displaySuccessMessage(analysisResult: AnalysisResult | null): void {
+function displaySuccessMessage(_analysisResult: AnalysisResult | null): void {
   console.log(chalk.green('\n✅ .ana/ framework initialized\n'));
 
   console.log(chalk.bold('Created:'));

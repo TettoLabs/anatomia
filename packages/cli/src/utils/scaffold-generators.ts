@@ -118,14 +118,14 @@ export function generateProjectOverviewScaffold(
  * @param analysis - Analysis result
  * @param projectName - Project name
  * @param timestamp - ISO timestamp
- * @param version - CLI version
+ * @param _version - CLI version (unused)
  * @returns Markdown scaffold string
  */
 export function generateArchitectureScaffold(
   analysis: AnalysisResult,
   projectName: string,
   timestamp: string,
-  version: string
+  _version: string
 ): string {
   let scaffold = `${SCAFFOLD_MARKER}\n\n`;
   scaffold += `# Architecture — ${projectName}\n\n`;
@@ -165,14 +165,14 @@ export function generateArchitectureScaffold(
  * @param analysis - Analysis result
  * @param projectName - Project name
  * @param timestamp - ISO timestamp
- * @param version - CLI version
+ * @param _version - CLI version (unused)
  * @returns Markdown scaffold string
  */
 export function generatePatternsScaffold(
   analysis: AnalysisResult,
   projectName: string,
   timestamp: string,
-  version: string
+  _version: string
 ): string {
   let scaffold = `${SCAFFOLD_MARKER}\n\n`;
   scaffold += `# Patterns — ${projectName}\n\n`;
@@ -260,14 +260,14 @@ export function generatePatternsScaffold(
  * @param analysis - Analysis result
  * @param projectName - Project name
  * @param timestamp - ISO timestamp
- * @param version - CLI version
+ * @param _version - CLI version (unused)
  * @returns Markdown scaffold string
  */
 export function generateConventionsScaffold(
   analysis: AnalysisResult,
   projectName: string,
   timestamp: string,
-  version: string
+  _version: string
 ): string {
   let scaffold = `${SCAFFOLD_MARKER}\n\n`;
   scaffold += `# Conventions — ${projectName}\n\n`;
@@ -365,14 +365,14 @@ export function generateConventionsScaffold(
  * @param analysis - Analysis result
  * @param projectName - Project name
  * @param timestamp - ISO timestamp
- * @param version - CLI version
+ * @param _version - CLI version (unused)
  * @returns Markdown scaffold string
  */
 export function generateWorkflowScaffold(
   analysis: AnalysisResult,
   projectName: string,
   timestamp: string,
-  version: string
+  _version: string
 ): string {
   let scaffold = `${SCAFFOLD_MARKER}\n\n`;
   scaffold += `# Workflow — ${projectName}\n\n`;
@@ -433,14 +433,14 @@ export function generateWorkflowScaffold(
  * @param analysis - Analysis result
  * @param projectName - Project name
  * @param timestamp - ISO timestamp
- * @param version - CLI version
+ * @param _version - CLI version (unused)
  * @returns Markdown scaffold string
  */
 export function generateTestingScaffold(
   analysis: AnalysisResult,
   projectName: string,
   timestamp: string,
-  version: string
+  _version: string
 ): string {
   let scaffold = `${SCAFFOLD_MARKER}\n\n`;
   scaffold += `# Testing — ${projectName}\n\n`;
@@ -498,14 +498,14 @@ export function generateTestingScaffold(
  * @param analysis - Analysis result
  * @param projectName - Project name
  * @param timestamp - ISO timestamp
- * @param version - CLI version
+ * @param _version - CLI version (unused)
  * @returns Markdown scaffold string
  */
 export function generateDebuggingScaffold(
   analysis: AnalysisResult,
   projectName: string,
   timestamp: string,
-  version: string
+  _version: string
 ): string {
   let scaffold = `${SCAFFOLD_MARKER}\n\n`;
   scaffold += `# Debugging — ${projectName}\n\n`;

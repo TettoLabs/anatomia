@@ -350,7 +350,7 @@ export async function validateContent(anaPath: string): Promise<ValidationError[
         message: 'project-overview.md missing: "## Tech Stack" section',
       });
     }
-  } catch (error) {
+  } catch (_error) {
     // File read failed - already caught by BF2
   }
 
@@ -397,7 +397,7 @@ export async function validateCrossReferences(
         message: `patterns.md documents ${documentedSections.length} pattern(s) but analyzer detected ${detectedCount}. Missing: ${missing.join(', ')}`,
       });
     }
-  } catch (error) {
+  } catch (_error) {
     // File read failed - already caught by BF2
   }
 
@@ -444,7 +444,7 @@ export async function validateCrossReferences(
         });
       }
     }
-  } catch (error) {
+  } catch (_error) {
     // File read failed - already caught by BF2
   }
 

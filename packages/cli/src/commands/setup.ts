@@ -338,7 +338,7 @@ async function updateMetaJson(
   try {
     const content = await fs.readFile(metaPath, 'utf-8');
     meta = JSON.parse(content);
-  } catch (error) {
+  } catch (_error) {
     // If .meta.json doesn't exist or is corrupt, create minimal
     meta = {
       version: META_VERSION,

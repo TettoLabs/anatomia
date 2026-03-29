@@ -36,7 +36,7 @@ export const analyzeCommand = new Command('analyze')
           console.error(chalk.red(`Error: Not a directory: ${rootPath}`));
           process.exit(1);
         }
-      } catch (error) {
+      } catch (_error) {
         console.error(chalk.red(`Error: Directory not found: ${rootPath}`));
         process.exit(1);
       }

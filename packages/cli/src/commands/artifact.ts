@@ -246,7 +246,7 @@ export function saveArtifact(type: string, slug: string): void {
   if (typeInfo.category === 'planning') {
     try {
       execSync('git push', { stdio: 'pipe' });
-    } catch (error) {
+    } catch (_error) {
       console.error(chalk.yellow('Warning: Push failed. Artifact committed locally. Run `git push` manually.'));
       // Don't exit - commit succeeded
     }
