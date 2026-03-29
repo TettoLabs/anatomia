@@ -117,6 +117,21 @@ git diff --name-only {artifactBranch}..HEAD
 ```
 Compare the changed files against the spec's File Changes section. Files changed that aren't in the spec need justification (test files, config updates that were necessary). Flag any unexpected changes.
 
+**3e. Test Skeleton Compliance (if skeleton exists)**
+
+If a test skeleton was provided by AnaPlan (`.ana/plans/active/{slug}/test_skeleton.ts` or language equivalent):
+
+1. Read the original skeleton from the plans directory
+2. Read the final test file from the codebase
+3. Compare: for every `expect()` in the skeleton, verify it exists in the final test file with the same assertion target and condition
+4. Compare: for every `it()` block in the skeleton, verify it exists in the final test
+5. Flag any modifications:
+   - **Modified assertion** → Deviation. Check build report for justification. Investigate per the Deviations Assessment guidance.
+   - **Removed assertion** → Coverage Gap. This is serious — the planner specified it, the builder removed it. List in Coverage Gaps section.
+   - **Added tests** → Good. Note positively in Summary. Builder exceeded the contract.
+
+If no skeleton exists, skip this step.
+
 ### Step 4: Acceptance Criteria Walkthrough
 
 Go through EVERY acceptance criterion from the spec, one by one.

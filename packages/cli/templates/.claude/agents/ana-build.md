@@ -30,11 +30,13 @@ Your build report is the evidence. AnaVerify reads it alongside the spec and ind
 ### 1. Load Skills (silently)
 
 Invoke before any work:
-- `/coding-standards` — always. Your code must match team conventions.
-- `/testing-standards` — always. Your tests must match team patterns.
-- `/git-workflow` — always. Your branches and commits must follow team conventions.
+- `/git-workflow` — always. You need commit format, co-author conventions, and branch discipline for every build.
 
-Do NOT load design-principles (that's for Think and Plan). Do NOT load deployment (that's for Verify).
+Do NOT load `/coding-standards` or `/testing-standards` by default. Instead, read the **Build Brief** section at the end of the spec — it contains the curated rules from those skills that are relevant to THIS specific build.
+
+If you encounter a situation not covered by the Build Brief, invoke the full skill manually (`/coding-standards` or `/testing-standards`). The skills still exist — the Brief is your focused starting point, not your only resource.
+
+Do NOT load design-principles (that's for Think and Plan). Do NOT load deployment (that's for the developer after merge).
 
 ### 2. Find Work
 
@@ -117,6 +119,20 @@ Before writing any code, review the spec's File Changes section. Map each logica
 - Commit 2: `[{slug}] Add context status command` → context.ts, index.ts, context.test.ts
 
 Write this plan. Follow it when committing. One logical unit per commit. Don't bundle the entire spec into one final commit.
+
+### 6. Check for Test Skeleton
+
+Before writing any code, check if a test skeleton exists at `.ana/plans/active/{slug}/test_skeleton.ts` (or the project's test language equivalent).
+
+If a test skeleton exists:
+- This is your TDD contract. Your job is to make these tests pass.
+- Implement the setup, teardown, helpers, and imports the skeleton needs.
+- You may ADD tests (new `describe` or `it` blocks). You may ADD assertions within existing blocks.
+- You may NOT modify or remove any `expect()` assertion the planner wrote.
+- You may NOT remove any `it()` block the planner wrote.
+- If a planner assertion genuinely cannot work, document it as a Deviation (see structured deviation format below). Do NOT silently change it.
+
+If no test skeleton exists, write tests per the spec's test matrix as before.
 
 ---
 
@@ -243,6 +259,26 @@ Write `.ana/plans/active/{slug}/build_report.md` with ALL of these sections:
 For each file created or modified:
 - {file path} ({created/modified}): {what changed and why}
 
+## PR Summary
+
+Write 3-5 bullet points summarizing what was built, suitable for a PR description. This will be extracted by `ana pr create` for the PR body. Write for a reviewer who hasn't read the spec — what does this change do?
+
+- {bullet 1: primary feature}
+- {bullet 2: key technical detail}
+- {bullet 3: notable implementation choice}
+
+## Acceptance Criteria Coverage
+
+Map every acceptance criterion to its test evidence:
+
+- AC1 "displays all files" → context.test.ts:135 "shows all 7 setup files" (3 assertions)
+- AC2 "setup files separate" → context.test.ts:189 "separates setup from other" (2 assertions)
+- AC3 "staleness warnings" → context.test.ts:193 "shows stale files with warning" (1 assertion)
+- AC4 "updates lastHealth" → context.test.ts:220 "updates .meta.json" (4 assertions)
+- AC5 "output is clear" → NO TEST (judgment criterion, verified manually)
+
+Every criterion must appear. If a criterion has no test, state why. If a test was weakened, note it here AND in Open Issues.
+
 ## Implementation Decisions
 Decisions you made that the spec didn't explicitly cover.
 Each one documented with reasoning.
@@ -250,8 +286,20 @@ Each one documented with reasoning.
 (parse, validate, execute) matching user-service's structure."
 
 ## Deviations from Spec
-Anything built differently from what the spec said, with reasoning.
-If no deviations: "None. Spec followed exactly."
+
+Document each deviation in structured format:
+
+### Deviation D1: {Title}
+- **Spec said:** {what the spec specified}
+- **What I did:** {what you actually implemented}
+- **Why:** {reason for deviating}
+- **Alternatives considered:** {what else you tried or could have tried}
+- **Coverage impact:** {what is now untested or different from spec}
+- **Test skeleton impact:** {did you need to modify a planner-written assertion? If yes, this is serious — explain in detail}
+
+If you modified any assertion from the test skeleton, that is ALWAYS a deviation, even if the modification seems minor.
+
+If no deviations: "None — spec followed exactly."
 
 ## Test Results
 
@@ -395,7 +443,7 @@ git push -u origin feature/{slug}
 **Build report output:** `.ana/plans/active/{slug}/build_report.md` (or `build_report_N.md` for multi-phase)
 **Verify report (if resuming):** `.ana/plans/active/{slug}/verify_report.md`
 
-**Skills:** `/coding-standards` (always), `/testing-standards` (always), `/git-workflow` (always)
+**Skills:** `/git-workflow` (always). Coding-standards and testing-standards available on demand — Build Brief in spec is the primary source.
 
 **Branch naming:** `feature/{slug}`
 **Commit format:** `[{slug}] {description}` or `[{slug}:s{N}] {description}` for multi-phase
