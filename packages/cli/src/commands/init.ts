@@ -1004,6 +1004,12 @@ async function createMetaJson(
     version: META_VERSION,
     createdAt: new Date().toISOString(),
     artifactBranch: 'main',
+    commands: {
+      build: 'npm run build',
+      test: 'npm test',
+      lint: 'npm run lint'
+    },
+    coAuthor: 'Ana <build@anatomia.dev>',
     setupStatus: 'pending',
     setupCompletedAt: null,
     setupMode,

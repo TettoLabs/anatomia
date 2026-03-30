@@ -611,4 +611,84 @@ file_changes:
       expect(output.stderr).toContain('No active work found');
     });
   });
+
+  describe('multi-phase support', () => {
+    it('--phase selects correct spec in multi-phase', async () => {
+      const spec1 = `# Spec 1
+<!-- MACHINE-READABLE
+file_changes:
+  - path: tests/phase1.test.ts
+    action: create
+-->`;
+
+      const spec2 = `# Spec 2
+<!-- MACHINE-READABLE
+file_changes:
+  - path: tests/phase2.test.ts
+    action: create
+-->`;
+
+      await createPreCheckProject({
+        slug: 'multi-slug',
+        commits: [{ message: 'phase 2', files: [{ path: 'test.ts', content: '// test' }] }]
+      });
+
+      // Add both specs
+      const planDir = path.join(tempDir, '.ana/plans/active/multi-slug');
+      await fs.writeFile(path.join(planDir, 'spec-1.md'), spec1, 'utf-8');
+      await fs.writeFile(path.join(planDir, 'spec-2.md'), spec2, 'utf-8');
+
+      // Add skeleton and test file for phase 2
+      await fs.writeFile(path.join(planDir, 'test_skeleton.ts'), '// expect(phase2).toBe(true)', 'utf-8');
+      await fs.mkdir(path.join(tempDir, 'tests'), { recursive: true });
+      await fs.writeFile(
+        path.join(tempDir, 'tests/phase2.test.ts'),
+        'expect(phase2).toBe(true)',
+        'utf-8'
+      );
+
+      execSync('git add -A && git commit -m "add phase 2"', { cwd: tempDir, stdio: 'ignore' });
+
+      const output = captureOutput(() => runPreCheck('multi-slug', 2));
+
+      expect(output.stdout).toContain('tests/phase2.test.ts');
+      expect(output.stdout).not.toContain('tests/phase1.test.ts');
+    });
+
+    it('no --phase with single spec works as before', async () => {
+      await createPreCheckProject({
+        skeleton: '// expect(foo).toBe(true)',
+        spec: `<!-- MACHINE-READABLE
+file_changes:
+  - path: test.ts
+    action: create
+-->`,
+        testFile: {
+          path: 'packages/cli/tests/commands/test-slug.test.ts',
+          content: 'expect(foo).toBe(true)'
+        },
+        commits: [{ message: 'test', files: [{ path: 'test.ts', content: '// test' }] }]
+      });
+
+      const output = captureOutput(() => runPreCheck('test-slug'));
+
+      expect(output.stdout).toContain('1 assertions in skeleton');
+      expect(output.stdout).toContain('1 exact match');
+    });
+
+    it('--phase with nonexistent spec reports error', async () => {
+      await createPreCheckProject({
+        skeleton: '// expect(foo).toBe(true)',
+        commits: [{ message: 'test', files: [{ path: 'test.ts', content: '// test' }] }]
+      });
+
+      // Add only spec-1
+      const planDir = path.join(tempDir, '.ana/plans/active/test-slug');
+      await fs.writeFile(path.join(planDir, 'spec-1.md'), '# Spec 1', 'utf-8');
+
+      const output = captureOutput(() => runPreCheck('test-slug', 3));
+
+      expect(output.stdout).toContain('No spec file found');
+    });
+  });
 });

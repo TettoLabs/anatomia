@@ -101,13 +101,45 @@ function extractAssertions(content: string, isCommented: boolean): Array<{ line:
 }
 
 /**
+ * Find the appropriate spec file for the current phase
+ *
+ * @param planDir - Plan directory path
+ * @param phase - Optional phase number for multi-phase plans
+ * @returns Spec file path or null if not found
+ */
+function findSpecFile(planDir: string, phase?: number): string | null {
+  if (phase) {
+    // Explicit phase: read spec-N.md
+    const phaseSpec = `spec-${phase}.md`;
+    const phaseSpecPath = path.join(planDir, phaseSpec);
+    if (fs.existsSync(phaseSpecPath)) {
+      return phaseSpecPath;
+    }
+    return null; // Phase specified but file not found
+  }
+
+  // No phase: prefer spec.md, fall back to first spec-N.md
+  const specPath = path.join(planDir, 'spec.md');
+  if (fs.existsSync(specPath)) {
+    return specPath;
+  }
+
+  const specFiles = fs.readdirSync(planDir)
+    .filter(f => f.match(/^spec-\d+\.md$/))
+    .sort(); // Alphabetical = numerical for spec-1, spec-2, etc.
+
+  return specFiles.length > 0 ? path.join(planDir, specFiles[0]) : null;
+}
+
+/**
  * Check skeleton compliance
  *
  * @param planDir - Plan directory path
  * @param slug - Work item slug
+ * @param phase - Optional phase number for multi-phase plans
  * @returns Check result
  */
-function checkSkeletonCompliance(planDir: string, slug: string): SkeletonCheckResult {
+function checkSkeletonCompliance(planDir: string, slug: string, phase?: number): SkeletonCheckResult {
   // Find skeleton file
   let skeletonFiles: string[];
   try {
@@ -143,9 +175,8 @@ function checkSkeletonCompliance(planDir: string, slug: string): SkeletonCheckRe
   let testContent: string | undefined;
 
   // Try to find test file from spec YAML
-  const specFiles = fs.readdirSync(planDir).filter(f => f === 'spec.md' || f.match(/^spec-\d+\.md$/));
-  if (specFiles.length > 0) {
-    const specPath = path.join(planDir, specFiles[0]);
+  const specPath = findSpecFile(planDir, phase);
+  if (specPath) {
     const specContent = fs.readFileSync(specPath, 'utf-8');
     const yamlMatch = specContent.match(/<!--\s*MACHINE-READABLE\s*\n([\s\S]*?)-->/);
 
@@ -240,13 +271,14 @@ function checkSkeletonCompliance(planDir: string, slug: string): SkeletonCheckRe
  *
  * @param planDir - Plan directory path
  * @param artifactBranch - Artifact branch name
+ * @param phase - Optional phase number for multi-phase plans
  * @returns Check result
  */
-function checkFileChanges(planDir: string, artifactBranch: string): FileChangesResult {
+function checkFileChanges(planDir: string, artifactBranch: string, phase?: number): FileChangesResult {
   // Find spec file
-  const specFiles = fs.readdirSync(planDir).filter(f => f === 'spec.md' || f.match(/^spec-\d+\.md$/));
+  const specPath = findSpecFile(planDir, phase);
 
-  if (specFiles.length === 0) {
+  if (!specPath) {
     return {
       error: 'No spec file found. Skipping file audit.',
       expectedFiles: [],
@@ -257,7 +289,6 @@ function checkFileChanges(planDir: string, artifactBranch: string): FileChangesR
     };
   }
 
-  const specPath = path.join(planDir, specFiles[0]);
   const specContent = fs.readFileSync(specPath, 'utf-8');
 
   // Extract YAML block
@@ -553,8 +584,9 @@ function printCommitResults(result: CommitCheckResult): void {
  * Run pre-check for a work item
  *
  * @param slug - Work item slug
+ * @param phase - Optional phase number for multi-phase plans
  */
-export function runPreCheck(slug: string): void {
+export function runPreCheck(slug: string, phase?: number): void {
   // Read .meta.json
   const metaPath = path.join(process.cwd(), '.ana', '.meta.json');
   if (!fs.existsSync(metaPath)) {
@@ -582,8 +614,8 @@ export function runPreCheck(slug: string): void {
   }
 
   // Run checks
-  const skeletonResult = checkSkeletonCompliance(planDir, slug);
-  const fileChangesResult = checkFileChanges(planDir, artifactBranch);
+  const skeletonResult = checkSkeletonCompliance(planDir, slug, phase);
+  const fileChangesResult = checkFileChanges(planDir, artifactBranch, phase);
   const commitResult = checkCommits(artifactBranch, coAuthor);
 
   // Print results
@@ -608,8 +640,10 @@ export function registerVerifyPreCheckCommand(program: Command): void {
     .command('pre-check')
     .description('Run mechanical verification checks (skeleton, files, commits)')
     .argument('<slug>', 'Work item slug (e.g., add-status-command)')
-    .action((slug: string) => {
-      runPreCheck(slug);
+    .option('--phase <number>', 'Phase number for multi-phase plans (reads spec-N.md)')
+    .action((slug: string, options: { phase?: string }) => {
+      const phase = options.phase ? parseInt(options.phase, 10) : undefined;
+      runPreCheck(slug, phase);
     });
 
   program.addCommand(verifyCommand);
