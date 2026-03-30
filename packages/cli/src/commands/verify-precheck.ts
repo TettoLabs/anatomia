@@ -176,6 +176,15 @@ function checkSkeletonCompliance(planDir: string, slug: string, phase?: number):
 
   // Try to find test file from spec YAML
   const specPath = findSpecFile(planDir, phase);
+
+  // Print note if multiple specs exist and no phase specified
+  if (!phase && specPath) {
+    const allSpecFiles = fs.readdirSync(planDir).filter(f => f.match(/^spec-\d+\.md$/));
+    if (allSpecFiles.length > 1) {
+      console.log(`Note: Multiple specs found. Reading ${path.basename(specPath)}. Use --phase N to specify.`);
+    }
+  }
+
   if (specPath) {
     const specContent = fs.readFileSync(specPath, 'utf-8');
     const yamlMatch = specContent.match(/<!--\s*MACHINE-READABLE\s*\n([\s\S]*?)-->/);
@@ -277,6 +286,14 @@ function checkSkeletonCompliance(planDir: string, slug: string, phase?: number):
 function checkFileChanges(planDir: string, artifactBranch: string, phase?: number): FileChangesResult {
   // Find spec file
   const specPath = findSpecFile(planDir, phase);
+
+  // Print note if multiple specs exist and no phase specified
+  if (!phase && specPath) {
+    const allSpecFiles = fs.readdirSync(planDir).filter(f => f.match(/^spec-\d+\.md$/));
+    if (allSpecFiles.length > 1) {
+      console.log(`Note: Multiple specs found. Reading ${path.basename(specPath)}. Use --phase N to specify.`);
+    }
+  }
 
   if (!specPath) {
     return {
