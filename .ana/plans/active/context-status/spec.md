@@ -364,6 +364,6 @@ afterEach(async () => {
 
 ### Build Baseline
 
-- Current test count: ~150 tests across CLI package
-- After build: expected ~165 tests (adding ~15 for context command)
+- Current test count: 289 tests in 25 files
+- After build: expected ~314 tests in 26 files (adding ~25 for context command)
 - Regression focus: No existing tests should break — this is additive
