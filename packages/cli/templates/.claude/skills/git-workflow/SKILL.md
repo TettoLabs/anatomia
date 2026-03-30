@@ -9,7 +9,8 @@ description: "Team git workflow. Invoke when creating branches, committing code,
 <!-- Branch naming convention, base branch -->
 
 ## Commits
-<!-- Message format, granularity, co-author trailers -->
+<!-- Message format, granularity -->
+<!-- Co-author trailer: read from `.meta.json` `coAuthor` field for all commits and PR bodies -->
 
 ## Before Pushing
 <!-- What checks must pass before push -->

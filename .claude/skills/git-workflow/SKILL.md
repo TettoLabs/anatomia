@@ -20,10 +20,7 @@ description: "Anatomia git workflow. Invoke when creating branches, committing c
   - `[auth-migration:s2] Add data pipeline connectors`
 - One logical unit of work per commit. Not per file, not per spec. A logical unit: one thing done that makes sense on its own.
 - Tests should pass for whatever is committed.
-- Co-author trailer on every AnaBuild commit:
-  ```
-  Co-authored-by: Ana <build@anatomia.dev>
-  ```
+- Co-author trailer on every AnaBuild commit: The co-author trailer is defined in `.meta.json` `coAuthor` field. Use it for all commits and PR bodies.
 
 ## Before Pushing
 ```bash

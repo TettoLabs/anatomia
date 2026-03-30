@@ -6,7 +6,8 @@ description: "Team testing standards. Invoke when writing tests, reviewing cover
 # Testing Standards
 
 ## Framework
-<!-- Your test framework, config location, run commands -->
+<!-- Your test framework, config location -->
+<!-- Test command: read from `.meta.json` `commands.test` field -->
 
 ## Coverage
 <!-- Coverage thresholds and how they're enforced -->
