@@ -301,3 +301,71 @@ File existence IS the state machine. No separate status file needed.
 **Re-saving artifacts:** Artifacts can be updated by modifying the file and running `ana artifact save` again. The command detects whether the file is new or updated and commits accordingly. First save uses commit message `[slug] Type`. Re-saves use `[slug] Update: Type`. If the file hasn't changed since the last save, the command exits gracefully without creating an empty commit.
 
 When a task is complete (verify passes), the developer runs `ana work complete {slug}` which archives the directory from `.ana/plans/active/{slug}/` to `.ana/plans/completed/{slug}/` and cleans up the feature branch. The four artifacts together form the permanent record: intent, plan, implementation, proof.
+
+---
+
+## .meta.json — Configuration
+
+Project-wide configuration file storing framework metadata and project-specific commands. Created by `ana init`, updated by `ana setup`.
+
+**Location:** `.ana/.meta.json`
+
+**Fields:**
+
+### `commands` (object)
+Stores the exact build, test, and lint commands for this project. Agents and tools read these instead of guessing or parsing from skills.
+
+**Structure:** Object with three required string fields:
+- `build` — exact shell command to build the project (e.g., `"pnpm --filter anatomia-cli build"` or `"npm run build"`)
+- `test` — exact shell command to run tests, including all flags (e.g., `"pnpm --filter anatomia-cli test -- --run"` or `"npm test"`)
+- `lint` — exact shell command to lint the project (e.g., `"pnpm --filter anatomia-cli lint"` or `"npm run lint"`)
+
+**Who reads it:**
+- `ana verify pre-check` uses `commands.test` to run tests during verification checks
+- Agents reference `commands` in Pre-Flight baseline and Build Brief checkpoint commands
+- AnaPlan copies commands into spec checkpoint sections
+
+**Default:** Template provides generic npm commands (`"npm run build"`, `"npm test"`, `"npm run lint"`). Teams update during setup with their actual commands.
+
+### `coAuthor` (string)
+The co-author trailer for all commits and PR bodies created by the pipeline.
+
+**Format:** Git co-author format: `Name <email>`. Example: `"Ana <build@anatomia.dev>"`.
+
+**Who reads it:**
+- `artifact.ts` adds it to commit messages when saving artifacts
+- `pr.ts` adds it to PR bodies when creating pull requests
+- `ana verify pre-check` checks for its presence in commit trailers
+- The `git-workflow` skill references this field for commit conventions
+
+**Default:** `"Ana <build@anatomia.dev>"`. Teams can customize with their own identity if desired.
+
+**Example .meta.json:**
+```json
+{
+  "version": "1.0.0",
+  "createdAt": "2026-03-25T00:57:03.132Z",
+  "artifactBranch": "main",
+  "commands": {
+    "build": "pnpm --filter anatomia-cli build",
+    "test": "pnpm --filter anatomia-cli test -- --run",
+    "lint": "pnpm --filter anatomia-cli lint"
+  },
+  "coAuthor": "Ana <build@anatomia.dev>",
+  "setupStatus": "complete",
+  "setupCompletedAt": "2026-03-25T01:31:05.140Z",
+  "setupMode": "guided",
+  "framework": null,
+  "analyzerVersion": "0.1.0",
+  "lastEvolve": null,
+  "lastHealth": {
+    "timestamp": "2026-03-29T04:05:02.122Z",
+    "totalFiles": 8,
+    "setupFiles": 7,
+    "setupFilesPresent": 7,
+    "missingSetupFiles": 0,
+    "staleFiles": 7
+  },
+  "sessionCount": 0
+}
+```
