@@ -290,6 +290,43 @@ expect(anotherCheck).toContain('data')
       expect(output.stdout).toContain('0 assertions in skeleton');
       expect(output.stdout).toContain('0 exact match');
     });
+
+    it('finds test file from spec YAML when slug differs from filename', async () => {
+      // Slug is context-status but test file is context.test.ts
+      const spec = `# Spec
+
+<!-- MACHINE-READABLE
+file_changes:
+  - path: packages/cli/tests/commands/context.test.ts
+    action: create
+  - path: src/commands/context.ts
+    action: create
+-->
+`;
+
+      await createPreCheckProject({
+        slug: 'context-status',
+        skeleton: `
+// expect(output).toContain('status')
+// expect(result).toBe(true)
+`,
+        spec,
+        testFile: {
+          path: 'packages/cli/tests/commands/context.test.ts',
+          content: `
+expect(output).toContain('status')
+expect(result).toBe(true)
+`
+        },
+        commits: [{ message: 'add context command', files: [{ path: 'src/context.ts', content: '// impl' }] }]
+      });
+
+      const output = captureOutput(() => runPreCheck('context-status'));
+
+      expect(output.stdout).toContain('2 assertions in skeleton');
+      expect(output.stdout).toContain('2 exact match');
+      expect(output.stdout).toContain('packages/cli/tests/commands/context.test.ts');
+    });
   });
 
   describe('file changes audit', () => {

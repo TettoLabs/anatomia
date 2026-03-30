@@ -138,27 +138,54 @@ function checkSkeletonCompliance(planDir: string, slug: string): SkeletonCheckRe
     };
   }
 
-  // Find test file - try common locations
-  const possibleTestPaths = [
-    path.join(process.cwd(), 'packages/cli/tests/commands', `${slug}.test.ts`),
-    path.join(process.cwd(), 'tests', `${slug}.test.ts`),
-    path.join(process.cwd(), 'test', `${slug}.test.ts`)
-  ];
-
+  // Find test file - first try spec YAML, then fall back to slug-based guessing
   let testFilePath: string | undefined;
   let testContent: string | undefined;
 
-  for (const testPath of possibleTestPaths) {
-    if (fs.existsSync(testPath)) {
-      testFilePath = testPath;
-      testContent = fs.readFileSync(testPath, 'utf-8');
-      break;
+  // Try to find test file from spec YAML
+  const specFiles = fs.readdirSync(planDir).filter(f => f === 'spec.md' || f.match(/^spec-\d+\.md$/));
+  if (specFiles.length > 0) {
+    const specPath = path.join(planDir, specFiles[0]);
+    const specContent = fs.readFileSync(specPath, 'utf-8');
+    const yamlMatch = specContent.match(/<!--\s*MACHINE-READABLE\s*\n([\s\S]*?)-->/);
+
+    if (yamlMatch) {
+      try {
+        const parsedYaml: { file_changes?: Array<{ path: string; action: string }> } = yaml.parse(yamlMatch[1]);
+        const testFile = parsedYaml.file_changes?.find(f => f.path.match(/\.(test|spec)\./));
+        if (testFile) {
+          const testPath = path.join(process.cwd(), testFile.path);
+          if (fs.existsSync(testPath)) {
+            testFilePath = testPath;
+            testContent = fs.readFileSync(testPath, 'utf-8');
+          }
+        }
+      } catch {
+        // YAML parse failed, fall through to slug-based guessing
+      }
+    }
+  }
+
+  // Fallback: try common locations based on slug
+  if (!testFilePath) {
+    const possibleTestPaths = [
+      path.join(process.cwd(), 'packages/cli/tests/commands', `${slug}.test.ts`),
+      path.join(process.cwd(), 'tests', `${slug}.test.ts`),
+      path.join(process.cwd(), 'test', `${slug}.test.ts`)
+    ];
+
+    for (const testPath of possibleTestPaths) {
+      if (fs.existsSync(testPath)) {
+        testFilePath = testPath;
+        testContent = fs.readFileSync(testPath, 'utf-8');
+        break;
+      }
     }
   }
 
   if (!testFilePath || !testContent) {
     return {
-      error: 'Test file not found. Checked common locations.',
+      error: 'Test file not found. Checked spec YAML and common locations.',
       skeletonPath,
       totalAssertions: skeletonAssertions.length,
       exactMatch: 0,
