@@ -3,7 +3,7 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import * as os from 'node:os';
 import { execSync } from 'node:child_process';
-import { saveArtifact } from '../../src/commands/artifact.js';
+import { saveArtifact, saveAllArtifacts } from '../../src/commands/artifact.js';
 
 /**
  * Tests for `ana artifact save` command
@@ -503,5 +503,140 @@ Line 11
       expect(message).toContain('[test-slug] Test skeleton');
       expect(isFileCommitted('.ana/plans/active/test-slug/test_skeleton.ts')).toBe(true);
     });
+  });
+
+  describe('coAuthor from config', () => {
+    it('uses coAuthor from .meta.json when present', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+
+      // Update .meta.json with custom coAuthor
+      const metaPath = path.join(tempDir, '.ana', '.meta.json');
+      const meta = JSON.parse(await fs.readFile(metaPath, 'utf-8'));
+      meta.coAuthor = 'Custom Bot <bot@example.com>';
+      await fs.writeFile(metaPath, JSON.stringify(meta), 'utf-8');
+
+      await createArtifact('test-slug', 'scope.md', '# Scope');
+      saveArtifact('scope', 'test-slug');
+
+      const message = getLastCommitMessage();
+      expect(message).toContain('Co-authored-by: Custom Bot <bot@example.com>');
+    });
+
+    it('falls back to default coAuthor when field missing', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      await createArtifact('test-slug', 'scope.md', '# Scope');
+
+      saveArtifact('scope', 'test-slug');
+
+      const message = getLastCommitMessage();
+      expect(message).toContain('Co-authored-by: Ana <build@anatomia.dev>');
+    });
+  });
+});
+
+describe('ana artifact save-all', () => {
+  let tempDir: string;
+  let originalCwd: string;
+
+  beforeEach(async () => {
+    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'save-all-test-'));
+    originalCwd = process.cwd();
+    process.chdir(tempDir);
+  });
+
+  afterEach(async () => {
+    process.chdir(originalCwd);
+    await fs.rm(tempDir, { recursive: true, force: true });
+  });
+
+  async function createTestProject(): Promise<void> {
+    execSync('git init', { cwd: tempDir, stdio: 'ignore' });
+    execSync('git config user.email "test@test.com"', { cwd: tempDir, stdio: 'ignore' });
+    execSync('git config user.name "Test"', { cwd: tempDir, stdio: 'ignore' });
+
+    const anaDir = path.join(tempDir, '.ana');
+    await fs.mkdir(anaDir, { recursive: true });
+    await fs.writeFile(
+      path.join(anaDir, '.meta.json'),
+      JSON.stringify({ artifactBranch: 'main', coAuthor: 'Ana <build@anatomia.dev>' }),
+      'utf-8'
+    );
+
+    execSync('git add -A && git commit -m "init"', { cwd: tempDir, stdio: 'ignore' });
+    execSync('git branch -M main', { cwd: tempDir, stdio: 'ignore' });
+  }
+
+  async function createArtifact(slug: string, fileName: string, content: string): Promise<void> {
+    const artifactPath = path.join(tempDir, '.ana', 'plans', 'active', slug);
+    await fs.mkdir(artifactPath, { recursive: true });
+    await fs.writeFile(path.join(artifactPath, fileName), content, 'utf-8');
+  }
+
+  function getLastCommitMessage(): string {
+    return execSync('git log -1 --pretty=%B', { cwd: tempDir, encoding: 'utf-8' }).trim();
+  }
+
+  it('saves all artifacts in single commit', async () => {
+    await createTestProject();
+
+    const validPlan = `# Plan
+## Phases
+- [ ] Phase 1
+  - Spec: spec.md`;
+
+    await createArtifact('test-slug', 'plan.md', validPlan);
+    await createArtifact('test-slug', 'spec.md', '# Spec');
+    await createArtifact('test-slug', 'test_skeleton.ts', '// test skeleton');
+
+    saveAllArtifacts('test-slug');
+
+    const message = getLastCommitMessage();
+    expect(message).toContain('[test-slug] Save:');
+    expect(message).toContain('Plan');
+    expect(message).toContain('Spec');
+    expect(message).toContain('Test skeleton');
+  });
+
+  it('saves partial artifacts when only some exist', async () => {
+    await createTestProject();
+    await createArtifact('test-slug', 'spec.md', '# Spec');
+
+    saveAllArtifacts('test-slug');
+
+    const message = getLastCommitMessage();
+    expect(message).toContain('[test-slug] Save: Spec');
+  });
+
+  it('errors when directory is empty', async () => {
+    await createTestProject();
+
+    const slugDir = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug');
+    await fs.mkdir(slugDir, { recursive: true });
+
+    expect(() => saveAllArtifacts('test-slug')).toThrow();
+  });
+
+  it('errors when plan.md validation fails', async () => {
+    await createTestProject();
+
+    const invalidPlan = `# Plan\nNo phases section`;
+    await createArtifact('test-slug', 'plan.md', invalidPlan);
+    await createArtifact('test-slug', 'spec.md', '# Spec');
+
+    expect(() => saveAllArtifacts('test-slug')).toThrow();
+  });
+
+  it('uses Update prefix for re-save', async () => {
+    await createTestProject();
+
+    await createArtifact('test-slug', 'spec.md', '# Spec');
+    saveAllArtifacts('test-slug');
+
+    // Modify and re-save
+    await createArtifact('test-slug', 'spec.md', '# Spec Updated');
+    saveAllArtifacts('test-slug');
+
+    const message = getLastCommitMessage();
+    expect(message).toContain('[test-slug] Update: Save: Spec');
   });
 });

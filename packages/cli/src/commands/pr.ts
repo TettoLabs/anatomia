@@ -167,7 +167,18 @@ export function createPr(slug: string): void {
     title = extractTitle(scopeContent);
   }
 
-  // 8. Build PR body
+  // 8. Read coAuthor from .meta.json
+  const metaPath = path.join(projectRoot, '.ana', '.meta.json');
+  let coAuthor = 'Ana <build@anatomia.dev>';
+  try {
+    const metaContent = fs.readFileSync(metaPath, 'utf-8');
+    const meta: { coAuthor?: string } = JSON.parse(metaContent);
+    coAuthor = meta.coAuthor || 'Ana <build@anatomia.dev>';
+  } catch {
+    // Use fallback
+  }
+
+  // 9. Build PR body
   const prBody = `## Summary
 ${prSummary}
 
@@ -182,9 +193,9 @@ ${prSummary}
 - Phases: ${phaseCount} verified
 - Tests: ${testInfo}
 
-Co-authored-by: Ana <build@anatomia.dev>`;
+Co-authored-by: ${coAuthor}`;
 
-  // 9. Create PR
+  // 10. Create PR
   const prTitle = `[${slug}] ${title}`;
   const ghResult = spawnSync(
     'gh',

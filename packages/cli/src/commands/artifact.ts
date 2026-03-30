@@ -329,8 +329,19 @@ export function saveArtifact(type: string, slug: string): void {
   }
 
   // 9. Commit
+  // Read coAuthor from .meta.json
+  const metaPath = path.join(process.cwd(), '.ana', '.meta.json');
+  let coAuthor = 'Ana <build@anatomia.dev>';
+  try {
+    const metaContent = fs.readFileSync(metaPath, 'utf-8');
+    const meta: { coAuthor?: string } = JSON.parse(metaContent);
+    coAuthor = meta.coAuthor || 'Ana <build@anatomia.dev>';
+  } catch {
+    // Use fallback if .meta.json can't be read
+  }
+
   const prefix = isTracked ? 'Update: ' : '';
-  const commitMessage = `[${slug}] ${prefix}${typeInfo.displayName}\n\nCo-authored-by: Ana <build@anatomia.dev>`;
+  const commitMessage = `[${slug}] ${prefix}${typeInfo.displayName}\n\nCo-authored-by: ${coAuthor}`;
   try {
     execSync(`git commit -m "${commitMessage}"`, { stdio: 'pipe' });
   } catch (error) {
@@ -357,6 +368,152 @@ export function saveArtifact(type: string, slug: string): void {
 }
 
 /**
+ * Save all artifacts in a plan directory atomically
+ *
+ * @param slug - Work item slug
+ */
+export function saveAllArtifacts(slug: string): void {
+  const projectRoot = process.cwd();
+  const planDir = path.join(projectRoot, '.ana/plans/active', slug);
+
+  // 1. Verify plan directory exists
+  if (!fs.existsSync(planDir)) {
+    console.error(chalk.red(`Error: No active work found for '${slug}'.`));
+    console.error(chalk.gray('Run `ana work status` to see active work items.'));
+    process.exit(1);
+  }
+
+  // 2. Scan for artifacts
+  const artifacts: Array<{ file: string; type: string; typeInfo: ArtifactTypeInfo; path: string }> = [];
+  const entries = fs.readdirSync(planDir);
+
+  for (const entry of entries) {
+    // Match recognized artifact patterns
+    let type: string | null = null;
+
+    if (entry === 'plan.md') {
+      type = 'plan';
+    } else if (entry === 'spec.md') {
+      type = 'spec';
+    } else if (entry.match(/^spec-\d+\.md$/)) {
+      const num = entry.match(/^spec-(\d+)\.md$/)?.[1];
+      type = `spec-${num}`;
+    } else if (entry.startsWith('test_skeleton')) {
+      type = 'test-skeleton';
+    } else if (entry === 'build_report.md') {
+      type = 'build-report';
+    } else if (entry.match(/^build_report_\d+\.md$/)) {
+      const num = entry.match(/^build_report_(\d+)\.md$/)?.[1];
+      type = `build-report-${num}`;
+    } else if (entry === 'verify_report.md') {
+      type = 'verify-report';
+    } else if (entry.match(/^verify_report_\d+\.md$/)) {
+      const num = entry.match(/^verify_report_(\d+)\.md$/)?.[1];
+      type = `verify-report-${num}`;
+    }
+
+    if (type) {
+      const typeInfo = parseArtifactType(type);
+      if (typeInfo) {
+        artifacts.push({
+          file: entry,
+          type,
+          typeInfo,
+          path: path.join(planDir, entry)
+        });
+      }
+    }
+  }
+
+  if (artifacts.length === 0) {
+    console.error(chalk.red('Error: No artifacts found in plan directory.'));
+    process.exit(1);
+  }
+
+  // 3. Validate all artifacts
+  for (const artifact of artifacts) {
+    if (artifact.typeInfo.baseType === 'plan') {
+      const error = validatePlanFormat(artifact.path);
+      if (error) {
+        console.error(chalk.red(`Error: ${artifact.file} format invalid.\n${error}`));
+        console.error(chalk.gray('Fix the validation error and try again.'));
+        process.exit(1);
+      }
+    }
+
+    if (artifact.typeInfo.baseType === 'verify-report') {
+      const error = validateVerifyReportFormat(artifact.path);
+      if (error) {
+        console.error(chalk.red(`Error: ${artifact.file} format invalid.\n${error}`));
+        process.exit(1);
+      }
+    }
+  }
+
+  // 4. Read .meta.json for coAuthor
+  const metaPath = path.join(projectRoot, '.ana', '.meta.json');
+  let coAuthor = 'Ana <build@anatomia.dev>';
+  try {
+    const metaContent = fs.readFileSync(metaPath, 'utf-8');
+    const meta: { coAuthor?: string } = JSON.parse(metaContent);
+    coAuthor = meta.coAuthor || 'Ana <build@anatomia.dev>';
+  } catch {
+    // Use fallback
+  }
+
+  // 5. Check if any artifacts are new (for create vs update message)
+  const artifactPaths = artifacts.map(a => path.relative(projectRoot, a.path));
+  const trackedStatus = artifactPaths.map(p => {
+    return spawnSync('git', ['ls-files', '--error-unmatch', p], {
+      cwd: projectRoot,
+      stdio: 'pipe'
+    }).status === 0;
+  });
+  const allTracked = trackedStatus.every(t => t);
+
+  // 6. Stage all artifacts
+  try {
+    for (const artifactPath of artifactPaths) {
+      execSync(`git add ${artifactPath}`, { stdio: 'pipe', cwd: projectRoot });
+    }
+
+    // Special case: if verify-report exists, also stage plan.md
+    if (artifacts.some(a => a.typeInfo.baseType === 'verify-report')) {
+      const planPath = path.join(planDir, 'plan.md');
+      if (fs.existsSync(planPath) && !artifactPaths.includes(path.relative(projectRoot, planPath))) {
+        execSync(`git add ${planPath}`, { stdio: 'pipe', cwd: projectRoot });
+      }
+    }
+  } catch (error) {
+    console.error(chalk.red(`Error: Failed to stage files. ${error instanceof Error ? error.message : 'Unknown error'}`));
+    process.exit(1);
+  }
+
+  // 7. Check if there are staged changes
+  const diffResult = spawnSync('git', ['diff', '--staged', '--quiet'], { cwd: projectRoot });
+  if (diffResult.status === 0) {
+    console.log(chalk.yellow('No changes to save — artifacts are already up to date.'));
+    process.exit(0);
+  }
+
+  // 8. Commit
+  const typeNames = artifacts.map(a => a.typeInfo.displayName).join(', ');
+  const prefix = allTracked ? 'Update: ' : '';
+  const commitMessage = `[${slug}] ${prefix}Save: ${typeNames}\n\nCo-authored-by: ${coAuthor}`;
+
+  try {
+    execSync(`git commit -m "${commitMessage}"`, { stdio: 'pipe', cwd: projectRoot });
+  } catch (error) {
+    console.error(chalk.red(`Error: Commit failed. ${error instanceof Error ? error.message : 'Unknown error'}`));
+    process.exit(1);
+  }
+
+  // 9. Success message
+  console.log(chalk.green(`✓ Saved ${artifacts.length} artifact${artifacts.length > 1 ? 's' : ''} for \`${slug}\``));
+  console.log(chalk.gray(`  ${typeNames}`));
+}
+
+/**
  * Command definition for artifact management
  */
 export const artifactCommand = new Command('artifact')
@@ -370,4 +527,12 @@ const saveCommand = new Command('save')
     saveArtifact(type, slug);
   });
 
+const saveAllCommand = new Command('save-all')
+  .description('Commit all artifacts in a plan directory atomically')
+  .argument('<slug>', 'Work item slug (e.g., add-status-command)')
+  .action((slug: string) => {
+    saveAllArtifacts(slug);
+  });
+
 artifactCommand.addCommand(saveCommand);
+artifactCommand.addCommand(saveAllCommand);

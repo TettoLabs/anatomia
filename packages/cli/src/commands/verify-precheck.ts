@@ -109,7 +109,6 @@ function extractAssertions(content: string, isCommented: boolean): Array<{ line:
  */
 function checkSkeletonCompliance(planDir: string, slug: string): SkeletonCheckResult {
   // Find skeleton file
-  const skeletonPattern = path.join(planDir, 'test_skeleton*');
   let skeletonFiles: string[];
   try {
     const entries = fs.readdirSync(planDir);
@@ -413,6 +412,8 @@ function checkCommits(artifactBranch: string, coAuthor: string): CommitCheckResu
 
 /**
  * Print skeleton check results
+ *
+ * @param result - Skeleton check result
  */
 function printSkeletonResults(result: SkeletonCheckResult): void {
   console.log(chalk.bold('\n=== SKELETON COMPLIANCE ==='));
@@ -455,6 +456,8 @@ function printSkeletonResults(result: SkeletonCheckResult): void {
 
 /**
  * Print file changes results
+ *
+ * @param result - File changes result
  */
 function printFileChangesResults(result: FileChangesResult): void {
   console.log(chalk.bold('\n=== FILE CHANGES ==='));
@@ -485,6 +488,8 @@ function printFileChangesResults(result: FileChangesResult): void {
 
 /**
  * Print commit analysis results
+ *
+ * @param result - Commit check result
  */
 function printCommitResults(result: CommitCheckResult): void {
   console.log(chalk.bold('\n=== COMMITS ==='));
