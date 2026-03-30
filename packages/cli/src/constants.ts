@@ -12,6 +12,9 @@ export const MIN_FILE_SIZE_WARNING = 20; // Lines
 export const MAX_FILE_SIZE_WARNING = 1500; // Lines
 export const MIN_DEBUGGING_FILE_SIZE = 15; // Lines
 
+/** Staleness threshold for context files (commits since last modified) */
+export const STALENESS_THRESHOLD = 5;
+
 /** Pattern categories (synchronized with analyzer) */
 export const PATTERN_CATEGORIES = [
   'errorHandling',
