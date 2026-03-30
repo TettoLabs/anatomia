@@ -21,6 +21,7 @@ import { artifactCommand } from './commands/artifact.js';
 import { workCommand } from './commands/work.js';
 import { registerPrCommand } from './commands/pr.js';
 import { registerAgentsCommand } from './commands/agents.js';
+import { registerVerifyPreCheckCommand } from './commands/verify-precheck.js';
 
 const program = new Command();
 
@@ -38,6 +39,7 @@ program.addCommand(artifactCommand);
 program.addCommand(workCommand);
 registerPrCommand(program);
 registerAgentsCommand(program);
+registerVerifyPreCheckCommand(program);
 
 // Parse arguments with async support
 // CRITICAL: Use parseAsync() not parse() for async action handlers
