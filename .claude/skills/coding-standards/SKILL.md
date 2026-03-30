@@ -43,7 +43,7 @@ description: "Anatomia coding standards. Invoke when implementing features, writ
 ## Co-authoring
 All commits from AnaBuild include:
 ```
-Co-authored-by: Ana <build@anatomia.dev>
+Co-authored-by: {from .meta.json coAuthor field}
 ```
 
 ## Gotchas

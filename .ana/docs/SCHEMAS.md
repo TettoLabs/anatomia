@@ -41,7 +41,26 @@ What was considered and discarded, with reasoning.
 ## Open Questions
 Unresolved items for AnaPlan to investigate further.
 
+## Exploration Findings
+
+Optional for small scopes — encouraged for medium and large. Structured breadcrumbs from codebase exploration that help the planner skip redundant file reads.
+
+### Patterns Discovered
+- {file: what pattern, which lines}
+(Facts about how things work in the codebase.)
+
+### Constraints Discovered
+- {file: data structure or existing contract that must be matched}
+(Mandatory — implementation must match or deliberately evolve these.)
+
+### Test Infrastructure
+- {test file: what helpers exist, how tests are structured}
+(What the planner needs for the test skeleton.)
+
 ## For AnaPlan
+
+### Structural Analog
+Name the file that is the closest structural match to what you're building and explain why. Required field — forces exploration and gives AnaPlan an explicit starting point.
 
 ### Relevant Code Paths
 - {file path and what's there — breadcrumbs Ana found during scoping}
@@ -134,6 +153,9 @@ Written by AnaPlan after reading the scope. Describes HOW in full implementation
 ## Approach
 Detailed implementation strategy. What pattern to follow. What existing code to build on.
 
+## Output Mockups
+Examples of what the user will see: command output, error messages, JSON structure. For commands: actual terminal output with real examples. For APIs: request/response examples. Placed near the top — the builder reads top-to-bottom and mockups define user-visible behavior.
+
 ## File Changes
 
 ### {file path} ({action: create / modify / delete})
@@ -163,6 +185,16 @@ What must exist before implementation begins.
 
 ## Constraints
 Performance, security, compatibility, or backward-compatibility requirements.
+
+## Gotchas
+Things that will break or confuse AnaBuild if not flagged upfront. Edge cases, known quirks, compatibility concerns.
+
+## Build Brief
+Curated context for the builder — specific rules, patterns, and commands for THIS build. The builder reads this instead of loading full skill files. Contains:
+- **Rules That Apply** — 5-10 relevant rules from coding-standards, testing-standards, design-principles
+- **Pattern Extracts** — 10-30 lines of code from the structural analog (existing code only, never new code)
+- **Checkpoint Commands** — exact commands from `.meta.json` `commands` field with expected results
+- **Build Baseline** — current test count, expected after build, regression focus areas
 ```
 
 **Rules:**
@@ -177,113 +209,95 @@ Performance, security, compatibility, or backward-compatibility requirements.
 
 ## build_report.md — AnaBuild → AnaVerify
 
-Written by AnaBuild after implementation. Summarizes what was done.
+Written by AnaBuild after implementation. Documents what was built, how, and what the verifier needs to know.
 
-```markdown
-# Build Report: {task name}
+**Location:** `.ana/plans/active/{slug}/build_report.md` (or `build_report_N.md` for multi-phase)
 
-**Created by:** AnaBuild
-**Date:** {date}
-**Spec:** .ana/plans/active/{slug}/spec.md
+**Sections (in order):**
 
-## What Was Built
-- `{file path}` — {one-line description of change}
-- `{file path}` — {one-line description of change}
-- `{file path}` — {one-line description of change}
+### What Was Built
+Summary of changes made. File paths with one-line descriptions of what was created, modified, or deleted.
 
-## Acceptance Criteria Status
-- [x] {criterion — checked off}
-- [x] {criterion — checked off}
-- [ ] {criterion — not completed, with reason}
+### PR Summary
+3-5 bullet points summarizing the change for a PR description. Extracted by `ana pr create` for the PR body. Write for a reviewer who hasn't read the spec.
 
-## Tests Written
-- `{test file}` — {what it tests} — PASS / FAIL
-- `{test file}` — {what it tests} — PASS / FAIL
+### Acceptance Criteria Coverage
+Maps every acceptance criterion to test evidence: AC ID → test file:line → assertion count. Every criterion must appear. If no test exists, state why. If a test was weakened, note here AND in Open Issues.
 
-## Implementation Decisions
-Choices made during implementation that weren't in the spec:
-- **{decision}:** {what was chosen} over {alternative}, because {reasoning}
+### Implementation Decisions
+Technical choices made during the build that the spec didn't explicitly cover. Which patterns followed, which approaches considered, with reasoning.
 
-## Known Concerns
-Anything uncertain. Edge cases not fully covered. Performance unknowns.
+### Deviations from Spec
+Structured format per deviation:
+- **Deviation D1: {Title}** with 6 required fields: Spec said / What I did / Why / Alternatives considered / Coverage impact / Test skeleton impact
+- If skeleton assertion was modified, that is ALWAYS a deviation
+- "None — spec followed exactly." if truly none
 
-## Files Changed
-Complete list for AnaVerify to inspect:
-- `{file path}`
-- `{file path}`
-```
+### Test Results
+Baseline (before changes), after changes, comparison. Complete test runner output with counts. New tests written with descriptions of what scenarios they cover.
+
+### Verification Commands
+Exact commands for AnaVerify to run independently. Commands from `.meta.json` `commands` field.
+
+### Git History
+Git log output showing commits made on the feature branch.
+
+### Open Issues
+Anything unfinished, concerning, or needing attention. Forced second pass: "What did I notice that I didn't write down?" Must explain if "None." An item followed by "None" is a contradiction.
 
 **Rules:**
-- Keep it factual. What was done, not what was planned.
-- Acceptance criteria checkboxes must match the spec exactly. Check off what's done. Leave unchecked what isn't, with a reason.
-- Files Changed list is critical — AnaVerify uses it to know what to inspect.
-- Implementation Decisions documents what the spec didn't cover. Captures tribal knowledge for future cycles.
+- Build report is proof, not claims. Test output pasted, not summarized. Git history is real, not described.
+- Acceptance criteria coverage maps each AC to specific test evidence with line numbers.
+- Deviations use structured D1/D2/D3 format with all 6 fields.
+- AnaVerify independently verifies all claims — the report must survive that scrutiny.
 
 ---
 
 ## verify_report.md — AnaVerify → Completion
 
-Written by AnaVerify after adversarial testing and review.
+Written by AnaVerify after independent verification. The final quality gate before PR creation.
 
-```markdown
-# Verify Report: {task name}
+**Location:** `.ana/plans/active/{slug}/verify_report.md` (or `verify_report_N.md` for multi-phase)
 
-**Result:** PASS
+**Result line:** `**Result:** PASS` or `**Result:** FAIL` — mandatory, machine-parsed by `ana artifact save verify-report`. Must appear in the first 10 lines. Case-insensitive.
 
-**Created by:** AnaVerify
-**Date:** {date}
-**Spec:** .ana/plans/active/{slug}/spec.md
+**Sections:**
 
-## Acceptance Criteria Results
-- ✅ PASS: {criterion} — {evidence}
-- ✅ PASS: {criterion} — {evidence}
-- ⚠️ PARTIAL: {criterion} — {what's partially done}
+### Pre-Check Results
+Output from `ana verify pre-check {slug}` (or with `--phase N` for multi-phase). Contains skeleton assertion diff, file changes audit, and commit analysis. Verifier investigates each DIFFER and unexpected file flag.
 
-## Regression Check
-- **Existing test suite:** PASS ({N} tests, {N} passed)
-- **Regressions found:** none
+### Independent Findings
+What the verifier discovered from reading code and tests BEFORE reading the build report. Code quality, pattern compliance, edge cases, test quality.
 
-## Edge Cases Tested
-- {edge case} — {result}
-- {edge case} — {result}
+### Build Report Audit
+For each major build report section, the verifier checks: CONFIRMED or CONTRADICTED with evidence.
+- What Was Built
+- Deviations (does "None" survive pre-check skeleton diff?)
+- Test Results (do counts match independent run?)
+- Open Issues (any self-contradictions?)
 
-## Issues Found
-None
+### AC Walkthrough
+Every acceptance criterion from the spec, individually assessed: ✅ PASS, ❌ FAIL, ⚠️ PARTIAL, or 🔍 UNVERIFIABLE. Each with evidence (command output, file path, line number).
 
-## Summary
-{2-3 sentence overall assessment}
-```
+### Blockers
+Anything preventing shipping. May be "None — shippable."
 
-Or for failures:
+### Callouts
+Observations, concerns, nits. Always populated — a report with zero callouts indicates insufficient investigation.
 
-```markdown
-# Verify Report: {task name}
+### Deployer Handoff
+What the person merging should know: assumptions, untested edge cases, performance characteristics, configuration dependencies. Always populated.
 
-**Result:** FAIL
-
-**Created by:** AnaVerify
-**Date:** {date}
-**Spec:** .ana/plans/active/{slug}/spec.md
-
-## Acceptance Criteria Results
-- ✅ PASS: {criterion} — {evidence}
-- ❌ FAIL: {criterion} — {what's wrong and what needs fixing}
-
-## Issues Found
-- **Critical:** {description} in `{file}` — {details}
-
-## Items to Fix
-1. {what to fix}
-2. {what to fix}
-```
+### Verdict
+**Shippable:** YES / NO with justification. Comes last — after all evidence.
 
 **Rules:**
-- The `**Result:**` line is mandatory and machine-parsed by `ana work status` and `ana work complete`. It must appear near the top of the file (line 3). Case-insensitive: PASS or FAIL only.
-- AnaVerify reads the spec and the code independently. It does NOT trust the build report's self-assessment.
-- Every acceptance criterion gets ✅ PASS, ❌ FAIL, or ⚠️ PARTIAL with evidence.
+- The `**Result:**` line is mandatory and machine-parsed by `ana work status` and `ana work complete`.
+- AnaVerify runs mechanical checks first (`ana verify pre-check`), forms independent findings, THEN reads the build report to audit its claims.
+- Every acceptance criterion must be assessed individually with evidence.
 - Overall Result is binary: PASS or FAIL. If ANY criterion is ❌ FAIL, the Result is FAIL.
-- FAIL means the developer should open `claude --agent ana-build` to fix the listed items, then re-run verify.
-- AnaVerify never fixes code. It reports only.
+- FAIL means the developer opens `claude --agent ana-build` to fix the documented issues, then re-verify.
+- AnaVerify creates the PR on PASS. The developer reviews and merges.
 
 ---
 
@@ -299,6 +313,8 @@ verify_report.md    → check recommendation: PASS = done, FAIL = back to build
 File existence IS the state machine. No separate status file needed.
 
 **Re-saving artifacts:** Artifacts can be updated by modifying the file and running `ana artifact save` again. The command detects whether the file is new or updated and commits accordingly. First save uses commit message `[slug] Type`. Re-saves use `[slug] Update: Type`. If the file hasn't changed since the last save, the command exits gracefully without creating an empty commit.
+
+**Batch saves:** `ana artifact save-all {slug}` saves all recognized artifacts in the plan directory atomically. Validates each artifact per type (plan format, verify report Result line) before committing. If any validation fails, nothing is saved. Commit message lists all artifact types saved.
 
 When a task is complete (verify passes), the developer runs `ana work complete {slug}` which archives the directory from `.ana/plans/active/{slug}/` to `.ana/plans/completed/{slug}/` and cleans up the feature branch. The four artifacts together form the permanent record: intent, plan, implementation, proof.
 
@@ -321,9 +337,11 @@ Stores the exact build, test, and lint commands for this project. Agents and too
 - `lint` — exact shell command to lint the project (e.g., `"pnpm --filter anatomia-cli lint"` or `"npm run lint"`)
 
 **Who reads it:**
-- `ana verify pre-check` uses `commands.test` to run tests during verification checks
-- Agents reference `commands` in Pre-Flight baseline and Build Brief checkpoint commands
-- AnaPlan copies commands into spec checkpoint sections
+- AnaVerify reads `commands` to execute build/test/lint during verification (Step 2)
+- AnaBuild reads `commands` for Pre-Flight baseline checks
+- AnaPlan reads `commands` to populate spec Build Brief checkpoint commands
+
+No toolbelt code reads `commands` programmatically — agents read `.meta.json` directly and use the command strings.
 
 **Default:** Template provides generic npm commands (`"npm run build"`, `"npm test"`, `"npm run lint"`). Teams update during setup with their actual commands.
 

@@ -60,8 +60,8 @@ Read the two contracts that define what should have been built:
 ### 4. Load Skills (reference material)
 
 Invoke after reading contracts:
-- `/testing-standards` — for test commands and conventions
-- `/coding-standards` — for build and lint commands
+- `/testing-standards` — for test conventions and patterns
+- `/coding-standards` — for code style and build conventions
 
 Read commands from `.meta.json` `commands` field for build/test/lint execution. These are the exact commands to run.
 
@@ -82,7 +82,7 @@ Paste the **FULL output** into the Pre-Check Results section of your report. Thi
 - **File changes audit** — compares spec YAML to actual git diff
 - **Commit analysis** — checks commit count, size, co-author presence
 
-If the command fails or is not available: build a manual comparison table. For each `expect()` in the skeleton, write one row — | Skeleton assertion | Test file assertion | MATCH or DIFFER |. Do not skip rows. Also check `git diff --name-only` against spec and review `git log --oneline`.
+If the command fails or is not available: build a manual comparison table. For each assertion in the skeleton (e.g., `expect()` for JS/TS, `assert` for Python), write one row — | Skeleton assertion | Test file assertion | MATCH or DIFFER |. Do not skip rows. Also check `git diff --name-only` against spec and review `git log --oneline`.
 
 ### Step 2: Run Build, Tests, Lint
 
@@ -98,7 +98,7 @@ Record: total tests, passed, failed, skipped. Note build and lint status.
 
 Read every new file. Read every modified file. Read every test assertion. Understand what the code DOES, not just that it compiles.
 
-Verification depth scales with change size. For every new file: read every function. For every test file: read every assertion. For the skeleton: compare every `expect()` value. If you can summarize what the code does in one sentence without reading it, you didn't read it.
+Verification depth scales with change size. For every new file: read every function. For every test file: read every assertion. For the skeleton: compare every assertion value (e.g., `expect()` for JS/TS). If you can summarize what the code does in one sentence without reading it, you didn't read it.
 
 For each DIFFER flagged by pre-check: read the actual code to understand why the builder changed the assertion.
 

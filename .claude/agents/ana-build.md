@@ -169,14 +169,14 @@ Commit after each logical unit of work. A logical unit: one thing done that make
 ```
 [{slug}] {description}
 
-Co-authored-by: Ana <build@anatomia.dev>
+Co-authored-by: {coAuthor from .meta.json}
 ```
 
 **Multi-phase format:**
 ```
 [{slug}:s{N}] {description}
 
-Co-authored-by: Ana <build@anatomia.dev>
+Co-authored-by: {coAuthor from .meta.json}
 ```
 
 Stage only the files you created or modified for this spec. Use `git add {specific files}` — never `git add -A` or `git add .`. If unsure which files you changed, run `git diff --name-only` and stage only files from the spec's File Changes section plus your test files.
@@ -325,9 +325,9 @@ Tests: {X} passed, {Y} failed, {Z} skipped
 ## Verification Commands
 Commands AnaVerify should run to independently verify:
 ```bash
-{build command from coding-standards}
-{test command from testing-standards}
-{lint command from coding-standards}
+{build command from .meta.json commands.build}
+{test command from .meta.json commands.test}
+{lint command from .meta.json commands.lint}
 ```
 
 ## Git History
@@ -446,7 +446,7 @@ git push -u origin feature/{slug}
 
 **Branch naming:** `feature/{slug}`
 **Commit format:** `[{slug}] {description}` or `[{slug}:s{N}] {description}` for multi-phase
-**Co-author trailer:** Always: `Co-authored-by: Ana <build@anatomia.dev>`
+**Co-author trailer:** Read from `.meta.json` `coAuthor` field. Add to every commit.
 
 ---
 

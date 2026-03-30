@@ -210,7 +210,7 @@ Before writing skeleton assertions, resolve every value ambiguity in the spec. I
 
 After writing the spec, write a test skeleton file. This is the TDD contract — AnaBuild makes these tests pass, they do NOT modify the assertions.
 
-**Filename convention:** Always name the file `test_skeleton.ts` (or `.py`, `.rs`, etc. matching the project's test language). Store at `.ana/plans/active/{slug}/test_skeleton.ts`.
+**Filename convention:** Always name the file `test_skeleton.ts` (or `.py`, `.rs`, etc. matching the project's test language). Store at `.ana/plans/active/{slug}/test_skeleton.ts`. Note: The `ana verify pre-check` tool currently parses `expect()` syntax (TypeScript/JavaScript). For other languages, the verifier uses manual comparison instead.
 
 The skeleton contains:
 - `describe` blocks matching the spec's test matrix scenarios
@@ -226,7 +226,7 @@ The skeleton is NOT compilable. It's a contract. The builder fills in:
 - Any additional tests beyond what the skeleton specifies
 
 **What the builder CANNOT do:**
-- Modify any `expect()` assertion the planner wrote
+- Modify or remove any `expect()` assertion the planner wrote
 - Remove any `it()` block the planner wrote
 - Change the meaning of any assertion (weaker, different condition, different target)
 
