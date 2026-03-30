@@ -1,0 +1,19 @@
+{
+  "version": "1.0.0",
+  "createdAt": "PLACEHOLDER_TIMESTAMP",
+  "artifactBranch": "main",
+  "commands": {
+    "build": "npm run build",
+    "test": "npm test",
+    "lint": "npm run lint"
+  },
+  "coAuthor": "Ana <build@anatomia.dev>",
+  "setupStatus": "pending",
+  "setupCompletedAt": null,
+  "setupMode": "guided",
+  "framework": null,
+  "analyzerVersion": "0.0.0",
+  "lastEvolve": null,
+  "lastHealth": null,
+  "sessionCount": 0
+}
