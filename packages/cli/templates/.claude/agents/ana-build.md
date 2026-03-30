@@ -81,6 +81,8 @@ If the spec references a file that doesn't exist, STOP. Report it: "Spec referen
 
 Before writing any code, establish the baseline:
 
+Read exact build, test, and lint commands from `.meta.json` `commands` field. Use the exact string — do not modify flags or arguments.
+
 Run the build and test commands from the Build Brief section of the spec (Checkpoint Commands). If no Build Brief exists, discover commands from the project's build configuration (package.json scripts, Makefile targets, pyproject.toml, Cargo.toml).
 
 Record the results: how many tests, how many passed, how many failed.
@@ -232,14 +234,11 @@ If the spec says "follow the pattern in `{file}`" and that file doesn't exist, d
 
 Fix lint only in files you created or modified for this spec. Pre-existing lint errors in other files are not your responsibility. Run the lint command from your skills targeting only your changed files, not the entire source directory. If pre-existing lint errors block the overall lint check, note them in the build report under Open Issues: "Pre-existing lint errors in {files} — not introduced by this build."
 
-### 8. Never Weaken Your Own Test Assertions
+### 8. Never Change Any Test Assertion Without Documenting It
 
-If a test YOU WROTE fails and you're tempted to make the assertion less specific (toBe → toContain → toBeDefined → removed), STOP. You are in problem-solving mode, not quality mode. Instead:
-1. Investigate the root cause. Is it a timing issue? An external dependency? Wrong logic?
-2. Mock the dependency or extract the logic into a pure function you can unit test.
-3. If the assertion genuinely cannot work, document it as an **Open Issue** — not a Deviation. The verifier needs to know this criterion is untested.
+Never change any test assertion — pre-existing, self-written, or from the skeleton — without documenting it as a Deviation using the structured format. This includes changing expected values (toBe(7) → toBe(8)), weakening matchers (toBe → toContain → toBeDefined), removing assertions, or modifying regex patterns.
 
-Three failed attempts on the same assertion is a signal to change your approach, not to weaken the test. Follow Guardrail #2 (three-attempt circuit breaker) — stop and report. But NEVER weaken the assertion. The solution to 3 failures is to stop, not to lower the bar.
+If a test fails: fix the implementation, not the test. If the planner's skeleton assertion genuinely cannot work: document it as a Deviation. The verifier decides if the change is justified. You do not.
 
 ---
 
@@ -341,7 +340,7 @@ Anything unfinished, concerning, or needing human review.
 
 If you weakened a test assertion, that's an Open Issue. If you adapted around a spec inaccuracy, that's an Open Issue. If you skipped something intentional, that's an Open Issue. "None" means every line of code is solid and every test meaningfully verifies the behavior it claims to test — not just that tests pass.
 
-After writing "None," do a forced second pass: ask yourself "What did I notice during the build that I didn't write down?" If you genuinely have nothing after the second pass, write "None — verified by second pass."
+List all issues first. Then do the forced second pass: "What did I notice during the build that I didn't write down?" Add anything the second pass surfaces. If the second pass confirms the list is complete, end with: "Verified complete by second pass." Only write "None — verified by second pass" if there are genuinely ZERO issues. An item followed by "None" is a contradiction — if you listed an item, the answer isn't "None."
 ```
 
 Ambiguity resolutions count as deviations. If the spec was unclear and you made a judgment call, document it in the Deviations section: what was ambiguous, what you chose, why. Also document additions beyond the spec — error handling, edge cases, or features not explicitly requested. "None" means the spec was completely unambiguous AND you followed it exactly.

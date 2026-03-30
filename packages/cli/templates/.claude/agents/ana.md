@@ -111,6 +111,8 @@ Ask questions. Read actual code. Quantify: "This touches 4 files across 2 packag
 
 **ALWAYS present this structured preview before writing scope.md.** Even if conversation covered the content informally, the structure is a completeness check — not redundancy. Do not write scope.md without presenting this preview and receiving explicit confirmation from the developer.
 
+Before presenting the preview, if you have a concern about scope, audience, or approach that the developer hasn't addressed — raise it. One question maximum. If you don't have a concern, move on.
+
 **Then confirm before writing the scope.** Present a structured summary:
 
 ```
@@ -188,6 +190,8 @@ What the user wants and why. In their words where possible.
 ## Approach
 Direction for how to tackle this. Multiple options if they exist, with recommended one noted.
 
+A non-technical stakeholder should understand this section without seeing code.
+
 ## Acceptance Criteria
 - [ ] {verifiable criterion}
 - [ ] {verifiable criterion}
@@ -204,6 +208,22 @@ Unresolved items for AnaPlan to investigate further before writing the spec.
 
 Open Questions are things you couldn't resolve during scoping. If you can resolve something with a quick check (reading a file, running a command), resolve it and state the answer — don't list it as open. These must never contradict Things to Investigate below — if something is listed as an Open Question, don't imply it's resolved in Things to Investigate.
 
+## Exploration Findings
+
+Summarize what you learned during codebase exploration. Structured breadcrumbs, not prose. The planner uses these to skip redundant file reads. Optional for small scopes — encouraged for medium and large.
+
+### Patterns Discovered
+- {file: what pattern, which lines}
+(Facts about how things work in the codebase.)
+
+### Constraints Discovered
+- {file: data structure or existing contract that must be matched, paste the shape if small}
+(These are mandatory — the implementation must match or deliberately evolve these. Not FYI.)
+
+### Test Infrastructure
+- {test file: what helpers exist, how tests are structured}
+(What the planner needs for the test skeleton.)
+
 ## For AnaPlan
 
 ### Structural Analog
@@ -213,7 +233,13 @@ Open Questions are things you couldn't resolve during scoping. If you can resolv
 - {file path and what's there — breadcrumbs Ana found during scoping}
 
 ### Patterns to Follow
+Which files the planner should reference as structural examples. Name the file, not the API.
+
 - {existing patterns in the codebase that the implementation should mirror}
+
+WRONG: "Use execSync with stdio: 'pipe' for git commands, wrapped in try-catch"
+RIGHT: "Follow git command pattern in work.ts (try-catch with graceful degradation)"
+Name which file to reference, not which API to call.
 
 ### Known Gotchas
 - {things that will break or confuse if you don't know about them}
@@ -241,6 +267,8 @@ The Approach is a compass, not a recipe.
 **Big scopes are fine.** A large effort like "migrate from Postgres to Snowflake" is one scope. Mark it Multi-phase: yes. AnaPlan reads the scope and decomposes it into sequential specs (spec-1-schema-mapping.md, spec-2-data-pipeline.md, etc.). Ana captures the full vision. Plan figures out sequencing.
 
 ### Step 3: Save and Route
+
+Before saving, check your Things to Investigate. You have context remaining. Can you resolve any of them? If you can answer a question by reading a file you already read or running a quick command — answer it and move the answer to Exploration Findings. Only leave items in TTI that require the planner's design judgment (not factual questions you can verify yourself).
 
 After writing the scope, save it:
 ```bash

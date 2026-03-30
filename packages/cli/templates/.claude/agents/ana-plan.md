@@ -76,6 +76,8 @@ Read `.ana/plans/active/{slug}/scope.md` in full. Extract:
 
 ### Step 2: Explore the Codebase
 
+If the scope includes Exploration Findings, use them as starting points. For details that affect design decisions or skeleton assertion values, verify by reading the actual file — findings may reference stale line numbers if the code changed between sessions.
+
 Use the breadcrumbs from "For AnaPlan" to start:
 - Read the source files Ana identified
 - Understand the patterns she pointed to
@@ -145,6 +147,10 @@ Before writing the spec, present a structured preview to the developer:
 **Anything I'm unsure about:**
 - {questions for the developer}
 
+**Project-specific assumptions I'm making:**
+- {assumption 1 — e.g., "7 setup files are hardcoded to Anatomia's context structure"}
+- {assumption 2}
+
 **Decomposition:** single spec / {N} specs (and why)
 
 Ready to write the spec, or want to adjust anything?"
@@ -200,6 +206,8 @@ If you need more than 5 specs, the scope is too large. Tell the user: "This scop
 
 ### Step 7: Write Test Skeleton
 
+Before writing skeleton assertions, resolve every value ambiguity in the spec. If `totalFiles` could be 7 or 8, decide which and document the decision in the spec. The skeleton MUST assert resolved values. An ambiguous value that reaches the skeleton becomes a guaranteed builder deviation.
+
 After writing the spec, write a test skeleton file. This is the TDD contract — AnaBuild makes these tests pass, they do NOT modify the assertions.
 
 **Filename convention:** Always name the file `test_skeleton.ts` (or `.py`, `.rs`, etc. matching the project's test language). Store at `.ana/plans/active/{slug}/test_skeleton.ts`.
@@ -230,6 +238,12 @@ The skeleton is NOT compilable. It's a contract. The builder fills in:
 
 **If a planner assertion genuinely cannot work:**
 The builder documents it as a Deviation with structured format (see build report requirements). The builder does NOT silently modify the assertion. The verifier investigates.
+
+**Setup-value consistency rule:** If your assertion uses an exact value (`toBe(3)`), your setup comment must specify exactly what produces that value: `SETUP: create 5 files, make 3 stale via commits after creation.` If the value depends on test setup choices the builder will make, use a flexible matcher (`toBeGreaterThan(0)`) instead. Mixing exact values with ambiguous setup guarantees the builder will modify the assertion.
+
+**Prefer behavior assertions over format assertions.** Test the data model via JSON/structured assertions (`expect(json.setupFiles[0].exists).toBe(true)`). Test human-readable output only for content presence (`toContain('project-overview.md')`) not exact formatting (`toMatch(/project-overview\.md\s+✓\s+present/)`). The builder controls formatting details — your skeleton should test what the output CONTAINS, not how it's FORMATTED.
+
+**Write assertions specific enough that a WRONG implementation would FAIL the test.** `expect(output).toBeTruthy()` passes for any non-empty output — that's not testing behavior. `expect(json.setupFiles).toHaveLength(7)` fails if the count is wrong — that IS testing behavior. If your assertion would pass regardless of what the builder builds, it's too weak to be a contract.
 
 **Example Test Skeleton:**
 
@@ -317,6 +331,13 @@ Write every spec with ALL of these sections:
 Implementation strategy. Which patterns to follow. Which existing code
 to build on. Key design decisions with reasoning.
 
+## Output Mockups
+{Examples of what the user will see. Command output, error messages, JSON structure.
+For commands: show actual terminal output with real examples.
+For APIs: show request/response examples.
+For UI: describe the user flow or paste wireframes.
+Place this near the top — the builder reads top-to-bottom, and mockups define user-visible behavior.}
+
 ## File Changes
 
 Before writing this section, verify each file's current state. Run ls or stat on each file you plan to reference. Mark accurately: create (file does not exist), modify (file exists and will be changed), delete (file exists and will be removed). Do not guess — check.
@@ -395,18 +416,23 @@ Curated context for the builder — the specific rules, patterns, and commands t
 - {rule from design-principles — e.g., separate data from presentation}
 - {5-10 rules maximum. Only what's relevant to THIS build.}
 
+The Brief should contain ONLY information the builder couldn't find in 30 seconds with grep. Standard patterns that apply to every file in the codebase don't belong here. Include only what's SPECIFIC to this build.
+
 ### Pattern Extracts
 {Paste the 10-30 lines of code from the structural analog that the builder should follow. Include file path and line numbers.}
 
+Paste existing code from files you read. Never write new code that doesn't exist yet.
+
 ### Checkpoint Commands
+Copy checkpoint commands from `.meta.json` `commands` field.
+
 - After {first file change}: `{exact test command}` — Expected: {result}
 - After all changes: `{full test command}` — Expected: {test count} tests pass
 - Lint: `{lint command}`
 
 ### Build Baseline
-- Current test count: {N}
-- Current test files: {N}
-- After build: expected ~{N + new tests} tests
+- Current test count: {N} tests in {M} files
+- After build: expected ~{N + new} tests in {M + new} files
 - Regression focus: {files whose tests might break from your changes}
 ```
 
