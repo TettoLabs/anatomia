@@ -498,8 +498,8 @@ export function saveAllArtifacts(slug: string): void {
 
   // 8. Commit
   const typeNames = artifacts.map(a => a.typeInfo.displayName).join(', ');
-  const prefix = allTracked ? 'Update: ' : '';
-  const commitMessage = `[${slug}] ${prefix}Save: ${typeNames}\n\nCo-authored-by: ${coAuthor}`;
+  const action = allTracked ? 'Update' : 'Save';
+  const commitMessage = `[${slug}] ${action}: ${typeNames}\n\nCo-authored-by: ${coAuthor}`;
 
   try {
     execSync(`git commit -m "${commitMessage}"`, { stdio: 'pipe', cwd: projectRoot });

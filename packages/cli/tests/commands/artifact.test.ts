@@ -576,6 +576,36 @@ describe('ana artifact save-all', () => {
     return execSync('git log -1 --pretty=%B', { cwd: tempDir, encoding: 'utf-8' }).trim();
   }
 
+  /**
+   * Helper to capture errors from functions that call process.exit
+   */
+  function captureError(fn: () => void): string {
+    const originalExit = process.exit;
+    const originalError = console.error;
+    const errors: string[] = [];
+
+    console.error = (...args: unknown[]) => {
+      errors.push(args.map(String).join(' '));
+    };
+
+    process.exit = ((code?: number) => {
+      throw new Error(`process.exit(${code})`);
+    }) as typeof process.exit;
+
+    try {
+      fn();
+      return '';
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith('process.exit')) {
+        return errors.join('\n');
+      }
+      throw error;
+    } finally {
+      console.error = originalError;
+      process.exit = originalExit;
+    }
+  }
+
   it('saves all artifacts in single commit', async () => {
     await createTestProject();
 
@@ -613,7 +643,8 @@ describe('ana artifact save-all', () => {
     const slugDir = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug');
     await fs.mkdir(slugDir, { recursive: true });
 
-    expect(() => saveAllArtifacts('test-slug')).toThrow();
+    const error = captureError(() => saveAllArtifacts('test-slug'));
+    expect(error).toContain('No artifacts found in plan directory');
   });
 
   it('errors when plan.md validation fails', async () => {
@@ -623,7 +654,8 @@ describe('ana artifact save-all', () => {
     await createArtifact('test-slug', 'plan.md', invalidPlan);
     await createArtifact('test-slug', 'spec.md', '# Spec');
 
-    expect(() => saveAllArtifacts('test-slug')).toThrow();
+    const error = captureError(() => saveAllArtifacts('test-slug'));
+    expect(error).toContain('plan.md format invalid');
   });
 
   it('uses Update prefix for re-save', async () => {
@@ -637,6 +669,7 @@ describe('ana artifact save-all', () => {
     saveAllArtifacts('test-slug');
 
     const message = getLastCommitMessage();
-    expect(message).toContain('[test-slug] Update: Save: Spec');
+    expect(message).toContain('[test-slug] Update: Spec');
+    expect(message).not.toContain('Save');
   });
 });
