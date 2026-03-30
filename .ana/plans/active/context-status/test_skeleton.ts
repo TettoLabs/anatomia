@@ -76,6 +76,30 @@ describe('ana context status', () => {
 
       expect(output).toMatch(/\d+ commits/);
     });
+
+    it('counts commits accurately for stale files', () => {
+      // SETUP: create git repo, create context file, commit
+      // SETUP: make exactly 5 commits touching other files after context file creation
+      // RUN: getContextStatus({ json: true })
+
+      const json = JSON.parse(output);
+      const file = json.setupFiles.find(f => f.name === 'project-overview.md');
+
+      expect(file.commitsSince).toBe(5);
+      expect(file.status).toBe('stale');
+    });
+
+    it('respects staleness boundary at exactly 4 commits', () => {
+      // SETUP: create git repo, create context file, commit
+      // SETUP: make exactly 4 commits touching other files after context file creation
+      // RUN: getContextStatus({ json: true })
+
+      const json = JSON.parse(output);
+      const file = json.setupFiles.find(f => f.name === 'project-overview.md');
+
+      expect(file.commitsSince).toBe(4);
+      expect(file.status).toBe('fresh');
+    });
   });
 
   describe('analysis.md handling', () => {
