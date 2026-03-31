@@ -290,23 +290,16 @@ describe('ana context status', () => {
 
 ### Step 8: Save Artifacts
 
-After writing plan.md and spec(s), save all artifacts:
+Save all plan artifacts at once:
 ```bash
-ana artifact save plan {slug}
-ana artifact save spec {slug}
-ana artifact save test-skeleton {slug}
+ana artifact save-all {slug}
 ```
 
-For multi-spec:
-```bash
-ana artifact save plan {slug}
-ana artifact save spec-1 {slug}
-ana artifact save spec-2 {slug}
-ana artifact save spec-3 {slug}
-ana artifact save test-skeleton {slug}
-```
+This saves plan.md, spec(s), and test skeleton(s) in a single atomic commit with validation.
 
-One test skeleton per plan. Saved after all specs. The skeleton covers all phases.
+Individual saves are available as fallback: `ana artifact save plan {slug}`, `ana artifact save spec {slug}`, etc.
+
+One test skeleton per plan. Saved with all specs. The skeleton covers all phases.
 
 ### Step 9: Route
 
