@@ -207,9 +207,9 @@ Curated context for the builder — specific rules, patterns, and commands for T
 
 ---
 
-## build_report.md — AnaBuild → AnaVerify
+## build_report.md — AnaBuild → Human
 
-Written by AnaBuild after implementation. Documents what was built, how, and what the verifier needs to know.
+Written by AnaBuild after implementation. Documents what was built, how, and any issues. Goes on the PR for the human reviewer. The verifier does not read this — it forms independent findings.
 
 **Location:** `.ana/plans/active/{slug}/build_report.md` (or `build_report_N.md` for multi-phase)
 
