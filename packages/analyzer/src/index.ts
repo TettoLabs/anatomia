@@ -232,10 +232,18 @@ export async function analyze(
     };
 
     // Phase 5: Tree-sitter parsing (STEP_1.3, optional)
-    const { parseProjectFiles } = await import('./parsers/treeSitter.js');
-    const parsed = options.skipParsing || !structure
-      ? undefined
-      : await parseProjectFiles(rootPath, intermediateResult, options);
+    // Wrapped in try-catch for graceful degradation (e.g., npx scenario where tree-sitter fails)
+    let parsed: import('./types/parsed.js').ParsedAnalysis | undefined;
+    if (!options.skipParsing && structure) {
+      try {
+        const { parseProjectFiles } = await import('./parsers/treeSitter.js');
+        parsed = await parseProjectFiles(rootPath, intermediateResult, options);
+      } catch {
+        // Tree-sitter failed (e.g., WASM not available in npx temp directory)
+        // Continue with partial results - projectType, framework, structure are preserved
+        parsed = undefined;
+      }
+    }
 
     // Build intermediate result with parsed data (needed for pattern inference)
     const withParsed: import('./types/index.js').AnalysisResult = {
@@ -244,10 +252,17 @@ export async function analyze(
     };
 
     // Phase 6: Pattern inference (STEP_2.1, optional)
-    const { inferPatterns } = await import('./analyzers/patterns.js');
-    const patterns = options.skipPatterns || !parsed
-      ? undefined
-      : await inferPatterns(rootPath, withParsed);
+    // Wrapped in try-catch for graceful degradation
+    let patterns: import('./types/patterns.js').PatternAnalysis | undefined;
+    if (!options.skipPatterns && parsed) {
+      try {
+        const { inferPatterns } = await import('./analyzers/patterns.js');
+        patterns = await inferPatterns(rootPath, withParsed);
+      } catch {
+        // Pattern inference failed - continue with partial results
+        patterns = undefined;
+      }
+    }
 
     // Build result with patterns
     const withPatterns: import('./types/index.js').AnalysisResult = {
@@ -256,15 +271,22 @@ export async function analyze(
     };
 
     // Phase 7: Convention detection (STEP_2.2 - NEW, optional)
-    const { detectConventions } = await import('./analyzers/conventions/index.js');
-    const conventions = options.skipConventions || !parsed
-      ? undefined
-      : await detectConventions(rootPath, withPatterns);
+    // Wrapped in try-catch for graceful degradation
+    let conventions: import('./types/conventions.js').ConventionAnalysis | undefined;
+    if (!options.skipConventions && parsed) {
+      try {
+        const { detectConventions } = await import('./analyzers/conventions/index.js');
+        conventions = await detectConventions(rootPath, withPatterns);
+      } catch {
+        // Convention detection failed - continue with partial results
+        conventions = undefined;
+      }
+    }
 
-    // Return complete result
+    // Return complete result (with whatever we successfully detected)
     return {
       ...withPatterns,
-      conventions,  // NEW optional field (STEP_2.2)
+      conventions,
     };
   } catch (error) {
     // Critical failure - return empty result
