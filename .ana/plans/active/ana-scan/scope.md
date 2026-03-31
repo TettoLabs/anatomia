@@ -19,6 +19,8 @@ The terminal output is a first-class design surface. This report will appear as 
   - `packages/cli/src/index.ts` (register command)
   - `packages/cli/src/utils/` (new formatting utilities)
   - `packages/cli/tests/` (new test files)
+  - `packages/cli/package.json` (bin entry for npx)
+  - `packages/analyzer/src/parsers/treeSitter.ts` (conditional — if WASM path fix needed)
 - **Blast radius:** Low — new command, no changes to existing analyzer or commands
 - **Estimated effort:** 2-3 days implementation + design iteration on terminal output
 - **Multi-phase:** No — single deliverable
@@ -32,7 +34,7 @@ New subcommand following the existing CLI patterns (structural analog: `work.ts`
 1. **Header** — Project name + scan timestamp
 2. **Stack Detection** — Five categories: Language, Framework, Database, Auth, Testing. Each on one line with detected value. Skip categories with no detection (no "Unknown" labels).
 3. **File Breakdown** — Source files, test files, config files, total. Clean numbers.
-4. **Structure Map** — Top-level directories with purposes. Capped at 10-12 entries; summarize overflow.
+4. **Structure Map** — Top-level directories with purposes. Capped at 10 entries; summarize overflow.
 5. **Footer CTA** — "Run `ana init` to generate full context for your AI."
 
 **Terminal UI approach:** Box-drawing characters, ANSI colors, column alignment, visual grouping with whitespace. Reference aesthetic: htop, lazygit, bottom — terminal tools where the UI IS the feature. Dark-background optimized for screenshot use.
@@ -49,7 +51,7 @@ New subcommand following the existing CLI patterns (structural analog: `work.ts`
 - AC6: Detects and displays 5 stack categories: Language, Framework, Database, Auth, Testing
 - AC7: Categories with no detection are omitted (not shown as "Unknown")
 - AC8: File counts shown: source files, test files, config files, total
-- AC9: Structure map shows max 10-12 directories with purposes
+- AC9: Structure map shows max 10 directories with purposes
 - AC10: Structure map overflow summarized (e.g., "+8 more directories")
 - AC11: Footer displays: "Run `ana init` to generate full context for your AI."
 - AC12: Terminal output uses box-drawing characters and ANSI colors
@@ -86,7 +88,9 @@ New subcommand following the existing CLI patterns (structural analog: `work.ts`
 
 ## Open Questions
 
-- How should the WASM path resolution be handled for npx scenarios? Options: (a) modify analyzer's `resolveWasmPath()` to check more candidate paths, (b) bundle WASM files differently, (c) graceful degradation if tree-sitter unavailable. Planner should investigate and decide.
+None. All decisions made.
+
+**WASM/npx fallback decision:** If tree-sitter cannot initialize (npx temp directory scenario), scan falls back to dependency-file detection only — Language and Framework still work from package.json/pyproject.toml/go.mod parsing. Pattern-based categories (Database, Auth, Testing) are omitted per AC7. The output is thinner but functional. Full detection works when installed normally.
 
 ## Exploration Findings
 
@@ -104,6 +108,14 @@ New subcommand following the existing CLI patterns (structural analog: `work.ts`
 - [TYPE-VERIFIED] `PatternAnalysis` (types/patterns.ts) — Contains database, auth, testing fields with confidence scores
 - [OBSERVED] WASM path resolution (parsers/treeSitter.ts:56-74) — Uses `__dirname` relative paths, checks 2 candidate locations
 - [OBSERVED] Tree-sitter grammars in `optionalDependencies` — Will install via npx but path resolution may fail
+
+### File Counting Definitions
+
+**Source files:** `.ts`, `.tsx`, `.js`, `.jsx`, `.py`, `.go`, `.rs`, `.rb`, `.php`, `.java`, `.kt`, `.swift`, `.c`, `.cpp`, `.h`, `.cs`
+
+**Test files:** Files matching `*.test.*`, `*.spec.*`, `test_*`, `*_test.*` OR files inside directories named `test/`, `tests/`, `__tests__/`, `spec/`
+
+**Config files:** Known filenames — `package.json`, `tsconfig.json`, `pyproject.toml`, `go.mod`, `go.sum`, `Cargo.toml`, `Gemfile`, `composer.json`, `.env`, `.env.*`, `.eslintrc.*`, `eslint.config.*`, `.prettierrc*`, `vite.config.*`, `vitest.config.*`, `next.config.*`, `jest.config.*`, `webpack.config.*`, `turbo.json`, `pnpm-workspace.yaml`, `Dockerfile`, `docker-compose.*`, `.gitignore`, `Makefile`
 
 ### Test Infrastructure
 
@@ -146,7 +158,6 @@ Secondary reference: `analyze.ts` — Shows how to integrate with the analyzer p
 
 ### Things to Investigate
 
-- WASM path resolution for npx: Test what `__dirname` resolves to when run via `npx anatomia scan`. Document findings and propose solution.
 - File counting implementation: Decide between glob-based counting vs directory walking. Consider performance for large projects (10k+ files).
 - Box-drawing character set: Research which characters render consistently across terminals (iTerm, Terminal.app, Windows Terminal, VS Code integrated terminal).
 - Color palette: Determine which ANSI colors work well on both dark and light terminal backgrounds, with dark-mode priority.
