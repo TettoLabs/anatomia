@@ -710,7 +710,19 @@ export function saveAllArtifacts(slug: string): void {
     process.exit(1);
   }
 
-  // 9. Success message
+  // 9. Push (planning artifacts only)
+  const artifactBranch = readArtifactBranch();
+  const currentBranch = getCurrentBranch();
+  if (currentBranch === artifactBranch) {
+    try {
+      execSync('git push', { stdio: 'pipe', cwd: projectRoot });
+    } catch (_error) {
+      console.error(chalk.yellow('Warning: Push failed. Artifacts committed locally. Run `git push` manually.'));
+      // Don't exit - commit succeeded
+    }
+  }
+
+  // 10. Success message
   console.log(chalk.green(`✓ Saved ${artifacts.length} artifact${artifacts.length > 1 ? 's' : ''} for \`${slug}\``));
   console.log(chalk.gray(`  ${typeNames}`));
 }
