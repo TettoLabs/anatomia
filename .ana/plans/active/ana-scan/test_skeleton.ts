@@ -29,30 +29,32 @@ describe('ana scan', () => {
   describe('command invocation', () => {
     // AC1: ana scan runs on cwd, ana scan <path> runs on specified path
     it('scans current directory when no path provided', () => {
-      // SETUP: create temp dir with package.json, chdir into it
+      // SETUP: create temp dir with package.json and 2 .ts files, chdir into it
       // Invoke scan with no arguments
-      // expect(output).toContain('Source');
-      // expect(output).toContain('Files');
+      // expect(output).toMatch(/Source\s+2/);
+      // expect(output).toMatch(/Config\s+1/);
+      // expect(output).toMatch(/Total\s+3/);
     });
 
     it('scans specified path when path argument provided', () => {
-      // SETUP: create temp dir with package.json
+      // SETUP: create temp dir with package.json and 3 .ts files
       // Invoke scan with path argument (don't chdir)
-      // expect(output).toContain('Source');
+      // expect(output).toMatch(/Source\s+3/);
     });
 
     it('shows helpful error for nonexistent path', () => {
       // SETUP: none needed
       // Invoke scan with '/nonexistent/path'
       // expect(exitCode).not.toBe(0);
-      // expect(output).toContain('not found');
+      // expect(output).toMatch(/not found|does not exist|No such/i);
     });
   });
 
   describe('no .ana/ required (AC2)', () => {
     it('works on project without .ana/ directory', () => {
       // SETUP: temp dir with package.json only (no .ana/)
-      // expect(output).toContain('Language');
+      // expect(output).toMatch(/Language\s+Node\.js/);
+      // expect(output).toMatch(/Config\s+1/);
       // expect(exitCode).toBe(0);
     });
   });
@@ -108,93 +110,90 @@ describe('ana scan', () => {
   describe('stack detection (AC6, AC7)', () => {
     it('displays Language when detected', () => {
       // SETUP: temp dir with package.json
-      // expect(output).toContain('Language');
-      // expect(output).toMatch(/Language\s+\w+/);
+      // expect(output).toMatch(/Language\s+Node\.js/);
     });
 
     it('displays Framework when detected', () => {
-      // SETUP: temp dir with package.json containing next dependency
-      // expect(output).toContain('Framework');
-      // expect(output).toContain('Next.js');
+      // SETUP: temp dir with package.json containing {"dependencies":{"next":"14.0.0"}}
+      // expect(output).toMatch(/Framework\s+Next\.js/);
     });
 
-    it('omits Framework when not detected', () => {
-      // SETUP: temp dir with minimal package.json (no framework deps)
-      // expect(output).not.toContain('Framework');
+    it('omits Framework line entirely when not detected', () => {
+      // SETUP: temp dir with minimal package.json {"name":"test","version":"1.0.0"}
+      // expect(output).not.toMatch(/Framework/);
     });
 
-    it('omits Database when not detected', () => {
+    it('omits Database line entirely when not detected', () => {
       // SETUP: temp dir with package.json (no db deps)
-      // expect(output).not.toContain('Database');
+      // expect(output).not.toMatch(/Database/);
     });
 
-    it('omits Auth when not detected', () => {
+    it('omits Auth line entirely when not detected', () => {
       // SETUP: temp dir with package.json (no auth deps)
-      // expect(output).not.toContain('Auth');
+      // expect(output).not.toMatch(/Auth/);
     });
 
     it('displays Testing when test framework detected', () => {
-      // SETUP: temp dir with package.json containing vitest in devDeps
-      // expect(output).toContain('Testing');
-      // expect(output).toContain('Vitest');
+      // SETUP: temp dir with package.json containing {"devDependencies":{"vitest":"2.0.0"}}
+      // expect(output).toMatch(/Testing\s+Vitest/);
     });
   });
 
   describe('file counts (AC8)', () => {
     it('shows source file count', () => {
-      // SETUP: temp dir with 3 .ts files
-      // expect(output).toContain('Source');
+      // SETUP: temp dir with index.ts, utils.ts, helper.ts (3 .ts files)
       // expect(output).toMatch(/Source\s+3/);
     });
 
     it('shows test file count', () => {
-      // SETUP: temp dir with 2 .test.ts files
-      // expect(output).toContain('Tests');
+      // SETUP: temp dir with foo.test.ts, bar.test.ts (2 test files)
       // expect(output).toMatch(/Tests\s+2/);
     });
 
     it('shows config file count', () => {
-      // SETUP: temp dir with package.json, tsconfig.json
-      // expect(output).toContain('Config');
+      // SETUP: temp dir with package.json, tsconfig.json (2 config files)
       // expect(output).toMatch(/Config\s+2/);
     });
 
     it('shows total file count', () => {
-      // SETUP: temp dir with 5 total files
-      // expect(output).toContain('Total');
-      // expect(output).toMatch(/Total\s+5/);
+      // SETUP: temp dir with 3 source + 2 test + 1 config = 6 total
+      // expect(output).toMatch(/Total\s+6/);
     });
 
     it('formats large numbers with commas', () => {
-      // SETUP: would need 1000+ files, may skip or mock
-      // For behavioral test: check formatting function
+      // Test the formatting function directly
       // expect(formatNumber(1026)).toBe('1,026');
+      // expect(formatNumber(999)).toBe('999');
+      // expect(formatNumber(10000)).toBe('10,000');
     });
   });
 
   describe('structure map (AC9, AC10)', () => {
     it('shows directories with purposes', () => {
       // SETUP: temp dir with src/, tests/
-      // expect(output).toContain('src/');
-      // expect(output).toContain('Source code');
-      // expect(output).toContain('tests/');
-      // expect(output).toContain('Tests');
+      // expect(output).toMatch(/src\/\s+Source code/);
+      // expect(output).toMatch(/tests\/\s+Tests/);
     });
 
-    it('limits to 10 directories maximum', () => {
-      // SETUP: temp dir with 15 top-level directories
+    it('shows all directories when 9 present (below cap)', () => {
+      // SETUP: temp dir with exactly 9 top-level directories
       // Count directory lines in Structure section
-      // expect(directoryLineCount).toBeLessThanOrEqual(10);
-    });
-
-    it('shows overflow count when more than 10 directories', () => {
-      // SETUP: temp dir with 14 top-level directories
-      // expect(output).toContain('+4 more directories');
-    });
-
-    it('does not show overflow when exactly 10 directories', () => {
-      // SETUP: temp dir with exactly 10 directories
+      // expect(directoryLineCount).toBe(9);
       // expect(output).not.toContain('more directories');
+    });
+
+    it('shows all directories when exactly 10 present (at cap)', () => {
+      // SETUP: temp dir with exactly 10 top-level directories
+      // Count directory lines in Structure section
+      // expect(directoryLineCount).toBe(10);
+      // expect(output).not.toContain('more directories');
+    });
+
+    it('shows 10 directories plus overflow when 11 present', () => {
+      // SETUP: temp dir with exactly 11 top-level directories
+      // Count directory lines in Structure section
+      // expect(directoryLineCount).toBe(10);
+      // expect(output).toContain('+1 more directories');
     });
   });
 
@@ -207,22 +206,26 @@ describe('ana scan', () => {
 
   describe('edge cases (AC14, AC15)', () => {
     it('handles empty directory gracefully', () => {
-      // SETUP: empty temp dir
-      // expect(output).toContain('No code detected');
+      // SETUP: empty temp dir (no files at all)
+      // expect(output).toMatch(/No code detected/);
       // expect(output).toMatch(/Source\s+0/);
+      // expect(output).toMatch(/Tests\s+0/);
+      // expect(output).toMatch(/Config\s+0/);
       // expect(output).toMatch(/Total\s+0/);
-      // expect(output).toContain('(empty)');
+      // expect(output).toMatch(/\(empty\)/);
       // expect(exitCode).toBe(0);
     });
 
     it('handles non-code project gracefully', () => {
-      // SETUP: temp dir with only README.md and images/
-      // expect(output).toContain('No code detected');
+      // SETUP: temp dir with only README.md and images/logo.png
+      // expect(output).toMatch(/No code detected/);
+      // expect(output).toMatch(/Source\s+0/);
       // expect(exitCode).toBe(0);
     });
 
     it('handles permission denied gracefully', () => {
-      // SETUP: temp dir with unreadable file (chmod 000)
+      // SETUP: temp dir with readable index.ts, unreadable secret.ts (chmod 000)
+      // expect(output).toMatch(/Source\s+1/);
       // expect(exitCode).toBe(0);
       // Scan should complete, skipping unreadable files
     });
@@ -324,9 +327,12 @@ describe('countFiles utility', () => {
 
   describe('total calculation', () => {
     it('total equals source + test + config', () => {
-      // SETUP: temp dir with mixed files
+      // SETUP: temp dir with 3 source (.ts), 2 test (.test.ts), 1 config (package.json)
       // const result = await countFiles(tempDir);
-      // expect(result.total).toBe(result.source + result.test + result.config);
+      // expect(result.source).toBe(3);
+      // expect(result.test).toBe(2);
+      // expect(result.config).toBe(1);
+      // expect(result.total).toBe(6);
     });
 
     it('returns zero counts for empty directory', () => {
@@ -336,6 +342,52 @@ describe('countFiles utility', () => {
       // expect(result.test).toBe(0);
       // expect(result.config).toBe(0);
       // expect(result.total).toBe(0);
+    });
+  });
+
+  describe('directory exclusions', () => {
+    it('excludes node_modules from all counts', () => {
+      // SETUP: temp dir with src/index.ts, node_modules/lodash/index.js
+      // const result = await countFiles(tempDir);
+      // expect(result.source).toBe(1);
+    });
+
+    it('excludes .git from all counts', () => {
+      // SETUP: temp dir with src/index.ts, .git/objects/abc123
+      // const result = await countFiles(tempDir);
+      // expect(result.source).toBe(1);
+    });
+
+    it('excludes dist from all counts', () => {
+      // SETUP: temp dir with src/index.ts, dist/index.js
+      // const result = await countFiles(tempDir);
+      // expect(result.source).toBe(1);
+    });
+
+    it('excludes vendor from all counts', () => {
+      // SETUP: temp dir with src/main.go, vendor/github.com/pkg/errors/errors.go
+      // const result = await countFiles(tempDir);
+      // expect(result.source).toBe(1);
+    });
+  });
+
+  describe('recursive counting', () => {
+    it('counts nested source files', () => {
+      // SETUP: temp dir with src/index.ts, src/utils/helper.ts, src/utils/deep/nested.ts
+      // const result = await countFiles(tempDir);
+      // expect(result.source).toBe(3);
+    });
+
+    it('counts nested test files', () => {
+      // SETUP: temp dir with tests/unit/foo.test.ts, tests/integration/bar.test.ts
+      // const result = await countFiles(tempDir);
+      // expect(result.test).toBe(2);
+    });
+
+    it('counts config files in subdirectories', () => {
+      // SETUP: temp dir with package.json, packages/cli/package.json, packages/analyzer/tsconfig.json
+      // const result = await countFiles(tempDir);
+      // expect(result.config).toBe(3);
     });
   });
 });

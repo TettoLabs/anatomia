@@ -208,6 +208,8 @@ file_changes:
   - path: "packages/analyzer/src/index.ts"
     action: modify
     reason: "Graceful degradation for tree-sitter failures"
+  - path: "packages/cli/tests/commands/scan.test.ts"
+    action: create
 ```
 <!-- END MACHINE-READABLE -->
 
@@ -440,5 +442,5 @@ registerVerifyPreCheckCommand(program);
 - Current tests: 309 passed
 - Current test files: 25
 - Command used: `pnpm --filter anatomia-cli test -- --run`
-- After build: expected 320+ tests (add ~15 for scan command coverage)
+- After build: expected 371 tests (309 + 62)
 - Regression focus: `analyze.ts` tests (analyzer integration pattern), analyzer index.ts tests (graceful degradation change)
