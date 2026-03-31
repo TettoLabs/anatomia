@@ -19,6 +19,7 @@ import { analyzeCommand } from './commands/analyze.js';
 import { setupCommand } from './commands/setup.js';
 import { artifactCommand } from './commands/artifact.js';
 import { workCommand } from './commands/work.js';
+import { scanCommand } from './commands/scan.js';
 import { registerPrCommand } from './commands/pr.js';
 import { registerAgentsCommand } from './commands/agents.js';
 import { registerVerifyPreCheckCommand } from './commands/verify-precheck.js';
@@ -34,6 +35,7 @@ program
 program.addCommand(initCommand);
 program.addCommand(modeCommand);
 program.addCommand(analyzeCommand);
+program.addCommand(scanCommand);
 program.addCommand(setupCommand);
 program.addCommand(artifactCommand);
 program.addCommand(workCommand);
