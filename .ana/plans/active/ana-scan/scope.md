@@ -20,8 +20,8 @@ The terminal output is a first-class design surface. This report will appear as 
   - `packages/cli/src/utils/` (new formatting utilities)
   - `packages/cli/tests/` (new test files)
   - `packages/cli/package.json` (bin entry for npx)
-  - `packages/analyzer/src/parsers/treeSitter.ts` (conditional — if WASM path fix needed)
-- **Blast radius:** Low — new command, no changes to existing analyzer or commands
+  - `packages/analyzer/src/index.ts` (modify `analyze()` error handling for graceful degradation)
+- **Blast radius:** Low-Medium — new command + targeted analyzer fix for graceful degradation
 - **Estimated effort:** 2-3 days implementation + design iteration on terminal output
 - **Multi-phase:** No — single deliverable
 
@@ -92,6 +92,8 @@ None. All decisions made.
 
 **WASM/npx fallback decision:** If tree-sitter cannot initialize (npx temp directory scenario), scan falls back to dependency-file detection only — Language and Framework still work from package.json/pyproject.toml/go.mod parsing. Pattern-based categories (Database, Auth, Testing) are omitted per AC7. The output is thinner but functional. Full detection works when installed normally.
 
+**Implementation note (verified by testing):** The current `analyze()` function returns `createEmptyAnalysisResult()` on ANY error, losing already-detected projectType/framework. Fix required: wrap only the tree-sitter phases (parseProjectFiles, inferPatterns, detectConventions) in their own try-catch, preserving partial results. This is a ~10-line change to `packages/analyzer/src/index.ts`.
+
 ## Exploration Findings
 
 ### Patterns Discovered
@@ -108,6 +110,25 @@ None. All decisions made.
 - [TYPE-VERIFIED] `PatternAnalysis` (types/patterns.ts) — Contains database, auth, testing fields with confidence scores
 - [OBSERVED] WASM path resolution (parsers/treeSitter.ts:56-74) — Uses `__dirname` relative paths, checks 2 candidate locations
 - [OBSERVED] Tree-sitter grammars in `optionalDependencies` — Will install via npx but path resolution may fail
+
+### WASM Fallback Verification (tested 2026-03-31)
+
+**Functions that work WITHOUT tree-sitter:**
+- `detectProjectType()` — uses fs/path + JSON parsing only
+- `detectFramework()` — uses dependency parsers (JSON/TOML/YAML), no tree-sitter
+- `analyzeStructure()` — uses fs/glob, no tree-sitter
+
+**Functions that REQUIRE tree-sitter:**
+- `parseProjectFiles()` — calls `parserManager.initialize()` which loads WASM
+- `inferPatterns()` — needs parsed files from tree-sitter
+- `detectConventions()` — needs parsed files from tree-sitter
+
+**Current `analyze()` behavior on WASM failure:**
+- Catches ANY error in outer try-catch (lines 269-274)
+- Returns `createEmptyAnalysisResult()` with `projectType: 'unknown'`
+- **LOSES** already-detected projectType and framework
+
+**Required fix:** Modify `analyze()` to catch WASM errors specifically and return partial results (projectType, framework, structure) without patterns. ~10 lines changed in `packages/analyzer/src/index.ts`.
 
 ### File Counting Definitions
 
