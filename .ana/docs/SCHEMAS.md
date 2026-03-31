@@ -207,9 +207,9 @@ Curated context for the builder — specific rules, patterns, and commands for T
 
 ---
 
-## build_report.md — AnaBuild → AnaVerify
+## build_report.md — AnaBuild → Human
 
-Written by AnaBuild after implementation. Documents what was built, how, and what the verifier needs to know.
+Written by AnaBuild after implementation. Documents what was built, how, and any issues. Goes on the PR for the human reviewer. The verifier does not read this — it forms independent findings.
 
 **Location:** `.ana/plans/active/{slug}/build_report.md` (or `build_report_N.md` for multi-phase)
 
@@ -261,41 +261,40 @@ Written by AnaVerify after independent verification. The final quality gate befo
 
 **Result line:** `**Result:** PASS` or `**Result:** FAIL` — mandatory, machine-parsed by `ana artifact save verify-report`. Must appear in the first 10 lines. Case-insensitive.
 
-**Sections:**
+**Sections (7 total):**
 
 ### Pre-Check Results
 Output from `ana verify pre-check {slug}` (or with `--phase N` for multi-phase). Contains skeleton assertion diff, file changes audit, and commit analysis. Verifier investigates each DIFFER and unexpected file flag.
 
 ### Independent Findings
-What the verifier discovered from reading code and tests BEFORE reading the build report. Code quality, pattern compliance, edge cases, test quality.
-
-### Build Report Audit
-For each major build report section, the verifier checks: CONFIRMED or CONTRADICTED with evidence.
-- What Was Built
-- Deviations (does "None" survive pre-check skeleton diff?)
-- Test Results (do counts match independent run?)
-- Open Issues (any self-contradictions?)
+What the verifier discovered from running checks and reading code. Code quality, pattern compliance, edge case handling, test quality. Includes:
+- **Over-building check:** Code, parameters, or features NOT in the spec
+- **YAGNI check:** Unused exports, dead code paths, unnecessary abstractions
 
 ### AC Walkthrough
 Every acceptance criterion from the spec, individually assessed: ✅ PASS, ❌ FAIL, ⚠️ PARTIAL, or 🔍 UNVERIFIABLE. Each with evidence (command output, file path, line number).
 
 ### Blockers
-Anything preventing shipping. May be "None — shippable."
+Anything preventing shipping. If none: explain what was searched and why nothing was found.
 
 ### Callouts
 Observations, concerns, nits. Always populated — a report with zero callouts indicates insufficient investigation.
 
 ### Deployer Handoff
-What the person merging should know: assumptions, untested edge cases, performance characteristics, configuration dependencies. Always populated.
+What the person merging should know. Always populated.
 
 ### Verdict
-**Shippable:** YES / NO with justification. Comes last — after all evidence.
+**Shippable:** YES / NO based on verifier's findings. Evidence gathered. Commands run.
 
 **Rules:**
 - The `**Result:**` line is mandatory and machine-parsed by `ana work status` and `ana work complete`.
-- AnaVerify runs mechanical checks first (`ana verify pre-check`), forms independent findings, THEN reads the build report to audit its claims.
+- AnaVerify runs mechanical checks first (`ana verify pre-check`), forms independent findings from reading code and running commands.
+- **The verifier never reads the build report.** The build report goes on the PR for the human reviewer.
+- The developer compares the verify report to the build report — two independent accounts of the same work.
 - Every acceptance criterion must be assessed individually with evidence.
 - Overall Result is binary: PASS or FAIL. If ANY criterion is ❌ FAIL, the Result is FAIL.
+- Over-building (extra code beyond spec) is noted as a callout, not a FAIL.
+- Live testing required: if the build includes CLI commands or user-facing output, run it with real data plus error cases.
 - FAIL means the developer opens `claude --agent ana-build` to fix the documented issues, then re-verify.
 - AnaVerify creates the PR on PASS. The developer reviews and merges.
 
@@ -314,7 +313,21 @@ File existence IS the state machine. No separate status file needed.
 
 **Re-saving artifacts:** Artifacts can be updated by modifying the file and running `ana artifact save` again. The command detects whether the file is new or updated and commits accordingly. First save uses commit message `[slug] Type`. Re-saves use `[slug] Update: Type`. If the file hasn't changed since the last save, the command exits gracefully without creating an empty commit.
 
-**Batch saves:** `ana artifact save-all {slug}` saves all recognized artifacts in the plan directory atomically. Validates each artifact per type (plan format, verify report Result line) before committing. If any validation fails, nothing is saved. Commit message lists all artifact types saved.
+**Batch saves:** `ana artifact save-all {slug}` saves all recognized artifacts in the plan directory atomically. Validates each artifact before committing. If any validation fails, nothing is saved. Commit message lists all artifact types saved.
+
+**Artifact validation:** Each artifact type has format validation at save time. Validation runs before git commit — if it fails, nothing is staged.
+
+Validation rules by type:
+- **Scope:** ≥3 acceptance criteria, Structural Analog heading, Intent section with content
+- **Spec:** file_changes YAML block present, Build Brief heading present, Build Baseline exact (warns on `~` or `approx`)
+- **Plan:** Phases heading, checkbox items, each checkbox has Spec: reference
+- **Test skeleton:** At least one assertion (`expect()` or `assert`), non-empty file
+- **Build report:** Deviations heading, Open Issues heading, AC Coverage heading, PR Summary heading
+- **Verify report:** Result line (`**Result:** PASS` or `**Result:** FAIL`) in first 10 lines
+
+**Pre-check tool format support:** `ana verify pre-check` handles both production and legacy formats:
+- Skeleton assertions: tries uncommented `expect()` first (production AnaPlan format), falls back to `// expect()` (legacy/test format)
+- YAML blocks: supports code-fenced format (`<!-- MACHINE-READABLE: ... -->\n```yaml...````) and legacy HTML comment format
 
 When a task is complete (verify passes), the developer runs `ana work complete {slug}` which archives the directory from `.ana/plans/active/{slug}/` to `.ana/plans/completed/{slug}/` and cleans up the feature branch. The four artifacts together form the permanent record: intent, plan, implementation, proof.
 

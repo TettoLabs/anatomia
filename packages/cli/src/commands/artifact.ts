@@ -190,6 +190,138 @@ function validateVerifyReportFormat(filePath: string): string | null {
 }
 
 /**
+ * Validate scope format
+ *
+ * @param filePath - Path to scope.md
+ * @returns Error message if invalid, null if valid
+ */
+function validateScopeFormat(filePath: string): string | null {
+  const content = fs.readFileSync(filePath, 'utf-8');
+
+  // Check for at least 3 acceptance criteria
+  const acPattern = /^-\s+(AC\d+|##?\s*AC|\*\*AC)/mi;
+  const acMatches = content.match(new RegExp(acPattern.source, 'gmi'));
+  if (!acMatches || acMatches.length < 3) {
+    return "Missing acceptance criteria. Scope must contain at least 3 acceptance criteria (lines starting with '- AC').";
+  }
+
+  // Check for Structural Analog section
+  if (!content.match(/###?\s+Structural\s+Analog/i)) {
+    return "Missing 'Structural Analog' section. Every scope needs a structural analog to guide implementation.";
+  }
+
+  // Check for Intent section with content
+  if (!content.match(/###?\s+Intent/i)) {
+    return "Missing 'Intent' section. Scope must explain the purpose of this work.";
+  }
+
+  // Extract content between Intent heading and next section
+  const lines = content.split('\n');
+  let inIntent = false;
+  const intentLines: string[] = [];
+  for (const line of lines) {
+    if (/^##\s+Intent/i.test(line)) {
+      inIntent = true;
+      continue;
+    }
+    if (inIntent) {
+      if (/^##/.test(line)) break; // Next section starts
+      intentLines.push(line);
+    }
+  }
+  const intentContent = intentLines.join('\n').trim();
+  if (!intentContent) {
+    return "Empty 'Intent' section. Scope must explain the purpose of this work.";
+  }
+
+  return null; // valid
+}
+
+/**
+ * Validate spec format
+ *
+ * @param filePath - Path to spec.md or spec-N.md
+ * @returns Error message if invalid, null if valid, or warning string for non-blocking issues
+ */
+function validateSpecFormat(filePath: string): { error?: string; warning?: string } {
+  const content = fs.readFileSync(filePath, 'utf-8');
+
+  // Check for file_changes YAML block
+  if (!content.includes('file_changes:')) {
+    return { error: "Missing file_changes YAML block. Spec must include machine-readable file changes." };
+  }
+
+  // Check for Build Brief section
+  if (!content.match(/###?\s+Build\s+Brief/i)) {
+    return { error: "Missing 'Build Brief' section. Spec must include build guidance for the implementer." };
+  }
+
+  // Check for approximate baseline (warning only)
+  const baselinePattern = /(Current\s+test|Current\s+tests)/i;
+  const hasBaseline = baselinePattern.test(content);
+  if (hasBaseline) {
+    const approximatePattern = /[~]|approx/i;
+    const lines = content.split('\n');
+    for (const line of lines) {
+      if (baselinePattern.test(line) && approximatePattern.test(line)) {
+        return { warning: "Build baseline contains approximations (~). Run the test command to get exact counts." };
+      }
+    }
+  }
+
+  return {}; // valid
+}
+
+/**
+ * Validate test skeleton format
+ *
+ * @param filePath - Path to test_skeleton.ts
+ * @returns Error message if invalid, null if valid
+ */
+function validateSkeletonFormat(filePath: string): string | null {
+  const content = fs.readFileSync(filePath, 'utf-8');
+
+  // Check file is not empty
+  if (!content.trim()) {
+    return "Test skeleton is empty. Skeleton must contain test structure and assertions.";
+  }
+
+  // Check for at least one assertion
+  const assertionPattern = /expect\(|assert\.|assert\(/;
+  if (!assertionPattern.test(content)) {
+    return "No assertions found. Test skeleton must contain at least one expect() or assert statement.";
+  }
+
+  return null; // valid
+}
+
+/**
+ * Validate build report format
+ *
+ * @param filePath - Path to build_report.md or build_report_N.md
+ * @returns Error message if invalid, null if valid
+ */
+function validateBuildReportFormat(filePath: string): string | null {
+  const content = fs.readFileSync(filePath, 'utf-8');
+
+  // Check for required sections
+  const requiredSections = [
+    { pattern: /###?\s+Deviation/i, name: 'Deviations' },
+    { pattern: /###?\s+Open\s+Issue/i, name: 'Open Issues' },
+    { pattern: /###?\s+(Acceptance\s+Criteria|AC\s+Coverage|Criteria\s+Coverage)/i, name: 'AC Coverage' },
+    { pattern: /###?\s+PR\s+Summary/i, name: 'PR Summary' }
+  ];
+
+  for (const section of requiredSections) {
+    if (!section.pattern.test(content)) {
+      return `Missing '${section.name}' section. Build report must document all required sections.`;
+    }
+  }
+
+  return null; // valid
+}
+
+/**
  * Validate that we're on the correct branch for this artifact type
  *
  * @param typeInfo - Parsed artifact type information
@@ -258,7 +390,7 @@ export function saveArtifact(type: string, slug: string): void {
     process.exit(1);
   }
 
-  // 6a. Validate format for plan and verify-report
+  // 6a. Validate format for all artifact types
   if (typeInfo.baseType === 'plan') {
     const error = validatePlanFormat(filePath);
     if (error) {
@@ -272,6 +404,41 @@ export function saveArtifact(type: string, slug: string): void {
     const error = validateVerifyReportFormat(filePath);
     if (error) {
       console.error(chalk.red(`Error: verify_report.md format invalid.\n${error}`));
+      process.exit(1);
+    }
+  }
+
+  if (typeInfo.baseType === 'scope') {
+    const error = validateScopeFormat(filePath);
+    if (error) {
+      console.error(chalk.red(`Error: scope.md format invalid.\n${error}`));
+      process.exit(1);
+    }
+  }
+
+  if (typeInfo.baseType === 'spec') {
+    const result = validateSpecFormat(filePath);
+    if (result.error) {
+      console.error(chalk.red(`Error: spec.md format invalid.\n${result.error}`));
+      process.exit(1);
+    }
+    if (result.warning) {
+      console.warn(chalk.yellow(`Warning: ${result.warning}`));
+    }
+  }
+
+  if (typeInfo.baseType === 'test-skeleton') {
+    const error = validateSkeletonFormat(filePath);
+    if (error) {
+      console.error(chalk.red(`Error: test_skeleton format invalid.\n${error}`));
+      process.exit(1);
+    }
+  }
+
+  if (typeInfo.baseType === 'build-report') {
+    const error = validateBuildReportFormat(filePath);
+    if (error) {
+      console.error(chalk.red(`Error: build_report.md format invalid.\n${error}`));
       process.exit(1);
     }
   }
@@ -443,6 +610,41 @@ export function saveAllArtifacts(slug: string): void {
 
     if (artifact.typeInfo.baseType === 'verify-report') {
       const error = validateVerifyReportFormat(artifact.path);
+      if (error) {
+        console.error(chalk.red(`Error: ${artifact.file} format invalid.\n${error}`));
+        process.exit(1);
+      }
+    }
+
+    if (artifact.typeInfo.baseType === 'scope') {
+      const error = validateScopeFormat(artifact.path);
+      if (error) {
+        console.error(chalk.red(`Error: ${artifact.file} format invalid.\n${error}`));
+        process.exit(1);
+      }
+    }
+
+    if (artifact.typeInfo.baseType === 'spec') {
+      const result = validateSpecFormat(artifact.path);
+      if (result.error) {
+        console.error(chalk.red(`Error: ${artifact.file} format invalid.\n${result.error}`));
+        process.exit(1);
+      }
+      if (result.warning) {
+        console.warn(chalk.yellow(`Warning: ${result.warning}`));
+      }
+    }
+
+    if (artifact.typeInfo.baseType === 'test-skeleton') {
+      const error = validateSkeletonFormat(artifact.path);
+      if (error) {
+        console.error(chalk.red(`Error: ${artifact.file} format invalid.\n${error}`));
+        process.exit(1);
+      }
+    }
+
+    if (artifact.typeInfo.baseType === 'build-report') {
+      const error = validateBuildReportFormat(artifact.path);
       if (error) {
         console.error(chalk.red(`Error: ${artifact.file} format invalid.\n${error}`));
         process.exit(1);

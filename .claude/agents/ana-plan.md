@@ -78,6 +78,8 @@ Read `.ana/plans/active/{slug}/scope.md` in full. Extract:
 
 If the scope includes Exploration Findings, use them as starting points. For details that affect design decisions or skeleton assertion values, verify by reading the actual file — findings may reference stale line numbers if the code changed between sessions.
 
+When reading the scope, identify both the **functional analog** (same domain, different shape) and the **structural analog** (same shape, different domain). If the scope only mentions one, look for the other. Both inform the spec.
+
 Use the breadcrumbs from "For AnaPlan" to start:
 - Read the source files Ana identified
 - Understand the patterns she pointed to
@@ -245,6 +247,10 @@ The builder documents it as a Deviation with structured format (see build report
 
 **Write assertions specific enough that a WRONG implementation would FAIL the test.** `expect(output).toBeTruthy()` passes for any non-empty output — that's not testing behavior. `expect(json.setupFiles).toHaveLength(7)` fails if the count is wrong — that IS testing behavior. If your assertion would pass regardless of what the builder builds, it's too weak to be a contract.
 
+**Computed Value Rule:** For every computed value in the spec (counts, thresholds, derived states), write at least one test asserting the EXACT value with setup that produces exactly that value. Ask: "Would a hardcoded return pass this test?" If yes, add a test that catches hardcoding.
+
+**Boundary Rule:** For every threshold (e.g., ">=5 commits marks stale"), write tests at threshold-1 (fresh), threshold (stale), and threshold+1 (stale). Three tests per boundary.
+
 **Example Test Skeleton:**
 
 ```typescript
@@ -290,23 +296,16 @@ describe('ana context status', () => {
 
 ### Step 8: Save Artifacts
 
-After writing plan.md and spec(s), save all artifacts:
+Save all plan artifacts at once:
 ```bash
-ana artifact save plan {slug}
-ana artifact save spec {slug}
-ana artifact save test-skeleton {slug}
+ana artifact save-all {slug}
 ```
 
-For multi-spec:
-```bash
-ana artifact save plan {slug}
-ana artifact save spec-1 {slug}
-ana artifact save spec-2 {slug}
-ana artifact save spec-3 {slug}
-ana artifact save test-skeleton {slug}
-```
+This saves plan.md, spec(s), and test skeleton(s) in a single atomic commit with validation.
 
-One test skeleton per plan. Saved after all specs. The skeleton covers all phases.
+Individual saves are available as fallback: `ana artifact save plan {slug}`, `ana artifact save spec {slug}`, etc.
+
+One test skeleton per plan. Saved with all specs. The skeleton covers all phases.
 
 ### Step 9: Route
 
@@ -431,8 +430,11 @@ Copy checkpoint commands from `.meta.json` `commands` field.
 - Lint: `{lint command}`
 
 ### Build Baseline
-- Current test count: {N} tests in {M} files
-- After build: expected ~{N + new} tests in {M + new} files
+Run the test command from `.meta.json` `commands.test` and record exact counts. Never estimate.
+- Current tests: {exact number from running the command}
+- Current test files: {exact number}
+- Command used: {exact command string}
+- After build: expected {N + new} tests in {M + new} files
 - Regression focus: {files whose tests might break from your changes}
 ```
 

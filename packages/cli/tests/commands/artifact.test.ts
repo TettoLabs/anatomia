@@ -64,10 +64,92 @@ describe('ana artifact save', () => {
   /**
    * Helper to create an artifact file
    */
-  async function createArtifact(slug: string, fileName: string, content: string = '# Test'): Promise<void> {
+  /**
+   * Create valid scope content that passes validation
+   */
+  function getValidScopeContent(): string {
+    return `# Scope: test
+
+## Intent
+This is a test scope.
+
+## Acceptance Criteria
+- AC1: First criterion
+- AC2: Second criterion
+- AC3: Third criterion
+
+### Structural Analog
+work.ts — similar pattern`;
+  }
+
+  /**
+   * Create valid spec content that passes validation
+   */
+  function getValidSpecContent(): string {
+    return `# Spec: test
+
+## Implementation
+Details here.
+
+file_changes:
+  - path: src/test.ts
+    action: create
+
+## Build Brief
+Rules that apply.`;
+  }
+
+  /**
+   * Create valid test skeleton content that passes validation
+   */
+  function getValidSkeletonContent(): string {
+    return `describe('test', () => {
+  it('works', () => {
+    expect(result).toBe(true);
+  });
+});`;
+  }
+
+  /**
+   * Create valid build report content that passes validation
+   */
+  function getValidBuildReportContent(): string {
+    return `# Build Report
+
+## Deviations
+None.
+
+## Open Issues
+None.
+
+## Acceptance Criteria
+All met.
+
+## PR Summary
+Ready to review.`;
+  }
+
+  async function createArtifact(slug: string, fileName: string, content?: string): Promise<void> {
     const artifactPath = path.join(tempDir, '.ana', 'plans', 'active', slug);
     await fs.mkdir(artifactPath, { recursive: true });
-    await fs.writeFile(path.join(artifactPath, fileName), content, 'utf-8');
+
+    // Use validation-compliant defaults
+    let fileContent = content;
+    if (!fileContent) {
+      if (fileName === 'scope.md') {
+        fileContent = getValidScopeContent();
+      } else if (fileName === 'spec.md' || fileName.match(/^spec-\d+\.md$/)) {
+        fileContent = getValidSpecContent();
+      } else if (fileName.startsWith('test_skeleton')) {
+        fileContent = getValidSkeletonContent();
+      } else if (fileName.startsWith('build_report')) {
+        fileContent = getValidBuildReportContent();
+      } else {
+        fileContent = '# Test';
+      }
+    }
+
+    await fs.writeFile(path.join(artifactPath, fileName), fileContent, 'utf-8');
   }
 
   /**
@@ -354,7 +436,7 @@ Content...`;
   describe('empty commit handling', () => {
     it('exits successfully when no changes to save', async () => {
       await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
-      await createArtifact('test-slug', 'scope.md', '# Test Content');
+      await createArtifact('test-slug', 'scope.md'); // Uses valid default
 
       // First save
       saveArtifact('scope', 'test-slug');
@@ -379,7 +461,7 @@ Content...`;
 
     it('uses Update: prefix for re-save', async () => {
       await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
-      await createArtifact('test-slug', 'scope.md', '# Original');
+      await createArtifact('test-slug', 'scope.md'); // Uses valid default
 
       // First save
       saveArtifact('scope', 'test-slug');
@@ -387,7 +469,7 @@ Content...`;
       // Modify and re-save
       await fs.writeFile(
         path.join(tempDir, '.ana/plans/active/test-slug/scope.md'),
-        '# Modified',
+        getValidScopeContent().replace('This is a test scope', 'Modified scope'),
         'utf-8'
       );
       saveArtifact('scope', 'test-slug');
@@ -492,10 +574,242 @@ Line 11
     });
   });
 
+  describe('scope format validation', () => {
+    it('accepts valid scope with 3+ ACs and Structural Analog', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      const validScope = `# Scope: test
+
+## Intent
+This adds a new feature.
+
+## Acceptance Criteria
+- AC1: First criterion
+- AC2: Second criterion
+- AC3: Third criterion
+
+### Structural Analog
+work.ts — similar command pattern`;
+      await createArtifact('test-slug', 'scope.md', validScope);
+
+      expect(() => saveArtifact('scope', 'test-slug')).not.toThrow();
+    });
+
+    it('rejects scope without sufficient ACs', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      const invalidScope = `# Scope: test
+
+## Intent
+This adds a feature.
+
+## Acceptance Criteria
+- AC1: First criterion
+
+### Structural Analog
+work.ts`;
+      await createArtifact('test-slug', 'scope.md', invalidScope);
+
+      expect(() => saveArtifact('scope', 'test-slug')).toThrow();
+    });
+
+    it('rejects scope without Structural Analog', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      const invalidScope = `# Scope: test
+
+## Intent
+This adds a feature.
+
+## Acceptance Criteria
+- AC1: First
+- AC2: Second
+- AC3: Third`;
+      await createArtifact('test-slug', 'scope.md', invalidScope);
+
+      expect(() => saveArtifact('scope', 'test-slug')).toThrow();
+    });
+
+    it('rejects scope with empty Intent', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      const invalidScope = `# Scope: test
+
+## Intent
+
+## Acceptance Criteria
+- AC1: First
+- AC2: Second
+- AC3: Third
+
+### Structural Analog
+work.ts`;
+      await createArtifact('test-slug', 'scope.md', invalidScope);
+
+      expect(() => saveArtifact('scope', 'test-slug')).toThrow();
+    });
+  });
+
+  describe('spec format validation', () => {
+    it('accepts valid spec with file_changes and Build Brief', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      const validSpec = `# Spec
+
+## Implementation
+Details here.
+
+<!-- MACHINE-READABLE -->
+\`\`\`yaml
+file_changes:
+  - path: src/test.ts
+    action: create
+\`\`\`
+
+## Build Brief
+Rules that apply.`;
+      await createArtifact('test-slug', 'spec.md', validSpec);
+
+      expect(() => saveArtifact('spec', 'test-slug')).not.toThrow();
+    });
+
+    it('rejects spec without file_changes', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      const invalidSpec = `# Spec
+
+## Implementation
+Details here.
+
+## Build Brief
+Rules.`;
+      await createArtifact('test-slug', 'spec.md', invalidSpec);
+
+      expect(() => saveArtifact('spec', 'test-slug')).toThrow();
+    });
+
+    it('rejects spec without Build Brief', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      const invalidSpec = `# Spec
+
+file_changes:
+  - path: test.ts
+    action: create`;
+      await createArtifact('test-slug', 'spec.md', invalidSpec);
+
+      expect(() => saveArtifact('spec', 'test-slug')).toThrow();
+    });
+  });
+
+  describe('test-skeleton format validation', () => {
+    it('accepts valid skeleton with assertions', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      const validSkeleton = `describe('test', () => {
+  it('works', () => {
+    expect(result).toBe(true);
+  });
+});`;
+      await createArtifact('test-slug', 'test_skeleton.ts', validSkeleton);
+
+      expect(() => saveArtifact('test-skeleton', 'test-slug')).not.toThrow();
+    });
+
+    it('rejects empty skeleton', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      await createArtifact('test-slug', 'test_skeleton.ts', '   \n  \n  ');
+
+      expect(() => saveArtifact('test-skeleton', 'test-slug')).toThrow();
+    });
+
+    it('rejects skeleton without assertions', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      const noAssertions = `describe('test', () => {
+  it('works', () => {
+    // TODO: add assertions
+  });
+});`;
+      await createArtifact('test-slug', 'test_skeleton.ts', noAssertions);
+
+      expect(() => saveArtifact('test-skeleton', 'test-slug')).toThrow();
+    });
+  });
+
+  describe('build-report format validation', () => {
+    it('accepts valid build report with all sections', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'feature/test-slug' });
+      const validReport = `# Build Report
+
+## Deviations from Spec
+None.
+
+## Open Issues
+None.
+
+## Acceptance Criteria
+All met.
+
+## PR Summary
+Ready to review.`;
+      await createArtifact('test-slug', 'build_report.md', validReport);
+
+      expect(() => saveArtifact('build-report', 'test-slug')).not.toThrow();
+    });
+
+    it('rejects build report without Deviations', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'feature/test-slug' });
+      const invalidReport = `# Build Report
+
+## Open Issues
+None.`;
+      await createArtifact('test-slug', 'build_report.md', invalidReport);
+
+      expect(() => saveArtifact('build-report', 'test-slug')).toThrow();
+    });
+
+    it('rejects build report without Open Issues', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'feature/test-slug' });
+      const invalidReport = `# Build Report
+
+## Deviations
+None.`;
+      await createArtifact('test-slug', 'build_report.md', invalidReport);
+
+      expect(() => saveArtifact('build-report', 'test-slug')).toThrow();
+    });
+
+    it('rejects build report without AC Coverage', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'feature/test-slug' });
+      const invalidReport = `# Build Report
+
+## Deviations
+None.
+
+## Open Issues
+None.
+
+## PR Summary
+Done.`;
+      await createArtifact('test-slug', 'build_report.md', invalidReport);
+
+      expect(() => saveArtifact('build-report', 'test-slug')).toThrow();
+    });
+
+    it('rejects build report without PR Summary', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'feature/test-slug' });
+      const invalidReport = `# Build Report
+
+## Deviations
+None.
+
+## Open Issues
+None.
+
+## Acceptance Criteria
+Met.`;
+      await createArtifact('test-slug', 'build_report.md', invalidReport);
+
+      expect(() => saveArtifact('build-report', 'test-slug')).toThrow();
+    });
+  });
+
   describe('test-skeleton type', () => {
     it('parses test-skeleton type correctly', async () => {
       await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
-      await createArtifact('test-slug', 'test_skeleton.ts', '// Test skeleton');
+      await createArtifact('test-slug', 'test_skeleton.ts'); // Uses valid default with assertions
 
       saveArtifact('test-skeleton', 'test-slug');
 
@@ -515,7 +829,7 @@ Line 11
       meta.coAuthor = 'Custom Bot <bot@example.com>';
       await fs.writeFile(metaPath, JSON.stringify(meta), 'utf-8');
 
-      await createArtifact('test-slug', 'scope.md', '# Scope');
+      await createArtifact('test-slug', 'scope.md'); // Uses valid default
       saveArtifact('scope', 'test-slug');
 
       const message = getLastCommitMessage();
@@ -524,7 +838,7 @@ Line 11
 
     it('falls back to default coAuthor when field missing', async () => {
       await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
-      await createArtifact('test-slug', 'scope.md', '# Scope');
+      await createArtifact('test-slug', 'scope.md'); // Uses valid default
 
       saveArtifact('scope', 'test-slug');
 
@@ -614,9 +928,18 @@ describe('ana artifact save-all', () => {
 - [ ] Phase 1
   - Spec: spec.md`;
 
+    const validSpec = `# Spec
+file_changes:
+  - path: test.ts
+    action: create
+## Build Brief
+Rules.`;
+
+    const validSkeleton = `expect(result).toBe(true);`;
+
     await createArtifact('test-slug', 'plan.md', validPlan);
-    await createArtifact('test-slug', 'spec.md', '# Spec');
-    await createArtifact('test-slug', 'test_skeleton.ts', '// test skeleton');
+    await createArtifact('test-slug', 'spec.md', validSpec);
+    await createArtifact('test-slug', 'test_skeleton.ts', validSkeleton);
 
     saveAllArtifacts('test-slug');
 
@@ -629,7 +952,15 @@ describe('ana artifact save-all', () => {
 
   it('saves partial artifacts when only some exist', async () => {
     await createTestProject();
-    await createArtifact('test-slug', 'spec.md', '# Spec');
+
+    const validSpec = `# Spec
+file_changes:
+  - path: test.ts
+    action: create
+## Build Brief
+Rules.`;
+
+    await createArtifact('test-slug', 'spec.md', validSpec);
 
     saveAllArtifacts('test-slug');
 
@@ -651,8 +982,15 @@ describe('ana artifact save-all', () => {
     await createTestProject();
 
     const invalidPlan = `# Plan\nNo phases section`;
+    const validSpec = `# Spec
+file_changes:
+  - path: test.ts
+    action: create
+## Build Brief
+Rules.`;
+
     await createArtifact('test-slug', 'plan.md', invalidPlan);
-    await createArtifact('test-slug', 'spec.md', '# Spec');
+    await createArtifact('test-slug', 'spec.md', validSpec);
 
     const error = captureError(() => saveAllArtifacts('test-slug'));
     expect(error).toContain('plan.md format invalid');
@@ -661,11 +999,18 @@ describe('ana artifact save-all', () => {
   it('uses Update prefix for re-save', async () => {
     await createTestProject();
 
-    await createArtifact('test-slug', 'spec.md', '# Spec');
+    const validSpec = `# Spec
+file_changes:
+  - path: test.ts
+    action: create
+## Build Brief
+Rules.`;
+
+    await createArtifact('test-slug', 'spec.md', validSpec);
     saveAllArtifacts('test-slug');
 
     // Modify and re-save
-    await createArtifact('test-slug', 'spec.md', '# Spec Updated');
+    await createArtifact('test-slug', 'spec.md', validSpec.replace('test.ts', 'test2.ts'));
     saveAllArtifacts('test-slug');
 
     const message = getLastCommitMessage();
