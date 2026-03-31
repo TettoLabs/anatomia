@@ -191,7 +191,18 @@ function checkSkeletonCompliance(planDir: string, slug: string, phase?: number):
 
   if (specPath) {
     const specContent = fs.readFileSync(specPath, 'utf-8');
-    const yamlMatch = specContent.match(/<!--\s*MACHINE-READABLE\s*\n([\s\S]*?)-->/);
+    // Try multiple patterns for YAML block (production format with code fence, legacy format inside comment)
+    const patterns = [
+      /<!--\s*MACHINE-READABLE[^>]*-->\s*```ya?ml\n([\s\S]*?)```/,  // New format: <!-- MACHINE-READABLE: ... -->\n```yaml\nfile_changes:...```
+      /<!--\s*MACHINE-READABLE\s*\n([\s\S]*?)-->/,                    // Legacy format: <!-- MACHINE-READABLE\nfile_changes:...-->
+      /```ya?ml\s*\n\s*file_changes:([\s\S]*?)```/                    // Fallback: just code fence
+    ];
+
+    let yamlMatch: RegExpMatchArray | null = null;
+    for (const pattern of patterns) {
+      yamlMatch = specContent.match(pattern);
+      if (yamlMatch) break;
+    }
 
     if (yamlMatch) {
       try {
@@ -312,8 +323,19 @@ function checkFileChanges(planDir: string, artifactBranch: string, phase?: numbe
 
   const specContent = fs.readFileSync(specPath, 'utf-8');
 
-  // Extract YAML block
-  const yamlMatch = specContent.match(/<!--\s*MACHINE-READABLE\s*\n([\s\S]*?)-->/);
+  // Extract YAML block - try multiple patterns for robustness (production format with code fence, legacy format inside comment)
+  const patterns = [
+    /<!--\s*MACHINE-READABLE[^>]*-->\s*```ya?ml\n([\s\S]*?)```/,  // New format: <!-- MACHINE-READABLE: ... -->\n```yaml\nfile_changes:...```
+    /<!--\s*MACHINE-READABLE\s*\n([\s\S]*?)-->/,                    // Legacy format: <!-- MACHINE-READABLE\nfile_changes:...-->
+    /```ya?ml\s*\n\s*file_changes:([\s\S]*?)```/                    // Fallback: just code fence
+  ];
+
+  let yamlMatch: RegExpMatchArray | null = null;
+  for (const pattern of patterns) {
+    yamlMatch = specContent.match(pattern);
+    if (yamlMatch) break;
+  }
+
   if (!yamlMatch) {
     return {
       error: 'No file_changes YAML block found in spec. Skipping file audit.',
