@@ -156,8 +156,12 @@ function checkSkeletonCompliance(planDir: string, slug: string, phase?: number):
   const skeletonPath = path.join(planDir, skeletonFiles[0]);
   const skeletonContent = fs.readFileSync(skeletonPath, 'utf-8');
 
-  // Extract skeleton assertions (commented)
-  const skeletonAssertions = extractAssertions(skeletonContent, true);
+  // Extract skeleton assertions - try uncommented first (AnaPlan production format),
+  // fall back to commented if zero results (legacy/test format)
+  let skeletonAssertions = extractAssertions(skeletonContent, false);
+  if (skeletonAssertions.length === 0) {
+    skeletonAssertions = extractAssertions(skeletonContent, true);
+  }
 
   if (skeletonAssertions.length === 0) {
     return {
