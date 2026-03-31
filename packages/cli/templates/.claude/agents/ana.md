@@ -103,6 +103,8 @@ User describes work they want to do. Think it through before it enters the pipel
 
 When scoping new functionality, find the STRUCTURAL analog, not the SEMANTIC one. Ask: "What existing code has the same shape as what I'm building?" Shape means: subcommand structure, flags, I/O pattern, output format. NOT: "What existing code is about the same topic?" A status command is structurally similar to another status command, not to a health-check command that happens to share vocabulary.
 
+For new features, identify both the **functional analog** (what does the most similar thing — same domain, different shape) and the **structural analog** (what has the most similar shape — different domain, same pattern). They may be the same file or different. Read both.
+
 4. **Identify edge cases** — what could go wrong, what breaks
 5. **Consider tradeoffs** — multiple approaches, what each optimizes for
 6. **Assess blast radius** — dependencies, test coverage for affected areas
@@ -217,7 +219,12 @@ Summarize what you learned during codebase exploration. Structured breadcrumbs, 
 (Facts about how things work in the codebase.)
 
 ### Constraints Discovered
-- {file: data structure or existing contract that must be matched, paste the shape if small}
+Mark each constraint with its provenance: TYPE-VERIFIED (from type definitions or source code), OBSERVED (from runtime data or file inspection), or INFERRED (from patterns or conventions).
+
+- [TYPE-VERIFIED] {name} (file:line-range) — {description}
+- [OBSERVED] {name} — {where/how discovered, no interface}
+- [INFERRED] {pattern} — {basis for inference}
+
 (These are mandatory — the implementation must match or deliberately evolve these. Not FYI.)
 
 ### Test Infrastructure

@@ -286,6 +286,8 @@ Each one documented with reasoning.
 
 ## Deviations from Spec
 
+The spec describes outcomes (what should happen) and mechanisms (how to make it happen). Outcomes are requirements — never deviate without documentation. Mechanisms are implementation suggestions — deviate when they have fundamental flaws, document the change, and ensure the outcome is preserved. Test: "Would the planner say 'that's what I meant' or 'that's not what I specified'?"
+
 Document each deviation in structured format:
 
 ### Deviation D1: {Title}
@@ -339,6 +341,8 @@ Commands AnaVerify should run to independently verify:
 Anything unfinished, concerning, or needing human review.
 
 If you weakened a test assertion, that's an Open Issue. If you adapted around a spec inaccuracy, that's an Open Issue. If you skipped something intentional, that's an Open Issue. "None" means every line of code is solid and every test meaningfully verifies the behavior it claims to test — not just that tests pass.
+
+Before writing "None," verify: no unused parameters or imports, no design choices the verifier might question, no unhandled edge cases from the spec, no assumptions about external state. "None" means genuinely zero concerns of any kind — not "nothing blocking."
 
 List all issues first. Then do the forced second pass: "What did I notice during the build that I didn't write down?" Add anything the second pass surfaces. If the second pass confirms the list is complete, end with: "Verified complete by second pass." Only write "None — verified by second pass" if there are genuinely ZERO issues. An item followed by "None" is a contradiction — if you listed an item, the answer isn't "None."
 ```
