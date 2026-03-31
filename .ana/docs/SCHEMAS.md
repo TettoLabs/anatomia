@@ -315,7 +315,7 @@ File existence IS the state machine. No separate status file needed.
 
 **Batch saves:** `ana artifact save-all {slug}` saves all recognized artifacts in the plan directory atomically. Validates each artifact before committing. If any validation fails, nothing is saved. Commit message lists all artifact types saved.
 
-**Artifact validation:** Each artifact type has format validation at save time. Validation runs before git commit — if it fails, nothing is staged. The `--force` flag skips validation.
+**Artifact validation:** Each artifact type has format validation at save time. Validation runs before git commit — if it fails, nothing is staged.
 
 Validation rules by type:
 - **Scope:** ≥3 acceptance criteria, Structural Analog heading, Intent section with content
