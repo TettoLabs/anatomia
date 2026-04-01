@@ -668,27 +668,26 @@ Rules that apply.`;
       expect(() => saveArtifact('spec', 'test-slug')).not.toThrow();
     });
 
-    it('rejects spec without file_changes', async () => {
+    it('saves spec without file_changes YAML block', async () => {
+      // S8: file_changes moved to contract.yaml - no longer required in spec
       await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
-      const invalidSpec = `# Spec
+      const specWithoutFileChanges = `# Spec
 
 ## Implementation
 Details here.
 
 ## Build Brief
 Rules.`;
-      await createArtifact('test-slug', 'spec.md', invalidSpec);
+      await createArtifact('test-slug', 'spec.md', specWithoutFileChanges);
 
-      expect(() => saveArtifact('spec', 'test-slug')).toThrow();
+      expect(() => saveArtifact('spec', 'test-slug')).not.toThrow();
     });
 
     it('rejects spec without Build Brief', async () => {
       await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
       const invalidSpec = `# Spec
 
-file_changes:
-  - path: test.ts
-    action: create`;
+Implementation details only.`;
       await createArtifact('test-slug', 'spec.md', invalidSpec);
 
       expect(() => saveArtifact('spec', 'test-slug')).toThrow();
@@ -847,6 +846,185 @@ Met.`;
     });
   });
 
+  describe('contract validation', () => {
+    /**
+     * Create valid contract content that passes validation
+     */
+    function getValidContractContent(): string {
+      return `version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Test Feature"
+
+assertions:
+  - id: A001
+    says: "Creating a payment returns success"
+    block: "creates payment intent"
+    target: "response.status"
+    matcher: "equals"
+    value: 200
+  - id: A002
+    says: "Response includes data"
+    block: "response has body"
+    target: "response.body"
+    matcher: "exists"
+
+file_changes:
+  - path: "src/test.ts"
+    action: create`;
+    }
+
+    it('accepts valid contract', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      await createArtifact('test-slug', 'contract.yaml', getValidContractContent());
+
+      expect(() => saveArtifact('contract', 'test-slug')).not.toThrow();
+      expect(isFileCommitted('.ana/plans/active/test-slug/contract.yaml')).toBe(true);
+    });
+
+    it('rejects unknown matcher', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      const invalidContract = getValidContractContent().replace('matcher: "equals"', 'matcher: "resembles"');
+      await createArtifact('test-slug', 'contract.yaml', invalidContract);
+
+      expect(() => saveArtifact('contract', 'test-slug')).toThrow();
+    });
+
+    it('rejects missing says field', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      const invalidContract = `version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Test Feature"
+
+assertions:
+  - id: A001
+    block: "test block"
+    target: "test.target"
+    matcher: "equals"
+    value: 200
+
+file_changes:
+  - path: "src/test.ts"
+    action: create`;
+      await createArtifact('test-slug', 'contract.yaml', invalidContract);
+
+      expect(() => saveArtifact('contract', 'test-slug')).toThrow();
+    });
+
+    it('rejects duplicate assertion IDs', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      const invalidContract = `version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Test Feature"
+
+assertions:
+  - id: A001
+    says: "First assertion"
+    block: "test block"
+    target: "test.target"
+    matcher: "equals"
+    value: 200
+  - id: A001
+    says: "Second assertion same ID"
+    block: "test block"
+    target: "test.target2"
+    matcher: "exists"
+
+file_changes:
+  - path: "src/test.ts"
+    action: create`;
+      await createArtifact('test-slug', 'contract.yaml', invalidContract);
+
+      expect(() => saveArtifact('contract', 'test-slug')).toThrow();
+    });
+
+    it('rejects empty assertions array', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      const invalidContract = `version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Test Feature"
+
+assertions: []
+
+file_changes:
+  - path: "src/test.ts"
+    action: create`;
+      await createArtifact('test-slug', 'contract.yaml', invalidContract);
+
+      expect(() => saveArtifact('contract', 'test-slug')).toThrow();
+    });
+
+    it('requires value for equals matcher', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      const invalidContract = `version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Test Feature"
+
+assertions:
+  - id: A001
+    says: "Equals without value"
+    block: "test block"
+    target: "test.target"
+    matcher: "equals"
+
+file_changes:
+  - path: "src/test.ts"
+    action: create`;
+      await createArtifact('test-slug', 'contract.yaml', invalidContract);
+
+      expect(() => saveArtifact('contract', 'test-slug')).toThrow();
+    });
+
+    it('does not require value for exists matcher', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      const validContract = `version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Test Feature"
+
+assertions:
+  - id: A001
+    says: "Exists without value"
+    block: "test block"
+    target: "test.target"
+    matcher: "exists"
+
+file_changes:
+  - path: "src/test.ts"
+    action: create`;
+      await createArtifact('test-slug', 'contract.yaml', validContract);
+
+      expect(() => saveArtifact('contract', 'test-slug')).not.toThrow();
+    });
+
+    it('rejects missing file_changes', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      const invalidContract = `version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Test Feature"
+
+assertions:
+  - id: A001
+    says: "Test assertion"
+    block: "test block"
+    target: "test.target"
+    matcher: "exists"`;
+      await createArtifact('test-slug', 'contract.yaml', invalidContract);
+
+      expect(() => saveArtifact('contract', 'test-slug')).toThrow();
+    });
+
+    it('writes .saves.json entry for contract', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      await createArtifact('test-slug', 'contract.yaml', getValidContractContent());
+
+      saveArtifact('contract', 'test-slug');
+
+      const savesPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug', '.saves.json');
+      const saves = JSON.parse(await fs.readFile(savesPath, 'utf-8'));
+      expect(saves.contract).toBeDefined();
+      expect(saves.contract.hash).toMatch(/^sha256:[a-f0-9]{64}$/);
+    });
+  });
+
   describe('.saves.json metadata', () => {
     it('writes .saves.json with save metadata', async () => {
       await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
@@ -958,6 +1136,15 @@ describe('ana artifact save-all', () => {
 
   function getLastCommitMessage(): string {
     return execSync('git log -1 --pretty=%B', { cwd: tempDir, encoding: 'utf-8' }).trim();
+  }
+
+  function isFileCommitted(filePath: string): boolean {
+    try {
+      execSync(`git ls-files --error-unmatch ${filePath}`, { cwd: tempDir, stdio: 'ignore' });
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   /**
@@ -1145,5 +1332,49 @@ Rules.`;
       expect(saves[type].commit).toMatch(/^[a-f0-9]{40}$/);
       expect(saves[type].hash).toMatch(/^sha256:[a-f0-9]{64}$/);
     }
+  });
+
+  it('save-all includes contract.yaml', async () => {
+    await createTestProject();
+
+    const validPlan = `# Plan
+## Phases
+- [ ] Phase 1
+  - Spec: spec.md`;
+
+    const validContract = `version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Test Feature"
+
+assertions:
+  - id: A001
+    says: "Test assertion"
+    block: "test block"
+    target: "test.target"
+    matcher: "exists"
+
+file_changes:
+  - path: "src/test.ts"
+    action: create`;
+
+    const validSpec = `# Spec
+## Build Brief
+Rules.`;
+
+    await createArtifact('test-slug', 'plan.md', validPlan);
+    await createArtifact('test-slug', 'contract.yaml', validContract);
+    await createArtifact('test-slug', 'spec.md', validSpec);
+
+    saveAllArtifacts('test-slug');
+
+    const message = getLastCommitMessage();
+    expect(message).toContain('Plan');
+    expect(message).toContain('Contract');
+    expect(message).toContain('Spec');
+
+    // Verify all are committed
+    expect(isFileCommitted('.ana/plans/active/test-slug/plan.md')).toBe(true);
+    expect(isFileCommitted('.ana/plans/active/test-slug/contract.yaml')).toBe(true);
+    expect(isFileCommitted('.ana/plans/active/test-slug/spec.md')).toBe(true);
   });
 });
