@@ -706,7 +706,8 @@ export const scanCommand = new Command('scan')
   .argument('[path]', 'Directory to scan (default: current directory)', '.')
   .option('--json', 'Output JSON format for programmatic consumption')
   .option('--verbose', 'Show detailed analyzer output')
-  .action(async (targetPath: string, options: { json?: boolean; verbose?: boolean }) => {
+  .option('--save', 'Save scan results to .ana/scan.json')
+  .action(async (targetPath: string, options: { json?: boolean; verbose?: boolean; save?: boolean }) => {
     const rootPath = path.resolve(targetPath);
 
     // Validate directory exists
@@ -772,11 +773,24 @@ export const scanCommand = new Command('scan')
       }
 
       // Format output
+      const jsonOutput = formatJson(projectName, stack, analysis, fileCounts, monorepoInfo);
       const output = options.json
-        ? formatJson(projectName, stack, analysis, fileCounts, monorepoInfo)
+        ? jsonOutput
         : formatHumanReadable(projectName, stack, analysis, fileCounts, monorepoInfo);
 
       console.log(output);
+
+      // Write to .ana/scan.json if --save flag is set
+      if (options.save) {
+        const anaDir = path.join(rootPath, '.ana');
+        try {
+          await fs.mkdir(anaDir, { recursive: true });
+          await fs.writeFile(path.join(anaDir, 'scan.json'), jsonOutput, 'utf-8');
+          console.log(chalk.gray('Scan saved to .ana/scan.json'));
+        } catch (writeError) {
+          console.error(chalk.yellow(`Warning: Failed to save scan results. ${writeError instanceof Error ? writeError.message : ''}`));
+        }
+      }
     } catch (error) {
       if (spinner) {
         spinner.fail('Scan failed');

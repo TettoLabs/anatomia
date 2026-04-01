@@ -4,7 +4,7 @@ import * as fsSync from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
 import { execSync } from 'node:child_process';
-import { runPreCheck } from '../../src/commands/verify-precheck.js';
+import { runPreCheck, runContractPreCheck } from '../../src/commands/verify-precheck.js';
 
 /**
  * Tests for `ana verify pre-check` command
@@ -69,531 +69,32 @@ describe('ana verify pre-check', () => {
     };
   }
 
-  /**
-   * Helper to create a test project with git and plan directory
-   */
-  async function createPreCheckProject(options: {
-    slug?: string;
-    skeleton?: string;
-    testFile?: { path: string; content: string };
-    spec?: string;
-    commits?: Array<{
-      message: string;
-      files: Array<{ path: string; content: string }>;
-      coAuthor?: boolean;
-    }>;
-  }): Promise<void> {
-    const slug = options.slug || 'test-slug';
+  describe('no contract', () => {
+    it('prints message when no contract exists', async () => {
+      // Create minimal project
+      execSync('git init', { cwd: tempDir, stdio: 'ignore' });
+      execSync('git config user.email "test@test.com"', { cwd: tempDir, stdio: 'ignore' });
+      execSync('git config user.name "Test"', { cwd: tempDir, stdio: 'ignore' });
 
-    // Init git
-    execSync('git init', { cwd: tempDir, stdio: 'ignore' });
-    execSync('git config user.email "test@test.com"', { cwd: tempDir, stdio: 'ignore' });
-    execSync('git config user.name "Test"', { cwd: tempDir, stdio: 'ignore' });
+      const anaDir = path.join(tempDir, '.ana');
+      await fs.mkdir(anaDir, { recursive: true });
+      await fs.writeFile(
+        path.join(anaDir, '.meta.json'),
+        JSON.stringify({ artifactBranch: 'main' }),
+        'utf-8'
+      );
 
-    // Create .ana/.meta.json
-    const anaDir = path.join(tempDir, '.ana');
-    await fs.mkdir(anaDir, { recursive: true });
-    await fs.writeFile(
-      path.join(anaDir, '.meta.json'),
-      JSON.stringify({
-        artifactBranch: 'main',
-        coAuthor: 'Ana <build@anatomia.dev>'
-      }),
-      'utf-8'
-    );
+      // Create plan directory without contract
+      const planDir = path.join(anaDir, 'plans', 'active', 'test-slug');
+      await fs.mkdir(planDir, { recursive: true });
+      await fs.writeFile(path.join(planDir, 'scope.md'), '# Scope', 'utf-8');
 
-    // Initial commit on main
-    execSync('git add -A && git commit -m "init"', { cwd: tempDir, stdio: 'ignore' });
-    execSync('git branch -M main', { cwd: tempDir, stdio: 'ignore' });
-
-    // Create plan directory
-    const planDir = path.join(tempDir, '.ana', 'plans', 'active', slug);
-    await fs.mkdir(planDir, { recursive: true });
-
-    // Add skeleton if provided
-    if (options.skeleton) {
-      await fs.writeFile(path.join(planDir, 'test_skeleton.ts'), options.skeleton, 'utf-8');
-    }
-
-    // Add spec if provided
-    if (options.spec) {
-      await fs.writeFile(path.join(planDir, 'spec.md'), options.spec, 'utf-8');
-    }
-
-    // Commit plan artifacts
-    if (options.skeleton || options.spec) {
-      execSync('git add -A && git commit -m "add plan artifacts"', { cwd: tempDir, stdio: 'ignore' });
-    }
-
-    // Create feature branch
-    execSync(`git checkout -b feature/${slug}`, { cwd: tempDir, stdio: 'ignore' });
-
-    // Add test file if provided
-    if (options.testFile) {
-      const testDir = path.dirname(options.testFile.path);
-      await fs.mkdir(path.join(tempDir, testDir), { recursive: true });
-      await fs.writeFile(path.join(tempDir, options.testFile.path), options.testFile.content, 'utf-8');
-    }
-
-    // Create commits if provided
-    if (options.commits) {
-      for (const commit of options.commits) {
-        for (const file of commit.files) {
-          const fileDir = path.dirname(file.path);
-          await fs.mkdir(path.join(tempDir, fileDir), { recursive: true });
-          await fs.writeFile(path.join(tempDir, file.path), file.content, 'utf-8');
-        }
-
-        const coAuthorLine = commit.coAuthor !== false ? '\n\nCo-authored-by: Ana <build@anatomia.dev>' : '';
-        execSync(`git add -A && git commit -m "${commit.message}${coAuthorLine}"`, {
-          cwd: tempDir,
-          stdio: 'ignore'
-        });
-      }
-    }
-  }
-
-  describe('skeleton compliance check', () => {
-    it('reports exact match when all assertions match', async () => {
-      await createPreCheckProject({
-        skeleton: `
-// describe('test', () => {
-//   it('should work', () => {
-//     // expect(result).toBe(true)
-//     // expect(count).toBe(3)
-//     // expect(output).toContain('hello')
-//   })
-// })
-`,
-        testFile: {
-          path: 'packages/cli/tests/commands/test-slug.test.ts',
-          content: `
-describe('test', () => {
-  it('should work', () => {
-    expect(result).toBe(true)
-    expect(count).toBe(3)
-    expect(output).toContain('hello')
-  })
-})
-`
-        },
-        commits: [{ message: 'add test', files: [{ path: 'test.ts', content: '// test' }] }]
-      });
+      execSync('git add -A && git commit -m "init"', { cwd: tempDir, stdio: 'ignore' });
 
       const output = captureOutput(() => runPreCheck('test-slug'));
 
-      expect(output.stdout).toContain('3 assertions in skeleton');
-      expect(output.stdout).toContain('3 exact match');
-      expect(output.stdout).toContain('0 modified');
-      expect(output.stdout).toContain('0 missing from test file');
-      expect(output.stdout).toContain('0 added by builder');
-    });
-
-    it('detects modified assertion values', async () => {
-      await createPreCheckProject({
-        skeleton: `
-// expect(count).toBe(3)
-// expect(output).toContain('hello')
-`,
-        testFile: {
-          path: 'packages/cli/tests/commands/test-slug.test.ts',
-          content: `
-expect(count).toBe(5)
-expect(output).toContain('hello')
-`
-        },
-        commits: [{ message: 'add test', files: [{ path: 'test.ts', content: '// test' }] }]
-      });
-
-      const output = captureOutput(() => runPreCheck('test-slug'));
-
-      expect(output.stdout).toContain('2 assertions in skeleton');
-      expect(output.stdout).toContain('1 exact match');
-      expect(output.stdout).toContain('1 modified');
-      expect(output.stdout).toContain('expect(count).toBe(3)');
-      expect(output.stdout).toContain('expect(count).toBe(5)');
-    });
-
-    it('detects missing assertions from test file', async () => {
-      await createPreCheckProject({
-        skeleton: `
-// expect(count).toBe(3)
-// expect(output).toContain('hello')
-// expect(status).toBe('success')
-`,
-        testFile: {
-          path: 'packages/cli/tests/commands/test-slug.test.ts',
-          content: `
-expect(count).toBe(3)
-expect(output).toContain('hello')
-`
-        },
-        commits: [{ message: 'add test', files: [{ path: 'test.ts', content: '// test' }] }]
-      });
-
-      const output = captureOutput(() => runPreCheck('test-slug'));
-
-      expect(output.stdout).toContain('3 assertions in skeleton');
-      expect(output.stdout).toContain('2 exact match');
-      expect(output.stdout).toContain('1 missing from test file');
-      expect(output.stdout).toContain('expect(status).toBe(\'success\')');
-    });
-
-    it('counts added assertions by builder', async () => {
-      await createPreCheckProject({
-        skeleton: `
-// expect(count).toBe(3)
-`,
-        testFile: {
-          path: 'packages/cli/tests/commands/test-slug.test.ts',
-          content: `
-expect(count).toBe(3)
-expect(extraCheck).toBe(true)
-expect(anotherCheck).toContain('data')
-`
-        },
-        commits: [{ message: 'add test', files: [{ path: 'test.ts', content: '// test' }] }]
-      });
-
-      const output = captureOutput(() => runPreCheck('test-slug'));
-
-      expect(output.stdout).toContain('1 assertions in skeleton');
-      expect(output.stdout).toContain('1 exact match');
-      expect(output.stdout).toContain('2 added by builder');
-    });
-
-    it('handles no skeleton file gracefully', async () => {
-      await createPreCheckProject({
-        commits: [{ message: 'add test', files: [{ path: 'test.ts', content: '// test' }] }]
-      });
-
-      const output = captureOutput(() => runPreCheck('test-slug'));
-
-      expect(output.stdout).toContain('No skeleton file found');
-      expect(output.stdout).toContain('Skipping skeleton check');
-    });
-
-    it('handles empty skeleton file', async () => {
-      await createPreCheckProject({
-        skeleton: `
-// describe('test', () => {
-//   it('should work', () => {
-//     // Setup code here
-//   })
-// })
-`,
-        commits: [{ message: 'add test', files: [{ path: 'test.ts', content: '// test' }] }]
-      });
-
-      const output = captureOutput(() => runPreCheck('test-slug'));
-
-      expect(output.stdout).toContain('0 assertions in skeleton');
-      expect(output.stdout).toContain('0 exact match');
-    });
-
-    it('finds test file from spec YAML when slug differs from filename', async () => {
-      // Slug is context-status but test file is context.test.ts
-      const spec = `# Spec
-
-<!-- MACHINE-READABLE
-file_changes:
-  - path: packages/cli/tests/commands/context.test.ts
-    action: create
-  - path: src/commands/context.ts
-    action: create
--->
-`;
-
-      await createPreCheckProject({
-        slug: 'context-status',
-        skeleton: `
-// expect(output).toContain('status')
-// expect(result).toBe(true)
-`,
-        spec,
-        testFile: {
-          path: 'packages/cli/tests/commands/context.test.ts',
-          content: `
-expect(output).toContain('status')
-expect(result).toBe(true)
-`
-        },
-        commits: [{ message: 'add context command', files: [{ path: 'src/context.ts', content: '// impl' }] }]
-      });
-
-      const output = captureOutput(() => runPreCheck('context-status'));
-
-      expect(output.stdout).toContain('2 assertions in skeleton');
-      expect(output.stdout).toContain('2 exact match');
-      expect(output.stdout).toContain('packages/cli/tests/commands/context.test.ts');
-    });
-  });
-
-  describe('file changes audit', () => {
-    it('reports all files match when spec and git diff align', async () => {
-      const spec = `# Spec
-
-<!-- MACHINE-READABLE
-file_changes:
-  - path: src/foo.ts
-    action: create
-  - path: src/index.ts
-    action: modify
-  - path: tests/foo.test.ts
-    action: create
--->
-`;
-
-      await createPreCheckProject({
-        spec,
-        commits: [
-          {
-            message: 'implement feature',
-            files: [
-              { path: 'src/foo.ts', content: 'export const foo = true;' },
-              { path: 'src/index.ts', content: 'import { foo } from "./foo";' },
-              { path: 'tests/foo.test.ts', content: 'test("foo", () => {});' }
-            ]
-          }
-        ]
-      });
-
-      const output = captureOutput(() => runPreCheck('test-slug'));
-
-      expect(output.stdout).toContain('Spec expects: 3 files (2 create, 1 modify)');
-      expect(output.stdout).toContain('✓ src/foo.ts');
-      expect(output.stdout).toContain('✓ src/index.ts');
-      expect(output.stdout).toContain('✓ tests/foo.test.ts');
-    });
-
-    it('flags unexpected files not in spec', async () => {
-      const spec = `# Spec
-
-<!-- MACHINE-READABLE
-file_changes:
-  - path: src/foo.ts
-    action: create
--->
-`;
-
-      await createPreCheckProject({
-        spec,
-        commits: [
-          {
-            message: 'implement feature',
-            files: [
-              { path: 'src/foo.ts', content: 'export const foo = true;' },
-              { path: 'src/bar.ts', content: 'export const bar = true;' }
-            ]
-          }
-        ]
-      });
-
-      const output = captureOutput(() => runPreCheck('test-slug'));
-
-      expect(output.stdout).toContain('✓ src/foo.ts');
-      expect(output.stdout).toContain('⚠ src/bar.ts — NOT in spec');
-    });
-
-    it('flags expected files missing from git diff', async () => {
-      const spec = `# Spec
-
-<!-- MACHINE-READABLE
-file_changes:
-  - path: src/foo.ts
-    action: create
-  - path: src/bar.ts
-    action: create
--->
-`;
-
-      await createPreCheckProject({
-        spec,
-        commits: [
-          {
-            message: 'implement feature',
-            files: [{ path: 'src/foo.ts', content: 'export const foo = true;' }]
-          }
-        ]
-      });
-
-      const output = captureOutput(() => runPreCheck('test-slug'));
-
-      expect(output.stdout).toContain('✓ src/foo.ts');
-      expect(output.stdout).toContain('✗ src/bar.ts — in spec (create) but NOT in git diff');
-    });
-
-    it('identifies pipeline artifacts correctly', async () => {
-      const spec = `# Spec
-
-<!-- MACHINE-READABLE
-file_changes:
-  - path: src/foo.ts
-    action: create
--->
-`;
-
-      await createPreCheckProject({
-        spec,
-        commits: [
-          {
-            message: 'implement feature',
-            files: [
-              { path: 'src/foo.ts', content: 'export const foo = true;' },
-              { path: '.ana/plans/active/test-slug/build_report.md', content: '# Build Report' }
-            ]
-          }
-        ]
-      });
-
-      const output = captureOutput(() => runPreCheck('test-slug'));
-
-      expect(output.stdout).toContain('✓ src/foo.ts');
-      expect(output.stdout).toContain('⚠ .ana/plans/active/test-slug/build_report.md — pipeline artifact');
-    });
-
-    it('handles missing YAML block gracefully', async () => {
-      await createPreCheckProject({
-        spec: '# Spec\n\nNo YAML here.',
-        commits: [{ message: 'test', files: [{ path: 'test.ts', content: '// test' }] }]
-      });
-
-      const output = captureOutput(() => runPreCheck('test-slug'));
-
-      expect(output.stdout).toContain('No file_changes YAML block found');
-      expect(output.stdout).toContain('Skipping file audit');
-    });
-  });
-
-  describe('commit analysis', () => {
-    it('reports clean commits with co-author', async () => {
-      await createPreCheckProject({
-        commits: [
-          {
-            message: 'add feature',
-            files: [{ path: 'src/foo.ts', content: '// foo' }],
-            coAuthor: true
-          },
-          {
-            message: 'add tests',
-            files: [{ path: 'tests/foo.test.ts', content: '// test' }],
-            coAuthor: true
-          }
-        ]
-      });
-
-      const output = captureOutput(() => runPreCheck('test-slug'));
-
-      expect(output.stdout).toContain('2 commits on feature/test-slug');
-      expect(output.stdout).toContain('Commit 1: add feature');
-      expect(output.stdout).toContain('Co-author: ✓');
-      expect(output.stdout).toContain('Commit 2: add tests');
-    });
-
-    it('flags commits with too many files', async () => {
-      await createPreCheckProject({
-        commits: [
-          {
-            message: 'big commit',
-            files: [
-              { path: 'f1.ts', content: '// 1' },
-              { path: 'f2.ts', content: '// 2' },
-              { path: 'f3.ts', content: '// 3' },
-              { path: 'f4.ts', content: '// 4' },
-              { path: 'f5.ts', content: '// 5' },
-              { path: 'f6.ts', content: '// 6' }
-            ],
-            coAuthor: true
-          }
-        ]
-      });
-
-      const output = captureOutput(() => runPreCheck('test-slug'));
-
-      expect(output.stdout).toContain('Commit 1: big commit');
-      expect(output.stdout).toContain('6 files');
-      expect(output.stdout).toContain('⚠ 6 files in single commit');
-    });
-
-    it('flags missing co-author', async () => {
-      await createPreCheckProject({
-        commits: [
-          {
-            message: 'no coauthor',
-            files: [{ path: 'test.ts', content: '// test' }],
-            coAuthor: false
-          }
-        ]
-      });
-
-      const output = captureOutput(() => runPreCheck('test-slug'));
-
-      expect(output.stdout).toContain('Commit 1: no coauthor');
-      expect(output.stdout).toContain('Co-author: ✗');
-    });
-
-    it('handles single commit', async () => {
-      await createPreCheckProject({
-        commits: [
-          {
-            message: 'single commit',
-            files: [{ path: 'test.ts', content: '// test' }],
-            coAuthor: true
-          }
-        ]
-      });
-
-      const output = captureOutput(() => runPreCheck('test-slug'));
-
-      expect(output.stdout).toContain('1 commits on feature/test-slug');
-      expect(output.stdout).toContain('Commit 1: single commit');
-    });
-  });
-
-  describe('orchestration', () => {
-    it('runs all three checks and exits 0', async () => {
-      await createPreCheckProject({
-        skeleton: '// expect(foo).toBe(true)',
-        testFile: {
-          path: 'packages/cli/tests/commands/test-slug.test.ts',
-          content: 'expect(foo).toBe(true)'
-        },
-        spec: `<!-- MACHINE-READABLE
-file_changes:
-  - path: test.ts
-    action: create
--->`,
-        commits: [{ message: 'test', files: [{ path: 'test.ts', content: '// test' }] }]
-      });
-
-      let exitCode: number | undefined;
-      const originalExit = process.exit;
-      process.exit = ((code?: number) => {
-        exitCode = code;
-        throw new Error(`process.exit(${code})`);
-      }) as typeof process.exit;
-
-      try {
-        runPreCheck('test-slug');
-      } catch (error) {
-        // Expected
-      } finally {
-        process.exit = originalExit;
-      }
-
-      expect(exitCode).toBe(0);
-    });
-
-    it('handles partial data gracefully', async () => {
-      await createPreCheckProject({
-        commits: [{ message: 'test', files: [{ path: 'test.ts', content: '// test' }] }]
-      });
-
-      const output = captureOutput(() => runPreCheck('test-slug'));
-
-      expect(output.stdout).toContain('No skeleton file found');
-      expect(output.stdout).toContain('No spec file found');
-      expect(output.stdout).toContain('1 commits');
+      expect(output.stdout).toContain('No contract found');
+      expect(output.stdout).toContain('AnaPlan');
     });
 
     it('errors when slug does not exist', async () => {
@@ -612,485 +113,288 @@ file_changes:
     });
   });
 
-  describe('multi-phase support', () => {
-    it('--phase selects correct spec in multi-phase', async () => {
-      const spec1 = `# Spec 1
-<!-- MACHINE-READABLE
-file_changes:
-  - path: tests/phase1.test.ts
-    action: create
--->`;
+  describe('contract mode (S8+)', () => {
+    /**
+     * Helper to create a contract mode test project
+     */
+    async function createContractProject(options: {
+      slug: string;
+      contract: string;
+      testFiles?: Array<{ path: string; content: string }>;
+      saveContract?: boolean;
+    }): Promise<void> {
+      // Create git repo
+      execSync('git init', { cwd: tempDir, stdio: 'ignore' });
+      execSync('git config user.email "test@test.com"', { cwd: tempDir, stdio: 'ignore' });
+      execSync('git config user.name "Test"', { cwd: tempDir, stdio: 'ignore' });
 
-      const spec2 = `# Spec 2
-<!-- MACHINE-READABLE
-file_changes:
-  - path: tests/phase2.test.ts
-    action: create
--->`;
-
-      await createPreCheckProject({
-        slug: 'multi-slug',
-        commits: [{ message: 'phase 2', files: [{ path: 'test.ts', content: '// test' }] }]
-      });
-
-      // Add both specs
-      const planDir = path.join(tempDir, '.ana/plans/active/multi-slug');
-      await fs.writeFile(path.join(planDir, 'spec-1.md'), spec1, 'utf-8');
-      await fs.writeFile(path.join(planDir, 'spec-2.md'), spec2, 'utf-8');
-
-      // Add skeleton and test file for phase 2
-      await fs.writeFile(path.join(planDir, 'test_skeleton.ts'), '// expect(phase2).toBe(true)', 'utf-8');
-      await fs.mkdir(path.join(tempDir, 'tests'), { recursive: true });
+      // Create .meta.json
+      const anaDir = path.join(tempDir, '.ana');
+      await fs.mkdir(anaDir, { recursive: true });
       await fs.writeFile(
-        path.join(tempDir, 'tests/phase2.test.ts'),
-        'expect(phase2).toBe(true)',
+        path.join(anaDir, '.meta.json'),
+        JSON.stringify({ artifactBranch: 'main' }),
         'utf-8'
       );
 
-      execSync('git add -A && git commit -m "add phase 2"', { cwd: tempDir, stdio: 'ignore' });
+      // Create plan directory
+      const planDir = path.join(anaDir, 'plans', 'active', options.slug);
+      await fs.mkdir(planDir, { recursive: true });
 
-      const output = captureOutput(() => runPreCheck('multi-slug', 2));
+      // Write contract
+      await fs.writeFile(path.join(planDir, 'contract.yaml'), options.contract, 'utf-8');
 
-      expect(output.stdout).toContain('tests/phase2.test.ts');
-      expect(output.stdout).not.toContain('tests/phase1.test.ts');
-    });
+      // Initial commit
+      execSync('git add -A && git commit -m "init"', { cwd: tempDir, stdio: 'ignore' });
 
-    it('no --phase with single spec works as before', async () => {
-      await createPreCheckProject({
-        skeleton: '// expect(foo).toBe(true)',
-        spec: `<!-- MACHINE-READABLE
+      // Write .saves.json with contract commit if requested
+      if (options.saveContract !== false) {
+        const commit = execSync('git rev-parse HEAD', { cwd: tempDir, encoding: 'utf-8' }).trim();
+        const savesPath = path.join(planDir, '.saves.json');
+        await fs.writeFile(savesPath, JSON.stringify({
+          contract: {
+            saved_at: new Date().toISOString(),
+            commit,
+            hash: 'sha256:abc123',
+          }
+        }), 'utf-8');
+      }
+
+      // Create test files
+      if (options.testFiles) {
+        for (const testFile of options.testFiles) {
+          const fullPath = path.join(tempDir, testFile.path);
+          await fs.mkdir(path.dirname(fullPath), { recursive: true });
+          await fs.writeFile(fullPath, testFile.content, 'utf-8');
+        }
+      }
+    }
+
+    it('reports INTACT when contract unchanged', async () => {
+      const contract = `version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Test Feature"
+assertions:
+  - id: A001
+    says: "Test passes"
+    block: "test"
+    target: "result"
+    matcher: "truthy"
 file_changes:
-  - path: test.ts
-    action: create
--->`,
-        testFile: {
-          path: 'packages/cli/tests/commands/test-slug.test.ts',
-          content: 'expect(foo).toBe(true)'
-        },
-        commits: [{ message: 'test', files: [{ path: 'test.ts', content: '// test' }] }]
-      });
+  - path: src/test.ts
+    action: create`;
 
-      const output = captureOutput(() => runPreCheck('test-slug'));
-
-      expect(output.stdout).toContain('1 assertions in skeleton');
-      expect(output.stdout).toContain('1 exact match');
-    });
-
-    it('--phase with nonexistent spec reports error', async () => {
-      await createPreCheckProject({
-        skeleton: '// expect(foo).toBe(true)',
-        commits: [{ message: 'test', files: [{ path: 'test.ts', content: '// test' }] }]
-      });
-
-      // Add only spec-1
-      const planDir = path.join(tempDir, '.ana/plans/active/test-slug');
-      await fs.writeFile(path.join(planDir, 'spec-1.md'), '# Spec 1', 'utf-8');
-
-      const output = captureOutput(() => runPreCheck('test-slug', 3));
-
-      expect(output.stdout).toContain('No spec file found');
-    });
-  });
-
-  describe('regression tests with production formats (S6-1.3)', () => {
-    it('handles production skeleton format with uncommented expect() calls', async () => {
-      // Real format from AnaPlan: uncommented expect() inside it() blocks with setup comments
-      const productionSkeleton = `
-it('shows all context files', async () => {
-  // SETUP NEEDED: create project with context files
-  expect(output).toContain('project-overview.md');
-  expect(files.length).toBe(7);
-  expect(status).toBe('complete');
-})`;
-
-      const testFile = `
-it('shows all context files', async () => {
-  const { output, files, status } = await setup();
-  expect(output).toContain('project-overview.md');
-  expect(files.length).toBe(7);
-  expect(status).toBe('complete');
-})`;
-
-      await createPreCheckProject({
-        slug: 'test-feature',
-        skeleton: productionSkeleton,
-        testFile: {
-          path: 'packages/cli/tests/commands/test-feature.test.ts',
-          content: testFile
-        },
-        commits: [{ message: 'add tests', files: [{ path: 'src/test.ts', content: '// code' }] }]
-      });
-
-      const output = captureOutput(() => runPreCheck('test-feature'));
-
-      expect(output.stdout).toContain('3 assertions in skeleton');
-      expect(output.stdout).toContain('3 exact match');
-      expect(output.stdout).toContain('0 modified');
-    });
-
-    it('handles production spec format with code fence and trailing text', async () => {
-      // Real format from AnaPlan: <!-- MACHINE-READABLE: DO NOT MODIFY MANUALLY --> + code fence
-      const productionSpec = `# Spec
-
-## Implementation Details
-...
-
-<!-- MACHINE-READABLE: DO NOT MODIFY MANUALLY -->
-\`\`\`yaml
-file_changes:
-  - path: packages/cli/src/commands/status.ts
-    action: create
-  - path: packages/cli/tests/commands/status.test.ts
-    action: create
-\`\`\`
-
-## Build Brief
-...`;
-
-      await createPreCheckProject({
-        slug: 'status-feature',
-        spec: productionSpec,
-        commits: [{
-          message: 'add status command',
-          files: [
-            { path: 'packages/cli/src/commands/status.ts', content: '// impl' },
-            { path: 'packages/cli/tests/commands/status.test.ts', content: '// test' }
-          ]
-        }]
-      });
-
-      const output = captureOutput(() => runPreCheck('status-feature'));
-
-      expect(output.stdout).toContain('Spec expects: 2 files (2 create, 0 modify)');
-      expect(output.stdout).toContain('✓ packages/cli/src/commands/status.ts');
-      expect(output.stdout).toContain('✓ packages/cli/tests/commands/status.test.ts');
-    });
-
-    it('handles skeleton with both commented and uncommented content', async () => {
-      const mixedSkeleton = `
-it('validates input', () => {
-  // SETUP NEEDED: create invalid input
-  expect(result).toBe(false);
-  // Note: validation should check format
-  expect(errors).toHaveLength(1);
-})`;
-
-      const testFile = `
-it('validates input', () => {
-  const result = validate();
-  expect(result).toBe(false);
-  expect(errors).toHaveLength(1);
-})`;
-
-      await createPreCheckProject({
-        skeleton: mixedSkeleton,
-        testFile: {
-          path: 'packages/cli/tests/commands/test-slug.test.ts',
-          content: testFile
-        },
-        commits: [{ message: 'test', files: [{ path: 'test.ts', content: '// test' }] }]
-      });
-
-      const output = captureOutput(() => runPreCheck('test-slug'));
-
-      expect(output.stdout).toContain('2 assertions in skeleton');
-      expect(output.stdout).toContain('2 exact match');
-    });
-
-    it('handles spec YAML with extra HTML comment attributes', async () => {
-      const specWithAttributes = `<!-- MACHINE-READABLE: DO NOT MODIFY MANUALLY - Generated by AnaPlan v2 -->
-\`\`\`yaml
-file_changes:
-  - path: src/feature.ts
-    action: create
-\`\`\``;
-
-      await createPreCheckProject({
-        spec: specWithAttributes,
-        commits: [{
-          message: 'add feature',
-          files: [{ path: 'src/feature.ts', content: '// feature' }]
-        }]
-      });
-
-      const output = captureOutput(() => runPreCheck('test-slug'));
-
-      expect(output.stdout).toContain('Spec expects: 1 files (1 create, 0 modify)');
-      expect(output.stdout).toContain('✓ src/feature.ts');
-    });
-
-    it('full orchestrator with both production formats together', async () => {
-      const productionSkeleton = `
-it('counts items correctly', () => {
-  // SETUP: create 3 items
-  expect(count).toBe(3);
-  expect(items).toHaveLength(3);
-})`;
-
-      const productionSpec = `<!-- MACHINE-READABLE: DO NOT MODIFY MANUALLY -->
-\`\`\`yaml
-file_changes:
-  - path: src/counter.ts
-    action: create
-  - path: tests/counter.test.ts
-    action: create
-\`\`\``;
-
-      const testFile = `
-it('counts items correctly', () => {
-  const { count, items } = setup();
-  expect(count).toBe(3);
-  expect(items).toHaveLength(3);
-})`;
-
-      await createPreCheckProject({
-        skeleton: productionSkeleton,
-        spec: productionSpec,
-        testFile: {
-          path: 'tests/counter.test.ts',
-          content: testFile
-        },
-        commits: [{
-          message: 'implement counter',
-          files: [
-            { path: 'src/counter.ts', content: '// counter' },
-            { path: 'tests/counter.test.ts', content: testFile }
-          ],
-          coAuthor: true
-        }]
-      });
-
-      const output = captureOutput(() => runPreCheck('test-slug'));
-
-      // Skeleton check
-      expect(output.stdout).toContain('2 assertions in skeleton');
-      expect(output.stdout).toContain('2 exact match');
-
-      // File audit
-      expect(output.stdout).toContain('Spec expects: 2 files');
-      expect(output.stdout).toContain('✓ src/counter.ts');
-      expect(output.stdout).toContain('✓ tests/counter.test.ts');
-
-      // Commit check
-      expect(output.stdout).toContain('1 commits on');
-      expect(output.stdout).toContain('Co-author: ✓');
-    });
-  });
-
-  describe('block-based matching', () => {
-    it('handles same assertions in different block order without false positives', async () => {
-      await createPreCheckProject({
+      await createContractProject({
         slug: 'test-slug',
-        skeleton: `
-describe('counter', () => {
-  it('counts .ts files', () => {
-    expect(result.source).toBe(2);
-  });
-
-  it('counts .tsx files', () => {
-    expect(result.source).toBe(5);
-  });
-});`,
-        testFile: {
-          path: 'tests/test-slug.test.ts',
-          content: `
-describe('counter', () => {
-  it('counts .tsx files', () => {
-    expect(result.source).toBe(5);
-  });
-
-  it('counts .ts files', () => {
-    expect(result.source).toBe(2);
-  });
-});`
-        },
-        spec: `
-# Test Spec
-<!-- MACHINE-READABLE -->
-\`\`\`yaml
-file_changes:
-  - path: tests/test-slug.test.ts
-    action: create
-\`\`\``,
-        commits: [{
-          message: 'test',
-          files: []
-        }]
+        contract,
+        testFiles: [{ path: 'tests/test.test.ts', content: '// @ana A001\ntest()' }],
       });
 
-      const output = captureOutput(() => runPreCheck('test-slug'));
-
-      expect(output.stdout).toContain('2 exact match');
-      expect(output.stdout).toContain('0 modified');
-      expect(output.stdout).toContain('0 missing');
+      const result = runContractPreCheck('test-slug', tempDir);
+      expect(result.seal).toBe('INTACT');
     });
 
-    it('does not cross-match same-type assertions in different blocks', async () => {
-      await createPreCheckProject({
-        slug: 'test-slug',
-        skeleton: `
-describe('counter', () => {
-  it('counts .ts files', () => {
-    expect(result.source).toBe(2);
-  });
-
-  it('counts .tsx files', () => {
-    expect(result.source).toBe(5);
-  });
-});`,
-        testFile: {
-          path: 'tests/test-slug.test.ts',
-          content: `
-describe('counter', () => {
-  it('counts .ts files', () => {
-    expect(result.source).toBe(2);
-  });
-
-  it('counts .tsx files', () => {
-    expect(result.source).toBe(5);
-  });
-});`
-        },
-        spec: `
-# Test Spec
-<!-- MACHINE-READABLE -->
-\`\`\`yaml
+    it('reports TAMPERED when contract modified after save', async () => {
+      const contract = `version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Test Feature"
+assertions:
+  - id: A001
+    says: "Test passes"
+    block: "test"
+    target: "result"
+    matcher: "truthy"
 file_changes:
-  - path: tests/test-slug.test.ts
-    action: create
-\`\`\``,
-        commits: [{
-          message: 'test',
-          files: []
-        }]
+  - path: src/test.ts
+    action: create`;
+
+      await createContractProject({
+        slug: 'test-slug',
+        contract,
       });
 
-      const output = captureOutput(() => runPreCheck('test-slug'));
+      // Modify the contract after save
+      const planDir = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug');
+      await fs.writeFile(
+        path.join(planDir, 'contract.yaml'),
+        contract.replace('Test passes', 'Modified assertion'),
+        'utf-8'
+      );
 
-      expect(output.stdout).toContain('2 exact match');
-      expect(output.stdout).toContain('0 modified');
+      const result = runContractPreCheck('test-slug', tempDir);
+      expect(result.seal).toBe('TAMPERED');
     });
 
-    it('fuzzy matches when builder renames block', async () => {
-      await createPreCheckProject({
-        slug: 'test-slug',
-        skeleton: `
-describe('counter', () => {
-  it('should count files correctly', () => {
-    expect(result.total).toBe(10);
-  });
-});`,
-        testFile: {
-          path: 'tests/test-slug.test.ts',
-          content: `
-describe('counter', () => {
-  it('counts files correctly', () => {
-    expect(result.total).toBe(10);
-  });
-});`
-        },
-        spec: `
-# Test Spec
-<!-- MACHINE-READABLE -->
-\`\`\`yaml
+    it('reports COVERED for tagged assertions', async () => {
+      const contract = `version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Test Feature"
+assertions:
+  - id: A001
+    says: "First assertion"
+    block: "test"
+    target: "result"
+    matcher: "truthy"
+  - id: A002
+    says: "Second assertion"
+    block: "test"
+    target: "result"
+    matcher: "truthy"
 file_changes:
-  - path: tests/test-slug.test.ts
-    action: create
-\`\`\``,
-        commits: [{
-          message: 'test',
-          files: []
-        }]
+  - path: src/test.ts
+    action: create`;
+
+      await createContractProject({
+        slug: 'test-slug',
+        contract,
+        testFiles: [
+          { path: 'tests/test.test.ts', content: '// @ana A001\n// @ana A002\ntest()' },
+        ],
       });
 
-      const output = captureOutput(() => runPreCheck('test-slug'));
-
-      expect(output.stdout).toContain('1 exact match');
-      expect(output.stdout).toContain('0 missing');
+      const result = runContractPreCheck('test-slug', tempDir);
+      expect(result.assertions.find(a => a.id === 'A001')?.status).toBe('COVERED');
+      expect(result.assertions.find(a => a.id === 'A002')?.status).toBe('COVERED');
     });
 
-    it('reports added assertions in new blocks', async () => {
-      await createPreCheckProject({
-        slug: 'test-slug',
-        skeleton: `
-describe('counter', () => {
-  it('counts files', () => {
-    expect(result.total).toBe(10);
-  });
-});`,
-        testFile: {
-          path: 'tests/test-slug.test.ts',
-          content: `
-describe('counter', () => {
-  it('counts files', () => {
-    expect(result.total).toBe(10);
-  });
-
-  it('counts source files', () => {
-    expect(result.source).toBe(5);
-  });
-});`
-        },
-        spec: `
-# Test Spec
-<!-- MACHINE-READABLE -->
-\`\`\`yaml
+    it('reports UNCOVERED for untagged assertions', async () => {
+      const contract = `version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Test Feature"
+assertions:
+  - id: A001
+    says: "First assertion"
+    block: "test"
+    target: "result"
+    matcher: "truthy"
+  - id: A002
+    says: "Second assertion"
+    block: "test"
+    target: "result"
+    matcher: "truthy"
 file_changes:
-  - path: tests/test-slug.test.ts
-    action: create
-\`\`\``,
-        commits: [{
-          message: 'test',
-          files: []
-        }]
+  - path: src/test.ts
+    action: create`;
+
+      await createContractProject({
+        slug: 'test-slug',
+        contract,
+        testFiles: [
+          { path: 'tests/test.test.ts', content: '// @ana A001\ntest()' },
+        ],
       });
 
-      const output = captureOutput(() => runPreCheck('test-slug'));
-
-      expect(output.stdout).toContain('1 exact match');
-      expect(output.stdout).toContain('1 added');
+      const result = runContractPreCheck('test-slug', tempDir);
+      expect(result.assertions.find(a => a.id === 'A001')?.status).toBe('COVERED');
+      expect(result.assertions.find(a => a.id === 'A002')?.status).toBe('UNCOVERED');
+      expect(result.summary.uncovered).toBe(1);
     });
 
-    it('reports missing assertions when builder removes block', async () => {
-      await createPreCheckProject({
-        slug: 'test-slug',
-        skeleton: `
-describe('counter', () => {
-  it('counts files', () => {
-    expect(result.total).toBe(10);
-  });
-
-  it('counts source files', () => {
-    expect(result.source).toBe(5);
-  });
-});`,
-        testFile: {
-          path: 'tests/test-slug.test.ts',
-          content: `
-describe('counter', () => {
-  it('counts files', () => {
-    expect(result.total).toBe(10);
-  });
-});`
-        },
-        spec: `
-# Test Spec
-<!-- MACHINE-READABLE -->
-\`\`\`yaml
+    it('handles multi-ID tags', async () => {
+      const contract = `version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Test Feature"
+assertions:
+  - id: A001
+    says: "First assertion"
+    block: "test"
+    target: "result"
+    matcher: "truthy"
+  - id: A002
+    says: "Second assertion"
+    block: "test"
+    target: "result"
+    matcher: "truthy"
 file_changes:
-  - path: tests/test-slug.test.ts
-    action: create
-\`\`\``,
-        commits: [{
-          message: 'test',
-          files: []
-        }]
+  - path: src/test.ts
+    action: create`;
+
+      await createContractProject({
+        slug: 'test-slug',
+        contract,
+        testFiles: [
+          { path: 'tests/test.test.ts', content: '// @ana A001, A002\ntest()' },
+        ],
+      });
+
+      const result = runContractPreCheck('test-slug', tempDir);
+      expect(result.assertions.find(a => a.id === 'A001')?.status).toBe('COVERED');
+      expect(result.assertions.find(a => a.id === 'A002')?.status).toBe('COVERED');
+    });
+
+    it('includes says fields in output', async () => {
+      const contract = `version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Test Feature"
+assertions:
+  - id: A001
+    says: "Creating a payment returns success"
+    block: "test"
+    target: "result"
+    matcher: "truthy"
+file_changes:
+  - path: src/test.ts
+    action: create`;
+
+      await createContractProject({
+        slug: 'test-slug',
+        contract,
+      });
+
+      const result = runContractPreCheck('test-slug', tempDir);
+      expect(result.assertions[0].says).toBe('Creating a payment returns success');
+    });
+
+    it('reports UNVERIFIABLE when no .saves.json', async () => {
+      const contract = `version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Test Feature"
+assertions:
+  - id: A001
+    says: "Test assertion"
+    block: "test"
+    target: "result"
+    matcher: "truthy"
+file_changes:
+  - path: src/test.ts
+    action: create`;
+
+      await createContractProject({
+        slug: 'test-slug',
+        contract,
+        saveContract: false,
+      });
+
+      const result = runContractPreCheck('test-slug', tempDir);
+      expect(result.seal).toBe('UNVERIFIABLE');
+    });
+
+    it('prints formatted output via runPreCheck', async () => {
+      const contract = `version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Test Feature"
+assertions:
+  - id: A001
+    says: "Test passes"
+    block: "test"
+    target: "result"
+    matcher: "truthy"
+file_changes:
+  - path: src/test.ts
+    action: create`;
+
+      await createContractProject({
+        slug: 'test-slug',
+        contract,
+        testFiles: [{ path: 'tests/test.test.ts', content: '// @ana A001\ntest()' }],
       });
 
       const output = captureOutput(() => runPreCheck('test-slug'));
 
-      expect(output.stdout).toContain('1 exact match');
-      expect(output.stdout).toContain('1 missing');
+      expect(output.stdout).toContain('CONTRACT COMPLIANCE');
+      expect(output.stdout).toContain('A001');
+      expect(output.stdout).toContain('COVERED');
+      expect(output.stdout).toContain('Test passes');
     });
   });
 });

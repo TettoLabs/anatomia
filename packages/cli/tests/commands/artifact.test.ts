@@ -668,27 +668,26 @@ Rules that apply.`;
       expect(() => saveArtifact('spec', 'test-slug')).not.toThrow();
     });
 
-    it('rejects spec without file_changes', async () => {
+    it('saves spec without file_changes YAML block', async () => {
+      // S8: file_changes moved to contract.yaml - no longer required in spec
       await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
-      const invalidSpec = `# Spec
+      const specWithoutFileChanges = `# Spec
 
 ## Implementation
 Details here.
 
 ## Build Brief
 Rules.`;
-      await createArtifact('test-slug', 'spec.md', invalidSpec);
+      await createArtifact('test-slug', 'spec.md', specWithoutFileChanges);
 
-      expect(() => saveArtifact('spec', 'test-slug')).toThrow();
+      expect(() => saveArtifact('spec', 'test-slug')).not.toThrow();
     });
 
     it('rejects spec without Build Brief', async () => {
       await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
       const invalidSpec = `# Spec
 
-file_changes:
-  - path: test.ts
-    action: create`;
+Implementation details only.`;
       await createArtifact('test-slug', 'spec.md', invalidSpec);
 
       expect(() => saveArtifact('spec', 'test-slug')).toThrow();
@@ -846,6 +845,408 @@ Met.`;
       expect(message).toContain('Co-authored-by: Ana <build@anatomia.dev>');
     });
   });
+
+  describe('contract validation', () => {
+    /**
+     * Create valid contract content that passes validation
+     */
+    function getValidContractContent(): string {
+      return `version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Test Feature"
+
+assertions:
+  - id: A001
+    says: "Creating a payment returns success"
+    block: "creates payment intent"
+    target: "response.status"
+    matcher: "equals"
+    value: 200
+  - id: A002
+    says: "Response includes data"
+    block: "response has body"
+    target: "response.body"
+    matcher: "exists"
+
+file_changes:
+  - path: "src/test.ts"
+    action: create`;
+    }
+
+    it('accepts valid contract', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      await createArtifact('test-slug', 'contract.yaml', getValidContractContent());
+
+      expect(() => saveArtifact('contract', 'test-slug')).not.toThrow();
+      expect(isFileCommitted('.ana/plans/active/test-slug/contract.yaml')).toBe(true);
+    });
+
+    it('rejects unknown matcher', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      const invalidContract = getValidContractContent().replace('matcher: "equals"', 'matcher: "resembles"');
+      await createArtifact('test-slug', 'contract.yaml', invalidContract);
+
+      expect(() => saveArtifact('contract', 'test-slug')).toThrow();
+    });
+
+    it('rejects missing says field', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      const invalidContract = `version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Test Feature"
+
+assertions:
+  - id: A001
+    block: "test block"
+    target: "test.target"
+    matcher: "equals"
+    value: 200
+
+file_changes:
+  - path: "src/test.ts"
+    action: create`;
+      await createArtifact('test-slug', 'contract.yaml', invalidContract);
+
+      expect(() => saveArtifact('contract', 'test-slug')).toThrow();
+    });
+
+    it('rejects duplicate assertion IDs', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      const invalidContract = `version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Test Feature"
+
+assertions:
+  - id: A001
+    says: "First assertion"
+    block: "test block"
+    target: "test.target"
+    matcher: "equals"
+    value: 200
+  - id: A001
+    says: "Second assertion same ID"
+    block: "test block"
+    target: "test.target2"
+    matcher: "exists"
+
+file_changes:
+  - path: "src/test.ts"
+    action: create`;
+      await createArtifact('test-slug', 'contract.yaml', invalidContract);
+
+      expect(() => saveArtifact('contract', 'test-slug')).toThrow();
+    });
+
+    it('rejects empty assertions array', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      const invalidContract = `version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Test Feature"
+
+assertions: []
+
+file_changes:
+  - path: "src/test.ts"
+    action: create`;
+      await createArtifact('test-slug', 'contract.yaml', invalidContract);
+
+      expect(() => saveArtifact('contract', 'test-slug')).toThrow();
+    });
+
+    it('requires value for equals matcher', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      const invalidContract = `version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Test Feature"
+
+assertions:
+  - id: A001
+    says: "Equals without value"
+    block: "test block"
+    target: "test.target"
+    matcher: "equals"
+
+file_changes:
+  - path: "src/test.ts"
+    action: create`;
+      await createArtifact('test-slug', 'contract.yaml', invalidContract);
+
+      expect(() => saveArtifact('contract', 'test-slug')).toThrow();
+    });
+
+    it('does not require value for exists matcher', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      const validContract = `version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Test Feature"
+
+assertions:
+  - id: A001
+    says: "Exists without value"
+    block: "test block"
+    target: "test.target"
+    matcher: "exists"
+
+file_changes:
+  - path: "src/test.ts"
+    action: create`;
+      await createArtifact('test-slug', 'contract.yaml', validContract);
+
+      expect(() => saveArtifact('contract', 'test-slug')).not.toThrow();
+    });
+
+    it('rejects missing file_changes', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      const invalidContract = `version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Test Feature"
+
+assertions:
+  - id: A001
+    says: "Test assertion"
+    block: "test block"
+    target: "test.target"
+    matcher: "exists"`;
+      await createArtifact('test-slug', 'contract.yaml', invalidContract);
+
+      expect(() => saveArtifact('contract', 'test-slug')).toThrow();
+    });
+
+    it('writes .saves.json entry for contract', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      await createArtifact('test-slug', 'contract.yaml', getValidContractContent());
+
+      saveArtifact('contract', 'test-slug');
+
+      const savesPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug', '.saves.json');
+      const saves = JSON.parse(await fs.readFile(savesPath, 'utf-8'));
+      expect(saves.contract).toBeDefined();
+      expect(saves.contract.hash).toMatch(/^sha256:[a-f0-9]{64}$/);
+    });
+  });
+
+  describe('auto pre-check on verify-report save', () => {
+    /**
+     * Create valid contract content
+     */
+    function getValidContractContent(): string {
+      return `version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Test Feature"
+
+assertions:
+  - id: A001
+    says: "Test passes"
+    block: "test"
+    target: "result"
+    matcher: "truthy"
+
+file_changes:
+  - path: "src/test.ts"
+    action: create`;
+    }
+
+    /**
+     * Create valid verify report content
+     */
+    function getValidVerifyReport(): string {
+      return `# Verify Report
+
+**Result:** PASS
+
+All good.`;
+    }
+
+    it('blocks save when contract is tampered', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'feature/test-slug' });
+
+      // Create contract and save it (creates .saves.json)
+      await createArtifact('test-slug', 'contract.yaml', getValidContractContent());
+      execSync('git add -A && git commit -m "contract"', { cwd: tempDir, stdio: 'ignore' });
+
+      // Write .saves.json with the contract commit
+      const commit = execSync('git rev-parse HEAD', { cwd: tempDir, encoding: 'utf-8' }).trim();
+      const savesPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug', '.saves.json');
+      await fs.writeFile(savesPath, JSON.stringify({
+        contract: {
+          saved_at: new Date().toISOString(),
+          commit,
+          hash: 'sha256:abc123',
+        }
+      }), 'utf-8');
+
+      // Modify the contract (tamper)
+      await fs.writeFile(
+        path.join(tempDir, '.ana/plans/active/test-slug/contract.yaml'),
+        getValidContractContent().replace('Test passes', 'MODIFIED'),
+        'utf-8'
+      );
+
+      // Try to save verify report - should fail
+      await createArtifact('test-slug', 'verify_report.md', getValidVerifyReport());
+
+      expect(() => saveArtifact('verify-report', 'test-slug')).toThrow();
+    });
+
+    it('warns on uncovered assertions but saves', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'feature/test-slug' });
+
+      // Create contract with 2 assertions
+      const contractWithTwo = `version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Test Feature"
+
+assertions:
+  - id: A001
+    says: "First assertion"
+    block: "test"
+    target: "result"
+    matcher: "truthy"
+  - id: A002
+    says: "Second assertion"
+    block: "test"
+    target: "result"
+    matcher: "truthy"
+
+file_changes:
+  - path: "src/test.ts"
+    action: create`;
+
+      await createArtifact('test-slug', 'contract.yaml', contractWithTwo);
+      execSync('git add -A && git commit -m "contract"', { cwd: tempDir, stdio: 'ignore' });
+
+      const commit = execSync('git rev-parse HEAD', { cwd: tempDir, encoding: 'utf-8' }).trim();
+      const savesPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug', '.saves.json');
+      await fs.writeFile(savesPath, JSON.stringify({
+        contract: {
+          saved_at: new Date().toISOString(),
+          commit,
+          hash: 'sha256:abc123',
+        }
+      }), 'utf-8');
+
+      // Create test file covering only A001
+      const testPath = path.join(tempDir, 'tests', 'test.test.ts');
+      await fs.mkdir(path.dirname(testPath), { recursive: true });
+      await fs.writeFile(testPath, '// @ana A001\ntest()', 'utf-8');
+
+      // Create verify report
+      await createArtifact('test-slug', 'verify_report.md', getValidVerifyReport());
+
+      // Should save but warn (capture stdout/stderr)
+      const originalWarn = console.warn;
+      const warnings: string[] = [];
+      console.warn = (...args: unknown[]) => {
+        warnings.push(args.map(String).join(' '));
+      };
+
+      try {
+        saveArtifact('verify-report', 'test-slug');
+      } finally {
+        console.warn = originalWarn;
+      }
+
+      expect(warnings.some(w => w.includes('UNCOVERED'))).toBe(true);
+      expect(isFileCommitted('.ana/plans/active/test-slug/verify_report.md')).toBe(true);
+    });
+
+    it('stores pre-check results in .saves.json', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'feature/test-slug' });
+
+      await createArtifact('test-slug', 'contract.yaml', getValidContractContent());
+      execSync('git add -A && git commit -m "contract"', { cwd: tempDir, stdio: 'ignore' });
+
+      const commit = execSync('git rev-parse HEAD', { cwd: tempDir, encoding: 'utf-8' }).trim();
+      const savesPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug', '.saves.json');
+      await fs.writeFile(savesPath, JSON.stringify({
+        contract: {
+          saved_at: new Date().toISOString(),
+          commit,
+          hash: 'sha256:abc123',
+        }
+      }), 'utf-8');
+
+      await createArtifact('test-slug', 'verify_report.md', getValidVerifyReport());
+      saveArtifact('verify-report', 'test-slug');
+
+      // Read .saves.json and verify pre-check key exists
+      const saves = JSON.parse(await fs.readFile(savesPath, 'utf-8'));
+      expect(saves['pre-check']).toBeDefined();
+      expect(saves['pre-check'].seal).toBe('INTACT');
+      expect(saves['pre-check'].assertions).toBeDefined();
+      expect(saves['pre-check'].run_at).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
+    });
+  });
+
+  describe('.saves.json metadata', () => {
+    it('writes .saves.json with save metadata', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      await createArtifact('test-slug', 'scope.md');
+
+      saveArtifact('scope', 'test-slug');
+
+      // Read .saves.json
+      const savesPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug', '.saves.json');
+      expect(await fs.stat(savesPath).catch(() => null)).not.toBeNull();
+
+      const saves = JSON.parse(await fs.readFile(savesPath, 'utf-8'));
+      expect(saves.scope).toBeDefined();
+      expect(saves.scope.saved_at).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
+      expect(saves.scope.commit).toMatch(/^[a-f0-9]{40}$/);
+      expect(saves.scope.hash).toMatch(/^sha256:[a-f0-9]{64}$/);
+    });
+
+    it('appends to existing .saves.json on subsequent saves', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      await createArtifact('test-slug', 'scope.md');
+      await createArtifact('test-slug', 'spec.md');
+
+      // Save scope first
+      saveArtifact('scope', 'test-slug');
+
+      const savesPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug', '.saves.json');
+      const savesAfterScope = JSON.parse(await fs.readFile(savesPath, 'utf-8'));
+      expect(savesAfterScope.scope).toBeDefined();
+      const scopeCommit = savesAfterScope.scope.commit;
+
+      // Save spec second
+      saveArtifact('spec', 'test-slug');
+
+      const savesAfterSpec = JSON.parse(await fs.readFile(savesPath, 'utf-8'));
+      expect(savesAfterSpec.scope).toBeDefined();
+      expect(savesAfterSpec.spec).toBeDefined();
+      // Scope entry should be unchanged
+      expect(savesAfterSpec.scope.commit).toBe(scopeCommit);
+    });
+
+    it('overwrites entry on re-save of same type', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      await createArtifact('test-slug', 'scope.md');
+
+      saveArtifact('scope', 'test-slug');
+
+      const savesPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug', '.saves.json');
+      const savesFirst = JSON.parse(await fs.readFile(savesPath, 'utf-8'));
+      const firstHash = savesFirst.scope.hash;
+      const firstSavedAt = savesFirst.scope.saved_at;
+
+      // Modify and re-save
+      await fs.writeFile(
+        path.join(tempDir, '.ana/plans/active/test-slug/scope.md'),
+        getValidScopeContent().replace('This is a test scope', 'Modified scope content'),
+        'utf-8'
+      );
+
+      // Small delay to ensure different timestamp
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      saveArtifact('scope', 'test-slug');
+
+      const savesSecond = JSON.parse(await fs.readFile(savesPath, 'utf-8'));
+      expect(savesSecond.scope.hash).not.toBe(firstHash);
+      expect(savesSecond.scope.saved_at).not.toBe(firstSavedAt);
+    });
+  });
 });
 
 describe('ana artifact save-all', () => {
@@ -888,6 +1289,15 @@ describe('ana artifact save-all', () => {
 
   function getLastCommitMessage(): string {
     return execSync('git log -1 --pretty=%B', { cwd: tempDir, encoding: 'utf-8' }).trim();
+  }
+
+  function isFileCommitted(filePath: string): boolean {
+    try {
+      execSync(`git ls-files --error-unmatch ${filePath}`, { cwd: tempDir, stdio: 'ignore' });
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   /**
@@ -1035,5 +1445,89 @@ Rules.`;
 
     // Push fails in test environment (no remote) but should be attempted
     expect(stderr).toContain('Warning: Push failed');
+  });
+
+  it('writes .saves.json for all saved artifacts', async () => {
+    await createTestProject();
+
+    const validPlan = `# Plan
+## Phases
+- [ ] Phase 1
+  - Spec: spec.md`;
+
+    const validSpec = `# Spec
+file_changes:
+  - path: test.ts
+    action: create
+## Build Brief
+Rules.`;
+
+    const validSkeleton = `expect(result).toBe(true);`;
+
+    await createArtifact('test-slug', 'plan.md', validPlan);
+    await createArtifact('test-slug', 'spec.md', validSpec);
+    await createArtifact('test-slug', 'test_skeleton.ts', validSkeleton);
+
+    saveAllArtifacts('test-slug');
+
+    // Read .saves.json
+    const savesPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug', '.saves.json');
+    const saves = JSON.parse(await fs.readFile(savesPath, 'utf-8'));
+
+    // All three artifacts should have entries
+    expect(saves.plan).toBeDefined();
+    expect(saves.spec).toBeDefined();
+    expect(saves['test-skeleton']).toBeDefined();
+
+    // Each should have proper metadata
+    for (const type of ['plan', 'spec', 'test-skeleton']) {
+      expect(saves[type].saved_at).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
+      expect(saves[type].commit).toMatch(/^[a-f0-9]{40}$/);
+      expect(saves[type].hash).toMatch(/^sha256:[a-f0-9]{64}$/);
+    }
+  });
+
+  it('save-all includes contract.yaml', async () => {
+    await createTestProject();
+
+    const validPlan = `# Plan
+## Phases
+- [ ] Phase 1
+  - Spec: spec.md`;
+
+    const validContract = `version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Test Feature"
+
+assertions:
+  - id: A001
+    says: "Test assertion"
+    block: "test block"
+    target: "test.target"
+    matcher: "exists"
+
+file_changes:
+  - path: "src/test.ts"
+    action: create`;
+
+    const validSpec = `# Spec
+## Build Brief
+Rules.`;
+
+    await createArtifact('test-slug', 'plan.md', validPlan);
+    await createArtifact('test-slug', 'contract.yaml', validContract);
+    await createArtifact('test-slug', 'spec.md', validSpec);
+
+    saveAllArtifacts('test-slug');
+
+    const message = getLastCommitMessage();
+    expect(message).toContain('Plan');
+    expect(message).toContain('Contract');
+    expect(message).toContain('Spec');
+
+    // Verify all are committed
+    expect(isFileCommitted('.ana/plans/active/test-slug/plan.md')).toBe(true);
+    expect(isFileCommitted('.ana/plans/active/test-slug/contract.yaml')).toBe(true);
+    expect(isFileCommitted('.ana/plans/active/test-slug/spec.md')).toBe(true);
   });
 });

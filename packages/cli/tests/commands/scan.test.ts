@@ -395,6 +395,60 @@ describe('ana scan', () => {
     });
   });
 
+  describe('--save flag', () => {
+    it('writes scan.json with --save flag', async () => {
+      await createTestFiles({
+        'package.json': '{"name":"test"}',
+        'index.ts': 'export const x = 1;',
+      });
+
+      const { stdout, exitCode } = runScan([tempDir, '--save']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('Scan saved to .ana/scan.json');
+
+      // Verify file exists and contains valid JSON
+      const scanJsonPath = path.join(tempDir, '.ana', 'scan.json');
+      expect(fsSync.existsSync(scanJsonPath)).toBe(true);
+
+      const scanContent = JSON.parse(await fs.readFile(scanJsonPath, 'utf-8'));
+      expect(scanContent.project).toBeDefined();
+      expect(scanContent.stack).toBeDefined();
+      expect(scanContent.files).toBeDefined();
+      expect(scanContent.structure).toBeDefined();
+    });
+
+    it('does not write scan.json without --save flag', async () => {
+      await createTestFiles({
+        'package.json': '{"name":"test"}',
+        'index.ts': 'export const x = 1;',
+      });
+
+      const { exitCode } = runScan([tempDir]);
+      expect(exitCode).toBe(0);
+
+      // Verify file does NOT exist
+      const scanJsonPath = path.join(tempDir, '.ana', 'scan.json');
+      expect(fsSync.existsSync(scanJsonPath)).toBe(false);
+    });
+
+    it('creates .ana directory if it does not exist', async () => {
+      await createTestFiles({
+        'package.json': '{"name":"test"}',
+      });
+
+      // Verify .ana doesn't exist yet
+      const anaDir = path.join(tempDir, '.ana');
+      expect(fsSync.existsSync(anaDir)).toBe(false);
+
+      const { exitCode } = runScan([tempDir, '--save']);
+      expect(exitCode).toBe(0);
+
+      // Verify .ana was created and scan.json written
+      expect(fsSync.existsSync(anaDir)).toBe(true);
+      expect(fsSync.existsSync(path.join(anaDir, 'scan.json'))).toBe(true);
+    });
+  });
+
   describe('edge cases (AC14, AC15)', () => {
     it('handles empty directory gracefully', async () => {
       // tempDir is already empty

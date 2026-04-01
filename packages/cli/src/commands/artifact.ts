@@ -17,6 +17,55 @@ import chalk from 'chalk';
 import { execSync, spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { createHash } from 'node:crypto';
+import * as yaml from 'yaml';
+import { runContractPreCheck } from './verify-precheck.js';
+
+/**
+ * Save metadata entry for .saves.json
+ */
+interface SaveMetadata {
+  saved_at: string;
+  commit: string;
+  hash: string;
+}
+
+/**
+ * Write save metadata to .saves.json after artifact commit
+ *
+ * @param slugDir - Path to the slug directory
+ * @param artifactType - The artifact type key (e.g., 'scope', 'spec', 'contract')
+ * @param content - The artifact content for hashing
+ */
+function writeSaveMetadata(slugDir: string, artifactType: string, content: string): void {
+  const savesPath = path.join(slugDir, '.saves.json');
+
+  // Read existing .saves.json or start fresh
+  let saves: Record<string, SaveMetadata> = {};
+  if (fs.existsSync(savesPath)) {
+    try {
+      saves = JSON.parse(fs.readFileSync(savesPath, 'utf-8'));
+    } catch {
+      // If parse fails, start fresh
+      saves = {};
+    }
+  }
+
+  // Get current commit hash
+  const commit = execSync('git rev-parse HEAD', { encoding: 'utf-8' }).trim();
+
+  // Compute SHA256 of content
+  const hash = createHash('sha256').update(content).digest('hex');
+
+  // Write entry for this artifact type
+  saves[artifactType] = {
+    saved_at: new Date().toISOString(),
+    commit,
+    hash: `sha256:${hash}`,
+  };
+
+  fs.writeFileSync(savesPath, JSON.stringify(saves, null, 2));
+}
 
 /**
  * Artifact type information after parsing
@@ -31,12 +80,12 @@ interface ArtifactTypeInfo {
 /**
  * Parse artifact type string and extract metadata
  *
- * @param type - Raw type string (e.g., "scope", "spec-2", "build-report", "verify-report-1", "test-skeleton")
+ * @param type - Raw type string (e.g., "scope", "spec-2", "build-report", "verify-report-1", "test-skeleton", "contract")
  * @returns Parsed artifact information
  */
 function parseArtifactType(type: string): ArtifactTypeInfo | null {
   // Match valid types with optional number suffix
-  const match = type.match(/^(scope|plan|spec|test-skeleton|build-report|verify-report)(?:-(\d+))?$/);
+  const match = type.match(/^(scope|plan|spec|test-skeleton|contract|build-report|verify-report)(?:-(\d+))?$/);
 
   if (!match) {
     return null;
@@ -57,6 +106,8 @@ function parseArtifactType(type: string): ArtifactTypeInfo | null {
     fileName = number ? `spec-${number}.md` : 'spec.md';
   } else if (baseType === 'test-skeleton') {
     fileName = 'test_skeleton.ts';
+  } else if (baseType === 'contract') {
+    fileName = 'contract.yaml';
   } else if (baseType === 'build-report') {
     fileName = number ? `build_report_${number}.md` : 'build_report.md';
   } else if (baseType === 'verify-report') {
@@ -75,6 +126,8 @@ function parseArtifactType(type: string): ArtifactTypeInfo | null {
     displayName = number ? `Spec ${number}` : 'Spec';
   } else if (baseType === 'test-skeleton') {
     displayName = 'Test skeleton';
+  } else if (baseType === 'contract') {
+    displayName = 'Contract';
   } else if (baseType === 'build-report') {
     displayName = number ? `Build report ${number}` : 'Build report';
   } else if (baseType === 'verify-report') {
@@ -246,10 +299,7 @@ function validateScopeFormat(filePath: string): string | null {
 function validateSpecFormat(filePath: string): { error?: string; warning?: string } {
   const content = fs.readFileSync(filePath, 'utf-8');
 
-  // Check for file_changes YAML block
-  if (!content.includes('file_changes:')) {
-    return { error: "Missing file_changes YAML block. Spec must include machine-readable file changes." };
-  }
+  // Note: file_changes has moved to contract.yaml in S8 — no longer required in spec
 
   // Check for Build Brief section
   if (!content.match(/###?\s+Build\s+Brief/i)) {
@@ -293,6 +343,150 @@ function validateSkeletonFormat(filePath: string): string | null {
   }
 
   return null; // valid
+}
+
+/**
+ * Valid matchers for contract assertions
+ */
+const VALID_MATCHERS = ['equals', 'exists', 'contains', 'greater', 'truthy', 'not_equals'];
+const VALUE_REQUIRED_MATCHERS = ['equals', 'contains', 'greater', 'not_equals'];
+
+/**
+ * Contract assertion structure
+ */
+interface ContractAssertion {
+  id?: string;
+  says?: string;
+  block?: string;
+  target?: string;
+  matcher?: string;
+  value?: unknown;
+}
+
+/**
+ * Contract file change structure
+ */
+interface ContractFileChange {
+  path?: string;
+  action?: string;
+}
+
+/**
+ * Contract schema structure
+ */
+interface ContractSchema {
+  version?: string;
+  sealed_by?: string;
+  feature?: string;
+  assertions?: ContractAssertion[];
+  file_changes?: ContractFileChange[];
+}
+
+/**
+ * Validate contract format
+ *
+ * @param filePath - Path to contract.yaml
+ * @returns Array of error messages, empty if valid
+ */
+function validateContractFormat(filePath: string): string[] {
+  const content = fs.readFileSync(filePath, 'utf-8');
+  const errors: string[] = [];
+
+  // 1. Parse YAML
+  let contract: ContractSchema;
+  try {
+    contract = yaml.parse(content);
+  } catch (e) {
+    return [`YAML parse error: ${e instanceof Error ? e.message : 'Invalid YAML'}`];
+  }
+
+  if (!contract || typeof contract !== 'object') {
+    return ['Contract must be a YAML object'];
+  }
+
+  // 2. Header fields
+  if (!contract.version) {
+    errors.push('Missing "version" field');
+  }
+  if (!contract.sealed_by) {
+    errors.push('Missing "sealed_by" field');
+  }
+  if (!contract.feature || typeof contract.feature !== 'string' || !contract.feature.trim()) {
+    errors.push('Missing or empty "feature" field');
+  }
+
+  // 3. Assertions array
+  if (!contract.assertions) {
+    errors.push('Missing "assertions" array');
+  } else if (!Array.isArray(contract.assertions)) {
+    errors.push('"assertions" must be an array');
+  } else if (contract.assertions.length === 0) {
+    errors.push('"assertions" array cannot be empty');
+  } else {
+    // Track IDs for uniqueness check
+    const seenIds = new Set<string>();
+
+    for (let i = 0; i < contract.assertions.length; i++) {
+      const assertion = contract.assertions[i];
+      const prefix = assertion.id ? `Assertion ${assertion.id}` : `Assertion ${i + 1}`;
+
+      // Required fields
+      if (!assertion.id || typeof assertion.id !== 'string') {
+        errors.push(`${prefix}: missing or invalid "id" field`);
+      } else {
+        if (seenIds.has(assertion.id)) {
+          errors.push(`Duplicate assertion ID: ${assertion.id}`);
+        }
+        seenIds.add(assertion.id);
+      }
+
+      if (!assertion.says || typeof assertion.says !== 'string' || !assertion.says.trim()) {
+        errors.push(`${prefix}: missing or empty "says" field`);
+      }
+
+      if (!assertion.block || typeof assertion.block !== 'string') {
+        errors.push(`${prefix}: missing "block" field`);
+      }
+
+      if (!assertion.target || typeof assertion.target !== 'string') {
+        errors.push(`${prefix}: missing "target" field`);
+      }
+
+      // Matcher validation
+      if (!assertion.matcher) {
+        errors.push(`${prefix}: missing "matcher" field`);
+      } else if (!VALID_MATCHERS.includes(assertion.matcher)) {
+        errors.push(`${prefix}: unknown matcher "${assertion.matcher}" (valid: ${VALID_MATCHERS.join(', ')})`);
+      } else if (VALUE_REQUIRED_MATCHERS.includes(assertion.matcher) && assertion.value === undefined) {
+        errors.push(`${prefix}: matcher "${assertion.matcher}" requires "value" field`);
+      }
+    }
+  }
+
+  // 4. File changes
+  if (!contract.file_changes) {
+    errors.push('Missing "file_changes" array');
+  } else if (!Array.isArray(contract.file_changes)) {
+    errors.push('"file_changes" must be an array');
+  } else if (contract.file_changes.length === 0) {
+    errors.push('"file_changes" array cannot be empty');
+  } else {
+    const validActions = ['create', 'modify', 'delete'];
+    for (let i = 0; i < contract.file_changes.length; i++) {
+      const change = contract.file_changes[i];
+      const prefix = `file_changes[${i}]`;
+
+      if (!change.path || typeof change.path !== 'string') {
+        errors.push(`${prefix}: missing "path" field`);
+      }
+
+      if (!change.action || !validActions.includes(change.action)) {
+        errors.push(`${prefix}: invalid "action" (must be: ${validActions.join(', ')})`);
+      }
+    }
+  }
+
+  return errors;
 }
 
 /**
@@ -363,7 +557,7 @@ export function saveArtifact(type: string, slug: string): void {
   const typeInfo = parseArtifactType(type);
   if (!typeInfo) {
     console.error(chalk.red(`Error: Unknown artifact type \`${type}\`.`));
-    console.error(chalk.gray('Valid types: scope, plan, spec, spec-N, test-skeleton, build-report, build-report-N, verify-report, verify-report-N'));
+    console.error(chalk.gray('Valid types: scope, plan, spec, spec-N, contract, test-skeleton, build-report, build-report-N, verify-report, verify-report-N'));
     process.exit(1);
   }
 
@@ -406,6 +600,54 @@ export function saveArtifact(type: string, slug: string): void {
       console.error(chalk.red(`Error: verify_report.md format invalid.\n${error}`));
       process.exit(1);
     }
+
+    // Auto pre-check for contract mode
+    const slugDir = path.join(process.cwd(), '.ana', 'plans', 'active', slug);
+    const contractPath = path.join(slugDir, 'contract.yaml');
+
+    if (fs.existsSync(contractPath)) {
+      const preCheckResult = runContractPreCheck(slug);
+
+      // TAMPERED blocks save
+      if (preCheckResult.seal === 'TAMPERED') {
+        console.error(chalk.red('ERROR: Contract tampered since plan commit. Cannot save verify report.'));
+        console.error(chalk.gray('The contract was modified after it was sealed by the planner.'));
+        console.error(chalk.gray('This invalidates the verification. Re-plan or restore the contract.'));
+        process.exit(1);
+      }
+
+      // UNCOVERED warns but proceeds
+      if (preCheckResult.summary.uncovered > 0) {
+        console.warn(chalk.yellow(`WARNING: ${preCheckResult.summary.uncovered} contract assertions uncovered:`));
+        preCheckResult.assertions
+          .filter(a => a.status === 'UNCOVERED')
+          .forEach(a => console.warn(chalk.yellow(`  ${a.id}  ✗ UNCOVERED  "${a.says}"`)));
+        console.warn(chalk.gray('Verify report saved. Uncovered assertions will appear in the proof.'));
+      }
+
+      // Store pre-check results in .saves.json
+      const savesPath = path.join(slugDir, '.saves.json');
+      let saves: Record<string, unknown> = {};
+      if (fs.existsSync(savesPath)) {
+        try {
+          saves = JSON.parse(fs.readFileSync(savesPath, 'utf-8'));
+        } catch {
+          // Ignore parse errors
+        }
+      }
+
+      saves['pre-check'] = {
+        seal: preCheckResult.seal,
+        seal_commit: preCheckResult.sealCommit,
+        seal_hash: preCheckResult.sealHash,
+        assertions: preCheckResult.assertions,
+        covered: preCheckResult.summary.covered,
+        uncovered: preCheckResult.summary.uncovered,
+        run_at: new Date().toISOString(),
+      };
+
+      fs.writeFileSync(savesPath, JSON.stringify(saves, null, 2));
+    }
   }
 
   if (typeInfo.baseType === 'scope') {
@@ -439,6 +681,17 @@ export function saveArtifact(type: string, slug: string): void {
     const error = validateBuildReportFormat(filePath);
     if (error) {
       console.error(chalk.red(`Error: build_report.md format invalid.\n${error}`));
+      process.exit(1);
+    }
+  }
+
+  if (typeInfo.baseType === 'contract') {
+    const errors = validateContractFormat(filePath);
+    if (errors.length > 0) {
+      console.error(chalk.red('Contract validation failed:'));
+      for (const error of errors) {
+        console.error(chalk.red(`  - ${error}`));
+      }
       process.exit(1);
     }
   }
@@ -516,6 +769,11 @@ export function saveArtifact(type: string, slug: string): void {
     process.exit(1);
   }
 
+  // 9a. Write .saves.json metadata after successful commit
+  const slugDir = path.join(process.cwd(), '.ana', 'plans', 'active', slug);
+  const artifactContent = fs.readFileSync(filePath, 'utf-8');
+  writeSaveMetadata(slugDir, typeInfo.baseType, artifactContent);
+
   // 10. Push (artifact branch only)
   if (typeInfo.category === 'planning') {
     try {
@@ -567,6 +825,8 @@ export function saveAllArtifacts(slug: string): void {
       type = `spec-${num}`;
     } else if (entry.startsWith('test_skeleton')) {
       type = 'test-skeleton';
+    } else if (entry === 'contract.yaml') {
+      type = 'contract';
     } else if (entry === 'build_report.md') {
       type = 'build-report';
     } else if (entry.match(/^build_report_\d+\.md$/)) {
@@ -650,6 +910,17 @@ export function saveAllArtifacts(slug: string): void {
         process.exit(1);
       }
     }
+
+    if (artifact.typeInfo.baseType === 'contract') {
+      const errors = validateContractFormat(artifact.path);
+      if (errors.length > 0) {
+        console.error(chalk.red('Contract validation failed:'));
+        for (const error of errors) {
+          console.error(chalk.red(`  - ${error}`));
+        }
+        process.exit(1);
+      }
+    }
   }
 
   // 4. Read .meta.json for coAuthor
@@ -708,6 +979,12 @@ export function saveAllArtifacts(slug: string): void {
   } catch (error) {
     console.error(chalk.red(`Error: Commit failed. ${error instanceof Error ? error.message : 'Unknown error'}`));
     process.exit(1);
+  }
+
+  // 8a. Write .saves.json metadata for each artifact after successful commit
+  for (const artifact of artifacts) {
+    const artifactContent = fs.readFileSync(artifact.path, 'utf-8');
+    writeSaveMetadata(planDir, artifact.typeInfo.baseType, artifactContent);
   }
 
   // 9. Push (planning artifacts only)
