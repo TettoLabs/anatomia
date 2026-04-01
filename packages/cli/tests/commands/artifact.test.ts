@@ -846,6 +846,76 @@ Met.`;
       expect(message).toContain('Co-authored-by: Ana <build@anatomia.dev>');
     });
   });
+
+  describe('.saves.json metadata', () => {
+    it('writes .saves.json with save metadata', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      await createArtifact('test-slug', 'scope.md');
+
+      saveArtifact('scope', 'test-slug');
+
+      // Read .saves.json
+      const savesPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug', '.saves.json');
+      expect(await fs.stat(savesPath).catch(() => null)).not.toBeNull();
+
+      const saves = JSON.parse(await fs.readFile(savesPath, 'utf-8'));
+      expect(saves.scope).toBeDefined();
+      expect(saves.scope.saved_at).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
+      expect(saves.scope.commit).toMatch(/^[a-f0-9]{40}$/);
+      expect(saves.scope.hash).toMatch(/^sha256:[a-f0-9]{64}$/);
+    });
+
+    it('appends to existing .saves.json on subsequent saves', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      await createArtifact('test-slug', 'scope.md');
+      await createArtifact('test-slug', 'spec.md');
+
+      // Save scope first
+      saveArtifact('scope', 'test-slug');
+
+      const savesPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug', '.saves.json');
+      const savesAfterScope = JSON.parse(await fs.readFile(savesPath, 'utf-8'));
+      expect(savesAfterScope.scope).toBeDefined();
+      const scopeCommit = savesAfterScope.scope.commit;
+
+      // Save spec second
+      saveArtifact('spec', 'test-slug');
+
+      const savesAfterSpec = JSON.parse(await fs.readFile(savesPath, 'utf-8'));
+      expect(savesAfterSpec.scope).toBeDefined();
+      expect(savesAfterSpec.spec).toBeDefined();
+      // Scope entry should be unchanged
+      expect(savesAfterSpec.scope.commit).toBe(scopeCommit);
+    });
+
+    it('overwrites entry on re-save of same type', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      await createArtifact('test-slug', 'scope.md');
+
+      saveArtifact('scope', 'test-slug');
+
+      const savesPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug', '.saves.json');
+      const savesFirst = JSON.parse(await fs.readFile(savesPath, 'utf-8'));
+      const firstHash = savesFirst.scope.hash;
+      const firstSavedAt = savesFirst.scope.saved_at;
+
+      // Modify and re-save
+      await fs.writeFile(
+        path.join(tempDir, '.ana/plans/active/test-slug/scope.md'),
+        getValidScopeContent().replace('This is a test scope', 'Modified scope content'),
+        'utf-8'
+      );
+
+      // Small delay to ensure different timestamp
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      saveArtifact('scope', 'test-slug');
+
+      const savesSecond = JSON.parse(await fs.readFile(savesPath, 'utf-8'));
+      expect(savesSecond.scope.hash).not.toBe(firstHash);
+      expect(savesSecond.scope.saved_at).not.toBe(firstSavedAt);
+    });
+  });
 });
 
 describe('ana artifact save-all', () => {
@@ -1035,5 +1105,45 @@ Rules.`;
 
     // Push fails in test environment (no remote) but should be attempted
     expect(stderr).toContain('Warning: Push failed');
+  });
+
+  it('writes .saves.json for all saved artifacts', async () => {
+    await createTestProject();
+
+    const validPlan = `# Plan
+## Phases
+- [ ] Phase 1
+  - Spec: spec.md`;
+
+    const validSpec = `# Spec
+file_changes:
+  - path: test.ts
+    action: create
+## Build Brief
+Rules.`;
+
+    const validSkeleton = `expect(result).toBe(true);`;
+
+    await createArtifact('test-slug', 'plan.md', validPlan);
+    await createArtifact('test-slug', 'spec.md', validSpec);
+    await createArtifact('test-slug', 'test_skeleton.ts', validSkeleton);
+
+    saveAllArtifacts('test-slug');
+
+    // Read .saves.json
+    const savesPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug', '.saves.json');
+    const saves = JSON.parse(await fs.readFile(savesPath, 'utf-8'));
+
+    // All three artifacts should have entries
+    expect(saves.plan).toBeDefined();
+    expect(saves.spec).toBeDefined();
+    expect(saves['test-skeleton']).toBeDefined();
+
+    // Each should have proper metadata
+    for (const type of ['plan', 'spec', 'test-skeleton']) {
+      expect(saves[type].saved_at).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
+      expect(saves[type].commit).toMatch(/^[a-f0-9]{40}$/);
+      expect(saves[type].hash).toMatch(/^sha256:[a-f0-9]{64}$/);
+    }
   });
 });

@@ -17,6 +17,53 @@ import chalk from 'chalk';
 import { execSync, spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { createHash } from 'node:crypto';
+
+/**
+ * Save metadata entry for .saves.json
+ */
+interface SaveMetadata {
+  saved_at: string;
+  commit: string;
+  hash: string;
+}
+
+/**
+ * Write save metadata to .saves.json after artifact commit
+ *
+ * @param slugDir - Path to the slug directory
+ * @param artifactType - The artifact type key (e.g., 'scope', 'spec', 'contract')
+ * @param content - The artifact content for hashing
+ */
+function writeSaveMetadata(slugDir: string, artifactType: string, content: string): void {
+  const savesPath = path.join(slugDir, '.saves.json');
+
+  // Read existing .saves.json or start fresh
+  let saves: Record<string, SaveMetadata> = {};
+  if (fs.existsSync(savesPath)) {
+    try {
+      saves = JSON.parse(fs.readFileSync(savesPath, 'utf-8'));
+    } catch {
+      // If parse fails, start fresh
+      saves = {};
+    }
+  }
+
+  // Get current commit hash
+  const commit = execSync('git rev-parse HEAD', { encoding: 'utf-8' }).trim();
+
+  // Compute SHA256 of content
+  const hash = createHash('sha256').update(content).digest('hex');
+
+  // Write entry for this artifact type
+  saves[artifactType] = {
+    saved_at: new Date().toISOString(),
+    commit,
+    hash: `sha256:${hash}`,
+  };
+
+  fs.writeFileSync(savesPath, JSON.stringify(saves, null, 2));
+}
 
 /**
  * Artifact type information after parsing
@@ -516,6 +563,11 @@ export function saveArtifact(type: string, slug: string): void {
     process.exit(1);
   }
 
+  // 9a. Write .saves.json metadata after successful commit
+  const slugDir = path.join(process.cwd(), '.ana', 'plans', 'active', slug);
+  const artifactContent = fs.readFileSync(filePath, 'utf-8');
+  writeSaveMetadata(slugDir, typeInfo.baseType, artifactContent);
+
   // 10. Push (artifact branch only)
   if (typeInfo.category === 'planning') {
     try {
@@ -708,6 +760,12 @@ export function saveAllArtifacts(slug: string): void {
   } catch (error) {
     console.error(chalk.red(`Error: Commit failed. ${error instanceof Error ? error.message : 'Unknown error'}`));
     process.exit(1);
+  }
+
+  // 8a. Write .saves.json metadata for each artifact after successful commit
+  for (const artifact of artifacts) {
+    const artifactContent = fs.readFileSync(artifact.path, 'utf-8');
+    writeSaveMetadata(planDir, artifact.typeInfo.baseType, artifactContent);
   }
 
   // 9. Push (planning artifacts only)
