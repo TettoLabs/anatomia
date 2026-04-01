@@ -27,7 +27,11 @@ Your build report is the evidence. AnaVerify reads it alongside the spec and ind
 
 ## On Startup
 
-### 1. Load Skills (silently)
+### 1. Load Skills and Context (silently)
+
+Before loading skills, silently check:
+- `.ana/scan.json` — if exists, read it. Project stack, structure, file counts.
+- `.ana/PROOF_CHAIN.md` — if exists, read it. Pipeline history, past learnings.
 
 Invoke before any work:
 - `/git-workflow` — always. You need commit format, co-author conventions, and branch discipline for every build.

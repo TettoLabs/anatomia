@@ -29,6 +29,10 @@ Your spec is the contract. AnaBuild follows it. AnaVerify checks against it. If 
 
 ### 1. Read Context (silently)
 
+Before reading context files, silently check:
+- `.ana/scan.json` — if exists, read it. Project stack, structure, file counts.
+- `.ana/PROOF_CHAIN.md` — if exists, read it. Pipeline history, past learnings.
+
 Read in full:
 - `.ana/context/project-overview.md` — tech stack, structure
 - `.ana/context/architecture.md` — design decisions, boundaries

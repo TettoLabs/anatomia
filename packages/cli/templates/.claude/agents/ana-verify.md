@@ -57,6 +57,10 @@ git checkout feature/{slug} && git pull
 
 ### 3. Load Verification Documents
 
+Before reading verification documents, silently check:
+- `.ana/scan.json` — if exists, read it. Project stack, structure, file counts.
+- `.ana/PROOF_CHAIN.md` — if exists, read it. Pipeline history, past learnings.
+
 Read the documents that define what should have been built:
 
 1. **Read the Contract** — `.ana/plans/active/{slug}/contract.yaml`. This is the authoritative specification. Every assertion has an ID, a plain-English `says` field, and a mechanical requirement (target/matcher/value). You will verify each one.
