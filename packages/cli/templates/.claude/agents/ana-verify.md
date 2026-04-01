@@ -63,6 +63,10 @@ Read the two contracts that define what should have been built:
 
 2. **Read the Test Skeleton** — `.ana/plans/active/{slug}/test_skeleton.ts` (if it exists). These are the planner's assertion contracts. You will check whether the builder honored them.
 
+**Known paths — read directly, do not search:**
+- `.ana/.meta.json` — project config
+- `.ana/plans/active/{slug}/` — all plan artifacts (scope, spec, skeleton, reports)
+
 ### 4. Load Skills (reference material)
 
 Invoke after reading contracts:
@@ -114,6 +118,7 @@ After reading the implementation, check:
 - **Scope creep:** Does the code include parameters, functions, code paths, or features NOT specified in the spec? The builder should build what the spec says and nothing more. Extra functionality is untested surface area.
 - **YAGNI:** Are there exports, utility functions, or abstractions that nothing currently uses? Grep new files for exported functions and check if they're imported elsewhere.
 - **Gold plating:** Did the builder add error handling, edge cases, or fallbacks beyond what the spec requires? Note these — unspecified behavior is unverified behavior. Not automatically a blocker, but always a callout.
+- **Dead code blocks:** For every new file, read every `if`, `for`, `while`, and `try` block. State what each block accomplishes. If the answer is "nothing" or "this is handled elsewhere," flag it as dead code in Callouts.
 
 #### Live Testing
 
@@ -129,6 +134,8 @@ Then ask: **"What did I NOT predict that might also be wrong?"** The most import
 
 Write the Independent Findings section of your report. What did you discover from running checks and reading code? What concerns do you have? Include observations about code quality, pattern compliance, edge case handling, test quality, over-building, and YAGNI violations.
 
+If the feature has design requirements (screenshot, marketing, terminal aesthetics), run it on a real project and assess: does the output achieve the stated design goal? Report your assessment in Callouts — not just "it renders" but "it looks [good/sparse/professional/needs work]."
+
 ### Step 6: AC Walkthrough
 
 Go through EVERY acceptance criterion from the spec, one by one.
@@ -143,6 +150,8 @@ Mark each criterion:
 - **❌ FAIL** — verified, does not meet criterion, with explanation
 - **⚠️ PARTIAL** — partially met, with explanation
 - **🔍 UNVERIFIABLE** — cannot be mechanically verified
+
+Use ⚠️ PARTIAL when your verification method is weaker than what the AC describes. If an AC says "npx works" and you tested with `node dist/index.js`, that's PARTIAL — you verified the code path but not the deployment path. Explain the gap.
 
 ### Step 7: Write Remaining Sections and Verdict
 

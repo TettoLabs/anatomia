@@ -251,6 +251,8 @@ The builder documents it as a Deviation with structured format (see build report
 
 **Boundary Rule:** For every threshold (e.g., ">=5 commits marks stale"), write tests at threshold-1 (fresh), threshold (stale), and threshold+1 (stale). Three tests per boundary.
 
+After writing the skeleton, count assertions: `grep -c 'expect\|assert' test_skeleton.ts`. Put that exact number in the Build Baseline "After build" line: "expected {baseline} + {assertion_count} = {total}".
+
 **Example Test Skeleton:**
 
 ```typescript
