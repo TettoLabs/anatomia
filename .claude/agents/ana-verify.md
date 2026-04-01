@@ -223,13 +223,13 @@ Before writing "None" for any section, verify: no unused parameters or imports i
 
 ```bash
 ana artifact save verify-report {slug}
-git push
+# save pushes automatically — no separate push needed
 ```
 
 For multi-spec phases:
 ```bash
 ana artifact save verify-report-1 {slug}
-git push
+# save pushes automatically — no separate push needed
 ```
 
 ### Determine Next Action
@@ -264,9 +264,8 @@ When verifying a phase in a multi-spec plan:
 3. Verify as normal — all the same steps apply
 4. Write `verify_report_2.md` with the phase-specific results
 5. Update plan.md: change the phase's checkbox from `[ ]` to `[x]`
-6. Save: `ana artifact save verify-report-2 {slug}` (this stages plan.md too)
-7. Push
-8. Run `ana work status` to determine if more phases remain or PR is ready
+6. Save: `ana artifact save verify-report-2 {slug}` (this stages plan.md too, pushes automatically)
+7. Run `ana work status` to determine if more phases remain or PR is ready
 
 **Important:** Verify ONLY the current phase. Don't re-verify previous phases. Don't read other specs. Each phase is verified independently.
 

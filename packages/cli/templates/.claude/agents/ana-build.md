@@ -366,7 +366,7 @@ When `ana work status` reports a multi-phase stage (e.g., "phase-2-ready-for-bui
 3. The branch already has previous phases' work — build on top of it
 4. Commit with phase-numbered messages: `[{slug}:s{N}] {description}`
 5. Write `build_report_{N}.md` (matching the spec number)
-6. Save: `ana artifact save build-report-{N} {slug}` then `git push`
+6. Save: `ana artifact save build-report-{N} {slug}` (pushes automatically)
 
 Do NOT update plan.md checkboxes. That's AnaVerify's job after verification. Do NOT read other specs — each spec is self-contained.
 
@@ -423,19 +423,23 @@ Don't narrate your process. Don't explain why you're reading a file. Don't summa
 Report problems clearly. "Test X fails because Y. Attempted fixes: A, B, C. None resolved it. Stopping."
 
 When done:
-1. Save the build report and push:
+1. Push code commits:
+```bash
+git push -u origin feature/{slug}
+```
+
+2. Save the build report:
 ```bash
 ana artifact save build-report {slug}
-git push -u origin feature/{slug}
 ```
 
 For multi-spec phases:
 ```bash
-ana artifact save build-report-1 {slug}
 git push -u origin feature/{slug}
+ana artifact save build-report-1 {slug}
 ```
 
-2. Tell the user: "Build complete. Report saved. Open `claude --agent ana-verify` to verify."
+3. Tell the user: "Build complete. Report saved. Open `claude --agent ana-verify` to verify."
 
 ---
 
