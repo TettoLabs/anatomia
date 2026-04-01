@@ -115,14 +115,11 @@ export function PricingSection() {
           <TetrisCorner position="bottom-right" pointing="inward" className="bottom-3 right-3" />
 
           <h2
-            className="text-5xl font-semibold tracking-[-0.03em] mb-3"
+            className="text-5xl font-semibold tracking-[-0.03em] mb-0"
             style={{ color: "var(--foreground-color)" }}
           >
             Start free. Scale when you&apos;re ready.
           </h2>
-          <p className="text-lg mb-0" style={{ color: "var(--text-muted-60)" }}>
-            Everything you need to ship with proof.
-          </p>
         </div>
 
         {/* Right side boxes (column 12) */}
@@ -147,14 +144,11 @@ export function PricingSection() {
       {/* Mobile header */}
       <div className="lg:hidden text-center py-8 px-6 border-t border-b" style={{ borderColor: "var(--border-light)" }}>
         <h2
-          className="text-3xl font-semibold tracking-[-0.03em] mb-2"
+          className="text-3xl font-semibold tracking-[-0.03em] mb-0"
           style={{ color: "var(--foreground-color)" }}
         >
           Start free. Scale when you&apos;re ready.
         </h2>
-        <p className="text-base mb-0" style={{ color: "var(--text-muted-60)" }}>
-          Everything you need to ship with proof.
-        </p>
       </div>
 
       {/* Bottom grid border (12 cells) */}

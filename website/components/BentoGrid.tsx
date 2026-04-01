@@ -73,46 +73,17 @@ export function BentoGrid() {
                 className="m-0 text-[38px] lg:text-[72px] font-semibold leading-[1.1] tracking-[-0.04em]"
                 style={{ color: "var(--foreground-color)" }}
               >
-                30-second init.
-                <br />
-                Deep understanding.
+                Think. Plan. Build. Verify.
               </h2>
             </div>
-            {/* Right side: Description and CTAs */}
+            {/* Right side: Description */}
             <div className="flex flex-col gap-5 lg:gap-8" style={{ flex: "1" }}>
               <p
                 className="m-0 text-base lg:text-xl leading-relaxed"
                 style={{ color: "var(--text-muted-60)" }}
               >
-                Drop <span className="font-mono">ana init</span> in your project. We analyze your stack, patterns, and conventions — then generate specialized context and behavioral contracts.
+                Anatomia structures AI development through a verified pipeline. Every change scoped, specified, built by constrained agents, and proven against your source code.
               </p>
-              <div className="flex flex-col sm:flex-row gap-3 lg:gap-4">
-                <a
-                  href="https://github.com/TettoLabs/anatomia"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="cursor-pointer transition-all duration-200 border-none px-6 lg:px-8 py-4 text-sm lg:text-base font-semibold rounded-lg hover:opacity-90 no-underline inline-flex items-center justify-center"
-                  style={{
-                    background: "var(--btn-primary-bg)",
-                    color: "var(--btn-primary-text)",
-                  }}
-                >
-                  Get started
-                </a>
-                <a
-                  href="https://github.com/TettoLabs/anatomia#readme"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="cursor-pointer transition-all duration-200 px-6 lg:px-8 py-4 text-sm lg:text-base font-semibold rounded-lg hover:bg-[rgba(62,207,142,0.1)] hover:border-[var(--green-from)] no-underline inline-flex items-center justify-center"
-                  style={{
-                    background: "var(--btn-secondary-bg)",
-                    color: "var(--btn-secondary-text)",
-                    border: "1px solid var(--btn-secondary-border)",
-                  }}
-                >
-                  See how it works
-                </a>
-              </div>
             </div>
           </header>
 
@@ -354,12 +325,6 @@ export function BentoGrid() {
 
             <div className="flex flex-col gap-3 lg:gap-4 max-w-full lg:max-w-[65%]">
               <div
-                className="text-xs font-semibold uppercase tracking-[0.15em]"
-                style={{ color: "var(--text-muted-35)" }}
-              >
-                COMPATIBILITY
-              </div>
-              <div
                 className="text-2xl lg:text-4xl font-semibold leading-[1.1] tracking-[-0.02em]"
                 style={{ color: "var(--foreground-color)" }}
               >
@@ -369,7 +334,7 @@ export function BentoGrid() {
                 className="text-[15px] lg:text-[17px] leading-[1.65]"
                 style={{ color: "var(--text-muted-60)" }}
               >
-                Open source. MIT License. Every line on GitHub.
+                Standard markdown. Git-tracked. No vendor lock-in. Claude Code gets native pipeline integration. Any AI tool that reads markdown gets the intelligence.
               </div>
             </div>
 
@@ -390,6 +355,13 @@ export function BentoGrid() {
               </ul>
 
               <IndustryTicker />
+            </div>
+
+            <div
+              className="text-sm lg:text-[15px] text-center mt-6 lg:mt-8"
+              style={{ color: "var(--text-muted-50)" }}
+            >
+              Open source. MIT License. Every line on GitHub.
             </div>
           </div>
         </div>

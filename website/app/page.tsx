@@ -1,5 +1,4 @@
 import { Hero } from "@/components/Hero";
-import { BridgeSection } from "@/components/BridgeSection";
 import { BentoGrid } from "@/components/BentoGrid";
 import { ProofSection } from "@/components/ProofSection";
 import { PricingSection } from "@/components/PricingSection";
@@ -12,7 +11,6 @@ export default function HomePage() {
       style={{ background: "var(--bg-gradient)" }}
     >
       <Hero />
-      <BridgeSection />
       <BentoGrid />
       <ProofSection />
       <PricingSection />
