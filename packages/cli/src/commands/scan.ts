@@ -110,6 +110,56 @@ const PATTERN_DISPLAY_NAMES: Record<string, string> = {
 };
 
 /**
+ * Database packages for dependency-file fallback detection
+ */
+const DATABASE_PACKAGES: Record<string, string> = {
+  '@supabase/supabase-js': 'Supabase',
+  'prisma': 'Prisma', '@prisma/client': 'Prisma',
+  'drizzle-orm': 'Drizzle',
+  'typeorm': 'TypeORM', 'sequelize': 'Sequelize',
+  'mongoose': 'Mongoose', 'knex': 'Knex',
+  'pg': 'PostgreSQL', 'mysql2': 'MySQL',
+  'better-sqlite3': 'SQLite', '@libsql/client': 'Turso',
+  'firebase': 'Firebase', 'firebase-admin': 'Firebase',
+};
+
+/**
+ * Auth packages for dependency-file fallback detection
+ */
+const AUTH_PACKAGES: Record<string, string> = {
+  '@clerk/nextjs': 'Clerk', '@clerk/express': 'Clerk',
+  'next-auth': 'NextAuth', '@auth/core': 'Auth.js',
+  '@supabase/ssr': 'Supabase Auth',
+  '@supabase/auth-helpers-nextjs': 'Supabase Auth',
+  'passport': 'Passport',
+  'lucia': 'Lucia', '@lucia-auth/adapter-prisma': 'Lucia',
+  'jsonwebtoken': 'JWT', 'bcrypt': 'bcrypt', 'bcryptjs': 'bcrypt',
+};
+
+/**
+ * Testing packages for dependency-file fallback detection
+ */
+const TESTING_PACKAGES: Record<string, string> = {
+  'vitest': 'Vitest',
+  'playwright': 'Playwright', '@playwright/test': 'Playwright',
+  'jest': 'Jest', '@jest/globals': 'Jest',
+  'cypress': 'Cypress',
+  'mocha': 'Mocha',
+  '@testing-library/react': 'Testing Library',
+  '@testing-library/jest-dom': 'Testing Library',
+  'supertest': 'Supertest',
+};
+
+/**
+ * Payment packages for dependency-file fallback detection
+ */
+const PAYMENT_PACKAGES: Record<string, string> = {
+  'stripe': 'Stripe', '@stripe/stripe-js': 'Stripe',
+  '@lemonsqueezy/lemonsqueezy.js': 'Lemon Squeezy',
+  'paddle-sdk': 'Paddle',
+};
+
+/**
  * Get display name for a language/project type
  *
  * @param projectType - Internal project type identifier
@@ -167,6 +217,95 @@ interface ScanResult {
   };
   structure: Array<{ path: string; purpose: string }>;
   structureOverflow?: number;
+}
+
+/**
+ * Detect stack categories from package.json dependencies.
+ * Fallback for when the analyzer's tree-sitter-based detection fails.
+ * Only ADDS categories the analyzer didn't already detect.
+ *
+ * @param scanPath - Path being scanned
+ * @param existingStack - Stack categories already detected by analyzer
+ * @param verbose - Whether to log verbose output
+ * @returns Merged stack with fallback additions
+ */
+async function detectFromPackageJson(
+  scanPath: string,
+  existingStack: Record<string, string>,
+  verbose: boolean
+): Promise<Record<string, string>> {
+  const stack = { ...existingStack };
+
+  try {
+    const packageJsonPath = path.join(scanPath, 'package.json');
+    const packageJsonContent = await fs.readFile(packageJsonPath, 'utf-8');
+    const packageJson = JSON.parse(packageJsonContent);
+
+    // Merge dependencies and devDependencies
+    const allDeps = {
+      ...packageJson.dependencies,
+      ...packageJson.devDependencies,
+    };
+
+    // Database detection (only if not already detected)
+    if (!stack.database) {
+      for (const [pkg, name] of Object.entries(DATABASE_PACKAGES)) {
+        if (allDeps[pkg]) {
+          stack.database = name;
+          if (verbose) {
+            console.error(chalk.dim(`Fallback: found ${pkg} in dependencies → Database: ${name}`));
+          }
+          break;
+        }
+      }
+    }
+
+    // Auth detection (only if not already detected)
+    if (!stack.auth) {
+      for (const [pkg, name] of Object.entries(AUTH_PACKAGES)) {
+        if (allDeps[pkg]) {
+          stack.auth = name;
+          if (verbose) {
+            console.error(chalk.dim(`Fallback: found ${pkg} in dependencies → Auth: ${name}`));
+          }
+          break;
+        }
+      }
+    }
+
+    // Testing detection (only if not already detected)
+    if (!stack.testing) {
+      for (const [pkg, name] of Object.entries(TESTING_PACKAGES)) {
+        if (allDeps[pkg]) {
+          stack.testing = name;
+          if (verbose) {
+            console.error(chalk.dim(`Fallback: found ${pkg} in dependencies → Testing: ${name}`));
+          }
+          break;
+        }
+      }
+    }
+
+    // Payments detection (always from fallback - new category)
+    if (!stack.payments) {
+      for (const [pkg, name] of Object.entries(PAYMENT_PACKAGES)) {
+        if (allDeps[pkg]) {
+          stack.payments = name;
+          if (verbose) {
+            console.error(chalk.dim(`Fallback: found ${pkg} in dependencies → Payments: ${name}`));
+          }
+          break;
+        }
+      }
+    }
+  } catch (error) {
+    // Gracefully handle missing or invalid package.json
+    if (verbose && error instanceof Error) {
+      console.error(chalk.dim(`Fallback: package.json not found or invalid`));
+    }
+  }
+
+  return stack;
 }
 
 /**
@@ -248,6 +387,7 @@ function extractStructure(
  * Format human-readable terminal output
  *
  * @param projectName - Name of the project
+ * @param stack - Stack categories (from analyzer + fallback)
  * @param analysis - Analysis result from analyzer
  * @param fileCounts - File count totals
  * @param fileCounts.source - Source file count
@@ -258,6 +398,7 @@ function extractStructure(
  */
 function formatHumanReadable(
   projectName: string,
+  stack: Record<string, string>,
   analysis: AnalysisResult,
   fileCounts: { source: number; test: number; config: number; total: number }
 ): string {
@@ -284,21 +425,21 @@ function formatHumanReadable(
 
   lines.push('');
 
-  // Stack section
-  const stack = extractStack(analysis);
+  // Stack section (stack is now passed in)
   lines.push(chalk.bold('  Stack'));
   lines.push(chalk.gray('  ' + BOX.horizontal.repeat(5)));
 
   if (Object.keys(stack).length === 0) {
     lines.push(chalk.gray('  No code detected'));
   } else {
-    const stackOrder = ['language', 'framework', 'database', 'auth', 'testing'];
+    const stackOrder = ['language', 'framework', 'database', 'auth', 'testing', 'payments'];
     const stackLabels: Record<string, string> = {
       language: 'Language',
       framework: 'Framework',
       database: 'Database',
       auth: 'Auth',
       testing: 'Testing',
+      payments: 'Payments',
     };
 
     for (const key of stackOrder) {
@@ -350,6 +491,7 @@ function formatHumanReadable(
  * Format JSON output
  *
  * @param projectName - Name of the project
+ * @param stack - Stack categories (from analyzer + fallback)
  * @param analysis - Analysis result from analyzer
  * @param fileCounts - File count totals
  * @param fileCounts.source - Source file count
@@ -360,10 +502,10 @@ function formatHumanReadable(
  */
 function formatJson(
   projectName: string,
+  stack: Record<string, string>,
   analysis: AnalysisResult,
   fileCounts: { source: number; test: number; config: number; total: number }
 ): string {
-  const stack = extractStack(analysis);
   const structure = extractStructure(analysis);
 
   const result: ScanResult = {
@@ -438,6 +580,12 @@ export const scanCommand = new Command('scan')
       // Count files
       const fileCounts = await countFiles(rootPath);
 
+      // Extract stack from analyzer
+      const analyzerStack = extractStack(analysis);
+
+      // Apply dependency-file fallback
+      const stack = await detectFromPackageJson(rootPath, analyzerStack, options.verbose || false);
+
       // Get project name from directory
       const projectName = path.basename(rootPath);
 
@@ -447,8 +595,8 @@ export const scanCommand = new Command('scan')
 
       // Format output
       const output = options.json
-        ? formatJson(projectName, analysis, fileCounts)
-        : formatHumanReadable(projectName, analysis, fileCounts);
+        ? formatJson(projectName, stack, analysis, fileCounts)
+        : formatHumanReadable(projectName, stack, analysis, fileCounts);
 
       console.log(output);
     } catch (error) {
