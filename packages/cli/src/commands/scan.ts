@@ -20,6 +20,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
+import { glob } from 'glob';
 import type { AnalysisResult } from 'anatomia-analyzer';
 import { countFiles, formatNumber } from '../utils/fileCounts.js';
 
@@ -309,6 +310,145 @@ async function detectFromPackageJson(
 }
 
 /**
+ * Monorepo detection result
+ */
+interface MonorepoInfo {
+  isMonorepo: boolean;
+  tool?: string;
+  packages?: Array<{ name: string; path: string }>;
+}
+
+/**
+ * Detect monorepo workspace and list packages
+ *
+ * @param scanPath - Path being scanned
+ * @param verbose - Whether to log verbose output
+ * @returns Monorepo information
+ */
+async function detectMonorepo(scanPath: string, verbose: boolean): Promise<MonorepoInfo> {
+  try {
+    // Check pnpm-workspace.yaml
+    const pnpmWorkspacePath = path.join(scanPath, 'pnpm-workspace.yaml');
+    try {
+      const pnpmContent = await fs.readFile(pnpmWorkspacePath, 'utf-8');
+      if (verbose) {
+        console.error(chalk.dim('Monorepo: detected pnpm-workspace.yaml'));
+      }
+
+      // Parse workspace patterns from YAML (simple parsing)
+      const patterns: string[] = [];
+      const lines = pnpmContent.split('\n');
+      let inPackages = false;
+      for (const line of lines) {
+        if (line.trim() === 'packages:') {
+          inPackages = true;
+          continue;
+        }
+        if (inPackages && line.trim().startsWith('-')) {
+          const pattern = line.trim().slice(1).trim().replace(/['"]/g, '');
+          patterns.push(pattern);
+        } else if (inPackages && line.trim() && !line.trim().startsWith('#')) {
+          inPackages = false;
+        }
+      }
+
+      // Find packages
+      const packages = await findWorkspacePackages(scanPath, patterns);
+      return { isMonorepo: true, tool: 'pnpm', packages };
+    } catch {
+      // Not a pnpm workspace
+    }
+
+    // Check lerna.json
+    try {
+      await fs.access(path.join(scanPath, 'lerna.json'));
+      if (verbose) {
+        console.error(chalk.dim('Monorepo: detected lerna.json'));
+      }
+      return { isMonorepo: true, tool: 'Lerna' };
+    } catch {
+      // Not a lerna workspace
+    }
+
+    // Check nx.json
+    try {
+      await fs.access(path.join(scanPath, 'nx.json'));
+      if (verbose) {
+        console.error(chalk.dim('Monorepo: detected nx.json'));
+      }
+      return { isMonorepo: true, tool: 'Nx' };
+    } catch {
+      // Not an nx workspace
+    }
+
+    // Check package.json workspaces
+    try {
+      const packageJsonPath = path.join(scanPath, 'package.json');
+      const packageJsonContent = await fs.readFile(packageJsonPath, 'utf-8');
+      const packageJson = JSON.parse(packageJsonContent);
+
+      if (packageJson.workspaces) {
+        if (verbose) {
+          console.error(chalk.dim('Monorepo: detected package.json workspaces'));
+        }
+        const patterns = Array.isArray(packageJson.workspaces)
+          ? packageJson.workspaces
+          : packageJson.workspaces.packages || [];
+        const packages = await findWorkspacePackages(scanPath, patterns);
+        return { isMonorepo: true, tool: 'npm/yarn', packages };
+      }
+    } catch {
+      // Not a workspace
+    }
+
+    return { isMonorepo: false };
+  } catch {
+    return { isMonorepo: false };
+  }
+}
+
+/**
+ * Find workspace packages from glob patterns
+ *
+ * @param rootPath - Root path of monorepo
+ * @param patterns - Workspace glob patterns (e.g., ['packages/*', 'website'])
+ * @returns List of packages with names and paths
+ */
+async function findWorkspacePackages(
+  rootPath: string,
+  patterns: string[]
+): Promise<Array<{ name: string; path: string }>> {
+  const packages: Array<{ name: string; path: string }> = [];
+
+  for (const pattern of patterns) {
+    try {
+      // Find directories matching pattern
+      const matches = await glob(pattern, {
+        cwd: rootPath,
+        absolute: false,
+      });
+
+      for (const match of matches) {
+        try {
+          const pkgJsonPath = path.join(rootPath, match, 'package.json');
+          const pkgContent = await fs.readFile(pkgJsonPath, 'utf-8');
+          const pkg = JSON.parse(pkgContent);
+          if (pkg.name) {
+            packages.push({ name: pkg.name, path: match });
+          }
+        } catch {
+          // No package.json or invalid - skip
+        }
+      }
+    } catch {
+      // Pattern failed - skip
+    }
+  }
+
+  return packages;
+}
+
+/**
  * Extract stack categories from analysis result
  *
  * @param analysis - Analysis result from analyzer
@@ -394,13 +534,15 @@ function extractStructure(
  * @param fileCounts.test - Test file count
  * @param fileCounts.config - Config file count
  * @param fileCounts.total - Total file count
+ * @param monorepoInfo - Monorepo detection result
  * @returns Formatted terminal output string
  */
 function formatHumanReadable(
   projectName: string,
   stack: Record<string, string>,
   analysis: AnalysisResult,
-  fileCounts: { source: number; test: number; config: number; total: number }
+  fileCounts: { source: number; test: number; config: number; total: number },
+  monorepoInfo?: MonorepoInfo
 ): string {
   const lines: string[] = [];
   const now = new Date();
@@ -432,7 +574,7 @@ function formatHumanReadable(
   if (Object.keys(stack).length === 0) {
     lines.push(chalk.gray('  No code detected'));
   } else {
-    const stackOrder = ['language', 'framework', 'database', 'auth', 'testing', 'payments'];
+    const stackOrder = ['language', 'framework', 'database', 'auth', 'testing', 'payments', 'workspace'];
     const stackLabels: Record<string, string> = {
       language: 'Language',
       framework: 'Framework',
@@ -440,6 +582,7 @@ function formatHumanReadable(
       auth: 'Auth',
       testing: 'Testing',
       payments: 'Payments',
+      workspace: 'Workspace',
     };
 
     for (const key of stackOrder) {
@@ -479,10 +622,28 @@ function formatHumanReadable(
     }
   }
 
+  // Monorepo packages
+  if (monorepoInfo?.isMonorepo && monorepoInfo.packages && monorepoInfo.packages.length > 0) {
+    lines.push('');
+    lines.push(chalk.bold('  Packages'));
+    lines.push(chalk.gray('  ' + BOX.horizontal.repeat(8)));
+    for (const pkg of monorepoInfo.packages.slice(0, 10)) {
+      const pathStr = pkg.path.padEnd(18);
+      lines.push(`  ${chalk.cyan(pathStr)}${chalk.gray(pkg.name)}`);
+    }
+    if (monorepoInfo.packages.length > 10) {
+      lines.push(chalk.gray(`  +${monorepoInfo.packages.length - 10} more packages`));
+    }
+  }
+
   lines.push('');
 
   // Footer CTA
-  lines.push(chalk.gray('Run `ana init` to generate full context for your AI.'));
+  if (monorepoInfo?.isMonorepo && monorepoInfo.packages && monorepoInfo.packages.length > 0) {
+    lines.push(chalk.gray('Scan individual packages: ana scan packages/cli'));
+  } else {
+    lines.push(chalk.gray('Run `ana init` to generate full context for your AI.'));
+  }
 
   return lines.join('\n');
 }
@@ -498,13 +659,15 @@ function formatHumanReadable(
  * @param fileCounts.test - Test file count
  * @param fileCounts.config - Config file count
  * @param fileCounts.total - Total file count
+ * @param monorepoInfo - Monorepo detection result
  * @returns JSON string output
  */
 function formatJson(
   projectName: string,
   stack: Record<string, string>,
   analysis: AnalysisResult,
-  fileCounts: { source: number; test: number; config: number; total: number }
+  fileCounts: { source: number; test: number; config: number; total: number },
+  monorepoInfo?: MonorepoInfo
 ): string {
   const structure = extractStructure(analysis);
 
@@ -523,6 +686,10 @@ function formatJson(
 
   if (structure.overflow > 0) {
     result.structureOverflow = structure.overflow;
+  }
+
+  if (monorepoInfo?.isMonorepo && monorepoInfo.packages) {
+    (result as any).packages = monorepoInfo.packages;
   }
 
   return JSON.stringify(result, null, 2);
@@ -586,6 +753,14 @@ export const scanCommand = new Command('scan')
       // Apply dependency-file fallback
       const stack = await detectFromPackageJson(rootPath, analyzerStack, options.verbose || false);
 
+      // Detect monorepo
+      const monorepoInfo = await detectMonorepo(rootPath, options.verbose || false);
+
+      // Add workspace to stack if monorepo detected
+      if (monorepoInfo.isMonorepo && monorepoInfo.tool) {
+        stack.workspace = `${monorepoInfo.tool} monorepo`;
+      }
+
       // Get project name from directory
       const projectName = path.basename(rootPath);
 
@@ -595,8 +770,8 @@ export const scanCommand = new Command('scan')
 
       // Format output
       const output = options.json
-        ? formatJson(projectName, stack, analysis, fileCounts)
-        : formatHumanReadable(projectName, stack, analysis, fileCounts);
+        ? formatJson(projectName, stack, analysis, fileCounts, monorepoInfo)
+        : formatHumanReadable(projectName, stack, analysis, fileCounts, monorepoInfo);
 
       console.log(output);
     } catch (error) {
