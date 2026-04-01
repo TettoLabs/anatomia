@@ -63,27 +63,29 @@ interface CommitCheckResult {
 
 /**
  * Extract assertions from a file
+ * Handles both commented and uncommented assertions (mixed format support)
  *
  * @param content - File content
- * @param isCommented - Whether to look for commented assertions (skeleton)
  * @returns Array of assertions with line numbers
  */
-function extractAssertions(content: string, isCommented: boolean): Array<{ line: number; text: string; target: string }> {
+function extractAssertions(content: string): Array<{ line: number; text: string; target: string }> {
   const lines = content.split('\n');
   const assertions: Array<{ line: number; text: string; target: string }> = [];
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    const expectPattern = isCommented ? /\/\/\s*expect\(/ : /^\s*expect\(/;
+    let assertionText: string | null = null;
 
-    if (expectPattern.test(line)) {
-      // Extract the full assertion (handle both commented and uncommented)
-      let assertionText = line.trim();
-      if (isCommented) {
-        // Remove ALL comment prefixes and leading slashes (may be nested: "//     // expect...")
-        assertionText = assertionText.replace(/^(\/\/\s*)+/, '');
-      }
+    // Try both formats to handle mixed-format skeletons
+    if (/\/\/\s*expect\(/.test(line)) {
+      // Commented format
+      assertionText = line.trim().replace(/^(\/\/\s*)+/, '');
+    } else if (/^\s*expect\(/.test(line)) {
+      // Uncommented format
+      assertionText = line.trim();
+    }
 
+    if (assertionText) {
       // Extract target (everything from expect( to the matcher)
       const targetMatch = assertionText.match(/expect\((.*?)\)\.(\w+)/);
       if (targetMatch) {
@@ -98,6 +100,204 @@ function extractAssertions(content: string, isCommented: boolean): Array<{ line:
   }
 
   return assertions;
+}
+
+/**
+ * Test block with its assertions
+ */
+interface TestBlock {
+  label: string;
+  startLine: number;
+  assertions: Array<{ line: number; text: string; target: string }>;
+}
+
+/**
+ * Extract test blocks with their assertions using brace-depth tracking
+ * Handles both commented and uncommented assertions (mixed format support)
+ *
+ * @param content - File content
+ * @returns Map of block labels to their assertions, or null if parsing failed
+ */
+function extractBlockStructure(content: string): Map<string, TestBlock> | null {
+  const lines = content.split('\n');
+  const blocks = new Map<string, TestBlock>();
+
+  // Track parsing state
+  let currentBlock: { label: string; startLine: number; braceDepth: number; assertions: Array<{ line: number; text: string; target: string }> } | null = null;
+  let globalBraceDepth = 0;
+  let inString = false;
+  let inTemplate = false;
+  let stringChar = '';
+  let pendingBlock: { label: string; startLine: number } | null = null;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // Skip comment-only lines for brace tracking (but not for assertion extraction)
+    const trimmedLine = line.trim();
+    const isCommentLine = trimmedLine.startsWith('//');
+
+    // Look for it() or test() block starts — skip comment lines to avoid wrong-label bug
+    if (!isCommentLine) {
+      const testBlockMatch = line.match(/\b(it|test)\s*\(\s*['"`]([^'"`]+)['"`]/);
+      if (testBlockMatch && !currentBlock) {
+        // Mark that we're waiting for the opening brace
+        pendingBlock = {
+          label: testBlockMatch[2],
+          startLine: i + 1
+        };
+      }
+    }
+
+    // State machine to track string/template context and braces
+    // Skip brace tracking for comment-only lines
+    if (!isCommentLine) {
+      for (let j = 0; j < line.length; j++) {
+      const char = line[j];
+      const prevChar = j > 0 ? line[j - 1] : '';
+
+      // Handle template literals
+      if (char === '`' && prevChar !== '\\') {
+        if (!inString) {
+          inTemplate = !inTemplate;
+        }
+      }
+
+      // Handle strings (skip if in template)
+      if ((char === '"' || char === "'") && prevChar !== '\\' && !inTemplate) {
+        if (!inString) {
+          inString = true;
+          stringChar = char;
+        } else if (char === stringChar) {
+          inString = false;
+          stringChar = '';
+        }
+      }
+
+      // Track braces only when not in string/template literal content
+      if (!inString && !inTemplate) {
+        if (char === '{') {
+          globalBraceDepth++;
+
+          // If we have a pending block, this is its opening brace
+          if (pendingBlock && !currentBlock) {
+            currentBlock = {
+              label: pendingBlock.label,
+              startLine: pendingBlock.startLine,
+              braceDepth: 1, // Start at 1 (we just saw the opening brace)
+              assertions: []
+            };
+            pendingBlock = null;
+          } else if (currentBlock) {
+            currentBlock.braceDepth++;
+          }
+        } else if (char === '}') {
+          globalBraceDepth--;
+          if (currentBlock) {
+            currentBlock.braceDepth--;
+            // Block ended
+            if (currentBlock.braceDepth === 0) {
+              blocks.set(currentBlock.label, {
+                label: currentBlock.label,
+                startLine: currentBlock.startLine,
+                assertions: currentBlock.assertions
+              });
+              currentBlock = null;
+            }
+          }
+        }
+      }
+    }
+    }
+
+    // Collect assertions within current block
+    // Handle both commented and uncommented assertions (mixed format support)
+    if (currentBlock) {
+      let assertionText: string | null = null;
+
+      // Try commented format first
+      if (/\/\/\s*expect\(/.test(line)) {
+        assertionText = line.trim().replace(/^(\/\/\s*)+/, '');
+      }
+      // Try uncommented format if commented didn't match
+      else if (/^\s*expect\(/.test(line)) {
+        assertionText = line.trim();
+      }
+
+      if (assertionText) {
+        const targetMatch = assertionText.match(/expect\((.*?)\)\.(\w+)/);
+        if (targetMatch) {
+          const target = targetMatch[1];
+          currentBlock.assertions.push({
+            line: i + 1,
+            text: assertionText.trim(),
+            target: target.trim()
+          });
+        }
+      }
+    }
+  }
+
+  // Sanity check: brace depth should return to 0
+  if (globalBraceDepth !== 0) {
+    return null; // Parsing failed - mismatched braces
+  }
+
+  // If we extracted 0 blocks but file has content, parsing likely failed
+  if (blocks.size === 0 && content.trim().length > 0 && content.includes('expect(')) {
+    return null;
+  }
+
+  return blocks;
+}
+
+/**
+ * Find matching block by label (exact match, then fuzzy)
+ *
+ * @param label - Label to find
+ * @param blocks - Available blocks
+ * @returns Matching block or null
+ */
+function findMatchingBlock(label: string, blocks: Map<string, TestBlock>): TestBlock | null {
+  // Exact match
+  if (blocks.has(label)) {
+    return blocks.get(label)!;
+  }
+
+  // Fuzzy match: word-based overlap
+  const labelWords = label.toLowerCase().split(/\s+/);
+  let bestMatch: TestBlock | null = null;
+  let bestScore = 0;
+
+  for (const [blockLabel, block] of blocks) {
+    const blockWords = blockLabel.toLowerCase().split(/\s+/);
+
+    // Count common words
+    const labelSet = new Set(labelWords);
+    const blockSet = new Set(blockWords);
+    let commonWords = 0;
+    for (const word of labelSet) {
+      if (blockSet.has(word)) {
+        commonWords++;
+      }
+    }
+
+    // Score = common words / min word count
+    const minWords = Math.min(labelWords.length, blockWords.length);
+    const score = minWords > 0 ? commonWords / minWords : 0;
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestMatch = block;
+    }
+  }
+
+  // Require >60% word overlap for fuzzy match
+  if (bestMatch && bestScore > 0.6) {
+    return bestMatch;
+  }
+
+  return null;
 }
 
 /**
@@ -156,12 +356,8 @@ function checkSkeletonCompliance(planDir: string, slug: string, phase?: number):
   const skeletonPath = path.join(planDir, skeletonFiles[0]);
   const skeletonContent = fs.readFileSync(skeletonPath, 'utf-8');
 
-  // Extract skeleton assertions - try uncommented first (AnaPlan production format),
-  // fall back to commented if zero results (legacy/test format)
-  let skeletonAssertions = extractAssertions(skeletonContent, false);
-  if (skeletonAssertions.length === 0) {
-    skeletonAssertions = extractAssertions(skeletonContent, true);
-  }
+  // Extract skeleton assertions (handles both commented and uncommented)
+  const skeletonAssertions = extractAssertions(skeletonContent);
 
   if (skeletonAssertions.length === 0) {
     return {
@@ -250,40 +446,113 @@ function checkSkeletonCompliance(planDir: string, slug: string, phase?: number):
     };
   }
 
-  // Extract test assertions (uncommented)
-  const testAssertions = extractAssertions(testContent, false);
+  // Try block-based matching first (more accurate)
+  const skeletonBlocks = extractBlockStructure(skeletonContent);
+  const testBlocks = extractBlockStructure(testContent);
 
-  // Compare
-  const exactMatch: typeof testAssertions = [];
+  // Fall back to position-based if block extraction failed for either file
+  const useBlockMatching = skeletonBlocks !== null && testBlocks !== null &&
+                           skeletonBlocks.size > 0 && testBlocks.size > 0;
+
+  if (!useBlockMatching) {
+    // Fallback: position-based matching (current behavior)
+    const testAssertions = extractAssertions(testContent);
+    const exactMatch: typeof testAssertions = [];
+    const modified: SkeletonCheckResult['modified'] = [];
+    const missing: SkeletonCheckResult['missing'] = [];
+
+    for (const skeletonAssertion of skeletonAssertions) {
+      const matchingTest = testAssertions.find(t => t.target === skeletonAssertion.target);
+
+      if (!matchingTest) {
+        missing.push({ line: skeletonAssertion.line, text: skeletonAssertion.text });
+      } else if (matchingTest.text === skeletonAssertion.text) {
+        exactMatch.push(matchingTest);
+      } else {
+        modified.push({
+          skeletonLine: skeletonAssertion.line,
+          skeletonText: skeletonAssertion.text,
+          testLine: matchingTest.line,
+          testText: matchingTest.text
+        });
+      }
+    }
+
+    const skeletonTargets = new Set(skeletonAssertions.map(a => a.target));
+    const addedCount = testAssertions.filter(t => !skeletonTargets.has(t.target)).length;
+
+    return {
+      skeletonPath,
+      testFilePath,
+      totalAssertions: skeletonAssertions.length,
+      exactMatch: exactMatch.length,
+      modified,
+      missing,
+      added: addedCount
+    };
+  }
+
+  // Block-based matching
+  let exactMatchCount = 0;
   const modified: SkeletonCheckResult['modified'] = [];
   const missing: SkeletonCheckResult['missing'] = [];
+  const matchedTestAssertions = new Set<string>(); // Track matched assertions to count added
 
-  for (const skeletonAssertion of skeletonAssertions) {
-    const matchingTest = testAssertions.find(t => t.target === skeletonAssertion.target);
+  // Compare assertions within matched blocks
+  for (const [skeletonLabel, skeletonBlock] of skeletonBlocks) {
+    const testBlock = findMatchingBlock(skeletonLabel, testBlocks);
 
-    if (!matchingTest) {
-      missing.push({ line: skeletonAssertion.line, text: skeletonAssertion.text });
-    } else if (matchingTest.text === skeletonAssertion.text) {
-      exactMatch.push(matchingTest);
-    } else {
-      modified.push({
-        skeletonLine: skeletonAssertion.line,
-        skeletonText: skeletonAssertion.text,
-        testLine: matchingTest.line,
-        testText: matchingTest.text
-      });
+    if (!testBlock) {
+      // Block not found in test file - all assertions are missing
+      for (const assertion of skeletonBlock.assertions) {
+        missing.push({ line: assertion.line, text: assertion.text });
+      }
+      continue;
+    }
+
+    // Compare assertions within this block
+    for (const skeletonAssertion of skeletonBlock.assertions) {
+      const matchingTest = testBlock.assertions.find(t => t.text === skeletonAssertion.text);
+
+      if (matchingTest) {
+        // Exact match
+        exactMatchCount++;
+        matchedTestAssertions.add(`${testBlock.label}:${matchingTest.line}`);
+      } else {
+        // Look for modified (same target, different text)
+        const modifiedTest = testBlock.assertions.find(t => t.target === skeletonAssertion.target);
+        if (modifiedTest) {
+          modified.push({
+            skeletonLine: skeletonAssertion.line,
+            skeletonText: skeletonAssertion.text,
+            testLine: modifiedTest.line,
+            testText: modifiedTest.text
+          });
+          matchedTestAssertions.add(`${testBlock.label}:${modifiedTest.line}`);
+        } else {
+          // Missing from test block
+          missing.push({ line: skeletonAssertion.line, text: skeletonAssertion.text });
+        }
+      }
     }
   }
 
-  // Count added (test assertions not in skeleton)
-  const skeletonTargets = new Set(skeletonAssertions.map(a => a.target));
-  const addedCount = testAssertions.filter(t => !skeletonTargets.has(t.target)).length;
+  // Count added assertions (in test blocks but not matched to skeleton)
+  let addedCount = 0;
+  for (const [testLabel, testBlock] of testBlocks) {
+    for (const assertion of testBlock.assertions) {
+      const key = `${testLabel}:${assertion.line}`;
+      if (!matchedTestAssertions.has(key)) {
+        addedCount++;
+      }
+    }
+  }
 
   return {
     skeletonPath,
     testFilePath,
     totalAssertions: skeletonAssertions.length,
-    exactMatch: exactMatch.length,
+    exactMatch: exactMatchCount,
     modified,
     missing,
     added: addedCount

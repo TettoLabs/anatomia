@@ -876,4 +876,221 @@ it('counts items correctly', () => {
       expect(output.stdout).toContain('Co-author: ✓');
     });
   });
+
+  describe('block-based matching', () => {
+    it('handles same assertions in different block order without false positives', async () => {
+      await createPreCheckProject({
+        slug: 'test-slug',
+        skeleton: `
+describe('counter', () => {
+  it('counts .ts files', () => {
+    expect(result.source).toBe(2);
+  });
+
+  it('counts .tsx files', () => {
+    expect(result.source).toBe(5);
+  });
+});`,
+        testFile: {
+          path: 'tests/test-slug.test.ts',
+          content: `
+describe('counter', () => {
+  it('counts .tsx files', () => {
+    expect(result.source).toBe(5);
+  });
+
+  it('counts .ts files', () => {
+    expect(result.source).toBe(2);
+  });
+});`
+        },
+        spec: `
+# Test Spec
+<!-- MACHINE-READABLE -->
+\`\`\`yaml
+file_changes:
+  - path: tests/test-slug.test.ts
+    action: create
+\`\`\``,
+        commits: [{
+          message: 'test',
+          files: []
+        }]
+      });
+
+      const output = captureOutput(() => runPreCheck('test-slug'));
+
+      expect(output.stdout).toContain('2 exact match');
+      expect(output.stdout).toContain('0 modified');
+      expect(output.stdout).toContain('0 missing');
+    });
+
+    it('does not cross-match same-type assertions in different blocks', async () => {
+      await createPreCheckProject({
+        slug: 'test-slug',
+        skeleton: `
+describe('counter', () => {
+  it('counts .ts files', () => {
+    expect(result.source).toBe(2);
+  });
+
+  it('counts .tsx files', () => {
+    expect(result.source).toBe(5);
+  });
+});`,
+        testFile: {
+          path: 'tests/test-slug.test.ts',
+          content: `
+describe('counter', () => {
+  it('counts .ts files', () => {
+    expect(result.source).toBe(2);
+  });
+
+  it('counts .tsx files', () => {
+    expect(result.source).toBe(5);
+  });
+});`
+        },
+        spec: `
+# Test Spec
+<!-- MACHINE-READABLE -->
+\`\`\`yaml
+file_changes:
+  - path: tests/test-slug.test.ts
+    action: create
+\`\`\``,
+        commits: [{
+          message: 'test',
+          files: []
+        }]
+      });
+
+      const output = captureOutput(() => runPreCheck('test-slug'));
+
+      expect(output.stdout).toContain('2 exact match');
+      expect(output.stdout).toContain('0 modified');
+    });
+
+    it('fuzzy matches when builder renames block', async () => {
+      await createPreCheckProject({
+        slug: 'test-slug',
+        skeleton: `
+describe('counter', () => {
+  it('should count files correctly', () => {
+    expect(result.total).toBe(10);
+  });
+});`,
+        testFile: {
+          path: 'tests/test-slug.test.ts',
+          content: `
+describe('counter', () => {
+  it('counts files correctly', () => {
+    expect(result.total).toBe(10);
+  });
+});`
+        },
+        spec: `
+# Test Spec
+<!-- MACHINE-READABLE -->
+\`\`\`yaml
+file_changes:
+  - path: tests/test-slug.test.ts
+    action: create
+\`\`\``,
+        commits: [{
+          message: 'test',
+          files: []
+        }]
+      });
+
+      const output = captureOutput(() => runPreCheck('test-slug'));
+
+      expect(output.stdout).toContain('1 exact match');
+      expect(output.stdout).toContain('0 missing');
+    });
+
+    it('reports added assertions in new blocks', async () => {
+      await createPreCheckProject({
+        slug: 'test-slug',
+        skeleton: `
+describe('counter', () => {
+  it('counts files', () => {
+    expect(result.total).toBe(10);
+  });
+});`,
+        testFile: {
+          path: 'tests/test-slug.test.ts',
+          content: `
+describe('counter', () => {
+  it('counts files', () => {
+    expect(result.total).toBe(10);
+  });
+
+  it('counts source files', () => {
+    expect(result.source).toBe(5);
+  });
+});`
+        },
+        spec: `
+# Test Spec
+<!-- MACHINE-READABLE -->
+\`\`\`yaml
+file_changes:
+  - path: tests/test-slug.test.ts
+    action: create
+\`\`\``,
+        commits: [{
+          message: 'test',
+          files: []
+        }]
+      });
+
+      const output = captureOutput(() => runPreCheck('test-slug'));
+
+      expect(output.stdout).toContain('1 exact match');
+      expect(output.stdout).toContain('1 added');
+    });
+
+    it('reports missing assertions when builder removes block', async () => {
+      await createPreCheckProject({
+        slug: 'test-slug',
+        skeleton: `
+describe('counter', () => {
+  it('counts files', () => {
+    expect(result.total).toBe(10);
+  });
+
+  it('counts source files', () => {
+    expect(result.source).toBe(5);
+  });
+});`,
+        testFile: {
+          path: 'tests/test-slug.test.ts',
+          content: `
+describe('counter', () => {
+  it('counts files', () => {
+    expect(result.total).toBe(10);
+  });
+});`
+        },
+        spec: `
+# Test Spec
+<!-- MACHINE-READABLE -->
+\`\`\`yaml
+file_changes:
+  - path: tests/test-slug.test.ts
+    action: create
+\`\`\``,
+        commits: [{
+          message: 'test',
+          files: []
+        }]
+      });
+
+      const output = captureOutput(() => runPreCheck('test-slug'));
+
+      expect(output.stdout).toContain('1 exact match');
+      expect(output.stdout).toContain('1 missing');
+    });
+  });
 });
