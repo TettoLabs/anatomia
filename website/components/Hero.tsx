@@ -93,9 +93,9 @@ export function Hero() {
           className="text-[48px] lg:text-[72px] font-bold mb-6 lg:mb-8 tracking-[-0.04em] leading-[0.95]"
           style={{ color: "var(--foreground-color)" }}
         >
-          Stop re-explaining
+          Your AI doesn&apos;t know your codebase.
           <br />
-          your codebase
+          Ana does.
         </motion.h1>
 
         {/* Subtext - Tighter, cleaner */}
@@ -106,9 +106,9 @@ export function Hero() {
           className="text-[17px] lg:text-[20px] mb-10 lg:mb-12 max-w-[620px] mx-auto leading-[1.5]"
           style={{ color: "var(--text-muted-65)" }}
         >
-          Auto-generated in 30 seconds. 7 modes for architecture, code, debug, docs, and testing.
+          One command. Your patterns, your architecture, your conventions —
           <br />
-          Your AI follows your patterns — not generic best practices.
+          parsed from source, verified, and always current.
         </motion.p>
 
         {/* CTAs */}
@@ -120,7 +120,7 @@ export function Hero() {
         >
           <div className="flex flex-wrap gap-4 justify-center">
             <motion.a
-              href="https://github.com/TettoLabs/anatomia"
+              href="https://github.com/TettoLabs/anatomia#quick-start"
               target="_blank"
               rel="noopener noreferrer"
               whileHover={{ scale: 1.02, y: -2 }}
@@ -132,7 +132,7 @@ export function Hero() {
               }}
             >
               <Download className="w-5 h-5" strokeWidth={2} />
-              Install Now
+              Try ana scan
             </motion.a>
             <motion.a
               href="https://github.com/TettoLabs/anatomia"
@@ -159,7 +159,7 @@ export function Hero() {
             className="text-[12px] sm:text-[13px] px-4"
             style={{ color: "var(--text-muted-40)" }}
           >
-            npm install -g anatomia • MIT License • Works with Claude Code, Cursor, Windsurf
+            npx anatomia-cli scan · No install · MIT License · Works with Claude Code
           </motion.p>
         </motion.div>
       </div>

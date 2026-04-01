@@ -8,9 +8,8 @@ import { Menu, X } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 
 const navLinks = [
-  { href: "#features", label: "Features" },
-  { href: "#pricing", label: "Pricing" },
-  { href: "https://github.com/TettoLabs/anatomia#readme", label: "Docs" },
+  { href: "https://github.com/TettoLabs/anatomia", label: "GitHub" },
+  { href: "#", label: "Docs" },
 ];
 
 export function LandingNav() {
@@ -103,7 +102,7 @@ export function LandingNav() {
         })}
         <ThemeToggle />
         <Link
-          href="https://github.com/TettoLabs/anatomia"
+          href="https://github.com/TettoLabs/anatomia#quick-start"
           target="_blank"
           rel="noopener noreferrer"
           className="px-6 py-2.5 rounded-lg font-semibold transition-all hover:opacity-90 no-underline"

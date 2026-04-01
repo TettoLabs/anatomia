@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 const footerLinks = [
-  { href: "https://github.com/TettoLabs/anatomia#readme", label: "Docs" },
   { href: "https://github.com/TettoLabs/anatomia", label: "GitHub" },
+  { href: "#", label: "Docs" },
 ];
 
 export function LandingFooter() {
