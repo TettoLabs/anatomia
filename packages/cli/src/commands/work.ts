@@ -17,6 +17,7 @@ import * as fs from 'node:fs';
 import * as fsPromises from 'node:fs/promises';
 import * as path from 'node:path';
 import { readArtifactBranch, getCurrentBranch } from './artifact.js';
+import { generateProofSummary, type ProofSummary } from '../utils/proofSummary.js';
 
 /**
  * Artifact state for a work item
@@ -646,6 +647,105 @@ export function getWorkStatus(options: { json?: boolean }): void {
 }
 
 /**
+ * Proof chain JSON entry
+ */
+interface ProofChainEntry {
+  slug: string;
+  feature: string;
+  result: string;
+  author: { name: string; email: string };
+  contract: ProofSummary['contract'];
+  assertions: Array<{
+    id: string;
+    says: string;
+    status: string;
+    deviation?: string;
+  }>;
+  acceptance_criteria: ProofSummary['acceptance_criteria'];
+  timing: ProofSummary['timing'];
+  hashes: Record<string, string>;
+  seal_commit: string | null;
+  completed_at: string;
+}
+
+/**
+ * Proof chain JSON structure
+ */
+interface ProofChain {
+  entries: ProofChainEntry[];
+}
+
+/**
+ * Write proof chain files (JSON and markdown)
+ *
+ * @param slug - Work item slug
+ * @param proof - Proof summary data
+ */
+async function writeProofChain(slug: string, proof: ProofSummary): Promise<void> {
+  const anaDir = path.join(process.cwd(), '.ana');
+
+  // Ensure .ana directory exists
+  await fsPromises.mkdir(anaDir, { recursive: true });
+
+  // 1. Write/append to proof_chain.json
+  const chainPath = path.join(anaDir, 'proof_chain.json');
+  let chain: ProofChain = { entries: [] };
+
+  if (fs.existsSync(chainPath)) {
+    try {
+      chain = JSON.parse(fs.readFileSync(chainPath, 'utf-8'));
+      if (!Array.isArray(chain.entries)) {
+        chain = { entries: [] };
+      }
+    } catch {
+      chain = { entries: [] };
+    }
+  }
+
+  const entry: ProofChainEntry = {
+    slug,
+    feature: proof.feature,
+    result: proof.result,
+    author: proof.author,
+    contract: proof.contract,
+    assertions: proof.assertions.map(a => ({
+      id: a.id,
+      says: a.says,
+      status: a.verifyStatus || a.preCheckStatus,
+      ...(a.verifyStatus === 'DEVIATED'
+        ? { deviation: proof.deviations.find(d => d.contract_id === a.id)?.instead || undefined }
+        : {}),
+    })),
+    acceptance_criteria: proof.acceptance_criteria,
+    timing: proof.timing,
+    hashes: proof.hashes,
+    seal_commit: proof.seal_commit,
+    completed_at: new Date().toISOString(),
+  };
+
+  chain.entries.push(entry);
+  await fsPromises.writeFile(chainPath, JSON.stringify(chain, null, 2));
+
+  // 2. Append to PROOF_CHAIN.md
+  const chainMdPath = path.join(anaDir, 'PROOF_CHAIN.md');
+  const deviationSummary = proof.deviations.length > 0
+    ? `\nDeviations: ${proof.deviations.map(d => `${d.contract_id} — ${d.instead || d.reason || 'undocumented'}`).join('; ')}`
+    : '';
+
+  const timingDetails = proof.timing.think != null
+    ? ` (Think ${proof.timing.think}m, Plan ${proof.timing.plan}m, Build ${proof.timing.build}m, Verify ${proof.timing.verify}m)`
+    : '';
+
+  const mdEntry = `## ${proof.feature} (${new Date().toISOString().split('T')[0]})
+Result: ${proof.result} | ${proof.contract.satisfied}/${proof.contract.total} satisfied | ${proof.acceptance_criteria.met}/${proof.acceptance_criteria.total} ACs | ${proof.deviations.length} deviation${proof.deviations.length !== 1 ? 's' : ''}
+Pipeline: ${proof.timing.total_minutes}m${timingDetails}${deviationSummary}
+
+`;
+
+  await fsPromises.appendFile(chainMdPath, mdEntry);
+}
+
+/**
  * Complete a work item after PR merge
  *
  * @param slug - Work item slug to complete
@@ -718,7 +818,7 @@ export async function completeWork(slug: string): Promise<void> {
   }
 
   const planContent = fs.readFileSync(planPath, 'utf-8');
-  const { total: totalPhases, specs } = countPhases(planContent);
+  const { specs } = countPhases(planContent);
 
   if (specs.length === 0) {
     console.error(chalk.red(`Error: No phases found in plan.md for \`${slug}\`.`));
@@ -776,9 +876,13 @@ export async function completeWork(slug: string): Promise<void> {
   await fsPromises.cp(activePath, completedPath, { recursive: true });
   await fsPromises.rm(activePath, { recursive: true, force: true });
 
+  // 9a. Generate proof summary and write proof chain
+  const proof = generateProofSummary(completedPath);
+  await writeProofChain(slug, proof);
+
   // 10. Stage and commit
   try {
-    execSync('git add .ana/plans/active/ .ana/plans/completed/', { stdio: 'pipe' });
+    execSync('git add .ana/plans/active/ .ana/plans/completed/ .ana/proof_chain.json .ana/PROOF_CHAIN.md', { stdio: 'pipe' });
     const commitMessage = `[${slug}] Complete — archived to plans/completed\n\nCo-authored-by: Ana <build@anatomia.dev>`;
     execSync(`git commit -m "${commitMessage}"`, { stdio: 'pipe' });
   } catch (error) {
@@ -807,11 +911,11 @@ export async function completeWork(slug: string): Promise<void> {
     // Silently continue if remote branch doesn't exist or was already deleted
   }
 
-  // 13. Print summary
-  console.log(chalk.green(`✓ Completed \`${slug}\``));
-  console.log(chalk.gray(`  Archived to .ana/plans/completed/${slug}/`));
-  console.log(chalk.gray('  Feature branch cleaned up.'));
-  console.log(chalk.gray(`  ${totalPhases} phase${totalPhases === 1 ? '' : 's'} verified.`));
+  // 13. Print summary (3-line proof summary)
+  const statusIcon = proof.result === 'PASS' ? '✓' : '✗';
+  console.log(`\n${statusIcon} ${proof.result} — ${proof.feature}`);
+  console.log(`  ${proof.contract.covered}/${proof.contract.total} covered · ${proof.contract.satisfied}/${proof.contract.total} satisfied · ${proof.deviations.length} deviation${proof.deviations.length !== 1 ? 's' : ''}`);
+  console.log('  Proof saved to chain.');
 }
 
 /**
