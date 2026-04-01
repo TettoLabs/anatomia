@@ -2,7 +2,6 @@ import { Hero } from "@/components/Hero";
 import { BentoGrid } from "@/components/BentoGrid";
 import { ProofSection } from "@/components/ProofSection";
 import { PricingSection } from "@/components/PricingSection";
-import { VisionSection } from "@/components/VisionSection";
 
 export default function HomePage() {
   return (
@@ -14,7 +13,6 @@ export default function HomePage() {
       <BentoGrid />
       <ProofSection />
       <PricingSection />
-      <VisionSection />
     </div>
   );
 }
