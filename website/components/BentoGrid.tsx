@@ -4,32 +4,32 @@ import { TetrisCorner } from "./TetrisCorner";
 import { IndustryTicker } from "./IndustryTicker";
 
 const analysisMetrics = [
-  { label: "SPEED", value: "30s" },
+  { label: "SCAN", value: "30s" },
   { label: "PATTERNS", value: "18+" },
-  { label: "MODES", value: "7" },
-  { label: "SETUP", value: "2min" },
+  { label: "LANGUAGES", value: "5" },
+  { label: "TESTS", value: "300+" },
 ];
 
 const generateFeatures = [
-  "7 behavioral modes (architect, code, debug, docs, test, general, setup)",
-  "Auto-detected patterns and coding conventions",
-  "Guided setup fills context from your real code",
-  "Free • Open source • Yours to modify",
+  "Intent captured before code is written",
+  "Specs with test contracts — TDD from the start",
+  "Constrained agents that can't exceed their role",
+  "Mechanical verification against the spec",
 ];
 
-const federationFeatures = [
-  { icon: "→", text: "Detects project maturity automatically" },
-  { icon: "◆", text: "3 tiers: Quick (2 min), Guided (7 min), Complete (15 min)" },
-  { icon: "✓", text: "Extracts real code examples from your source files" },
-  { icon: "○", text: "Fills patterns, conventions, architecture, testing, workflow" },
-  { icon: "▲", text: "Works in Claude Code (Cursor, Windsurf support planned)" },
-  { icon: "●", text: "Run once, use forever — context stays with your repo" },
+const systemFeatures = [
+  { icon: "→", text: "Context verified against your actual source code" },
+  { icon: "◆", text: "Skills define your team's preferences — not defaults" },
+  { icon: "✓", text: "Agents use the model you choose — Opus, Sonnet, Haiku" },
+  { icon: "○", text: "Context updates when your code changes" },
+  { icon: "▲", text: "Teach Ana what parsing can't detect — your way" },
+  { icon: "●", text: "Every change produces a proof you can share" },
 ];
 
 const compatibilityBullets = [
-  "Markdown files, not proprietary lock-in",
-  "Git-tracked, version-controlled knowledge",
-  "Git-tracked context travels with your repo",
+  "Standard markdown. Git-tracked. No vendor lock-in.",
+  "Claude Code gets native pipeline integration.",
+  "Any AI tool that reads markdown gets the intelligence.",
 ];
 
 export function BentoGrid() {
@@ -133,16 +133,16 @@ export function BentoGrid() {
                 className="text-xs font-semibold uppercase tracking-[0.15em] mb-2"
                 style={{ color: "var(--text-muted-35)" }}
               >
-                STEP 0
+                ANA READS YOUR CODE
               </div>
               <div
                 className="text-lg lg:text-xl font-semibold mb-2"
                 style={{ color: "var(--foreground-color)" }}
               >
-                Analyze →
+                Not your README. Your source.
               </div>
               <div className="text-sm lg:text-[15px]" style={{ color: "var(--text-muted-60)" }}>
-                Detects your tech stack, frameworks, and patterns automatically.
+                Tree-sitter parses functions, imports, patterns, and conventions across TypeScript, Python, JavaScript, Go, and TSX. Every detection traced to a file and line number. Every claim verified against your actual codebase. Context stays current. When your code changes, Ana detects the drift and updates. Your code is the source of truth.
               </div>
             </div>
 
@@ -185,19 +185,19 @@ export function BentoGrid() {
               className="text-xs font-semibold uppercase tracking-[0.15em] mb-4"
               style={{ color: "var(--text-muted-35)" }}
             >
-              STEP 1
+              EVERY CHANGE
             </div>
             <div
               className="text-2xl lg:text-4xl font-semibold leading-[1.1] tracking-[-0.02em] mb-4"
               style={{ color: "var(--foreground-color)" }}
             >
-              Generate
+              Scoped. Specified. Built. Proven.
             </div>
             <div
               className="text-[15px] lg:text-[17px] leading-[1.65] mb-6 lg:mb-8 max-w-[90%]"
               style={{ color: "var(--text-muted-60)" }}
             >
-              Creates .ana/ with behavioral contracts and auto-detected patterns. 7 context files pre-populated from your actual source code.
+              Anatomia structures every AI change through a verified pipeline. Four stages that ensure your intent becomes working code with proof.
             </div>
             <ul className="list-none p-0 flex flex-col gap-2.5 lg:gap-3.5">
               {generateFeatures.map((feature, index) => (
@@ -229,30 +229,36 @@ export function BentoGrid() {
               className="text-xs font-semibold uppercase tracking-[0.15em] mb-4"
               style={{ color: "var(--text-muted-35)" }}
             >
-              STEP 2
+              IN YOUR TERMINAL
             </div>
             <div
               className="text-2xl lg:text-4xl font-semibold leading-[1.1] tracking-[-0.02em] mb-4"
               style={{ color: "var(--foreground-color)" }}
             >
-              Use
+              See what Ana sees.
             </div>
             <div
               className="text-[15px] lg:text-[17px] leading-[1.65] mb-6 lg:mb-8 max-w-[90%]"
               style={{ color: "var(--text-muted-60)" }}
             >
-              Reference modes in any AI tool. Claude Code, Cursor, and Windsurf read your .ana/ files and follow your project&apos;s patterns—not generic best practices.
+              Run ana init to analyze your project. Watch as it detects your stack, patterns, and conventions in real time.
             </div>
             <div
               className="bg-[#1a1a2e] rounded-lg p-5 lg:p-6 font-mono text-sm lg:text-[14px] leading-[1.6]"
               style={{ color: "#ffffff" }}
             >
-              <div style={{ color: "#888" }}># In Claude Code:</div>
-              <div className="mt-2" style={{ color: "#06b6d4" }}>@.ana/modes/code.md</div>
-              <div style={{ color: "#ffffff" }}>&quot;Implement JWT refresh&quot;</div>
-              <div className="mt-3" style={{ color: "#888" }}># Claude reads YOUR auth pattern from</div>
-              <div style={{ color: "#888" }}># patterns.md — not generic advice</div>
-              <div className="mt-3" style={{ color: "#888" }}># Then writes code matching YOUR conventions</div>
+              <div style={{ color: "#888" }}>$ ana init</div>
+              <div className="mt-2" style={{ color: "#888" }}></div>
+              <div style={{ color: "#888" }}>Analyzing your project...</div>
+              <div className="mt-2" style={{ color: "#888" }}></div>
+              <div style={{ color: "#10b981" }}>✓ Framework: Next.js 14 (App Router)</div>
+              <div style={{ color: "#10b981" }}>✓ Language: TypeScript (strict)</div>
+              <div style={{ color: "#10b981" }}>✓ Database: Prisma → PostgreSQL</div>
+              <div style={{ color: "#10b981" }}>✓ Patterns: 12 detected</div>
+              <div style={{ color: "#10b981" }}>✓ Conventions: 8 captured</div>
+              <div className="mt-2" style={{ color: "#888" }}></div>
+              <div style={{ color: "#888" }}>Context generated → .ana/</div>
+              <div style={{ color: "#06b6d4" }}>Your AI now knows your project.</div>
             </div>
           </div>
 
@@ -269,19 +275,19 @@ export function BentoGrid() {
                 className="text-xs font-semibold uppercase tracking-[0.15em]"
                 style={{ color: "var(--text-muted-35)" }}
               >
-                STEP 3
+                YOUR SYSTEM
               </div>
               <div
                 className="text-2xl lg:text-4xl font-semibold leading-[1.1] tracking-[-0.02em]"
                 style={{ color: "var(--foreground-color)" }}
               >
-                Setup
+                Configured for how you ship.
               </div>
               <div
                 className="text-[15px] lg:text-[17px] leading-[1.65]"
                 style={{ color: "var(--text-muted-60)" }}
               >
-                Guided setup detects your project&apos;s maturity and walks you through filling 7 context files with real, project-specific content.
+                Skills, agents, and context work together. Every piece configurable. Every change verified against your actual code.
               </div>
             </div>
 
@@ -294,7 +300,7 @@ export function BentoGrid() {
                 border: "1px solid var(--border-light)",
               }}
             >
-              {federationFeatures.map((feature) => (
+              {systemFeatures.map((feature) => (
                 <li
                   key={feature.text}
                   className="m-0 flex items-center p-5 lg:p-8 gap-3"
@@ -357,13 +363,13 @@ export function BentoGrid() {
                 className="text-2xl lg:text-4xl font-semibold leading-[1.1] tracking-[-0.02em]"
                 style={{ color: "var(--foreground-color)" }}
               >
-                Works with any AI tool
+                Works with your tools.
               </div>
               <div
                 className="text-[15px] lg:text-[17px] leading-[1.65]"
                 style={{ color: "var(--text-muted-60)" }}
               >
-                File-based, portable, tool-agnostic. Use with Claude Code, Cursor, Windsurf, or any AI assistant.
+                Open source. MIT License. Every line on GitHub.
               </div>
             </div>
 
