@@ -393,7 +393,8 @@ export const scanCommand = new Command('scan')
   .description('Scan project and display tech stack, file counts, and structure')
   .argument('[path]', 'Directory to scan (default: current directory)', '.')
   .option('--json', 'Output JSON format for programmatic consumption')
-  .action(async (targetPath: string, options: { json?: boolean }) => {
+  .option('--verbose', 'Show detailed analyzer output')
+  .action(async (targetPath: string, options: { json?: boolean; verbose?: boolean }) => {
     const rootPath = path.resolve(targetPath);
 
     // Validate directory exists
@@ -408,8 +409,8 @@ export const scanCommand = new Command('scan')
       process.exit(1);
     }
 
-    // Suppress spinner for JSON output
-    const spinner = options.json ? null : ora('Scanning project...').start();
+    // Suppress spinner for JSON or verbose output
+    const spinner = options.json || options.verbose ? null : ora('Scanning project...').start();
 
     try {
       // Dynamic import to avoid WASM crash at module level
@@ -419,6 +420,20 @@ export const scanCommand = new Command('scan')
       const analysis = await analyze(rootPath, {
         skipImportScan: true, // Speed optimization
       });
+
+      // Verbose logging
+      if (options.verbose) {
+        console.error(chalk.dim('\n=== VERBOSE ANALYZER OUTPUT ==='));
+        console.error(chalk.dim('Scan path:'), rootPath);
+        console.error(chalk.dim('Options:'), { skipImportScan: true });
+        console.error(chalk.dim('\nAnalysis result:'));
+        console.error(chalk.dim('  projectType:'), analysis.projectType || chalk.gray('undefined'));
+        console.error(chalk.dim('  framework:'), analysis.framework || chalk.gray('undefined'));
+        console.error(chalk.dim('  patterns:'), analysis.patterns ? JSON.stringify(analysis.patterns, null, 2) : chalk.gray('undefined'));
+        console.error(chalk.dim('  conventions:'), analysis.conventions ? `${Object.keys(analysis.conventions).length} items` : chalk.gray('undefined'));
+        console.error(chalk.dim('  structure.directories:'), analysis.structure?.directories ? `${Object.keys(analysis.structure.directories).length} items` : chalk.gray('undefined'));
+        console.error(chalk.dim('===============================\n'));
+      }
 
       // Count files
       const fileCounts = await countFiles(rootPath);
