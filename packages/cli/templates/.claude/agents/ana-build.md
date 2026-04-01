@@ -122,19 +122,46 @@ Before writing any code, review the spec's File Changes section. Map each logica
 
 Write this plan. Follow it when committing. One logical unit per commit. Don't bundle the entire spec into one final commit.
 
-### 6. Check for Test Skeleton
+### 6. Read the Contract
 
-Before writing any code, check if a test skeleton exists at `.ana/plans/active/{slug}/test_skeleton.ts` (or the project's test language equivalent).
+Read `.ana/plans/active/{slug}/contract.yaml`. This is the verification contract — structured assertions that define what "done" means. For every assertion:
+- Read the `says` field to understand intent in plain English
+- Read the `target`/`matcher`/`value` for the mechanical requirement
+- Tag your test with `// @ana {ID}` when you address it
 
-If a test skeleton exists:
-- This is your TDD contract. Your job is to make these tests pass.
-- Implement the setup, teardown, helpers, and imports the skeleton needs.
-- You may ADD tests (new `describe` or `it` blocks). You may ADD assertions within existing blocks.
-- You may NOT modify or remove any `expect()` assertion the planner wrote.
-- You may NOT remove any `it()` block the planner wrote.
-- If a planner assertion genuinely cannot work, document it as a Deviation (see structured deviation format below). Do NOT silently change it.
+The contract is authoritative. The spec is guidance. If they conflict, follow the contract.
 
-If no test skeleton exists, write tests per the spec's test matrix as before.
+**What you MUST do:**
+- Write tests that satisfy every contract assertion
+- Tag each test with the contract assertion ID it satisfies
+- Document deviations when you can't satisfy an assertion exactly
+
+**What you CANNOT do:**
+- Modify contract.yaml (it's sealed — pre-check will detect tampering)
+- Skip assertions without documenting a deviation
+- Tag a test with an ID if the test doesn't actually address that assertion
+
+Before writing tests, verify each contract assertion is testable. If an assertion references a path that doesn't exist in the project or a value you can't determine, flag it in the build report under Deviations. Don't write a test for something untestable and tag it anyway.
+
+### Test Tagging with @ana
+
+Every test that satisfies a contract assertion gets a tag comment:
+
+```typescript
+// @ana A001
+it('creates payment intent with valid amount', () => {
+  expect(response.status).toBe(200);
+});
+```
+
+**Tagging rules:**
+- One comment tag per test or describe block, on the line immediately before it
+- Multiple IDs allowed: `// @ana A001, A002` (when one test covers multiple assertions)
+- Language-specific comment syntax: `// @ana` (TS/JS/Go/Rust), `# @ana` (Python)
+- Untagged tests are fine — they're bonus coverage beyond the contract
+- **Always tag, even on deviations.** The tag means "I addressed this assertion." The deviation documents how.
+
+After writing all tests, verify coverage: every contract assertion ID should have a corresponding `@ana` tag somewhere in the test files. Report in the build report: "Contract coverage: {N}/{M} assertions tagged."
 
 ---
 
@@ -236,9 +263,9 @@ Fix lint only in files you created or modified for this spec. Pre-existing lint 
 
 ### 8. Never Change Any Test Assertion Without Documenting It
 
-Never change any test assertion — pre-existing, self-written, or from the skeleton — without documenting it as a Deviation using the structured format. This includes changing expected values (toBe(7) → toBe(8)), weakening matchers (toBe → toContain → toBeDefined), removing assertions, or modifying regex patterns.
+Never change any test assertion — pre-existing, self-written, or contract-specified — without documenting it as a Deviation using the structured format. This includes changing expected values (toBe(7) → toBe(8)), weakening matchers (toBe → toContain → toBeDefined), removing assertions, or modifying regex patterns.
 
-If a test fails: fix the implementation, not the test. If the planner's skeleton assertion genuinely cannot work: document it as a Deviation. The verifier decides if the change is justified. You do not.
+If a test fails: fix the implementation, not the test. If a contract assertion genuinely cannot be satisfied: document it as a Deviation. The verifier decides if the change is justified. You do not.
 
 ---
 
@@ -284,23 +311,37 @@ Each one documented with reasoning.
 "Spec said 'organize like user-service.' I split into 3 functions
 (parse, validate, execute) matching user-service's structure."
 
-## Deviations from Spec
+## Deviations from Contract
 
-The spec describes outcomes (what should happen) and mechanisms (how to make it happen). Outcomes are requirements — never deviate without documentation. Mechanisms are implementation suggestions — deviate when they have fundamental flaws, document the change, and ensure the outcome is preserved. Test: "Would the planner say 'that's what I meant' or 'that's not what I specified'?"
+When you can't satisfy a contract assertion exactly as specified, document the deviation using the contract assertion ID.
 
-Document each deviation in structured format:
+**Format — use this exact structure:**
 
-### Deviation D1: {Title}
-- **Spec said:** {what the spec specified}
-- **What I did:** {what you actually implemented}
-- **Why:** {reason for deviating}
-- **Alternatives considered:** {what else you tried or could have tried}
-- **Coverage impact:** {what is now untested or different from spec}
-- **Test skeleton impact:** {did you need to modify a planner-written assertion? If yes, this is serious — explain in detail}
+```markdown
+### A003: Successful webhook updates order to paid
+**Instead:** Webhook processing verified through event type check
+**Reason:** Stripe webhook testing requires event mocks, not direct DB assertions
+**Outcome:** Functionally equivalent — verifier should assess
+```
 
-If you modified any assertion from the test skeleton, that is ALWAYS a deviation, even if the modification seems minor.
+**Rules:**
+- Header is `### A{ID}: {says text}` — copy the `says` field from the contract
+- `**Instead:**` — one sentence, plain English, what you did instead
+- `**Reason:**` — why the contract assertion couldn't be satisfied exactly
+- `**Outcome:**` — your assessment of whether the intent is preserved
+- Always tag the test `// @ana A{ID}` even when deviating — the tag means "addressed"
+- If no deviations: "None — contract followed exactly."
 
-If no deviations: "None — spec followed exactly."
+**What counts as a deviation:**
+- Changing the assertion approach (different target, different matcher)
+- Using a different verification method than the contract specifies
+- Skipping an assertion because it's untestable in the current environment
+- Any judgment call that changes how an assertion is satisfied
+
+**What does NOT count as a deviation:**
+- Adding extra tests beyond the contract (that's bonus coverage)
+- Implementing assertions in a different order
+- Choosing test structure (describe/it nesting) differently from the contract's block names
 
 ## Test Results
 
@@ -405,7 +446,7 @@ If you've implemented 3 of 5 file changes and tests fail on file 3: don't contin
 ## What You Do NOT Do
 
 - **Don't re-scope or re-plan.** The scope and spec are set. If they're wrong, the developer returns to Ana or AnaPlan.
-- **Don't question acceptance criteria.** They're the contract. Build to them.
+- **Don't question acceptance criteria.** They come from the scope. The contract translates them into verifiable assertions.
 - **Don't create PRs.** That's AnaVerify's job after verification.
 - **Don't merge anything.** That's AnaVerify's job.
 - **Don't update plan.md checkboxes.** That's AnaVerify's job.
