@@ -1,46 +1,104 @@
 # Anatomia
 
-Auto-generated AI context for codebases.
+**Your AI doesn't know your codebase. Ana does.**
+
+Verified AI development through scoped planning, contract-based building, and independent verification.
 
 [![npm version](https://img.shields.io/npm/v/anatomia-cli.svg)](https://www.npmjs.com/package/anatomia-cli)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
 
-## What is this?
-
-Anatomia generates `.ana/` folders that help AI assistants understand your project. Instead of re-explaining your patterns every conversation, reference mode files in chat.
-
-**Example:**
-```
-@.ana/modes/code.md "Implement user authentication"
-```
-
-AI reads your patterns and writes code that matches your team's standards.
-
----
-
-## Install
-
-```bash
-npm install -g anatomia-cli
-```
-
----
-
 ## Quick Start
 
 ```bash
-cd your-project/
-ana init
+npx anatomia-cli scan
 ```
 
-This creates 10 files in `.ana/`:
-- `ENTRY.md` - Project orientation
-- `modes/*.md` - 5 task modes (architect, code, debug, docs, test)
-- `context/*.md` - Your patterns, conventions, architecture
+See what Ana detects about your project:
 
-Fill `context/*.md` with your project details. Reference `modes/*.md` when working with AI.
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│  ana scan                                                           │
+│  tetto-portal                                       2026-04-01 12:34│
+└─────────────────────────────────────────────────────────────────────┘
+
+  Stack
+  ─────
+  Language     Node.js
+  Framework    Next.js
+  Database     Supabase
+  Auth         Supabase Auth
+  Testing      Jest
+
+  Files
+  ─────
+  Source       252
+  Tests        24
+  Config       10
+  Total        286
+
+  Structure
+  ─────────
+  app/              Application code
+  components/       UI components
+  lib/              Library code
+  supabase/         Supabase config
+
+Run `ana init` to generate full context for your AI.
+```
+
+---
+
+## What Ana Scans
+
+- **Stack** — Language, Framework, Database, Auth, Testing, Payments
+- **Files** — Source, test, config counts
+- **Structure** — Directory purposes and organization
+- **Workspace** — Monorepo detection and package listing
+
+Get JSON output with `--json` for programmatic use. Debug with `--verbose` to see analyzer phases.
+
+---
+
+## The Pipeline
+
+Ana structures AI development through four verified stages:
+
+| Stage | Agent | What It Does |
+|-------|-------|--------------|
+| **Think** | Ana | Scopes the work, explores the codebase, writes intent |
+| **Plan** | AnaPlan | Writes specs with test contracts and acceptance criteria |
+| **Build** | AnaBuild | Implements against the spec and test skeleton |
+| **Verify** | AnaVerify | Independent verification, mechanical checks, creates PR |
+
+Each stage produces artifacts. Each artifact is versioned in git. The pipeline enforces:
+- Scope before plan (no planning without understanding intent)
+- Plan before build (no building without a spec)
+- Build before verify (no verification without implementation)
+- Verify before merge (no merging without independent review)
+
+---
+
+## Getting Started
+
+1. **Scan your project:**
+   ```bash
+   npx anatomia-cli scan
+   ```
+
+2. **Initialize context:**
+   ```bash
+   npm install -g anatomia-cli
+   ana init
+   ```
+
+3. **Scope your first feature:**
+   ```bash
+   claude --agent ana
+   ```
+
+Ana will help you explore the codebase, write a scope document, and kick off the pipeline.
 
 ---
 
@@ -49,9 +107,10 @@ Fill `context/*.md` with your project details. Reference `modes/*.md` when worki
 ```
 anatomia/
 ├── packages/
-│   ├── cli/          # CLI tool
-│   └── analyzer/     # Code analysis engine
-└── website/          # Documentation
+│   ├── cli/          # CLI tool (ana commands)
+│   ├── analyzer/     # Code analysis engine
+│   └── generator/    # Context generators
+└── website/          # Demo site
 ```
 
 ---
@@ -68,7 +127,7 @@ pnpm build
 
 **Test:**
 ```bash
-pnpm test
+pnpm --filter anatomia-cli test -- --run
 ```
 
 **Link locally:**
@@ -82,14 +141,9 @@ ana --version
 
 ## Documentation
 
-- [CLI Documentation](./packages/cli/README.md)
-- [Analyzer Documentation](./packages/analyzer/README.md)
-
----
-
-## Contributing
-
-See [CONTRIBUTING.md](./CONTRIBUTING.md)
+- [Artifact Schemas](./.ana/docs/SCHEMAS.md) — Pipeline artifact formats
+- [CLI Package](./packages/cli/README.md) — Command reference
+- [Analyzer Package](./packages/analyzer/README.md) — Analysis engine
 
 ---
 
@@ -104,4 +158,3 @@ MIT
 - **Repository:** [GitHub](https://github.com/TettoLabs/anatomia)
 - **Issues:** [Report Issues](https://github.com/TettoLabs/anatomia/issues)
 - **CLI Package:** [anatomia-cli on npm](https://www.npmjs.com/package/anatomia-cli)
-- **Analyzer Package:** [anatomia-analyzer on npm](https://www.npmjs.com/package/anatomia-analyzer)
