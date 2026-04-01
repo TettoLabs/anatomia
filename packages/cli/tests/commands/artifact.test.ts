@@ -908,7 +908,7 @@ describe('ana artifact save-all', () => {
 
     try {
       fn();
-      return '';
+      return errors.join('\n'); // Return captured errors even if no exit
     } catch (error) {
       if (error instanceof Error && error.message.startsWith('process.exit')) {
         return errors.join('\n');
@@ -1016,5 +1016,24 @@ Rules.`;
     const message = getLastCommitMessage();
     expect(message).toContain('[test-slug] Update: Spec');
     expect(message).not.toContain('Save');
+  });
+
+  it('attempts push after committing', async () => {
+    await createTestProject();
+
+    const validSpec = `# Spec
+file_changes:
+  - path: test.ts
+    action: create
+## Build Brief
+Rules.`;
+
+    await createArtifact('test-slug', 'spec.md', validSpec);
+
+    // Capture stderr to verify push attempt
+    const stderr = captureError(() => saveAllArtifacts('test-slug'));
+
+    // Push fails in test environment (no remote) but should be attempted
+    expect(stderr).toContain('Warning: Push failed');
   });
 });
