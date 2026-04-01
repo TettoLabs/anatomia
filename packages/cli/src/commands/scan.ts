@@ -218,6 +218,7 @@ interface ScanResult {
   };
   structure: Array<{ path: string; purpose: string }>;
   structureOverflow?: number;
+  packages?: Array<{ name: string; path: string }>;
 }
 
 /**
@@ -689,7 +690,7 @@ function formatJson(
   }
 
   if (monorepoInfo?.isMonorepo && monorepoInfo.packages) {
-    (result as any).packages = monorepoInfo.packages;
+    result.packages = monorepoInfo.packages;
   }
 
   return JSON.stringify(result, null, 2);

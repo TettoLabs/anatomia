@@ -716,6 +716,269 @@ describe('analyzer graceful degradation', () => {
   });
 });
 
+describe('ana scan', () => {
+  let tempDir: string;
+  let originalCwd: string;
+
+  beforeEach(async () => {
+    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'scan-test-fallback-'));
+    originalCwd = process.cwd();
+  });
+
+  afterEach(async () => {
+    process.chdir(originalCwd);
+    await fs.rm(tempDir, { recursive: true, force: true });
+  });
+
+  function runScan(args: string[] = []): { stdout: string; stderr: string; exitCode: number } {
+    const cliPath = path.join(__dirname, '../../dist/index.js');
+    try {
+      const stdout = execSync(`node ${cliPath} scan ${args.join(' ')}`, {
+        encoding: 'utf-8',
+        cwd: process.cwd(),
+        env: { ...process.env, FORCE_COLOR: '0' },
+      });
+      return { stdout, stderr: '', exitCode: 0 };
+    } catch (error) {
+      const execError = error as { stdout?: string; stderr?: string; status?: number };
+      return {
+        stdout: execError.stdout || '',
+        stderr: execError.stderr || '',
+        exitCode: execError.status || 1,
+      };
+    }
+  }
+
+  async function createTestFiles(files: Record<string, string>): Promise<void> {
+    for (const [filePath, content] of Object.entries(files)) {
+      const fullPath = path.join(tempDir, filePath);
+      await fs.mkdir(path.dirname(fullPath), { recursive: true });
+      await fs.writeFile(fullPath, content);
+    }
+  }
+
+  describe('dependency-file fallback detection', () => {
+    it('detects Supabase from @supabase/supabase-js', async () => {
+      await createTestFiles({
+        'package.json': JSON.stringify({
+          name: 'test',
+          dependencies: { '@supabase/supabase-js': '2.0.0' },
+        }),
+        'index.ts': 'const x = 1;',
+      });
+      process.chdir(tempDir);
+
+      const { stdout } = runScan();
+      expect(stdout).toMatch(/Database\s+Supabase/);
+    });
+
+    it('detects Clerk from @clerk/nextjs', async () => {
+      await createTestFiles({
+        'package.json': JSON.stringify({
+          name: 'test',
+          dependencies: { '@clerk/nextjs': '4.0.0' },
+        }),
+        'index.ts': 'const x = 1;',
+      });
+      process.chdir(tempDir);
+
+      const { stdout } = runScan();
+      expect(stdout).toMatch(/Auth\s+Clerk/);
+    });
+
+    it('detects Vitest from devDependencies', async () => {
+      await createTestFiles({
+        'package.json': JSON.stringify({
+          name: 'test',
+          devDependencies: { vitest: '2.0.0' },
+        }),
+        'index.ts': 'const x = 1;',
+      });
+      process.chdir(tempDir);
+
+      const { stdout } = runScan();
+      expect(stdout).toMatch(/Testing\s+Vitest/);
+    });
+
+    it('detects Stripe as Payments category', async () => {
+      await createTestFiles({
+        'package.json': JSON.stringify({
+          name: 'test',
+          dependencies: { stripe: '16.0.0' },
+        }),
+        'index.ts': 'const x = 1;',
+      });
+      process.chdir(tempDir);
+
+      const { stdout } = runScan();
+      expect(stdout).toMatch(/Payments\s+Stripe/);
+    });
+
+    it('detects both Database and Auth from Supabase packages', async () => {
+      await createTestFiles({
+        'package.json': JSON.stringify({
+          name: 'test',
+          dependencies: {
+            '@supabase/supabase-js': '2.0.0',
+            '@supabase/ssr': '0.5.0',
+          },
+        }),
+        'index.ts': 'const x = 1;',
+      });
+      process.chdir(tempDir);
+
+      const { stdout } = runScan();
+      expect(stdout).toMatch(/Database\s+Supabase/);
+      expect(stdout).toMatch(/Auth\s+Supabase Auth/);
+    });
+
+    it('detects NextAuth', async () => {
+      await createTestFiles({
+        'package.json': JSON.stringify({
+          name: 'test',
+          dependencies: { 'next-auth': '4.0.0' },
+        }),
+        'index.ts': 'const x = 1;',
+      });
+      process.chdir(tempDir);
+
+      const { stdout } = runScan();
+      expect(stdout).toMatch(/Auth\s+NextAuth/);
+    });
+
+    it('detects Prisma', async () => {
+      await createTestFiles({
+        'package.json': JSON.stringify({
+          name: 'test',
+          dependencies: { prisma: '5.0.0' },
+        }),
+        'index.ts': 'const x = 1;',
+      });
+      process.chdir(tempDir);
+
+      const { stdout } = runScan();
+      expect(stdout).toMatch(/Database\s+Prisma/);
+    });
+
+    it('handles no relevant deps gracefully', async () => {
+      await createTestFiles({
+        'package.json': JSON.stringify({
+          name: 'test',
+          dependencies: { lodash: '4.0.0' },
+        }),
+        'index.ts': 'const x = 1;',
+      });
+      process.chdir(tempDir);
+
+      const { stdout } = runScan();
+      expect(stdout).not.toMatch(/Database/);
+      expect(stdout).not.toMatch(/Auth/);
+      expect(stdout).not.toMatch(/Payments/);
+    });
+
+    it('handles empty package.json gracefully', async () => {
+      await createTestFiles({
+        'package.json': '{}',
+        'index.ts': 'const x = 1;',
+      });
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runScan();
+      expect(exitCode).toBe(0);
+      expect(stdout).toMatch(/Language\s+Node\.js/);
+    });
+
+    it('handles missing package.json gracefully', async () => {
+      await createTestFiles({
+        'index.ts': 'const x = 1;',
+      });
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runScan();
+      expect(exitCode).toBe(0);
+      // Should not crash - language detection may or may not succeed without package.json
+      expect(stdout).toContain('ana scan');
+    });
+
+    it('includes payments in JSON output', async () => {
+      await createTestFiles({
+        'package.json': JSON.stringify({
+          name: 'test',
+          dependencies: { stripe: '16.0.0' },
+        }),
+        'index.ts': 'const x = 1;',
+      });
+      process.chdir(tempDir);
+
+      const { stdout } = runScan(['--json']);
+      const result = JSON.parse(stdout);
+      expect(result.stack.payments).toBe('Stripe');
+    });
+  });
+
+  describe('monorepo detection', () => {
+    it('detects pnpm-workspace.yaml as pnpm monorepo', async () => {
+      await createTestFiles({
+        'pnpm-workspace.yaml': 'packages:\n  - "packages/*"',
+        'packages/cli/package.json': JSON.stringify({ name: 'cli' }),
+        'packages/web/package.json': JSON.stringify({ name: 'web' }),
+        'package.json': JSON.stringify({ name: 'root' }),
+        'index.ts': 'const x = 1;',
+      });
+      process.chdir(tempDir);
+
+      const { stdout } = runScan();
+      expect(stdout).toMatch(/Workspace\s+pnpm monorepo/);
+      expect(stdout).toMatch(/Packages/);
+      expect(stdout).toMatch(/packages\/cli/);
+      expect(stdout).toMatch(/packages\/web/);
+    });
+
+    it('shows no workspace info for non-monorepo', async () => {
+      await createTestFiles({
+        'package.json': JSON.stringify({ name: 'test' }),
+        'index.ts': 'const x = 1;',
+      });
+      process.chdir(tempDir);
+
+      const { stdout } = runScan();
+      expect(stdout).not.toMatch(/Workspace/);
+      expect(stdout).not.toMatch(/Packages/);
+    });
+
+    it('detects package.json workspaces', async () => {
+      await createTestFiles({
+        'package.json': JSON.stringify({
+          name: 'root',
+          workspaces: ['apps/*'],
+        }),
+        'apps/web/package.json': JSON.stringify({ name: 'web' }),
+        'index.ts': 'const x = 1;',
+      });
+      process.chdir(tempDir);
+
+      const { stdout } = runScan();
+      expect(stdout).toMatch(/Workspace\s+npm\/yarn monorepo/);
+    });
+
+    it('includes packages in JSON output', async () => {
+      await createTestFiles({
+        'pnpm-workspace.yaml': 'packages:\n  - "packages/*"',
+        'packages/cli/package.json': JSON.stringify({ name: 'cli' }),
+        'package.json': JSON.stringify({ name: 'root' }),
+        'index.ts': 'const x = 1;',
+      });
+      process.chdir(tempDir);
+
+      const { stdout } = runScan(['--json']);
+      const result = JSON.parse(stdout);
+      expect(result.stack.workspace).toBe('pnpm monorepo');
+      expect(result.packages).toBeInstanceOf(Array);
+      expect(result.packages.length).toBeGreaterThan(0);
+    });
+  });
+});
+
 describe('display name mapping', () => {
   it('maps node to Node.js', () => {
     expect(getLanguageDisplayName('node')).toBe('Node.js');
