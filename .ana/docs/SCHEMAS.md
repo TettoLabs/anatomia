@@ -300,6 +300,102 @@ What the person merging should know. Always populated.
 
 ---
 
+## ana scan — Zero-Install Project Scanner
+
+**Command:** `ana scan [path]` (optional: `--json`, `--verbose`)
+
+Zero-install project scanner. Analyzes a project and outputs:
+- Stack detection (Language, Framework, Database, Auth, Testing, Payments)
+- File counts (source, test, config, total)
+- Structure map (top directories with purposes)
+- Monorepo awareness (workspace type, package listing)
+
+**Works without .ana/ directory.** Read-only operation, creates no files.
+
+**Output format:**
+
+Terminal (default):
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│  ana scan                                                           │
+│  project-name                                       2026-04-01 12:34│
+└─────────────────────────────────────────────────────────────────────┘
+
+  Stack
+  ─────
+  Language     Node.js
+  Framework    Next.js
+  Database     Supabase
+  Auth         Supabase Auth
+  Testing      Vitest
+  Payments     Stripe
+  Workspace    pnpm monorepo
+
+  Files
+  ─────
+  Source       98
+  Tests        24
+  Config       10
+  Total        132
+
+  Structure
+  ─────────
+  app/              Application code
+  components/       UI components
+  hooks/            React hooks
+
+  Packages
+  ────────
+  packages/cli      anatomia-cli
+  packages/web      website
+
+Run `ana init` to generate full context for your AI.
+Scan individual packages: ana scan packages/cli
+```
+
+JSON (`--json`):
+```json
+{
+  "project": "project-name",
+  "scannedAt": "2026-04-01T12:34:56.789Z",
+  "stack": {
+    "language": "Node.js",
+    "framework": "Next.js",
+    "database": "Supabase",
+    "auth": "Supabase Auth",
+    "testing": "Vitest",
+    "payments": "Stripe",
+    "workspace": "pnpm monorepo"
+  },
+  "files": {
+    "source": 98,
+    "test": 24,
+    "config": 10,
+    "total": 132
+  },
+  "structure": [
+    { "path": "app/", "purpose": "Application code" },
+    { "path": "components/", "purpose": "UI components" }
+  ],
+  "packages": [
+    { "name": "anatomia-cli", "path": "packages/cli" },
+    { "name": "website", "path": "packages/web" }
+  ]
+}
+```
+
+**Stack detection:**
+- **Primary:** Analyzer uses tree-sitter for code-based detection
+- **Fallback:** Reads package.json dependencies for Database, Auth, Testing, Payments when tree-sitter detection doesn't fire
+- **6 categories:** Language, Framework, Database, Auth, Testing, Payments
+- **Dual-category support:** Supabase can appear as both Database (@supabase/supabase-js) and Auth (@supabase/ssr)
+
+**Flags:**
+- `--json` — Output JSON for programmatic consumption
+- `--verbose` — Show detailed analyzer phase output (stderr)
+
+---
+
 ## Artifact Lifecycle
 
 ```
@@ -326,8 +422,8 @@ Validation rules by type:
 - **Verify report:** Result line (`**Result:** PASS` or `**Result:** FAIL`) in first 10 lines
 
 **Pre-check tool format support:** `ana verify pre-check` handles both production and legacy formats:
-- Skeleton assertions: tries uncommented `expect()` first (production AnaPlan format), falls back to `// expect()` (legacy/test format)
-- YAML blocks: supports code-fenced format (`<!-- MACHINE-READABLE: ... -->\n```yaml...````) and legacy HTML comment format
+- **Skeleton assertions:** Block-based matching groups assertions by their containing `it()`/`test()` block. Handles both commented (`// expect()`) and uncommented (`expect()`) assertions, including mixed-format skeletons. Falls back to position-based matching if block parsing fails.
+- **YAML blocks:** Supports code-fenced format (`<!-- MACHINE-READABLE: ... -->\n```yaml...````) and legacy HTML comment format
 
 When a task is complete (verify passes), the developer runs `ana work complete {slug}` which archives the directory from `.ana/plans/active/{slug}/` to `.ana/plans/completed/{slug}/` and cleans up the feature branch. The four artifacts together form the permanent record: intent, plan, implementation, proof.
 
