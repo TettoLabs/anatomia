@@ -90,12 +90,10 @@ export function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          className="text-[48px] lg:text-[72px] font-bold mb-6 lg:mb-8 tracking-[-0.04em] leading-[0.95]"
+          className="text-[40px] lg:text-[58px] font-bold mb-6 lg:mb-8 tracking-[-0.05em] leading-[0.95]"
           style={{ color: "var(--foreground-color)" }}
         >
-          Your AI doesn&apos;t know your codebase.
-          <br />
-          Ana does.
+          Your AI doesn&apos;t know your codebase. Ana does.
         </motion.h1>
 
         {/* Subtext - Tighter, cleaner */}
