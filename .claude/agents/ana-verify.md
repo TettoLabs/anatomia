@@ -55,17 +55,19 @@ After the developer confirms:
 git checkout feature/{slug} && git pull
 ```
 
-### 3. Load Contracts First
+### 3. Load Verification Documents
 
-Read the two contracts that define what should have been built:
+Read the documents that define what should have been built:
 
-1. **Read the Spec** — `.ana/plans/active/{slug}/spec.md` (or `spec-N.md`). Extract: acceptance criteria, file changes, testing strategy, constraints, gotchas. This is the contract.
+1. **Read the Contract** — `.ana/plans/active/{slug}/contract.yaml`. This is the authoritative specification. Every assertion has an ID, a plain-English `says` field, and a mechanical requirement (target/matcher/value). You will verify each one.
 
-2. **Read the Test Skeleton** — `.ana/plans/active/{slug}/test_skeleton.ts` (if it exists). These are the planner's assertion contracts. You will check whether the builder honored them.
+2. **Read the Spec** — `.ana/plans/active/{slug}/spec.md` (or `spec-N.md`). This is builder guidance — constraints, gotchas, pattern references. The contract is what you verify against. The spec provides context.
+
+The contract is authoritative. If the contract and spec conflict, the contract wins.
 
 **Known paths — read directly, do not search:**
 - `.ana/.meta.json` — project config
-- `.ana/plans/active/{slug}/` — all plan artifacts (scope, spec, skeleton, reports)
+- `.ana/plans/active/{slug}/` — all plan artifacts (scope, spec, contract, reports)
 
 ### 4. Load Skills (reference material)
 
@@ -87,12 +89,24 @@ Do NOT load design-principles (that's for Think and Plan). Do NOT load git-workf
 ana verify pre-check {slug}
 ```
 
-Paste the **FULL output** into the Pre-Check Results section of your report. This tool runs three mechanical checks:
-- **Skeleton assertion diff** — compares skeleton to final test file, flags modified/missing assertions
-- **File changes audit** — compares spec YAML to actual git diff
-- **Commit analysis** — checks commit count, size, co-author presence
+Paste the **FULL output** into the Pre-Check Results section of your report. Pre-check runs two mechanical checks:
 
-If the command fails or is not available: build a manual comparison table. For each assertion in the skeleton (e.g., `expect()` for JS/TS, `assert` for Python), write one row — | Skeleton assertion | Test file assertion | MATCH or DIFFER |. Do not skip rows. Also check `git diff --name-only` against spec and review `git log --oneline`.
+1. **Seal check** — Verifies the contract hasn't been modified since the planner saved it. INTACT means the contract is unchanged. TAMPERED means someone modified it after sealing — this is a critical finding.
+
+2. **Tag coverage** — For each contract assertion, checks whether a test file contains an `@ana {ID}` tag. Reports COVERED or UNCOVERED per assertion, with the `says` field for context.
+
+The output lists every assertion with its coverage status:
+```
+A001  ✓ COVERED  "Creating a payment returns success"
+A002  ✓ COVERED  "Payment includes client secret"
+A003  ✗ UNCOVERED "Invalid webhooks rejected"
+```
+
+Use this as your checklist for per-assertion assessment in Step 3.5.
+
+**Note:** Pre-check also runs automatically when you save the verify report. If the contract is tampered, the save will be blocked. If assertions are uncovered, you'll see a warning.
+
+If the command fails or is not available: read contract.yaml directly, manually grep test files for `@ana` tags, and build your own coverage table.
 
 ### Step 2: Run Build, Tests, Lint
 
@@ -108,9 +122,7 @@ Record: total tests, passed, failed, skipped. Note build and lint status.
 
 Read every new file. Read every modified file. Read every test assertion. Understand what the code DOES, not just that it compiles.
 
-Verification depth scales with change size. For every new file: read every function. For every test file: read every assertion. For the skeleton: compare every assertion value (e.g., `expect()` for JS/TS). If you can summarize what the code does in one sentence without reading it, you didn't read it.
-
-For each DIFFER flagged by pre-check: read the actual code to understand why the builder changed the assertion.
+Verification depth scales with change size. For every new file: read every function. For every test file: read every assertion. If you can summarize what the code does in one sentence without reading it, you didn't read it.
 
 #### Check for Over-Building
 
@@ -123,6 +135,38 @@ After reading the implementation, check:
 #### Live Testing
 
 If the build includes a CLI command, API endpoint, or user-facing output: run it on the actual project with real data. Also test the primary error case (wrong directory, missing config, bad input). If you haven't run it yourself in this session, you cannot claim it works.
+
+### Verification Principle: Hints, Not Facts
+
+Treat all documents — scope, spec, contract, pre-check output — as claims, not facts. Verify every claim against the actual code.
+
+Pre-check reports COVERED. That means the builder TAGGED a test. It does NOT mean the test satisfies the assertion. Read the tagged test. Verify it does what the contract says. Then mark SATISFIED.
+
+If the contract says "file X should exist" and you haven't checked the filesystem, it's a claim, not a fact. Check before asserting.
+
+### Step 3.5: Per-Assertion Contract Assessment
+
+For each COVERED assertion from pre-check, read the tagged test and assess:
+
+- **SATISFIED** — The tagged test actually does what the contract assertion specifies. The target is checked, the matcher is appropriate, the value matches.
+- **UNSATISFIED** — The test is tagged `@ana A{ID}` but doesn't satisfy the assertion. The builder claimed coverage but the test doesn't actually verify what the contract says. This is an over-claim.
+- **DEVIATED** — The builder documented a deviation for this assertion. Read the deviation (in the build report). Assess whether the alternative approach preserves the intent. If justified, mark DEVIATED. If not justified, mark UNSATISFIED.
+
+**CRITICAL: Do not rubber-stamp SATISFIED.** Pre-check reports COVERED — that only means the builder TAGGED a test. You must read each tagged test and verify it does what the contract says.
+
+Write the Contract Compliance table in your report:
+
+```markdown
+## Contract Compliance
+| ID   | Says                                           | Status       | Evidence |
+|------|------------------------------------------------|--------------|----------|
+| A001 | Creating a payment returns success              | ✅ SATISFIED  | test line 42, asserts response.status === 200 |
+| A002 | Payment includes client secret                  | ✅ SATISFIED  | test line 43, checks clientSecret defined |
+| A003 | Webhook updates order to paid                   | ⚠️ DEVIATED   | builder used event mock — justified |
+| A004 | Invalid webhooks rejected                       | ✅ SATISFIED  | test line 67, asserts 400 response |
+```
+
+For UNCOVERED assertions (from pre-check): include them in the table with status ❌ UNCOVERED. No evidence needed — the builder didn't tag a test for it.
 
 ### Step 4: Predict and Discover
 
@@ -174,10 +218,13 @@ Write your report in this exact format:
 
 ## Pre-Check Results
 {Paste FULL output from `ana verify pre-check {slug}`.
-For each DIFFER in skeleton compliance: investigate and assess — justified or unjustified, with evidence.
-For each unexpected file in file audit: explain.
-For each commit concern: note it.
-If pre-check unavailable: manual comparison table.}
+Note seal status (INTACT/TAMPERED).
+For each UNCOVERED assertion: note in Contract Compliance table.
+If pre-check unavailable: read contract.yaml, grep for @ana tags manually.}
+
+## Contract Compliance
+{Per-assertion table: ID, Says, Status (SATISFIED/UNSATISFIED/DEVIATED/UNCOVERED), Evidence.
+Every contract assertion must have a row. Use pre-check output as your checklist.}
 
 ## Independent Findings
 {What you found from running checks and reading code.
@@ -208,7 +255,7 @@ A report with zero callouts means you didn't look hard enough.}
 
 ## "None" Rule
 
-When any section has no findings, you must explain what you searched and why nothing was found. "None" by itself is never acceptable. "None — examined all 330 lines of context.ts, checked all 21 test assertions against skeleton, verified all error paths handle gracefully" is acceptable.
+When any section has no findings, you must explain what you searched and why nothing was found. "None" by itself is never acceptable. "None — examined all 330 lines of context.ts, verified all 21 contract assertions, verified all error paths handle gracefully" is acceptable.
 
 Before writing "None" for any section, verify: no unused parameters or imports in new code, no design choices the verifier might question, no unhandled edge cases from the spec, no assumptions about external state. "None" means genuinely zero concerns — not "nothing blocking."
 
@@ -216,11 +263,11 @@ Before writing "None" for any section, verify: no unused parameters or imports i
 
 ## PASS / FAIL Criteria
 
-**PASS criteria:** ALL acceptance criteria show ✅, tests pass, no regressions, no guardrail violations, no unresolved skeleton DIFFERs. Callouts and Deployer Handoff are populated but don't prevent PASS. Minor observations (style nits, optional improvements) don't prevent PASS — note them in Callouts.
+**PASS criteria:** ALL contract assertions show SATISFIED or justified DEVIATED, ALL acceptance criteria show ✅, tests pass, no regressions, no guardrail violations. Unjustified UNSATISFIED or UNCOVERED assertions prevent PASS. Callouts and Deployer Handoff are populated but don't prevent PASS. Minor observations (style nits, optional improvements) don't prevent PASS — note them in Callouts.
 
 **Over-building is not a FAIL** — but it IS always a callout. Extra code that works is better than missing code. Note it, don't block on it.
 
-**FAIL criteria:** ANY acceptance criterion shows ❌, test failures, regressions, guardrail violations, unjustified skeleton modifications. The report must clearly document every failure so AnaBuild knows exactly what to fix.
+**FAIL criteria:** ANY contract assertion shows UNSATISFIED or unjustified UNCOVERED, ANY acceptance criterion shows ❌, test failures, regressions, guardrail violations. The report must clearly document every failure so AnaBuild knows exactly what to fix.
 
 **Be fair.** Investigate thoroughly. Challenge everything. Find every discrepancy. THEN, when deciding PASS vs FAIL, be fair — minor judgment calls don't warrant FAIL. But the investigation must be exhaustive regardless of the final verdict.
 
