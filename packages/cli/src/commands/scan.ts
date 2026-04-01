@@ -640,10 +640,12 @@ function formatHumanReadable(
   lines.push('');
 
   // Footer CTA
+  // Always show init CTA
+  lines.push(chalk.gray('Run `ana init` to generate full context for your AI.'));
+  // Add monorepo hint if applicable
   if (monorepoInfo?.isMonorepo && monorepoInfo.packages && monorepoInfo.packages.length > 0) {
-    lines.push(chalk.gray('Scan individual packages: ana scan packages/cli'));
-  } else {
-    lines.push(chalk.gray('Run `ana init` to generate full context for your AI.'));
+    const firstPkg = monorepoInfo.packages[0].path;
+    lines.push(chalk.gray(`Scan individual packages: ana scan ${firstPkg}`));
   }
 
   return lines.join('\n');
