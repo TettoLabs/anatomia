@@ -10,43 +10,30 @@ const pricingTiers = [
     price: "$0",
     period: "Forever",
     features: [
-      "Full ana init with smart analysis",
-      "All 7 modes (6 work + guided setup)",
-      "Guided setup (3 tiers)",
-      "7 specialized context files",
-      "Open source, MIT license",
+      "Full codebase analysis",
+      "Four-agent pipeline",
+      "Mechanical verification",
+      "Context drift detection",
+      "Configurable agents",
+      "MIT License",
     ],
     cta: "Get Started",
     ctaStyle: "primary" as const,
     disabled: false,
   },
   {
-    name: "PRO",
-    price: "$19",
-    period: "per month (coming soon)",
+    name: "TEAM",
+    price: "Coming soon",
+    period: "",
     features: [
       "Everything in Free",
-      "Semantic query search (LLM-powered)",
-      "Public node access (query nextjs.org/.ana/)",
-      "Local dashboard and analytics",
-      "Advanced features based on feedback",
-    ],
-    cta: "Coming Soon",
-    ctaStyle: "secondary" as const,
-    disabled: true,
-  },
-  {
-    name: "TEAM",
-    price: "$99",
-    period: "per month (coming soon)",
-    features: [
-      "Everything in Pro",
-      "Cloud node sync across team",
-      "Shared pattern library",
-      "Team onboarding analytics",
+      "Hosted Proofs",
+      "Team dashboard",
+      "Parallel pipelines",
+      "Shared context",
       "Priority support",
     ],
-    cta: "Coming Soon",
+    cta: "Join waitlist",
     ctaStyle: "secondary" as const,
     disabled: true,
   },
@@ -131,10 +118,10 @@ export function PricingSection() {
             className="text-5xl font-semibold tracking-[-0.03em] mb-3"
             style={{ color: "var(--foreground-color)" }}
           >
-            Simple Pricing
+            Start free. Scale when you&apos;re ready.
           </h2>
           <p className="text-lg mb-0" style={{ color: "var(--text-muted-60)" }}>
-            Free forever. Pro and Team tiers coming soon.
+            Everything you need to ship with proof.
           </p>
         </div>
 
@@ -163,10 +150,10 @@ export function PricingSection() {
           className="text-3xl font-semibold tracking-[-0.03em] mb-2"
           style={{ color: "var(--foreground-color)" }}
         >
-          Simple Pricing
+          Start free. Scale when you&apos;re ready.
         </h2>
         <p className="text-base mb-0" style={{ color: "var(--text-muted-60)" }}>
-          Free forever. Pro and Team tiers coming soon.
+          Everything you need to ship with proof.
         </p>
       </div>
 
@@ -189,8 +176,8 @@ export function PricingSection() {
           ))}
       </div>
 
-      {/* Pricing cards - 1 col mobile, 3 col desktop */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-0">
+      {/* Pricing cards - 1 col mobile, 2 col desktop */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
         {pricingTiers.map((tier, index) => (
           <motion.div
             key={tier.name}
@@ -203,7 +190,7 @@ export function PricingSection() {
               delay: index * 0.1,
             }}
             className={`p-6 lg:p-8 min-h-0 lg:min-h-[400px] border-b ${
-              index < 2 ? "lg:border-r" : ""
+              index < 1 ? "lg:border-r" : ""
             } ${tier.disabled ? "opacity-60" : ""}`}
             style={{ borderColor: "var(--border-light)" }}
           >
@@ -247,7 +234,7 @@ export function PricingSection() {
               </Button>
             ) : (
               <ButtonLink
-                href="https://github.com/TettoLabs/anatomia"
+                href="https://github.com/TettoLabs/anatomia#quick-start"
                 variant={tier.ctaStyle}
                 size="md"
                 className="w-full justify-center"
