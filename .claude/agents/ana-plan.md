@@ -76,7 +76,7 @@ Read `.ana/plans/active/{slug}/scope.md` in full. Extract:
 
 ### Step 2: Explore the Codebase
 
-If the scope includes Exploration Findings, use them as starting points. For details that affect design decisions or skeleton assertion values, verify by reading the actual file — findings may reference stale line numbers if the code changed between sessions.
+If the scope includes Exploration Findings, use them as starting points. For details that affect design decisions or contract assertion values, verify by reading the actual file — findings may reference stale line numbers if the code changed between sessions.
 
 When reading the scope, identify both the **functional analog** (same domain, different shape) and the **structural analog** (same shape, different domain). If the scope only mentions one, look for the other. Both inform the spec.
 
@@ -206,95 +206,97 @@ The `## Phases` heading and `- [ ]` checkbox format is mandatory — the CLI par
 
 If you need more than 5 specs, the scope is too large. Tell the user: "This scope should be split into multiple scopes. Return to `claude --agent ana` to decompose."
 
-### Step 7: Write Test Skeleton
+### Step 7: Write the Contract
 
-Before writing skeleton assertions, resolve every value ambiguity in the spec. If `totalFiles` could be 7 or 8, decide which and document the decision in the spec. The skeleton MUST assert resolved values. An ambiguous value that reaches the skeleton becomes a guaranteed builder deviation.
+After writing the spec, write a contract file. This is the verification contract — AnaBuild writes tests that satisfy these assertions, tagging each one. AnaVerify checks whether the tagged tests actually do what the contract says.
 
-After writing the spec, write a test skeleton file. This is the TDD contract — AnaBuild makes these tests pass, they do NOT modify the assertions.
+**Filename:** Always `contract.yaml`. Store at `.ana/plans/active/{slug}/contract.yaml`.
 
-**Filename convention:** Always name the file `test_skeleton.ts` (or `.py`, `.rs`, etc. matching the project's test language). Store at `.ana/plans/active/{slug}/test_skeleton.ts`. Note: The `ana verify pre-check` tool currently parses `expect()` syntax (TypeScript/JavaScript). For other languages, the verifier uses manual comparison instead.
+**Contract schema:**
 
-The skeleton contains:
-- `describe` blocks matching the spec's test matrix scenarios
-- `it` blocks with descriptive names matching acceptance criteria
-- `expect()` assertions that define the expected behavior
-- Placeholder setup (comments showing what setup is needed, not full implementation)
-- Import placeholders (comments showing what needs to be imported)
+```yaml
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "{Feature name from scope}"
 
-The skeleton is NOT compilable. It's a contract. The builder fills in:
-- Actual imports
-- Setup/teardown code (beforeEach, afterEach, temp directories, mocks)
-- Helper functions
-- Any additional tests beyond what the skeleton specifies
+assertions:
+  - id: A001
+    says: "Creating a payment returns a successful response"
+    block: "creates payment intent"
+    target: "response.status"
+    matcher: "equals"
+    value: 200
 
-**What the builder CANNOT do:**
-- Modify or remove any `expect()` assertion the planner wrote
-- Remove any `it()` block the planner wrote
-- Change the meaning of any assertion (weaker, different condition, different target)
+  - id: A002
+    says: "Payment response includes a client secret for the frontend"
+    block: "creates payment intent"
+    target: "response.body.clientSecret"
+    matcher: "exists"
 
-**What the builder CAN do:**
-- Add new `describe` or `it` blocks (more tests = good)
-- Add assertions within existing `it` blocks (stronger coverage = good)
-- Implement all setup, teardown, helpers, and infrastructure
-- Wrap planner assertions in proper async/await or test utilities
-
-**If a planner assertion genuinely cannot work:**
-The builder documents it as a Deviation with structured format (see build report requirements). The builder does NOT silently modify the assertion. The verifier investigates.
-
-**Setup-value consistency rule:** If your assertion uses an exact value (`toBe(3)`), your setup comment must specify exactly what produces that value: `SETUP: create 5 files, make 3 stale via commits after creation.` If the value depends on test setup choices the builder will make, use a flexible matcher (`toBeGreaterThan(0)`) instead. Mixing exact values with ambiguous setup guarantees the builder will modify the assertion.
-
-**Prefer behavior assertions over format assertions.** Test the data model via JSON/structured assertions (`expect(json.setupFiles[0].exists).toBe(true)`). Test human-readable output only for content presence (`toContain('project-overview.md')`) not exact formatting (`toMatch(/project-overview\.md\s+✓\s+present/)`). The builder controls formatting details — your skeleton should test what the output CONTAINS, not how it's FORMATTED.
-
-**Write assertions specific enough that a WRONG implementation would FAIL the test.** `expect(output).toBeTruthy()` passes for any non-empty output — that's not testing behavior. `expect(json.setupFiles).toHaveLength(7)` fails if the count is wrong — that IS testing behavior. If your assertion would pass regardless of what the builder builds, it's too weak to be a contract.
-
-**Computed Value Rule:** For every computed value in the spec (counts, thresholds, derived states), write at least one test asserting the EXACT value with setup that produces exactly that value. Ask: "Would a hardcoded return pass this test?" If yes, add a test that catches hardcoding.
-
-**Boundary Rule:** For every threshold (e.g., ">=5 commits marks stale"), write tests at threshold-1 (fresh), threshold (stale), and threshold+1 (stale). Three tests per boundary.
-
-After writing the skeleton, count assertions: `grep -c 'expect\|assert' test_skeleton.ts`. Put that exact number in the Build Baseline "After build" line: "expected {baseline} + {assertion_count} = {total}".
-
-**Example Test Skeleton:**
-
-```typescript
-// Test skeleton for: context-status-command
-// Generated by: AnaPlan
-// Contract: AnaBuild makes these pass. Do NOT modify assertions.
-
-// SETUP NEEDED: temp directory with .ana/context/ structure
-// SETUP NEEDED: mock or real git repo for staleness tests
-
-describe('ana context status', () => {
-  // AC1: displays all context files with existence status
-  it('shows all 7 setup files when present', () => {
-    // SETUP: create all 7 files in .ana/context/
-    // expect(output).toContain('project-overview.md');
-    // expect(output).toContain('conventions.md');
-    // ... all 7 files
-    // expect(output).toContain('Setup Files (7 verified)');
-  });
-
-  // AC2: setup files shown separately from other files
-  it('separates setup files from other files', () => {
-    // SETUP: create setup files + analysis.md
-    // expect(output).toContain('Setup Files');
-    // expect(output).toContain('Other Files');
-    // expect(output).toContain('analysis.md');
-  });
-
-  // AC3: staleness warnings when git activity detected
-  it('shows stale files with commit count warnings', () => {
-    // SETUP: create files, make commits after file creation
-    // expect(output).toMatch(/⚠.*commits since update/);
-  });
-
-  // AC7: graceful handling when not in git repo
-  it('handles non-git repo gracefully', () => {
-    // SETUP: temp dir WITHOUT git init
-    // expect(output).toContain('Git unavailable');
-    // expect(exitCode).toBe(0);
-  });
-});
+file_changes:
+  - path: "src/payments/intent.ts"
+    action: create
+  - path: "src/payments/__tests__/payments.test.ts"
+    action: create
 ```
+
+**Required fields per assertion:**
+- `id` — Unique ID, format A001, A002, etc. Sequential.
+- `says` — **Mandatory.** One plain-English sentence a non-engineer founder would understand. This appears on the Proof card.
+- `block` — Human-readable test description. Becomes the test's `it()` or `test()` label.
+- `target` — What's being checked. Dot notation for nested properties.
+- `matcher` — One of: `equals`, `exists`, `contains`, `greater`, `truthy`, `not_equals`
+- `value` — Required for `equals`, `contains`, `greater`, `not_equals`. Omit for `exists` and `truthy`.
+
+**`says` field guidance:**
+
+Write says fields as if they appear on a card your CEO reads. One sentence. Plain English. No code. No field names.
+
+```
+Good:  "Creating a payment returns a successful response"
+Good:  "Invalid webhooks are rejected before processing"
+Good:  "Cancelled subscription stops future invoices"
+Bad:   "A001 test"
+Bad:   "response.status equals 200"
+Bad:   "Test passes"
+```
+
+**`file_changes` section:**
+
+List every file the builder should create, modify, or delete. This is the single source of truth for file changes.
+
+```yaml
+file_changes:
+  - path: "src/payments/intent.ts"
+    action: create
+  - path: "src/payments/webhook.ts"
+    action: create
+  - path: "src/config/stripe.ts"
+    action: modify
+```
+
+Valid actions: `create`, `modify`, `delete`.
+
+**Assertion count guideline:**
+
+Fewer than 8 assertions usually means the contract is too shallow. More than 35 usually means you're over-specifying. Target 3-5 per acceptance criterion.
+
+After writing the contract: "Contract: {N} assertions across {M} blocks."
+
+**Matchers reference:**
+
+| Matcher | Meaning | Value required? |
+|---------|---------|-----------------|
+| `equals` | Exact value match | Yes |
+| `exists` | Field/property exists and is not null | No |
+| `contains` | String/array contains value | Yes |
+| `greater` | Numeric greater-than comparison | Yes |
+| `truthy` | Boolean truthiness | No |
+| `not_equals` | Value does NOT match | Yes |
+
+Before writing contract assertions, resolve every value ambiguity in the spec. If `totalFiles` could be 7 or 8, decide which and document the decision in the spec. The contract MUST assert resolved values. An ambiguous value that reaches the contract becomes a guaranteed builder deviation.
+
+**Prefer behavior assertions over format assertions.** Test the data model via structured assertions (`target: "response.body.count"`, `matcher: "equals"`). Test human-readable output only for content presence (`matcher: "contains"`), not exact formatting. The builder controls formatting details — your contract should test what the output CONTAINS, not how it's FORMATTED.
 
 ### Step 8: Save Artifacts
 
@@ -303,11 +305,11 @@ Save all plan artifacts at once:
 ana artifact save-all {slug}
 ```
 
-This saves plan.md, spec(s), and test skeleton(s) in a single atomic commit with validation.
+This saves plan.md, contract.yaml, and spec(s) in a single atomic commit with validation.
 
-Individual saves are available as fallback: `ana artifact save plan {slug}`, `ana artifact save spec {slug}`, etc.
+Individual saves are available as fallback: `ana artifact save plan {slug}`, `ana artifact save spec {slug}`, `ana artifact save contract {slug}`, etc.
 
-One test skeleton per plan. Saved with all specs. The skeleton covers all phases.
+One contract per plan. Saved with all specs. The contract covers all phases.
 
 ### Step 9: Route
 
@@ -318,6 +320,8 @@ For multi-phase: "Plan and specs saved. Review plan.md for the sequence. When re
 ---
 
 ## Spec Format
+
+The contract defines WHAT must be true. The spec describes HOW to approach it. If the contract and spec conflict, the contract wins.
 
 Write every spec with ALL of these sections:
 
@@ -343,26 +347,12 @@ Place this near the top — the builder reads top-to-bottom, and mockups define 
 
 Before writing this section, verify each file's current state. Run ls or stat on each file you plan to reference. Mark accurately: create (file does not exist), modify (file exists and will be changed), delete (file exists and will be removed). Do not guess — check.
 
+Note: The machine-readable `file_changes` list is in contract.yaml. This section provides prose context for the builder.
+
 ### {file path} ({action: create / modify / delete})
 **What changes:** {strategic description}
 **Pattern to follow:** {existing file or pattern to mirror}
 **Why:** {what breaks or degrades without this change}
-
-<!-- MACHINE-READABLE: DO NOT MODIFY MANUALLY -->
-```yaml
-file_changes:
-  - path: "src/commands/context.ts"
-    action: create
-  - path: "src/constants.ts"
-    action: modify
-    reason: "Extract shared constant"
-  - path: "src/commands/check.ts"
-    action: modify
-    reason: "Import constant from shared location"
-```
-<!-- END MACHINE-READABLE -->
-
-The YAML `action` field must match reality — use the file existence check to determine `create` vs `modify` vs `delete`.
 
 ## Acceptance Criteria
 Copied from scope, expanded with implementation-specific criteria:
@@ -539,7 +529,7 @@ Don't explain your process. Don't narrate your exploration. Read, think, write t
 
 **Scope location:** `.ana/plans/active/{slug}/scope.md`
 **Spec output:** `.ana/plans/active/{slug}/spec.md` (or `spec-N.md` for multi-phase)
-**Test skeleton output:** `.ana/plans/active/{slug}/test_skeleton.ts`
+**Contract output:** `.ana/plans/active/{slug}/contract.yaml`
 **Plan output:** `.ana/plans/active/{slug}/plan.md` (always — required for all work items)
 
 **Context files:** `.ana/context/*.md`
