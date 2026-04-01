@@ -207,24 +207,6 @@ export async function countFiles(rootPath: string): Promise<FileCounts> {
     configCount += matches.length;
   }
 
-  // Also count top-level config files that might be missed
-  const topLevelConfigs = await glob('*', {
-    cwd: rootPath,
-    nodir: true,
-  });
-  for (const file of topLevelConfigs) {
-    if (CONFIG_FILES.some((pattern) => {
-      if (pattern.includes('*')) {
-        // Handle glob patterns like .env.*
-        const regex = new RegExp('^' + pattern.replace(/\./g, '\\.').replace(/\*/g, '.*') + '$');
-        return regex.test(file);
-      }
-      return file === pattern;
-    })) {
-      // Already counted in the loop above
-    }
-  }
-
   return {
     source: sourceCount,
     test: testCount,
