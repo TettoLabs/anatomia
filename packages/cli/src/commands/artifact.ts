@@ -19,6 +19,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { createHash } from 'node:crypto';
 import * as yaml from 'yaml';
+import { runContractPreCheck } from './verify-precheck.js';
 
 /**
  * Save metadata entry for .saves.json
@@ -598,6 +599,54 @@ export function saveArtifact(type: string, slug: string): void {
     if (error) {
       console.error(chalk.red(`Error: verify_report.md format invalid.\n${error}`));
       process.exit(1);
+    }
+
+    // Auto pre-check for contract mode
+    const slugDir = path.join(process.cwd(), '.ana', 'plans', 'active', slug);
+    const contractPath = path.join(slugDir, 'contract.yaml');
+
+    if (fs.existsSync(contractPath)) {
+      const preCheckResult = runContractPreCheck(slug);
+
+      // TAMPERED blocks save
+      if (preCheckResult.seal === 'TAMPERED') {
+        console.error(chalk.red('ERROR: Contract tampered since plan commit. Cannot save verify report.'));
+        console.error(chalk.gray('The contract was modified after it was sealed by the planner.'));
+        console.error(chalk.gray('This invalidates the verification. Re-plan or restore the contract.'));
+        process.exit(1);
+      }
+
+      // UNCOVERED warns but proceeds
+      if (preCheckResult.summary.uncovered > 0) {
+        console.warn(chalk.yellow(`WARNING: ${preCheckResult.summary.uncovered} contract assertions uncovered:`));
+        preCheckResult.assertions
+          .filter(a => a.status === 'UNCOVERED')
+          .forEach(a => console.warn(chalk.yellow(`  ${a.id}  ✗ UNCOVERED  "${a.says}"`)));
+        console.warn(chalk.gray('Verify report saved. Uncovered assertions will appear in the proof.'));
+      }
+
+      // Store pre-check results in .saves.json
+      const savesPath = path.join(slugDir, '.saves.json');
+      let saves: Record<string, unknown> = {};
+      if (fs.existsSync(savesPath)) {
+        try {
+          saves = JSON.parse(fs.readFileSync(savesPath, 'utf-8'));
+        } catch {
+          // Ignore parse errors
+        }
+      }
+
+      saves['pre-check'] = {
+        seal: preCheckResult.seal,
+        seal_commit: preCheckResult.sealCommit,
+        seal_hash: preCheckResult.sealHash,
+        assertions: preCheckResult.assertions,
+        covered: preCheckResult.summary.covered,
+        uncovered: preCheckResult.summary.uncovered,
+        run_at: new Date().toISOString(),
+      };
+
+      fs.writeFileSync(savesPath, JSON.stringify(saves, null, 2));
     }
   }
 

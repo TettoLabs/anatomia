@@ -1025,6 +1025,159 @@ assertions:
     });
   });
 
+  describe('auto pre-check on verify-report save', () => {
+    /**
+     * Create valid contract content
+     */
+    function getValidContractContent(): string {
+      return `version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Test Feature"
+
+assertions:
+  - id: A001
+    says: "Test passes"
+    block: "test"
+    target: "result"
+    matcher: "truthy"
+
+file_changes:
+  - path: "src/test.ts"
+    action: create`;
+    }
+
+    /**
+     * Create valid verify report content
+     */
+    function getValidVerifyReport(): string {
+      return `# Verify Report
+
+**Result:** PASS
+
+All good.`;
+    }
+
+    it('blocks save when contract is tampered', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'feature/test-slug' });
+
+      // Create contract and save it (creates .saves.json)
+      await createArtifact('test-slug', 'contract.yaml', getValidContractContent());
+      execSync('git add -A && git commit -m "contract"', { cwd: tempDir, stdio: 'ignore' });
+
+      // Write .saves.json with the contract commit
+      const commit = execSync('git rev-parse HEAD', { cwd: tempDir, encoding: 'utf-8' }).trim();
+      const savesPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug', '.saves.json');
+      await fs.writeFile(savesPath, JSON.stringify({
+        contract: {
+          saved_at: new Date().toISOString(),
+          commit,
+          hash: 'sha256:abc123',
+        }
+      }), 'utf-8');
+
+      // Modify the contract (tamper)
+      await fs.writeFile(
+        path.join(tempDir, '.ana/plans/active/test-slug/contract.yaml'),
+        getValidContractContent().replace('Test passes', 'MODIFIED'),
+        'utf-8'
+      );
+
+      // Try to save verify report - should fail
+      await createArtifact('test-slug', 'verify_report.md', getValidVerifyReport());
+
+      expect(() => saveArtifact('verify-report', 'test-slug')).toThrow();
+    });
+
+    it('warns on uncovered assertions but saves', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'feature/test-slug' });
+
+      // Create contract with 2 assertions
+      const contractWithTwo = `version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Test Feature"
+
+assertions:
+  - id: A001
+    says: "First assertion"
+    block: "test"
+    target: "result"
+    matcher: "truthy"
+  - id: A002
+    says: "Second assertion"
+    block: "test"
+    target: "result"
+    matcher: "truthy"
+
+file_changes:
+  - path: "src/test.ts"
+    action: create`;
+
+      await createArtifact('test-slug', 'contract.yaml', contractWithTwo);
+      execSync('git add -A && git commit -m "contract"', { cwd: tempDir, stdio: 'ignore' });
+
+      const commit = execSync('git rev-parse HEAD', { cwd: tempDir, encoding: 'utf-8' }).trim();
+      const savesPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug', '.saves.json');
+      await fs.writeFile(savesPath, JSON.stringify({
+        contract: {
+          saved_at: new Date().toISOString(),
+          commit,
+          hash: 'sha256:abc123',
+        }
+      }), 'utf-8');
+
+      // Create test file covering only A001
+      const testPath = path.join(tempDir, 'tests', 'test.test.ts');
+      await fs.mkdir(path.dirname(testPath), { recursive: true });
+      await fs.writeFile(testPath, '// @ana A001\ntest()', 'utf-8');
+
+      // Create verify report
+      await createArtifact('test-slug', 'verify_report.md', getValidVerifyReport());
+
+      // Should save but warn (capture stdout/stderr)
+      const originalWarn = console.warn;
+      const warnings: string[] = [];
+      console.warn = (...args: unknown[]) => {
+        warnings.push(args.map(String).join(' '));
+      };
+
+      try {
+        saveArtifact('verify-report', 'test-slug');
+      } finally {
+        console.warn = originalWarn;
+      }
+
+      expect(warnings.some(w => w.includes('UNCOVERED'))).toBe(true);
+      expect(isFileCommitted('.ana/plans/active/test-slug/verify_report.md')).toBe(true);
+    });
+
+    it('stores pre-check results in .saves.json', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'feature/test-slug' });
+
+      await createArtifact('test-slug', 'contract.yaml', getValidContractContent());
+      execSync('git add -A && git commit -m "contract"', { cwd: tempDir, stdio: 'ignore' });
+
+      const commit = execSync('git rev-parse HEAD', { cwd: tempDir, encoding: 'utf-8' }).trim();
+      const savesPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug', '.saves.json');
+      await fs.writeFile(savesPath, JSON.stringify({
+        contract: {
+          saved_at: new Date().toISOString(),
+          commit,
+          hash: 'sha256:abc123',
+        }
+      }), 'utf-8');
+
+      await createArtifact('test-slug', 'verify_report.md', getValidVerifyReport());
+      saveArtifact('verify-report', 'test-slug');
+
+      // Read .saves.json and verify pre-check key exists
+      const saves = JSON.parse(await fs.readFile(savesPath, 'utf-8'));
+      expect(saves['pre-check']).toBeDefined();
+      expect(saves['pre-check'].seal).toBe('INTACT');
+      expect(saves['pre-check'].assertions).toBeDefined();
+      expect(saves['pre-check'].run_at).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
+    });
+  });
+
   describe('.saves.json metadata', () => {
     it('writes .saves.json with save metadata', async () => {
       await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
