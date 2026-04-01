@@ -177,4 +177,200 @@ describe('ana pr create', () => {
     });
   });
 
+  describe('compliance table', () => {
+    /**
+     * Helper to create full proof artifacts with contract data
+     */
+    async function createProofArtifacts(slug: string, options: {
+      includeContract?: boolean;
+      includePreCheck?: boolean;
+      includeComplianceTable?: boolean;
+    } = {}): Promise<void> {
+      const artifactPath = path.join(tempDir, '.ana/plans/active', slug);
+      await fs.mkdir(artifactPath, { recursive: true });
+
+      // scope.md
+      await fs.writeFile(
+        path.join(artifactPath, 'scope.md'),
+        '# Scope: Test Feature\n\n## Intent\nAdd test feature',
+        'utf-8'
+      );
+
+      // plan.md
+      await fs.writeFile(
+        path.join(artifactPath, 'plan.md'),
+        '# Plan\n\n## Phases\n\n- [x] Phase 1\n  - Spec: spec.md',
+        'utf-8'
+      );
+
+      // contract.yaml
+      if (options.includeContract !== false) {
+        await fs.writeFile(
+          path.join(artifactPath, 'contract.yaml'),
+          `version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Test Feature"
+
+assertions:
+  - id: A001
+    says: "Creates item successfully"
+    block: "creates item"
+    target: "result"
+    matcher: "equals"
+    value: true
+  - id: A002
+    says: "Returns proper status"
+    block: "returns status"
+    target: "status"
+    matcher: "equals"
+    value: 200
+
+file_changes:
+  - path: "src/item.ts"
+    action: create
+`,
+          'utf-8'
+        );
+      }
+
+      // .saves.json with pre-check data
+      if (options.includePreCheck !== false && options.includeContract !== false) {
+        await fs.writeFile(
+          path.join(artifactPath, '.saves.json'),
+          JSON.stringify({
+            scope: {
+              saved_at: '2026-04-01T10:00:00.000Z',
+              commit: 'abc123',
+              hash: 'sha256:scope123'
+            },
+            contract: {
+              saved_at: '2026-04-01T10:30:00.000Z',
+              commit: 'def456',
+              hash: 'sha256:contract456'
+            },
+            'pre-check': {
+              seal: 'INTACT',
+              seal_commit: 'def456',
+              assertions: [
+                { id: 'A001', says: 'Creates item successfully', status: 'COVERED' },
+                { id: 'A002', says: 'Returns proper status', status: 'COVERED' }
+              ],
+              covered: 2,
+              uncovered: 0
+            }
+          }),
+          'utf-8'
+        );
+      }
+
+      // build_report.md
+      await fs.writeFile(
+        path.join(artifactPath, 'build_report.md'),
+        `# Build Report
+
+## PR Summary
+- Added test feature
+- Includes validation
+
+## Deviations from Contract
+None — contract followed exactly.
+`,
+        'utf-8'
+      );
+
+      // verify_report.md with compliance table
+      const complianceTable = options.includeComplianceTable !== false
+        ? `
+## Contract Compliance
+| ID | Says | Status | Evidence |
+|----|------|--------|----------|
+| A001 | Creates item successfully | ✅ SATISFIED | test line 10 |
+| A002 | Returns proper status | ✅ SATISFIED | test line 20 |
+`
+        : '';
+
+      await fs.writeFile(
+        path.join(artifactPath, 'verify_report.md'),
+        `# Verify Report
+
+**Result:** PASS
+${complianceTable}
+## AC Walkthrough
+- ✅ PASS Item creation works
+- ✅ PASS Status returned correctly
+
+## Verdict
+**Shippable:** YES
+`,
+        'utf-8'
+      );
+    }
+
+    it('includes compliance table when proof data exists', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'feature/test-feature' });
+      await createProofArtifacts('test-feature', {
+        includeContract: true,
+        includePreCheck: true,
+        includeComplianceTable: true
+      });
+
+      // We can't actually run createPr without gh CLI, but we can test
+      // the proof generation directly by importing generateProofSummary
+      const { generateProofSummary } = await import('../../src/utils/proofSummary.js');
+      const activeDir = path.join(tempDir, '.ana/plans/active/test-feature');
+      const proof = generateProofSummary(activeDir);
+
+      // Verify proof data is populated correctly
+      expect(proof.feature).toBe('Test Feature');
+      expect(proof.assertions.length).toBe(2);
+      expect(proof.assertions[0].id).toBe('A001');
+      expect(proof.assertions[0].says).toBe('Creates item successfully');
+      expect(proof.assertions[0].verifyStatus).toBe('SATISFIED');
+      expect(proof.contract.total).toBe(2);
+      expect(proof.contract.satisfied).toBe(2);
+    });
+
+    it('works without proof data (graceful fallback)', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'feature/test-feature' });
+
+      // Create minimal artifacts without contract
+      const artifactPath = path.join(tempDir, '.ana/plans/active/test-feature');
+      await fs.mkdir(artifactPath, { recursive: true });
+
+      await fs.writeFile(
+        path.join(artifactPath, 'scope.md'),
+        '# Scope: Test Feature\n\n## Intent\nAdd test feature',
+        'utf-8'
+      );
+
+      await fs.writeFile(
+        path.join(artifactPath, 'plan.md'),
+        '# Plan\n\n## Phases\n\n- [x] Phase 1\n  - Spec: spec.md',
+        'utf-8'
+      );
+
+      await fs.writeFile(
+        path.join(artifactPath, 'build_report.md'),
+        `# Build Report\n\n## PR Summary\n- Added feature\n`,
+        'utf-8'
+      );
+
+      await fs.writeFile(
+        path.join(artifactPath, 'verify_report.md'),
+        `# Verify Report\n\n**Result:** PASS\n\n## Verdict\n**Shippable:** YES\n`,
+        'utf-8'
+      );
+
+      // Test that generateProofSummary handles missing contract gracefully
+      const { generateProofSummary } = await import('../../src/utils/proofSummary.js');
+      const activeDir = path.join(tempDir, '.ana/plans/active/test-feature');
+      const proof = generateProofSummary(activeDir);
+
+      // Should return empty assertions but not crash
+      expect(proof.assertions).toHaveLength(0);
+      expect(proof.contract.total).toBe(0);
+      expect(proof.result).toBe('PASS');
+    });
+  });
+
 });

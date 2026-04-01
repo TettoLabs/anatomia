@@ -674,5 +674,260 @@ describe('ana work status', () => {
         await expect(completeWork('test-slug')).rejects.toThrow();
       });
     });
+
+    describe('proof chain', () => {
+      /**
+       * Helper to create a merged project with full proof artifacts
+       */
+      async function createProofProject(slug: string, options: {
+        existingChain?: boolean;
+      } = {}): Promise<void> {
+        // Init git
+        execSync('git init', { cwd: tempDir, stdio: 'ignore' });
+        execSync('git config user.email "test@test.com"', { cwd: tempDir, stdio: 'ignore' });
+        execSync('git config user.name "Test"', { cwd: tempDir, stdio: 'ignore' });
+
+        // Create .ana/.meta.json
+        const anaDir = path.join(tempDir, '.ana');
+        await fs.mkdir(anaDir, { recursive: true });
+        await fs.writeFile(
+          path.join(anaDir, '.meta.json'),
+          JSON.stringify({ artifactBranch: 'main' }),
+          'utf-8'
+        );
+
+        // Create existing proof chain if requested
+        if (options.existingChain) {
+          await fs.writeFile(
+            path.join(anaDir, 'proof_chain.json'),
+            JSON.stringify({
+              entries: [{
+                slug: 'previous-feature',
+                feature: 'Previous Feature',
+                result: 'PASS',
+                completed_at: '2026-03-01T00:00:00.000Z'
+              }]
+            }),
+            'utf-8'
+          );
+          await fs.writeFile(
+            path.join(anaDir, 'PROOF_CHAIN.md'),
+            '## Previous Feature (2026-03-01)\nResult: PASS | 5/5 satisfied | 3/3 ACs | 0 deviations\n\n',
+            'utf-8'
+          );
+        }
+
+        // Initial commit
+        execSync('git add -A && git commit -m "init"', { cwd: tempDir, stdio: 'ignore' });
+        execSync('git branch -M main', { cwd: tempDir, stdio: 'ignore' });
+
+        // Create slug directory with full artifacts
+        const slugPath = path.join(tempDir, '.ana', 'plans', 'active', slug);
+        await fs.mkdir(slugPath, { recursive: true });
+
+        // scope.md
+        await fs.writeFile(path.join(slugPath, 'scope.md'), '# Scope: Test Feature', 'utf-8');
+
+        // plan.md
+        await fs.writeFile(
+          path.join(slugPath, 'plan.md'),
+          '# Plan\n## Phases\n- [ ] Phase 1\n  Spec: spec.md',
+          'utf-8'
+        );
+
+        // spec.md
+        await fs.writeFile(path.join(slugPath, 'spec.md'), '# Spec', 'utf-8');
+
+        // contract.yaml
+        await fs.writeFile(
+          path.join(slugPath, 'contract.yaml'),
+          `version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Test Feature"
+
+assertions:
+  - id: A001
+    says: "Creates item successfully"
+    block: "creates item"
+    target: "result"
+    matcher: "equals"
+    value: true
+  - id: A002
+    says: "Returns proper status"
+    block: "returns status"
+    target: "status"
+    matcher: "equals"
+    value: 200
+
+file_changes:
+  - path: "src/item.ts"
+    action: create
+`,
+          'utf-8'
+        );
+
+        // .saves.json with pre-check data
+        await fs.writeFile(
+          path.join(slugPath, '.saves.json'),
+          JSON.stringify({
+            scope: {
+              saved_at: '2026-04-01T10:00:00.000Z',
+              commit: 'abc123',
+              hash: 'sha256:scope123'
+            },
+            contract: {
+              saved_at: '2026-04-01T10:30:00.000Z',
+              commit: 'def456',
+              hash: 'sha256:contract456'
+            },
+            'build-report': {
+              saved_at: '2026-04-01T11:00:00.000Z',
+              commit: 'ghi789',
+              hash: 'sha256:build789'
+            },
+            'verify-report': {
+              saved_at: '2026-04-01T11:30:00.000Z',
+              commit: 'jkl012',
+              hash: 'sha256:verify012'
+            },
+            'pre-check': {
+              seal: 'INTACT',
+              seal_commit: 'def456',
+              assertions: [
+                { id: 'A001', says: 'Creates item successfully', status: 'COVERED' },
+                { id: 'A002', says: 'Returns proper status', status: 'COVERED' }
+              ],
+              covered: 2,
+              uncovered: 0
+            }
+          }),
+          'utf-8'
+        );
+
+        // Commit planning artifacts
+        execSync('git add -A && git commit -m "add planning"', { cwd: tempDir, stdio: 'ignore' });
+
+        // Create feature branch
+        execSync(`git checkout -b feature/${slug}`, { cwd: tempDir, stdio: 'ignore' });
+
+        // build_report.md with deviation
+        await fs.writeFile(
+          path.join(slugPath, 'build_report.md'),
+          `# Build Report
+
+## What Was Built
+- src/item.ts (created): Item creation logic
+
+## PR Summary
+- Added item creation feature
+- Includes validation
+
+## Deviations from Contract
+
+None — contract followed exactly.
+
+## Test Results
+Tests: 5 passed
+`,
+          'utf-8'
+        );
+
+        // verify_report.md with compliance table
+        await fs.writeFile(
+          path.join(slugPath, 'verify_report.md'),
+          `# Verify Report
+
+**Result:** PASS
+
+## Contract Compliance
+| ID | Says | Status | Evidence |
+|----|------|--------|----------|
+| A001 | Creates item successfully | ✅ SATISFIED | test line 10 |
+| A002 | Returns proper status | ✅ SATISFIED | test line 20 |
+
+## AC Walkthrough
+- ✅ PASS Item creation works
+- ✅ PASS Status returned correctly
+- ✅ PASS Validation applied
+
+## Verdict
+**Shippable:** YES
+`,
+          'utf-8'
+        );
+
+        execSync('git add -A && git commit -m "add reports"', { cwd: tempDir, stdio: 'ignore' });
+
+        // Merge to main
+        execSync('git checkout main', { cwd: tempDir, stdio: 'ignore' });
+        execSync(`git merge --no-ff feature/${slug} -m "merge"`, { cwd: tempDir, stdio: 'ignore' });
+      }
+
+      it('writes proof_chain.json with one entry', async () => {
+        await createProofProject('test-feature');
+
+        await completeWork('test-feature');
+
+        const chainPath = path.join(tempDir, '.ana', 'proof_chain.json');
+        expect(fsSync.existsSync(chainPath)).toBe(true);
+
+        const chain = JSON.parse(fsSync.readFileSync(chainPath, 'utf-8'));
+        expect(chain.entries).toHaveLength(1);
+        expect(chain.entries[0].slug).toBe('test-feature');
+        expect(chain.entries[0].feature).toBe('Test Feature');
+        expect(chain.entries[0].result).toBe('PASS');
+        expect(chain.entries[0].assertions).toHaveLength(2);
+        expect(chain.entries[0].assertions[0].id).toBe('A001');
+        expect(chain.entries[0].assertions[0].says).toBe('Creates item successfully');
+      });
+
+      it('appends to existing proof_chain.json', async () => {
+        await createProofProject('test-feature', { existingChain: true });
+
+        await completeWork('test-feature');
+
+        const chainPath = path.join(tempDir, '.ana', 'proof_chain.json');
+        const chain = JSON.parse(fsSync.readFileSync(chainPath, 'utf-8'));
+
+        expect(chain.entries).toHaveLength(2);
+        expect(chain.entries[0].slug).toBe('previous-feature');
+        expect(chain.entries[1].slug).toBe('test-feature');
+      });
+
+      it('writes PROOF_CHAIN.md', async () => {
+        await createProofProject('test-feature');
+
+        await completeWork('test-feature');
+
+        const chainMdPath = path.join(tempDir, '.ana', 'PROOF_CHAIN.md');
+        expect(fsSync.existsSync(chainMdPath)).toBe(true);
+
+        const content = fsSync.readFileSync(chainMdPath, 'utf-8');
+        expect(content).toContain('## Test Feature');
+        expect(content).toContain('Result: PASS');
+        expect(content).toContain('2/2 satisfied');
+      });
+
+      it('prints proof summary line', async () => {
+        await createProofProject('test-feature');
+
+        // Capture console output
+        const originalLog = console.log;
+        const logs: string[] = [];
+        console.log = (...args: unknown[]) => {
+          logs.push(args.join(' '));
+        };
+
+        await completeWork('test-feature');
+
+        console.log = originalLog;
+        const output = logs.join('\n');
+
+        expect(output).toContain('✓ PASS');
+        expect(output).toContain('Test Feature');
+        expect(output).toContain('2/2 covered');
+        expect(output).toContain('Proof saved to chain');
+      });
+    });
   });
 });
