@@ -99,16 +99,6 @@ file_changes:
 Rules that apply.`;
   }
 
-  /**
-   * Create valid test skeleton content that passes validation
-   */
-  function getValidSkeletonContent(): string {
-    return `describe('test', () => {
-  it('works', () => {
-    expect(result).toBe(true);
-  });
-});`;
-  }
 
   /**
    * Create valid build report content that passes validation
@@ -140,8 +130,6 @@ Ready to review.`;
         fileContent = getValidScopeContent();
       } else if (fileName === 'spec.md' || fileName.match(/^spec-\d+\.md$/)) {
         fileContent = getValidSpecContent();
-      } else if (fileName.startsWith('test_skeleton')) {
-        fileContent = getValidSkeletonContent();
       } else if (fileName.startsWith('build_report')) {
         fileContent = getValidBuildReportContent();
       } else {
@@ -694,38 +682,6 @@ Implementation details only.`;
     });
   });
 
-  describe('test-skeleton format validation', () => {
-    it('accepts valid skeleton with assertions', async () => {
-      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
-      const validSkeleton = `describe('test', () => {
-  it('works', () => {
-    expect(result).toBe(true);
-  });
-});`;
-      await createArtifact('test-slug', 'test_skeleton.ts', validSkeleton);
-
-      expect(() => saveArtifact('test-skeleton', 'test-slug')).not.toThrow();
-    });
-
-    it('rejects empty skeleton', async () => {
-      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
-      await createArtifact('test-slug', 'test_skeleton.ts', '   \n  \n  ');
-
-      expect(() => saveArtifact('test-skeleton', 'test-slug')).toThrow();
-    });
-
-    it('rejects skeleton without assertions', async () => {
-      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
-      const noAssertions = `describe('test', () => {
-  it('works', () => {
-    // TODO: add assertions
-  });
-});`;
-      await createArtifact('test-slug', 'test_skeleton.ts', noAssertions);
-
-      expect(() => saveArtifact('test-skeleton', 'test-slug')).toThrow();
-    });
-  });
 
   describe('build-report format validation', () => {
     it('accepts valid build report with all sections', async () => {
@@ -805,18 +761,6 @@ Met.`;
     });
   });
 
-  describe('test-skeleton type', () => {
-    it('parses test-skeleton type correctly', async () => {
-      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
-      await createArtifact('test-slug', 'test_skeleton.ts'); // Uses valid default with assertions
-
-      saveArtifact('test-skeleton', 'test-slug');
-
-      const message = getLastCommitMessage();
-      expect(message).toContain('[test-slug] Test skeleton');
-      expect(isFileCommitted('.ana/plans/active/test-slug/test_skeleton.ts')).toBe(true);
-    });
-  });
 
   describe('coAuthor from config', () => {
     it('uses coAuthor from .meta.json when present', async () => {
@@ -1345,11 +1289,8 @@ file_changes:
 ## Build Brief
 Rules.`;
 
-    const validSkeleton = `expect(result).toBe(true);`;
-
     await createArtifact('test-slug', 'plan.md', validPlan);
     await createArtifact('test-slug', 'spec.md', validSpec);
-    await createArtifact('test-slug', 'test_skeleton.ts', validSkeleton);
 
     saveAllArtifacts('test-slug');
 
@@ -1357,7 +1298,6 @@ Rules.`;
     expect(message).toContain('[test-slug] Save:');
     expect(message).toContain('Plan');
     expect(message).toContain('Spec');
-    expect(message).toContain('Test skeleton');
   });
 
   it('saves partial artifacts when only some exist', async () => {
@@ -1462,11 +1402,8 @@ file_changes:
 ## Build Brief
 Rules.`;
 
-    const validSkeleton = `expect(result).toBe(true);`;
-
     await createArtifact('test-slug', 'plan.md', validPlan);
     await createArtifact('test-slug', 'spec.md', validSpec);
-    await createArtifact('test-slug', 'test_skeleton.ts', validSkeleton);
 
     saveAllArtifacts('test-slug');
 
@@ -1474,13 +1411,12 @@ Rules.`;
     const savesPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug', '.saves.json');
     const saves = JSON.parse(await fs.readFile(savesPath, 'utf-8'));
 
-    // All three artifacts should have entries
+    // Both artifacts should have entries
     expect(saves.plan).toBeDefined();
     expect(saves.spec).toBeDefined();
-    expect(saves['test-skeleton']).toBeDefined();
 
     // Each should have proper metadata
-    for (const type of ['plan', 'spec', 'test-skeleton']) {
+    for (const type of ['plan', 'spec']) {
       expect(saves[type].saved_at).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
       expect(saves[type].commit).toMatch(/^[a-f0-9]{40}$/);
       expect(saves[type].hash).toMatch(/^sha256:[a-f0-9]{64}$/);

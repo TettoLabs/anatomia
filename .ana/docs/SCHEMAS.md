@@ -55,7 +55,7 @@ Optional for small scopes — encouraged for medium and large. Structured breadc
 
 ### Test Infrastructure
 - {test file: what helpers exist, how tests are structured}
-(What the planner needs for the test skeleton.)
+(What the planner needs for the contract assertions.)
 
 ## For AnaPlan
 

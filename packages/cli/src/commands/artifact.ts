@@ -80,12 +80,12 @@ interface ArtifactTypeInfo {
 /**
  * Parse artifact type string and extract metadata
  *
- * @param type - Raw type string (e.g., "scope", "spec-2", "build-report", "verify-report-1", "test-skeleton", "contract")
+ * @param type - Raw type string (e.g., "scope", "spec-2", "build-report", "verify-report-1", "contract")
  * @returns Parsed artifact information
  */
 function parseArtifactType(type: string): ArtifactTypeInfo | null {
   // Match valid types with optional number suffix
-  const match = type.match(/^(scope|plan|spec|test-skeleton|contract|build-report|verify-report)(?:-(\d+))?$/);
+  const match = type.match(/^(scope|plan|spec|contract|build-report|verify-report)(?:-(\d+))?$/);
 
   if (!match) {
     return null;
@@ -104,8 +104,6 @@ function parseArtifactType(type: string): ArtifactTypeInfo | null {
     fileName = `${baseType}.md`;
   } else if (baseType === 'spec') {
     fileName = number ? `spec-${number}.md` : 'spec.md';
-  } else if (baseType === 'test-skeleton') {
-    fileName = 'test_skeleton.ts';
   } else if (baseType === 'contract') {
     fileName = 'contract.yaml';
   } else if (baseType === 'build-report') {
@@ -124,8 +122,6 @@ function parseArtifactType(type: string): ArtifactTypeInfo | null {
     displayName = 'Plan';
   } else if (baseType === 'spec') {
     displayName = number ? `Spec ${number}` : 'Spec';
-  } else if (baseType === 'test-skeleton') {
-    displayName = 'Test skeleton';
   } else if (baseType === 'contract') {
     displayName = 'Contract';
   } else if (baseType === 'build-report') {
@@ -322,28 +318,6 @@ function validateSpecFormat(filePath: string): { error?: string; warning?: strin
   return {}; // valid
 }
 
-/**
- * Validate test skeleton format
- *
- * @param filePath - Path to test_skeleton.ts
- * @returns Error message if invalid, null if valid
- */
-function validateSkeletonFormat(filePath: string): string | null {
-  const content = fs.readFileSync(filePath, 'utf-8');
-
-  // Check file is not empty
-  if (!content.trim()) {
-    return "Test skeleton is empty. Skeleton must contain test structure and assertions.";
-  }
-
-  // Check for at least one assertion
-  const assertionPattern = /expect\(|assert\.|assert\(/;
-  if (!assertionPattern.test(content)) {
-    return "No assertions found. Test skeleton must contain at least one expect() or assert statement.";
-  }
-
-  return null; // valid
-}
 
 /**
  * Valid matchers for contract assertions
@@ -557,7 +531,7 @@ export function saveArtifact(type: string, slug: string): void {
   const typeInfo = parseArtifactType(type);
   if (!typeInfo) {
     console.error(chalk.red(`Error: Unknown artifact type \`${type}\`.`));
-    console.error(chalk.gray('Valid types: scope, plan, spec, spec-N, contract, test-skeleton, build-report, build-report-N, verify-report, verify-report-N'));
+    console.error(chalk.gray('Valid types: scope, plan, spec, spec-N, contract, build-report, build-report-N, verify-report, verify-report-N'));
     process.exit(1);
   }
 
@@ -666,14 +640,6 @@ export function saveArtifact(type: string, slug: string): void {
     }
     if (result.warning) {
       console.warn(chalk.yellow(`Warning: ${result.warning}`));
-    }
-  }
-
-  if (typeInfo.baseType === 'test-skeleton') {
-    const error = validateSkeletonFormat(filePath);
-    if (error) {
-      console.error(chalk.red(`Error: test_skeleton format invalid.\n${error}`));
-      process.exit(1);
     }
   }
 
@@ -823,8 +789,6 @@ export function saveAllArtifacts(slug: string): void {
     } else if (entry.match(/^spec-\d+\.md$/)) {
       const num = entry.match(/^spec-(\d+)\.md$/)?.[1];
       type = `spec-${num}`;
-    } else if (entry.startsWith('test_skeleton')) {
-      type = 'test-skeleton';
     } else if (entry === 'contract.yaml') {
       type = 'contract';
     } else if (entry === 'build_report.md') {
@@ -892,14 +856,6 @@ export function saveAllArtifacts(slug: string): void {
       }
       if (result.warning) {
         console.warn(chalk.yellow(`Warning: ${result.warning}`));
-      }
-    }
-
-    if (artifact.typeInfo.baseType === 'test-skeleton') {
-      const error = validateSkeletonFormat(artifact.path);
-      if (error) {
-        console.error(chalk.red(`Error: ${artifact.file} format invalid.\n${error}`));
-        process.exit(1);
       }
     }
 
@@ -1012,7 +968,7 @@ export const artifactCommand = new Command('artifact')
 
 const saveCommand = new Command('save')
   .description('Commit a pipeline artifact to the correct branch')
-  .argument('<type>', 'Artifact type: scope, plan, spec, spec-N, test-skeleton, build-report, build-report-N, verify-report, verify-report-N')
+  .argument('<type>', 'Artifact type: scope, plan, spec, spec-N, contract, build-report, build-report-N, verify-report, verify-report-N')
   .argument('<slug>', 'Work item slug (e.g., add-status-command)')
   .action((type: string, slug: string) => {
     saveArtifact(type, slug);

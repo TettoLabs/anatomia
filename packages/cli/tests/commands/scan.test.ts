@@ -1,7 +1,6 @@
 /**
  * Tests for ana scan command
  *
- * Following test skeleton from AnaPlan.
  * Uses temp directories for isolation.
  */
 
