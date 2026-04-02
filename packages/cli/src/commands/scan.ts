@@ -143,10 +143,10 @@ function formatHumanReadable(result: EngineResult): string {
   lines.push(chalk.bold('  Stack'));
   lines.push(chalk.gray('  ' + BOX.horizontal.repeat(5)));
 
-  const stackOrder = ['language', 'framework', 'database', 'auth', 'testing', 'payments', 'workspace'] as const;
+  const stackOrder = ['language', 'framework', 'database', 'auth', 'testing', 'workspace'] as const;
   const stackLabels: Record<string, string> = {
     language: 'Language', framework: 'Framework', database: 'Database',
-    auth: 'Auth', testing: 'Testing', payments: 'Payments', workspace: 'Workspace',
+    auth: 'Auth', testing: 'Testing', workspace: 'Workspace',
   };
 
   let hasStack = false;
@@ -172,32 +172,33 @@ function formatHumanReadable(result: EngineResult): string {
     lines.push(chalk.gray('  No code detected'));
   }
 
-  // Services (only if non-empty) — grouped by category
-  if (result.externalServices.length > 0) {
+  // Services + Deployment (rendered as one block)
+  const hasServices = result.externalServices.length > 0;
+  const hasDeploy = result.deployment !== null;
+  if (hasServices || hasDeploy) {
     lines.push('');
     lines.push(chalk.bold('  Services'));
     lines.push(chalk.gray('  ' + BOX.horizontal.repeat(8)));
-    const byCategory = new Map<string, string[]>();
-    for (const svc of result.externalServices) {
-      const list = byCategory.get(svc.category) || [];
-      list.push(svc.name);
-      byCategory.set(svc.category, list);
+    if (hasServices) {
+      const byCategory = new Map<string, string[]>();
+      for (const svc of result.externalServices) {
+        const list = byCategory.get(svc.category) || [];
+        list.push(svc.name);
+        byCategory.set(svc.category, list);
+      }
+      const categoryLabels: Record<string, string> = {
+        ai: 'AI', payments: 'Payments', email: 'Email', monitoring: 'Monitoring',
+        backend: 'Backend', storage: 'Storage', hosting: 'Hosting',
+        analytics: 'Analytics', jobs: 'Jobs', cloud: 'Cloud',
+      };
+      for (const [cat, names] of byCategory) {
+        const label = (categoryLabels[cat] || cat).padEnd(12);
+        lines.push(`  ${chalk.gray(label)} ${names.join(', ')}`);
+      }
     }
-    const categoryLabels: Record<string, string> = {
-      ai: 'AI', payments: 'Payments', email: 'Email', monitoring: 'Monitoring',
-      backend: 'Backend', storage: 'Storage', hosting: 'Hosting',
-      analytics: 'Analytics', jobs: 'Jobs', cloud: 'Cloud',
-    };
-    for (const [cat, names] of byCategory) {
-      const label = (categoryLabels[cat] || cat).padEnd(12);
-      lines.push(`  ${chalk.gray(label)} ${names.join(', ')}`);
+    if (hasDeploy) {
+      lines.push(`  ${chalk.gray('Deploy'.padEnd(12))} ${result.deployment!.platform} ${chalk.gray(`(${result.deployment!.configFile})`)}`);
     }
-  }
-
-  // Deployment (only if detected)
-  if (result.deployment) {
-    lines.push('');
-    lines.push(`  ${chalk.gray('Deploy'.padEnd(12))} ${result.deployment.platform} ${chalk.gray(`(${result.deployment.configFile})`)}`);
   }
 
   // Commands (only if any detected)
@@ -221,7 +222,7 @@ function formatHumanReadable(result: EngineResult): string {
   // Files + Git
   if (result.git.head) {
     const commitInfo = `${formatNumber(result.git.commitCount || 0)} commits`;
-    const contribInfo = result.git.contributorCount ? ` · ${result.git.contributorCount} contributors` : '';
+    const contribInfo = result.git.contributorCount ? ` · ${result.git.contributorCount} contributor${result.git.contributorCount === 1 ? '' : 's'}` : '';
     const branchInfo = result.git.branch || 'detached';
     const lastCommit = result.git.lastCommitAt ? ` · ${timeAgo(result.git.lastCommitAt)}` : '';
 
@@ -318,7 +319,7 @@ function formatHumanReadable(result: EngineResult): string {
       convLines.push(`  ${chalk.gray('Imports'.padEnd(12))} ${conv.imports.style}`);
     }
     if (conv.indentation?.style) {
-      const width = conv.indentation.width ? ` ${conv.indentation.width}` : '';
+      const width = conv.indentation.width ? `${conv.indentation.width} ` : '';
       convLines.push(`  ${chalk.gray('Indentation'.padEnd(12))} ${width}${conv.indentation.style}`);
     }
     if (conv.docstrings && conv.docstrings.coverage > 0) {
