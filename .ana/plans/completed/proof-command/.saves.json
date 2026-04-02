@@ -1,0 +1,162 @@
+{
+  "scope": {
+    "saved_at": "2026-04-02T00:05:55.727Z",
+    "commit": "40aa2a449bee6147ef677123551035010decf269",
+    "hash": "sha256:39e1f2a1799e44ea684a2a6cfc28957c8efd56329ce63fec0f979e8696c8b7f4"
+  },
+  "contract": {
+    "saved_at": "2026-04-02T00:17:55.913Z",
+    "commit": "d059359329c2b0147604bceadcf39e9419986af3",
+    "hash": "sha256:2e86713208ce56637bbb4602f3fa187e15824a90cb15592c65afcbf9c26f9ead"
+  },
+  "plan": {
+    "saved_at": "2026-04-02T00:17:55.919Z",
+    "commit": "d059359329c2b0147604bceadcf39e9419986af3",
+    "hash": "sha256:55b8509608ec9ad1dc8d196721a92186535afb23e468453c22ebd82b0d4a66d7"
+  },
+  "spec": {
+    "saved_at": "2026-04-02T00:17:55.925Z",
+    "commit": "d059359329c2b0147604bceadcf39e9419986af3",
+    "hash": "sha256:6ac7c5d3f2074eee13792959e0af7b5696a01a34e20d6e5b65f95b247a9630f7"
+  },
+  "build-report": {
+    "saved_at": "2026-04-02T00:25:55.860Z",
+    "commit": "e11f8d5a2ffceae3557381abe07ae6f32c7dd2fb",
+    "hash": "sha256:093e66874b468f97be9058d171b2b0cf8e2a94546c4eb448e4c19b06c2bc66bd"
+  },
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_commit": "d059359329c2b0147604bceadcf39e9419986af3",
+    "seal_hash": "sha256:2e86713208ce56637bbb4602f3fa187e15824a90cb15592c65afcbf9c26f9ead",
+    "assertions": [
+      {
+        "id": "A001",
+        "says": "Running ana proof with a valid slug displays the feature name",
+        "status": "COVERED"
+      },
+      {
+        "id": "A002",
+        "says": "The proof card shows the verification result prominently",
+        "status": "COVERED"
+      },
+      {
+        "id": "A003",
+        "says": "The proof card shows contract compliance summary",
+        "status": "COVERED"
+      },
+      {
+        "id": "A004",
+        "says": "The proof card shows deviation count in summary",
+        "status": "COVERED"
+      },
+      {
+        "id": "A005",
+        "says": "Satisfied assertions show a checkmark icon",
+        "status": "COVERED"
+      },
+      {
+        "id": "A006",
+        "says": "Deviated assertions show a warning icon",
+        "status": "COVERED"
+      },
+      {
+        "id": "A007",
+        "says": "Assertions display the says text from the contract",
+        "status": "COVERED"
+      },
+      {
+        "id": "A008",
+        "says": "The timing section shows total pipeline time",
+        "status": "COVERED"
+      },
+      {
+        "id": "A009",
+        "says": "The timing section shows per-phase breakdown when available",
+        "status": "COVERED"
+      },
+      {
+        "id": "A010",
+        "says": "Deviations section appears when deviations exist",
+        "status": "COVERED"
+      },
+      {
+        "id": "A011",
+        "says": "Each deviation shows what was done instead",
+        "status": "COVERED"
+      },
+      {
+        "id": "A012",
+        "says": "Deviations section is omitted when no deviations exist",
+        "status": "COVERED"
+      },
+      {
+        "id": "A013",
+        "says": "The --json flag outputs valid JSON",
+        "status": "COVERED"
+      },
+      {
+        "id": "A014",
+        "says": "JSON output includes the slug field",
+        "status": "COVERED"
+      },
+      {
+        "id": "A015",
+        "says": "JSON output includes the assertions array",
+        "status": "COVERED"
+      },
+      {
+        "id": "A016",
+        "says": "JSON output includes timing information",
+        "status": "COVERED"
+      },
+      {
+        "id": "A017",
+        "says": "Unknown slug returns a helpful error message",
+        "status": "COVERED"
+      },
+      {
+        "id": "A018",
+        "says": "Unknown slug error suggests checking work status",
+        "status": "COVERED"
+      },
+      {
+        "id": "A019",
+        "says": "Missing proof_chain.json returns a helpful error",
+        "status": "COVERED"
+      },
+      {
+        "id": "A020",
+        "says": "Missing file error suggests using work complete",
+        "status": "COVERED"
+      },
+      {
+        "id": "A021",
+        "says": "Output uses box-drawing characters for the header",
+        "status": "COVERED"
+      },
+      {
+        "id": "A022",
+        "says": "Section headers have horizontal rule separators",
+        "status": "COVERED"
+      },
+      {
+        "id": "A023",
+        "says": "Command works when timing breakdown fields are missing",
+        "status": "COVERED"
+      },
+      {
+        "id": "A024",
+        "says": "Command exits with non-zero code on error",
+        "status": "COVERED"
+      }
+    ],
+    "covered": 24,
+    "uncovered": 0,
+    "run_at": "2026-04-02T00:44:03.704Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-04-02T00:44:03.751Z",
+    "commit": "2c20f4ade8f4200c6a5331440144fbc2cd95184c",
+    "hash": "sha256:8cbfd751aefa68afbfffa77db0dafdb5315c825e721f8e00d8cbff2451bcd201"
+  }
+}
