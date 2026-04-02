@@ -649,7 +649,7 @@ export function getWorkStatus(options: { json?: boolean }): void {
 /**
  * Proof chain JSON entry
  */
-interface ProofChainEntry {
+export interface ProofChainEntry {
   slug: string;
   feature: string;
   result: string;

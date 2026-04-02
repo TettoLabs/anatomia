@@ -20,41 +20,7 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import * as path from 'node:path';
 import * as fs from 'node:fs';
-
-/**
- * Proof chain entry structure (matches work.ts ProofChainEntry)
- */
-interface ProofChainEntry {
-  slug: string;
-  feature: string;
-  result: string;
-  author: { name: string; email: string };
-  contract: {
-    total: number;
-    covered: number;
-    uncovered: number;
-    satisfied: number;
-    unsatisfied: number;
-    deviated: number;
-  };
-  assertions: Array<{
-    id: string;
-    says: string;
-    status: string;
-    deviation?: string;
-  }>;
-  acceptance_criteria: { total: number; met: number };
-  timing: {
-    total_minutes: number;
-    think?: number;
-    plan?: number;
-    build?: number;
-    verify?: number;
-  };
-  hashes: Record<string, string>;
-  seal_commit: string | null;
-  completed_at: string;
-}
+import type { ProofChainEntry } from './work.js';
 
 /**
  * Proof chain JSON structure
