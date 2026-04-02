@@ -563,7 +563,7 @@ describe('ASTCache - invalidation scenarios', () => {
     it('parseFile() uses cache correctly (parseMethod tree-sitter then cached)', async () => {
       if (!wasmAvailable) return;
       // Import parseFile for integration test
-      const { parseFile } = await import('../../src/parsers/treeSitter.js');
+      const { parseFile } = await import('../../../src/engine/parsers/treeSitter.js');
 
       // Given: First parse (cache miss)
       const result1 = await parseFile(testFilePath, 'python', cache);

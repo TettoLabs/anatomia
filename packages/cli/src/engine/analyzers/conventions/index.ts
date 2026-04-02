@@ -129,7 +129,7 @@ export async function detectConventions(
     };
   } catch (_error) {
     // Graceful degradation - return empty conventions
-    console.error('Convention detection failed:', error);
+    console.error('Convention detection failed:', _error);
     return createEmptyConventionAnalysis();
   }
 }

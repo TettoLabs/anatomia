@@ -46,43 +46,36 @@ export type Language = 'python' | 'typescript' | 'tsx' | 'javascript' | 'go';
 // Get current module directory for path construction
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// createRequire scoped to this module — resolves packages from correct node_modules
-const require = createRequire(import.meta.url);
-
 /**
- * Resolve WASM file path by locating the grammar package's directory.
+ * Resolve WASM file path by walking up from process.cwd() to find node_modules.
  *
- * Uses createRequire to resolve package.json (safe — no code execution, no native
- * tree-sitter loading). Then constructs the WASM path from the resolved directory.
- * Falls back to walking up from __dirname for environments where resolution fails.
+ * tsup bundling means import.meta.url doesn't point where you'd expect at runtime.
+ * Instead, walk up from cwd (the project root) looking for node_modules containing
+ * the grammar package. Also tries createRequire from cwd for pnpm .pnpm store.
  * @param packageName
  * @param wasmFileName
  */
 function resolveWasmPath(packageName: string, wasmFileName: string): string {
-  // Strategy 1: Resolve via package.json (works with pnpm .pnpm store)
+  // Strategy 1: createRequire from cwd (resolves through pnpm .pnpm store)
   try {
-    const pkgJsonPath = require.resolve(`${packageName}/package.json`);
+    const cwdRequire = createRequire(join(process.cwd(), '__placeholder.js'));
+    const pkgJsonPath = cwdRequire.resolve(`${packageName}/package.json`);
     const candidate = join(dirname(pkgJsonPath), wasmFileName);
     accessSync(candidate);
     return candidate;
   } catch {
-    // Resolution failed, try manual fallback
+    // Resolution failed, try manual walk
   }
 
-  // Strategy 2: Walk up from module location checking node_modules
-  const candidates = [
-    // packages/cli/node_modules/<pkg>/<file>.wasm
-    join(__dirname, '..', '..', '..', 'node_modules', packageName, wasmFileName),
-    // monorepo root node_modules/<pkg>/<file>.wasm
-    join(__dirname, '..', '..', '..', '..', '..', 'node_modules', packageName, wasmFileName),
-  ];
-
-  for (const candidate of candidates) {
+  // Strategy 2: Walk up from cwd checking node_modules
+  let dir = process.cwd();
+  while (dir !== dirname(dir)) {
+    const candidate = join(dir, 'node_modules', packageName, wasmFileName);
     try {
       accessSync(candidate);
       return candidate;
     } catch {
-      continue;
+      dir = dirname(dir);
     }
   }
 
@@ -157,23 +150,10 @@ export class ParserManager {
   async initialize(): Promise<void> {
     if (this.initialized) return;
 
-    // Initialize WASM runtime with explicit path resolution
-    // Use direct path construction to avoid loading any modules
+    // Initialize WASM runtime — resolve web-tree-sitter.wasm from cwd
     await TSParser.init({
       locateFile(scriptName: string) {
-        const candidates = [
-          join(__dirname, '..', '..', 'node_modules', 'web-tree-sitter', scriptName),
-          join(__dirname, '..', '..', '..', '..', 'node_modules', 'web-tree-sitter', scriptName),
-        ];
-        for (const c of candidates) {
-          try {
-            accessSync(c);
-            return c;
-          } catch {
-            continue;
-          }
-        }
-        throw new Error(`WASM runtime not found: ${scriptName}`);
+        return resolveWasmPath('web-tree-sitter', scriptName);
       }
     } as any); // Cast to any - web-tree-sitter types reference undefined EmscriptenModule
 
