@@ -12,14 +12,17 @@ import * as fs from 'node:fs/promises';
  * Database packages for dependency detection
  */
 export const DATABASE_PACKAGES: Record<string, string> = {
-  '@supabase/supabase-js': 'Supabase',
+  // ORMs first — they represent what the code queries through
   'prisma': 'Prisma', '@prisma/client': 'Prisma',
   'drizzle-orm': 'Drizzle',
   'typeorm': 'TypeORM', 'sequelize': 'Sequelize',
   'mongoose': 'Mongoose', 'knex': 'Knex',
+  // BaaS after ORMs
+  '@supabase/supabase-js': 'Supabase',
+  'firebase': 'Firebase', 'firebase-admin': 'Firebase',
+  // Raw drivers last
   'pg': 'PostgreSQL', 'mysql2': 'MySQL',
   'better-sqlite3': 'SQLite', '@libsql/client': 'Turso',
-  'firebase': 'Firebase', 'firebase-admin': 'Firebase',
 };
 
 /**

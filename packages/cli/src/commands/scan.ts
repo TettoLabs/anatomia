@@ -96,7 +96,24 @@ const BOX = {
 };
 
 /**
+ * Relative time from ISO date string
+ * @param date - ISO date string
+ * @returns Human-readable relative time
+ */
+function timeAgo(date: string): string {
+  const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
+  if (seconds < 60) return 'just now';
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+  if (seconds < 2592000) return `${Math.floor(seconds / 86400)}d ago`;
+  return `${Math.floor(seconds / 2592000)}mo ago`;
+}
+
+/**
  * Format human-readable terminal output from EngineResult
+ *
+ * Renders all engine intelligence: stack, services, commands, files, git,
+ * structure, packages, patterns (--deep), conventions (--deep), blind spots.
  *
  * @param result - Engine analysis result
  * @returns Formatted terminal output string
@@ -110,6 +127,7 @@ function formatHumanReadable(result: EngineResult): string {
   const boxWidth = 71;
   const innerWidth = boxWidth - 2;
 
+  // Header
   const titleLine = `  ana scan`;
   const projectLine = `  ${result.overview.project}`;
   const padding = innerWidth - projectLine.length - timestamp.length;
@@ -137,22 +155,80 @@ function formatHumanReadable(result: EngineResult): string {
     if (value) {
       hasStack = true;
       const label = stackLabels[key].padEnd(12);
-      lines.push(`  ${chalk.gray(label)} ${value}`);
+      // Enrich database with model count from schemas
+      let display = value;
+      if (key === 'database') {
+        const schemaKey = Object.keys(result.schemas).find(k =>
+          result.schemas[k].found && result.schemas[k].modelCount
+        );
+        if (schemaKey && result.schemas[schemaKey].modelCount) {
+          display = `${value} (${result.schemas[schemaKey].modelCount} models)`;
+        }
+      }
+      lines.push(`  ${chalk.gray(label)} ${display}`);
     }
   }
   if (!hasStack) {
     lines.push(chalk.gray('  No code detected'));
   }
 
+  // Services (only if non-empty)
+  if (result.externalServices.length > 0) {
+    lines.push('');
+    lines.push(chalk.bold('  Services'));
+    lines.push(chalk.gray('  ' + BOX.horizontal.repeat(8)));
+    for (const svc of result.externalServices) {
+      const name = svc.name.padEnd(12);
+      lines.push(`  ${chalk.gray(name)} ${svc.category}`);
+    }
+  }
+
+  // Commands (only if any detected)
+  const cmdEntries = [
+    ['Build', result.commands.build],
+    ['Test', result.commands.test],
+    ['Lint', result.commands.lint],
+  ].filter(([, v]) => v) as [string, string][];
+
+  if (cmdEntries.length > 0) {
+    lines.push('');
+    lines.push(chalk.bold('  Commands'));
+    lines.push(chalk.gray('  ' + BOX.horizontal.repeat(8)));
+    for (const [label, cmd] of cmdEntries) {
+      lines.push(`  ${chalk.gray(label.padEnd(12))} ${cmd}`);
+    }
+  }
+
   lines.push('');
 
-  // Files
-  lines.push(chalk.bold('  Files'));
-  lines.push(chalk.gray('  ' + BOX.horizontal.repeat(5)));
-  lines.push(`  ${chalk.gray('Source'.padEnd(12))} ${formatNumber(result.files.source)}`);
-  lines.push(`  ${chalk.gray('Tests'.padEnd(12))} ${formatNumber(result.files.test)}`);
-  lines.push(`  ${chalk.gray('Config'.padEnd(12))} ${formatNumber(result.files.config)}`);
-  lines.push(`  ${chalk.gray('Total'.padEnd(12))} ${formatNumber(result.files.total)}`);
+  // Files + Git
+  if (result.git.head) {
+    const commitInfo = `${formatNumber(result.git.commitCount || 0)} commits`;
+    const contribInfo = result.git.contributorCount ? ` · ${result.git.contributorCount} contributors` : '';
+    const branchInfo = result.git.branch || 'detached';
+    const lastCommit = result.git.lastCommitAt ? ` · ${timeAgo(result.git.lastCommitAt)}` : '';
+
+    lines.push(chalk.bold('  Files') + '                          ' + chalk.bold('Git'));
+    lines.push(chalk.gray('  ' + BOX.horizontal.repeat(5)) + '                          ' + chalk.gray(BOX.horizontal.repeat(3)));
+    lines.push(
+      `  ${chalk.gray('Source')}  ${formatNumber(result.files.source).padEnd(6)}` +
+      `${chalk.gray('Config')}  ${formatNumber(result.files.config).padEnd(10)}` +
+      `${commitInfo}${contribInfo}`
+    );
+    lines.push(
+      `  ${chalk.gray('Tests')}   ${formatNumber(result.files.test).padEnd(6)}` +
+      `${chalk.gray('Total')}   ${formatNumber(result.files.total).padEnd(10)}` +
+      `${branchInfo}${lastCommit}`
+    );
+  } else {
+    lines.push(chalk.bold('  Files'));
+    lines.push(chalk.gray('  ' + BOX.horizontal.repeat(5)));
+    lines.push(`  ${chalk.gray('Source'.padEnd(12))} ${formatNumber(result.files.source)}`);
+    lines.push(`  ${chalk.gray('Tests'.padEnd(12))} ${formatNumber(result.files.test)}`);
+    lines.push(`  ${chalk.gray('Config'.padEnd(12))} ${formatNumber(result.files.config)}`);
+    lines.push(`  ${chalk.gray('Total'.padEnd(12))} ${formatNumber(result.files.total)}`);
+  }
+
   lines.push('');
 
   // Structure
@@ -182,6 +258,71 @@ function formatHumanReadable(result: EngineResult): string {
     }
     if (result.monorepo.packages.length > 10) {
       lines.push(chalk.gray(`  +${result.monorepo.packages.length - 10} more packages`));
+    }
+  }
+
+  // Patterns (deep only)
+  if (result.patterns && typeof result.patterns === 'object') {
+    const patternKeys = Object.keys(result.patterns).filter(k =>
+      !['sampledFiles', 'detectionTime', 'threshold'].includes(k)
+    );
+    const threshold = result.patterns.threshold ?? 0.7;
+    const visible = patternKeys.filter(k => {
+      const p = result.patterns[k];
+      return p && typeof p === 'object' && p.confidence >= threshold;
+    });
+    if (visible.length > 0) {
+      lines.push('');
+      lines.push(chalk.bold('  Patterns'));
+      lines.push(chalk.gray('  ' + BOX.horizontal.repeat(8)));
+      const patternLabels: Record<string, string> = {
+        errorHandling: 'Errors', validation: 'Validation', testing: 'Testing',
+        database: 'Database', auth: 'Auth', api: 'API',
+      };
+      for (const k of visible) {
+        const p = result.patterns[k];
+        const label = (patternLabels[k] || k).padEnd(12);
+        const lib = p.library || p.variant || k;
+        lines.push(`  ${chalk.gray(label)} ${lib} ${chalk.gray(`(${p.confidence.toFixed(2)})`)}`);
+      }
+    }
+  }
+
+  // Conventions (deep only)
+  if (result.conventions && typeof result.conventions === 'object') {
+    const conv = result.conventions;
+    const convLines: string[] = [];
+
+    if (conv.naming?.functions?.majority && conv.naming.functions.majority !== 'unknown') {
+      const pct = Math.round(conv.naming.functions.confidence * 100);
+      convLines.push(`  ${chalk.gray('Functions'.padEnd(12))} ${conv.naming.functions.majority} (${pct}%)`);
+    }
+    if (conv.imports?.style) {
+      convLines.push(`  ${chalk.gray('Imports'.padEnd(12))} ${conv.imports.style}`);
+    }
+    if (conv.indentation?.style) {
+      const width = conv.indentation.width ? ` ${conv.indentation.width}` : '';
+      convLines.push(`  ${chalk.gray('Indentation'.padEnd(12))} ${width}${conv.indentation.style}`);
+    }
+    if (conv.docstrings && conv.docstrings.coverage > 0) {
+      convLines.push(`  ${chalk.gray('Docstrings'.padEnd(12))} ${Math.round(conv.docstrings.coverage * 100)}% coverage`);
+    }
+
+    if (convLines.length > 0) {
+      lines.push('');
+      lines.push(chalk.bold('  Conventions'));
+      lines.push(chalk.gray('  ' + BOX.horizontal.repeat(11)));
+      lines.push(...convLines);
+    }
+  }
+
+  // Blind Spots (only if non-empty)
+  if (result.blindSpots.length > 0) {
+    lines.push('');
+    lines.push(chalk.bold('  Blind Spots'));
+    lines.push(chalk.gray('  ' + BOX.horizontal.repeat(11)));
+    for (const spot of result.blindSpots) {
+      lines.push(`  ${chalk.yellow(spot.area.padEnd(12))} ${spot.issue}`);
     }
   }
 
