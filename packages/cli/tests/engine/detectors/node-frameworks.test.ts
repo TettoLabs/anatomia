@@ -12,12 +12,12 @@ import { detectNestjs } from '../../../src/engine/detectors/node/nestjs';
 import { detectExpress } from '../../../src/engine/detectors/node/express';
 import { detectOtherNodeFrameworks } from '../../../src/engine/detectors/node/other';
 
-// Mock modules
-vi.mock('../../src/utils/importScanner.js', () => ({
+// Mock modules — paths must match the actual module specifiers used by the source
+vi.mock('../../../src/engine/utils/importScanner.js', () => ({
   scanForImports: vi.fn(),
 }));
 
-vi.mock('../../src/utils/file.js', () => ({
+vi.mock('../../../src/engine/utils/file.js', () => ({
   exists: vi.fn(),
 }));
 
