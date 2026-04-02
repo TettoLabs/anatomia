@@ -23,6 +23,7 @@ import * as fs from 'node:fs/promises';
 import { glob } from 'glob';
 import type { AnalysisResult } from '../engine/index.js';
 import { countFiles, formatNumber } from '../utils/fileCounts.js';
+import { detectFromPackageJson } from '../engine/detectors/dependencies.js';
 
 /**
  * Display name mapping for project types
@@ -110,55 +111,7 @@ const PATTERN_DISPLAY_NAMES: Record<string, string> = {
   phpunit: 'PHPUnit',
 };
 
-/**
- * Database packages for dependency-file fallback detection
- */
-const DATABASE_PACKAGES: Record<string, string> = {
-  '@supabase/supabase-js': 'Supabase',
-  'prisma': 'Prisma', '@prisma/client': 'Prisma',
-  'drizzle-orm': 'Drizzle',
-  'typeorm': 'TypeORM', 'sequelize': 'Sequelize',
-  'mongoose': 'Mongoose', 'knex': 'Knex',
-  'pg': 'PostgreSQL', 'mysql2': 'MySQL',
-  'better-sqlite3': 'SQLite', '@libsql/client': 'Turso',
-  'firebase': 'Firebase', 'firebase-admin': 'Firebase',
-};
-
-/**
- * Auth packages for dependency-file fallback detection
- */
-const AUTH_PACKAGES: Record<string, string> = {
-  '@clerk/nextjs': 'Clerk', '@clerk/express': 'Clerk',
-  'next-auth': 'NextAuth', '@auth/core': 'Auth.js',
-  '@supabase/ssr': 'Supabase Auth',
-  '@supabase/auth-helpers-nextjs': 'Supabase Auth',
-  'passport': 'Passport',
-  'lucia': 'Lucia', '@lucia-auth/adapter-prisma': 'Lucia',
-  'jsonwebtoken': 'JWT', 'bcrypt': 'bcrypt', 'bcryptjs': 'bcrypt',
-};
-
-/**
- * Testing packages for dependency-file fallback detection
- */
-const TESTING_PACKAGES: Record<string, string> = {
-  'vitest': 'Vitest',
-  'playwright': 'Playwright', '@playwright/test': 'Playwright',
-  'jest': 'Jest', '@jest/globals': 'Jest',
-  'cypress': 'Cypress',
-  'mocha': 'Mocha',
-  '@testing-library/react': 'Testing Library',
-  '@testing-library/jest-dom': 'Testing Library',
-  'supertest': 'Supertest',
-};
-
-/**
- * Payment packages for dependency-file fallback detection
- */
-const PAYMENT_PACKAGES: Record<string, string> = {
-  'stripe': 'Stripe', '@stripe/stripe-js': 'Stripe',
-  '@lemonsqueezy/lemonsqueezy.js': 'Lemon Squeezy',
-  'paddle-sdk': 'Paddle',
-};
+// Dependency detection constants and functions moved to engine/detectors/dependencies.ts
 
 /**
  * Get display name for a language/project type
@@ -221,94 +174,7 @@ interface ScanResult {
   packages?: Array<{ name: string; path: string }>;
 }
 
-/**
- * Detect stack categories from package.json dependencies.
- * Fallback for when the analyzer's tree-sitter-based detection fails.
- * Only ADDS categories the analyzer didn't already detect.
- *
- * @param scanPath - Path being scanned
- * @param existingStack - Stack categories already detected by analyzer
- * @param verbose - Whether to log verbose output
- * @returns Merged stack with fallback additions
- */
-async function detectFromPackageJson(
-  scanPath: string,
-  existingStack: Record<string, string>,
-  verbose: boolean
-): Promise<Record<string, string>> {
-  const stack = { ...existingStack };
-
-  try {
-    const packageJsonPath = path.join(scanPath, 'package.json');
-    const packageJsonContent = await fs.readFile(packageJsonPath, 'utf-8');
-    const packageJson = JSON.parse(packageJsonContent);
-
-    // Merge dependencies and devDependencies
-    const allDeps = {
-      ...packageJson.dependencies,
-      ...packageJson.devDependencies,
-    };
-
-    // Database detection (only if not already detected)
-    if (!stack.database) {
-      for (const [pkg, name] of Object.entries(DATABASE_PACKAGES)) {
-        if (allDeps[pkg]) {
-          stack.database = name;
-          if (verbose) {
-            console.error(chalk.dim(`Fallback: found ${pkg} in dependencies → Database: ${name}`));
-          }
-          break;
-        }
-      }
-    }
-
-    // Auth detection (only if not already detected)
-    if (!stack.auth) {
-      for (const [pkg, name] of Object.entries(AUTH_PACKAGES)) {
-        if (allDeps[pkg]) {
-          stack.auth = name;
-          if (verbose) {
-            console.error(chalk.dim(`Fallback: found ${pkg} in dependencies → Auth: ${name}`));
-          }
-          break;
-        }
-      }
-    }
-
-    // Testing detection (only if not already detected)
-    if (!stack.testing) {
-      for (const [pkg, name] of Object.entries(TESTING_PACKAGES)) {
-        if (allDeps[pkg]) {
-          stack.testing = name;
-          if (verbose) {
-            console.error(chalk.dim(`Fallback: found ${pkg} in dependencies → Testing: ${name}`));
-          }
-          break;
-        }
-      }
-    }
-
-    // Payments detection (always from fallback - new category)
-    if (!stack.payments) {
-      for (const [pkg, name] of Object.entries(PAYMENT_PACKAGES)) {
-        if (allDeps[pkg]) {
-          stack.payments = name;
-          if (verbose) {
-            console.error(chalk.dim(`Fallback: found ${pkg} in dependencies → Payments: ${name}`));
-          }
-          break;
-        }
-      }
-    }
-  } catch (error) {
-    // Gracefully handle missing or invalid package.json
-    if (verbose && error instanceof Error) {
-      console.error(chalk.dim(`Fallback: package.json not found or invalid`));
-    }
-  }
-
-  return stack;
-}
+// detectFromPackageJson is now imported from engine/detectors/dependencies.ts
 
 /**
  * Monorepo detection result
