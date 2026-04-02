@@ -6,6 +6,9 @@
 import type { DetectionError } from './DetectionError.js';
 import { DetectionEngineError } from './DetectionError.js';
 
+/**
+ *
+ */
 export class DetectionCollector {
   private errors: DetectionError[] = [];
   private warnings: DetectionError[] = [];
@@ -13,6 +16,7 @@ export class DetectionCollector {
 
   /**
    * Add error (blocks functionality)
+   * @param error
    */
   addError(error: DetectionEngineError | DetectionError): void {
     const detectionError =
@@ -22,6 +26,7 @@ export class DetectionCollector {
 
   /**
    * Add warning (concerning but continues)
+   * @param error
    */
   addWarning(error: DetectionEngineError | DetectionError): void {
     const detectionError =
@@ -31,6 +36,7 @@ export class DetectionCollector {
 
   /**
    * Add info message
+   * @param error
    */
   addInfo(error: DetectionEngineError | DetectionError): void {
     const detectionError =

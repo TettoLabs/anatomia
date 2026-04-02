@@ -9,6 +9,7 @@
  * Parse Pipfile dependencies
  *
  * Handles [packages] and [dev-packages] sections
+ * @param content
  */
 export function parsePipfile(content: string): string[] {
   const deps: string[] = [];

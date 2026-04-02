@@ -8,6 +8,7 @@ import type { DetectionError } from './DetectionError.js';
 
 /**
  * Format single error for console output
+ * @param error
  */
 export function formatError(error: DetectionError): string {
   const lines: string[] = [];
@@ -44,6 +45,7 @@ export function formatError(error: DetectionError): string {
 
 /**
  * Format all errors in result
+ * @param errors
  */
 export function formatAllErrors(errors: DetectionError[]): string {
   if (errors.length === 0) return '';
@@ -78,6 +80,7 @@ export function formatAllErrors(errors: DetectionError[]): string {
 
 /**
  * Format errors summary (counts only)
+ * @param errors
  */
 export function formatErrorSummary(errors: DetectionError[]): string {
   const critical = errors.filter((e) => e.severity === 'error').length;

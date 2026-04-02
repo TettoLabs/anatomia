@@ -5,9 +5,13 @@
  * Supports: v1, v2, v3 formats
  */
 
+/**
+ *
+ * @param content
+ */
 export function parsePackageLock(content: string): string[] {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+     
     const lock = JSON.parse(content);
 
     if (!lock || typeof lock !== 'object') {

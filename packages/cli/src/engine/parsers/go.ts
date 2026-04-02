@@ -17,6 +17,7 @@ import { readFile, exists } from '../utils/file.js';
  * - Indirect dependencies (// indirect)
  * - Version suffixes (/v2, /v3)
  * - Pseudo-versions (v0.0.0-20231024153337-abc)
+ * @param content
  */
 export function parseGoMod(content: string): string[] {
   const deps: string[] = [];
@@ -48,6 +49,7 @@ export function parseGoMod(content: string): string[] {
 
 /**
  * Read Go dependencies from go.mod
+ * @param rootPath
  */
 export async function readGoDependencies(rootPath: string): Promise<string[]> {
   const goModPath = path.join(rootPath, 'go.mod');

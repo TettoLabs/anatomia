@@ -52,7 +52,7 @@
 export function parsePackageJson(content: string): string[] {
   try {
     // Parse JSON content
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+     
     const pkg = JSON.parse(content);
 
     // Validate that we got an object
@@ -99,7 +99,7 @@ export function parsePackageJson(content: string): string[] {
 
     // Return deduplicated array
     return Array.from(deps);
-  } catch (error) {
+  } catch (_error) {
     // Graceful degradation: Return empty array on any error
     // This handles:
     // - SyntaxError from JSON.parse

@@ -18,6 +18,8 @@ import { DetectionEngineError, ERROR_CODES, type DetectionCollector } from '../e
  *
  * Priority: requirements.txt, pyproject.toml, Pipfile
  * Combines all found dependencies
+ * @param rootPath
+ * @param collector
  */
 export async function readPythonDependencies(
   rootPath: string,
@@ -32,7 +34,7 @@ export async function readPythonDependencies(
       const content = await readFile(reqPath);
       const reqDeps = parseRequirementsTxt(content);
       reqDeps.forEach((d) => deps.add(d));
-    } catch (error) {
+    } catch (_error) {
       collector?.addWarning(
         new DetectionEngineError(
           ERROR_CODES.PARSE_ERROR,
@@ -57,7 +59,7 @@ export async function readPythonDependencies(
       const content = await readFile(pyprojectPath);
       const tomlDeps = parsePyprojectToml(content);
       tomlDeps.forEach((d) => deps.add(d));
-    } catch (error) {
+    } catch (_error) {
       collector?.addWarning(
         new DetectionEngineError(
           ERROR_CODES.PARSE_ERROR,
@@ -81,7 +83,7 @@ export async function readPythonDependencies(
       const content = await readFile(pipfilePath);
       const pipDeps = parsePipfile(content);
       pipDeps.forEach((d) => deps.add(d));
-    } catch (error) {
+    } catch (_error) {
       collector?.addWarning(
         new DetectionEngineError(
           ERROR_CODES.PARSE_ERROR,

@@ -102,6 +102,7 @@ export type MultiPattern = z.infer<typeof MultiPatternSchema>;
 /**
  * Type guard to check if pattern is multi-pattern
  *
+ * @param pattern
  * @example
  * ```typescript
  * const pattern = result.database;

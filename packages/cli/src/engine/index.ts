@@ -288,7 +288,7 @@ export async function analyze(
       ...withPatterns,
       conventions,
     };
-  } catch (error) {
+  } catch (_error) {
     // Critical failure - return empty result
     if (options.strictMode) {
       throw error;

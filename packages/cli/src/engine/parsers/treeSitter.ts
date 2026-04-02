@@ -52,6 +52,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  * as peer deps, and any resolution through their module graph triggers native loading.
  *
  * Instead: Walk up from our module location and check known node_modules paths directly.
+ * @param packageName
+ * @param wasmFileName
  */
 function resolveWasmPath(packageName: string, wasmFileName: string): string {
   const candidates = [
@@ -410,7 +412,7 @@ export function extractFunctions(
     }
 
     return functions;
-  } catch (error) {
+  } catch (_error) {
     // Query might not exist for this language
     return [];
   }
@@ -563,7 +565,7 @@ export function extractClasses(
     }
 
     return classes;
-  } catch (error) {
+  } catch (_error) {
     return [];
   }
 }
@@ -636,7 +638,7 @@ export function extractImports(
     }
 
     return imports;
-  } catch (error) {
+  } catch (_error) {
     return [];
   }
 }
@@ -724,7 +726,7 @@ export function extractDecorators(
     }
 
     return decorators;
-  } catch (error) {
+  } catch (_error) {
     return [];
   }
 }
@@ -979,6 +981,7 @@ export async function parseFile(
  * @param projectRoot - Absolute path to project root
  * @param analysis - AnalysisResult with structure field
  * @param options - Options with maxFiles
+ * @param options.maxFiles
  * @returns ParsedAnalysis or undefined if no structure
  *
  * @example
@@ -1038,7 +1041,7 @@ export async function parseProjectFiles(
     try {
       const parsed = await parseFile(absolutePath, language, cache);
       parsedFiles.push(parsed);
-    } catch (error) {
+    } catch (_error) {
       // Parse failed - continue with other files
       continue;
     }

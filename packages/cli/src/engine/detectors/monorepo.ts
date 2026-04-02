@@ -31,6 +31,8 @@ export interface MonorepoResult {
  * 4. lerna.json (Lerna)
  * 5. package.json workspaces (npm/yarn)
  * 6. Fallback: recursive package.json scan
+ * @param rootPath
+ * @param collector
  */
 export async function detectMonorepo(
   rootPath: string,
@@ -59,7 +61,7 @@ export async function detectMonorepo(
         tool: 'pnpm',
         workspacePatterns: patterns,
       };
-    } catch (error) {
+    } catch (_error) {
       collector.addWarning(
         new DetectionEngineError(
           ERROR_CODES.INVALID_YAML,
@@ -101,7 +103,7 @@ export async function detectMonorepo(
           // Turbo doesn't list packages explicitly
         };
       }
-    } catch (error) {
+    } catch (_error) {
       collector.addWarning(
         new DetectionEngineError(
           ERROR_CODES.INVALID_JSON,
@@ -141,7 +143,7 @@ export async function detectMonorepo(
           tool: 'nx',
         };
       }
-    } catch (error) {
+    } catch (_error) {
       collector.addWarning(
         new DetectionEngineError(
           ERROR_CODES.INVALID_JSON,
@@ -181,7 +183,7 @@ export async function detectMonorepo(
         tool: 'lerna',
         workspacePatterns: patterns,
       };
-    } catch (error) {
+    } catch (_error) {
       collector.addWarning(
         new DetectionEngineError(
           ERROR_CODES.INVALID_JSON,
@@ -225,7 +227,7 @@ export async function detectMonorepo(
           workspacePatterns: patterns,
         };
       }
-    } catch (error) {
+    } catch (_error) {
       // Already handled by main detection, don't duplicate error
     }
   }
@@ -261,6 +263,11 @@ export async function detectMonorepo(
 
 /**
  * Discover packages via recursive scan (fallback)
+ * @param rootPath
+ * @param collector
+ * @param depth
+ * @param maxDepth
+ * @param visited
  */
 async function discoverPackages(
   rootPath: string,
@@ -305,7 +312,7 @@ async function discoverPackages(
         packages.push(...subPackages);
       }
     }
-  } catch (error) {
+  } catch (_error) {
     collector.addWarning(
       new DetectionEngineError(
         ERROR_CODES.PERMISSION_DENIED,
@@ -326,6 +333,7 @@ async function discoverPackages(
 
 /**
  * Should skip directory during scanning
+ * @param name
  */
 function shouldSkipDirectory(name: string): boolean {
   const skipPatterns = [

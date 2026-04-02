@@ -66,6 +66,7 @@ export async function detectFramework(
 
 /**
  * Detect Python framework (priority order)
+ * @param rootPath
  */
 async function detectPythonFramework(rootPath: string): Promise<FrameworkResult> {
   const deps = await readPythonDependencies(rootPath);
@@ -88,6 +89,7 @@ async function detectPythonFramework(rootPath: string): Promise<FrameworkResult>
 /**
  * Detect Node framework (priority order)
  * CRITICAL: Next before React, Nest before Express
+ * @param rootPath
  */
 async function detectNodeFramework(rootPath: string): Promise<FrameworkResult> {
   const deps = await readNodeDependencies(rootPath);

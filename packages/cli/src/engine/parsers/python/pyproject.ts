@@ -14,6 +14,7 @@
  * - Poetry: [tool.poetry.dependencies] package = "^version"
  *
  * Note: Poetry 2.0+ prefers PEP 621 format, but legacy format still common
+ * @param content
  */
 export function parsePyprojectToml(content: string): string[] {
   const deps: string[] = [];

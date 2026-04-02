@@ -76,6 +76,7 @@ export async function walkDirectories(
 
 /**
  * Get immediate subdirectories only (no recursion)
+ * @param rootPath
  */
 export async function getSubdirectories(rootPath: string): Promise<string[]> {
   try {

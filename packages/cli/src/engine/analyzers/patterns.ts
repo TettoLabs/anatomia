@@ -52,7 +52,7 @@ export async function detectFromDependencies(
       // Rust, Ruby, PHP - not yet supported for pattern inference
       return patterns;
     }
-  } catch (error) {
+  } catch (_error) {
     // Dependency parsing failed - return empty (graceful degradation)
     return patterns;
   }
@@ -83,6 +83,7 @@ export async function detectFromDependencies(
 /**
  * Helper: Read Node.js dev dependencies
  * Testing frameworks often in devDependencies, not dependencies
+ * @param rootPath
  */
 async function readNodeDevDependencies(rootPath: string): Promise<string[]> {
   try {
@@ -92,7 +93,7 @@ async function readNodeDevDependencies(rootPath: string): Promise<string[]> {
       const pkg = JSON.parse(content);
       return Object.keys(pkg.devDependencies || {});
     }
-  } catch (error) {
+  } catch (_error) {
     // Failed to read - return empty
   }
   return [];
@@ -102,6 +103,9 @@ async function readNodeDevDependencies(rootPath: string): Promise<string[]> {
  * Detect validation pattern from dependencies
  *
  * Checks for: pydantic, zod, joi, class-validator, djangorestframework, go-playground/validator
+ * @param deps
+ * @param framework
+ * @param rootPath
  */
 async function detectValidationPattern(
   deps: string[],
@@ -177,6 +181,9 @@ async function detectValidationPattern(
  *
  * Checks for: sqlalchemy, prisma, typeorm, gorm, sqlc, sequelize, drizzle-orm
  * Detects variants: SQLAlchemy async vs sync based on async drivers
+ * @param deps
+ * @param framework
+ * @param rootPath
  */
 async function detectDatabasePattern(
   deps: string[],
@@ -278,6 +285,9 @@ async function detectDatabasePattern(
  * Detect auth pattern from dependencies
  *
  * Checks for: JWT libraries, OAuth, session management, third-party (Clerk, NextAuth)
+ * @param deps
+ * @param framework
+ * @param rootPath
  */
 async function detectAuthPattern(
   deps: string[],
@@ -371,6 +381,10 @@ async function detectAuthPattern(
  * Detect testing pattern from dependencies
  *
  * Checks for: pytest, jest, vitest, mocha, go test (file pattern)
+ * @param deps
+ * @param devDeps
+ * @param framework
+ * @param rootPath
  */
 async function detectTestingPattern(
   deps: string[],
@@ -459,6 +473,10 @@ async function detectTestingPattern(
  *
  * Mostly framework-specific (FastAPI → HTTPException, Go → error returns)
  * Only detects when we have dependencies or framework information
+ * @param deps
+ * @param projectType
+ * @param framework
+ * @param rootPath
  */
 async function detectErrorHandlingPattern(
   deps: string[],
@@ -623,7 +641,7 @@ export async function inferPatterns(
 
     return result;
 
-  } catch (error) {
+  } catch (_error) {
     // Graceful degradation: If pattern inference fails, return empty result
     if (process.env['VERBOSE']) {
       console.error('[Pattern Inference] Error during inference:', error);
@@ -685,6 +703,9 @@ export async function confirmPatternsWithTreeSitter(
  * - class-validator: Decorator usage
  *
  * Boosts confidence if patterns found in code.
+ * @param patterns
+ * @param parsedFiles
+ * @param analysis
  */
 async function confirmValidationPattern(
   patterns: Partial<Record<string, PatternConfidence>>,
@@ -846,6 +867,9 @@ async function confirmValidationPattern(
  *
  * Checks frequency of error handling patterns in code.
  * Heuristic: Route decorators and framework imports indicate error handling.
+ * @param patterns
+ * @param parsedFiles
+ * @param analysis
  */
 async function confirmErrorHandlingPattern(
   patterns: Partial<Record<string, PatternConfidence>>,
@@ -934,6 +958,9 @@ async function confirmErrorHandlingPattern(
  * SQLAlchemy: Distinguish async vs sync based on imports (AsyncSession vs Session)
  * Prisma: Verify PrismaClient imports
  * GORM: Check struct tag usage
+ * @param patterns
+ * @param parsedFiles
+ * @param analysis
  */
 async function confirmDatabasePattern(
   patterns: Partial<Record<string, PatternConfidence>>,
@@ -1111,6 +1138,9 @@ async function confirmDatabasePattern(
 
 /**
  * Confirm auth pattern usage in code
+ * @param patterns
+ * @param parsedFiles
+ * @param analysis
  */
 async function confirmAuthPattern(
   patterns: Partial<Record<string, PatternConfidence>>,
@@ -1199,6 +1229,9 @@ async function confirmAuthPattern(
  *
  * Uses structure.testLocation from STEP_1.2 (test directory already detected).
  * Boosts confidence if test directory found.
+ * @param patterns
+ * @param parsedFiles
+ * @param analysis
  */
 async function confirmTestingPattern(
   patterns: Partial<Record<string, PatternConfidence>>,

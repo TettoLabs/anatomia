@@ -19,6 +19,7 @@ import { z } from 'zod';
  * Used for any convention type that has multiple possible values.
  * Reports majority, confidence, whether mixed, and full distribution.
  *
+ * @param valueSchema
  * @example Clear convention
  * ```typescript
  * {

@@ -295,7 +295,7 @@ async function parsePyprojectName(rootPath: string): Promise<string | null> {
     }
 
     return null;  // No name found
-  } catch (error) {
+  } catch (_error) {
     return null;  // Parse failed - graceful degradation
   }
 }
@@ -332,7 +332,7 @@ async function parseTsconfigAlias(rootPath: string): Promise<string | null> {
     }
 
     return null;
-  } catch (error) {
+  } catch (_error) {
     return null;  // Parse failed or invalid JSON
   }
 }
@@ -362,7 +362,7 @@ async function parseGoModule(rootPath: string): Promise<string | null> {
     }
 
     return null;
-  } catch (error) {
+  } catch (_error) {
     return null;
   }
 }

@@ -5,9 +5,13 @@
 import * as path from 'node:path';
 import { readFile, exists } from '../utils/file.js';
 
+/**
+ *
+ * @param content
+ */
 export function parseComposerJson(content: string): string[] {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+     
     const composer = JSON.parse(content);
 
     if (!composer || typeof composer !== 'object') {
@@ -45,6 +49,10 @@ export function parseComposerJson(content: string): string[] {
   }
 }
 
+/**
+ *
+ * @param rootPath
+ */
 export async function readPhpDependencies(rootPath: string): Promise<string[]> {
   const composerPath = path.join(rootPath, 'composer.json');
 

@@ -17,6 +17,7 @@ export interface ProjectTypeResult {
 
 /**
  * Check if a file exists at the given path
+ * @param p
  */
 async function exists(p: string): Promise<boolean> {
   try {
@@ -32,6 +33,7 @@ async function exists(p: string): Promise<boolean> {
  *
  * Priority order: Node → Python → Go → Rust → Ruby → PHP
  * Returns first match with indicators of supporting files found.
+ * @param rootPath
  */
 export async function detectProjectType(
   rootPath: string

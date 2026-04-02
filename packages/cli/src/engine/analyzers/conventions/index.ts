@@ -127,7 +127,7 @@ export async function detectConventions(
       sampledFiles: sampledFilePaths.length,
       detectionTime,
     };
-  } catch (error) {
+  } catch (_error) {
     // Graceful degradation - return empty conventions
     console.error('Convention detection failed:', error);
     return createEmptyConventionAnalysis();

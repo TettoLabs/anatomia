@@ -128,6 +128,7 @@ const DIRECTORY_PURPOSES: Record<string, string> = {
 
 /**
  * Map directory paths to purpose descriptions
+ * @param directories
  */
 function mapDirectoriesToPurposes(directories: string[]): Record<string, string> {
   const mapped: Record<string, string> = {};
@@ -140,6 +141,7 @@ function mapDirectoriesToPurposes(directories: string[]): Record<string, string>
 
 /**
  * Detect layered architecture pattern
+ * @param directories
  */
 function isLayeredArchitecture(directories: string[]): {
   match: boolean;
@@ -175,6 +177,8 @@ function isLayeredArchitecture(directories: string[]): {
 
 /**
  * Detect domain-driven design pattern
+ * @param directories
+ * @param framework
  */
 function isDomainDriven(directories: string[], framework: string | null): {
   match: boolean;
@@ -205,6 +209,8 @@ function isDomainDriven(directories: string[], framework: string | null): {
 
 /**
  * Detect microservices architecture
+ * @param directories
+ * @param projectType
  */
 function isMicroservices(directories: string[], projectType: string): {
   match: boolean;
@@ -363,7 +369,7 @@ async function getPackageJsonEntry(rootPath: string): Promise<string | null> {
 
     // No entry point specified
     return null;
-  } catch (error) {
+  } catch (_error) {
     // Corrupted package.json - graceful degradation
     // Will fallback to convention-based detection
     return null;
@@ -433,7 +439,7 @@ export async function analyzeStructure(
         overall: overallConfidence,
       },
     };
-  } catch (error) {
+  } catch (_error) {
     return createEmptyStructureAnalysis();
   }
 }
@@ -667,6 +673,7 @@ export async function findEntryPoints(
  * @param directories - List of directories in project
  * @param entryPoints - Detected entry points (empty for libraries)
  * @param framework - Framework (affects classification - NestJS modules/ = DDD)
+ * @param projectType
  * @returns Architecture classification result
  *
  * Implementation: CP2
@@ -733,6 +740,7 @@ export function classifyArchitecture(
 
 /**
  * Find pytest test location (Python)
+ * @param rootPath
  */
 async function findPytestLocation(rootPath: string): Promise<TestLocationResult> {
   const testsDir = joinPath(rootPath, 'tests');
@@ -756,6 +764,7 @@ async function findPytestLocation(rootPath: string): Promise<TestLocationResult>
 
 /**
  * Find Jest/Vitest test location (Node)
+ * @param rootPath
  */
 async function findJestVitestLocation(rootPath: string): Promise<TestLocationResult> {
   const jestTestsDir = joinPath(rootPath, '__tests__');
@@ -812,6 +821,7 @@ function findGoTestLocation(): TestLocationResult {
 
 /**
  * Find Rust test location
+ * @param rootPath
  */
 async function findRustTestLocation(rootPath: string): Promise<TestLocationResult> {
   const testsDir = joinPath(rootPath, 'tests');

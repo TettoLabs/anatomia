@@ -129,6 +129,9 @@ export async function scanForImports(
 /**
  * Sample source files for scanning
  * Priority: entry points, then random source files
+ * @param rootPath
+ * @param maxFiles
+ * @param excludeDirs
  */
 async function sampleSourceFiles(
   rootPath: string,

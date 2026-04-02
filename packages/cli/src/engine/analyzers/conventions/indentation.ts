@@ -173,6 +173,7 @@ async function checkConfigFiles(
  *
  * INI-style format with [*] section.
  *
+ * @param rootPath
  * @example
  * ```ini
  * [*]
@@ -215,7 +216,7 @@ async function readEditorConfig(
     }
 
     return null;
-  } catch (error) {
+  } catch (_error) {
     return null;  // Parse error - graceful
   }
 }
@@ -225,6 +226,7 @@ async function readEditorConfig(
  *
  * JSON format with useTabs and tabWidth.
  *
+ * @param rootPath
  * @example
  * ```json
  * {
@@ -260,7 +262,7 @@ async function readPrettierConfig(
     }
 
     return null;
-  } catch (error) {
+  } catch (_error) {
     return null;  // JSON parse error - graceful
   }
 }

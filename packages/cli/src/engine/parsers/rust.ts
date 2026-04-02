@@ -5,6 +5,10 @@
 import * as path from 'node:path';
 import { readFile, exists } from '../utils/file.js';
 
+/**
+ *
+ * @param content
+ */
 export function parseCargoToml(content: string): string[] {
   const deps: string[] = [];
 
@@ -35,6 +39,10 @@ export function parseCargoToml(content: string): string[] {
   return Array.from(new Set(deps));
 }
 
+/**
+ *
+ * @param rootPath
+ */
 export async function readRustDependencies(
   rootPath: string
 ): Promise<string[]> {

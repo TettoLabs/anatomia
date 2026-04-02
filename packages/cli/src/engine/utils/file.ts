@@ -7,6 +7,7 @@ import * as path from 'node:path';
 
 /**
  * Check if file or directory exists
+ * @param filePath
  */
 export async function exists(filePath: string): Promise<boolean> {
   try {
@@ -20,6 +21,7 @@ export async function exists(filePath: string): Promise<boolean> {
 /**
  * Read file content (UTF-8)
  * Returns empty string if file doesn't exist (graceful)
+ * @param filePath
  */
 export async function readFile(filePath: string): Promise<string> {
   try {
@@ -31,6 +33,7 @@ export async function readFile(filePath: string): Promise<string> {
 
 /**
  * Check if path is a directory
+ * @param filePath
  */
 export async function isDirectory(filePath: string): Promise<boolean> {
   try {
@@ -43,6 +46,7 @@ export async function isDirectory(filePath: string): Promise<boolean> {
 
 /**
  * Join path segments safely (cross-platform)
+ * @param {...any} segments
  */
 export function joinPath(...segments: string[]): string {
   return path.join(...segments);

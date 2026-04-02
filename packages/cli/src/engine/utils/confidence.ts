@@ -51,6 +51,7 @@ export function calculateConfidence(signals: ConfidenceSignals): number {
  * - Moderate (0.50-0.79): Recommend verification
  * - Low (0.30-0.49): Require manual confirmation
  * - Uncertain (<0.30): Flag for manual review
+ * @param confidence
  */
 export function interpretConfidence(confidence: number): {
   level: 'high' | 'moderate' | 'low' | 'uncertain';

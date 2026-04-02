@@ -120,6 +120,7 @@ export function createEmptyAnalysisResult(): AnalysisResult {
 /**
  * Validate AnalysisResult at runtime
  * Throws ZodError if invalid
+ * @param data
  */
 export function validateAnalysisResult(data: unknown): AnalysisResult {
   return AnalysisResultSchema.parse(data);
