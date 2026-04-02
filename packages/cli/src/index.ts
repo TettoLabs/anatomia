@@ -15,7 +15,6 @@
 import { Command } from 'commander';
 import { initCommand } from './commands/init.js';
 import { modeCommand } from './commands/mode.js';
-import { analyzeCommand } from './commands/analyze.js';
 import { setupCommand } from './commands/setup.js';
 import { artifactCommand } from './commands/artifact.js';
 import { workCommand } from './commands/work.js';
@@ -35,7 +34,6 @@ program
 // Register commands
 program.addCommand(initCommand);
 program.addCommand(modeCommand);
-program.addCommand(analyzeCommand);
 program.addCommand(scanCommand);
 program.addCommand(setupCommand);
 program.addCommand(artifactCommand);
