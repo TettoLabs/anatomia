@@ -641,7 +641,7 @@ export async function inferPatterns(
 
     return result;
 
-  } catch (_error) {
+  } catch (error) {
     // Graceful degradation: If pattern inference fails, return empty result
     if (process.env['VERBOSE']) {
       console.error('[Pattern Inference] Error during inference:', error);
