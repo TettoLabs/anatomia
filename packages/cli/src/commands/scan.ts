@@ -56,14 +56,29 @@ const PATTERN_DISPLAY_NAMES: Record<string, string> = {
   cargo_test: 'Cargo test', junit: 'JUnit', phpunit: 'PHPUnit',
 };
 
+/**
+ * Get display name for a language/project type
+ * @param projectType - Internal project type identifier
+ * @returns Human-readable display name
+ */
 function getLanguageDisplayName(projectType: string): string {
   return LANGUAGE_DISPLAY_NAMES[projectType.toLowerCase()] || projectType;
 }
 
+/**
+ * Get display name for a framework
+ * @param framework - Internal framework identifier
+ * @returns Human-readable display name
+ */
 function getFrameworkDisplayName(framework: string): string {
   return FRAMEWORK_DISPLAY_NAMES[framework.toLowerCase()] || framework;
 }
 
+/**
+ * Get display name for a pattern
+ * @param pattern - Internal pattern identifier
+ * @returns Human-readable display name
+ */
 function getPatternDisplayName(pattern: string): string {
   return PATTERN_DISPLAY_NAMES[pattern.toLowerCase()] || pattern;
 }
@@ -82,6 +97,9 @@ const BOX = {
 
 /**
  * Format human-readable terminal output from EngineResult
+ *
+ * @param result - Engine analysis result
+ * @returns Formatted terminal output string
  */
 function formatHumanReadable(result: EngineResult): string {
   const lines: string[] = [];
