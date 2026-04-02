@@ -617,11 +617,17 @@ export const scanCommand = new Command('scan')
       // Count files
       const fileCounts = await countFiles(rootPath);
 
-      // Extract stack from analyzer
-      const analyzerStack = extractStack(analysis);
+      // Primary: dependency detection from package.json
+      const depStack = await detectFromPackageJson(rootPath, {}, options.verbose || false);
 
-      // Apply dependency-file fallback
-      const stack = await detectFromPackageJson(rootPath, analyzerStack, options.verbose || false);
+      // Enrich: tree-sitter analyzer results add categories dep scan missed, but don't override
+      const analyzerStack = extractStack(analysis);
+      const stack: Record<string, string> = { ...depStack };
+      for (const [key, value] of Object.entries(analyzerStack)) {
+        if (!stack[key] && value) {
+          stack[key] = value;
+        }
+      }
 
       // Detect monorepo
       const monorepoInfo = await detectMonorepo(rootPath, options.verbose || false);
