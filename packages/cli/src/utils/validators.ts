@@ -10,7 +10,7 @@
 
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
-import type { AnalysisResult } from 'anatomia-analyzer';
+import type { AnalysisResult } from '../engine/index.js';
 import {
   SCAFFOLD_MARKER,
   MIN_FILE_SIZE_WARNING,

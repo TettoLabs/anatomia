@@ -32,6 +32,23 @@ export default [
       'no-warning-comments': ['error', { terms: ['TODO', 'FIXME'] }],
     },
   },
+  // Relaxed rules for engine code (merged from analyzer package)
+  // The analyzer had different lint standards - these are style issues, not bugs
+  {
+    files: ['src/engine/**/*.ts'],
+    rules: {
+      'jsdoc/require-jsdoc': 'off',
+      'jsdoc/require-description': 'off',
+      'jsdoc/require-param': 'off',
+      'jsdoc/require-returns': 'off',
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-unused-vars': ['warn', {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+        caughtErrorsIgnorePattern: '^_',
+      }],
+    },
+  },
   {
     ignores: ['dist/', 'node_modules/', '*.config.ts', '*.config.js', 'tests/'],
   },

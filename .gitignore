@@ -39,3 +39,7 @@ test-results/
 master_plan/
 .ana/.state/cache/
 **/.ana/.state/cache/
+
+# Sprint investigation/diagnostic files (not source)
+*DIAGNOSTIC*.md
+*DOSSIER*.md

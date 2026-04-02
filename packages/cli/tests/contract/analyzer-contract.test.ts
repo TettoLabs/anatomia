@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import type { AnalysisResult } from 'anatomia-analyzer';
+import type { AnalysisResult } from '../../src/engine/index.js';
 import { formatAnalysisBrief } from '../../src/utils/format-analysis-brief.js';
 import { generatePatternsScaffold } from '../../src/utils/scaffold-generators.js';
 import { createEmptyAnalysisResult } from '../scaffolds/test-types.js';
