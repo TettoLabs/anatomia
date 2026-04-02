@@ -129,6 +129,10 @@ export {
 // Convention types already exported via types/index.ts import/export chain
 // (ConventionAnalysis, NamingConvention, etc. exported from types/index.ts which imports from types/conventions.ts)
 
+// Export EngineResult and analyzeProject
+export type { EngineResult } from './types/engineResult.js';
+export { analyzeProject } from './analyze.js';
+
 // Version constant
 export const VERSION = '0.1.0';
 
