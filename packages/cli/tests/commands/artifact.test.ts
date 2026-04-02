@@ -939,6 +939,50 @@ file_changes:
       expect(() => saveArtifact('contract', 'test-slug')).not.toThrow();
     });
 
+    it('accepts not_contains matcher with value', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      const validContract = `version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Test Feature"
+
+assertions:
+  - id: A001
+    says: "Error message does not contain debug info"
+    block: "error handling"
+    target: "error.message"
+    matcher: "not_contains"
+    value: "DEBUG"
+
+file_changes:
+  - path: "src/test.ts"
+    action: create`;
+      await createArtifact('test-slug', 'contract.yaml', validContract);
+
+      expect(() => saveArtifact('contract', 'test-slug')).not.toThrow();
+      expect(isFileCommitted('.ana/plans/active/test-slug/contract.yaml')).toBe(true);
+    });
+
+    it('rejects not_contains matcher without value', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      const invalidContract = `version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Test Feature"
+
+assertions:
+  - id: A001
+    says: "Not contains without value"
+    block: "test block"
+    target: "test.target"
+    matcher: "not_contains"
+
+file_changes:
+  - path: "src/test.ts"
+    action: create`;
+      await createArtifact('test-slug', 'contract.yaml', invalidContract);
+
+      expect(() => saveArtifact('contract', 'test-slug')).toThrow();
+    });
+
     it('rejects missing file_changes', async () => {
       await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
       const invalidContract = `version: "1.0"
