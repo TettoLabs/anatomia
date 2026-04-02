@@ -349,18 +349,35 @@ async function runAnalyzer(
   const spinner = ora('Analyzing project...').start();
 
   try {
-    // Dynamic import - only loads analyzer when actually needed
-    const { analyze } = await import('../engine/index.js');
+    // Use the new engine's analyzeProject() — runs deep for init (Decision 13)
+    const { analyzeProject } = await import('../engine/analyze.js');
+    const engineResult = await analyzeProject(rootPath, { depth: 'deep' });
 
-    const result = await analyze(rootPath, {
-      skipImportScan: false,
-      strictMode: false,
-      verbose: false,
-    });
+    // Map EngineResult back to AnalysisResult shape for downstream consumers
+    // This adapter is temporary — removed in S11 when init is redesigned
+    const result: AnalysisResult = {
+      projectType: engineResult.stack.language
+        ? Object.entries({
+            'Node.js': 'node', 'Python': 'python', 'Go': 'go', 'Rust': 'rust',
+            'Ruby': 'ruby', 'PHP': 'php', 'TypeScript': 'node',
+          }).find(([display]) => display === engineResult.stack.language)?.[1] || 'unknown'
+        : 'unknown',
+      framework: engineResult.stack.framework
+        ? Object.entries({
+            'Next.js': 'nextjs', 'React': 'react', 'Vue': 'vue', 'Express': 'express',
+            'NestJS': 'nestjs', 'FastAPI': 'fastapi', 'Django': 'django', 'Flask': 'flask',
+            'Rails': 'rails', 'Svelte': 'svelte', 'Angular': 'angular',
+          }).find(([display]) => display === engineResult.stack.framework)?.[1] || engineResult.stack.framework.toLowerCase()
+        : null,
+      confidence: { projectType: 0.9, framework: engineResult.stack.framework ? 0.9 : 0 },
+      indicators: { projectType: [], framework: [] },
+      detectedAt: engineResult.overview.scannedAt,
+      version: '0.2.0',
+      patterns: engineResult.patterns || undefined,
+      conventions: engineResult.conventions || undefined,
+    };
 
     spinner.succeed('Analysis complete');
-
-    // Display detection summary
     displayDetectionSummary(result);
 
     return result;
