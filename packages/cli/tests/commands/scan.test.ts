@@ -689,7 +689,7 @@ describe('countFiles utility', () => {
       await createFiles([
         'package.json',
         'packages/cli/package.json',
-        'packages/analyzer/tsconfig.json',
+        'packages/cli/tsconfig.json',
       ]);
       const result = await countFiles(tempDir);
       expect(result.config).toBe(3);
@@ -725,7 +725,7 @@ describe('analyzer graceful degradation', () => {
       'package.json': '{"name":"test","version":"1.0.0"}',
     });
 
-    const { analyze } = await import('anatomia-analyzer');
+    const { analyze } = await import('../../src/engine/index.js');
     const result = await analyze(tempDir, { skipPatterns: false });
     expect(result.projectType).not.toBe('unknown');
   });
@@ -738,7 +738,7 @@ describe('analyzer graceful degradation', () => {
       }),
     });
 
-    const { analyze } = await import('anatomia-analyzer');
+    const { analyze } = await import('../../src/engine/index.js');
     const result = await analyze(tempDir);
     expect(result.framework).toBe('nextjs');
   });
@@ -750,7 +750,7 @@ describe('analyzer graceful degradation', () => {
       'tests/foo.test.ts': 'test("x", () => {});',
     });
 
-    const { analyze } = await import('anatomia-analyzer');
+    const { analyze } = await import('../../src/engine/index.js');
     const result = await analyze(tempDir);
     expect(result.structure).toBeDefined();
     expect(result.structure?.directories).toBeDefined();
@@ -761,7 +761,7 @@ describe('analyzer graceful degradation', () => {
       'package.json': '{"name":"test","version":"1.0.0"}',
     });
 
-    const { analyze } = await import('anatomia-analyzer');
+    const { analyze } = await import('../../src/engine/index.js');
     const result = await analyze(tempDir);
     // Patterns may be undefined if no patterns detected
     // This is acceptable behavior
