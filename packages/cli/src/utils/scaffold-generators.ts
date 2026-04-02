@@ -14,7 +14,7 @@ import type {
   AnalysisResult,
   PatternConfidence,
   MultiPattern,
-} from 'anatomia-analyzer';
+} from '../engine/index.js';
 import {
   displayProjectType,
   formatCategoryName,

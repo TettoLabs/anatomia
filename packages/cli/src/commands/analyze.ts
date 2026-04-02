@@ -7,7 +7,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
-import type { AnalysisResult } from 'anatomia-analyzer';
+import type { AnalysisResult } from '../engine/index.js';
 
 interface AnalyzeCommandOptions {
   output?: string;
@@ -45,7 +45,7 @@ export const analyzeCommand = new Command('analyze')
 
       try {
         // Dynamic import - only loads analyzer when actually needed
-        const { analyze } = await import('anatomia-analyzer');
+        const { analyze } = await import('../engine/index.js');
 
         // Run analysis
         const result = await analyze(rootPath, {

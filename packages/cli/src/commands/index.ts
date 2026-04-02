@@ -333,7 +333,7 @@ export async function buildSymbolIndex(
   outputDir?: string
 ): Promise<SymbolIndex> {
   // Dynamic import to avoid top-level analyzer dependency
-  const { ParserManager } = await import('anatomia-analyzer');
+  const { ParserManager } = await import('../engine/index.js');
 
   const parserManager = ParserManager.getInstance();
   await parserManager.initialize();

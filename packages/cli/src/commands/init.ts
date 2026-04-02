@@ -61,7 +61,7 @@ import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
-import type { AnalysisResult } from 'anatomia-analyzer';
+import type { AnalysisResult } from '../engine/index.js';
 import { dirname } from 'node:path';
 import { formatAnalysisBrief } from '../utils/format-analysis-brief.js';
 import {
@@ -179,7 +179,7 @@ export const initCommand = new Command('init')
     try {
       // Set ASTCache to write to temp directory during analysis
       // (prevents creating .ana/ in project root before atomic rename)
-      const { ASTCache } = await import('anatomia-analyzer');
+      const { ASTCache } = await import('../engine/index.js');
       const tmpCacheDir = path.join(tmpAnaPath, '.state', 'cache');
       ASTCache.setCacheDir(tmpCacheDir);
 
@@ -350,7 +350,7 @@ async function runAnalyzer(
 
   try {
     // Dynamic import - only loads analyzer when actually needed
-    const { analyze } = await import('anatomia-analyzer');
+    const { analyze } = await import('../engine/index.js');
 
     const result = await analyze(rootPath, {
       skipImportScan: false,

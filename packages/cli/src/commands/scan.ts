@@ -21,7 +21,7 @@ import ora from 'ora';
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
 import { glob } from 'glob';
-import type { AnalysisResult } from 'anatomia-analyzer';
+import type { AnalysisResult } from '../engine/index.js';
 import { countFiles, formatNumber } from '../utils/fileCounts.js';
 
 /**
@@ -727,7 +727,7 @@ export const scanCommand = new Command('scan')
 
     try {
       // Dynamic import to avoid WASM crash at module level
-      const { analyze } = await import('anatomia-analyzer');
+      const { analyze } = await import('../engine/index.js');
 
       // Run analysis
       const analysis = await analyze(rootPath, {

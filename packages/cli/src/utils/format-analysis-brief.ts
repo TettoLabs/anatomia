@@ -17,7 +17,7 @@ import type {
   ParsedFile,
   PatternConfidence,
   MultiPattern,
-} from 'anatomia-analyzer';
+} from '../engine/index.js';
 
 /**
  * Type guard to check if pattern is multi-pattern

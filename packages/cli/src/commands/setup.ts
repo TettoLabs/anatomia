@@ -9,7 +9,7 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
-import type { AnalysisResult } from 'anatomia-analyzer';
+import type { AnalysisResult } from '../engine/index.js';
 import {
   validateStructure,
   validateContent,
