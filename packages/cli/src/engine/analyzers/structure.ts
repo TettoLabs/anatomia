@@ -117,13 +117,36 @@ const DIRECTORY_PURPOSES: Record<string, string> = {
   'build': 'Build output',
   'out': 'Build output',
   '.next': 'Next.js build cache',
+  '.nuxt': 'Nuxt build cache',
   'target': 'Rust build output',
-  // Other
+  // CI/CD and tooling
+  '.github': 'GitHub config',
+  '.vscode': 'VS Code config',
+  '.idea': 'JetBrains config',
   'scripts': 'Build/utility scripts',
   'tools': 'Development tools',
   'deployments': 'Deployment configs',
   'docker': 'Docker configurations',
   'templates': 'Template files',
+  'examples': 'Example code',
+  'benchmarks': 'Performance benchmarks',
+  // Ruby/Rails
+  'concerns': 'Rails concerns',
+  'mailers': 'Email mailers',
+  'jobs': 'Background jobs',
+  'workers': 'Worker processes',
+  'tasks': 'Rake tasks',
+  // PHP/Laravel
+  'resources': 'Application resources',
+  'providers': 'Service providers',
+  // Misc
+  'vendor': 'Third-party dependencies',
+  'locales': 'Internationalization',
+  'i18n': 'Internationalization',
+  'types': 'Type definitions',
+  'generated': 'Generated code',
+  'protos': 'Protocol buffer definitions',
+  'graphql': 'GraphQL schemas',
 };
 
 /**
