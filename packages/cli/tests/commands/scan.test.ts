@@ -123,14 +123,15 @@ describe('ana scan', () => {
       const { stdout, exitCode } = runScan([tempDir, '--json']);
       expect(exitCode).toBe(0);
       const json = JSON.parse(stdout);
-      expect(json).toHaveProperty('project');
-      expect(json).toHaveProperty('scannedAt');
+      expect(json).toHaveProperty('overview');
+      expect(json.overview).toHaveProperty('project');
+      expect(json.overview).toHaveProperty('scannedAt');
       expect(json).toHaveProperty('stack');
       expect(json).toHaveProperty('files');
       expect(json).toHaveProperty('structure');
     });
 
-    it('JSON stack contains detected categories only', async () => {
+    it('JSON stack contains all category fields', async () => {
       await createTestFiles({
         'package.json': '{"name":"test","version":"1.0.0"}',
       });
@@ -138,7 +139,9 @@ describe('ana scan', () => {
       const { stdout } = runScan([tempDir, '--json']);
       const json = JSON.parse(stdout);
       expect(json.stack).toHaveProperty('language');
-      expect(json.stack).not.toHaveProperty('auth');
+      expect(json.stack).toHaveProperty('auth');
+      // auth is null when not detected
+      expect(json.stack.auth).toBeNull();
     });
 
     it('JSON files contains all count fields', async () => {
@@ -410,7 +413,8 @@ describe('ana scan', () => {
       expect(fsSync.existsSync(scanJsonPath)).toBe(true);
 
       const scanContent = JSON.parse(await fs.readFile(scanJsonPath, 'utf-8'));
-      expect(scanContent.project).toBeDefined();
+      expect(scanContent.overview).toBeDefined();
+      expect(scanContent.overview.project).toBeDefined();
       expect(scanContent.stack).toBeDefined();
       expect(scanContent.files).toBeDefined();
       expect(scanContent.structure).toBeDefined();
@@ -1026,8 +1030,9 @@ describe('ana scan', () => {
       const { stdout } = runScan(['--json']);
       const result = JSON.parse(stdout);
       expect(result.stack.workspace).toBe('pnpm monorepo');
-      expect(result.packages).toBeInstanceOf(Array);
-      expect(result.packages.length).toBeGreaterThan(0);
+      expect(result.monorepo).toBeDefined();
+      expect(result.monorepo.packages).toBeInstanceOf(Array);
+      expect(result.monorepo.packages.length).toBeGreaterThan(0);
     });
   });
 });

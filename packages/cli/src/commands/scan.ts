@@ -13,6 +13,7 @@
  *   ana scan           Scan current directory
  *   ana scan <path>    Scan specified path
  *   ana scan --json    Output JSON format
+ *   ana scan --deep    Include patterns and conventions (tree-sitter)
  */
 
 import { Command } from 'commander';
@@ -20,410 +21,79 @@ import chalk from 'chalk';
 import ora from 'ora';
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
-import { glob } from 'glob';
-import type { AnalysisResult } from '../engine/index.js';
-import { countFiles, formatNumber } from '../utils/fileCounts.js';
-import { detectFromPackageJson, aggregateMonorepoDependencies, detectFromDeps } from '../engine/detectors/dependencies.js';
+import type { EngineResult } from '../engine/types/engineResult.js';
+import { formatNumber } from '../utils/fileCounts.js';
 
 /**
- * Display name mapping for project types
+ * Display name mappings kept here for test exports (backward compat)
  */
 const LANGUAGE_DISPLAY_NAMES: Record<string, string> = {
-  node: 'Node.js',
-  python: 'Python',
-  go: 'Go',
-  rust: 'Rust',
-  ruby: 'Ruby',
-  php: 'PHP',
-  java: 'Java',
-  kotlin: 'Kotlin',
-  swift: 'Swift',
-  csharp: 'C#',
-  cpp: 'C++',
-  c: 'C',
-  typescript: 'TypeScript',
-  unknown: 'Unknown',
+  node: 'Node.js', python: 'Python', go: 'Go', rust: 'Rust',
+  ruby: 'Ruby', php: 'PHP', java: 'Java', kotlin: 'Kotlin',
+  swift: 'Swift', csharp: 'C#', cpp: 'C++', c: 'C',
+  typescript: 'TypeScript', unknown: 'Unknown',
 };
 
-/**
- * Display name mapping for frameworks
- */
 const FRAMEWORK_DISPLAY_NAMES: Record<string, string> = {
-  nextjs: 'Next.js',
-  react: 'React',
-  vue: 'Vue',
-  angular: 'Angular',
-  svelte: 'Svelte',
-  express: 'Express',
-  fastify: 'Fastify',
-  nestjs: 'NestJS',
-  fastapi: 'FastAPI',
-  django: 'Django',
-  flask: 'Flask',
-  rails: 'Rails',
-  sinatra: 'Sinatra',
-  gin: 'Gin',
-  echo: 'Echo',
-  fiber: 'Fiber',
-  actix: 'Actix',
-  rocket: 'Rocket',
-  spring: 'Spring',
-  laravel: 'Laravel',
-  symfony: 'Symfony',
+  nextjs: 'Next.js', react: 'React', vue: 'Vue', angular: 'Angular',
+  svelte: 'Svelte', express: 'Express', fastify: 'Fastify', nestjs: 'NestJS',
+  fastapi: 'FastAPI', django: 'Django', flask: 'Flask', rails: 'Rails',
+  sinatra: 'Sinatra', gin: 'Gin', echo: 'Echo', fiber: 'Fiber',
+  actix: 'Actix', rocket: 'Rocket', spring: 'Spring',
+  laravel: 'Laravel', symfony: 'Symfony',
 };
 
-/**
- * Display name mapping for patterns (database, auth, testing)
- */
 const PATTERN_DISPLAY_NAMES: Record<string, string> = {
-  // Database
-  prisma: 'Prisma',
-  drizzle: 'Drizzle',
-  typeorm: 'TypeORM',
-  sequelize: 'Sequelize',
-  mongoose: 'Mongoose',
-  sqlalchemy: 'SQLAlchemy',
-  django_orm: 'Django ORM',
-  activerecord: 'ActiveRecord',
-  gorm: 'GORM',
-  diesel: 'Diesel',
-  // Auth
-  nextauth: 'NextAuth',
-  'next-auth': 'NextAuth',
-  passport: 'Passport',
-  clerk: 'Clerk',
-  auth0: 'Auth0',
-  firebase_auth: 'Firebase Auth',
-  supabase_auth: 'Supabase Auth',
-  jwt: 'JWT',
-  oauth: 'OAuth',
-  // Testing
-  vitest: 'Vitest',
-  jest: 'Jest',
-  mocha: 'Mocha',
-  pytest: 'pytest',
-  unittest: 'unittest',
-  rspec: 'RSpec',
-  minitest: 'Minitest',
-  go_testing: 'Go testing',
-  cargo_test: 'Cargo test',
-  junit: 'JUnit',
-  phpunit: 'PHPUnit',
+  prisma: 'Prisma', drizzle: 'Drizzle', typeorm: 'TypeORM',
+  sequelize: 'Sequelize', mongoose: 'Mongoose', sqlalchemy: 'SQLAlchemy',
+  django_orm: 'Django ORM', activerecord: 'ActiveRecord', gorm: 'GORM',
+  diesel: 'Diesel', nextauth: 'NextAuth', 'next-auth': 'NextAuth',
+  passport: 'Passport', clerk: 'Clerk', auth0: 'Auth0',
+  firebase_auth: 'Firebase Auth', supabase_auth: 'Supabase Auth',
+  jwt: 'JWT', oauth: 'OAuth', vitest: 'Vitest', jest: 'Jest',
+  mocha: 'Mocha', pytest: 'pytest', unittest: 'unittest',
+  rspec: 'RSpec', minitest: 'Minitest', go_testing: 'Go testing',
+  cargo_test: 'Cargo test', junit: 'JUnit', phpunit: 'PHPUnit',
 };
 
-// Dependency detection constants and functions moved to engine/detectors/dependencies.ts
-
-/**
- * Get display name for a language/project type
- *
- * @param projectType - Internal project type identifier
- * @returns Human-readable display name
- */
 function getLanguageDisplayName(projectType: string): string {
   return LANGUAGE_DISPLAY_NAMES[projectType.toLowerCase()] || projectType;
 }
 
-/**
- * Get display name for a framework
- *
- * @param framework - Internal framework identifier
- * @returns Human-readable display name
- */
 function getFrameworkDisplayName(framework: string): string {
   return FRAMEWORK_DISPLAY_NAMES[framework.toLowerCase()] || framework;
 }
 
-/**
- * Get display name for a pattern (database, auth, testing)
- *
- * @param pattern - Internal pattern identifier
- * @returns Human-readable display name
- */
 function getPatternDisplayName(pattern: string): string {
   return PATTERN_DISPLAY_NAMES[pattern.toLowerCase()] || pattern;
 }
 
 /**
  * Box-drawing characters for terminal output
- * Compatible across iTerm, Terminal.app, VS Code terminal, Windows Terminal
  */
 const BOX = {
-  horizontal: '\u2500', // ─
-  vertical: '\u2502', // │
-  topLeft: '\u250C', // ┌
-  topRight: '\u2510', // ┐
-  bottomLeft: '\u2514', // └
-  bottomRight: '\u2518', // ┘
+  horizontal: '\u2500',
+  vertical: '\u2502',
+  topLeft: '\u250C',
+  topRight: '\u2510',
+  bottomLeft: '\u2514',
+  bottomRight: '\u2518',
 };
 
 /**
- * Scan result structure for JSON output
+ * Format human-readable terminal output from EngineResult
  */
-interface ScanResult {
-  project: string;
-  scannedAt: string;
-  stack: Record<string, string>;
-  files: {
-    source: number;
-    test: number;
-    config: number;
-    total: number;
-  };
-  structure: Array<{ path: string; purpose: string }>;
-  structureOverflow?: number;
-  packages?: Array<{ name: string; path: string }>;
-}
-
-// detectFromPackageJson is now imported from engine/detectors/dependencies.ts
-
-/**
- * Monorepo detection result
- */
-interface MonorepoInfo {
-  isMonorepo: boolean;
-  tool?: string;
-  packages?: Array<{ name: string; path: string }>;
-}
-
-/**
- * Detect monorepo workspace and list packages
- *
- * @param scanPath - Path being scanned
- * @param verbose - Whether to log verbose output
- * @returns Monorepo information
- */
-async function detectMonorepo(scanPath: string, verbose: boolean): Promise<MonorepoInfo> {
-  try {
-    // Check pnpm-workspace.yaml
-    const pnpmWorkspacePath = path.join(scanPath, 'pnpm-workspace.yaml');
-    try {
-      const pnpmContent = await fs.readFile(pnpmWorkspacePath, 'utf-8');
-      if (verbose) {
-        console.error(chalk.dim('Monorepo: detected pnpm-workspace.yaml'));
-      }
-
-      // Parse workspace patterns from YAML (simple parsing)
-      const patterns: string[] = [];
-      const lines = pnpmContent.split('\n');
-      let inPackages = false;
-      for (const line of lines) {
-        if (line.trim() === 'packages:') {
-          inPackages = true;
-          continue;
-        }
-        if (inPackages && line.trim().startsWith('-')) {
-          const pattern = line.trim().slice(1).trim().replace(/['"]/g, '');
-          patterns.push(pattern);
-        } else if (inPackages && line.trim() && !line.trim().startsWith('#')) {
-          inPackages = false;
-        }
-      }
-
-      // Find packages
-      const packages = await findWorkspacePackages(scanPath, patterns);
-      return { isMonorepo: true, tool: 'pnpm', packages };
-    } catch {
-      // Not a pnpm workspace
-    }
-
-    // Check lerna.json
-    try {
-      await fs.access(path.join(scanPath, 'lerna.json'));
-      if (verbose) {
-        console.error(chalk.dim('Monorepo: detected lerna.json'));
-      }
-      return { isMonorepo: true, tool: 'Lerna' };
-    } catch {
-      // Not a lerna workspace
-    }
-
-    // Check nx.json
-    try {
-      await fs.access(path.join(scanPath, 'nx.json'));
-      if (verbose) {
-        console.error(chalk.dim('Monorepo: detected nx.json'));
-      }
-      return { isMonorepo: true, tool: 'Nx' };
-    } catch {
-      // Not an nx workspace
-    }
-
-    // Check package.json workspaces
-    try {
-      const packageJsonPath = path.join(scanPath, 'package.json');
-      const packageJsonContent = await fs.readFile(packageJsonPath, 'utf-8');
-      const packageJson = JSON.parse(packageJsonContent);
-
-      if (packageJson.workspaces) {
-        if (verbose) {
-          console.error(chalk.dim('Monorepo: detected package.json workspaces'));
-        }
-        const patterns = Array.isArray(packageJson.workspaces)
-          ? packageJson.workspaces
-          : packageJson.workspaces.packages || [];
-        const packages = await findWorkspacePackages(scanPath, patterns);
-        return { isMonorepo: true, tool: 'npm/yarn', packages };
-      }
-    } catch {
-      // Not a workspace
-    }
-
-    return { isMonorepo: false };
-  } catch {
-    return { isMonorepo: false };
-  }
-}
-
-/**
- * Find workspace packages from glob patterns
- *
- * @param rootPath - Root path of monorepo
- * @param patterns - Workspace glob patterns (e.g., ['packages/*', 'website'])
- * @returns List of packages with names and paths
- */
-async function findWorkspacePackages(
-  rootPath: string,
-  patterns: string[]
-): Promise<Array<{ name: string; path: string }>> {
-  const packages: Array<{ name: string; path: string }> = [];
-
-  for (const pattern of patterns) {
-    try {
-      // Find directories matching pattern
-      const matches = await glob(pattern, {
-        cwd: rootPath,
-        absolute: false,
-      });
-
-      for (const match of matches) {
-        try {
-          const pkgJsonPath = path.join(rootPath, match, 'package.json');
-          const pkgContent = await fs.readFile(pkgJsonPath, 'utf-8');
-          const pkg = JSON.parse(pkgContent);
-          if (pkg.name) {
-            packages.push({ name: pkg.name, path: match });
-          }
-        } catch {
-          // No package.json or invalid - skip
-        }
-      }
-    } catch {
-      // Pattern failed - skip
-    }
-  }
-
-  return packages;
-}
-
-/**
- * Extract stack categories from analysis result
- *
- * @param analysis - Analysis result from analyzer
- * @returns Stack categories with display names
- */
-function extractStack(analysis: AnalysisResult): Record<string, string> {
-  const stack: Record<string, string> = {};
-
-  // Language (always present if detected)
-  if (analysis.projectType && analysis.projectType !== 'unknown') {
-    stack.language = getLanguageDisplayName(analysis.projectType);
-  }
-
-  // Framework
-  if (analysis.framework) {
-    stack.framework = getFrameworkDisplayName(analysis.framework);
-  }
-
-  // Database, Auth, Testing from patterns
-  if (analysis.patterns) {
-    if (analysis.patterns.database?.library) {
-      stack.database = getPatternDisplayName(analysis.patterns.database.library);
-    }
-    if (analysis.patterns.auth?.library) {
-      stack.auth = getPatternDisplayName(analysis.patterns.auth.library);
-    }
-    if (analysis.patterns.testing?.library) {
-      stack.testing = getPatternDisplayName(analysis.patterns.testing.library);
-    }
-  }
-
-  return stack;
-}
-
-/**
- * Extract structure from analysis result
- * Returns max 10 directories with overflow count
- *
- * @param analysis - Analysis result from analyzer
- * @returns Structure items and overflow count
- */
-function extractStructure(
-  analysis: AnalysisResult
-): { items: Array<{ path: string; purpose: string }>; overflow: number } {
-  if (analysis.structure?.directories) {
-    const directories = analysis.structure.directories;
-
-    // Filter to top-level directories and exclude "Unknown" purposes
-    const entries = Object.entries(directories)
-      .filter(([dirPath, purpose]) => {
-        // Only include top-level directories (no nested paths)
-        const depth = dirPath.split('/').filter(Boolean).length;
-        return depth === 1 && purpose && purpose !== 'Unknown';
-      })
-      .map(([dirPath, purpose]) => ({
-        path: dirPath.endsWith('/') ? dirPath : `${dirPath}/`,
-        purpose,
-      }));
-
-    // Sort by path for consistent ordering
-    entries.sort((a, b) => a.path.localeCompare(b.path));
-
-    const maxItems = 10;
-    const overflow = Math.max(0, entries.length - maxItems);
-
-    return {
-      items: entries.slice(0, maxItems),
-      overflow,
-    };
-  }
-
-  return { items: [], overflow: 0 };
-}
-
-/**
- * Format human-readable terminal output
- *
- * @param projectName - Name of the project
- * @param stack - Stack categories (from analyzer + fallback)
- * @param analysis - Analysis result from analyzer
- * @param fileCounts - File count totals
- * @param fileCounts.source - Source file count
- * @param fileCounts.test - Test file count
- * @param fileCounts.config - Config file count
- * @param fileCounts.total - Total file count
- * @param monorepoInfo - Monorepo detection result
- * @returns Formatted terminal output string
- */
-function formatHumanReadable(
-  projectName: string,
-  stack: Record<string, string>,
-  analysis: AnalysisResult,
-  fileCounts: { source: number; test: number; config: number; total: number },
-  monorepoInfo?: MonorepoInfo
-): string {
+function formatHumanReadable(result: EngineResult): string {
   const lines: string[] = [];
-  const now = new Date();
-  const dateStr = now.toISOString().split('T')[0];
-  const timeStr = now.toTimeString().slice(0, 5);
+  const dateStr = result.overview.scannedAt.split('T')[0];
+  const timeStr = new Date(result.overview.scannedAt).toTimeString().slice(0, 5);
   const timestamp = `${dateStr} ${timeStr}`;
 
-  // Box width (fits in 80 columns)
   const boxWidth = 71;
   const innerWidth = boxWidth - 2;
 
-  // Header box
   const titleLine = `  ana scan`;
-  const projectLine = `  ${projectName}`;
+  const projectLine = `  ${result.overview.project}`;
   const padding = innerWidth - projectLine.length - timestamp.length;
   const projectWithTimestamp = `${projectLine}${' '.repeat(Math.max(1, padding))}${timestamp}`;
 
@@ -431,137 +101,82 @@ function formatHumanReadable(
   lines.push(chalk.cyan(BOX.vertical) + chalk.bold(titleLine.padEnd(innerWidth)) + chalk.cyan(BOX.vertical));
   lines.push(chalk.cyan(BOX.vertical) + projectWithTimestamp.padEnd(innerWidth) + chalk.cyan(BOX.vertical));
   lines.push(chalk.cyan(BOX.bottomLeft + BOX.horizontal.repeat(innerWidth) + BOX.bottomRight));
-
   lines.push('');
 
-  // Stack section (stack is now passed in)
+  // Stack
   lines.push(chalk.bold('  Stack'));
   lines.push(chalk.gray('  ' + BOX.horizontal.repeat(5)));
 
-  if (Object.keys(stack).length === 0) {
-    lines.push(chalk.gray('  No code detected'));
-  } else {
-    const stackOrder = ['language', 'framework', 'database', 'auth', 'testing', 'payments', 'workspace'];
-    const stackLabels: Record<string, string> = {
-      language: 'Language',
-      framework: 'Framework',
-      database: 'Database',
-      auth: 'Auth',
-      testing: 'Testing',
-      payments: 'Payments',
-      workspace: 'Workspace',
-    };
+  const stackOrder = ['language', 'framework', 'database', 'auth', 'testing', 'payments', 'workspace'] as const;
+  const stackLabels: Record<string, string> = {
+    language: 'Language', framework: 'Framework', database: 'Database',
+    auth: 'Auth', testing: 'Testing', payments: 'Payments', workspace: 'Workspace',
+  };
 
-    for (const key of stackOrder) {
-      if (stack[key]) {
-        const label = stackLabels[key].padEnd(12);
-        lines.push(`  ${chalk.gray(label)} ${stack[key]}`);
-      }
+  let hasStack = false;
+  for (const key of stackOrder) {
+    const value = result.stack[key];
+    if (value) {
+      hasStack = true;
+      const label = stackLabels[key].padEnd(12);
+      lines.push(`  ${chalk.gray(label)} ${value}`);
     }
+  }
+  if (!hasStack) {
+    lines.push(chalk.gray('  No code detected'));
   }
 
   lines.push('');
 
-  // Files section
+  // Files
   lines.push(chalk.bold('  Files'));
   lines.push(chalk.gray('  ' + BOX.horizontal.repeat(5)));
-  lines.push(`  ${chalk.gray('Source'.padEnd(12))} ${formatNumber(fileCounts.source)}`);
-  lines.push(`  ${chalk.gray('Tests'.padEnd(12))} ${formatNumber(fileCounts.test)}`);
-  lines.push(`  ${chalk.gray('Config'.padEnd(12))} ${formatNumber(fileCounts.config)}`);
-  lines.push(`  ${chalk.gray('Total'.padEnd(12))} ${formatNumber(fileCounts.total)}`);
-
+  lines.push(`  ${chalk.gray('Source'.padEnd(12))} ${formatNumber(result.files.source)}`);
+  lines.push(`  ${chalk.gray('Tests'.padEnd(12))} ${formatNumber(result.files.test)}`);
+  lines.push(`  ${chalk.gray('Config'.padEnd(12))} ${formatNumber(result.files.config)}`);
+  lines.push(`  ${chalk.gray('Total'.padEnd(12))} ${formatNumber(result.files.total)}`);
   lines.push('');
 
-  // Structure section
-  const structure = extractStructure(analysis);
+  // Structure
   lines.push(chalk.bold('  Structure'));
   lines.push(chalk.gray('  ' + BOX.horizontal.repeat(9)));
 
-  if (structure.items.length === 0) {
+  if (result.structure.length === 0) {
     lines.push(chalk.gray('  (empty)'));
   } else {
-    for (const item of structure.items) {
+    for (const item of result.structure) {
       const pathStr = item.path.padEnd(18);
       lines.push(`  ${chalk.cyan(pathStr)}${chalk.gray(item.purpose)}`);
     }
-    if (structure.overflow > 0) {
-      lines.push(chalk.gray(`  +${structure.overflow} more directories`));
+    if (result.structureOverflow > 0) {
+      lines.push(chalk.gray(`  +${result.structureOverflow} more directories`));
     }
   }
 
   // Monorepo packages
-  if (monorepoInfo?.isMonorepo && monorepoInfo.packages && monorepoInfo.packages.length > 0) {
+  if (result.monorepo.isMonorepo && result.monorepo.packages.length > 0) {
     lines.push('');
     lines.push(chalk.bold('  Packages'));
     lines.push(chalk.gray('  ' + BOX.horizontal.repeat(8)));
-    for (const pkg of monorepoInfo.packages.slice(0, 10)) {
+    for (const pkg of result.monorepo.packages.slice(0, 10)) {
       const pathStr = pkg.path.padEnd(18);
       lines.push(`  ${chalk.cyan(pathStr)}${chalk.gray(pkg.name)}`);
     }
-    if (monorepoInfo.packages.length > 10) {
-      lines.push(chalk.gray(`  +${monorepoInfo.packages.length - 10} more packages`));
+    if (result.monorepo.packages.length > 10) {
+      lines.push(chalk.gray(`  +${result.monorepo.packages.length - 10} more packages`));
     }
   }
 
   lines.push('');
 
   // Footer CTA
-  // Always show init CTA
   lines.push(chalk.gray('Run `ana init` to generate full context for your AI.'));
-  // Add monorepo hint if applicable
-  if (monorepoInfo?.isMonorepo && monorepoInfo.packages && monorepoInfo.packages.length > 0) {
-    const firstPkg = monorepoInfo.packages[0].path;
+  if (result.monorepo.isMonorepo && result.monorepo.packages.length > 0) {
+    const firstPkg = result.monorepo.packages[0].path;
     lines.push(chalk.gray(`Scan individual packages: ana scan ${firstPkg}`));
   }
 
   return lines.join('\n');
-}
-
-/**
- * Format JSON output
- *
- * @param projectName - Name of the project
- * @param stack - Stack categories (from analyzer + fallback)
- * @param analysis - Analysis result from analyzer
- * @param fileCounts - File count totals
- * @param fileCounts.source - Source file count
- * @param fileCounts.test - Test file count
- * @param fileCounts.config - Config file count
- * @param fileCounts.total - Total file count
- * @param monorepoInfo - Monorepo detection result
- * @returns JSON string output
- */
-function formatJson(
-  projectName: string,
-  stack: Record<string, string>,
-  analysis: AnalysisResult,
-  fileCounts: { source: number; test: number; config: number; total: number },
-  monorepoInfo?: MonorepoInfo
-): string {
-  const structure = extractStructure(analysis);
-
-  const result: ScanResult = {
-    project: projectName,
-    scannedAt: new Date().toISOString(),
-    stack,
-    files: {
-      source: fileCounts.source,
-      test: fileCounts.test,
-      config: fileCounts.config,
-      total: fileCounts.total,
-    },
-    structure: structure.items,
-  };
-
-  if (structure.overflow > 0) {
-    result.structureOverflow = structure.overflow;
-  }
-
-  if (monorepoInfo?.isMonorepo && monorepoInfo.packages) {
-    result.packages = monorepoInfo.packages;
-  }
-
-  return JSON.stringify(result, null, 2);
 }
 
 /**
@@ -571,9 +186,10 @@ export const scanCommand = new Command('scan')
   .description('Scan project and display tech stack, file counts, and structure')
   .argument('[path]', 'Directory to scan (default: current directory)', '.')
   .option('--json', 'Output JSON format for programmatic consumption')
+  .option('--deep', 'Include patterns and conventions from tree-sitter analysis')
   .option('--verbose', 'Show detailed analyzer output')
   .option('--save', 'Save scan results to .ana/scan.json')
-  .action(async (targetPath: string, options: { json?: boolean; verbose?: boolean; save?: boolean }) => {
+  .action(async (targetPath: string, options: { json?: boolean; deep?: boolean; verbose?: boolean; save?: boolean }) => {
     const rootPath = path.resolve(targetPath);
 
     // Validate directory exists
@@ -588,101 +204,49 @@ export const scanCommand = new Command('scan')
       process.exit(1);
     }
 
-    // Suppress spinner for JSON or verbose output
     const spinner = options.json || options.verbose ? null : ora('Scanning project...').start();
 
     try {
       // Dynamic import to avoid WASM crash at module level
-      const { analyze } = await import('../engine/index.js');
+      const { analyzeProject } = await import('../engine/analyze.js');
 
-      // Run analysis
-      const analysis = await analyze(rootPath, {
-        skipImportScan: true, // Speed optimization
-      });
+      const depth = options.deep ? 'deep' as const : 'surface' as const;
+      const result = await analyzeProject(rootPath, { depth });
 
-      // Verbose logging
+      if (spinner) spinner.stop();
+
+      // Verbose output
       if (options.verbose) {
-        console.error(chalk.dim('\n=== VERBOSE ANALYZER OUTPUT ==='));
-        console.error(chalk.dim('Scan path:'), rootPath);
-        console.error(chalk.dim('Options:'), { skipImportScan: true });
-        console.error(chalk.dim('\nAnalysis result:'));
-        console.error(chalk.dim('  projectType:'), analysis.projectType || chalk.gray('undefined'));
-        console.error(chalk.dim('  framework:'), analysis.framework || chalk.gray('undefined'));
-        console.error(chalk.dim('  patterns:'), analysis.patterns ? JSON.stringify(analysis.patterns, null, 2) : chalk.gray('undefined'));
-        console.error(chalk.dim('  conventions:'), analysis.conventions ? `${Object.keys(analysis.conventions).length} items` : chalk.gray('undefined'));
-        console.error(chalk.dim('  structure.directories:'), analysis.structure?.directories ? `${Object.keys(analysis.structure.directories).length} items` : chalk.gray('undefined'));
-        console.error(chalk.dim('===============================\n'));
+        console.error(chalk.dim('\n=== ENGINE RESULT ==='));
+        console.error(chalk.dim('Stack:'), JSON.stringify(result.stack));
+        console.error(chalk.dim('Commands:'), JSON.stringify(result.commands));
+        console.error(chalk.dim('Git:'), JSON.stringify(result.git));
+        console.error(chalk.dim('External services:'), result.externalServices.length);
+        console.error(chalk.dim('Blind spots:'), result.blindSpots.length);
+        console.error(chalk.dim('====================\n'));
       }
 
-      // Count files
-      const fileCounts = await countFiles(rootPath);
-
-      // Detect monorepo first (needed for dependency aggregation)
-      const monorepoInfo = await detectMonorepo(rootPath, options.verbose || false);
-
-      // Primary: dependency detection from package.json
-      // If monorepo, aggregate dependencies from all workspace packages
-      let depStack: Record<string, string>;
-      if (monorepoInfo.isMonorepo && monorepoInfo.packages && monorepoInfo.packages.length > 0) {
-        const packagePaths = monorepoInfo.packages.map(p => p.path);
-        const aggregatedDeps = await aggregateMonorepoDependencies(rootPath, packagePaths);
-        const detected = detectFromDeps(aggregatedDeps);
-        depStack = {};
-        if (detected.database) depStack.database = detected.database;
-        if (detected.auth) depStack.auth = detected.auth;
-        if (detected.testing) depStack.testing = detected.testing;
-        if (detected.payments) depStack.payments = detected.payments;
+      // Output
+      if (options.json) {
+        console.log(JSON.stringify(result, null, 2));
       } else {
-        depStack = await detectFromPackageJson(rootPath, {}, options.verbose || false);
+        console.log(formatHumanReadable(result));
       }
 
-      // Enrich: tree-sitter analyzer results add categories dep scan missed, but don't override
-      const analyzerStack = extractStack(analysis);
-      const stack: Record<string, string> = { ...depStack };
-      for (const [key, value] of Object.entries(analyzerStack)) {
-        if (!stack[key] && value) {
-          stack[key] = value;
-        }
-      }
-
-      // Add workspace to stack if monorepo detected
-      if (monorepoInfo.isMonorepo && monorepoInfo.tool) {
-        stack.workspace = `${monorepoInfo.tool} monorepo`;
-      }
-
-      // Get project name from directory
-      const projectName = path.basename(rootPath);
-
-      if (spinner) {
-        spinner.stop();
-      }
-
-      // Format output
-      const jsonOutput = formatJson(projectName, stack, analysis, fileCounts, monorepoInfo);
-      const output = options.json
-        ? jsonOutput
-        : formatHumanReadable(projectName, stack, analysis, fileCounts, monorepoInfo);
-
-      console.log(output);
-
-      // Write to .ana/scan.json if --save flag is set
+      // Save
       if (options.save) {
         const anaDir = path.join(rootPath, '.ana');
         try {
           await fs.mkdir(anaDir, { recursive: true });
-          await fs.writeFile(path.join(anaDir, 'scan.json'), jsonOutput, 'utf-8');
+          await fs.writeFile(path.join(anaDir, 'scan.json'), JSON.stringify(result, null, 2), 'utf-8');
           console.log(chalk.gray('Scan saved to .ana/scan.json'));
         } catch (writeError) {
           console.error(chalk.yellow(`Warning: Failed to save scan results. ${writeError instanceof Error ? writeError.message : ''}`));
         }
       }
     } catch (error) {
-      if (spinner) {
-        spinner.fail('Scan failed');
-      }
-      if (error instanceof Error) {
-        console.error(chalk.red(`Error: ${error.message}`));
-      }
+      if (spinner) spinner.fail('Scan failed');
+      if (error instanceof Error) console.error(chalk.red(`Error: ${error.message}`));
       process.exit(1);
     }
   });
