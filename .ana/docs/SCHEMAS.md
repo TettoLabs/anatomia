@@ -168,7 +168,7 @@ file_changes:
 - `says` — **Mandatory.** One plain-English sentence a non-engineer founder would understand. This appears on the proof card and PR compliance table.
 - `block` — Human-readable test description. Becomes the test's `it()` or `test()` label.
 - `target` — What's being checked. Dot notation for nested properties.
-- `matcher` — One of the 6 valid matchers (see below).
+- `matcher` — One of the 7 valid matchers (see below).
 - `value` — Required for some matchers (see below).
 
 **Matcher vocabulary:**
@@ -181,6 +181,7 @@ file_changes:
 | `greater` | Numeric greater-than comparison | Yes |
 | `truthy` | Boolean truthiness | No |
 | `not_equals` | Value does NOT match | Yes |
+| `not_contains` | String/array does NOT contain value | Yes |
 
 **`file_changes` section:**
 

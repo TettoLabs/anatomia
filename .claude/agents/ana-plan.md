@@ -249,8 +249,8 @@ file_changes:
 - `says` — **Mandatory.** One plain-English sentence a non-engineer founder would understand. This appears on the Proof card.
 - `block` — Human-readable test description. Becomes the test's `it()` or `test()` label.
 - `target` — What's being checked. Dot notation for nested properties.
-- `matcher` — One of: `equals`, `exists`, `contains`, `greater`, `truthy`, `not_equals`
-- `value` — Required for `equals`, `contains`, `greater`, `not_equals`. Omit for `exists` and `truthy`.
+- `matcher` — One of: `equals`, `exists`, `contains`, `greater`, `truthy`, `not_equals`, `not_contains`
+- `value` — Required for `equals`, `contains`, `greater`, `not_equals`, `not_contains`. Omit for `exists` and `truthy`.
 
 **`says` field guidance:**
 
@@ -297,6 +297,7 @@ After writing the contract: "Contract: {N} assertions across {M} blocks."
 | `greater` | Numeric greater-than comparison | Yes |
 | `truthy` | Boolean truthiness | No |
 | `not_equals` | Value does NOT match | Yes |
+| `not_contains` | String/array does NOT contain value | Yes |
 
 Before writing contract assertions, resolve every value ambiguity in the spec. If `totalFiles` could be 7 or 8, decide which and document the decision in the spec. The contract MUST assert resolved values. An ambiguous value that reaches the contract becomes a guaranteed builder deviation.
 

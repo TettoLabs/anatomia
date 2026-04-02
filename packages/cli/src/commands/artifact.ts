@@ -322,8 +322,8 @@ function validateSpecFormat(filePath: string): { error?: string; warning?: strin
 /**
  * Valid matchers for contract assertions
  */
-const VALID_MATCHERS = ['equals', 'exists', 'contains', 'greater', 'truthy', 'not_equals'];
-const VALUE_REQUIRED_MATCHERS = ['equals', 'contains', 'greater', 'not_equals'];
+const VALID_MATCHERS = ['equals', 'exists', 'contains', 'greater', 'truthy', 'not_equals', 'not_contains'];
+const VALUE_REQUIRED_MATCHERS = ['equals', 'contains', 'greater', 'not_equals', 'not_contains'];
 
 /**
  * Contract assertion structure
