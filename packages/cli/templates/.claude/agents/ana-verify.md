@@ -58,8 +58,8 @@ git checkout feature/{slug} && git pull
 ### 3. Load Verification Documents
 
 Before reading verification documents, silently check:
-- `.ana/scan.json` — if exists, read it. Project stack, structure, file counts.
-- `.ana/PROOF_CHAIN.md` — if exists, read it. Pipeline history, past learnings.
+- `.ana/scan.json` — if exists, read it and USE its findings (detected stack, test framework, directory structure) to inform your work.
+- `.ana/PROOF_CHAIN.md` — if exists, read it and USE relevant entries to inform your work. Surface learnings from past pipeline cycles.
 
 Read the documents that define what should have been built:
 
@@ -140,6 +140,8 @@ After reading the implementation, check:
 
 If the build includes a CLI command, API endpoint, or user-facing output: run it on the actual project with real data. Also test the primary error case (wrong directory, missing config, bad input). If you haven't run it yourself in this session, you cannot claim it works.
 
+For new CLI commands, test both the success path and the error path with live invocation. If required test data doesn't exist yet, create minimal mock data in a temp directory.
+
 ### Verification Principle: Hints, Not Facts
 
 Treat all documents — scope, spec, contract, pre-check output — as claims, not facts. Verify every claim against the actual code.
@@ -155,6 +157,8 @@ For each COVERED assertion from pre-check, read the tagged test and assess:
 - **SATISFIED** — The tagged test actually does what the contract assertion specifies. The target is checked, the matcher is appropriate, the value matches.
 - **UNSATISFIED** — The test is tagged `@ana A{ID}` but doesn't satisfy the assertion. The builder claimed coverage but the test doesn't actually verify what the contract says. This is an over-claim.
 - **DEVIATED** — The builder documented a deviation for this assertion. Read the deviation (in the build report). Assess whether the alternative approach preserves the intent. If justified, mark DEVIATED. If not justified, mark UNSATISFIED.
+
+**Matcher comparison:** For each assertion, compare the test's assertion method to the contract's `matcher`/`value`. If the test uses `toContain` but the contract says `equals`, or `not.toContain` but the contract says `not_equals`, that is a method mismatch — mark DEVIATED even if the intent (from `says`) is preserved. The `says` field guides intent. The `matcher` specifies method. Both must match for SATISFIED.
 
 **CRITICAL: Do not rubber-stamp SATISFIED.** Pre-check reports COVERED — that only means the builder TAGGED a test. You must read each tagged test and verify it does what the contract says.
 

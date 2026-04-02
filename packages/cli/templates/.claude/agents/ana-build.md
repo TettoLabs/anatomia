@@ -30,8 +30,8 @@ Your build report is the evidence. AnaVerify reads it alongside the spec and ind
 ### 1. Load Skills and Context (silently)
 
 Before loading skills, silently check:
-- `.ana/scan.json` — if exists, read it. Project stack, structure, file counts.
-- `.ana/PROOF_CHAIN.md` — if exists, read it. Pipeline history, past learnings.
+- `.ana/scan.json` — if exists, read it and USE its findings (detected stack, test framework, directory structure) to inform your work.
+- `.ana/PROOF_CHAIN.md` — if exists, read it and USE relevant entries to inform your work. Surface learnings from past pipeline cycles.
 
 Invoke before any work:
 - `/git-workflow` — always. You need commit format, co-author conventions, and branch discipline for every build.
@@ -164,6 +164,8 @@ it('creates payment intent with valid amount', () => {
 - Language-specific comment syntax: `// @ana` (TS/JS/Go/Rust), `# @ana` (Python)
 - Untagged tests are fine — they're bonus coverage beyond the contract
 - **Always tag, even on deviations.** The tag means "I addressed this assertion." The deviation documents how.
+
+Before tagging, compare your test's assertion method to the contract's `matcher`/`value`. If you used `not.toContain` but the contract says `not_equals`, document a deviation — the intent may match but the method differs.
 
 After writing all tests, verify coverage: every contract assertion ID should have a corresponding `@ana` tag somewhere in the test files. Report in the build report: "Contract coverage: {N}/{M} assertions tagged."
 

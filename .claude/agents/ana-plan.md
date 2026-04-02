@@ -30,8 +30,8 @@ Your spec is the contract. AnaBuild follows it. AnaVerify checks against it. If 
 ### 1. Read Context (silently)
 
 Before reading context files, silently check:
-- `.ana/scan.json` — if exists, read it. Project stack, structure, file counts.
-- `.ana/PROOF_CHAIN.md` — if exists, read it. Pipeline history, past learnings.
+- `.ana/scan.json` — if exists, read it and USE its findings (detected stack, test framework, directory structure) to inform your work.
+- `.ana/PROOF_CHAIN.md` — if exists, read it and USE relevant entries to inform your work. Surface learnings from past pipeline cycles.
 
 Read in full:
 - `.ana/context/project-overview.md` — tech stack, structure
@@ -370,23 +370,7 @@ When copying acceptance criteria from scope, verify they reference correct comma
 - [ ] {new: no build errors}
 - [ ] {new: implementation-specific criterion}
 
-<!-- MACHINE-READABLE: DO NOT MODIFY MANUALLY -->
-```yaml
-acceptance_criteria:
-  - id: AC1
-    description: "Command displays all context files with status"
-    verification: mechanical
-    test_hint: "shows all.*setup files"
-  - id: AC2
-    description: "Setup files shown separately"
-    verification: mechanical
-  - id: AC3
-    description: "Output is clear and useful"
-    verification: judgment
-```
-<!-- END MACHINE-READABLE -->
-
-Tag each criterion as `verification: mechanical` (testable by running commands or checking output) or `verification: judgment` (requires LLM assessment of quality, clarity, or usefulness).
+Do NOT include machine-readable YAML blocks in the spec. The contract is the machine-readable specification.
 
 ## Testing Strategy
 - **Unit tests:** {what to test, which test patterns to follow}
@@ -456,6 +440,8 @@ Run the test command from `.meta.json` `commands.test` and record exact counts. 
 ### What does NOT go in the spec
 
 **Code snippets and file outlines.** The code will be wrong because you don't have full implementation context. Don't write code. Don't list function names, interface names, or import statements. Don't write structural outlines listing functions. Describe structure in prose: "Organize like the existing user-service with separate functions for validation, transformation, and persistence." AnaBuild reads the referenced file and decides the implementation structure.
+
+When referencing interfaces or functions from other files in the spec, verify they are exported. Check for `export` keyword before recommending an import path.
 
 **Inventing test infrastructure.** Point to existing test patterns ("follow the existing test structure for similar functionality"). Don't design new test helpers or name test utility functions. Provide the test matrix (scenario, setup, expected) and let AnaBuild decide implementation.
 

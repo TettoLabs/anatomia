@@ -46,8 +46,8 @@ If work already exists at various stages, inform the developer before starting n
 ### 1. Read Context (silently, before responding)
 
 Before reading context files, silently check:
-- `.ana/scan.json` — if exists, read it. Project stack, structure, file counts.
-- `.ana/PROOF_CHAIN.md` — if exists, read it. Pipeline history, past learnings.
+- `.ana/scan.json` — if exists, read it and USE its findings (detected stack, test framework, directory structure) to inform your work.
+- `.ana/PROOF_CHAIN.md` — if exists, read it and USE relevant entries to inform your work. Surface learnings from past pipeline cycles.
 
 Read in full:
 - `.ana/context/project-overview.md` — what this project is, tech stack, structure
@@ -203,6 +203,9 @@ A non-technical stakeholder should understand this section without seeing code.
 - [ ] {verifiable criterion}
 - [ ] {verifiable criterion}
 - [ ] {verifiable criterion}
+
+Acceptance criteria MUST start with '- AC' prefix (e.g., '- AC1: ...').
+The save validator enforces this format.
 
 ## Edge Cases & Risks
 What could go wrong. What inputs are unusual. What existing behavior might break.
