@@ -18,10 +18,11 @@ import * as fs from 'node:fs/promises';
 import { glob } from 'glob';
 import type { EngineResult } from './types/engineResult.js';
 import type { AnalysisResult } from './types/index.js';
-import { readDependencies, detectFromDeps, aggregateMonorepoDependencies, DATABASE_PACKAGES, AUTH_PACKAGES, TESTING_PACKAGES, PAYMENT_PACKAGES } from './detectors/dependencies.js';
+import { readDependencies, detectFromDeps, detectServiceDeps, aggregateMonorepoDependencies, DATABASE_PACKAGES, AUTH_PACKAGES, TESTING_PACKAGES, PAYMENT_PACKAGES } from './detectors/dependencies.js';
 import { detectPackageManager } from './detectors/packageManager.js';
 import { detectGitInfo } from './detectors/git.js';
 import { detectCommands } from './detectors/commands.js';
+import { detectDeployment } from './detectors/deployment.js';
 import { countFiles } from '../utils/fileCounts.js';
 
 // Display name mappings (moved from scan.ts to be shared)
@@ -374,10 +375,17 @@ export async function analyzeProject(
   // 9. Git
   const git = await detectGitInfo(rootPath);
 
-  // 10. External services, schemas, secrets
+  // 10. External services (existing + new categories), schemas, secrets, deployment
   const externalServices = await detectExternalServices(allDeps, rootPath);
+  // Add services from new category maps (AI, email, monitoring, jobs)
+  for (const svc of detectServiceDeps(allDeps)) {
+    if (!externalServices.some(s => s.name === svc.name)) {
+      externalServices.push({ name: svc.name, category: svc.category, source: 'dependency', configFound: false });
+    }
+  }
   const { schemas, blindSpots } = await detectSchemas(allDeps, rootPath);
   const secrets = await detectSecrets(rootPath);
+  const deployment = detectDeployment(rootPath);
 
   // 11. Project profile
   const browserFrameworks = ['Next.js', 'React', 'Vue', 'Angular', 'Svelte', 'Nuxt'];
@@ -416,8 +424,10 @@ export async function analyzeProject(
     secrets,
     projectProfile,
     blindSpots,
+    deployment,
     patterns: options.depth === 'deep' && analysis?.patterns ? analysis.patterns : null,
     conventions: options.depth === 'deep' && analysis?.conventions ? analysis.conventions : null,
+    recommendations: null, // S11: populated by recommendation engine
     health: {} as Record<string, never>,
     readiness: {} as Record<string, never>,
   };

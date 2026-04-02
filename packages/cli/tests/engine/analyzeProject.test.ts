@@ -35,8 +35,8 @@ describe('analyzeProject()', () => {
     const expectedKeys = [
       'overview', 'stack', 'files', 'structure', 'structureOverflow',
       'commands', 'git', 'monorepo', 'externalServices', 'schemas',
-      'secrets', 'projectProfile', 'blindSpots', 'patterns',
-      'conventions', 'health', 'readiness',
+      'secrets', 'projectProfile', 'blindSpots', 'deployment',
+      'patterns', 'conventions', 'recommendations', 'health', 'readiness',
     ];
     for (const key of expectedKeys) {
       expect(result).toHaveProperty(key);

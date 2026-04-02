@@ -83,9 +83,20 @@ export interface EngineResult {
     issue: string;
     resolution: string;
   }>;
+  deployment: {
+    platform: string;
+    configFile: string;
+  } | null;
   // Deep tier only (null when surface)
   patterns: any | null;
   conventions: any | null;
+  // S11: Stack recommendations based on detected patterns
+  recommendations: Array<{
+    area: string;
+    suggestion: string;
+    reason: string;
+    priority: 'low' | 'medium' | 'high';
+  }> | null;
   // Phase 1 placeholder
   health: Record<string, never>;
   // Phase 2 placeholder

@@ -17,8 +17,11 @@ export const DATABASE_PACKAGES: Record<string, string> = {
   'drizzle-orm': 'Drizzle',
   'typeorm': 'TypeORM', 'sequelize': 'Sequelize',
   'mongoose': 'Mongoose', 'knex': 'Knex',
-  // BaaS after ORMs
+  // BaaS / serverless databases
+  'convex': 'Convex',
   '@supabase/supabase-js': 'Supabase',
+  '@neondatabase/serverless': 'Neon',
+  '@planetscale/database': 'PlanetScale',
   'firebase': 'Firebase', 'firebase-admin': 'Firebase',
   // Raw drivers last
   'pg': 'PostgreSQL', 'mysql2': 'MySQL',
@@ -29,8 +32,9 @@ export const DATABASE_PACKAGES: Record<string, string> = {
  * Auth packages for dependency detection
  */
 export const AUTH_PACKAGES: Record<string, string> = {
-  '@clerk/nextjs': 'Clerk', '@clerk/express': 'Clerk',
+  '@clerk/nextjs': 'Clerk', '@clerk/express': 'Clerk', '@clerk/clerk-react': 'Clerk',
   'next-auth': 'NextAuth', '@auth/core': 'Auth.js',
+  'better-auth': 'Better Auth',
   '@supabase/ssr': 'Supabase Auth',
   '@supabase/auth-helpers-nextjs': 'Supabase Auth',
   'passport': 'Passport',
@@ -57,8 +61,56 @@ export const TESTING_PACKAGES: Record<string, string> = {
  */
 export const PAYMENT_PACKAGES: Record<string, string> = {
   'stripe': 'Stripe', '@stripe/stripe-js': 'Stripe',
-  '@lemonsqueezy/lemonsqueezy.js': 'Lemon Squeezy',
+  '@lemonsqueezy/lemonsqueezy.js': 'LemonSqueezy',
+  '@polar-sh/sdk': 'Polar',
   'paddle-sdk': 'Paddle',
+};
+
+/**
+ * AI/LLM packages
+ */
+export const AI_PACKAGES: Record<string, string> = {
+  '@anthropic-ai/sdk': 'Anthropic',
+  'openai': 'OpenAI',
+  '@google/generative-ai': 'Google AI',
+  'ai': 'Vercel AI SDK',
+  '@ai-sdk/anthropic': 'Vercel AI (Anthropic)',
+  '@ai-sdk/openai': 'Vercel AI (OpenAI)',
+  '@ai-sdk/google': 'Vercel AI (Google)',
+  'ollama': 'Ollama',
+  'replicate': 'Replicate',
+};
+
+/**
+ * Email packages
+ */
+export const EMAIL_PACKAGES: Record<string, string> = {
+  'resend': 'Resend',
+  '@sendgrid/mail': 'SendGrid',
+  'postmark': 'Postmark',
+  'nodemailer': 'Nodemailer',
+  '@react-email/components': 'React Email',
+};
+
+/**
+ * Monitoring/analytics packages
+ */
+export const MONITORING_PACKAGES: Record<string, string> = {
+  'posthog-js': 'PostHog', 'posthog-node': 'PostHog',
+  '@sentry/nextjs': 'Sentry', '@sentry/node': 'Sentry', '@sentry/react': 'Sentry',
+  'logrocket': 'LogRocket',
+  '@amplitude/analytics-browser': 'Amplitude',
+};
+
+/**
+ * Background jobs/queue packages
+ */
+export const JOBS_PACKAGES: Record<string, string> = {
+  'inngest': 'Inngest',
+  '@trigger.dev/sdk': 'Trigger.dev',
+  '@upstash/qstash': 'Upstash QStash',
+  'bullmq': 'BullMQ',
+  '@upstash/redis': 'Upstash Redis',
 };
 
 export interface DependencyDetectionResult {
@@ -155,6 +207,35 @@ export async function detectFromPackageJson(
   }
 
   return stack;
+}
+
+/**
+ * Detect services from new category maps.
+ * Returns entries for externalServices in EngineResult.
+ */
+export function detectServiceDeps(
+  allDeps: Record<string, string>
+): Array<{ name: string; category: string }> {
+  const services: Array<{ name: string; category: string }> = [];
+  const seen = new Set<string>();
+
+  const maps: Array<[Record<string, string>, string]> = [
+    [AI_PACKAGES, 'ai'],
+    [EMAIL_PACKAGES, 'email'],
+    [MONITORING_PACKAGES, 'monitoring'],
+    [JOBS_PACKAGES, 'jobs'],
+  ];
+
+  for (const [map, category] of maps) {
+    for (const [pkg, name] of Object.entries(map)) {
+      if (allDeps[pkg] && !seen.has(name)) {
+        seen.add(name);
+        services.push({ name, category });
+      }
+    }
+  }
+
+  return services;
 }
 
 /**

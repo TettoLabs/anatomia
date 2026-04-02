@@ -172,15 +172,32 @@ function formatHumanReadable(result: EngineResult): string {
     lines.push(chalk.gray('  No code detected'));
   }
 
-  // Services (only if non-empty)
+  // Services (only if non-empty) — grouped by category
   if (result.externalServices.length > 0) {
     lines.push('');
     lines.push(chalk.bold('  Services'));
     lines.push(chalk.gray('  ' + BOX.horizontal.repeat(8)));
+    const byCategory = new Map<string, string[]>();
     for (const svc of result.externalServices) {
-      const name = svc.name.padEnd(12);
-      lines.push(`  ${chalk.gray(name)} ${svc.category}`);
+      const list = byCategory.get(svc.category) || [];
+      list.push(svc.name);
+      byCategory.set(svc.category, list);
     }
+    const categoryLabels: Record<string, string> = {
+      ai: 'AI', payments: 'Payments', email: 'Email', monitoring: 'Monitoring',
+      backend: 'Backend', storage: 'Storage', hosting: 'Hosting',
+      analytics: 'Analytics', jobs: 'Jobs', cloud: 'Cloud',
+    };
+    for (const [cat, names] of byCategory) {
+      const label = (categoryLabels[cat] || cat).padEnd(12);
+      lines.push(`  ${chalk.gray(label)} ${names.join(', ')}`);
+    }
+  }
+
+  // Deployment (only if detected)
+  if (result.deployment) {
+    lines.push('');
+    lines.push(`  ${chalk.gray('Deploy'.padEnd(12))} ${result.deployment.platform} ${chalk.gray(`(${result.deployment.configFile})`)}`);
   }
 
   // Commands (only if any detected)
