@@ -93,6 +93,9 @@ describe('old template system removed', () => {
       const content = await fs.readFile(pkgPath, 'utf-8');
       const pkg = JSON.parse(content);
 
+      // Verify analyzer dependency was removed in S10 merge
+      expect(pkg.dependencies?.['anatomia-analyzer']).toBeUndefined();
+
       // Verify kept dependencies (analyzer absorbed into CLI in S10)
       expect(pkg.dependencies?.chalk).toBeDefined();
       expect(pkg.dependencies?.commander).toBeDefined();

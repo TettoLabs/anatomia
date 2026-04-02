@@ -61,7 +61,7 @@ export async function detectMonorepo(
         tool: 'pnpm',
         workspacePatterns: patterns,
       };
-    } catch (_error) {
+    } catch (error) {
       collector.addWarning(
         new DetectionEngineError(
           ERROR_CODES.INVALID_YAML,
@@ -103,7 +103,7 @@ export async function detectMonorepo(
           // Turbo doesn't list packages explicitly
         };
       }
-    } catch (_error) {
+    } catch (error) {
       collector.addWarning(
         new DetectionEngineError(
           ERROR_CODES.INVALID_JSON,
@@ -143,7 +143,7 @@ export async function detectMonorepo(
           tool: 'nx',
         };
       }
-    } catch (_error) {
+    } catch (error) {
       collector.addWarning(
         new DetectionEngineError(
           ERROR_CODES.INVALID_JSON,
@@ -183,7 +183,7 @@ export async function detectMonorepo(
         tool: 'lerna',
         workspacePatterns: patterns,
       };
-    } catch (_error) {
+    } catch (error) {
       collector.addWarning(
         new DetectionEngineError(
           ERROR_CODES.INVALID_JSON,
@@ -312,7 +312,7 @@ async function discoverPackages(
         packages.push(...subPackages);
       }
     }
-  } catch (_error) {
+  } catch (error) {
     collector.addWarning(
       new DetectionEngineError(
         ERROR_CODES.PERMISSION_DENIED,

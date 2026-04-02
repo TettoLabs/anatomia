@@ -34,7 +34,7 @@ export async function readPythonDependencies(
       const content = await readFile(reqPath);
       const reqDeps = parseRequirementsTxt(content);
       reqDeps.forEach((d) => deps.add(d));
-    } catch (_error) {
+    } catch (error) {
       collector?.addWarning(
         new DetectionEngineError(
           ERROR_CODES.PARSE_ERROR,
@@ -59,7 +59,7 @@ export async function readPythonDependencies(
       const content = await readFile(pyprojectPath);
       const tomlDeps = parsePyprojectToml(content);
       tomlDeps.forEach((d) => deps.add(d));
-    } catch (_error) {
+    } catch (error) {
       collector?.addWarning(
         new DetectionEngineError(
           ERROR_CODES.PARSE_ERROR,
@@ -83,7 +83,7 @@ export async function readPythonDependencies(
       const content = await readFile(pipfilePath);
       const pipDeps = parsePipfile(content);
       pipDeps.forEach((d) => deps.add(d));
-    } catch (_error) {
+    } catch (error) {
       collector?.addWarning(
         new DetectionEngineError(
           ERROR_CODES.PARSE_ERROR,
