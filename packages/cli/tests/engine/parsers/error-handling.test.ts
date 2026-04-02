@@ -5,13 +5,13 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { skipIfNoWasm } from '../fixtures.js';
 
-let wasmAvailable = false;
+const wasmAvailable = await skipIfNoWasm();
 
-describe('Error handling', () => {
+describe.skipIf(!wasmAvailable)('Error handling', () => {
   let testDir: string;
 
   beforeAll(async () => {
-    wasmAvailable = await skipIfNoWasm();
+    await ParserManager.getInstance().initialize();
   });
 
   beforeEach(async () => {
@@ -24,7 +24,7 @@ describe('Error handling', () => {
   });
 
   it('handles Python syntax error gracefully', async () => {
-    if (!wasmAvailable) return;
+
     const malformed = 'def broken(\n    pass';  // Missing closing paren
     const filePath = join(testDir, 'broken.py');
     await writeFile(filePath, malformed, 'utf8');
@@ -38,7 +38,7 @@ describe('Error handling', () => {
   });
 
   it('handles TypeScript syntax error gracefully', async () => {
-    if (!wasmAvailable) return;
+
     const malformed = 'function broken( {';  // Missing param closing
     const filePath = join(testDir, 'broken.ts');
     await writeFile(filePath, malformed, 'utf8');
@@ -51,7 +51,7 @@ describe('Error handling', () => {
   });
 
   it('handles empty file gracefully', async () => {
-    if (!wasmAvailable) return;
+
     const filePath = join(testDir, 'empty.py');
     await writeFile(filePath, '', 'utf8');
 
@@ -64,7 +64,7 @@ describe('Error handling', () => {
   });
 
   it('handles file with only comments', async () => {
-    if (!wasmAvailable) return;
+
     const comments = '# This is a comment\n# Another comment\n';
     const filePath = join(testDir, 'comments.py');
     await writeFile(filePath, comments, 'utf8');
@@ -77,7 +77,7 @@ describe('Error handling', () => {
   });
 
   it('handles JavaScript with incomplete code', async () => {
-    if (!wasmAvailable) return;
+
     const incomplete = 'const x = ';  // Incomplete statement
     const filePath = join(testDir, 'incomplete.js');
     await writeFile(filePath, incomplete, 'utf8');
@@ -89,7 +89,7 @@ describe('Error handling', () => {
   });
 
   it('handles Go with missing package declaration', async () => {
-    if (!wasmAvailable) return;
+
     const invalid = 'func main() {}';  // Missing 'package main'
     const filePath = join(testDir, 'nopkg.go');
     await writeFile(filePath, invalid, 'utf8');

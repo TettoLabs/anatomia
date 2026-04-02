@@ -1,17 +1,18 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { parseGoMod } from '../../../src/engine/parsers/go';
 import { parseCargoToml } from '../../../src/engine/parsers/rust';
+import { ParserManager } from '../../../src/engine/parsers/treeSitter.js';
 import { skipIfNoWasm } from '../fixtures.js';
 
-let wasmAvailable = false;
+const wasmAvailable = await skipIfNoWasm();
 
-describe('parseGoMod', () => {
+describe.skipIf(!wasmAvailable)('parseGoMod', () => {
   beforeAll(async () => {
-    wasmAvailable = await skipIfNoWasm();
+    await ParserManager.getInstance().initialize();
   });
 
   it('parses require blocks with multiple dependencies', () => {
-    if (!wasmAvailable) return;
+
     const content = `module github.com/user/myapp
 
 require (
@@ -24,7 +25,7 @@ require (
   });
 
   it('handles version suffixes (/v2, /v3, /v5) in module paths', () => {
-    if (!wasmAvailable) return;
+
     const content = `require (
     github.com/go-chi/chi/v5 v5.0.0
 )`;
@@ -34,7 +35,7 @@ require (
   });
 
   it('parses single-line require statements', () => {
-    if (!wasmAvailable) return;
+
     const content = `require github.com/gin-gonic/gin v1.9.0`;
 
     const result = parseGoMod(content);
@@ -42,7 +43,7 @@ require (
   });
 
   it('returns empty array for go.mod with no dependencies', () => {
-    if (!wasmAvailable) return;
+
     const content = `module github.com/user/myapp`;
 
     const result = parseGoMod(content);
@@ -50,13 +51,13 @@ require (
   });
 });
 
-describe('parseCargoToml', () => {
+describe.skipIf(!wasmAvailable)('parseCargoToml', () => {
   beforeAll(async () => {
-    wasmAvailable = await skipIfNoWasm();
+    await ParserManager.getInstance().initialize();
   });
 
   it('parses dependencies section with simple and inline table formats', () => {
-    if (!wasmAvailable) return;
+
     const content = `[dependencies]
 axum = "0.6"
 tokio = { version = "1.0", features = ["full"] }`;
@@ -66,7 +67,7 @@ tokio = { version = "1.0", features = ["full"] }`;
   });
 
   it('parses dev-dependencies section', () => {
-    if (!wasmAvailable) return;
+
     const content = `[dev-dependencies]
 criterion = "0.5"`;
 
@@ -75,7 +76,7 @@ criterion = "0.5"`;
   });
 
   it('parses both dependencies and dev-dependencies sections combined', () => {
-    if (!wasmAvailable) return;
+
     const content = `[dependencies]
 axum = "0.6"
 
@@ -87,7 +88,7 @@ tokio-test = "0.4"`;
   });
 
   it('returns empty array for Cargo.toml with no dependencies', () => {
-    if (!wasmAvailable) return;
+
     const content = `[package]
 name = "myapp"
 version = "0.1.0"`;

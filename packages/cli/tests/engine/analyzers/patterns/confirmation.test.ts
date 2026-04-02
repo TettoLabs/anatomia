@@ -2,9 +2,10 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { confirmPatternsWithTreeSitter } from '../../../../src/engine/analyzers/patterns.js';
 import type { AnalysisResult, ParsedFile } from '../../../../src/engine/types/index.js';
 import type { PatternConfidence } from '../../../../src/engine/types/patterns.js';
+import { ParserManager } from '../../../../src/engine/parsers/treeSitter.js';
 import { skipIfNoWasm } from '../../fixtures.js';
 
-let wasmAvailable = false;
+const wasmAvailable = await skipIfNoWasm();
 
 // Helper to create mock ParsedFile
 function createMockParsedFile(
@@ -28,14 +29,14 @@ function createMockParsedFile(
   };
 }
 
-describe('Tree-sitter Pattern Confirmation', () => {
+describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
   beforeAll(async () => {
-    wasmAvailable = await skipIfNoWasm();
+    await ParserManager.getInstance().initialize();
   });
 
   describe('Validation Pattern Confirmation', () => {
     it('boosts Pydantic confidence when BaseModel imports found', async () => {
-      if (!wasmAvailable) return;
+
       const analysis: AnalysisResult = {
         projectType: 'python',
         framework: 'fastapi',
@@ -75,7 +76,7 @@ describe('Tree-sitter Pattern Confirmation', () => {
     });
 
     it('boosts Zod confidence when zod imports found', async () => {
-      if (!wasmAvailable) return;
+
       const analysis: AnalysisResult = {
         projectType: 'node',
         framework: 'express',
@@ -112,7 +113,7 @@ describe('Tree-sitter Pattern Confirmation', () => {
     });
 
     it('does not boost confidence when imports not found', async () => {
-      if (!wasmAvailable) return;
+
       const analysis: AnalysisResult = {
         projectType: 'python',
         framework: null,
@@ -146,7 +147,7 @@ describe('Tree-sitter Pattern Confirmation', () => {
     });
 
     it('confirms Joi validation library', async () => {
-      if (!wasmAvailable) return;
+
       const analysis: AnalysisResult = {
         projectType: 'node',
         framework: 'express',
@@ -183,7 +184,7 @@ describe('Tree-sitter Pattern Confirmation', () => {
     });
 
     it('confirms class-validator via decorators', async () => {
-      if (!wasmAvailable) return;
+
       const analysis: AnalysisResult = {
         projectType: 'node',
         framework: 'nestjs',
@@ -226,7 +227,7 @@ describe('Tree-sitter Pattern Confirmation', () => {
     });
 
     it('confirms DRF serializers', async () => {
-      if (!wasmAvailable) return;
+
       const analysis: AnalysisResult = {
         projectType: 'python',
         framework: 'django',
@@ -269,7 +270,7 @@ describe('Tree-sitter Pattern Confirmation', () => {
 
   describe('Database Pattern Confirmation', () => {
     it('confirms SQLAlchemy async variant and boosts confidence', async () => {
-      if (!wasmAvailable) return;
+
       const analysis: AnalysisResult = {
         projectType: 'python',
         framework: 'fastapi',
@@ -318,7 +319,7 @@ describe('Tree-sitter Pattern Confirmation', () => {
     });
 
     it('detects SQLAlchemy sync variant when Session imports found', async () => {
-      if (!wasmAvailable) return;
+
       const analysis: AnalysisResult = {
         projectType: 'python',
         framework: 'flask',
@@ -356,7 +357,7 @@ describe('Tree-sitter Pattern Confirmation', () => {
     });
 
     it('confirms Prisma when PrismaClient imports found', async () => {
-      if (!wasmAvailable) return;
+
       const analysis: AnalysisResult = {
         projectType: 'node',
         framework: 'nextjs',
@@ -393,7 +394,7 @@ describe('Tree-sitter Pattern Confirmation', () => {
     });
 
     it('confirms TypeORM', async () => {
-      if (!wasmAvailable) return;
+
       const analysis: AnalysisResult = {
         projectType: 'node',
         framework: 'nestjs',
@@ -430,7 +431,7 @@ describe('Tree-sitter Pattern Confirmation', () => {
     });
 
     it('confirms GORM for Go projects', async () => {
-      if (!wasmAvailable) return;
+
       const analysis: AnalysisResult = {
         projectType: 'go',
         framework: 'gin',
@@ -467,7 +468,7 @@ describe('Tree-sitter Pattern Confirmation', () => {
     });
 
     it('confirms Sequelize', async () => {
-      if (!wasmAvailable) return;
+
       const analysis: AnalysisResult = {
         projectType: 'node',
         framework: 'express',
@@ -506,7 +507,7 @@ describe('Tree-sitter Pattern Confirmation', () => {
 
   describe('Auth Pattern Confirmation', () => {
     it('confirms JWT when imports found', async () => {
-      if (!wasmAvailable) return;
+
       const analysis: AnalysisResult = {
         projectType: 'python',
         framework: 'fastapi',
@@ -546,7 +547,7 @@ describe('Tree-sitter Pattern Confirmation', () => {
     });
 
     it('confirms Clerk auth', async () => {
-      if (!wasmAvailable) return;
+
       const analysis: AnalysisResult = {
         projectType: 'node',
         framework: 'nextjs',
@@ -583,7 +584,7 @@ describe('Tree-sitter Pattern Confirmation', () => {
     });
 
     it('confirms Passport session auth', async () => {
-      if (!wasmAvailable) return;
+
       const analysis: AnalysisResult = {
         projectType: 'node',
         framework: 'express',
@@ -622,7 +623,7 @@ describe('Tree-sitter Pattern Confirmation', () => {
 
   describe('Testing Pattern Confirmation', () => {
     it('boosts testing confidence when test directory detected', async () => {
-      if (!wasmAvailable) return;
+
       const analysis: AnalysisResult = {
         projectType: 'python',
         framework: 'fastapi',
@@ -667,7 +668,7 @@ describe('Tree-sitter Pattern Confirmation', () => {
     });
 
     it('confirms jest with test imports', async () => {
-      if (!wasmAvailable) return;
+
       const analysis: AnalysisResult = {
         projectType: 'node',
         framework: 'express',
@@ -719,7 +720,7 @@ describe('Tree-sitter Pattern Confirmation', () => {
     });
 
     it('confirms Go test files', async () => {
-      if (!wasmAvailable) return;
+
       const analysis: AnalysisResult = {
         projectType: 'go',
         framework: 'gin',
@@ -766,7 +767,7 @@ describe('Tree-sitter Pattern Confirmation', () => {
 
   describe('Error Handling Pattern Confirmation', () => {
     it('boosts confidence when route decorators found', async () => {
-      if (!wasmAvailable) return;
+
       const analysis: AnalysisResult = {
         projectType: 'python',
         framework: 'fastapi',
@@ -806,7 +807,7 @@ describe('Tree-sitter Pattern Confirmation', () => {
     });
 
     it('boosts confidence when HTTPException imports found', async () => {
-      if (!wasmAvailable) return;
+
       const analysis: AnalysisResult = {
         projectType: 'python',
         framework: 'fastapi',
@@ -844,7 +845,7 @@ describe('Tree-sitter Pattern Confirmation', () => {
     });
 
     it('confirms Go error returns', async () => {
-      if (!wasmAvailable) return;
+
       const analysis: AnalysisResult = {
         projectType: 'go',
         framework: 'gin',
@@ -877,7 +878,7 @@ describe('Tree-sitter Pattern Confirmation', () => {
 
   describe('Edge Cases', () => {
     it('handles missing parsed data gracefully', async () => {
-      if (!wasmAvailable) return;
+
       const analysis: AnalysisResult = {
         projectType: 'python',
         framework: null,
@@ -904,7 +905,7 @@ describe('Tree-sitter Pattern Confirmation', () => {
     });
 
     it('handles empty parsed files array', async () => {
-      if (!wasmAvailable) return;
+
       const analysis: AnalysisResult = {
         projectType: 'python',
         framework: null,
@@ -935,7 +936,7 @@ describe('Tree-sitter Pattern Confirmation', () => {
     });
 
     it('handles patterns with no confirmation function', async () => {
-      if (!wasmAvailable) return;
+
       const analysis: AnalysisResult = {
         projectType: 'rust',  // Supported for detection but not parsing
         framework: 'axum',
@@ -960,7 +961,7 @@ describe('Tree-sitter Pattern Confirmation', () => {
     });
 
     it('caps confidence at 1.0', async () => {
-      if (!wasmAvailable) return;
+
       const analysis: AnalysisResult = {
         projectType: 'python',
         framework: 'fastapi',
@@ -1001,7 +1002,7 @@ describe('Tree-sitter Pattern Confirmation', () => {
     });
 
     it('preserves patterns not found in parsed data', async () => {
-      if (!wasmAvailable) return;
+
       const analysis: AnalysisResult = {
         projectType: 'python',
         framework: 'fastapi',

@@ -2,17 +2,17 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { ParserManager } from '../../../src/engine/parsers/treeSitter.js';
 import { skipIfNoWasm } from '../fixtures.js';
 
-let wasmAvailable = false;
+const wasmAvailable = await skipIfNoWasm();
 
-describe('Tree-sitter parsing', () => {
+describe.skipIf(!wasmAvailable)('Tree-sitter parsing', () => {
   const manager = ParserManager.getInstance();
 
   beforeAll(async () => {
-    wasmAvailable = await skipIfNoWasm();
+    await ParserManager.getInstance().initialize();
   });
 
   it('parses Python code', () => {
-    if (!wasmAvailable) return;
+
     const parser = manager.getParser('python');
     const code = 'def hello():\n    pass';
     const tree = parser.parse(code);
@@ -24,7 +24,7 @@ describe('Tree-sitter parsing', () => {
   });
 
   it('parses TypeScript code', () => {
-    if (!wasmAvailable) return;
+
     const parser = manager.getParser('typescript');
     const code = 'function greet(name: string): void {}';
     const tree = parser.parse(code);
@@ -36,7 +36,7 @@ describe('Tree-sitter parsing', () => {
   });
 
   it('parses TSX code', () => {
-    if (!wasmAvailable) return;
+
     const parser = manager.getParser('tsx');
     const code = 'const Comp = () => <div>Hello</div>;';
     const tree = parser.parse(code);
@@ -48,7 +48,7 @@ describe('Tree-sitter parsing', () => {
   });
 
   it('parses JavaScript code', () => {
-    if (!wasmAvailable) return;
+
     const parser = manager.getParser('javascript');
     const code = 'const x = 42;';
     const tree = parser.parse(code);
@@ -60,7 +60,7 @@ describe('Tree-sitter parsing', () => {
   });
 
   it('parses Go code', () => {
-    if (!wasmAvailable) return;
+
     const parser = manager.getParser('go');
     const code = 'package main\n\nfunc main() {}';
     const tree = parser.parse(code);
@@ -72,7 +72,7 @@ describe('Tree-sitter parsing', () => {
   });
 
   it('detects syntax errors (hasError property)', () => {
-    if (!wasmAvailable) return;
+
     const parser = manager.getParser('python');
     const malformed = 'def broken(\n    pass';  // Missing closing paren
     const tree = parser.parse(malformed);
@@ -85,7 +85,7 @@ describe('Tree-sitter parsing', () => {
   });
 
   it('handles empty code', () => {
-    if (!wasmAvailable) return;
+
     const parser = manager.getParser('python');
     const tree = parser.parse('');
 

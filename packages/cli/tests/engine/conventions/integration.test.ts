@@ -2,17 +2,18 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { createEmptyAnalysisResult } from '../../../src/engine/types/index.js';
 import { detectConventions } from '../../../src/engine/analyzers/conventions/index.js';
 import type { AnalysisResult } from '../../../src/engine/types/index.js';
+import { ParserManager } from '../../../src/engine/parsers/treeSitter.js';
 import { skipIfNoWasm } from '../fixtures.js';
 
-let wasmAvailable = false;
+const wasmAvailable = await skipIfNoWasm();
 
-describe('detectConventions orchestrator', () => {
+describe.skipIf(!wasmAvailable)('detectConventions orchestrator', () => {
   beforeAll(async () => {
-    wasmAvailable = await skipIfNoWasm();
+    await ParserManager.getInstance().initialize();
   });
 
   it('returns ConventionAnalysis with all required fields', async () => {
-    if (!wasmAvailable) return;
+
     // Create mock analysis with minimal parsed data
     const analysis: AnalysisResult = {
       ...createEmptyAnalysisResult(),
@@ -56,7 +57,7 @@ describe('detectConventions orchestrator', () => {
   });
 
   it('handles missing parsed data gracefully', async () => {
-    if (!wasmAvailable) return;
+
     const analysis = createEmptyAnalysisResult();
     // No parsed field
 
@@ -68,7 +69,7 @@ describe('detectConventions orchestrator', () => {
   });
 
   it('includes typeHints only for Python projects', async () => {
-    if (!wasmAvailable) return;
+
     const pythonAnalysis: AnalysisResult = {
       ...createEmptyAnalysisResult(),
       projectType: 'python',
@@ -103,7 +104,7 @@ describe('detectConventions orchestrator', () => {
   });
 
   it('naming includes all 5 sub-categories', async () => {
-    if (!wasmAvailable) return;
+
     const analysis: AnalysisResult = {
       ...createEmptyAnalysisResult(),
       projectType: 'python',
@@ -144,13 +145,13 @@ describe('detectConventions orchestrator', () => {
   });
 });
 
-describe('Mixed convention handling', () => {
+describe.skipIf(!wasmAvailable)('Mixed convention handling', () => {
   beforeAll(async () => {
-    wasmAvailable = await skipIfNoWasm();
+    await ParserManager.getInstance().initialize();
   });
 
   it('reports distributions for mixed naming', async () => {
-    if (!wasmAvailable) return;
+
     const analysis: AnalysisResult = {
       ...createEmptyAnalysisResult(),
       projectType: 'python',
@@ -186,7 +187,7 @@ describe('Mixed convention handling', () => {
   });
 
   it('reports distributions for mixed imports', async () => {
-    if (!wasmAvailable) return;
+
     const analysis: AnalysisResult = {
       ...createEmptyAnalysisResult(),
       projectType: 'python',
@@ -227,13 +228,13 @@ describe('Mixed convention handling', () => {
   });
 });
 
-describe('Performance', () => {
+describe.skipIf(!wasmAvailable)('Performance', () => {
   beforeAll(async () => {
-    wasmAvailable = await skipIfNoWasm();
+    await ParserManager.getInstance().initialize();
   });
 
   it('completes in reasonable time', async () => {
-    if (!wasmAvailable) return;
+
     const analysis: AnalysisResult = {
       ...createEmptyAnalysisResult(),
       projectType: 'python',

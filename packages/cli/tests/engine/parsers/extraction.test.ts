@@ -2,18 +2,18 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { ParserManager, extractFunctions, extractClasses, extractImports } from '../../../src/engine/parsers/treeSitter.js';
 import { skipIfNoWasm } from '../fixtures.js';
 
-let wasmAvailable = false;
+const wasmAvailable = await skipIfNoWasm();
 
-describe('AST extraction', () => {
+describe.skipIf(!wasmAvailable)('AST extraction', () => {
   const manager = ParserManager.getInstance();
 
   beforeAll(async () => {
-    wasmAvailable = await skipIfNoWasm();
+    await ParserManager.getInstance().initialize();
   });
 
   describe('Python extraction', () => {
     it('extracts function name', () => {
-      if (!wasmAvailable) return;
+  
       const parser = manager.getParser('python');
       const code = 'def hello():\n    pass';
       const tree = parser.parse(code);
@@ -29,7 +29,7 @@ describe('AST extraction', () => {
     });
 
     it('extracts async function', () => {
-      if (!wasmAvailable) return;
+  
       const parser = manager.getParser('python');
       const code = 'async def fetch():\n    pass';
       const tree = parser.parse(code);
@@ -44,7 +44,7 @@ describe('AST extraction', () => {
     });
 
     it('extracts class name', () => {
-      if (!wasmAvailable) return;
+  
       const parser = manager.getParser('python');
       const code = 'class User:\n    pass';
       const tree = parser.parse(code);
@@ -59,7 +59,7 @@ describe('AST extraction', () => {
     });
 
     it('extracts imports', () => {
-      if (!wasmAvailable) return;
+  
       const parser = manager.getParser('python');
       const code = 'from fastapi import FastAPI';
       const tree = parser.parse(code);
@@ -76,7 +76,7 @@ describe('AST extraction', () => {
 
   describe('TypeScript extraction', () => {
     it('extracts function name', () => {
-      if (!wasmAvailable) return;
+  
       const parser = manager.getParser('typescript');
       const code = 'function greet(name: string): void {}';
       const tree = parser.parse(code);
@@ -91,7 +91,7 @@ describe('AST extraction', () => {
     });
 
     it('extracts class name', () => {
-      if (!wasmAvailable) return;
+  
       const parser = manager.getParser('typescript');
       const code = 'class User {}';
       const tree = parser.parse(code);
@@ -106,7 +106,7 @@ describe('AST extraction', () => {
     });
 
     it('extracts imports', () => {
-      if (!wasmAvailable) return;
+  
       const parser = manager.getParser('typescript');
       const code = 'import { Controller } from "@nestjs/common";';
       const tree = parser.parse(code);
@@ -122,7 +122,7 @@ describe('AST extraction', () => {
 
   describe('JavaScript extraction', () => {
     it('extracts function name', () => {
-      if (!wasmAvailable) return;
+  
       const parser = manager.getParser('javascript');
       const code = 'function hello() {}';
       const tree = parser.parse(code);
@@ -136,7 +136,7 @@ describe('AST extraction', () => {
     });
 
     it('extracts class name', () => {
-      if (!wasmAvailable) return;
+  
       const parser = manager.getParser('javascript');
       const code = 'class App {}';
       const tree = parser.parse(code);
@@ -152,7 +152,7 @@ describe('AST extraction', () => {
 
   describe('Go extraction', () => {
     it('extracts function name', () => {
-      if (!wasmAvailable) return;
+  
       const parser = manager.getParser('go');
       const code = 'package main\n\nfunc main() {}';
       const tree = parser.parse(code);
@@ -166,7 +166,7 @@ describe('AST extraction', () => {
     });
 
     it('extracts imports', () => {
-      if (!wasmAvailable) return;
+  
       const parser = manager.getParser('go');
       const code = 'package main\n\nimport "fmt"';
       const tree = parser.parse(code);
