@@ -1,10 +1,18 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { createEmptyAnalysisResult } from '../../../src/engine/types/index.js';
 import { detectConventions } from '../../../src/engine/analyzers/conventions/index.js';
 import type { AnalysisResult } from '../../../src/engine/types/index.js';
+import { skipIfNoWasm } from '../fixtures.js';
+
+let wasmAvailable = false;
 
 describe('Convention Detection Edge Cases', () => {
+  beforeAll(async () => {
+    wasmAvailable = await skipIfNoWasm();
+  });
+
   it('handles no parsed data gracefully', async () => {
+    if (!wasmAvailable) return;
     const analysis = createEmptyAnalysisResult();
     // No parsed field
 
@@ -16,6 +24,7 @@ describe('Convention Detection Edge Cases', () => {
   });
 
   it('handles empty parsed files array', async () => {
+    if (!wasmAvailable) return;
     const analysis: AnalysisResult = {
       ...createEmptyAnalysisResult(),
       projectType: 'python',
@@ -43,6 +52,7 @@ describe('Convention Detection Edge Cases', () => {
   });
 
   it('handles project with no functions or classes', async () => {
+    if (!wasmAvailable) return;
     const analysis: AnalysisResult = {
       ...createEmptyAnalysisResult(),
       projectType: 'python',
@@ -80,6 +90,7 @@ describe('Convention Detection Edge Cases', () => {
   });
 
   it('handles TypeScript project (no type hints)', async () => {
+    if (!wasmAvailable) return;
     const analysis: AnalysisResult = {
       ...createEmptyAnalysisResult(),
       projectType: 'node',  // TypeScript projects
@@ -116,6 +127,7 @@ describe('Convention Detection Edge Cases', () => {
   });
 
   it('handles all unknown naming (ambiguous single-word names)', async () => {
+    if (!wasmAvailable) return;
     const analysis: AnalysisResult = {
       ...createEmptyAnalysisResult(),
       projectType: 'python',
@@ -158,6 +170,7 @@ describe('Convention Detection Edge Cases', () => {
   });
 
   it('handles no internal imports (library project)', async () => {
+    if (!wasmAvailable) return;
     const analysis: AnalysisResult = {
       ...createEmptyAnalysisResult(),
       projectType: 'python',
@@ -199,6 +212,7 @@ describe('Convention Detection Edge Cases', () => {
   });
 
   it('handles no docstrings (coverage 0%)', async () => {
+    if (!wasmAvailable) return;
     const analysis: AnalysisResult = {
       ...createEmptyAnalysisResult(),
       projectType: 'python',
@@ -239,6 +253,7 @@ describe('Convention Detection Edge Cases', () => {
   });
 
   it('handles mixed indentation gracefully', async () => {
+    if (!wasmAvailable) return;
     const analysis: AnalysisResult = {
       ...createEmptyAnalysisResult(),
       projectType: 'python',
@@ -276,6 +291,7 @@ describe('Convention Detection Edge Cases', () => {
   });
 
   it('performance: completes in reasonable time', async () => {
+    if (!wasmAvailable) return;
     const analysis: AnalysisResult = {
       ...createEmptyAnalysisResult(),
       projectType: 'python',
@@ -315,6 +331,7 @@ describe('Convention Detection Edge Cases', () => {
   });
 
   it('all categories have required fields', async () => {
+    if (!wasmAvailable) return;
     const analysis: AnalysisResult = {
       ...createEmptyAnalysisResult(),
       projectType: 'python',

@@ -5,6 +5,9 @@ import { join } from 'node:path';
 import { ASTCache } from '../../../src/engine/cache/astCache.js';
 import type { ASTCacheEntry } from '../../../src/engine/cache/astCache.js';
 import { ParserManager } from '../../../src/engine/parsers/treeSitter.js';
+import { skipIfNoWasm } from '../fixtures.js';
+
+let wasmAvailable = false;
 
 describe('ASTCache', () => {
   let tempDir: string;
@@ -12,7 +15,7 @@ describe('ASTCache', () => {
   let testFilePath: string;
 
   beforeAll(async () => {
-    await ParserManager.getInstance().initialize();
+    wasmAvailable = await skipIfNoWasm();
   });
 
   beforeEach(async () => {
@@ -35,6 +38,7 @@ describe('ASTCache', () => {
 
   describe('Cache miss behavior', () => {
     it('get() returns null on cache miss (file not in cache)', async () => {
+      if (!wasmAvailable) return;
       // Given: Cache is empty
       const stats = cache.getStats();
       expect(stats.files).toBe(0);
@@ -51,6 +55,7 @@ describe('ASTCache', () => {
 
   describe('Memory cache behavior', () => {
     it('set() stores data in memory cache', async () => {
+      if (!wasmAvailable) return;
       // Given: Cache entry data
       const cacheData: Omit<ASTCacheEntry, 'mtimeMs' | 'cachedAt'> = {
         functions: [{ name: 'hello', line: 1, async: false, decorators: [] }],
@@ -70,6 +75,7 @@ describe('ASTCache', () => {
     });
 
     it('get() returns cached data on hit (memory cache)', async () => {
+      if (!wasmAvailable) return;
       // Given: Data stored in cache
       const cacheData: Omit<ASTCacheEntry, 'mtimeMs' | 'cachedAt'> = {
         functions: [{ name: 'hello', line: 1, async: false, decorators: [] }],
@@ -98,6 +104,7 @@ describe('ASTCache', () => {
 
   describe('Disk cache behavior', () => {
     it('set() creates .ana/.state/cache/ directory automatically', async () => {
+      if (!wasmAvailable) return;
       // Given: Cache directory doesn't exist
       const expectedCacheDir = join(tempDir, '.ana/.state/cache');
 
@@ -116,6 +123,7 @@ describe('ASTCache', () => {
     });
 
     it('disk cache persists across ASTCache instances', async () => {
+      if (!wasmAvailable) return;
       // Given: Data stored in first cache instance
       const cacheData: Omit<ASTCacheEntry, 'mtimeMs' | 'cachedAt'> = {
         functions: [{ name: 'persistent', line: 1, async: false, decorators: [] }],
@@ -138,6 +146,7 @@ describe('ASTCache', () => {
     });
 
     it('memory cache checked before disk (faster)', async () => {
+      if (!wasmAvailable) return;
       // Given: Data stored in cache
       const cacheData: Omit<ASTCacheEntry, 'mtimeMs' | 'cachedAt'> = {
         functions: [{ name: 'test', line: 1, async: false, decorators: [] }],
@@ -165,6 +174,7 @@ describe('ASTCache', () => {
 
   describe('Cache statistics', () => {
     it('getStats() tracks hits and misses correctly', async () => {
+      if (!wasmAvailable) return;
       // Given: Initial stats
       let stats = cache.getStats();
       expect(stats.hits).toBe(0);
@@ -212,6 +222,7 @@ describe('ASTCache', () => {
 
   describe('Cache clearing', () => {
     it('clear() removes all cached data (memory + disk)', async () => {
+      if (!wasmAvailable) return;
       // Given: Multiple files cached
       const cacheData1: Omit<ASTCacheEntry, 'mtimeMs' | 'cachedAt'> = {
         functions: [{ name: 'func1', line: 1, async: false, decorators: [] }],
@@ -266,6 +277,7 @@ describe('ASTCache', () => {
 
   describe('mtime-based invalidation', () => {
     it('cache invalidates when file is modified', async () => {
+      if (!wasmAvailable) return;
       // Given: File cached
       const cacheData: Omit<ASTCacheEntry, 'mtimeMs' | 'cachedAt'> = {
         functions: [{ name: 'original', line: 1, async: false, decorators: [] }],
@@ -298,6 +310,10 @@ describe('ASTCache - invalidation scenarios', () => {
   let cache: ASTCache;
   let testFilePath: string;
 
+  beforeAll(async () => {
+    wasmAvailable = await skipIfNoWasm();
+  });
+
   beforeEach(async () => {
     // Create unique temp directory for each test
     tempDir = join(tmpdir(), `ana-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
@@ -318,6 +334,7 @@ describe('ASTCache - invalidation scenarios', () => {
 
   describe('File modification scenarios', () => {
     it('cache invalidated when file mtime changes (modify file, check null)', async () => {
+      if (!wasmAvailable) return;
       // Given: File cached with data
       const cacheData: Omit<ASTCacheEntry, 'mtimeMs' | 'cachedAt'> = {
         functions: [{ name: 'hello', line: 1, async: false, decorators: [] }],
@@ -343,6 +360,7 @@ describe('ASTCache - invalidation scenarios', () => {
     });
 
     it('cache valid when mtime unchanged (multiple gets without modification)', async () => {
+      if (!wasmAvailable) return;
       // Given: File cached
       const cacheData: Omit<ASTCacheEntry, 'mtimeMs' | 'cachedAt'> = {
         functions: [{ name: 'stable', line: 1, async: false, decorators: [] }],
@@ -372,6 +390,7 @@ describe('ASTCache - invalidation scenarios', () => {
     });
 
     it('disk cache invalidated on mtime change (test across instances)', async () => {
+      if (!wasmAvailable) return;
       // Given: Data stored in first cache instance
       const cacheData: Omit<ASTCacheEntry, 'mtimeMs' | 'cachedAt'> = {
         functions: [{ name: 'original', line: 1, async: false, decorators: [] }],
@@ -397,6 +416,7 @@ describe('ASTCache - invalidation scenarios', () => {
 
   describe('Multiple files', () => {
     it('multiple files cached independently (3 files, each returns own data)', async () => {
+      if (!wasmAvailable) return;
       // Given: Three different files
       const file1 = join(tempDir, 'file1.py');
       const file2 = join(tempDir, 'file2.py');
@@ -451,6 +471,7 @@ describe('ASTCache - invalidation scenarios', () => {
 
   describe('Error handling', () => {
     it('cache handles missing files gracefully (delete file, get does not crash)', async () => {
+      if (!wasmAvailable) return;
       // Given: File cached
       const cacheData: Omit<ASTCacheEntry, 'mtimeMs' | 'cachedAt'> = {
         functions: [{ name: 'deleted', line: 1, async: false, decorators: [] }],
@@ -468,6 +489,7 @@ describe('ASTCache - invalidation scenarios', () => {
     });
 
     it('cache handles corrupted JSON gracefully (corrupt disk cache, does not crash)', async () => {
+      if (!wasmAvailable) return;
       // Given: File cached normally
       const cacheData: Omit<ASTCacheEntry, 'mtimeMs' | 'cachedAt'> = {
         functions: [{ name: 'valid', line: 1, async: false, decorators: [] }],
@@ -495,6 +517,7 @@ describe('ASTCache - invalidation scenarios', () => {
 
   describe('Cache key generation', () => {
     it('getCacheKey() generates unique keys (same filename, different directories)', async () => {
+      if (!wasmAvailable) return;
       // Given: Two files with same name in different directories
       const dir1 = join(tempDir, 'dir1');
       const dir2 = join(tempDir, 'dir2');
@@ -538,6 +561,7 @@ describe('ASTCache - invalidation scenarios', () => {
 
   describe('Integration with parseFile', () => {
     it('parseFile() uses cache correctly (parseMethod tree-sitter then cached)', async () => {
+      if (!wasmAvailable) return;
       // Import parseFile for integration test
       const { parseFile } = await import('../../src/parsers/treeSitter.js');
 

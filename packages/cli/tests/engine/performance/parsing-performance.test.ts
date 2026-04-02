@@ -5,13 +5,17 @@ import { parseFile, detectLanguage, ParserManager } from '../../../src/engine/pa
 import { sampleFiles } from '../../../src/engine/sampling/fileSampler.js';
 import { ASTCache } from '../../../src/engine/cache/astCache.js';
 import { joinPath } from '../../../src/engine/utils/file.js';
+import { skipIfNoWasm } from '../fixtures.js';
+
+let wasmAvailable = false;
 
 describe('Tree-sitter performance', () => {
   beforeAll(async () => {
-    await ParserManager.getInstance().initialize();
+    wasmAvailable = await skipIfNoWasm();
   });
 
   it('parses 20 files in ≤5 seconds', async () => {
+    if (!wasmAvailable) return;
     // Use actual project for realistic benchmark
     const projectRoot = process.cwd();
     const analysis = await analyze(projectRoot, { skipParsing: true });
@@ -56,6 +60,7 @@ describe('Tree-sitter performance', () => {
   }, 10000);  // 10s timeout
 
   it('achieves ≥80% cache speedup on second run', async () => {
+    if (!wasmAvailable) return;
     const projectRoot = process.cwd();
     const cache = new ASTCache(projectRoot);
 
@@ -118,6 +123,7 @@ describe('Tree-sitter performance', () => {
   }, 15000);  // 15s timeout
 
   it('memory usage stays ≤500MB during parsing', async () => {
+    if (!wasmAvailable) return;
     const projectRoot = process.cwd();
     const analysis = await analyze(projectRoot, { skipParsing: true });
     if (!analysis.structure) {

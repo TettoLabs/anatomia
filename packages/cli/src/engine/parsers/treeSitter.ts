@@ -17,6 +17,7 @@
  */
 
 import { accessSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -45,22 +46,35 @@ export type Language = 'python' | 'typescript' | 'tsx' | 'javascript' | 'go';
 // Get current module directory for path construction
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+// createRequire scoped to this module — resolves packages from correct node_modules
+const require = createRequire(import.meta.url);
+
 /**
- * Resolve WASM file path without loading grammar package modules
+ * Resolve WASM file path by locating the grammar package's directory.
  *
- * DO NOT use require.resolve() on grammar packages — they have native tree-sitter
- * as peer deps, and any resolution through their module graph triggers native loading.
- *
- * Instead: Walk up from our module location and check known node_modules paths directly.
+ * Uses createRequire to resolve package.json (safe — no code execution, no native
+ * tree-sitter loading). Then constructs the WASM path from the resolved directory.
+ * Falls back to walking up from __dirname for environments where resolution fails.
  * @param packageName
  * @param wasmFileName
  */
 function resolveWasmPath(packageName: string, wasmFileName: string): string {
+  // Strategy 1: Resolve via package.json (works with pnpm .pnpm store)
+  try {
+    const pkgJsonPath = require.resolve(`${packageName}/package.json`);
+    const candidate = join(dirname(pkgJsonPath), wasmFileName);
+    accessSync(candidate);
+    return candidate;
+  } catch {
+    // Resolution failed, try manual fallback
+  }
+
+  // Strategy 2: Walk up from module location checking node_modules
   const candidates = [
-    // packages/analyzer/node_modules/<pkg>/<file>.wasm
-    join(__dirname, '..', '..', 'node_modules', packageName, wasmFileName),
-    // monorepo root node_modules/<pkg>/<file>.wasm (pnpm hoists)
-    join(__dirname, '..', '..', '..', '..', 'node_modules', packageName, wasmFileName),
+    // packages/cli/node_modules/<pkg>/<file>.wasm
+    join(__dirname, '..', '..', '..', 'node_modules', packageName, wasmFileName),
+    // monorepo root node_modules/<pkg>/<file>.wasm
+    join(__dirname, '..', '..', '..', '..', '..', 'node_modules', packageName, wasmFileName),
   ];
 
   for (const candidate of candidates) {
@@ -72,7 +86,7 @@ function resolveWasmPath(packageName: string, wasmFileName: string): string {
     }
   }
 
-  throw new Error(`WASM file not found: ${packageName}/${wasmFileName}. Checked: ${candidates.join(', ')}`);
+  throw new Error(`WASM file not found: ${packageName}/${wasmFileName}`);
 }
 
 /**
@@ -186,6 +200,20 @@ export class ParserManager {
    */
   isInitialized(): boolean {
     return this.initialized;
+  }
+
+  /**
+   * Try to initialize — returns true on success, false on failure.
+   * Logs a single warning on failure. Safe to call multiple times.
+   */
+  async tryInitialize(): Promise<boolean> {
+    if (this.initialized) return true;
+    try {
+      await this.initialize();
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   /**

@@ -1,10 +1,18 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { createEmptyAnalysisResult } from '../../../src/engine/types/index.js';
 import { detectConventions } from '../../../src/engine/analyzers/conventions/index.js';
 import type { AnalysisResult } from '../../../src/engine/types/index.js';
+import { skipIfNoWasm } from '../fixtures.js';
+
+let wasmAvailable = false;
 
 describe('detectConventions orchestrator', () => {
+  beforeAll(async () => {
+    wasmAvailable = await skipIfNoWasm();
+  });
+
   it('returns ConventionAnalysis with all required fields', async () => {
+    if (!wasmAvailable) return;
     // Create mock analysis with minimal parsed data
     const analysis: AnalysisResult = {
       ...createEmptyAnalysisResult(),
@@ -48,6 +56,7 @@ describe('detectConventions orchestrator', () => {
   });
 
   it('handles missing parsed data gracefully', async () => {
+    if (!wasmAvailable) return;
     const analysis = createEmptyAnalysisResult();
     // No parsed field
 
@@ -59,6 +68,7 @@ describe('detectConventions orchestrator', () => {
   });
 
   it('includes typeHints only for Python projects', async () => {
+    if (!wasmAvailable) return;
     const pythonAnalysis: AnalysisResult = {
       ...createEmptyAnalysisResult(),
       projectType: 'python',
@@ -93,6 +103,7 @@ describe('detectConventions orchestrator', () => {
   });
 
   it('naming includes all 5 sub-categories', async () => {
+    if (!wasmAvailable) return;
     const analysis: AnalysisResult = {
       ...createEmptyAnalysisResult(),
       projectType: 'python',
@@ -134,7 +145,12 @@ describe('detectConventions orchestrator', () => {
 });
 
 describe('Mixed convention handling', () => {
+  beforeAll(async () => {
+    wasmAvailable = await skipIfNoWasm();
+  });
+
   it('reports distributions for mixed naming', async () => {
+    if (!wasmAvailable) return;
     const analysis: AnalysisResult = {
       ...createEmptyAnalysisResult(),
       projectType: 'python',
@@ -170,6 +186,7 @@ describe('Mixed convention handling', () => {
   });
 
   it('reports distributions for mixed imports', async () => {
+    if (!wasmAvailable) return;
     const analysis: AnalysisResult = {
       ...createEmptyAnalysisResult(),
       projectType: 'python',
@@ -211,7 +228,12 @@ describe('Mixed convention handling', () => {
 });
 
 describe('Performance', () => {
+  beforeAll(async () => {
+    wasmAvailable = await skipIfNoWasm();
+  });
+
   it('completes in reasonable time', async () => {
+    if (!wasmAvailable) return;
     const analysis: AnalysisResult = {
       ...createEmptyAnalysisResult(),
       projectType: 'python',

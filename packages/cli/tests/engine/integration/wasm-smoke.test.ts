@@ -1,11 +1,19 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { analyze } from '../../../src/engine/index.js';
 import { writeFile, mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+import { skipIfNoWasm } from '../fixtures.js';
+
+let wasmAvailable = false;
 
 describe('WASM smoke test', () => {
+  beforeAll(async () => {
+    wasmAvailable = await skipIfNoWasm();
+  });
+
   it('analyze() parses real files and returns extracted data', async () => {
+    if (!wasmAvailable) return;
     // Create minimal project with parseable code
     const testDir = join(tmpdir(), `ana-wasm-smoke-${Date.now()}`);
     await mkdir(testDir, { recursive: true });

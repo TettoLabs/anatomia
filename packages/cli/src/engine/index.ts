@@ -291,7 +291,7 @@ export async function analyze(
   } catch (_error) {
     // Critical failure - return empty result
     if (options.strictMode) {
-      throw error;
+      throw _error;
     }
     return createEmptyAnalysisResult();
   }

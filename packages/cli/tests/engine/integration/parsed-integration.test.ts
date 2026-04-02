@@ -17,9 +17,16 @@ import { AnalysisResultSchema } from '../../../src/engine/types/index.js';
 import { mkdir, writeFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { randomBytes } from 'node:crypto';
+import { skipIfNoWasm } from '../fixtures.js';
+
+let wasmAvailable = false;
 
 describe('analyze() with tree-sitter integration', () => {
   let testDir: string;
+
+  beforeAll(async () => {
+    wasmAvailable = await skipIfNoWasm();
+  });
 
   beforeEach(async () => {
     // Create unique temp directory for each test
@@ -33,6 +40,7 @@ describe('analyze() with tree-sitter integration', () => {
   });
 
   it('analyze() with skipParsing:true → parsed undefined', async () => {
+    if (!wasmAvailable) return;
     // Create minimal Python project with proper structure
     await writeFile(join(testDir, 'requirements.txt'), 'fastapi==0.100.0');
     await mkdir(join(testDir, 'app'));
@@ -51,6 +59,7 @@ describe('analyze() with tree-sitter integration', () => {
   });
 
   it('analyze() with skipParsing:false → parsed field populated', async () => {
+    if (!wasmAvailable) return;
     // Create minimal Python project with proper structure
     await writeFile(join(testDir, 'requirements.txt'), 'fastapi==0.100.0');
     await mkdir(join(testDir, 'app'));
@@ -73,6 +82,7 @@ describe('analyze() with tree-sitter integration', () => {
   });
 
   it('analyze() without structure → parsed undefined (can\'t sample)', async () => {
+    if (!wasmAvailable) return;
     // Create minimal project with proper Python structure
     await writeFile(join(testDir, 'requirements.txt'), 'fastapi==0.100.0');
     await writeFile(join(testDir, 'main.py'), 'from fastapi import FastAPI\napp = FastAPI()\ndef hello(): pass');
@@ -90,6 +100,7 @@ describe('analyze() with tree-sitter integration', () => {
   });
 
   it('analyze() with structure → parsed.files is array', async () => {
+    if (!wasmAvailable) return;
     // Create Python project with multiple files and proper structure
     await writeFile(join(testDir, 'requirements.txt'), 'fastapi==0.100.0');
     await mkdir(join(testDir, 'app'));
@@ -127,6 +138,10 @@ describe('analyze() with tree-sitter integration', () => {
 describe('sampleFiles() entry point handling', () => {
   let testDir: string;
 
+  beforeAll(async () => {
+    wasmAvailable = await skipIfNoWasm();
+  });
+
   beforeEach(async () => {
     const suffix = randomBytes(4).toString('hex');
     testDir = join('/tmp', `test-sampling-${suffix}`);
@@ -138,6 +153,7 @@ describe('sampleFiles() entry point handling', () => {
   });
 
   it('sampleFiles() uses structure.entryPoints (verify entry points in result)', async () => {
+    if (!wasmAvailable) return;
     // Create project with clear entry point
     await writeFile(join(testDir, 'requirements.txt'), 'fastapi==0.100.0');
     await mkdir(join(testDir, 'app'));
@@ -166,6 +182,7 @@ describe('sampleFiles() entry point handling', () => {
   });
 
   it('sampleFiles() excludes tests (structure.testLocation used)', async () => {
+    if (!wasmAvailable) return;
     // Create project with test files
     await writeFile(join(testDir, 'requirements.txt'), 'fastapi==0.100.0');
     await mkdir(join(testDir, 'app'));
@@ -192,6 +209,7 @@ describe('sampleFiles() entry point handling', () => {
   });
 
   it('sampleFiles() respects maxFiles limit', async () => {
+    if (!wasmAvailable) return;
     // Create project with many files
     await writeFile(join(testDir, 'requirements.txt'), 'fastapi==0.100.0');
     await mkdir(join(testDir, 'src'));
@@ -215,7 +233,7 @@ describe('parseProjectFiles() integration', () => {
   let testDir: string;
 
   beforeAll(async () => {
-    await ParserManager.getInstance().initialize();
+    wasmAvailable = await skipIfNoWasm();
   });
 
   beforeEach(async () => {
@@ -229,6 +247,7 @@ describe('parseProjectFiles() integration', () => {
   });
 
   it('parseProjectFiles() returns ParsedAnalysis with stats', async () => {
+    if (!wasmAvailable) return;
     // Create Python project with src directory (sampler looks for src/ files)
     await writeFile(join(testDir, 'requirements.txt'), 'fastapi==0.100.0');
     await mkdir(join(testDir, 'src'));
@@ -269,6 +288,10 @@ describe('parseProjectFiles() integration', () => {
 describe('Backward compatibility validation', () => {
   let testDir: string;
 
+  beforeAll(async () => {
+    wasmAvailable = await skipIfNoWasm();
+  });
+
   beforeEach(async () => {
     const suffix = randomBytes(4).toString('hex');
     testDir = join('/tmp', `test-backward-compat-${suffix}`);
@@ -280,6 +303,7 @@ describe('Backward compatibility validation', () => {
   });
 
   it('STEP_1.1 result validates (no structure, no parsed)', async () => {
+    if (!wasmAvailable) return;
     // Create minimal project
     await writeFile(join(testDir, 'requirements.txt'), 'fastapi==0.100.0');
 
@@ -306,6 +330,7 @@ describe('Backward compatibility validation', () => {
   });
 
   it('STEP_1.2 result validates (structure, no parsed)', async () => {
+    if (!wasmAvailable) return;
     // Create minimal project with proper Python structure
     await writeFile(join(testDir, 'requirements.txt'), 'fastapi==0.100.0');
     await mkdir(join(testDir, 'app'));

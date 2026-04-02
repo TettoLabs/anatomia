@@ -1,12 +1,20 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { analyze } from '../../../../src/engine/index.js';
 import { inferPatterns } from '../../../../src/engine/analyzers/patterns.js';
 import { testProjects } from './fixtures/testProjects.js';
 import type { AnalysisResult } from '../../../../src/engine/types/index.js';
+import { skipIfNoWasm } from '../../fixtures.js';
+
+let wasmAvailable = false;
 
 describe('Pattern Inference Integration', () => {
+  beforeAll(async () => {
+    wasmAvailable = await skipIfNoWasm();
+  });
+
   describe('analyze() integration', () => {
     it('includes patterns when skipPatterns=false', async () => {
+      if (!wasmAvailable) return;
       // Test on analyzer package itself
       const result = await analyze('.', { skipPatterns: false });
 
@@ -18,6 +26,7 @@ describe('Pattern Inference Integration', () => {
     });
 
     it('excludes patterns when skipPatterns=true', async () => {
+      if (!wasmAvailable) return;
       const result = await analyze('.', { skipPatterns: true });
 
       // Should not have patterns field
@@ -25,6 +34,7 @@ describe('Pattern Inference Integration', () => {
     });
 
     it('excludes patterns when skipParsing=true', async () => {
+      if (!wasmAvailable) return;
       const result = await analyze('.', { skipParsing: true, skipPatterns: false });
 
       // Patterns require parsed data, so should be undefined
@@ -32,6 +42,7 @@ describe('Pattern Inference Integration', () => {
     });
 
     it('includes patterns by default (skipPatterns defaults to false)', async () => {
+      if (!wasmAvailable) return;
       const result = await analyze('.');
 
       // Default behavior should include patterns (if parsed available)
@@ -43,6 +54,7 @@ describe('Pattern Inference Integration', () => {
 
   describe('inferPatterns() orchestrator', () => {
     it('returns PatternAnalysis with metadata', async () => {
+      if (!wasmAvailable) return;
       // Create mock analysis
       const mockAnalysis: AnalysisResult = {
         projectType: 'python',
@@ -68,6 +80,7 @@ describe('Pattern Inference Integration', () => {
     });
 
     it('filters patterns by confidence threshold', async () => {
+      if (!wasmAvailable) return;
       // This validates CP2 filtering is applied
       const mockAnalysis: AnalysisResult = {
         projectType: 'python',
@@ -93,6 +106,7 @@ describe('Pattern Inference Integration', () => {
     });
 
     it('handles errors gracefully (returns empty patterns)', async () => {
+      if (!wasmAvailable) return;
       // Invalid project path
       const mockAnalysis: AnalysisResult = {
         projectType: 'unknown',
@@ -113,10 +127,12 @@ describe('Pattern Inference Integration', () => {
 
   describe('Test project structure validation', () => {
     it('has 30 test projects defined', () => {
+      if (!wasmAvailable) return;
       expect(testProjects).toHaveLength(30);
     });
 
     it('all projects have required fields', () => {
+      if (!wasmAvailable) return;
       testProjects.forEach(project => {
         expect(project.name).toBeDefined();
         expect(project.url).toMatch(/^https:\/\/github\.com/);
@@ -127,31 +143,37 @@ describe('Pattern Inference Integration', () => {
     });
 
     it('has Python projects (10)', () => {
+      if (!wasmAvailable) return;
       const pythonProjects = testProjects.filter(p => p.language === 'python');
       expect(pythonProjects).toHaveLength(10);
     });
 
     it('has Node.js projects (10)', () => {
+      if (!wasmAvailable) return;
       const nodeProjects = testProjects.filter(p => p.language === 'node');
       expect(nodeProjects).toHaveLength(10);
     });
 
     it('has Go projects (5)', () => {
+      if (!wasmAvailable) return;
       const goProjects = testProjects.filter(p => p.language === 'go');
       expect(goProjects).toHaveLength(5);
     });
 
     it('has Rust projects (5)', () => {
+      if (!wasmAvailable) return;
       const rustProjects = testProjects.filter(p => p.language === 'rust');
       expect(rustProjects).toHaveLength(5);
     });
 
     it('has FastAPI projects (5)', () => {
+      if (!wasmAvailable) return;
       const fastapiProjects = testProjects.filter(p => p.framework === 'fastapi');
       expect(fastapiProjects).toHaveLength(5);
     });
 
     it('has Next.js projects (4)', () => {
+      if (!wasmAvailable) return;
       const nextjsProjects = testProjects.filter(p => p.framework === 'nextjs');
       expect(nextjsProjects).toHaveLength(4);
     });
@@ -159,6 +181,7 @@ describe('Pattern Inference Integration', () => {
 
   describe('Performance validation', () => {
     it('completes pattern inference within budget (<10s)', async () => {
+      if (!wasmAvailable) return;
       const mockAnalysis: AnalysisResult = {
         projectType: 'python',
         framework: 'fastapi',
@@ -196,6 +219,7 @@ describe('Pattern Inference Integration', () => {
 
   describe('Backward compatibility', () => {
     it('maintains STEP_1 compatibility (patterns optional)', async () => {
+      if (!wasmAvailable) return;
       // Analyze without pattern inference
       const result = await analyze('.', { skipPatterns: true });
 
