@@ -750,6 +750,17 @@ export function saveArtifact(type: string, slug: string): void {
     }
   }
 
+  // Push build-verify artifacts to feature branch
+  if (typeInfo.category === 'build-verify') {
+    try {
+      execSync('git push', { stdio: 'pipe' });
+    } catch (_error) {
+      console.error(chalk.yellow(
+        'Warning: Push failed. Artifact committed locally. Run `git push` manually.'
+      ));
+    }
+  }
+
   // 11. Print success
   if (typeInfo.category === 'planning') {
     console.log(chalk.green(`✓ Saved ${typeInfo.displayName} for \`${slug}\` to \`${artifactBranch}\`.`));
@@ -952,6 +963,17 @@ export function saveAllArtifacts(slug: string): void {
     } catch (_error) {
       console.error(chalk.yellow('Warning: Push failed. Artifacts committed locally. Run `git push` manually.'));
       // Don't exit - commit succeeded
+    }
+  }
+
+  // Also push if we saved build-verify artifacts on a feature branch
+  if (currentBranch !== artifactBranch && artifacts.some(a => a.typeInfo.category === 'build-verify')) {
+    try {
+      execSync('git push', { stdio: 'pipe', cwd: projectRoot });
+    } catch (_error) {
+      console.error(chalk.yellow(
+        'Warning: Push failed. Artifacts committed locally. Run `git push` manually.'
+      ));
     }
   }
 
