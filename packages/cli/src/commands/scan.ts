@@ -23,7 +23,7 @@ import * as fs from 'node:fs/promises';
 import { glob } from 'glob';
 import type { AnalysisResult } from '../engine/index.js';
 import { countFiles, formatNumber } from '../utils/fileCounts.js';
-import { detectFromPackageJson } from '../engine/detectors/dependencies.js';
+import { detectFromPackageJson, aggregateMonorepoDependencies, detectFromDeps } from '../engine/detectors/dependencies.js';
 
 /**
  * Display name mapping for project types
@@ -617,8 +617,24 @@ export const scanCommand = new Command('scan')
       // Count files
       const fileCounts = await countFiles(rootPath);
 
+      // Detect monorepo first (needed for dependency aggregation)
+      const monorepoInfo = await detectMonorepo(rootPath, options.verbose || false);
+
       // Primary: dependency detection from package.json
-      const depStack = await detectFromPackageJson(rootPath, {}, options.verbose || false);
+      // If monorepo, aggregate dependencies from all workspace packages
+      let depStack: Record<string, string>;
+      if (monorepoInfo.isMonorepo && monorepoInfo.packages && monorepoInfo.packages.length > 0) {
+        const packagePaths = monorepoInfo.packages.map(p => p.path);
+        const aggregatedDeps = await aggregateMonorepoDependencies(rootPath, packagePaths);
+        const detected = detectFromDeps(aggregatedDeps);
+        depStack = {};
+        if (detected.database) depStack.database = detected.database;
+        if (detected.auth) depStack.auth = detected.auth;
+        if (detected.testing) depStack.testing = detected.testing;
+        if (detected.payments) depStack.payments = detected.payments;
+      } else {
+        depStack = await detectFromPackageJson(rootPath, {}, options.verbose || false);
+      }
 
       // Enrich: tree-sitter analyzer results add categories dep scan missed, but don't override
       const analyzerStack = extractStack(analysis);
@@ -628,9 +644,6 @@ export const scanCommand = new Command('scan')
           stack[key] = value;
         }
       }
-
-      // Detect monorepo
-      const monorepoInfo = await detectMonorepo(rootPath, options.verbose || false);
 
       // Add workspace to stack if monorepo detected
       if (monorepoInfo.isMonorepo && monorepoInfo.tool) {
