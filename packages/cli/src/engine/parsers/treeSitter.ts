@@ -64,18 +64,31 @@ function resolveWasmPath(packageName: string, wasmFileName: string): string {
     accessSync(candidate);
     return candidate;
   } catch {
+    // Resolution failed, try next strategy
+  }
+
+  // Strategy 2: createRequire from __dirname (works when cwd differs from install location)
+  try {
+    const dirRequire = createRequire(join(__dirname, '__placeholder.js'));
+    const pkgJsonPath = dirRequire.resolve(`${packageName}/package.json`);
+    const candidate = join(dirname(pkgJsonPath), wasmFileName);
+    accessSync(candidate);
+    return candidate;
+  } catch {
     // Resolution failed, try manual walk
   }
 
-  // Strategy 2: Walk up from cwd checking node_modules
-  let dir = process.cwd();
-  while (dir !== dirname(dir)) {
-    const candidate = join(dir, 'node_modules', packageName, wasmFileName);
-    try {
-      accessSync(candidate);
-      return candidate;
-    } catch {
-      dir = dirname(dir);
+  // Strategy 3: Walk up from cwd checking node_modules
+  for (const startDir of [process.cwd(), __dirname]) {
+    let dir = startDir;
+    while (dir !== dirname(dir)) {
+      const candidate = join(dir, 'node_modules', packageName, wasmFileName);
+      try {
+        accessSync(candidate);
+        return candidate;
+      } catch {
+        dir = dirname(dir);
+      }
     }
   }
 
