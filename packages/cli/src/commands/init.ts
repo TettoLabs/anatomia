@@ -195,6 +195,7 @@ export const initCommand = new Command('init')
       ASTCache.setCacheDir(tmpCacheDir);
 
       // All operations in temp directory
+      const scanStart = Date.now();
       const engineResult = await runAnalyzer(cwd, options);
 
       // Reset cache override after analysis
@@ -225,7 +226,9 @@ export const initCommand = new Command('init')
       await createClaudeConfiguration(cwd, engineResult);
 
       // Display success
-      displaySuccessMessage(engineResult);
+      const scanTime = ((Date.now() - scanStart) / 1000).toFixed(1);
+      const projectName = await getProjectName(cwd);
+      displaySuccessMessage(engineResult, projectName, scanTime);
     } catch (error) {
       // FAILURE: Cleanup temp, no changes made
       await fs.rm(tmpDir, { recursive: true, force: true });
@@ -1230,19 +1233,59 @@ async function atomicRename(tmpAnaPath: string, anaPath: string): Promise<void> 
  *
  * Shows what was created and next steps.
  *
- * @param _engineResult - Engine result (unused)
+ * @param engineResult - Engine result (null if skipped)
+ * @param projectName - Project name
+ * @param scanTime - Scan duration in seconds
  */
-function displaySuccessMessage(_engineResult: EngineResult | null): void {
-  console.log(chalk.green('\n✅ .ana/ framework initialized\n'));
+function displaySuccessMessage(engineResult: EngineResult | null, projectName: string, scanTime: string): void {
+  console.log('');
 
-  console.log(chalk.gray('  ✓ Context generated → .ana/context/ (7 files)'));
-  console.log(chalk.gray('  ✓ Scan saved → .ana/scan.json'));
-  console.log(chalk.gray('  ✓ Config written → .ana/ana.json'));
-  console.log();
+  if (engineResult) {
+    console.log(chalk.green(`✓ Scanned ${projectName}`) + chalk.gray(` (${scanTime}s)`));
+    console.log('');
 
-  console.log(chalk.bold('  Next:'));
-  console.log('    claude --agent ana    Start working with Ana');
-  console.log('    ana scan              Refresh project intelligence');
-  console.log('    ana setup             Deepen context with your knowledge');
-  console.log();
+    // Stack
+    const stackParts: string[] = [];
+    if (engineResult.stack.language) stackParts.push(engineResult.stack.language);
+    if (engineResult.stack.framework) stackParts.push(engineResult.stack.framework);
+    if (engineResult.stack.database) {
+      let db = engineResult.stack.database;
+      const prismaSchema = engineResult.schemas?.prisma;
+      if (prismaSchema?.found && prismaSchema.modelCount) {
+        db += ` (${prismaSchema.modelCount} models)`;
+      }
+      stackParts.push(db);
+    }
+    if (engineResult.stack.auth) stackParts.push(engineResult.stack.auth);
+    if (engineResult.stack.testing) stackParts.push(engineResult.stack.testing);
+    if (stackParts.length > 0) {
+      console.log(`  ${chalk.bold('Stack:')}   ${stackParts.join(' · ')}`);
+    }
+
+    // Services (exclude things already in stack)
+    const serviceNames = engineResult.externalServices
+      .filter(s => !stackParts.some(p => p.includes(s.name)))
+      .map(s => s.name);
+    if (serviceNames.length > 0) {
+      console.log(`  ${chalk.bold('Services:')} ${serviceNames.join(', ')}`);
+    }
+
+    // Deploy
+    if (engineResult.deployment?.platform) {
+      console.log(`  ${chalk.bold('Deploy:')}  ${engineResult.deployment.platform}`);
+    }
+
+    console.log('');
+  }
+
+  console.log(chalk.green('✓ Context generated → .ana/context/ (7 files)'));
+  console.log(chalk.green('✓ Skills seeded → .claude/skills/ (6 files)'));
+  console.log(chalk.green('✓ Scan saved → .ana/scan.json'));
+  console.log(chalk.green('✓ Config written → .ana/ana.json'));
+  console.log('');
+  console.log('  Your AI now knows your project. Next:');
+  console.log(chalk.cyan('    claude --agent ana') + '    Start working with Ana');
+  console.log(chalk.cyan('    ana scan') + '              Refresh project intelligence');
+  console.log(chalk.cyan('    ana setup') + '             Deepen context with your knowledge');
+  console.log('');
 }
