@@ -1244,8 +1244,10 @@ function displaySuccessMessage(engineResult: EngineResult | null, projectName: s
   }
 
   console.log(chalk.green('✓ Context generated → .ana/context/ (7 files)'));
-  console.log(chalk.green('✓ Skills seeded → .claude/skills/ (6 files)'));
-  console.log(chalk.green('✓ Scan saved → .ana/scan.json'));
+  if (engineResult) {
+    console.log(chalk.green('✓ Skills seeded → .claude/skills/ (6 files)'));
+    console.log(chalk.green('✓ Scan saved → .ana/scan.json'));
+  }
   console.log(chalk.green('✓ Config written → .ana/ana.json'));
   console.log('');
   console.log('  Your AI now knows your project. Next:');
