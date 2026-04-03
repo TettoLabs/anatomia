@@ -3,6 +3,7 @@
  *
  * Detects package manager from lockfiles.
  * Walks up from scan target to find nearest lockfile (supports sub-packages).
+ * Capped at 5 levels to avoid picking up stray lockfiles from $HOME.
  */
 
 import * as path from 'node:path';
@@ -15,6 +16,9 @@ const LOCKFILE_MAP: Array<[string, string]> = [
   ['package-lock.json', 'npm'],
 ];
 
+/** Maximum directory levels to walk up when searching for lockfiles */
+const MAX_WALK_DEPTH = 5;
+
 /**
  * Detect the package manager used in a project by checking lockfiles.
  * Walks up from cwd to find the nearest lockfile (inherits from parent).
@@ -25,8 +29,9 @@ const LOCKFILE_MAP: Array<[string, string]> = [
  */
 export async function detectPackageManager(cwd: string): Promise<string> {
   let dir = path.resolve(cwd);
+  let depth = 0;
 
-  while (true) {
+  while (depth < MAX_WALK_DEPTH) {
     for (const [lockfile, manager] of LOCKFILE_MAP) {
       try {
         await fs.access(path.join(dir, lockfile));
@@ -39,6 +44,7 @@ export async function detectPackageManager(cwd: string): Promise<string> {
     const parent = path.dirname(dir);
     if (parent === dir) break; // reached filesystem root
     dir = parent;
+    depth++;
   }
 
   return 'npm';
