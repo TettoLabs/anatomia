@@ -9,7 +9,7 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
-import type { AnalysisResult } from '../engine/index.js';
+import type { EngineResult } from '../engine/types/engineResult.js';
 import {
   validateStructure,
   validateContent,
@@ -80,7 +80,7 @@ setupCommand
       process.exit(1);
     }
 
-    let snapshot: AnalysisResult;
+    let snapshot: EngineResult;
     try {
       const content = await fs.readFile(snapshotPath, 'utf-8');
       snapshot = JSON.parse(content);

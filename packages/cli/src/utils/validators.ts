@@ -10,7 +10,7 @@
 
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
-import type { AnalysisResult } from '../engine/index.js';
+import type { EngineResult } from '../engine/types/engineResult.js';
 import {
   SCAFFOLD_MARKER,
   MIN_FILE_SIZE_WARNING,
@@ -32,14 +32,14 @@ export interface ValidationError {
  *
  * Used for BF5 validation (patterns.md must document all detected patterns)
  *
- * @param analysis - AnalysisResult from snapshot.json
+ * @param analysis - EngineResult from snapshot.json
  * @returns Number of non-null pattern categories (0-5)
  *
  * @example
  * const snapshot = { patterns: { errorHandling: {...}, validation: {...} } };
  * countDetectedPatterns(snapshot); // Returns: 2
  */
-export function countDetectedPatterns(analysis: AnalysisResult): number {
+export function countDetectedPatterns(analysis: EngineResult): number {
   // Scenario B guard: analyzer may return null/undefined when tree-sitter fails
   if (!analysis || !analysis.patterns) {
     return 0;
@@ -77,12 +77,12 @@ export function getDocumentedPatternSections(content: string): string[] {
 /**
  * Get missing patterns (detected but not documented)
  *
- * @param analysis - AnalysisResult from snapshot
+ * @param analysis - EngineResult from snapshot
  * @param documented - Section names from patterns.md
  * @returns Array of pattern category names that are missing
  */
 export function getMissingPatterns(
-  analysis: AnalysisResult,
+  analysis: EngineResult,
   documented: string[]
 ): string[] {
   // Scenario B guard: analyzer may return null/undefined when tree-sitter fails
@@ -365,12 +365,12 @@ export async function validateContent(anaPath: string): Promise<ValidationError[
  * - BF6: Framework in project-overview.md matches analyzer
  *
  * @param anaPath - Path to .ana/ directory
- * @param snapshot - AnalysisResult from state/snapshot.json
+ * @param snapshot - EngineResult from state/snapshot.json
  * @returns Array of blocking errors (empty if valid)
  */
 export async function validateCrossReferences(
   anaPath: string,
-  snapshot: AnalysisResult
+  snapshot: EngineResult
 ): Promise<ValidationError[]> {
   const errors: ValidationError[] = [];
 
@@ -409,7 +409,7 @@ export async function validateCrossReferences(
   // Skip when analyzer framework is null, "none", or "unknown".
   // But if analyzer returned a specific framework name (like "nextjs", "fastapi"),
   // still perform the check even with low confidence - it's a comparison point.
-  const analyzerFramework = snapshot.framework?.toLowerCase() || null;
+  const analyzerFramework = snapshot.stack?.framework?.toLowerCase() || null;
   const analyzerReturnedNoFramework =
     analyzerFramework === null ||
     analyzerFramework === 'none' ||
@@ -427,7 +427,7 @@ export async function validateCrossReferences(
     const overviewContent = await fs.readFile(overviewPath, 'utf-8');
     const overviewFramework = extractFrameworkFromContent(overviewContent);
     // Scenario B: normalize "none" to null (analyzer may return framework: "none")
-    const rawSnapshotFramework = snapshot.framework?.toLowerCase() || null;
+    const rawSnapshotFramework = snapshot.stack?.framework?.toLowerCase() || null;
     const snapshotFramework = rawSnapshotFramework === 'none' ? null : rawSnapshotFramework;
 
     // Both should be null or both should match

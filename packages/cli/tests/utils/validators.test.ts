@@ -10,52 +10,24 @@ import {
   validateCrossReferences,
 } from '../../src/utils/validators.js';
 
+import { createEmptyEngineResult } from '../scaffolds/test-types.js';
+
 /**
- * Minimal AnalysisResult type for testing (avoids tree-sitter dependency)
+ * Create minimal EngineResult for Scenario B testing
+ * Simulates what engine returns when analysis fails
  */
-interface AnalysisResult {
-  projectType: string;
-  framework: string | null;
-  confidence: { projectType: number; framework: number };
-  indicators: { projectType: string[]; framework: string[] };
-  detectedAt: string;
-  version: string;
-  patterns?: {
-    errorHandling?: { library: string; confidence: number; evidence: string[] };
-    validation?: { library: string; confidence: number; evidence: string[] };
-    database?: { library: string; confidence: number; evidence: string[] };
-    auth?: { library: string; confidence: number; evidence: string[] };
-    testing?: { library: string; confidence: number; evidence: string[] };
-  };
+function createScenarioBSnapshot() {
+  return createEmptyEngineResult();
 }
 
 /**
- * Create minimal AnalysisResult for Scenario B testing
- * Simulates what analyzer returns when tree-sitter fails
+ * Create EngineResult with framework = "none" (string)
  */
-function createScenarioBSnapshot(): AnalysisResult {
+function createFrameworkNoneSnapshot() {
+  const result = createEmptyEngineResult();
   return {
-    projectType: 'unknown',
-    framework: null,
-    confidence: { projectType: 0, framework: 0 },
-    indicators: { projectType: [], framework: [] },
-    detectedAt: new Date().toISOString(),
-    version: '0.1.0',
-    // patterns: undefined - not present
-  };
-}
-
-/**
- * Create AnalysisResult with framework = "none" (string)
- */
-function createFrameworkNoneSnapshot(): AnalysisResult {
-  return {
-    projectType: 'node',
-    framework: 'none',
-    confidence: { projectType: 0.5, framework: 0 },
-    indicators: { projectType: ['package.json'], framework: [] },
-    detectedAt: new Date().toISOString(),
-    version: '0.1.0',
+    ...result,
+    stack: { ...result.stack, framework: 'none' as any, language: 'Node.js' },
   };
 }
 
@@ -287,11 +259,8 @@ describe('Scenario B — analyzer returned no/minimal data', () => {
         '# Project Overview\n\n**Framework:** FastAPI\n'
       );
 
-      const snapshot = createScenarioBSnapshot();
-      snapshot.framework = 'nextjs';
-      // When analyzer returns a real framework name, give it non-zero confidence
-      // so BF6 check is not skipped
-      snapshot.confidence = { projectType: 0, framework: 0.7 };
+      const base = createScenarioBSnapshot();
+      const snapshot = { ...base, stack: { ...base.stack, framework: 'nextjs' } };
       const errors = await validateCrossReferences(anaPath, snapshot as never);
 
       const bf6Errors = errors.filter(e => e.rule === 'BF6');

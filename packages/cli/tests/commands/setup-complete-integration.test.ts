@@ -7,7 +7,7 @@ import {
   validateContent,
   validateCrossReferences,
 } from '../../src/utils/validators.js';
-import { createEmptyAnalysisResult } from '../scaffolds/test-types.js';
+import { createEmptyEngineResult } from '../scaffolds/test-types.js';
 
 describe('ana setup complete integration', () => {
   let tmpDir: string;
@@ -38,7 +38,7 @@ describe('ana setup complete integration', () => {
     }
 
     // Create snapshot.json
-    const snapshot = createEmptyAnalysisResult();
+    const snapshot = createEmptyEngineResult();
     await fs.writeFile(
       path.join(anaPath, 'state/snapshot.json'),
       JSON.stringify(snapshot, null, 2)
@@ -60,7 +60,7 @@ describe('ana setup complete integration', () => {
     const overview = `# Project Overview — test\n\n## Tech Stack\n\nContent\n`.repeat(5);
     await fs.writeFile(path.join(anaPath, 'context/project-overview.md'), overview);
 
-    const snapshot = createEmptyAnalysisResult();
+    const snapshot = createEmptyEngineResult();
 
     const structuralErrors = await validateStructure(anaPath);
     const contentErrors = await validateContent(anaPath);
@@ -97,7 +97,7 @@ describe('ana setup complete integration', () => {
     const patterns = `# Patterns\n\n## Framework Patterns\n\nContent\n`;
     await fs.writeFile(path.join(anaPath, 'context/patterns.md'), patterns);
 
-    const snapshot = createEmptyAnalysisResult();
+    const snapshot = createEmptyEngineResult();
 
     const structuralErrors = await validateStructure(anaPath);
     const contentErrors = await validateContent(anaPath);
