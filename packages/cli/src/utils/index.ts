@@ -1,5 +1,4 @@
 export {
-  displayProjectType,
   formatCategoryName,
   PATTERN_CATEGORIES,
 } from './analysis-helpers.js';

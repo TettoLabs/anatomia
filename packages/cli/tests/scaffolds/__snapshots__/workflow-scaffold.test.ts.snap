@@ -1,33 +1,38 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`workflow.md scaffold > empty analysis (analyzer failed) 1`] = `
+exports[`workflow.md scaffold > TypeScript project with Vercel deployment and no CI config 1`] = `
 "<!-- SCAFFOLD - Setup will fill this file -->
 
 # Workflow — test-project
 
-## Git Workflow
+## Key Facts
+**Detected:** Deploy: Vercel
 
-[Setup will add: Branching strategy, merge vs rebase, branch naming]
+## Commands
+**Detected:** Build: \`npm run build\`
+**Detected:** Test: \`npm run test\`
+**Detected:** Lint: \`npm run lint\`
+**Detected:** Dev: \`npm run dev\`
 
-## Commit Conventions
-
-[Setup will add: Commit message format, conventional commits usage, scope/type]
-
-## PR Process
-
-[Setup will add: Review process, approval requirements, PR templates]
+## Environment
+**Detected:** .env file exists: no
+**Detected:** .env.example exists: no
+**Detected:** .gitignore covers .env: no
 
 ## CI/CD
+**Unexamined:** Build pipeline, test automation, deployment triggers
 
-[Setup will add: Build pipeline, test automation, deployment triggers]
+## Git Workflow
+**Unexamined:** Branching strategy, merge vs rebase, branch naming conventions
 
-## Deployment
+## Commit Conventions
+**Unexamined:** Commit message format, conventional commits, scope/type
 
-[Setup will add: Deployment process, environments (dev/staging/prod), rollback procedure]
+## PR Process
+**Unexamined:** Review process, approval requirements, PR templates
 
-## Environment Management
-
-[Setup will add: Environment variables, secrets management, config per environment]
+## Deployment Process
+**Unexamined:** Environments (dev/staging/prod), rollback procedure
 
 ---
 
@@ -35,34 +40,34 @@ exports[`workflow.md scaffold > empty analysis (analyzer failed) 1`] = `
 "
 `;
 
-exports[`workflow.md scaffold > flat project with no CI config detected 1`] = `
+exports[`workflow.md scaffold > empty result (scan failed) 1`] = `
 "<!-- SCAFFOLD - Setup will fill this file -->
 
 # Workflow — test-project
 
-## Git Workflow
+## Key Facts
 
-[Setup will add: Branching strategy, merge vs rebase, branch naming]
+## Commands
 
-## Commit Conventions
-
-[Setup will add: Commit message format, conventional commits usage, scope/type]
-
-## PR Process
-
-[Setup will add: Review process, approval requirements, PR templates]
+## Environment
+**Detected:** .env file exists: no
+**Detected:** .env.example exists: no
+**Detected:** .gitignore covers .env: no
 
 ## CI/CD
+**Unexamined:** Build pipeline, test automation, deployment triggers
 
-[Setup will add: Build pipeline, test automation, deployment triggers]
+## Git Workflow
+**Unexamined:** Branching strategy, merge vs rebase, branch naming conventions
 
-## Deployment
+## Commit Conventions
+**Unexamined:** Commit message format, conventional commits, scope/type
 
-[Setup will add: Deployment process, environments (dev/staging/prod), rollback procedure]
+## PR Process
+**Unexamined:** Review process, approval requirements, PR templates
 
-## Environment Management
-
-[Setup will add: Environment variables, secrets management, config per environment]
+## Deployment Process
+**Unexamined:** Environments (dev/staging/prod), rollback procedure
 
 ---
 
@@ -70,38 +75,44 @@ exports[`workflow.md scaffold > flat project with no CI config detected 1`] = `
 "
 `;
 
-exports[`workflow.md scaffold > rich project with GitHub Actions CI 1`] = `
+exports[`workflow.md scaffold > rich project with full deployment and CI config 1`] = `
 "<!-- SCAFFOLD - Setup will fill this file -->
 
 # Workflow — test-project
 
-## Git Workflow
+## Key Facts
+**Detected:** Default branch: main
+**Detected:** Commits: 142, Contributors: 4
+**Detected:** Last activity: 2026-03-18T15:30:00Z
+**Detected:** Deploy: AWS
 
-[Setup will add: Branching strategy, merge vs rebase, branch naming]
+## Commands
+**Detected:** Build: \`docker build .\`
+**Detected:** Test: \`pytest\`
+**Detected:** Lint: \`ruff check .\`
+**Detected:** Dev: \`uvicorn src.main:app --reload\`
 
-## Commit Conventions
-
-[Setup will add: Commit message format, conventional commits usage, scope/type]
-
-## PR Process
-
-[Setup will add: Review process, approval requirements, PR templates]
+## Environment
+**Detected:** .env file exists: no
+**Detected:** .env.example exists: no
+**Detected:** .gitignore covers .env: no
 
 ## CI/CD
+**Detected:** \`.github/workflows/\` — CI/CD workflows
 
-**CI config detected:**
-- \`.github/workflows/ci.yml\`
-- \`.github/workflows/deploy.yml\`
+**Unexamined:** Build pipeline, test automation, deployment triggers
 
-[Setup will add: Build pipeline, test automation, deployment triggers]
+## Git Workflow
+**Unexamined:** Branching strategy, merge vs rebase, branch naming conventions
 
-## Deployment
+## Commit Conventions
+**Unexamined:** Commit message format, conventional commits, scope/type
 
-[Setup will add: Deployment process, environments (dev/staging/prod), rollback procedure]
+## PR Process
+**Unexamined:** Review process, approval requirements, PR templates
 
-## Environment Management
-
-[Setup will add: Environment variables, secrets management, config per environment]
+## Deployment Process
+**Unexamined:** Environments (dev/staging/prod), rollback procedure
 
 ---
 

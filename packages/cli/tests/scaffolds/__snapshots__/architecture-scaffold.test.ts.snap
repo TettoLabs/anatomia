@@ -1,27 +1,24 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`architecture.md scaffold > empty analysis (analyzer failed) 1`] = `
+exports[`architecture.md scaffold > Node Express project with structure overflow 1`] = `
 "<!-- SCAFFOLD - Setup will fill this file -->
 
 # Architecture — test-project
 
+## Key Facts
+**Detected:** Express application
+
 ## Architecture Pattern
-
-**Detected:** Unknown
-
-[Setup will add: Why this pattern, how components interact, architectural principles]
+**Unexamined:** What pattern does this project follow? (monolith, microservices, serverless, modular monolith)
 
 ## System Boundaries
-
-[Setup will add: What's in scope, what's external, how boundaries are enforced]
+**Unexamined:** What's in scope? What's external? How are boundaries enforced?
 
 ## Design Decisions
-
-[Setup will add: Key architectural decisions, rationale, alternatives considered]
+**Unexamined:** Key architectural decisions, rationale, alternatives considered
 
 ## Trade-Offs
-
-[Setup will add: What we optimize for, what we sacrifice, technical debt]
+**Unexamined:** What does this project optimize for? What does it sacrifice?
 
 ---
 
@@ -29,29 +26,24 @@ exports[`architecture.md scaffold > empty analysis (analyzer failed) 1`] = `
 "
 `;
 
-exports[`architecture.md scaffold > flat project with unknown architecture 1`] = `
+exports[`architecture.md scaffold > empty result (scan failed) 1`] = `
 "<!-- SCAFFOLD - Setup will fill this file -->
 
 # Architecture — test-project
 
+## Key Facts
+
 ## Architecture Pattern
-
-**Detected:** Unknown
-**Confidence:** 0.00
-
-[Setup will add: Why this pattern, how components interact, architectural principles]
+**Unexamined:** What pattern does this project follow? (monolith, microservices, serverless, modular monolith)
 
 ## System Boundaries
-
-[Setup will add: What's in scope, what's external, how boundaries are enforced]
+**Unexamined:** What's in scope? What's external? How are boundaries enforced?
 
 ## Design Decisions
-
-[Setup will add: Key architectural decisions, rationale, alternatives considered]
+**Unexamined:** Key architectural decisions, rationale, alternatives considered
 
 ## Trade-Offs
-
-[Setup will add: What we optimize for, what we sacrifice, technical debt]
+**Unexamined:** What does this project optimize for? What does it sacrifice?
 
 ---
 
@@ -59,29 +51,26 @@ exports[`architecture.md scaffold > flat project with unknown architecture 1`] =
 "
 `;
 
-exports[`architecture.md scaffold > rich project with layered architecture 1`] = `
+exports[`architecture.md scaffold > rich Python FastAPI project with structure entries 1`] = `
 "<!-- SCAFFOLD - Setup will fill this file -->
 
 # Architecture — test-project
 
+## Key Facts
+**Detected:** FastAPI application
+**Detected:** Database: PostgreSQL
+
 ## Architecture Pattern
-
-**Detected:** layered
-**Confidence:** 0.85
-
-[Setup will add: Why this pattern, how components interact, architectural principles]
+**Unexamined:** What pattern does this project follow? (monolith, microservices, serverless, modular monolith)
 
 ## System Boundaries
-
-[Setup will add: What's in scope, what's external, how boundaries are enforced]
+**Unexamined:** What's in scope? What's external? How are boundaries enforced?
 
 ## Design Decisions
-
-[Setup will add: Key architectural decisions, rationale, alternatives considered]
+**Unexamined:** Key architectural decisions, rationale, alternatives considered
 
 ## Trade-Offs
-
-[Setup will add: What we optimize for, what we sacrifice, technical debt]
+**Unexamined:** What does this project optimize for? What does it sacrifice?
 
 ---
 

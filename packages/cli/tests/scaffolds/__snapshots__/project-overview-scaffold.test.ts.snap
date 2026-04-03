@@ -1,32 +1,26 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`project-overview.md scaffold > empty analysis (analyzer failed) 1`] = `
+exports[`project-overview.md scaffold > Python FastAPI project with minimal data 1`] = `
 "<!-- SCAFFOLD - Setup will fill this file -->
 
 # Project Overview — test-project
 
-## What This Project Is
+## Key Facts
+**Detected:** Python · FastAPI
+**Detected:** Testing: pytest
 
-**Language:** Unknown
-**Framework:** None detected
-**Architecture:** Unknown
+## Commands
+**Detected:** Test: \`pytest\`
+**Detected:** Package manager: pip
 
-[Setup will add: Project purpose (what/why/who), target users, problem this solves]
+## Project Shape
+**Detected:** 45 source files, 12 test files, 5 config files
 
-## Tech Stack
-
-**Language:** Unknown
-**Framework:** None detected
-
-[Setup will add: Key dependencies, build tools, deployment stack]
-
-## Directory Structure
-
-[Setup will add: Directory purpose explanations, special folders, organizational patterns]
+## Purpose
+**Unexamined:** What does this project do? Who are the target users? What problem does it solve?
 
 ## Current Status
-
-[Setup will add: Development stage, what's working, what's in progress, known issues]
+**Unexamined:** What's working? What's in progress? Known issues?
 
 ---
 
@@ -34,33 +28,24 @@ exports[`project-overview.md scaffold > empty analysis (analyzer failed) 1`] = `
 "
 `;
 
-exports[`project-overview.md scaffold > flat Next.js project with minimal data 1`] = `
+exports[`project-overview.md scaffold > empty result (scan failed) 1`] = `
 "<!-- SCAFFOLD - Setup will fill this file -->
 
 # Project Overview — test-project
 
-## What This Project Is
+## Key Facts
 
-**Language:** JavaScript/TypeScript
-**Framework:** nextjs
-**Architecture:** Unknown
+## Commands
+**Detected:** Package manager: npm
 
-[Setup will add: Project purpose (what/why/who), target users, problem this solves]
+## Project Shape
+**Detected:** 0 source files, 0 test files, 0 config files
 
-## Tech Stack
-
-**Language:** JavaScript/TypeScript
-**Framework:** nextjs
-
-[Setup will add: Key dependencies, build tools, deployment stack]
-
-## Directory Structure
-
-[Setup will add: Directory purpose explanations, special folders, organizational patterns]
+## Purpose
+**Unexamined:** What does this project do? Who are the target users? What problem does it solve?
 
 ## Current Status
-
-[Setup will add: Development stage, what's working, what's in progress, known issues]
+**Unexamined:** What's working? What's in progress? Known issues?
 
 ---
 
@@ -68,45 +53,41 @@ exports[`project-overview.md scaffold > flat Next.js project with minimal data 1
 "
 `;
 
-exports[`project-overview.md scaffold > rich FastAPI project with full structure 1`] = `
+exports[`project-overview.md scaffold > rich TypeScript Next.js project with full data 1`] = `
 "<!-- SCAFFOLD - Setup will fill this file -->
 
 # Project Overview — test-project
 
-## What This Project Is
+## Key Facts
+**Detected:** TypeScript · Next.js
+**Detected:** Database: PostgreSQL
+**Detected:** Auth: NextAuth
+**Detected:** Testing: Vitest
+**Detected:** Payments: Stripe
+**Detected:** Deploy: Vercel
 
-**Language:** Python
-**Framework:** fastapi
-**Architecture:** layered (confidence: 0.85)
+## Services
+**Detected:** payments: Stripe
+**Detected:** email: SendGrid
 
-[Setup will add: Project purpose (what/why/who), target users, problem this solves]
+## Commands
+**Detected:** Build: \`npm run build\`
+**Detected:** Test: \`npm run test\`
+**Detected:** Lint: \`npm run lint\`
+**Detected:** Package manager: npm
 
-## Tech Stack
+## Project Shape
+**Detected:** 120 source files, 35 test files, 18 config files
+**Detected:** \`src/app\` — Next.js app directory
+**Detected:** \`src/components\` — React components
+**Detected:** \`src/lib\` — Shared utilities
+**Detected:** \`tests\` — Test files
 
-**Language:** Python
-**Framework:** fastapi
-**Testing:** pytest
-
-[Setup will add: Key dependencies, build tools, deployment stack]
-
-## Directory Structure
-
-**Key directories:**
-- **src:** \`src/\`
-- **tests:** \`tests/\`
-- **api:** \`src/api/\`
-
-**Entry points:**
-- \`src/main.py\`
-- \`src/api/app.py\`
-
-**Tests:** \`tests/\`
-
-[Setup will add: Directory purpose explanations, special folders, organizational patterns]
+## Purpose
+**Unexamined:** What does this project do? Who are the target users? What problem does it solve?
 
 ## Current Status
-
-[Setup will add: Development stage, what's working, what's in progress, known issues]
+**Unexamined:** What's working? What's in progress? Known issues?
 
 ---
 

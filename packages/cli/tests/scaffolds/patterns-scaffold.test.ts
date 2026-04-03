@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { generatePatternsScaffold } from '../../src/utils/scaffold-generators.js';
-import type { AnalysisResult } from './test-types.js';
-import { createEmptyAnalysisResult } from './test-types.js';
+import { createEmptyEngineResult } from './test-types.js';
+import type { TestEngineResult } from './test-types.js';
 
 describe('patterns.md scaffold', () => {
   const projectName = 'test-project';
@@ -9,16 +9,18 @@ describe('patterns.md scaffold', () => {
   const version = '0.2.0';
 
   it('rich FastAPI project with 5 patterns', () => {
-    const richAnalysis: AnalysisResult = {
-      projectType: 'python',
-      framework: 'fastapi',
-      confidence: { projectType: 1.0, framework: 0.95 },
-      indicators: {
-        projectType: ['pyproject.toml'],
-        framework: ['fastapi in dependencies'],
+    const result: TestEngineResult = {
+      ...createEmptyEngineResult(),
+      overview: { project: projectName, scannedAt: timestamp, depth: 'deep' },
+      stack: {
+        language: 'Python',
+        framework: 'FastAPI',
+        database: 'PostgreSQL',
+        auth: 'OAuth2',
+        testing: 'pytest',
+        payments: null,
+        workspace: null,
       },
-      detectedAt: timestamp,
-      version: '0.2.0',
       patterns: {
         errorHandling: {
           library: 'exceptions',
@@ -74,7 +76,7 @@ describe('patterns.md scaffold', () => {
     };
 
     const scaffold = generatePatternsScaffold(
-      richAnalysis,
+      result as any,
       projectName,
       timestamp,
       version
@@ -83,17 +85,19 @@ describe('patterns.md scaffold', () => {
     expect(scaffold).toMatchSnapshot();
   });
 
-  it('flat Next.js project with 1 pattern', () => {
-    const flatAnalysis: AnalysisResult = {
-      projectType: 'node',
-      framework: 'nextjs',
-      confidence: { projectType: 1.0, framework: 0.88 },
-      indicators: {
-        projectType: ['package.json'],
-        framework: ['next in dependencies'],
+  it('TypeScript Next.js project with 1 pattern', () => {
+    const result: TestEngineResult = {
+      ...createEmptyEngineResult(),
+      overview: { project: projectName, scannedAt: timestamp, depth: 'deep' },
+      stack: {
+        language: 'TypeScript',
+        framework: 'Next.js',
+        database: null,
+        auth: null,
+        testing: 'Vitest',
+        payments: null,
+        workspace: null,
       },
-      detectedAt: timestamp,
-      version: '0.2.0',
       patterns: {
         testing: {
           library: 'vitest',
@@ -107,7 +111,7 @@ describe('patterns.md scaffold', () => {
     };
 
     const scaffold = generatePatternsScaffold(
-      flatAnalysis,
+      result as any,
       projectName,
       timestamp,
       version
@@ -116,11 +120,11 @@ describe('patterns.md scaffold', () => {
     expect(scaffold).toMatchSnapshot();
   });
 
-  it('empty analysis (analyzer failed)', () => {
-    const empty = createEmptyAnalysisResult();
+  it('empty result (scan failed)', () => {
+    const empty = createEmptyEngineResult();
 
     const scaffold = generatePatternsScaffold(
-      empty,
+      empty as any,
       projectName,
       timestamp,
       version

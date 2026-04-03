@@ -1,19 +1,16 @@
 {
-  "version": "1.0.0",
-  "createdAt": "PLACEHOLDER_TIMESTAMP",
-  "artifactBranch": "main",
+  "name": "PLACEHOLDER",
+  "framework": null,
+  "language": null,
+  "packageManager": "npm",
   "commands": {
-    "build": "npm run build",
-    "test": "npm test",
-    "lint": "npm run lint"
+    "build": null,
+    "test": null,
+    "lint": null,
+    "dev": null
   },
   "coAuthor": "Ana <build@anatomia.dev>",
-  "setupStatus": "pending",
-  "setupCompletedAt": null,
-  "setupMode": "guided",
-  "framework": null,
-  "analyzerVersion": "0.0.0",
-  "lastEvolve": null,
-  "lastHealth": null,
-  "sessionCount": 0
+  "artifactBranch": "main",
+  "setupMode": "not_started",
+  "scanStaleDays": 7
 }

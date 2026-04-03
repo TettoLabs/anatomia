@@ -3,20 +3,18 @@
  *
  * Each function creates a scaffold with:
  * - <!-- SCAFFOLD --> marker (first line)
- * - Section headers
- * - Analyzer data pre-populated (where available)
- * - Placeholder text for setup mode
+ * - **Detected:** lines for engine data
+ * - **Unexamined:** lines for data requiring human input
  *
  * @module scaffold-generators
  */
 
+import type { EngineResult } from '../engine/types/engineResult.js';
 import type {
-  AnalysisResult,
   PatternConfidence,
   MultiPattern,
 } from '../engine/index.js';
 import {
-  displayProjectType,
   formatCategoryName,
   PATTERN_CATEGORIES,
 } from './analysis-helpers.js';
@@ -24,9 +22,6 @@ import { SCAFFOLD_MARKER } from '../constants.js';
 
 /**
  * Type guard to check if pattern is multi-pattern
- *
- * Local implementation to avoid runtime import of analyzer
- * (which would trigger tree-sitter native module loading).
  *
  * @param pattern - Pattern to check
  * @returns true if MultiPattern, false otherwise
@@ -40,493 +35,514 @@ function isMultiPattern(
 /**
  * Generate project-overview.md scaffold
  *
- * Pre-populates: language, framework, architecture, directories, entry points (40%)
- * Placeholders: project purpose, target users, current status (60%)
- *
- * @param analysis - Analysis result from analyzer
- * @param projectName - Project name for header
- * @param timestamp - ISO timestamp for footer
- * @param version - CLI version for footer
+ * @param result - Engine result
+ * @param projectName - Project name
+ * @param timestamp - ISO timestamp
+ * @param version - CLI version
  * @returns Markdown scaffold string
  */
 export function generateProjectOverviewScaffold(
-  analysis: AnalysisResult,
+  result: EngineResult,
   projectName: string,
   timestamp: string,
   version: string
 ): string {
-  let scaffold = `${SCAFFOLD_MARKER}\n\n`;
-  scaffold += `# Project Overview — ${projectName}\n\n`;
+  let s = `${SCAFFOLD_MARKER}\n\n`;
+  s += `# Project Overview — ${projectName}\n\n`;
 
-  // Section 1: What This Project Is
-  scaffold += `## What This Project Is\n\n`;
-  scaffold += `**Language:** ${displayProjectType(analysis.projectType)}\n`;
-  scaffold += `**Framework:** ${analysis.framework || 'None detected'}\n`;
-  scaffold += `**Architecture:** ${analysis.structure?.architecture || 'Unknown'}`;
-  if (analysis.structure?.confidence?.architecture !== undefined) {
-    scaffold += ` (confidence: ${analysis.structure.confidence.architecture.toFixed(2)})`;
+  // Key Facts
+  s += `## Key Facts\n`;
+  const stackParts = [result.stack.language, result.stack.framework].filter(Boolean);
+  if (stackParts.length > 0) s += `**Detected:** ${stackParts.join(' · ')}\n`;
+  if (result.stack.database) s += `**Detected:** Database: ${result.stack.database}\n`;
+  if (result.stack.auth) s += `**Detected:** Auth: ${result.stack.auth}\n`;
+  if (result.stack.testing) s += `**Detected:** Testing: ${result.stack.testing}\n`;
+  if (result.stack.payments) s += `**Detected:** Payments: ${result.stack.payments}\n`;
+  if (result.deployment) s += `**Detected:** Deploy: ${result.deployment.platform}\n`;
+  s += '\n';
+
+  // Services
+  if (result.externalServices.length > 0) {
+    s += `## Services\n`;
+    const byCategory: Record<string, string[]> = {};
+    for (const svc of result.externalServices) {
+      if (!byCategory[svc.category]) byCategory[svc.category] = [];
+      byCategory[svc.category].push(svc.name);
+    }
+    for (const [cat, names] of Object.entries(byCategory)) {
+      s += `**Detected:** ${cat}: ${names.join(', ')}\n`;
+    }
+    s += '\n';
   }
-  scaffold += '\n\n';
-  scaffold += `[Setup will add: Project purpose (what/why/who), target users, problem this solves]\n\n`;
 
-  // Section 2: Tech Stack
-  scaffold += `## Tech Stack\n\n`;
-  scaffold += `**Language:** ${displayProjectType(analysis.projectType)}\n`;
-  scaffold += `**Framework:** ${analysis.framework || 'None detected'}\n`;
-  if (analysis.patterns?.testing && !isMultiPattern(analysis.patterns.testing)) {
-    scaffold += `**Testing:** ${analysis.patterns.testing.library}\n`;
+  // Commands
+  s += `## Commands\n`;
+  if (result.commands.build) s += `**Detected:** Build: \`${result.commands.build}\`\n`;
+  if (result.commands.test) s += `**Detected:** Test: \`${result.commands.test}\`\n`;
+  if (result.commands.lint) s += `**Detected:** Lint: \`${result.commands.lint}\`\n`;
+  s += `**Detected:** Package manager: ${result.commands.packageManager}\n\n`;
+
+  // Project Shape
+  s += `## Project Shape\n`;
+  s += `**Detected:** ${result.files.source} source files, ${result.files.test} test files, ${result.files.config} config files\n`;
+  if (result.structure.length > 0) {
+    const entries = result.structure.slice(0, 10);
+    for (const entry of entries) {
+      s += `**Detected:** \`${entry.path}\` — ${entry.purpose}\n`;
+    }
   }
-  scaffold += '\n';
-  scaffold += `[Setup will add: Key dependencies, build tools, deployment stack]\n\n`;
+  s += '\n';
 
-  // Section 3: Directory Structure
-  scaffold += `## Directory Structure\n\n`;
-  if (analysis.structure?.directories && Object.keys(analysis.structure.directories).length > 0) {
-    scaffold += '**Key directories:**\n';
-    Object.entries(analysis.structure.directories).forEach(([purpose, path]) => {
-      scaffold += `- **${purpose}:** \`${path}\`\n`;
-    });
-    scaffold += '\n';
+  // Git
+  if (result.git.branch || result.git.commitCount) {
+    s += `## Git\n`;
+    const gitParts: string[] = [];
+    if (result.git.branch) gitParts.push(`Branch: ${result.git.branch}`);
+    if (result.git.commitCount !== null) gitParts.push(`${result.git.commitCount} commits`);
+    if (result.git.contributorCount !== null) gitParts.push(`${result.git.contributorCount} contributors`);
+    s += `**Detected:** ${gitParts.join(', ')}\n\n`;
   }
-  if (analysis.structure?.entryPoints && analysis.structure.entryPoints.length > 0) {
-    scaffold += '**Entry points:**\n';
-    analysis.structure.entryPoints.forEach((entry) => {
-      scaffold += `- \`${entry}\`\n`;
-    });
-    scaffold += '\n';
-  }
-  if (analysis.structure?.testLocation) {
-    scaffold += `**Tests:** \`${analysis.structure.testLocation}\`\n\n`;
-  }
-  scaffold += `[Setup will add: Directory purpose explanations, special folders, organizational patterns]\n\n`;
 
-  // Section 4: Current Status
-  scaffold += `## Current Status\n\n`;
-  scaffold += `[Setup will add: Development stage, what's working, what's in progress, known issues]\n\n`;
+  // Unexamined
+  s += `## Purpose\n`;
+  s += `**Unexamined:** What does this project do? Who are the target users? What problem does it solve?\n\n`;
+  s += `## Current Status\n`;
+  s += `**Unexamined:** What's working? What's in progress? Known issues?\n\n`;
 
-  scaffold += `---\n\n*Generated by Anatomia v${version} on ${timestamp}*\n`;
-
-  return scaffold;
+  s += `---\n\n*Generated by Anatomia v${version} on ${timestamp}*\n`;
+  return s;
 }
 
 /**
  * Generate architecture.md scaffold
  *
- * Pre-populates: architecture pattern with confidence (20%)
- * Placeholders: system boundaries, design decisions, trade-offs (80%)
- *
- * @param analysis - Analysis result
+ * @param result - Engine result
  * @param projectName - Project name
  * @param timestamp - ISO timestamp
  * @param _version - CLI version (unused)
  * @returns Markdown scaffold string
  */
 export function generateArchitectureScaffold(
-  analysis: AnalysisResult,
+  result: EngineResult,
   projectName: string,
   timestamp: string,
   _version: string
 ): string {
-  let scaffold = `${SCAFFOLD_MARKER}\n\n`;
-  scaffold += `# Architecture — ${projectName}\n\n`;
+  let s = `${SCAFFOLD_MARKER}\n\n`;
+  s += `# Architecture — ${projectName}\n\n`;
 
-  // Section 1: Architecture Pattern
-  scaffold += `## Architecture Pattern\n\n`;
-  scaffold += `**Detected:** ${analysis.structure?.architecture || 'Unknown'}\n`;
-  if (analysis.structure?.confidence?.architecture !== undefined) {
-    scaffold += `**Confidence:** ${analysis.structure.confidence.architecture.toFixed(2)}\n`;
+  // Key Facts
+  s += `## Key Facts\n`;
+  if (result.stack.framework) s += `**Detected:** ${result.stack.framework} application\n`;
+  if (result.stack.database) s += `**Detected:** Database: ${result.stack.database}\n`;
+  if (result.stack.auth) s += `**Detected:** Auth: ${result.stack.auth}\n`;
+  if (result.stack.payments) s += `**Detected:** Payments: ${result.stack.payments}\n`;
+  if (result.deployment) s += `**Detected:** Deploy: ${result.deployment.platform} (${result.deployment.configFile})\n`;
+  s += '\n';
+
+  // External Services
+  if (result.externalServices.length > 0) {
+    s += `## External Services\n`;
+    for (const svc of result.externalServices) {
+      s += `**Detected:** ${svc.name} (${svc.category})${svc.configFound ? ' — config found' : ''}\n`;
+    }
+    s += '\n';
   }
-  scaffold += '\n';
-  scaffold += `[Setup will add: Why this pattern, how components interact, architectural principles]\n\n`;
 
-  // Section 2: System Boundaries
-  scaffold += `## System Boundaries\n\n`;
-  scaffold += `[Setup will add: What's in scope, what's external, how boundaries are enforced]\n\n`;
+  // Schema
+  const schemaEntries = Object.entries(result.schemas).filter(([, v]) => v.found);
+  if (schemaEntries.length > 0) {
+    s += `## Database Schema\n`;
+    for (const [name, info] of schemaEntries) {
+      s += `**Detected:** ${name}`;
+      if (info.path) s += ` at \`${info.path}\``;
+      if (info.modelCount !== null) s += ` (${info.modelCount} models)`;
+      s += '\n';
+    }
+    s += '\n';
+  }
 
-  // Section 3: Design Decisions
-  scaffold += `## Design Decisions\n\n`;
-  scaffold += `[Setup will add: Key architectural decisions, rationale, alternatives considered]\n\n`;
+  // Monorepo
+  if (result.monorepo.isMonorepo) {
+    s += `## Monorepo\n`;
+    s += `**Detected:** ${result.monorepo.tool || 'monorepo'} with ${result.monorepo.packages.length} packages\n`;
+    for (const pkg of result.monorepo.packages) {
+      s += `**Detected:** \`${pkg.path}\` — ${pkg.name}\n`;
+    }
+    s += '\n';
+  }
 
-  // Section 4: Trade-Offs
-  scaffold += `## Trade-Offs\n\n`;
-  scaffold += `[Setup will add: What we optimize for, what we sacrifice, technical debt]\n\n`;
+  // Unexamined
+  s += `## Architecture Pattern\n`;
+  s += `**Unexamined:** What pattern does this project follow? (monolith, microservices, serverless, modular monolith)\n\n`;
+  s += `## System Boundaries\n`;
+  s += `**Unexamined:** What's in scope? What's external? How are boundaries enforced?\n\n`;
+  s += `## Design Decisions\n`;
+  s += `**Unexamined:** Key architectural decisions, rationale, alternatives considered\n\n`;
+  s += `## Trade-Offs\n`;
+  s += `**Unexamined:** What does this project optimize for? What does it sacrifice?\n\n`;
 
-  scaffold += `---\n\n*Last updated: ${timestamp}*\n`;
-
-  return scaffold;
+  s += `---\n\n*Last updated: ${timestamp}*\n`;
+  return s;
 }
 
 /**
  * Generate patterns.md scaffold
  *
- * Pre-populates: All 5 detected patterns with library, variant, confidence, evidence (50%)
- * Placeholders: Code examples, framework-specific guidance (50%)
- *
- * @param analysis - Analysis result
+ * @param result - Engine result
  * @param projectName - Project name
  * @param timestamp - ISO timestamp
  * @param _version - CLI version (unused)
  * @returns Markdown scaffold string
  */
 export function generatePatternsScaffold(
-  analysis: AnalysisResult,
+  result: EngineResult,
   projectName: string,
   timestamp: string,
   _version: string
 ): string {
-  let scaffold = `${SCAFFOLD_MARKER}\n\n`;
-  scaffold += `# Patterns — ${projectName}\n\n`;
+  let s = `${SCAFFOLD_MARKER}\n\n`;
+  s += `# Patterns — ${projectName}\n\n`;
 
-  // Iterate 5 pattern categories
   for (const category of PATTERN_CATEGORIES) {
-    scaffold += `## ${formatCategoryName(category)}\n\n`;
-
-    const pattern = analysis.patterns?.[category];
+    s += `## ${formatCategoryName(category)}\n\n`;
+    const pattern = result.patterns?.[category];
 
     if (!pattern) {
-      // Not detected
-      scaffold += `**Detected:** None\n\n`;
-      scaffold += `[Setup will investigate source files or ask: Does this project use ${formatCategoryName(category).toLowerCase()}?]\n\n`;
+      s += `**Detected:** None\n\n`;
+      s += `**Unexamined:** Does this project use ${formatCategoryName(category).toLowerCase()}?\n\n`;
       continue;
     }
 
     if (isMultiPattern(pattern)) {
-      // Multi-pattern scenario (e.g., SQLAlchemy sync + async)
-      scaffold += `**Detected:** Multiple patterns\n\n`;
+      s += `**Detected:** Multiple patterns\n\n`;
+      s += `**Primary:**\n`;
+      s += `- **Library:** ${pattern.primary.library}`;
+      if (pattern.primary.variant) s += ` (${pattern.primary.variant})`;
+      s += '\n';
+      s += `- **Confidence:** ${pattern.primary.confidence.toFixed(2)}\n`;
+      s += `- **Evidence:**\n`;
+      pattern.primary.evidence.forEach((e) => { s += `  - ${e}\n`; });
+      s += '\n';
 
-      // Primary pattern
-      scaffold += `**Primary:**\n`;
-      scaffold += `- **Library:** ${pattern.primary.library}`;
-      if (pattern.primary.variant) {
-        scaffold += ` (${pattern.primary.variant})`;
-      }
-      scaffold += '\n';
-      scaffold += `- **Confidence:** ${pattern.primary.confidence.toFixed(2)}\n`;
-      scaffold += `- **Evidence:**\n`;
-      pattern.primary.evidence.forEach((e) => {
-        scaffold += `  - ${e}\n`;
-      });
-      scaffold += '\n';
-
-      // Secondary patterns
       const secondary = pattern.patterns.filter((p) => !p.primary);
       if (secondary.length > 0) {
-        scaffold += `**Also detected:**\n`;
+        s += `**Also detected:**\n`;
         secondary.forEach((p) => {
-          scaffold += `- ${p.library}`;
-          if (p.variant) {
-            scaffold += ` (${p.variant})`;
-          }
-          scaffold += ` — confidence: ${p.confidence.toFixed(2)}\n`;
+          s += `- ${p.library}`;
+          if (p.variant) s += ` (${p.variant})`;
+          s += ` — confidence: ${p.confidence.toFixed(2)}\n`;
         });
-        scaffold += '\n';
+        s += '\n';
       }
-
-      scaffold += `[Setup will add: Real code examples showing both patterns, explain why multiple (legacy code, migration, different use cases)]\n\n`;
+      s += `**Unexamined:** Real code examples showing both patterns, why multiple?\n\n`;
     } else {
-      // Single pattern
-      scaffold += `**Detected:** ${pattern.library}`;
-      if (pattern.variant) {
-        scaffold += ` (${pattern.variant})`;
-      }
-      scaffold += '\n';
-      scaffold += `**Confidence:** ${pattern.confidence.toFixed(2)}\n\n`;
-
-      scaffold += `**Evidence:**\n`;
-      pattern.evidence.forEach((e) => {
-        scaffold += `- ${e}\n`;
-      });
-      scaffold += '\n';
-
-      scaffold += `[Setup will add: Real code examples from codebase showing usage, best practices, common patterns]\n\n`;
+      s += `**Detected:** ${pattern.library}`;
+      if (pattern.variant) s += ` (${pattern.variant})`;
+      s += '\n';
+      s += `**Confidence:** ${pattern.confidence.toFixed(2)}\n\n`;
+      s += `**Evidence:**\n`;
+      pattern.evidence.forEach((e) => { s += `- ${e}\n`; });
+      s += '\n';
+      s += `**Unexamined:** Real code examples from codebase showing usage\n\n`;
     }
   }
 
-  // Framework Patterns section (meta-section, not a pattern category)
-  scaffold += `---\n\n## Framework Patterns\n\n`;
-  scaffold += `[Setup will incorporate guidance from context/setup/framework-snippets/${analysis.framework || 'generic'}.md]\n\n`;
+  // Framework Patterns
+  s += `---\n\n## Framework Patterns\n\n`;
+  const fwSlug = result.stack.framework?.toLowerCase().replace(/[^a-z]/g, '') || 'generic';
+  s += `**Unexamined:** Framework-specific patterns (see context/setup/framework-snippets/${fwSlug}.md)\n\n`;
 
-  scaffold += `---\n\n*Last updated: ${timestamp}*\n`;
-
-  return scaffold;
+  s += `---\n\n*Last updated: ${timestamp}*\n`;
+  return s;
 }
 
 /**
  * Generate conventions.md scaffold
  *
- * Pre-populates: Naming (5 sub-types), imports, indentation (70%)
- * Placeholders: Additional conventions, team preferences (30%)
- *
- * @param analysis - Analysis result
+ * @param result - Engine result
  * @param projectName - Project name
  * @param timestamp - ISO timestamp
  * @param _version - CLI version (unused)
  * @returns Markdown scaffold string
  */
 export function generateConventionsScaffold(
-  analysis: AnalysisResult,
+  result: EngineResult,
   projectName: string,
   timestamp: string,
   _version: string
 ): string {
-  let scaffold = `${SCAFFOLD_MARKER}\n\n`;
-  scaffold += `# Conventions — ${projectName}\n\n`;
+  let s = `${SCAFFOLD_MARKER}\n\n`;
+  s += `# Conventions — ${projectName}\n\n`;
 
-  // Section 1: Naming Conventions
-  scaffold += `## Naming Conventions\n\n`;
+  // Key Facts summary
+  s += `## Key Facts\n`;
+  if (result.conventions?.naming?.functions) {
+    s += `**Detected:** Functions: ${result.conventions.naming.functions.majority}`;
+    if (result.conventions.naming.functions.mixed) s += ' (mixed)';
+    s += '\n';
+  }
+  if (result.conventions?.imports) {
+    s += `**Detected:** Imports: ${result.conventions.imports.style}\n`;
+  }
+  if (result.conventions?.indentation) {
+    const indent = result.conventions.indentation;
+    s += `**Detected:** Indentation: ${indent.width || ''} ${indent.style}\n`;
+  }
+  s += '\n';
 
-  if (analysis.conventions?.naming) {
-    const naming = analysis.conventions.naming;
+  // Naming
+  s += `## Naming Conventions\n\n`;
+  if (result.conventions?.naming) {
+    const naming = result.conventions.naming;
     const categories = ['files', 'variables', 'functions', 'classes', 'constants'] as const;
-
     for (const cat of categories) {
       const conv = naming[cat];
       if (conv) {
         const label = cat.charAt(0).toUpperCase() + cat.slice(1);
-        scaffold += `**${label}:** ${conv.majority}`;
-        scaffold += ` (confidence: ${conv.confidence.toFixed(2)}`;
-        if (conv.mixed) {
-          scaffold += ', mixed';
-        }
-        scaffold += ')\n';
-
-        // Show distribution if mixed
+        s += `**${label}:** ${conv.majority}`;
+        s += ` (confidence: ${conv.confidence.toFixed(2)}`;
+        if (conv.mixed) s += ', mixed';
+        s += ')\n';
         if (conv.mixed && conv.distribution) {
           const distItems = Object.entries(conv.distribution)
             .filter(([, pct]) => pct > 0.01)
             .map(([style, pct]) => `${style}: ${(pct * 100).toFixed(0)}%`);
           if (distItems.length > 0) {
-            scaffold += `  Distribution: ${distItems.join(', ')}\n`;
+            s += `  Distribution: ${distItems.join(', ')}\n`;
           }
         }
       }
     }
-    scaffold += '\n';
+    s += '\n';
   } else {
-    scaffold += '*Naming conventions not analyzed*\n\n';
+    s += '*Naming conventions not analyzed*\n\n';
   }
+  s += `**Unexamined:** Examples from codebase, exceptions to rules, team-specific preferences\n\n`;
 
-  scaffold += `[Setup will add: Examples from codebase, exceptions to rules, team-specific preferences]\n\n`;
-
-  // Section 2: Import Organization
-  scaffold += `## Import Organization\n\n`;
-
-  if (analysis.conventions?.imports) {
-    const imports = analysis.conventions.imports;
-    scaffold += `**Style:** ${imports.style}\n`;
-    scaffold += `**Confidence:** ${imports.confidence.toFixed(2)}\n`;
+  // Imports
+  s += `## Import Organization\n\n`;
+  if (result.conventions?.imports) {
+    const imports = result.conventions.imports;
+    s += `**Style:** ${imports.style}\n`;
+    s += `**Confidence:** ${imports.confidence.toFixed(2)}\n`;
     if (imports.distribution) {
-      scaffold += `**Distribution:** absolute: ${(imports.distribution.absolute * 100).toFixed(0)}%, `;
-      scaffold += `relative: ${(imports.distribution.relative * 100).toFixed(0)}%\n`;
+      s += `**Distribution:** absolute: ${(imports.distribution.absolute * 100).toFixed(0)}%, `;
+      s += `relative: ${(imports.distribution.relative * 100).toFixed(0)}%\n`;
     }
-    scaffold += '\n';
+    s += '\n';
   } else {
-    scaffold += '*Import conventions not analyzed*\n\n';
+    s += '*Import conventions not analyzed*\n\n';
   }
+  s += `**Unexamined:** Import grouping rules, alias patterns, ordering conventions\n\n`;
 
-  scaffold += `[Setup will add: Import grouping rules, alias patterns, ordering conventions]\n\n`;
-
-  // Section 3: Code Style
-  scaffold += `## Code Style\n\n`;
-
-  if (analysis.conventions?.indentation) {
-    const indent = analysis.conventions.indentation;
-    scaffold += `**Indentation:** ${indent.style}`;
-    if (indent.width) {
-      scaffold += ` (${indent.width} ${indent.style})`;
-    }
-    scaffold += '\n';
-    scaffold += `**Confidence:** ${indent.confidence.toFixed(2)}`;
-    if (indent.confidence === 1.0) {
-      scaffold += ' (from config file)';
-    } else {
-      scaffold += ' (from code analysis)';
-    }
-    scaffold += '\n\n';
+  // Code Style
+  s += `## Code Style\n\n`;
+  if (result.conventions?.indentation) {
+    const indent = result.conventions.indentation;
+    s += `**Indentation:** ${indent.style}`;
+    if (indent.width) s += ` (${indent.width} ${indent.style})`;
+    s += '\n';
+    s += `**Confidence:** ${indent.confidence.toFixed(2)}`;
+    if (indent.confidence === 1.0) s += ' (from config file)';
+    else s += ' (from code analysis)';
+    s += '\n\n';
   }
+  s += `**Unexamined:** Line length, formatting rules, linter config, code style guide\n\n`;
 
-  scaffold += `[Setup will add: Line length, formatting rules, linter config, code style guide]\n\n`;
+  // Additional
+  s += `## Additional Conventions\n\n`;
+  s += `**Unexamined:** Team-specific conventions, file organization, comment style, other standards\n\n`;
 
-  // Section 4: Additional Conventions
-  scaffold += `## Additional Conventions\n\n`;
-  scaffold += `[Setup will add: Team-specific conventions, file organization, comment style, other standards]\n\n`;
-
-  scaffold += `---\n\n*Last updated: ${timestamp}*\n`;
-
-  return scaffold;
+  s += `---\n\n*Last updated: ${timestamp}*\n`;
+  return s;
 }
 
 /**
  * Generate workflow.md scaffold
  *
- * Pre-populates: CI config detection (10%)
- * Placeholders: Git workflow, commit conventions, PR process, deployment (90%)
- *
- * @param analysis - Analysis result
+ * @param result - Engine result
  * @param projectName - Project name
  * @param timestamp - ISO timestamp
  * @param _version - CLI version (unused)
  * @returns Markdown scaffold string
  */
 export function generateWorkflowScaffold(
-  analysis: AnalysisResult,
+  result: EngineResult,
   projectName: string,
   timestamp: string,
   _version: string
 ): string {
-  let scaffold = `${SCAFFOLD_MARKER}\n\n`;
-  scaffold += `# Workflow — ${projectName}\n\n`;
+  let s = `${SCAFFOLD_MARKER}\n\n`;
+  s += `# Workflow — ${projectName}\n\n`;
 
-  // Section 1: Git Workflow
-  scaffold += `## Git Workflow\n\n`;
-  scaffold += `[Setup will add: Branching strategy, merge vs rebase, branch naming]\n\n`;
+  // Key Facts
+  s += `## Key Facts\n`;
+  if (result.git.branch) s += `**Detected:** Default branch: ${result.git.branch}\n`;
+  if (result.git.commitCount !== null) s += `**Detected:** Commits: ${result.git.commitCount}`;
+  if (result.git.contributorCount !== null) s += `, Contributors: ${result.git.contributorCount}`;
+  if (result.git.commitCount !== null) s += '\n';
+  if (result.git.lastCommitAt) s += `**Detected:** Last activity: ${result.git.lastCommitAt}\n`;
+  if (result.deployment) s += `**Detected:** Deploy: ${result.deployment.platform}\n`;
+  s += '\n';
 
-  // Section 2: Commit Conventions
-  scaffold += `## Commit Conventions\n\n`;
-  scaffold += `[Setup will add: Commit message format, conventional commits usage, scope/type]\n\n`;
+  // Commands
+  s += `## Commands\n`;
+  if (result.commands.build) s += `**Detected:** Build: \`${result.commands.build}\`\n`;
+  if (result.commands.test) s += `**Detected:** Test: \`${result.commands.test}\`\n`;
+  if (result.commands.lint) s += `**Detected:** Lint: \`${result.commands.lint}\`\n`;
+  if (result.commands.dev) s += `**Detected:** Dev: \`${result.commands.dev}\`\n`;
+  s += '\n';
 
-  // Section 3: PR Process
-  scaffold += `## PR Process\n\n`;
-  scaffold += `[Setup will add: Review process, approval requirements, PR templates]\n\n`;
+  // Environment
+  s += `## Environment\n`;
+  s += `**Detected:** .env file exists: ${result.secrets.envFileExists ? 'yes' : 'no'}\n`;
+  s += `**Detected:** .env.example exists: ${result.secrets.envExampleExists ? 'yes' : 'no'}\n`;
+  s += `**Detected:** .gitignore covers .env: ${result.secrets.gitignoreCoversEnv ? 'yes' : 'no'}\n\n`;
 
-  // Section 4: CI/CD
-  scaffold += `## CI/CD\n\n`;
-
-  // Detect CI config files
-  if (analysis.structure?.configFiles) {
-    const ciConfigs = analysis.structure.configFiles.filter((f) =>
-      f.includes('.github/workflows') ||
-      f.includes('.gitlab-ci') ||
-      f.includes('jenkins') ||
-      f.includes('circle')
-    );
-    if (ciConfigs.length > 0) {
-      scaffold += '**CI config detected:**\n';
-      ciConfigs.forEach((config) => {
-        scaffold += `- \`${config}\`\n`;
-      });
-      scaffold += '\n';
+  // CI detection from structure
+  s += `## CI/CD\n`;
+  const ciEntries = result.structure.filter(e =>
+    e.path.includes('.github/workflows') || e.path.includes('.gitlab-ci') || e.path.includes('Jenkinsfile')
+  );
+  if (ciEntries.length > 0) {
+    for (const ci of ciEntries) {
+      s += `**Detected:** \`${ci.path}\` — ${ci.purpose}\n`;
     }
+    s += '\n';
   }
+  s += `**Unexamined:** Build pipeline, test automation, deployment triggers\n\n`;
 
-  scaffold += `[Setup will add: Build pipeline, test automation, deployment triggers]\n\n`;
+  // Unexamined
+  s += `## Git Workflow\n`;
+  s += `**Unexamined:** Branching strategy, merge vs rebase, branch naming conventions\n\n`;
+  s += `## Commit Conventions\n`;
+  s += `**Unexamined:** Commit message format, conventional commits, scope/type\n\n`;
+  s += `## PR Process\n`;
+  s += `**Unexamined:** Review process, approval requirements, PR templates\n\n`;
+  s += `## Deployment Process\n`;
+  s += `**Unexamined:** Environments (dev/staging/prod), rollback procedure\n\n`;
 
-  // Section 5: Deployment
-  scaffold += `## Deployment\n\n`;
-  scaffold += `[Setup will add: Deployment process, environments (dev/staging/prod), rollback procedure]\n\n`;
-
-  // Section 6: Environment Management
-  scaffold += `## Environment Management\n\n`;
-  scaffold += `[Setup will add: Environment variables, secrets management, config per environment]\n\n`;
-
-  scaffold += `---\n\n*Last updated: ${timestamp}*\n`;
-
-  return scaffold;
+  s += `---\n\n*Last updated: ${timestamp}*\n`;
+  return s;
 }
 
 /**
  * Generate testing.md scaffold
  *
- * Pre-populates: Test framework, test location (50%)
- * Placeholders: Test structure, fixtures, mocking, coverage (50%)
- *
- * @param analysis - Analysis result
+ * @param result - Engine result
  * @param projectName - Project name
  * @param timestamp - ISO timestamp
  * @param _version - CLI version (unused)
  * @returns Markdown scaffold string
  */
 export function generateTestingScaffold(
-  analysis: AnalysisResult,
+  result: EngineResult,
   projectName: string,
   timestamp: string,
   _version: string
 ): string {
-  let scaffold = `${SCAFFOLD_MARKER}\n\n`;
-  scaffold += `# Testing — ${projectName}\n\n`;
+  let s = `${SCAFFOLD_MARKER}\n\n`;
+  s += `# Testing — ${projectName}\n\n`;
 
-  // Section 1: Test Framework
-  scaffold += `## Test Framework\n\n`;
-  if (analysis.patterns?.testing && !isMultiPattern(analysis.patterns.testing)) {
-    // Type narrowed to PatternConfidence - safe to access .library
-    scaffold += `**Framework:** ${analysis.patterns.testing.library}\n`;
-    scaffold += `**Confidence:** ${analysis.patterns.testing.confidence.toFixed(2)}\n\n`;
-    scaffold += '**Evidence:**\n';
-    analysis.patterns.testing.evidence.forEach((e) => {
-      scaffold += `- ${e}\n`;
-    });
-    scaffold += '\n';
-  } else {
-    scaffold += '**Detected:** None\n\n';
+  // Key Facts
+  s += `## Key Facts\n`;
+  if (result.stack.testing) s += `**Detected:** Framework: ${result.stack.testing}\n`;
+  if (result.commands.test) s += `**Detected:** Test command: \`${result.commands.test}\`\n`;
+  s += `**Detected:** Test files: ${result.files.test}\n\n`;
+
+  // Test Framework detail
+  s += `## Test Framework\n\n`;
+  const testPattern = result.patterns?.testing;
+  if (testPattern && !isMultiPattern(testPattern)) {
+    s += `**Detected:** ${testPattern.library} (confidence: ${testPattern.confidence.toFixed(2)})\n`;
+    if (testPattern.evidence.length > 0) {
+      s += '**Evidence:**\n';
+      testPattern.evidence.forEach((e) => { s += `- ${e}\n`; });
+    }
+    s += '\n';
   }
-  scaffold += `[Setup will add: Test runner config, test scripts, watch mode]\n\n`;
 
-  // Section 2: Test Structure
-  scaffold += `## Test Structure\n\n`;
-  if (analysis.structure?.testLocation) {
-    scaffold += `**Test location:** \`${analysis.structure.testLocation}\`\n\n`;
+  // Test Structure
+  s += `## Test Structure\n`;
+  if (result.files.source > 0) {
+    const ratio = (result.files.test / result.files.source).toFixed(2);
+    s += `**Detected:** Test-to-source ratio: ${result.files.test}/${result.files.source} (${ratio})\n`;
   }
-  scaffold += `[Setup will add: Test file organization, naming conventions, directory structure]\n\n`;
+  s += `**Unexamined:** Test file organization, naming conventions, directory structure\n\n`;
 
-  // Section 3: Fixture Patterns
-  scaffold += `## Fixture Patterns\n\n`;
-  scaffold += `[Setup will add: How fixtures are organized, setup/teardown patterns, shared fixtures]\n\n`;
+  // Unexamined
+  s += `## Fixture Patterns\n`;
+  s += `**Unexamined:** How fixtures are organized, setup/teardown patterns, shared fixtures\n\n`;
+  s += `## Mocking\n`;
+  s += `**Unexamined:** Mocking strategy, what gets mocked, mock libraries used\n\n`;
+  s += `## Coverage\n`;
+  s += `**Unexamined:** Coverage targets, coverage tools, what's excluded\n\n`;
 
-  // Section 4: Mocking
-  scaffold += `## Mocking\n\n`;
-  scaffold += `[Setup will add: Mocking strategy, what gets mocked, mock libraries used]\n\n`;
-
-  // Section 5: Coverage
-  scaffold += `## Coverage\n\n`;
-  scaffold += `[Setup will add: Coverage targets, coverage tools, what's excluded]\n\n`;
-
-  // Section 6: Example Test Structure
-  scaffold += `## Example Test Structure\n\n`;
-  scaffold += `[Setup will add: Real test example from codebase showing structure, assertions, patterns]\n\n`;
-
-  scaffold += `---\n\n*Last updated: ${timestamp}*\n`;
-
-  return scaffold;
+  s += `---\n\n*Last updated: ${timestamp}*\n`;
+  return s;
 }
 
 /**
  * Generate debugging.md scaffold
  *
- * Pre-populates: None (5% - minimal)
- * Placeholders: All debugging info comes from user (95%)
- *
- * @param analysis - Analysis result
+ * @param result - Engine result
  * @param projectName - Project name
  * @param timestamp - ISO timestamp
  * @param _version - CLI version (unused)
  * @returns Markdown scaffold string
  */
 export function generateDebuggingScaffold(
-  analysis: AnalysisResult,
+  result: EngineResult,
   projectName: string,
   timestamp: string,
   _version: string
 ): string {
-  let scaffold = `${SCAFFOLD_MARKER}\n\n`;
-  scaffold += `# Debugging — ${projectName}\n\n`;
+  let s = `${SCAFFOLD_MARKER}\n\n`;
+  s += `# Debugging — ${projectName}\n\n`;
 
-  // All sections are placeholders
-  scaffold += `## Logging\n\n`;
-  scaffold += `[Setup will add: Logging framework, log levels, where logs go]\n\n`;
+  // Key Facts — monitoring/analytics services
+  const monitoring = result.externalServices.filter(svc =>
+    svc.category.toLowerCase().includes('monitoring') ||
+    svc.category.toLowerCase().includes('observability') ||
+    svc.name.toLowerCase().includes('sentry')
+  );
+  const analytics = result.externalServices.filter(svc =>
+    svc.category.toLowerCase().includes('analytics') ||
+    svc.name.toLowerCase().includes('posthog') ||
+    svc.name.toLowerCase().includes('mixpanel')
+  );
 
-  scaffold += `## Error Tracing\n\n`;
-  scaffold += `[Setup will add: Stack traces, error tracking tools, debugging tools]\n\n`;
+  if (monitoring.length > 0 || analytics.length > 0) {
+    s += `## Key Facts\n`;
+    if (monitoring.length > 0) {
+      s += `**Detected:** Monitoring: ${monitoring.map(m => m.name).join(', ')}\n`;
+    }
+    if (analytics.length > 0) {
+      s += `**Detected:** Analytics: ${analytics.map(a => a.name).join(', ')}\n`;
+    }
+    s += '\n';
+  }
 
-  scaffold += `## Failure Modes\n\n`;
-  scaffold += `[Setup will add: Common failure scenarios, error messages, troubleshooting steps]\n\n`;
+  // Blind Spots
+  if (result.blindSpots.length > 0) {
+    s += `## Blind Spots\n`;
+    for (const spot of result.blindSpots) {
+      s += `**Detected:** ${spot.area}: ${spot.issue}\n`;
+    }
+    s += '\n';
+  }
 
-  scaffold += `## Debugging Workflow\n\n`;
-  scaffold += `[Setup will add: How to debug locally, remote debugging, production debugging]\n\n`;
+  // Unexamined
+  s += `## Logging\n`;
+  s += `**Unexamined:** Logging framework, log levels, where logs go\n\n`;
+  s += `## Error Tracing\n`;
+  s += `**Unexamined:** Stack traces, error tracking tools, debugging tools\n\n`;
+  s += `## Failure Modes\n`;
+  s += `**Unexamined:** Common failure scenarios, error messages, troubleshooting steps\n\n`;
+  s += `## Debugging Workflow\n`;
+  s += `**Unexamined:** How to debug locally, remote debugging, production debugging\n\n`;
 
-  scaffold += `## Observability\n\n`;
-  scaffold += `[Setup will add: Monitoring tools, metrics, alerting, health checks]\n\n`;
-
-  scaffold += `---\n\n*Last updated: ${timestamp}*\n`;
-
-  return scaffold;
+  s += `---\n\n*Last updated: ${timestamp}*\n`;
+  return s;
 }

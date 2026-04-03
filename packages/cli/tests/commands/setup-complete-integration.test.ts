@@ -47,7 +47,7 @@ describe('ana setup complete integration', () => {
     // Create ana.json
     await fs.writeFile(
       path.join(anaPath, 'ana.json'),
-      JSON.stringify({ setupStatus: 'pending', createdAt: new Date().toISOString() })
+      JSON.stringify({ setupMode: 'guided', name: 'test-project', createdAt: new Date().toISOString() })
     );
   });
 

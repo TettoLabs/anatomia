@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import * as os from 'node:os';
-import { createEmptyAnalysisResult } from '../scaffolds/test-types.js';
+import { createEmptyEngineResult } from '../scaffolds/test-types.js';
 
 async function dirExists(dirPath: string): Promise<boolean> {
   try {
@@ -145,50 +145,57 @@ describe('ana init', () => {
   });
 
   describe('ana.json', () => {
-    it('creates valid initial ana.json', async () => {
-      const analysis = createEmptyAnalysisResult();
-      analysis.framework = 'fastapi';
-      analysis.version = '0.2.0';
-
+    it('creates valid initial ana.json from EngineResult', async () => {
+      const engineResult = createEmptyEngineResult();
+      // Simulate what createAnaJson does from an EngineResult
       const meta = {
-        version: '1.0.0',
-        createdAt: new Date().toISOString(),
-        setupStatus: 'pending',
-        setupCompletedAt: null,
-        setupMode: null,
-        framework: analysis.framework,
-        analyzerVersion: analysis.version,
-        lastEvolve: null,
-        lastHealth: null,
-        sessionCount: 0,
+        name: engineResult.overview.project,
+        framework: engineResult.stack.framework || null,
+        language: engineResult.stack.language || null,
+        packageManager: engineResult.commands.packageManager,
+        commands: {
+          build: engineResult.commands.build || null,
+          test: engineResult.commands.test || null,
+          lint: engineResult.commands.lint || null,
+          dev: engineResult.commands.dev || null,
+        },
+        coAuthor: 'Ana <build@anatomia.dev>',
+        artifactBranch: engineResult.git?.branch || 'main',
+        setupMode: 'guided',
+        scanStaleDays: 7,
       };
 
-      expect(meta.setupStatus).toBe('pending');
-      expect(meta.framework).toBe('fastapi');
-      expect(meta.analyzerVersion).toBe('0.2.0');
-      expect(meta.sessionCount).toBe(0);
+      expect(meta.setupMode).toBe('guided');
+      expect(meta.name).toBe('unknown');
+      expect(meta.packageManager).toBe('npm');
+      expect(meta.framework).toBeNull();
     });
 
-    it('has all 10 required fields', () => {
+    it('has all required fields for new schema', () => {
       const meta = {
-        version: '1.0.0',
-        createdAt: new Date().toISOString(),
-        setupStatus: 'pending',
-        setupCompletedAt: null,
-        setupMode: null,
-        framework: null,
-        analyzerVersion: '0.2.0',
-        lastEvolve: null,
-        lastHealth: null,
-        sessionCount: 0,
+        name: 'my-project',
+        framework: 'FastAPI',
+        language: 'Python',
+        packageManager: 'pip',
+        commands: {
+          build: null,
+          test: 'pytest',
+          lint: 'ruff check .',
+          dev: 'uvicorn src.main:app --reload',
+        },
+        coAuthor: 'Ana <build@anatomia.dev>',
+        artifactBranch: 'main',
+        setupMode: 'guided',
+        scanStaleDays: 7,
       };
 
       const keys = Object.keys(meta);
-      expect(keys).toHaveLength(10);
-      expect(keys).toContain('setupStatus');
       expect(keys).toContain('setupMode');
+      expect(keys).toContain('name');
       expect(keys).toContain('framework');
-      expect(keys).toContain('analyzerVersion');
+      expect(keys).toContain('packageManager');
+      expect(keys).not.toContain('setupStatus');
+      expect(keys).not.toContain('analyzerVersion');
     });
   });
 

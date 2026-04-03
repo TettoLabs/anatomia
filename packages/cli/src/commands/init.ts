@@ -60,7 +60,7 @@ import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
-import type { AnalysisResult } from '../engine/index.js';
+import type { EngineResult } from '../engine/types/engineResult.js';
 import { dirname } from 'node:path';
 
 import {
@@ -79,7 +79,6 @@ import {
   FRAMEWORK_SNIPPETS,
   AGENT_FILES,
   SKILL_DIRS,
-  ANA_JSON_VERSION,
 } from '../constants.js';
 import { buildSymbolIndex } from './index.js';
 
@@ -101,17 +100,30 @@ interface PreflightResult {
  * Used when analyzer fails or is skipped with --skip-analysis.
  * Scaffolds handle undefined optional fields gracefully.
  *
- * @returns Minimal valid AnalysisResult
+ * @returns Minimal valid EngineResult
  */
-function createEmptyAnalysisResult(): AnalysisResult {
+function createEmptyEngineResult(): EngineResult {
   return {
-    projectType: 'unknown',
-    framework: null,
-    confidence: { projectType: 0, framework: 0 },
-    indicators: { projectType: [], framework: [] },
-    detectedAt: new Date().toISOString(),
-    version: '0.0.0',
-  } as AnalysisResult;
+    overview: { project: 'unknown', scannedAt: new Date().toISOString(), depth: 'surface' },
+    stack: { language: null, framework: null, database: null, auth: null, testing: null, payments: null, workspace: null },
+    files: { source: 0, test: 0, config: 0, total: 0 },
+    structure: [],
+    structureOverflow: 0,
+    commands: { build: null, test: null, lint: null, dev: null, packageManager: 'npm' },
+    git: { head: null, branch: null, commitCount: null, lastCommitAt: null, uncommittedChanges: false, contributorCount: null },
+    monorepo: { isMonorepo: false, tool: null, packages: [] },
+    externalServices: [],
+    schemas: {},
+    secrets: { envFileExists: false, envExampleExists: false, gitignoreCoversEnv: false, hardcodedKeysFound: null, envVarReferences: null },
+    projectProfile: { type: null, maturity: null, teamSize: null, hasExternalAPIs: false, hasDatabase: false, hasBrowserUI: false, hasAuthSystem: false, hasPayments: false, hasFileStorage: false },
+    blindSpots: [],
+    deployment: null,
+    patterns: null,
+    conventions: null,
+    recommendations: null,
+    health: {},
+    readiness: {},
+  };
 }
 
 /**
@@ -183,16 +195,17 @@ export const initCommand = new Command('init')
       ASTCache.setCacheDir(tmpCacheDir);
 
       // All operations in temp directory
-      const analysisResult = await runAnalyzer(cwd, options);
+      const engineResult = await runAnalyzer(cwd, options);
 
       // Reset cache override after analysis
       ASTCache.setCacheDir(null);
       await createDirectoryStructure(tmpAnaPath);
-      await generateScaffolds(tmpAnaPath, analysisResult, cwd);
+      await generateScaffolds(tmpAnaPath, engineResult, cwd);
       await copyStaticFilesWithVerification(tmpAnaPath);
       await copyHookScripts(tmpAnaPath);
-      await createAnaJson(tmpAnaPath, analysisResult, setupMode);
-      await storeSnapshot(tmpAnaPath, analysisResult);
+      await saveScanJson(tmpAnaPath, engineResult);
+      await createAnaJson(tmpAnaPath, engineResult, setupMode);
+      await storeSnapshot(tmpAnaPath, engineResult);
       await buildSymbolIndexSafe(cwd, tmpAnaPath);
       await writeCliPath(tmpAnaPath);
 
@@ -212,7 +225,7 @@ export const initCommand = new Command('init')
       await createClaudeConfiguration(cwd);
 
       // Display success
-      displaySuccessMessage(analysisResult);
+      displaySuccessMessage(engineResult);
     } catch (error) {
       // FAILURE: Cleanup temp, no changes made
       await fs.rm(tmpDir, { recursive: true, force: true });
@@ -270,11 +283,11 @@ async function validateInitPreconditions(
       const anaJsonContent = await fs.readFile(anaJsonPath, 'utf-8');
       const meta = JSON.parse(anaJsonContent);
 
-      if (meta.setupStatus === 'pending') {
+      if (meta.setupMode === 'not_started' || meta.setupStatus === 'pending') {
         console.log('Setup is incomplete. Options:\n');
         console.log('  1. Resume setup: `claude --agent ana-setup`');
         console.log('  2. Start over: ana init --force\n');
-      } else if (meta.setupStatus === 'complete') {
+      } else if (meta.setupMode === 'complete' || meta.setupStatus === 'complete') {
         console.log('Framework already set up. Options:\n');
         console.log('  1. Keep current: Do nothing');
         console.log('  2. Recreate: ana init --force (preserves state/)\n');
@@ -331,12 +344,12 @@ async function dirExists(dirPath: string): Promise<boolean> {
  *
  * @param rootPath - Project root directory
  * @param options - Command options
- * @returns AnalysisResult or null if failed/skipped
+ * @returns EngineResult or null if failed/skipped
  */
 async function runAnalyzer(
   rootPath: string,
   options: InitCommandOptions
-): Promise<AnalysisResult | null> {
+): Promise<EngineResult | null> {
   // Skip if --skip-analysis flag
   if (options.skipAnalysis) {
     console.log(chalk.gray('\nSkipping analyzer (--skip-analysis flag)'));
@@ -347,38 +360,13 @@ async function runAnalyzer(
   const spinner = ora('Analyzing project...').start();
 
   try {
-    // Use the new engine's analyzeProject() — runs deep for init (Decision 13)
     const { analyzeProject } = await import('../engine/analyze.js');
     const engineResult = await analyzeProject(rootPath, { depth: 'deep' });
 
-    // Map EngineResult back to AnalysisResult shape for downstream consumers
-    // This adapter is temporary — removed in S11 when init is redesigned
-    const result: AnalysisResult = {
-      projectType: engineResult.stack.language
-        ? Object.entries({
-            'Node.js': 'node', 'Python': 'python', 'Go': 'go', 'Rust': 'rust',
-            'Ruby': 'ruby', 'PHP': 'php', 'TypeScript': 'node',
-          }).find(([display]) => display === engineResult.stack.language)?.[1] || 'unknown'
-        : 'unknown',
-      framework: engineResult.stack.framework
-        ? Object.entries({
-            'Next.js': 'nextjs', 'React': 'react', 'Vue': 'vue', 'Express': 'express',
-            'NestJS': 'nestjs', 'FastAPI': 'fastapi', 'Django': 'django', 'Flask': 'flask',
-            'Rails': 'rails', 'Svelte': 'svelte', 'Angular': 'angular',
-          }).find(([display]) => display === engineResult.stack.framework)?.[1] || engineResult.stack.framework.toLowerCase()
-        : null,
-      confidence: { projectType: 0.9, framework: engineResult.stack.framework ? 0.9 : 0 },
-      indicators: { projectType: [], framework: [] },
-      detectedAt: engineResult.overview.scannedAt,
-      version: '0.2.0',
-      patterns: engineResult.patterns || undefined,
-      conventions: engineResult.conventions || undefined,
-    };
-
     spinner.succeed('Analysis complete');
-    displayDetectionSummary(result);
+    displayDetectionSummary(engineResult);
 
-    return result;
+    return engineResult;
   } catch (error) {
     spinner.warn('Analyzer failed — continuing with empty scaffolds');
     console.log(chalk.yellow('  Setup will work but scaffolds will have no pre-populated data'));
@@ -396,38 +384,24 @@ async function runAnalyzer(
  * Display detection summary after analysis
  * @param result
  */
-function displayDetectionSummary(result: AnalysisResult): void {
+function displayDetectionSummary(result: EngineResult): void {
   console.log();
 
-  // Framework
-  if (result.framework) {
-    console.log(chalk.bold('  Framework: ') + chalk.cyan(result.framework));
-  } else {
-    console.log(chalk.gray('  Framework: None detected'));
+  // Stack
+  const stackParts = [result.stack.language, result.stack.framework, result.stack.database, result.stack.auth, result.stack.testing].filter(Boolean);
+  if (stackParts.length > 0) {
+    console.log(chalk.bold('  Stack: ') + chalk.cyan(stackParts.join(' · ')));
   }
 
-  // Patterns
-  if (result.patterns) {
-    const detectedPatterns: string[] = [];
-    if (result.patterns.errorHandling) detectedPatterns.push('error handling');
-    if (result.patterns.validation) detectedPatterns.push('validation');
-    if (result.patterns.database) detectedPatterns.push('database');
-    if (result.patterns.auth) detectedPatterns.push('auth');
-    if (result.patterns.testing) detectedPatterns.push('testing');
-
-    if (detectedPatterns.length > 0) {
-      console.log(chalk.bold('  Patterns: ') + detectedPatterns.join(', '));
-    }
+  // Services
+  if (result.externalServices.length > 0) {
+    const names = result.externalServices.map(s => s.name).join(', ');
+    console.log(chalk.bold('  Services: ') + names);
   }
 
-  // Conventions (sample)
-  if (result.conventions?.naming?.functions) {
-    const funcNaming = result.conventions.naming.functions;
-    console.log(
-      chalk.bold('  Conventions: ') +
-        `${funcNaming.majority} functions` +
-        (funcNaming.mixed ? chalk.gray(' (mixed)') : '')
-    );
+  // Deployment
+  if (result.deployment) {
+    console.log(chalk.bold('  Deploy: ') + result.deployment.platform);
   }
 
   console.log();
@@ -484,18 +458,18 @@ state/
  * Calls all 7 scaffold generators and writes files.
  *
  * @param tmpAnaPath - Temp .ana/ path
- * @param analysisResult - Analyzer result or null
+ * @param engineResult - Engine result or null
  * @param cwd - Project root (for projectName)
  */
 async function generateScaffolds(
   tmpAnaPath: string,
-  analysisResult: AnalysisResult | null,
+  engineResult: EngineResult | null,
   cwd: string
 ): Promise<void> {
   const spinner = ora('Generating scaffolds...').start();
 
   // Use empty result if analyzer failed
-  const analysis = analysisResult || createEmptyAnalysisResult();
+  const analysis = engineResult || createEmptyEngineResult();
 
   // Get metadata
   const projectName = await getProjectName(cwd);
@@ -963,72 +937,85 @@ function getTemplatesDir(): string {
 }
 
 /**
- * Phase 7: Create ana.json
- *
- * Creates framework metadata file with initial state:
- * - setupStatus: 'pending' (setup not run yet)
- * - setupMode: from user selection
- * - framework: from analyzer
- * - analyzerVersion: from analyzer
+ * Save scan.json — full EngineResult for agent consumption
  *
  * @param tmpAnaPath - Temp .ana/ path
- * @param analysisResult - Analyzer result or null
+ * @param engineResult - Engine result or null
+ */
+async function saveScanJson(
+  tmpAnaPath: string,
+  engineResult: EngineResult | null
+): Promise<void> {
+  if (!engineResult) return;
+  const spinner = ora('Saving scan.json...').start();
+  const scanPath = path.join(tmpAnaPath, 'scan.json');
+  await fs.writeFile(scanPath, JSON.stringify(engineResult, null, 2), 'utf-8');
+  spinner.succeed('Saved scan.json');
+}
+
+/**
+ * Phase 7: Create ana.json
+ *
+ * Creates project config with detected data:
+ * - commands from EngineResult (not hardcoded)
+ * - package manager, framework, language
+ * - setupMode: 'not_started'
+ *
+ * @param tmpAnaPath - Temp .ana/ path
+ * @param engineResult - Engine result or null
  * @param setupMode - User-selected setup tier
  */
 async function createAnaJson(
   tmpAnaPath: string,
-  analysisResult: AnalysisResult | null,
+  engineResult: EngineResult | null,
   setupMode: string
 ): Promise<void> {
   const spinner = ora('Creating ana.json...').start();
 
-  const analysis = analysisResult || createEmptyAnalysisResult();
+  const result = engineResult || createEmptyEngineResult();
 
-  const meta = {
-    version: ANA_JSON_VERSION,
-    createdAt: new Date().toISOString(),
-    artifactBranch: 'main',
+  const anaConfig = {
+    name: result.overview.project,
+    framework: result.stack.framework || null,
+    language: result.stack.language || null,
+    packageManager: result.commands.packageManager,
     commands: {
-      build: 'npm run build',
-      test: 'npm test',
-      lint: 'npm run lint'
+      build: result.commands.build || null,
+      test: result.commands.test || null,
+      lint: result.commands.lint || null,
+      dev: result.commands.dev || null,
     },
     coAuthor: 'Ana <build@anatomia.dev>',
-    setupStatus: 'pending',
-    setupCompletedAt: null,
-    setupMode,
-    framework: analysis.framework,
-    analyzerVersion: analysis.version,
-    lastEvolve: null,
-    lastHealth: null,
-    sessionCount: 0,
+    artifactBranch: result.git?.branch || 'main',
+    setupMode: setupMode === 'not_started' ? 'not_started' : setupMode,
+    scanStaleDays: 7,
   };
 
   const anaJsonPath = path.join(tmpAnaPath, 'ana.json');
-  await fs.writeFile(anaJsonPath, JSON.stringify(meta, null, 2), 'utf-8');
+  await fs.writeFile(anaJsonPath, JSON.stringify(anaConfig, null, 2), 'utf-8');
 
   spinner.succeed('Created ana.json');
 }
 
 /**
- * Phase 8: Store analyzer snapshot
+ * Phase 8: Store engine snapshot
  *
- * Stores raw AnalysisResult to state/snapshot.json.
- * Used by `ana diff` (STEP 3) as baseline for detecting drift.
+ * Stores full EngineResult to state/snapshot.json.
+ * Used by `ana diff` as baseline for detecting drift.
  *
  * @param tmpAnaPath - Temp .ana/ path
- * @param analysisResult - Analyzer result or null
+ * @param engineResult - Engine result or null
  */
 async function storeSnapshot(
   tmpAnaPath: string,
-  analysisResult: AnalysisResult | null
+  engineResult: EngineResult | null
 ): Promise<void> {
   const spinner = ora('Storing analyzer snapshot...').start();
 
-  const analysis = analysisResult || createEmptyAnalysisResult();
+  const result = engineResult || createEmptyEngineResult();
 
   const snapshotPath = path.join(tmpAnaPath, 'state/snapshot.json');
-  await fs.writeFile(snapshotPath, JSON.stringify(analysis, null, 2), 'utf-8');
+  await fs.writeFile(snapshotPath, JSON.stringify(result, null, 2), 'utf-8');
 
   spinner.succeed('Stored analyzer snapshot');
 }
@@ -1124,26 +1111,19 @@ async function atomicRename(tmpAnaPath: string, anaPath: string): Promise<void> 
  *
  * Shows what was created and next steps.
  *
- * @param _analysisResult - Analyzer result (unused)
+ * @param _engineResult - Engine result (unused)
  */
-function displaySuccessMessage(_analysisResult: AnalysisResult | null): void {
+function displaySuccessMessage(_engineResult: EngineResult | null): void {
   console.log(chalk.green('\n✅ .ana/ framework initialized\n'));
 
-  console.log(chalk.bold('Created:'));
-  console.log('  • 7 context scaffolds (with analyzer data)');
-  console.log('  • 9 agents — Ana, AnaPlan, AnaBuild, AnaVerify, Setup + 4 sub-agents (.claude/agents/)');
-  console.log('  • 6 team-editable skills (.claude/skills/)');
-  console.log('  • SCHEMAS.md artifact reference (.ana/docs/)');
-  console.log('  • Plan directories (.ana/plans/)');
-  console.log('  • Hook scripts (.ana/hooks/)');
-  console.log('  • CLAUDE.md entry point');
+  console.log(chalk.gray('  ✓ Context generated → .ana/context/ (7 files)'));
+  console.log(chalk.gray('  ✓ Scan saved → .ana/scan.json'));
+  console.log(chalk.gray('  ✓ Config written → .ana/ana.json'));
   console.log();
 
-  console.log(chalk.bold('Next: ') + 'Complete setup in Claude Code:');
-  console.log(chalk.cyan('  claude --agent ana-setup'));
-  console.log();
-
-  console.log(chalk.gray('Setup fills your context files through codebase exploration and targeted questions (~5-15 min).'));
-  console.log(chalk.gray('After setup: claude --agent ana'));
+  console.log(chalk.bold('  Next:'));
+  console.log('    claude --agent ana    Start working with Ana');
+  console.log('    ana scan              Refresh project intelligence');
+  console.log('    ana setup             Deepen context with your knowledge');
   console.log();
 }

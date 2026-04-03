@@ -318,9 +318,8 @@ async function generateClaudeMd(cwd: string, anaPath: string): Promise<void> {
  * Update ana.json after successful validation
  *
  * Sets:
- * - setupStatus: 'complete'
+ * - setupMode: 'complete'
  * - setupCompletedAt: current timestamp
- * - setupMode: Priority: CLI --mode flag (highest) → .setup_tier file → existing ana.json setupMode → error
  *
  * @param anaPath - Path to .ana/ directory
  * @param cwd - Project root
@@ -393,9 +392,8 @@ async function updateAnaJson(
   }
 
   // Update meta fields
-  meta.setupStatus = 'complete';
+  meta.setupMode = 'complete';
   meta.setupCompletedAt = new Date().toISOString();
-  meta.setupMode = setupMode;
 
   // Write back to file (formatted JSON)
   await fs.writeFile(anaJsonPath, JSON.stringify(meta, null, 2), 'utf-8');

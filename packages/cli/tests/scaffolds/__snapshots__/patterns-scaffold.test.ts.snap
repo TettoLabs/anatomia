@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`patterns.md scaffold > empty analysis (analyzer failed) 1`] = `
+exports[`patterns.md scaffold > TypeScript Next.js project with 1 pattern 1`] = `
 "<!-- SCAFFOLD - Setup will fill this file -->
 
 # Patterns — test-project
@@ -9,72 +9,25 @@ exports[`patterns.md scaffold > empty analysis (analyzer failed) 1`] = `
 
 **Detected:** None
 
-[Setup will investigate source files or ask: Does this project use error handling?]
+**Unexamined:** Does this project use error handling?
 
 ## Validation
 
 **Detected:** None
 
-[Setup will investigate source files or ask: Does this project use validation?]
+**Unexamined:** Does this project use validation?
 
 ## Database
 
 **Detected:** None
 
-[Setup will investigate source files or ask: Does this project use database?]
+**Unexamined:** Does this project use database?
 
 ## Authentication
 
 **Detected:** None
 
-[Setup will investigate source files or ask: Does this project use authentication?]
-
-## Testing
-
-**Detected:** None
-
-[Setup will investigate source files or ask: Does this project use testing?]
-
----
-
-## Framework Patterns
-
-[Setup will incorporate guidance from context/setup/framework-snippets/generic.md]
-
----
-
-*Last updated: 2026-03-19T10:00:00Z*
-"
-`;
-
-exports[`patterns.md scaffold > flat Next.js project with 1 pattern 1`] = `
-"<!-- SCAFFOLD - Setup will fill this file -->
-
-# Patterns — test-project
-
-## Error Handling
-
-**Detected:** None
-
-[Setup will investigate source files or ask: Does this project use error handling?]
-
-## Validation
-
-**Detected:** None
-
-[Setup will investigate source files or ask: Does this project use validation?]
-
-## Database
-
-**Detected:** None
-
-[Setup will investigate source files or ask: Does this project use database?]
-
-## Authentication
-
-**Detected:** None
-
-[Setup will investigate source files or ask: Does this project use authentication?]
+**Unexamined:** Does this project use authentication?
 
 ## Testing
 
@@ -84,13 +37,60 @@ exports[`patterns.md scaffold > flat Next.js project with 1 pattern 1`] = `
 **Evidence:**
 - vitest in dependencies
 
-[Setup will add: Real code examples from codebase showing usage, best practices, common patterns]
+**Unexamined:** Real code examples from codebase showing usage
 
 ---
 
 ## Framework Patterns
 
-[Setup will incorporate guidance from context/setup/framework-snippets/nextjs.md]
+**Unexamined:** Framework-specific patterns (see context/setup/framework-snippets/nextjs.md)
+
+---
+
+*Last updated: 2026-03-19T10:00:00Z*
+"
+`;
+
+exports[`patterns.md scaffold > empty result (scan failed) 1`] = `
+"<!-- SCAFFOLD - Setup will fill this file -->
+
+# Patterns — test-project
+
+## Error Handling
+
+**Detected:** None
+
+**Unexamined:** Does this project use error handling?
+
+## Validation
+
+**Detected:** None
+
+**Unexamined:** Does this project use validation?
+
+## Database
+
+**Detected:** None
+
+**Unexamined:** Does this project use database?
+
+## Authentication
+
+**Detected:** None
+
+**Unexamined:** Does this project use authentication?
+
+## Testing
+
+**Detected:** None
+
+**Unexamined:** Does this project use testing?
+
+---
+
+## Framework Patterns
+
+**Unexamined:** Framework-specific patterns (see context/setup/framework-snippets/generic.md)
 
 ---
 
@@ -111,7 +111,7 @@ exports[`patterns.md scaffold > rich FastAPI project with 5 patterns 1`] = `
 **Evidence:**
 - HTTPException imports
 
-[Setup will add: Real code examples from codebase showing usage, best practices, common patterns]
+**Unexamined:** Real code examples from codebase showing usage
 
 ## Validation
 
@@ -122,7 +122,7 @@ exports[`patterns.md scaffold > rich FastAPI project with 5 patterns 1`] = `
 - BaseModel usage
 - 7 Pydantic models
 
-[Setup will add: Real code examples from codebase showing usage, best practices, common patterns]
+**Unexamined:** Real code examples from codebase showing usage
 
 ## Database
 
@@ -138,7 +138,7 @@ exports[`patterns.md scaffold > rich FastAPI project with 5 patterns 1`] = `
 **Also detected:**
 - sqlalchemy (sync) — confidence: 0.85
 
-[Setup will add: Real code examples showing both patterns, explain why multiple (legacy code, migration, different use cases)]
+**Unexamined:** Real code examples showing both patterns, why multiple?
 
 ## Authentication
 
@@ -149,7 +149,7 @@ exports[`patterns.md scaffold > rich FastAPI project with 5 patterns 1`] = `
 - python-jose in dependencies
 - OAuth2PasswordBearer detected
 
-[Setup will add: Real code examples from codebase showing usage, best practices, common patterns]
+**Unexamined:** Real code examples from codebase showing usage
 
 ## Testing
 
@@ -160,13 +160,13 @@ exports[`patterns.md scaffold > rich FastAPI project with 5 patterns 1`] = `
 - pytest in dependencies
 - pytest.ini found
 
-[Setup will add: Real code examples from codebase showing usage, best practices, common patterns]
+**Unexamined:** Real code examples from codebase showing usage
 
 ---
 
 ## Framework Patterns
 
-[Setup will incorporate guidance from context/setup/framework-snippets/fastapi.md]
+**Unexamined:** Framework-specific patterns (see context/setup/framework-snippets/fastapi.md)
 
 ---
 
