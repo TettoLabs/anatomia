@@ -366,8 +366,9 @@ export async function analyzeProject(
     }
   }
 
-  // TypeScript override: if language is Node.js but tsconfig or typescript dep exists
-  if (stack.language === 'Node.js' || stack.language === null) {
+  // TypeScript override: ONLY upgrade Node.js → TypeScript
+  // Don't override null (could be Python/Go project with tsconfig for tooling)
+  if (stack.language === 'Node.js') {
     const hasTsConfig = existsSync(path.join(rootPath, 'tsconfig.json'));
     const hasTsDep = allDeps['typescript'] !== undefined;
     if (hasTsConfig || hasTsDep) {
