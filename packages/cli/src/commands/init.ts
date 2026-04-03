@@ -892,6 +892,9 @@ async function seedSkillFiles(skillsDir: string, result: EngineResult): Promise<
     try {
       let content = await fs.readFile(filePath, 'utf-8');
 
+      // Skip if already seeded (prevent duplicate ## Detected on reinit)
+      if (content.includes('## Detected')) continue;
+
       const detectedSection = `\n## Detected\n${lines.join('\n')}\n`;
 
       // Find end of YAML frontmatter (second ---)
