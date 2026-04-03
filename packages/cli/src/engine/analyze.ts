@@ -15,6 +15,7 @@
 
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { glob } from 'glob';
 import type { EngineResult } from './types/engineResult.js';
 import type { AnalysisResult } from './types/index.js';
@@ -360,6 +361,15 @@ export async function analyzeProject(
     }
     if (!stack.testing && analysis.patterns?.testing?.library) {
       stack.testing = displayName(PATTERN_DISPLAY_NAMES, analysis.patterns.testing.library);
+    }
+  }
+
+  // TypeScript override: if language is Node.js but tsconfig or typescript dep exists
+  if (stack.language === 'Node.js' || stack.language === null) {
+    const hasTsConfig = existsSync(path.join(rootPath, 'tsconfig.json'));
+    const hasTsDep = allDeps['typescript'] !== undefined;
+    if (hasTsConfig || hasTsDep) {
+      stack.language = 'TypeScript';
     }
   }
 
