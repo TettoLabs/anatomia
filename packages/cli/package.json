@@ -1,7 +1,7 @@
 {
   "name": "anatomia-cli",
   "version": "0.2.0",
-  "description": "AI context framework with analyzer-driven setup",
+  "description": "Verified AI development. Ship with proof.",
   "bin": {
     "ana": "./dist/index.js"
   },
@@ -9,18 +9,14 @@
   "type": "module",
   "license": "MIT",
   "keywords": [
-    "cli",
     "ai",
-    "context",
-    "codebase",
-    "llm",
+    "cli",
     "developer-tools",
+    "typescript",
+    "verification",
+    "claude-code",
     "code-analysis",
-    "ai-assistant",
-    "templates",
-    "analyzer",
-    "setup",
-    "framework"
+    "ai-assistant"
   ],
   "repository": {
     "type": "git",
@@ -45,7 +41,8 @@
     "dev": "tsup --watch",
     "test": "vitest",
     "lint": "eslint src/",
-    "lint:fix": "eslint src/ --fix"
+    "lint:fix": "eslint src/ --fix",
+    "prepublishOnly": "pnpm build && pnpm test"
   },
   "dependencies": {
     "chalk": "^5.3.0",
