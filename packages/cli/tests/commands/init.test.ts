@@ -161,11 +161,11 @@ describe('ana init', () => {
         },
         coAuthor: 'Ana <build@anatomia.dev>',
         artifactBranch: engineResult.git?.branch || 'main',
-        setupMode: 'guided',
+        setupMode: 'not_started',
         scanStaleDays: 7,
       };
 
-      expect(meta.setupMode).toBe('guided');
+      expect(meta.setupMode).toBe('not_started');
       expect(meta.name).toBe('unknown');
       expect(meta.packageManager).toBe('npm');
       expect(meta.framework).toBeNull();
@@ -185,7 +185,7 @@ describe('ana init', () => {
         },
         coAuthor: 'Ana <build@anatomia.dev>',
         artifactBranch: 'main',
-        setupMode: 'guided',
+        setupMode: 'not_started',
         scanStaleDays: 7,
       };
 

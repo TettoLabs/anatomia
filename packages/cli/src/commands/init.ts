@@ -61,7 +61,6 @@ import * as os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import type { EngineResult } from '../engine/types/engineResult.js';
-import { dirname } from 'node:path';
 
 import {
   generateProjectOverviewScaffold,
@@ -126,45 +125,6 @@ function createEmptyEngineResult(): EngineResult {
   };
 }
 
-/**
- * Ask for setup tier selection
- *
- * Prompts user to choose quick/guided/complete tier.
- * Defaults to guided for non-interactive environments.
- *
- * @param _options - Command options (unused)
- * @returns Selected setup tier
- */
-async function askSetupTier(_options: InitCommandOptions): Promise<string> {
-  // Default for non-interactive environments
-  if (!process.stdout.isTTY || !process.stdin.isTTY) {
-    return 'guided';
-  }
-
-  console.log(chalk.cyan('\nSetup tier:'));
-  console.log(chalk.gray('  1. Quick     — ~2 min, no questions, uses detected data only'));
-  console.log(chalk.gray('  2. Guided    — ~5 min, asks 5-7 questions to improve accuracy'));
-  console.log(chalk.gray('  3. Complete  — ~15 min, thorough Q&A for maximum accuracy'));
-  console.log();
-
-  // Simple stdin read for single character
-  const readline = await import('node:readline');
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-
-  const answer = await new Promise<string>((resolve) => {
-    rl.question(chalk.cyan('  Choose (1/2/3, default 2): '), (ans) => {
-      rl.close();
-      resolve(ans.trim());
-    });
-  });
-
-  const tierMap: Record<string, string> = { '1': 'quick', '2': 'guided', '3': 'complete' };
-  const setupMode = tierMap[answer] || 'guided';
-  console.log(chalk.green(`  → ${setupMode} tier selected\n`));
-
-  return setupMode;
-}
-
 /** Create init command */
 export const initCommand = new Command('init')
   .description('Initialize .ana/ context framework')
@@ -186,9 +146,6 @@ export const initCommand = new Command('init')
     if (!preflight.canProceed) {
       return; // Exit already handled in validation
     }
-
-    // Ask for setup tier (before Phase 2)
-    const setupMode = await askSetupTier(options);
 
     // Phase 2-9: Atomic operation
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ana-init-'));
@@ -212,7 +169,7 @@ export const initCommand = new Command('init')
       await copyStaticFilesWithVerification(tmpAnaPath);
       await copyHookScripts(tmpAnaPath);
       await saveScanJson(tmpAnaPath, engineResult);
-      await createAnaJson(tmpAnaPath, engineResult, setupMode);
+      await createAnaJson(tmpAnaPath, engineResult);
       await storeSnapshot(tmpAnaPath, engineResult);
       await buildSymbolIndexSafe(cwd, tmpAnaPath);
       await writeCliPath(tmpAnaPath);
@@ -1091,16 +1048,14 @@ async function saveScanJson(
  * Creates project config with detected data:
  * - commands from EngineResult (not hardcoded)
  * - package manager, framework, language
- * - setupMode: 'not_started'
+ * - setupMode: 'not_started' (setup sets the real mode when it runs)
  *
  * @param tmpAnaPath - Temp .ana/ path
  * @param engineResult - Engine result or null
- * @param setupMode - User-selected setup tier
  */
 async function createAnaJson(
   tmpAnaPath: string,
-  engineResult: EngineResult | null,
-  setupMode: string
+  engineResult: EngineResult | null
 ): Promise<void> {
   const spinner = ora('Creating ana.json...').start();
 
@@ -1119,7 +1074,7 @@ async function createAnaJson(
     },
     coAuthor: 'Ana <build@anatomia.dev>',
     artifactBranch: result.git?.branch || 'main',
-    setupMode: setupMode === 'not_started' ? 'not_started' : setupMode,
+    setupMode: 'not_started',
     scanStaleDays: 7,
   };
 
@@ -1192,7 +1147,7 @@ async function writeCliPath(tmpAnaPath: string): Promise<void> {
   // Get CLI entry point path (handles both dev and built contexts)
   // import.meta.url points to the currently executing file
   const moduleUrl = fileURLToPath(import.meta.url);
-  const moduleDir = dirname(moduleUrl);
+  const moduleDir = path.dirname(moduleUrl);
 
   // In bundled context: dist/index.js → dist/index.js is the entry
   // In dev context: src/commands/init.ts → go up to find index.ts
