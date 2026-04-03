@@ -5,16 +5,10 @@ exports[`debugging.md scaffold > TypeScript Next.js project (no debugging-specif
 
 # Debugging — test-project
 
-## Logging
+## Open Questions
 **Unexamined:** Logging framework, log levels, where logs go
-
-## Error Tracing
 **Unexamined:** Stack traces, error tracking tools, debugging tools
-
-## Failure Modes
 **Unexamined:** Common failure scenarios, error messages, troubleshooting steps
-
-## Debugging Workflow
 **Unexamined:** How to debug locally, remote debugging, production debugging
 
 ---
@@ -28,16 +22,10 @@ exports[`debugging.md scaffold > empty result (scan failed) 1`] = `
 
 # Debugging — test-project
 
-## Logging
+## Open Questions
 **Unexamined:** Logging framework, log levels, where logs go
-
-## Error Tracing
 **Unexamined:** Stack traces, error tracking tools, debugging tools
-
-## Failure Modes
 **Unexamined:** Common failure scenarios, error messages, troubleshooting steps
-
-## Debugging Workflow
 **Unexamined:** How to debug locally, remote debugging, production debugging
 
 ---
@@ -51,16 +39,10 @@ exports[`debugging.md scaffold > rich FastAPI project with stack and structure d
 
 # Debugging — test-project
 
-## Logging
+## Open Questions
 **Unexamined:** Logging framework, log levels, where logs go
-
-## Error Tracing
 **Unexamined:** Stack traces, error tracking tools, debugging tools
-
-## Failure Modes
 **Unexamined:** Common failure scenarios, error messages, troubleshooting steps
-
-## Debugging Workflow
 **Unexamined:** How to debug locally, remote debugging, production debugging
 
 ---

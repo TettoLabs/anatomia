@@ -18,15 +18,11 @@ exports[`testing.md scaffold > TypeScript Next.js project with vitest 1`] = `
 
 ## Test Structure
 **Detected:** Test-to-source ratio: 10/50 (0.20)
+
+## Open Questions
 **Unexamined:** Test file organization, naming conventions, directory structure
-
-## Fixture Patterns
 **Unexamined:** How fixtures are organized, setup/teardown patterns, shared fixtures
-
-## Mocking
 **Unexamined:** Mocking strategy, what gets mocked, mock libraries used
-
-## Coverage
 **Unexamined:** Coverage targets, coverage tools, what's excluded
 
 ---
@@ -46,15 +42,11 @@ exports[`testing.md scaffold > empty result (scan failed) 1`] = `
 ## Test Framework
 
 ## Test Structure
+
+## Open Questions
 **Unexamined:** Test file organization, naming conventions, directory structure
-
-## Fixture Patterns
 **Unexamined:** How fixtures are organized, setup/teardown patterns, shared fixtures
-
-## Mocking
 **Unexamined:** Mocking strategy, what gets mocked, mock libraries used
-
-## Coverage
 **Unexamined:** Coverage targets, coverage tools, what's excluded
 
 ---
@@ -83,15 +75,11 @@ exports[`testing.md scaffold > rich project with pytest testing and test structu
 
 ## Test Structure
 **Detected:** Test-to-source ratio: 25/80 (0.31)
+
+## Open Questions
 **Unexamined:** Test file organization, naming conventions, directory structure
-
-## Fixture Patterns
 **Unexamined:** How fixtures are organized, setup/teardown patterns, shared fixtures
-
-## Mocking
 **Unexamined:** Mocking strategy, what gets mocked, mock libraries used
-
-## Coverage
 **Unexamined:** Coverage targets, coverage tools, what's excluded
 
 ---

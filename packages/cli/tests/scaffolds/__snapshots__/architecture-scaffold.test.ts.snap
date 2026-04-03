@@ -8,16 +8,10 @@ exports[`architecture.md scaffold > Node Express project with structure overflow
 ## Key Facts
 **Detected:** Express application
 
-## Architecture Pattern
-**Unexamined:** What pattern does this project follow? (monolith, microservices, serverless, modular monolith)
-
-## System Boundaries
+## Open Questions
+**Unexamined:** What architecture pattern? (monolith, microservices, serverless, modular monolith)
 **Unexamined:** What's in scope? What's external? How are boundaries enforced?
-
-## Design Decisions
 **Unexamined:** Key architectural decisions, rationale, alternatives considered
-
-## Trade-Offs
 **Unexamined:** What does this project optimize for? What does it sacrifice?
 
 ---
@@ -33,16 +27,10 @@ exports[`architecture.md scaffold > empty result (scan failed) 1`] = `
 
 ## Key Facts
 
-## Architecture Pattern
-**Unexamined:** What pattern does this project follow? (monolith, microservices, serverless, modular monolith)
-
-## System Boundaries
+## Open Questions
+**Unexamined:** What architecture pattern? (monolith, microservices, serverless, modular monolith)
 **Unexamined:** What's in scope? What's external? How are boundaries enforced?
-
-## Design Decisions
 **Unexamined:** Key architectural decisions, rationale, alternatives considered
-
-## Trade-Offs
 **Unexamined:** What does this project optimize for? What does it sacrifice?
 
 ---
@@ -60,16 +48,10 @@ exports[`architecture.md scaffold > rich Python FastAPI project with structure e
 **Detected:** FastAPI application
 **Detected:** Database: PostgreSQL
 
-## Architecture Pattern
-**Unexamined:** What pattern does this project follow? (monolith, microservices, serverless, modular monolith)
-
-## System Boundaries
+## Open Questions
+**Unexamined:** What architecture pattern? (monolith, microservices, serverless, modular monolith)
 **Unexamined:** What's in scope? What's external? How are boundaries enforced?
-
-## Design Decisions
 **Unexamined:** Key architectural decisions, rationale, alternatives considered
-
-## Trade-Offs
 **Unexamined:** What does this project optimize for? What does it sacrifice?
 
 ---

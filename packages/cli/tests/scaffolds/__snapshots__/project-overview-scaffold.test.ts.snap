@@ -16,10 +16,8 @@ exports[`project-overview.md scaffold > Python FastAPI project with minimal data
 ## Project Shape
 **Detected:** 45 source files, 12 test files, 5 config files
 
-## Purpose
+## Open Questions
 **Unexamined:** What does this project do? Who are the target users? What problem does it solve?
-
-## Current Status
 **Unexamined:** What's working? What's in progress? Known issues?
 
 ---
@@ -41,10 +39,8 @@ exports[`project-overview.md scaffold > empty result (scan failed) 1`] = `
 ## Project Shape
 **Detected:** 0 source files, 0 test files, 0 config files
 
-## Purpose
+## Open Questions
 **Unexamined:** What does this project do? Who are the target users? What problem does it solve?
-
-## Current Status
 **Unexamined:** What's working? What's in progress? Known issues?
 
 ---
@@ -83,10 +79,8 @@ exports[`project-overview.md scaffold > rich TypeScript Next.js project with ful
 **Detected:** \`src/lib\` — Shared utilities
 **Detected:** \`tests\` — Test files
 
-## Purpose
+## Open Questions
 **Unexamined:** What does this project do? Who are the target users? What problem does it solve?
-
-## Current Status
 **Unexamined:** What's working? What's in progress? Known issues?
 
 ---

@@ -53,12 +53,13 @@ describe('all scaffolds integration', () => {
     const debugging = generateDebuggingScaffold(result, projectName, timestamp, version);
 
     // Count ## headings (varies based on detected data for empty result)
+    // Architecture and Debugging consolidate unexamined sections into ## Open Questions
     expect((overview.match(/^## /gm) || []).length).toBeGreaterThanOrEqual(3);
-    expect((architecture.match(/^## /gm) || []).length).toBeGreaterThanOrEqual(4);
+    expect((architecture.match(/^## /gm) || []).length).toBeGreaterThanOrEqual(2);
     expect((patterns.match(/^## /gm) || []).length).toBe(6); // 5 categories + Framework Patterns
     expect((conventions.match(/^## /gm) || []).length).toBeGreaterThanOrEqual(4);
     expect((workflow.match(/^## /gm) || []).length).toBeGreaterThanOrEqual(5);
     expect((testing.match(/^## /gm) || []).length).toBeGreaterThanOrEqual(4);
-    expect((debugging.match(/^## /gm) || []).length).toBeGreaterThanOrEqual(3);
+    expect((debugging.match(/^## /gm) || []).length).toBeGreaterThanOrEqual(1);
   });
 });

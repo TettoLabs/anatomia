@@ -13,22 +13,18 @@ exports[`conventions.md scaffold > TypeScript Next.js project with partial conve
 
 **Functions:** camelCase (confidence: 0.92)
 
-**Unexamined:** Examples from codebase, exceptions to rules, team-specific preferences
-
 ## Import Organization
 
 **Style:** relative
 **Confidence:** 0.75
 
-**Unexamined:** Import grouping rules, alias patterns, ordering conventions
-
 ## Code Style
 
+## Open Questions
+**Unexamined:** Examples from codebase, exceptions to rules, team-specific preferences
+**Unexamined:** Import grouping rules, alias patterns, ordering conventions
 **Unexamined:** Line length, formatting rules, linter config, code style guide
-
-## Additional Conventions
-
-**Unexamined:** Team-specific conventions, file organization, comment style, other standards
+**Unexamined:** Team-specific conventions, file organization, comment style
 
 ---
 
@@ -47,21 +43,17 @@ exports[`conventions.md scaffold > empty result (scan failed) 1`] = `
 
 *Naming conventions not analyzed*
 
-**Unexamined:** Examples from codebase, exceptions to rules, team-specific preferences
-
 ## Import Organization
 
-*Import conventions not analyzed*
-
-**Unexamined:** Import grouping rules, alias patterns, ordering conventions
+*Import conventions not detected with sufficient confidence*
 
 ## Code Style
 
+## Open Questions
+**Unexamined:** Examples from codebase, exceptions to rules, team-specific preferences
+**Unexamined:** Import grouping rules, alias patterns, ordering conventions
 **Unexamined:** Line length, formatting rules, linter config, code style guide
-
-## Additional Conventions
-
-**Unexamined:** Team-specific conventions, file organization, comment style, other standards
+**Unexamined:** Team-specific conventions, file organization, comment style
 
 ---
 
@@ -88,26 +80,22 @@ exports[`conventions.md scaffold > rich Python project with full conventions 1`]
 **Constants:** SCREAMING_SNAKE_CASE (confidence: 0.90, mixed)
   Distribution: SCREAMING_SNAKE_CASE: 90%, UPPER_CASE: 10%
 
-**Unexamined:** Examples from codebase, exceptions to rules, team-specific preferences
-
 ## Import Organization
 
 **Style:** absolute
 **Confidence:** 0.85
 **Distribution:** absolute: 85%, relative: 15%
 
-**Unexamined:** Import grouping rules, alias patterns, ordering conventions
-
 ## Code Style
 
 **Indentation:** spaces (4 spaces)
 **Confidence:** 1.00 (from config file)
 
+## Open Questions
+**Unexamined:** Examples from codebase, exceptions to rules, team-specific preferences
+**Unexamined:** Import grouping rules, alias patterns, ordering conventions
 **Unexamined:** Line length, formatting rules, linter config, code style guide
-
-## Additional Conventions
-
-**Unexamined:** Team-specific conventions, file organization, comment style, other standards
+**Unexamined:** Team-specific conventions, file organization, comment style
 
 ---
 

@@ -20,18 +20,11 @@ exports[`workflow.md scaffold > TypeScript project with Vercel deployment and no
 **Detected:** .gitignore covers .env: no
 
 ## CI/CD
-**Unexamined:** Build pipeline, test automation, deployment triggers
-
-## Git Workflow
+## Open Questions
 **Unexamined:** Branching strategy, merge vs rebase, branch naming conventions
-
-## Commit Conventions
 **Unexamined:** Commit message format, conventional commits, scope/type
-
-## PR Process
 **Unexamined:** Review process, approval requirements, PR templates
-
-## Deployment Process
+**Unexamined:** Build pipeline, test automation, deployment triggers
 **Unexamined:** Environments (dev/staging/prod), rollback procedure
 
 ---
@@ -55,18 +48,11 @@ exports[`workflow.md scaffold > empty result (scan failed) 1`] = `
 **Detected:** .gitignore covers .env: no
 
 ## CI/CD
-**Unexamined:** Build pipeline, test automation, deployment triggers
-
-## Git Workflow
+## Open Questions
 **Unexamined:** Branching strategy, merge vs rebase, branch naming conventions
-
-## Commit Conventions
 **Unexamined:** Commit message format, conventional commits, scope/type
-
-## PR Process
 **Unexamined:** Review process, approval requirements, PR templates
-
-## Deployment Process
+**Unexamined:** Build pipeline, test automation, deployment triggers
 **Unexamined:** Environments (dev/staging/prod), rollback procedure
 
 ---
@@ -100,18 +86,11 @@ exports[`workflow.md scaffold > rich project with full deployment and CI config 
 ## CI/CD
 **Detected:** \`.github/workflows/\` — CI/CD workflows
 
-**Unexamined:** Build pipeline, test automation, deployment triggers
-
-## Git Workflow
+## Open Questions
 **Unexamined:** Branching strategy, merge vs rebase, branch naming conventions
-
-## Commit Conventions
 **Unexamined:** Commit message format, conventional commits, scope/type
-
-## PR Process
 **Unexamined:** Review process, approval requirements, PR templates
-
-## Deployment Process
+**Unexamined:** Build pipeline, test automation, deployment triggers
 **Unexamined:** Environments (dev/staging/prod), rollback procedure
 
 ---
