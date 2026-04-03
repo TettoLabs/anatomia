@@ -103,10 +103,10 @@ describe.skipIf(!wasmAvailable)('ASTCache', () => {
   });
 
   describe('Disk cache behavior', () => {
-    it('set() creates .ana/.state/cache/ directory automatically', async () => {
+    it('set() creates .ana/state/cache/ directory automatically', async () => {
   
       // Given: Cache directory doesn't exist
-      const expectedCacheDir = join(tempDir, '.ana/.state/cache');
+      const expectedCacheDir = join(tempDir, '.ana/state/cache');
 
       // When: Storing data
       const cacheData: Omit<ASTCacheEntry, 'mtimeMs' | 'cachedAt'> = {
@@ -263,7 +263,7 @@ describe.skipIf(!wasmAvailable)('ASTCache', () => {
       expect(cache.getStats().misses).toBe(1);
 
       // Then: Disk cache directory is removed
-      const cacheDir = join(tempDir, '.ana/.state/cache');
+      const cacheDir = join(tempDir, '.ana/state/cache');
       try {
         await stat(cacheDir);
         // If we reach here, directory still exists (should not happen)
@@ -500,7 +500,7 @@ describe.skipIf(!wasmAvailable)('ASTCache - invalidation scenarios', () => {
       await cache.set(testFilePath, cacheData);
 
       // When: Corrupt the disk cache JSON file
-      const cacheDir = join(tempDir, '.ana/.state/cache');
+      const cacheDir = join(tempDir, '.ana/state/cache');
       const files = await readdir(cacheDir);
       const cacheFile = join(cacheDir, files[0]);
       await writeFile(cacheFile, 'CORRUPTED{invalid json', 'utf8');

@@ -71,7 +71,7 @@ setupCommand
     }
 
     // Load snapshot for cross-reference validation
-    const snapshotPath = path.join(anaPath, '.state/snapshot.json');
+    const snapshotPath = path.join(anaPath, 'state/snapshot.json');
     if (!(await fileExists(snapshotPath))) {
       console.error(chalk.red('Error: snapshot.json not found'));
       console.error(

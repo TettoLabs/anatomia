@@ -174,7 +174,7 @@ export function errorHandler(err: Error, req: Request, res: Response, next: Next
 
 ## After You Write
 
-A silent verification hook logs results after every Write. The SubagentStop hook enforces quality when you finish — if your file fails, you'll be told to read `.ana/.state/check_result_{yourfile}` for details and fix the issues before completing.
+A silent verification hook logs results after every Write. The SubagentStop hook enforces quality when you finish — if your file fails, you'll be told to read `.ana/state/check_result_{yourfile}` for details and fix the issues before completing.
 
 ### If the Hook Reports Failures:
 1. **Citation failures**: Re-read the source file and correct the citation

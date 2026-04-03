@@ -19,7 +19,7 @@ describe('ana setup complete integration', () => {
 
     // Create complete .ana/ structure
     await fs.mkdir(path.join(anaPath, 'context'), { recursive: true });
-    await fs.mkdir(path.join(anaPath, '.state'), { recursive: true });
+    await fs.mkdir(path.join(anaPath, 'state'), { recursive: true });
 
     // Create all 7 context files (valid, no scaffold markers)
     const files = [
@@ -40,7 +40,7 @@ describe('ana setup complete integration', () => {
     // Create snapshot.json
     const snapshot = createEmptyAnalysisResult();
     await fs.writeFile(
-      path.join(anaPath, '.state/snapshot.json'),
+      path.join(anaPath, 'state/snapshot.json'),
       JSON.stringify(snapshot, null, 2)
     );
 

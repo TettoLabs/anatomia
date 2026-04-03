@@ -48,7 +48,7 @@ else
 fi
 
 # Test 4: snapshot.json exists
-if [ -f .ana/.state/snapshot.json ]; then
+if [ -f .ana/state/snapshot.json ]; then
   echo "✓ PASS: snapshot.json exists"
 else
   echo "✗ FAIL: snapshot.json missing"
@@ -65,16 +65,16 @@ for mode in architect code debug docs test general setup; do
   fi
 done
 
-# Test 6: --force preserves .state/
+# Test 6: --force preserves state/
 echo ""
-echo "Test: --force preserves .state/"
-echo '{"test":"data"}' > .ana/.state/test.json
+echo "Test: --force preserves state/"
+echo '{"test":"data"}' > .ana/state/test.json
 node "$CLI_PATH" init --force --skip-analysis
 
-if [ -f .ana/.state/test.json ] && grep -q '"test":"data"' .ana/.state/test.json; then
-  echo "✓ PASS: --force preserved .state/test.json"
+if [ -f .ana/state/test.json ] && grep -q '"test":"data"' .ana/state/test.json; then
+  echo "✓ PASS: --force preserved state/test.json"
 else
-  echo "✗ FAIL: --force did not preserve .state/"
+  echo "✗ FAIL: --force did not preserve state/"
   exit 1
 fi
 

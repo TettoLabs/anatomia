@@ -365,7 +365,7 @@ export async function validateContent(anaPath: string): Promise<ValidationError[
  * - BF6: Framework in project-overview.md matches analyzer
  *
  * @param anaPath - Path to .ana/ directory
- * @param snapshot - AnalysisResult from .state/snapshot.json
+ * @param snapshot - AnalysisResult from state/snapshot.json
  * @returns Array of blocking errors (empty if valid)
  */
 export async function validateCrossReferences(

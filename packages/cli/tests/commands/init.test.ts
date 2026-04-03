@@ -44,7 +44,7 @@ describe('ana init', () => {
       await fs.mkdir(path.join(anaPath, 'context/setup'), { recursive: true });
       await fs.mkdir(path.join(anaPath, 'context/setup/steps'), { recursive: true });
       await fs.mkdir(path.join(anaPath, 'context/setup/framework-snippets'), { recursive: true });
-      await fs.mkdir(path.join(anaPath, '.state'), { recursive: true });
+      await fs.mkdir(path.join(anaPath, 'state'), { recursive: true });
 
       // Verify all exist
       const dirs = [
@@ -53,7 +53,7 @@ describe('ana init', () => {
         'context/setup',
         'context/setup/steps',
         'context/setup/framework-snippets',
-        '.state',
+        'state',
       ];
 
       for (const dir of dirs) {
@@ -193,15 +193,15 @@ describe('ana init', () => {
   });
 
   describe('--force flag', () => {
-    it('preserves .state/ when overwriting', async () => {
+    it('preserves state/ when overwriting', async () => {
       const anaPath = path.join(tmpDir, '.ana');
-      const statePath = path.join(anaPath, '.state');
+      const statePath = path.join(anaPath, 'state');
 
-      // Create existing .ana/ with .state/
+      // Create existing .ana/ with state/
       await fs.mkdir(statePath, { recursive: true });
       await fs.writeFile(path.join(statePath, 'snapshot.json'), '{"test":"data"}');
 
-      // Simulate --force: backup .state/
+      // Simulate --force: backup state/
       const backup = path.join(os.tmpdir(), `.ana-state-backup-${Date.now()}`);
       await fs.cp(statePath, backup, { recursive: true });
 
@@ -211,7 +211,7 @@ describe('ana init', () => {
       // Recreate .ana/
       await fs.mkdir(statePath, { recursive: true });
 
-      // Restore .state/
+      // Restore state/
       await fs.rm(statePath, { recursive: true });
       await fs.rename(backup, statePath);
 

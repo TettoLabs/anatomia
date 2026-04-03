@@ -1,7 +1,7 @@
 /**
  * ana setup index - Build symbol index for citation verification
  *
- * Creates .ana/.state/symbol-index.json with:
+ * Creates .ana/state/symbol-index.json with:
  * - Function declarations and names
  * - Class declarations and names
  * - Method definitions
@@ -325,7 +325,7 @@ function extractGoSymbols(
  * Build symbol index for the project
  *
  * @param projectRoot - Project root directory
- * @param outputDir - Directory to write symbol-index.json (defaults to .ana/.state)
+ * @param outputDir - Directory to write symbol-index.json (defaults to .ana/state)
  * @returns SymbolIndex object
  */
 export async function buildSymbolIndex(
@@ -424,7 +424,7 @@ export async function buildSymbolIndex(
   };
 
   // Write to output directory
-  const targetDir = outputDir || path.join(projectRoot, '.ana', '.state');
+  const targetDir = outputDir || path.join(projectRoot, '.ana', 'state');
   await fs.mkdir(targetDir, { recursive: true });
 
   const indexPath = path.join(targetDir, 'symbol-index.json');
@@ -443,7 +443,7 @@ export function createIndexCommand(): Command {
     .action(async () => {
       const cwd = process.cwd();
       const anaPath = path.join(cwd, '.ana');
-      const statePath = path.join(anaPath, '.state');
+      const statePath = path.join(anaPath, 'state');
 
       // Check .ana/ exists
       try {
@@ -465,7 +465,7 @@ export function createIndexCommand(): Command {
           `Symbol index built: ${index.symbols.length} symbols from ${index.files_parsed} files (${elapsed}ms)`
         );
 
-        console.log(chalk.gray(`\nWritten to: .ana/.state/symbol-index.json`));
+        console.log(chalk.gray(`\nWritten to: .ana/state/symbol-index.json`));
       } catch (error) {
         spinner.fail('Failed to build symbol index');
         if (error instanceof Error) {

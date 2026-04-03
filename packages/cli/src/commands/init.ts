@@ -27,7 +27,7 @@
  *   │   ├── active/               (in-progress work)
  *   │   └── completed/            (completed cycles)
  *   ├── ana.json                   (framework metadata)
- *   └── .state/
+ *   └── state/
  *       └── snapshot.json         (analyzer baseline)
  *
  *   .claude/
@@ -93,7 +93,7 @@ interface InitCommandOptions {
 /** Pre-flight validation result */
 interface PreflightResult {
   canProceed: boolean;
-  stateBackup?: string; // Path to .state/ backup if --force used
+  stateBackup?: string; // Path to state/ backup if --force used
 }
 
 /**
@@ -157,7 +157,7 @@ async function askSetupTier(_options: InitCommandOptions): Promise<string> {
 /** Create init command */
 export const initCommand = new Command('init')
   .description('Initialize .ana/ context framework')
-  .option('-f, --force', 'Overwrite existing .ana/ (preserves .state/)')
+  .option('-f, --force', 'Overwrite existing .ana/ (preserves state/)')
   .option('--skip-analysis', 'Skip analyzer, create empty scaffolds')
   .action(async (options: InitCommandOptions) => {
     const cwd = process.cwd();
@@ -180,7 +180,7 @@ export const initCommand = new Command('init')
       // Set ASTCache to write to temp directory during analysis
       // (prevents creating .ana/ in project root before atomic rename)
       const { ASTCache } = await import('../engine/index.js');
-      const tmpCacheDir = path.join(tmpAnaPath, '.state', 'cache');
+      const tmpCacheDir = path.join(tmpAnaPath, 'state', 'cache');
       ASTCache.setCacheDir(tmpCacheDir);
 
       // All operations in temp directory
@@ -198,10 +198,10 @@ export const initCommand = new Command('init')
       await buildSymbolIndexSafe(cwd, tmpAnaPath);
       await writeCliPath(tmpAnaPath);
 
-      // Restore .state/ if --force was used
+      // Restore state/ if --force was used
       if (preflight.stateBackup) {
-        // Remove empty .state/ created by Phase 3
-        const stateDir = path.join(tmpAnaPath, '.state');
+        // Remove empty state/ created by Phase 3
+        const stateDir = path.join(tmpAnaPath, 'state');
         await fs.rm(stateDir, { recursive: true, force: true });
         // Move backup into place
         await fs.rename(preflight.stateBackup, stateDir);
@@ -233,7 +233,7 @@ export const initCommand = new Command('init')
  * Checks:
  * - Directory exists and is readable
  * - .ana/ doesn't exist OR --force provided
- * - If --force: backup .state/ for preservation
+ * - If --force: backup state/ for preservation
  *
  * @param anaPath - Path to .ana/ directory
  * @param options - Command options
@@ -279,7 +279,7 @@ async function validateInitPreconditions(
       } else if (meta.setupStatus === 'complete') {
         console.log('Framework already set up. Options:\n');
         console.log('  1. Keep current: Do nothing');
-        console.log('  2. Recreate: ana init --force (preserves .state/)\n');
+        console.log('  2. Recreate: ana init --force (preserves state/)\n');
       }
     } catch {
       // ana.json missing or corrupted
@@ -289,15 +289,15 @@ async function validateInitPreconditions(
     process.exit(0);
   }
 
-  // --force provided: backup .state/ before deletion
-  const statePath = path.join(anaPath, '.state');
+  // --force provided: backup state/ before deletion
+  const statePath = path.join(anaPath, 'state');
   let stateBackup: string | undefined;
 
   if (await dirExists(statePath)) {
     const timestamp = Date.now();
     stateBackup = path.join(os.tmpdir(), `.ana-state-backup-${timestamp}`);
 
-    console.log(chalk.gray('Backing up .state/ directory...'));
+    console.log(chalk.gray('Backing up state/ directory...'));
     await fs.cp(statePath, stateBackup, { recursive: true });
   }
 
@@ -444,7 +444,7 @@ function displayDetectionSummary(result: AnalysisResult): void {
  * - context/setup/
  * - context/setup/steps/
  * - context/setup/framework-snippets/
- * - .state/
+ * - state/
  *
  * @param tmpAnaPath - Path to temp .ana/ directory
  */
@@ -460,7 +460,7 @@ async function createDirectoryStructure(tmpAnaPath: string): Promise<void> {
   await fs.mkdir(path.join(tmpAnaPath, 'docs'), { recursive: true });
   await fs.mkdir(path.join(tmpAnaPath, 'plans/active'), { recursive: true });
   await fs.mkdir(path.join(tmpAnaPath, 'plans/completed'), { recursive: true });
-  await fs.mkdir(path.join(tmpAnaPath, '.state'), { recursive: true });
+  await fs.mkdir(path.join(tmpAnaPath, 'state'), { recursive: true });
 
   // Create .gitkeep files for empty plan directories
   await fs.writeFile(path.join(tmpAnaPath, 'plans/active/.gitkeep'), '', 'utf-8');
@@ -468,7 +468,7 @@ async function createDirectoryStructure(tmpAnaPath: string): Promise<void> {
 
   // Create .gitignore for runtime state files
   const gitignoreContent = `# Anatomia runtime state — local to each developer
-.state/
+state/
 .setup_qa_log.md
 .setup_exploration.md
 .setup_verification.md
@@ -1046,7 +1046,7 @@ async function createAnaJson(
 /**
  * Phase 8: Store analyzer snapshot
  *
- * Stores raw AnalysisResult to .state/snapshot.json.
+ * Stores raw AnalysisResult to state/snapshot.json.
  * Used by `ana diff` (STEP 3) as baseline for detecting drift.
  *
  * @param tmpAnaPath - Temp .ana/ path
@@ -1060,7 +1060,7 @@ async function storeSnapshot(
 
   const analysis = analysisResult || createEmptyAnalysisResult();
 
-  const snapshotPath = path.join(tmpAnaPath, '.state/snapshot.json');
+  const snapshotPath = path.join(tmpAnaPath, 'state/snapshot.json');
   await fs.writeFile(snapshotPath, JSON.stringify(analysis, null, 2), 'utf-8');
 
   spinner.succeed('Stored analyzer snapshot');
@@ -1073,13 +1073,13 @@ async function storeSnapshot(
  * will fall back to file-only checks.
  *
  * @param cwd - Project root directory
- * @param tmpAnaPath - Temp .ana/ path (writes to .state/)
+ * @param tmpAnaPath - Temp .ana/ path (writes to state/)
  */
 async function buildSymbolIndexSafe(cwd: string, tmpAnaPath: string): Promise<void> {
   const spinner = ora('Building symbol index...').start();
 
   try {
-    const statePath = path.join(tmpAnaPath, '.state');
+    const statePath = path.join(tmpAnaPath, 'state');
     const index = await buildSymbolIndex(cwd, statePath);
     spinner.succeed(`Symbol index built (${index.symbols.length} symbols from ${index.files_parsed} files)`);
   } catch (error) {
@@ -1100,7 +1100,7 @@ async function buildSymbolIndexSafe(cwd: string, tmpAnaPath: string): Promise<vo
  * @param tmpAnaPath - Temp .ana/ path
  */
 async function writeCliPath(tmpAnaPath: string): Promise<void> {
-  const stateDir = path.join(tmpAnaPath, '.state');
+  const stateDir = path.join(tmpAnaPath, 'state');
   await fs.mkdir(stateDir, { recursive: true });
 
   // Get CLI entry point path (handles both dev and built contexts)

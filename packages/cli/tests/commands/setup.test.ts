@@ -25,7 +25,7 @@ describe('validators', () => {
     anaPath = path.join(tmpDir, '.ana');
     await fs.mkdir(anaPath, { recursive: true });
     await fs.mkdir(path.join(anaPath, 'context'), { recursive: true });
-    await fs.mkdir(path.join(anaPath, '.state'), { recursive: true });
+    await fs.mkdir(path.join(anaPath, 'state'), { recursive: true });
   });
 
   afterEach(async () => {

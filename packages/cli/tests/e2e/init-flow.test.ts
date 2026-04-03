@@ -58,7 +58,7 @@ describe('ana init E2E', () => {
       'docs',
       'plans/active',
       'plans/completed',
-      '.state',
+      'state',
     ];
 
     for (const dir of dirs) {
@@ -139,7 +139,7 @@ describe('ana init E2E', () => {
     expect(meta.version).toBe('1.0.0');
 
     // Verify snapshot.json
-    const snapshotExists = await fileExists(path.join(anaPath, '.state/snapshot.json'));
+    const snapshotExists = await fileExists(path.join(anaPath, 'state/snapshot.json'));
     expect(snapshotExists).toBe(true);
 
     // Count total files in .ana/
@@ -150,7 +150,7 @@ describe('ana init E2E', () => {
     // Verify .gitignore exists and excludes runtime state
     const gitignorePath = path.join(anaPath, '.gitignore');
     const gitignoreContent = await fs.readFile(gitignorePath, 'utf-8');
-    expect(gitignoreContent).toContain('.state/');
+    expect(gitignoreContent).toContain('state/');
     expect(gitignoreContent).toContain('.setup_qa_log.md');
 
     // Verify .claude/ directory was also created (outside .ana/)
@@ -210,16 +210,16 @@ describe('ana init E2E', () => {
     expect(claudeMdContent).toContain('claude --agent ana');
   }, 30000); // 30s timeout
 
-  it('--force preserves .state/ directory', async () => {
+  it('--force preserves state/ directory', async () => {
     // First init
     await execFileAsync('node', [cliPath, 'init', '--skip-analysis'], {
       cwd: tmpProject,
     });
 
     const anaPath = path.join(tmpProject, '.ana');
-    const statePath = path.join(anaPath, '.state');
+    const statePath = path.join(anaPath, 'state');
 
-    // Add test data to .state/
+    // Add test data to state/
     await fs.writeFile(path.join(statePath, 'test.json'), '{"preserved":true}');
 
     // Re-init with --force

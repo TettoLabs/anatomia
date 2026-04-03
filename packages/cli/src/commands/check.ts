@@ -247,7 +247,7 @@ function isValidFilePath(filePath: string): boolean {
  * @returns {Promise<SymbolEntry[] | null>} Symbol entries or null if unavailable
  */
 async function loadSymbolIndex(projectRoot: string): Promise<SymbolEntry[] | null> {
-  const indexPath = path.join(projectRoot, '.ana', '.state', 'symbol-index.json');
+  const indexPath = path.join(projectRoot, '.ana', 'state', 'symbol-index.json');
   try {
     const content = await fs.readFile(indexPath, 'utf-8');
     const index: SymbolIndex = JSON.parse(content);

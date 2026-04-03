@@ -56,7 +56,7 @@ describe('ana setup index', () => {
 
     it('produces valid JSON output', async () => {
       // Create .ana/ structure
-      await fs.mkdir(path.join(tempDir, '.ana', '.state'), { recursive: true });
+      await fs.mkdir(path.join(tempDir, '.ana', 'state'), { recursive: true });
 
       // Create a sample TypeScript file
       await fs.mkdir(path.join(tempDir, 'src'), { recursive: true });
@@ -80,7 +80,7 @@ const helper = () => 'internal';
       runCli('setup index');
 
       // Read the generated index
-      const indexPath = path.join(tempDir, '.ana', '.state', 'symbol-index.json');
+      const indexPath = path.join(tempDir, '.ana', 'state', 'symbol-index.json');
       const content = await fs.readFile(indexPath, 'utf-8');
       const index = JSON.parse(content);
 
@@ -91,7 +91,7 @@ const helper = () => 'internal';
     });
 
     it('extracts functions, classes, and methods', async () => {
-      await fs.mkdir(path.join(tempDir, '.ana', '.state'), { recursive: true });
+      await fs.mkdir(path.join(tempDir, '.ana', 'state'), { recursive: true });
       await fs.mkdir(path.join(tempDir, 'src'), { recursive: true });
 
       await fs.writeFile(
@@ -117,7 +117,7 @@ const internalHelper = (x: number) => x * 2;
       process.chdir(tempDir);
       runCli('setup index');
 
-      const indexPath = path.join(tempDir, '.ana', '.state', 'symbol-index.json');
+      const indexPath = path.join(tempDir, '.ana', 'state', 'symbol-index.json');
       const content = await fs.readFile(indexPath, 'utf-8');
       const index = JSON.parse(content);
 
@@ -130,7 +130,7 @@ const internalHelper = (x: number) => x * 2;
     });
 
     it('handles arrow functions assigned to const', async () => {
-      await fs.mkdir(path.join(tempDir, '.ana', '.state'), { recursive: true });
+      await fs.mkdir(path.join(tempDir, '.ana', 'state'), { recursive: true });
       await fs.mkdir(path.join(tempDir, 'src'), { recursive: true });
 
       await fs.writeFile(
@@ -148,7 +148,7 @@ const privateHelper = () => null;
       process.chdir(tempDir);
       runCli('setup index');
 
-      const indexPath = path.join(tempDir, '.ana', '.state', 'symbol-index.json');
+      const indexPath = path.join(tempDir, '.ana', 'state', 'symbol-index.json');
       const content = await fs.readFile(indexPath, 'utf-8');
       const index = JSON.parse(content);
 
@@ -159,7 +159,7 @@ const privateHelper = () => null;
     });
 
     it('marks exported vs non-exported correctly', async () => {
-      await fs.mkdir(path.join(tempDir, '.ana', '.state'), { recursive: true });
+      await fs.mkdir(path.join(tempDir, '.ana', 'state'), { recursive: true });
       await fs.mkdir(path.join(tempDir, 'src'), { recursive: true });
 
       await fs.writeFile(
@@ -177,7 +177,7 @@ class PrivateClass {}
       process.chdir(tempDir);
       runCli('setup index');
 
-      const indexPath = path.join(tempDir, '.ana', '.state', 'symbol-index.json');
+      const indexPath = path.join(tempDir, '.ana', 'state', 'symbol-index.json');
       const content = await fs.readFile(indexPath, 'utf-8');
       const index = JSON.parse(content);
 
@@ -193,7 +193,7 @@ class PrivateClass {}
     });
 
     it('excludes node_modules, dist, and test files', async () => {
-      await fs.mkdir(path.join(tempDir, '.ana', '.state'), { recursive: true });
+      await fs.mkdir(path.join(tempDir, '.ana', 'state'), { recursive: true });
 
       // Create files that should be excluded
       await fs.mkdir(path.join(tempDir, 'node_modules', 'pkg'), { recursive: true });
@@ -223,7 +223,7 @@ class PrivateClass {}
       process.chdir(tempDir);
       runCli('setup index');
 
-      const indexPath = path.join(tempDir, '.ana', '.state', 'symbol-index.json');
+      const indexPath = path.join(tempDir, '.ana', 'state', 'symbol-index.json');
       const content = await fs.readFile(indexPath, 'utf-8');
       const index = JSON.parse(content);
 
@@ -246,7 +246,7 @@ describe('ana setup check with symbol index', () => {
     tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'check-index-test-'));
     contextPath = path.join(tempDir, '.ana', 'context');
     await fs.mkdir(contextPath, { recursive: true });
-    await fs.mkdir(path.join(tempDir, '.ana', '.state'), { recursive: true });
+    await fs.mkdir(path.join(tempDir, '.ana', 'state'), { recursive: true });
     originalCwd = process.cwd();
     process.chdir(tempDir);
   });
@@ -290,7 +290,7 @@ describe('ana setup check with symbol index', () => {
       files_parsed: 1,
       symbols,
     };
-    const indexPath = path.join(tempDir, '.ana', '.state', 'symbol-index.json');
+    const indexPath = path.join(tempDir, '.ana', 'state', 'symbol-index.json');
     await fs.writeFile(indexPath, JSON.stringify(index, null, 2), 'utf-8');
   }
 

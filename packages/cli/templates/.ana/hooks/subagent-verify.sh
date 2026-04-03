@@ -46,14 +46,14 @@ RESULT=$(bash "$HOOK_DIR/run-check.sh" "$ASSIGNED_FILE" --json 2>&1)
 CHECK_EXIT=$?
 
 # Write detailed results to disk for the writer to read
-RESULT_DIR="$PROJECT_ROOT/.ana/.state"
+RESULT_DIR="$PROJECT_ROOT/.ana/state"
 mkdir -p "$RESULT_DIR"
 echo "$RESULT" > "$RESULT_DIR/check_result_${ASSIGNED_FILE}"
 
 if [ $CHECK_EXIT -ne 0 ]; then
   PASSED=$(echo "$RESULT" | grep -o '"overall":[[:space:]]*true' | head -1)
   if [ -z "$PASSED" ]; then
-    echo "Check failed for $ASSIGNED_FILE. Read .ana/.state/check_result_${ASSIGNED_FILE} for details." >&2
+    echo "Check failed for $ASSIGNED_FILE. Read .ana/state/check_result_${ASSIGNED_FILE} for details." >&2
     exit 2
   fi
 fi

@@ -52,7 +52,7 @@ export interface CacheStats {
  *
  * Two-tier cache:
  * - Memory: Fast access (Map<filePath, entry>)
- * - Disk: Persistent across runs (JSON files in .ana/.state/cache/)
+ * - Disk: Persistent across runs (JSON files in .ana/state/cache/)
  *
  * Invalidation: mtime-based (if file.mtimeMs !== cached.mtimeMs → reparse)
  *
@@ -101,7 +101,7 @@ export class ASTCache {
    */
   constructor(projectRoot: string) {
     // Use override if set, otherwise default
-    this.cacheDir = ASTCache.cacheOverrideDir || join(projectRoot, '.ana/.state/cache');
+    this.cacheDir = ASTCache.cacheOverrideDir || join(projectRoot, '.ana/state/cache');
   }
 
   /**
