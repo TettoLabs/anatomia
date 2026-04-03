@@ -253,6 +253,42 @@ describe('regression tests', () => {
     await fs.rm(tmpProject, { recursive: true, force: true });
   });
 
+  it('creates scan.json with full engine result when analysis runs', async () => {
+    // Create a minimal project with detectable framework
+    await fs.writeFile(
+      path.join(tmpProject, 'package.json'),
+      JSON.stringify({
+        name: 'scan-test',
+        dependencies: { next: '14.0.0' },
+        scripts: { build: 'next build', test: 'vitest run' },
+      })
+    );
+
+    // Run init WITHOUT --skip-analysis
+    await execFileAsync('node', [cliPath, 'init'], {
+      cwd: tmpProject,
+    });
+
+    const anaPath = path.join(tmpProject, '.ana');
+    const scanPath = path.join(anaPath, 'scan.json');
+
+    // scan.json must exist
+    const exists = await fileExists(scanPath);
+    expect(exists).toBe(true);
+
+    // Must be valid JSON with expected top-level keys
+    const content = await fs.readFile(scanPath, 'utf-8');
+    const scan = JSON.parse(content);
+    expect(scan.overview).toBeDefined();
+    expect(scan.stack).toBeDefined();
+    expect(scan.commands).toBeDefined();
+    expect(scan.files).toBeDefined();
+    expect(scan.externalServices).toBeDefined();
+
+    // Should detect Next.js
+    expect(scan.stack.framework).toBe('Next.js');
+  }, 30000);
+
   it('ana mode shows 7 modes (general, setup added in CP4)', async () => {
     const { stdout } = await execFileAsync('node', [cliPath, 'mode', 'code'], {
       cwd: tmpProject,
