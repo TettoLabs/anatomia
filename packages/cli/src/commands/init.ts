@@ -222,7 +222,7 @@ export const initCommand = new Command('init')
       await atomicRename(tmpAnaPath, anaPath);
 
       // Create .claude/ configuration (outside temp directory - handles merge)
-      await createClaudeConfiguration(cwd);
+      await createClaudeConfiguration(cwd, engineResult);
 
       // Display success
       displaySuccessMessage(engineResult);
@@ -662,8 +662,9 @@ async function copyHookScripts(tmpAnaPath: string): Promise<void> {
  * Agent/skill files are copied without overwriting existing ones (merge-not-overwrite).
  *
  * @param cwd - Project root directory
+ * @param engineResult - Engine result for skill seeding (null if skipped)
  */
-async function createClaudeConfiguration(cwd: string): Promise<void> {
+async function createClaudeConfiguration(cwd: string, engineResult: EngineResult | null): Promise<void> {
   const spinner = ora('Creating .claude/ configuration...').start();
 
   const claudePath = path.join(cwd, '.claude');
@@ -691,6 +692,11 @@ async function createClaudeConfiguration(cwd: string): Promise<void> {
 
     // Copy all skill files
     await copySkillFiles(skillsPath, templatesDir);
+
+    // Seed skills with detected data
+    if (engineResult) {
+      await seedSkillFiles(skillsPath, engineResult);
+    }
 
     // Copy CLAUDE.md to project root
     await copyClaudeMd(cwd, templatesDir);
@@ -738,6 +744,11 @@ async function createClaudeConfiguration(cwd: string): Promise<void> {
 
   // Copy skill files (merge-not-overwrite)
   await copySkillFiles(skillsPath, templatesDir);
+
+  // Seed skills with detected data
+  if (engineResult) {
+    await seedSkillFiles(skillsPath, engineResult);
+  }
 
   // Copy CLAUDE.md to project root (merge-not-overwrite)
   await copyClaudeMd(cwd, templatesDir);
@@ -798,6 +809,114 @@ async function copySkillFiles(skillsPath: string, templatesDir: string): Promise
     // Copy with verification
     const sourcePath = path.join(templatesDir, '.claude/skills', skillDir, 'SKILL.md');
     await copyAndVerifyFile(sourcePath, destPath, `.claude/skills/${skillDir}/SKILL.md`);
+  }
+}
+
+/**
+ * Seed skill files with detected data from EngineResult
+ *
+ * Reads each copied skill template, injects a ## Detected section
+ * below the YAML frontmatter, writes back. Only enriches, never creates.
+ *
+ * @param skillsDir - Path to .claude/skills/ directory
+ * @param result - EngineResult from engine
+ */
+async function seedSkillFiles(skillsDir: string, result: EngineResult): Promise<void> {
+  const seeds: Record<string, string[]> = {};
+
+  // coding-standards
+  const codingLines: string[] = [];
+  if (result.stack?.language) {
+    codingLines.push(`- Language: ${result.stack.language}${result.stack.framework ? ` with ${result.stack.framework}` : ''}`);
+  }
+  if (result.conventions?.naming?.functions) {
+    const f = result.conventions.naming.functions;
+    codingLines.push(`- Functions: ${f.majority}${f.confidence ? ` (${(f.confidence * 100).toFixed(0)}% confidence)` : ''}`);
+  }
+  if (result.conventions?.naming?.files) {
+    codingLines.push(`- Files: ${result.conventions.naming.files.majority}`);
+  }
+  if (result.conventions?.imports) {
+    codingLines.push(`- Imports: ${result.conventions.imports.style}`);
+  }
+  if (result.conventions?.indentation) {
+    const i = result.conventions.indentation;
+    codingLines.push(`- Indentation: ${i.width ? `${i.width} ` : ''}${i.style}`);
+  }
+  if (result.patterns?.validation && !('patterns' in result.patterns.validation)) {
+    codingLines.push(`- Validation: ${result.patterns.validation.library}`);
+  }
+  if (codingLines.length > 0) seeds['coding-standards'] = codingLines;
+
+  // testing-standards
+  const testingLines: string[] = [];
+  if (result.stack?.testing) testingLines.push(`- Framework: ${result.stack.testing}`);
+  if (result.commands?.test) testingLines.push(`- Test command: \`${result.commands.test}\``);
+  if (result.files?.test !== undefined) testingLines.push(`- Test files: ${result.files.test}`);
+  if (testingLines.length > 0) seeds['testing-standards'] = testingLines;
+
+  // git-workflow
+  const gitLines: string[] = [];
+  if (result.git?.branch) gitLines.push(`- Default branch: ${result.git.branch}`);
+  if (result.git?.commitCount) gitLines.push(`- Commits: ${result.git.commitCount}`);
+  if (result.git?.contributorCount) gitLines.push(`- Contributors: ${result.git.contributorCount}`);
+  gitLines.push('- Co-author: read from `ana.json` coAuthor field');
+  if (gitLines.length > 1) seeds['git-workflow'] = gitLines; // more than just coAuthor line
+
+  // deployment
+  const deployLines: string[] = [];
+  if (result.deployment?.platform) {
+    deployLines.push(`- Platform: ${result.deployment.platform}${result.deployment.configFile ? ` (${result.deployment.configFile})` : ''}`);
+  }
+  if (result.commands?.build) deployLines.push(`- Build command: \`${result.commands.build}\``);
+  if (deployLines.length > 0) seeds['deployment'] = deployLines;
+
+  // logging-standards
+  const loggingLines: string[] = [];
+  const monitoringServices = result.externalServices?.filter(s =>
+    s.category === 'monitoring' || s.category === 'observability' || s.category === 'analytics'
+  ) || [];
+  for (const svc of monitoringServices) {
+    loggingLines.push(`- ${svc.category}: ${svc.name}${svc.configFound ? ' (config found)' : ''}`);
+  }
+  if (loggingLines.length > 0) seeds['logging-standards'] = loggingLines;
+
+  // design-principles — skip entirely (100% human philosophy)
+
+  // Inject ## Detected sections
+  for (const [skillName, lines] of Object.entries(seeds)) {
+    const filePath = path.join(skillsDir, skillName, 'SKILL.md');
+    try {
+      let content = await fs.readFile(filePath, 'utf-8');
+
+      const detectedSection = `\n## Detected\n${lines.join('\n')}\n`;
+
+      // Find end of YAML frontmatter (second ---)
+      const fmEnd = content.indexOf('---', content.indexOf('---') + 3);
+      if (fmEnd !== -1) {
+        const insertPos = content.indexOf('\n', fmEnd) + 1;
+        content = content.slice(0, insertPos) + detectedSection + content.slice(insertPos);
+      }
+
+      // For testing-standards: replace commented Commands section with real commands
+      if (skillName === 'testing-standards') {
+        const commandsBlock = `\n## Commands\n\`\`\`bash\n# Build\n${result.commands?.build || 'your-build-command'}\n\n# Test (non-watch mode)\n${result.commands?.test || 'your-test-command'}\n\n# Lint (all source)\n${result.commands?.lint || 'your-lint-command'}\n\`\`\`\n`;
+
+        // Replace the HTML-commented Commands section
+        const cmdCommentStart = content.indexOf('## Commands');
+        if (cmdCommentStart !== -1) {
+          // Find the end of the commented block (closing -->)
+          const commentEnd = content.indexOf('-->', cmdCommentStart);
+          if (commentEnd !== -1) {
+            content = content.slice(0, cmdCommentStart) + commandsBlock.trim() + '\n' + content.slice(commentEnd + 3).trimStart();
+          }
+        }
+      }
+
+      await fs.writeFile(filePath, content, 'utf-8');
+    } catch {
+      // File doesn't exist (was skipped in merge-not-overwrite) — skip seeding
+    }
   }
 }
 
