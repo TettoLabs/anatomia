@@ -132,8 +132,8 @@ describe('ana init E2E', () => {
     const metaExists = await fileExists(path.join(anaPath, 'ana.json'));
     expect(metaExists).toBe(true);
 
-    const metaContent = await fs.readFile(path.join(anaPath, 'ana.json'), 'utf-8');
-    const meta = JSON.parse(metaContent);
+    const anaJsonContent = await fs.readFile(path.join(anaPath, 'ana.json'), 'utf-8');
+    const meta = JSON.parse(anaJsonContent);
     expect(meta.setupStatus).toBe('pending');
     expect(meta.version).toBe('1.0.0');
 

@@ -19,7 +19,7 @@ import {
   fileExists,
   type ValidationError,
 } from '../utils/validators.js';
-import { VALID_SETUP_TIERS, META_VERSION } from '../constants.js';
+import { VALID_SETUP_TIERS, ANA_JSON_VERSION } from '../constants.js';
 import { createCheckCommand } from './check.js';
 import { createIndexCommand } from './index.js';
 
@@ -331,17 +331,17 @@ async function updateAnaJson(
   cwd: string,
   options: SetupCompleteOptions
 ): Promise<void> {
-  const metaPath = path.join(anaPath, 'ana.json');
+  const anaJsonPath = path.join(anaPath, 'ana.json');
 
   // Read existing ana.json
   let meta: Record<string, unknown>;
   try {
-    const content = await fs.readFile(metaPath, 'utf-8');
+    const content = await fs.readFile(anaJsonPath, 'utf-8');
     meta = JSON.parse(content);
   } catch (_error) {
     // If ana.json doesn't exist or is corrupt, create minimal
     meta = {
-      version: META_VERSION,
+      version: ANA_JSON_VERSION,
       createdAt: new Date().toISOString(),
     };
   }
@@ -398,7 +398,7 @@ async function updateAnaJson(
   meta.setupMode = setupMode;
 
   // Write back to file (formatted JSON)
-  await fs.writeFile(metaPath, JSON.stringify(meta, null, 2), 'utf-8');
+  await fs.writeFile(anaJsonPath, JSON.stringify(meta, null, 2), 'utf-8');
 
   console.log(chalk.gray(`  Setup mode: ${setupMode}`));
 }

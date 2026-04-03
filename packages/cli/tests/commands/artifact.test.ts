@@ -767,10 +767,10 @@ Met.`;
       await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
 
       // Update ana.json with custom coAuthor
-      const metaPath = path.join(tempDir, '.ana', 'ana.json');
-      const meta = JSON.parse(await fs.readFile(metaPath, 'utf-8'));
+      const anaJsonPath = path.join(tempDir, '.ana', 'ana.json');
+      const meta = JSON.parse(await fs.readFile(anaJsonPath, 'utf-8'));
       meta.coAuthor = 'Custom Bot <bot@example.com>';
-      await fs.writeFile(metaPath, JSON.stringify(meta), 'utf-8');
+      await fs.writeFile(anaJsonPath, JSON.stringify(meta), 'utf-8');
 
       await createArtifact('test-slug', 'scope.md'); // Uses valid default
       saveArtifact('scope', 'test-slug');

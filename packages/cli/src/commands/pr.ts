@@ -224,11 +224,11 @@ export function createPr(slug: string): void {
   }
 
   // 8. Read coAuthor from ana.json
-  const metaPath = path.join(projectRoot, '.ana', 'ana.json');
+  const anaJsonPath = path.join(projectRoot, '.ana', 'ana.json');
   let coAuthor = 'Ana <build@anatomia.dev>';
   try {
-    const metaContent = fs.readFileSync(metaPath, 'utf-8');
-    const meta: { coAuthor?: string } = JSON.parse(metaContent);
+    const anaJsonContent = fs.readFileSync(anaJsonPath, 'utf-8');
+    const meta: { coAuthor?: string } = JSON.parse(anaJsonContent);
     coAuthor = meta.coAuthor || 'Ana <build@anatomia.dev>';
   } catch {
     // Use fallback

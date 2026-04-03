@@ -141,10 +141,10 @@ function parseArtifactType(type: string): ArtifactTypeInfo | null {
  * @returns The artifact branch name
  */
 export function readArtifactBranch(): string {
-  const metaPath = path.join(process.cwd(), '.ana', 'ana.json');
+  const anaJsonPath = path.join(process.cwd(), '.ana', 'ana.json');
 
   // Check if file exists
-  if (!fs.existsSync(metaPath)) {
+  if (!fs.existsSync(anaJsonPath)) {
     console.error(chalk.red('Error: No .ana/ana.json found. Run `ana init` first.'));
     process.exit(1);
   }
@@ -152,7 +152,7 @@ export function readArtifactBranch(): string {
   // Read and parse
   let meta: Record<string, unknown>;
   try {
-    const content = fs.readFileSync(metaPath, 'utf-8');
+    const content = fs.readFileSync(anaJsonPath, 'utf-8');
     meta = JSON.parse(content);
   } catch {
     console.error(chalk.red('Error: Failed to read .ana/ana.json. File may be corrupted.'));
@@ -716,11 +716,11 @@ export function saveArtifact(type: string, slug: string): void {
 
   // 9. Commit
   // Read coAuthor from ana.json
-  const metaPath = path.join(process.cwd(), '.ana', 'ana.json');
+  const anaJsonPath = path.join(process.cwd(), '.ana', 'ana.json');
   let coAuthor = 'Ana <build@anatomia.dev>';
   try {
-    const metaContent = fs.readFileSync(metaPath, 'utf-8');
-    const meta: { coAuthor?: string } = JSON.parse(metaContent);
+    const anaJsonContent = fs.readFileSync(anaJsonPath, 'utf-8');
+    const meta: { coAuthor?: string } = JSON.parse(anaJsonContent);
     coAuthor = meta.coAuthor || 'Ana <build@anatomia.dev>';
   } catch {
     // Use fallback if ana.json can't be read
@@ -891,11 +891,11 @@ export function saveAllArtifacts(slug: string): void {
   }
 
   // 4. Read ana.json for coAuthor
-  const metaPath = path.join(projectRoot, '.ana', 'ana.json');
+  const anaJsonPath = path.join(projectRoot, '.ana', 'ana.json');
   let coAuthor = 'Ana <build@anatomia.dev>';
   try {
-    const metaContent = fs.readFileSync(metaPath, 'utf-8');
-    const meta: { coAuthor?: string } = JSON.parse(metaContent);
+    const anaJsonContent = fs.readFileSync(anaJsonPath, 'utf-8');
+    const meta: { coAuthor?: string } = JSON.parse(anaJsonContent);
     coAuthor = meta.coAuthor || 'Ana <build@anatomia.dev>';
   } catch {
     // Use fallback

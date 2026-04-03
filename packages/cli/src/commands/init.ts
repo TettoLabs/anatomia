@@ -79,7 +79,7 @@ import {
   FRAMEWORK_SNIPPETS,
   AGENT_FILES,
   SKILL_DIRS,
-  META_VERSION,
+  ANA_JSON_VERSION,
 } from '../constants.js';
 import { buildSymbolIndex } from './index.js';
 
@@ -265,10 +265,10 @@ async function validateInitPreconditions(
     console.log(chalk.yellow('\n.ana/ directory already exists.\n'));
 
     // Check ana.json to provide better guidance
-    const metaPath = path.join(anaPath, 'ana.json');
+    const anaJsonPath = path.join(anaPath, 'ana.json');
     try {
-      const metaContent = await fs.readFile(metaPath, 'utf-8');
-      const meta = JSON.parse(metaContent);
+      const anaJsonContent = await fs.readFile(anaJsonPath, 'utf-8');
+      const meta = JSON.parse(anaJsonContent);
 
       if (meta.setupStatus === 'pending') {
         console.log('Setup is incomplete. Options:\n');
@@ -985,7 +985,7 @@ async function createAnaJson(
   const analysis = analysisResult || createEmptyAnalysisResult();
 
   const meta = {
-    version: META_VERSION,
+    version: ANA_JSON_VERSION,
     createdAt: new Date().toISOString(),
     artifactBranch: 'main',
     commands: {
@@ -1004,8 +1004,8 @@ async function createAnaJson(
     sessionCount: 0,
   };
 
-  const metaPath = path.join(tmpAnaPath, 'ana.json');
-  await fs.writeFile(metaPath, JSON.stringify(meta, null, 2), 'utf-8');
+  const anaJsonPath = path.join(tmpAnaPath, 'ana.json');
+  await fs.writeFile(anaJsonPath, JSON.stringify(meta, null, 2), 'utf-8');
 
   spinner.succeed('Created ana.json');
 }

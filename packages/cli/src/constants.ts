@@ -102,4 +102,4 @@ export const SKILL_DIRS = [
 export const VALID_SETUP_TIERS = ['quick', 'guided', 'complete'] as const;
 
 /** ana.json version */
-export const META_VERSION = '1.0.0';
+export const ANA_JSON_VERSION = '1.0.0';
