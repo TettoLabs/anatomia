@@ -1,7 +1,7 @@
 /**
  * Shared helpers for analysis formatting and scaffold generation
  *
- * Used by: format-analysis-brief.ts, scaffold-generators.ts
+ * Used by: scaffold-generators.ts
  */
 
 /**

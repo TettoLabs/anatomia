@@ -258,7 +258,7 @@ async function generateClaudeMd(cwd: string, anaPath: string): Promise<void> {
   let contextFileCount = 0;
   try {
     const files = await fs.readdir(contextDir);
-    contextFileCount = files.filter((f) => f.endsWith('.md') && f !== 'analysis.md').length;
+    contextFileCount = files.filter((f) => f.endsWith('.md')).length;
   } catch {
     contextFileCount = 7; // default
   }

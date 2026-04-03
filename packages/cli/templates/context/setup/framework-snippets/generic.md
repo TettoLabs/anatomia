@@ -1,6 +1,6 @@
 ## General Coding Patterns
 
-**Follow detected patterns:** Reference analysis.md for detected error handling, validation, database, auth, testing patterns specific to your project.
+**Follow detected patterns:** Reference scan.json and context files for detected error handling, validation, database, auth, testing patterns specific to your project.
 
 **Use project conventions:** Follow naming, imports, and code style from conventions.md exactly.
 

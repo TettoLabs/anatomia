@@ -9,7 +9,6 @@
 
 import { describe, it, expect } from 'vitest';
 import type { AnalysisResult } from '../../src/engine/index.js';
-import { formatAnalysisBrief } from '../../src/utils/format-analysis-brief.js';
 import { generatePatternsScaffold } from '../../src/utils/scaffold-generators.js';
 import { createEmptyAnalysisResult } from '../scaffolds/test-types.js';
 
@@ -32,11 +31,9 @@ describe('Analyzer Interface Contract', () => {
       };
 
       // Should not throw - proves all required fields accessible
-      expect(() => formatAnalysisBrief(minimal)).not.toThrow();
-
-      const output = formatAnalysisBrief(minimal);
-      expect(output).toContain('JavaScript/TypeScript');
-      expect(output).toContain('nextjs');
+      expect(minimal.projectType).toBe('node');
+      expect(minimal.framework).toBe('nextjs');
+      expect(minimal.confidence.projectType).toBe(1.0);
     });
 
     it('catches field renames at compile time', () => {
@@ -118,7 +115,6 @@ describe('Analyzer Interface Contract', () => {
       };
 
       // Should not throw - proves all optional fields accessible with ?.
-      expect(() => formatAnalysisBrief(full)).not.toThrow();
       expect(() =>
         generatePatternsScaffold(full, 'test', '2026-03-19T10:00:00Z', '1.0.0')
       ).not.toThrow();

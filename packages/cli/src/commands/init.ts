@@ -12,7 +12,6 @@
  *   │   ├── run-check.sh
  *   │   └── subagent-verify.sh
  *   ├── context/
- *   │   ├── analysis.md           (generated from analyzer)
  *   │   ├── project-overview.md   (scaffold with 40% pre-pop)
  *   │   ├── architecture.md       (scaffold with 20% pre-pop)
  *   │   ├── patterns.md           (scaffold with 50% pre-pop)
@@ -63,7 +62,7 @@ import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import type { AnalysisResult } from '../engine/index.js';
 import { dirname } from 'node:path';
-import { formatAnalysisBrief } from '../utils/format-analysis-brief.js';
+
 import {
   generateProjectOverviewScaffold,
   generateArchitectureScaffold,
@@ -189,7 +188,6 @@ export const initCommand = new Command('init')
       // Reset cache override after analysis
       ASTCache.setCacheDir(null);
       await createDirectoryStructure(tmpAnaPath);
-      await generateAnalysisMd(tmpAnaPath, analysisResult, cwd);
       await generateScaffolds(tmpAnaPath, analysisResult, cwd);
       await copyStaticFilesWithVerification(tmpAnaPath);
       await copyHookScripts(tmpAnaPath);
@@ -478,37 +476,6 @@ state/
   await fs.writeFile(path.join(tmpAnaPath, '.gitignore'), gitignoreContent, 'utf-8');
 
   spinner.succeed('Directory structure created');
-}
-
-/**
- * Phase 4: Generate analysis.md
- *
- * Calls formatAnalysisBrief() and writes to context/analysis.md
- *
- * @param tmpAnaPath - Temp .ana/ path
- * @param analysisResult - Analyzer result or null
- * @param _cwd - Project root (unused)
- */
-async function generateAnalysisMd(
-  tmpAnaPath: string,
-  analysisResult: AnalysisResult | null,
-  _cwd: string
-): Promise<void> {
-  const spinner = ora('Generating analysis.md...').start();
-
-  // Use empty result if analyzer failed
-  const analysis = analysisResult || createEmptyAnalysisResult();
-
-  // Generate markdown
-  const markdown = formatAnalysisBrief(analysis);
-
-  // Write to context/analysis.md
-  const analysisPath = path.join(tmpAnaPath, 'context/analysis.md');
-  await fs.writeFile(analysisPath, markdown, 'utf-8');
-
-  // Display file size
-  const lines = markdown.split('\n').length;
-  spinner.succeed(`Generated analysis.md (${lines} lines)`);
 }
 
 /**
