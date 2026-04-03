@@ -116,7 +116,7 @@ export interface TestEngineResult {
   git: { head: string | null; branch: string | null; commitCount: number | null; lastCommitAt: string | null; uncommittedChanges: boolean; contributorCount: number | null };
   monorepo: { isMonorepo: boolean; tool: string | null; packages: Array<{ name: string; path: string }> };
   externalServices: Array<{ name: string; category: string; source: string; configFound: boolean }>;
-  schemas: Record<string, { found: boolean; path: string | null; modelCount: number | null }>;
+  schemas: Record<string, { found: boolean; path: string | null; modelCount: number | null; provider?: string | null }>;
   secrets: { envFileExists: boolean; envExampleExists: boolean; gitignoreCoversEnv: boolean; hardcodedKeysFound: null; envVarReferences: null };
   projectProfile: { type: string | null; maturity: null; teamSize: null; hasExternalAPIs: boolean; hasDatabase: boolean; hasBrowserUI: boolean; hasAuthSystem: boolean; hasPayments: boolean; hasFileStorage: boolean };
   blindSpots: Array<{ area: string; issue: string; resolution: string }>;

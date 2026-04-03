@@ -217,7 +217,9 @@ async function detectSchemas(
     try {
       const content = await fs.readFile(schemaPath, 'utf-8');
       const modelCount = (content.match(/^model\s+/gm) || []).length;
-      schemas['prisma'] = { found: true, path: 'prisma/schema.prisma', modelCount };
+      const providerMatch = content.match(/provider\s*=\s*"(\w+)"/);
+      const provider = providerMatch?.[1] || null;
+      schemas['prisma'] = { found: true, path: 'prisma/schema.prisma', modelCount, provider };
     } catch {
       schemas['prisma'] = { found: false, path: null, modelCount: null };
       blindSpots.push({ area: 'Database', issue: 'Prisma dependency found but no schema.prisma', resolution: 'Create prisma/schema.prisma' });

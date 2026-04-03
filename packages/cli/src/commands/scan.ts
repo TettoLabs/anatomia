@@ -159,10 +159,22 @@ function formatHumanReadable(result: EngineResult): string {
       let display = value;
       if (key === 'database') {
         const schemaKey = Object.keys(result.schemas).find(k =>
-          result.schemas[k].found && result.schemas[k].modelCount
+          result.schemas[k].found
         );
-        if (schemaKey && result.schemas[schemaKey].modelCount) {
-          display = `${value} (${result.schemas[schemaKey].modelCount} models)`;
+        if (schemaKey) {
+          const schema = result.schemas[schemaKey];
+          // Arrow notation: Prisma → PostgreSQL (3 models)
+          if (schema.provider) {
+            const providerNames: Record<string, string> = {
+              postgresql: 'PostgreSQL', mysql: 'MySQL', sqlite: 'SQLite',
+              mongodb: 'MongoDB', cockroachdb: 'CockroachDB', sqlserver: 'SQL Server',
+            };
+            const providerDisplay = providerNames[schema.provider] || schema.provider;
+            display = `${value} → ${providerDisplay}`;
+          }
+          if (schema.modelCount) {
+            display += ` (${schema.modelCount} models)`;
+          }
         }
       }
       lines.push(`  ${chalk.gray(label)} ${display}`);
