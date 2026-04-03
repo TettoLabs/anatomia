@@ -397,9 +397,10 @@ export function generateWorkflowScaffold(
   // Key Facts
   s += `## Key Facts\n`;
   if (result.git.branch) s += `**Detected:** Default branch: ${result.git.branch}\n`;
-  if (result.git.commitCount !== null) s += `**Detected:** Commits: ${result.git.commitCount}`;
-  if (result.git.contributorCount !== null) s += `, Contributors: ${result.git.contributorCount}`;
-  if (result.git.commitCount !== null) s += '\n';
+  const gitParts: string[] = [];
+  if (result.git.commitCount !== null) gitParts.push(`${result.git.commitCount} commits`);
+  if (result.git.contributorCount !== null) gitParts.push(`${result.git.contributorCount} contributors`);
+  if (gitParts.length > 0) s += `**Detected:** ${gitParts.join(', ')}\n`;
   if (result.git.lastCommitAt) s += `**Detected:** Last activity: ${result.git.lastCommitAt}\n`;
   if (result.deployment) s += `**Detected:** Deploy: ${result.deployment.platform}\n`;
   s += '\n';
@@ -427,8 +428,8 @@ export function generateWorkflowScaffold(
     for (const ci of ciEntries) {
       s += `**Detected:** \`${ci.path}\` — ${ci.purpose}\n`;
     }
-    s += '\n';
   }
+  s += '\n';
 
   // Open Questions
   s += `## Open Questions\n`;

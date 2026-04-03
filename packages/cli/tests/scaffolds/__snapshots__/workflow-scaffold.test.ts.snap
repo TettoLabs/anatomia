@@ -20,6 +20,7 @@ exports[`workflow.md scaffold > TypeScript project with Vercel deployment and no
 **Detected:** .gitignore covers .env: no
 
 ## CI/CD
+
 ## Open Questions
 **Unexamined:** Branching strategy, merge vs rebase, branch naming conventions
 **Unexamined:** Commit message format, conventional commits, scope/type
@@ -48,6 +49,7 @@ exports[`workflow.md scaffold > empty result (scan failed) 1`] = `
 **Detected:** .gitignore covers .env: no
 
 ## CI/CD
+
 ## Open Questions
 **Unexamined:** Branching strategy, merge vs rebase, branch naming conventions
 **Unexamined:** Commit message format, conventional commits, scope/type
@@ -68,7 +70,7 @@ exports[`workflow.md scaffold > rich project with full deployment and CI config 
 
 ## Key Facts
 **Detected:** Default branch: main
-**Detected:** Commits: 142, Contributors: 4
+**Detected:** 142 commits, 4 contributors
 **Detected:** Last activity: 2026-03-18T15:30:00Z
 **Detected:** Deploy: AWS
 
