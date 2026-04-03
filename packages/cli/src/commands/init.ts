@@ -170,7 +170,14 @@ export const initCommand = new Command('init')
   .description('Initialize .ana/ context framework')
   .option('-f, --force', 'Overwrite existing .ana/ (preserves state/)')
   .option('--skip-analysis', 'Skip analyzer, create empty scaffolds')
-  .action(async (options: InitCommandOptions) => {
+  .action(async (options: InitCommandOptions, command: Command) => {
+    // Reject positional arguments (init operates on cwd)
+    if (command.args.length > 0) {
+      console.error(chalk.red(`Error: ana init does not accept a path argument.`));
+      console.error(chalk.gray('cd into the project directory and run: ana init'));
+      process.exit(1);
+    }
+
     const cwd = process.cwd();
     const anaPath = path.join(cwd, '.ana');
 
