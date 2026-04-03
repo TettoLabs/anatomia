@@ -333,13 +333,13 @@ async function updateAnaJson(
   const anaJsonPath = path.join(anaPath, 'ana.json');
 
   // Read existing ana.json
-  let meta: Record<string, unknown>;
+  let config: Record<string, unknown>;
   try {
     const content = await fs.readFile(anaJsonPath, 'utf-8');
-    meta = JSON.parse(content);
+    config = JSON.parse(content);
   } catch (_error) {
     // If ana.json doesn't exist or is corrupt, create minimal
-    meta = {
+    config = {
       version: ANA_JSON_VERSION,
       createdAt: new Date().toISOString(),
     };
@@ -379,8 +379,8 @@ async function updateAnaJson(
       }
     }
     // Priority 3: Existing setupMode from ana.json (re-running setup complete)
-    else if (meta.setupMode && isValidSetupTier(meta.setupMode)) {
-      setupMode = meta.setupMode;
+    else if (config.setupMode && isValidSetupTier(config.setupMode)) {
+      setupMode = config.setupMode;
     }
     // Priority 4: Error if no source available
     else {
@@ -391,12 +391,12 @@ async function updateAnaJson(
     }
   }
 
-  // Update meta fields
-  meta.setupMode = 'complete';
-  meta.setupCompletedAt = new Date().toISOString();
+  // Update config fields
+  config.setupMode = 'complete';
+  config.setupCompletedAt = new Date().toISOString();
 
   // Write back to file (formatted JSON)
-  await fs.writeFile(anaJsonPath, JSON.stringify(meta, null, 2), 'utf-8');
+  await fs.writeFile(anaJsonPath, JSON.stringify(config, null, 2), 'utf-8');
 
   console.log(chalk.gray(`  Setup mode: ${setupMode}`));
 }

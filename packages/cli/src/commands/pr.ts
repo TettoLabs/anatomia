@@ -228,8 +228,8 @@ export function createPr(slug: string): void {
   let coAuthor = 'Ana <build@anatomia.dev>';
   try {
     const anaJsonContent = fs.readFileSync(anaJsonPath, 'utf-8');
-    const meta: { coAuthor?: string } = JSON.parse(anaJsonContent);
-    coAuthor = meta.coAuthor || 'Ana <build@anatomia.dev>';
+    const config: { coAuthor?: string } = JSON.parse(anaJsonContent);
+    coAuthor = config.coAuthor || 'Ana <build@anatomia.dev>';
   } catch {
     // Use fallback
   }

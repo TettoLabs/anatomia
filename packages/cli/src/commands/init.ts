@@ -281,13 +281,13 @@ async function validateInitPreconditions(
     const anaJsonPath = path.join(anaPath, 'ana.json');
     try {
       const anaJsonContent = await fs.readFile(anaJsonPath, 'utf-8');
-      const meta = JSON.parse(anaJsonContent);
+      const config = JSON.parse(anaJsonContent);
 
-      if (meta.setupMode === 'not_started' || meta.setupStatus === 'pending') {
+      if (config.setupMode === 'not_started' || config.setupStatus === 'pending') {
         console.log('Setup is incomplete. Options:\n');
         console.log('  1. Resume setup: `claude --agent ana-setup`');
         console.log('  2. Start over: ana init --force\n');
-      } else if (meta.setupMode === 'complete' || meta.setupStatus === 'complete') {
+      } else if (config.setupMode === 'complete' || config.setupStatus === 'complete') {
         console.log('Framework already set up. Options:\n');
         console.log('  1. Keep current: Do nothing');
         console.log('  2. Recreate: ana init --force (preserves state/)\n');

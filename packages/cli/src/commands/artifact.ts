@@ -150,22 +150,22 @@ export function readArtifactBranch(): string {
   }
 
   // Read and parse
-  let meta: Record<string, unknown>;
+  let config: Record<string, unknown>;
   try {
     const content = fs.readFileSync(anaJsonPath, 'utf-8');
-    meta = JSON.parse(content);
+    config = JSON.parse(content);
   } catch {
     console.error(chalk.red('Error: Failed to read .ana/ana.json. File may be corrupted.'));
     process.exit(1);
   }
 
   // Check artifactBranch field outside try/catch
-  if (!meta.artifactBranch) {
+  if (!config.artifactBranch) {
     console.error(chalk.red('Error: No artifactBranch configured in ana.json. Run `ana init` first.'));
     process.exit(1);
   }
 
-  return meta.artifactBranch as string;
+  return config.artifactBranch as string;
 }
 
 /**
@@ -720,8 +720,8 @@ export function saveArtifact(type: string, slug: string): void {
   let coAuthor = 'Ana <build@anatomia.dev>';
   try {
     const anaJsonContent = fs.readFileSync(anaJsonPath, 'utf-8');
-    const meta: { coAuthor?: string } = JSON.parse(anaJsonContent);
-    coAuthor = meta.coAuthor || 'Ana <build@anatomia.dev>';
+    const config: { coAuthor?: string } = JSON.parse(anaJsonContent);
+    coAuthor = config.coAuthor || 'Ana <build@anatomia.dev>';
   } catch {
     // Use fallback if ana.json can't be read
   }
@@ -895,8 +895,8 @@ export function saveAllArtifacts(slug: string): void {
   let coAuthor = 'Ana <build@anatomia.dev>';
   try {
     const anaJsonContent = fs.readFileSync(anaJsonPath, 'utf-8');
-    const meta: { coAuthor?: string } = JSON.parse(anaJsonContent);
-    coAuthor = meta.coAuthor || 'Ana <build@anatomia.dev>';
+    const config: { coAuthor?: string } = JSON.parse(anaJsonContent);
+    coAuthor = config.coAuthor || 'Ana <build@anatomia.dev>';
   } catch {
     // Use fallback
   }
