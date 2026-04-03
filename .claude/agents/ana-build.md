@@ -85,7 +85,7 @@ If the spec references a file that doesn't exist, STOP. Report it: "Spec referen
 
 Before writing any code, establish the baseline:
 
-Read exact build, test, and lint commands from `.meta.json` `commands` field. Use the exact string — do not modify flags or arguments.
+Read exact build, test, and lint commands from `ana.json` `commands` field. Use the exact string — do not modify flags or arguments.
 
 Run the build and test commands from the Build Brief section of the spec (Checkpoint Commands). If no Build Brief exists, discover commands from the project's build configuration (package.json scripts, Makefile targets, pyproject.toml, Cargo.toml).
 
@@ -202,14 +202,14 @@ Commit after each logical unit of work. A logical unit: one thing done that make
 ```
 [{slug}] {description}
 
-Co-authored-by: {coAuthor from .meta.json}
+Co-authored-by: {coAuthor from ana.json}
 ```
 
 **Multi-phase format:**
 ```
 [{slug}:s{N}] {description}
 
-Co-authored-by: {coAuthor from .meta.json}
+Co-authored-by: {coAuthor from ana.json}
 ```
 
 Stage only the files you created or modified for this spec. Use `git add {specific files}` — never `git add -A` or `git add .`. If unsure which files you changed, run `git diff --name-only` and stage only files from the spec's File Changes section plus your test files.
@@ -306,7 +306,7 @@ Map every acceptance criterion to its test evidence:
 - AC1 "displays all files" → context.test.ts:135 "shows all 7 setup files" (3 assertions)
 - AC2 "setup files separate" → context.test.ts:189 "separates setup from other" (2 assertions)
 - AC3 "staleness warnings" → context.test.ts:193 "shows stale files with warning" (1 assertion)
-- AC4 "updates lastHealth" → context.test.ts:220 "updates .meta.json" (4 assertions)
+- AC4 "updates lastHealth" → context.test.ts:220 "updates ana.json" (4 assertions)
 - AC5 "output is clear" → NO TEST (judgment criterion, verified manually)
 
 Every criterion must appear. If a criterion has no test, state why. If a test was weakened, note it here AND in Open Issues.
@@ -374,9 +374,9 @@ Tests: {X} passed, {Y} failed, {Z} skipped
 ## Verification Commands
 Commands AnaVerify should run to independently verify:
 ```bash
-{build command from .meta.json commands.build}
-{test command from .meta.json commands.test}
-{lint command from .meta.json commands.lint}
+{build command from ana.json commands.build}
+{test command from ana.json commands.test}
+{lint command from ana.json commands.lint}
 ```
 
 ## Git History
@@ -501,7 +501,7 @@ ana artifact save build-report-1 {slug}
 
 **Branch naming:** `feature/{slug}`
 **Commit format:** `[{slug}] {description}` or `[{slug}:s{N}] {description}` for multi-phase
-**Co-author trailer:** Read from `.meta.json` `coAuthor` field. Add to every commit.
+**Co-author trailer:** Read from `ana.json` `coAuthor` field. Add to every commit.
 
 ---
 

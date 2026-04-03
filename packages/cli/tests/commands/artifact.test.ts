@@ -40,11 +40,11 @@ describe('ana artifact save', () => {
     execSync('git config user.email "test@test.com"', { cwd: tempDir, stdio: 'ignore' });
     execSync('git config user.name "Test"', { cwd: tempDir, stdio: 'ignore' });
 
-    // Create .ana/.meta.json
+    // Create .ana/ana.json
     const anaDir = path.join(tempDir, '.ana');
     await fs.mkdir(anaDir, { recursive: true });
     await fs.writeFile(
-      path.join(anaDir, '.meta.json'),
+      path.join(anaDir, 'ana.json'),
       JSON.stringify({ artifactBranch }),
       'utf-8'
     );
@@ -387,7 +387,7 @@ Content...`;
       const anaDir = path.join(tempDir, '.ana');
       await fs.mkdir(anaDir, { recursive: true });
       await fs.writeFile(
-        path.join(anaDir, '.meta.json'),
+        path.join(anaDir, 'ana.json'),
         JSON.stringify({ artifactBranch: 'main' }),
         'utf-8'
       );
@@ -396,7 +396,7 @@ Content...`;
       expect(() => saveArtifact('scope', 'test-slug')).toThrow();
     });
 
-    it('errors when no .meta.json exists', async () => {
+    it('errors when no ana.json exists', async () => {
       execSync('git init', { cwd: tempDir, stdio: 'ignore' });
       execSync('git config user.email "test@test.com"', { cwd: tempDir, stdio: 'ignore' });
       execSync('git config user.name "Test"', { cwd: tempDir, stdio: 'ignore' });
@@ -412,7 +412,7 @@ Content...`;
       const anaDir = path.join(tempDir, '.ana');
       await fs.mkdir(anaDir, { recursive: true });
       await fs.writeFile(
-        path.join(anaDir, '.meta.json'),
+        path.join(anaDir, 'ana.json'),
         JSON.stringify({ version: '1.0.0' }),
         'utf-8'
       );
@@ -763,11 +763,11 @@ Met.`;
 
 
   describe('coAuthor from config', () => {
-    it('uses coAuthor from .meta.json when present', async () => {
+    it('uses coAuthor from ana.json when present', async () => {
       await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
 
-      // Update .meta.json with custom coAuthor
-      const metaPath = path.join(tempDir, '.ana', '.meta.json');
+      // Update ana.json with custom coAuthor
+      const metaPath = path.join(tempDir, '.ana', 'ana.json');
       const meta = JSON.parse(await fs.readFile(metaPath, 'utf-8'));
       meta.coAuthor = 'Custom Bot <bot@example.com>';
       await fs.writeFile(metaPath, JSON.stringify(meta), 'utf-8');
@@ -1260,7 +1260,7 @@ describe('ana artifact save-all', () => {
     const anaDir = path.join(tempDir, '.ana');
     await fs.mkdir(anaDir, { recursive: true });
     await fs.writeFile(
-      path.join(anaDir, '.meta.json'),
+      path.join(anaDir, 'ana.json'),
       JSON.stringify({ artifactBranch: 'main', coAuthor: 'Ana <build@anatomia.dev>' }),
       'utf-8'
     );

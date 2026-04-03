@@ -144,8 +144,8 @@ describe('ana init', () => {
     });
   });
 
-  describe('.meta.json', () => {
-    it('creates valid initial .meta.json', async () => {
+  describe('ana.json', () => {
+    it('creates valid initial ana.json', async () => {
       const analysis = createEmptyAnalysisResult();
       analysis.framework = 'fastapi';
       analysis.version = '0.2.0';

@@ -149,7 +149,7 @@ function renderProofMarkdown(proof: ProofSummary): string {
 export function createPr(slug: string): void {
   const projectRoot = process.cwd();
 
-  // 1. Read artifactBranch from .meta.json
+  // 1. Read artifactBranch from ana.json
   const artifactBranch = readArtifactBranch();
 
   // 2. Get current branch and derive slug if needed
@@ -223,8 +223,8 @@ export function createPr(slug: string): void {
     title = extractTitle(scopeContent);
   }
 
-  // 8. Read coAuthor from .meta.json
-  const metaPath = path.join(projectRoot, '.ana', '.meta.json');
+  // 8. Read coAuthor from ana.json
+  const metaPath = path.join(projectRoot, '.ana', 'ana.json');
   let coAuthor = 'Ana <build@anatomia.dev>';
   try {
     const metaContent = fs.readFileSync(metaPath, 'utf-8');

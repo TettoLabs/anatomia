@@ -39,11 +39,11 @@ else
   exit 1
 fi
 
-# Test 3: .meta.json has setupStatus: pending
-if grep -q '"setupStatus": "pending"' .ana/.meta.json; then
-  echo "✓ PASS: .meta.json has setupStatus: pending"
+# Test 3: ana.json has setupStatus: pending
+if grep -q '"setupStatus": "pending"' .ana/ana.json; then
+  echo "✓ PASS: ana.json has setupStatus: pending"
 else
-  echo "✗ FAIL: .meta.json missing setupStatus: pending"
+  echo "✗ FAIL: ana.json missing setupStatus: pending"
   exit 1
 fi
 

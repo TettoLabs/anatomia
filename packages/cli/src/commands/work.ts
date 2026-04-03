@@ -7,7 +7,7 @@
  *
  * Exit codes:
  *   0 - Success (always for status - it's informational)
- *   1 - Error (missing .meta.json, not a git repo for complete, etc.)
+ *   1 - Error (missing ana.json, not a git repo for complete, etc.)
  */
 
 import { Command } from 'commander';
@@ -751,7 +751,7 @@ Pipeline: ${proof.timing.total_minutes}m${timingDetails}${deviationSummary}
  * @param slug - Work item slug to complete
  */
 export async function completeWork(slug: string): Promise<void> {
-  // 1. Read artifactBranch from .meta.json
+  // 1. Read artifactBranch from ana.json
   const artifactBranch = readArtifactBranch();
 
   // 2. Get current branch

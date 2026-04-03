@@ -137,9 +137,9 @@ setupCommand
     console.log(chalk.gray('Updating CLAUDE.md...'));
     await generateClaudeMd(cwd, anaPath);
 
-    // Phase 7: Update .meta.json
-    console.log(chalk.gray('Updating .meta.json...'));
-    await updateMetaJson(anaPath, cwd, options);
+    // Phase 7: Update ana.json
+    console.log(chalk.gray('Updating ana.json...'));
+    await updateAnaJson(anaPath, cwd, options);
 
     // Success
     console.log(chalk.green('\n✅ Setup complete!\n'));
@@ -315,31 +315,31 @@ async function generateClaudeMd(cwd: string, anaPath: string): Promise<void> {
 }
 
 /**
- * Update .meta.json after successful validation
+ * Update ana.json after successful validation
  *
  * Sets:
  * - setupStatus: 'complete'
  * - setupCompletedAt: current timestamp
- * - setupMode: Priority: CLI --mode flag (highest) → .setup_tier file → existing .meta.json setupMode → error
+ * - setupMode: Priority: CLI --mode flag (highest) → .setup_tier file → existing ana.json setupMode → error
  *
  * @param anaPath - Path to .ana/ directory
  * @param cwd - Project root
  * @param options - Command options (may have --mode flag)
  */
-async function updateMetaJson(
+async function updateAnaJson(
   anaPath: string,
   cwd: string,
   options: SetupCompleteOptions
 ): Promise<void> {
-  const metaPath = path.join(anaPath, '.meta.json');
+  const metaPath = path.join(anaPath, 'ana.json');
 
-  // Read existing .meta.json
+  // Read existing ana.json
   let meta: Record<string, unknown>;
   try {
     const content = await fs.readFile(metaPath, 'utf-8');
     meta = JSON.parse(content);
   } catch (_error) {
-    // If .meta.json doesn't exist or is corrupt, create minimal
+    // If ana.json doesn't exist or is corrupt, create minimal
     meta = {
       version: META_VERSION,
       createdAt: new Date().toISOString(),
@@ -379,7 +379,7 @@ async function updateMetaJson(
         process.exit(1);
       }
     }
-    // Priority 3: Existing setupMode from .meta.json (re-running setup complete)
+    // Priority 3: Existing setupMode from ana.json (re-running setup complete)
     else if (meta.setupMode && isValidSetupTier(meta.setupMode)) {
       setupMode = meta.setupMode;
     }

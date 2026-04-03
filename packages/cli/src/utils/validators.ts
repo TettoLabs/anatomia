@@ -225,7 +225,7 @@ export async function fileExists(filePath: string): Promise<boolean> {
 }
 
 // inferSetupModeFromQuality() REMOVED - executive decision: no inference
-// Priority: CLI --mode flag → .setup_tier file → existing .meta.json setupMode → error
+// Priority: CLI --mode flag → .setup_tier file → existing ana.json setupMode → error
 
 /**
  * Validate structural requirements (BF1, BF2, BF3)

@@ -271,7 +271,7 @@ WRONG (implementation steps):
 "1. Read the directory with readdir 2. Get file mtimes with fs.stat 3. Run git log --since to count commits 4. Compare dates and generate warnings"
 
 RIGHT (strategic direction):
-"New subcommand following the existing status pattern (structural analog: work.ts), using filesystem age and git activity as staleness signals. Persist health summary in .meta.json for pipeline integration."
+"New subcommand following the existing status pattern (structural analog: work.ts), using filesystem age and git activity as staleness signals. Persist health summary in ana.json for pipeline integration."
 
 The Approach is a compass, not a recipe.
 

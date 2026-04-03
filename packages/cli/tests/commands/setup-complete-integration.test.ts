@@ -44,9 +44,9 @@ describe('ana setup complete integration', () => {
       JSON.stringify(snapshot, null, 2)
     );
 
-    // Create .meta.json
+    // Create ana.json
     await fs.writeFile(
-      path.join(anaPath, '.meta.json'),
+      path.join(anaPath, 'ana.json'),
       JSON.stringify({ setupStatus: 'pending', createdAt: new Date().toISOString() })
     );
   });

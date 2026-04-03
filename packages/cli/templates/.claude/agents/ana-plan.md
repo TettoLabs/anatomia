@@ -404,14 +404,14 @@ The Brief should contain ONLY information the builder couldn't find in 30 second
 Paste existing code from files you read. Never write new code that doesn't exist yet.
 
 ### Checkpoint Commands
-Copy checkpoint commands from `.meta.json` `commands` field.
+Copy checkpoint commands from `ana.json` `commands` field.
 
 - After {first file change}: `{exact test command}` — Expected: {result}
 - After all changes: `{full test command}` — Expected: {test count} tests pass
 - Lint: `{lint command}`
 
 ### Build Baseline
-Run the test command from `.meta.json` `commands.test` and record exact counts. Never estimate.
+Run the test command from `ana.json` `commands.test` and record exact counts. Never estimate.
 - Current tests: {exact number from running the command}
 - Current test files: {exact number}
 - Command used: {exact command string}

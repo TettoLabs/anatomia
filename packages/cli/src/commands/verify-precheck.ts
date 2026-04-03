@@ -242,10 +242,10 @@ function printContractResults(result: ContractPreCheckResult, slugDir: string): 
  * @param slug - Work item slug
  */
 export function runPreCheck(slug: string): void {
-  // Read .meta.json
-  const metaPath = path.join(process.cwd(), '.ana', '.meta.json');
+  // Read ana.json
+  const metaPath = path.join(process.cwd(), '.ana', 'ana.json');
   if (!fs.existsSync(metaPath)) {
-    console.error(chalk.red('Error: No .ana/.meta.json found. Run `ana init` first.'));
+    console.error(chalk.red('Error: No .ana/ana.json found. Run `ana init` first.'));
     process.exit(1);
   }
 

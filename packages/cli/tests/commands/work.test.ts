@@ -47,11 +47,11 @@ describe('ana work status', () => {
     execSync('git config user.email "test@test.com"', { cwd: tempDir, stdio: 'ignore' });
     execSync('git config user.name "Test"', { cwd: tempDir, stdio: 'ignore' });
 
-    // Create .ana/.meta.json
+    // Create .ana/ana.json
     const anaDir = path.join(tempDir, '.ana');
     await fs.mkdir(anaDir, { recursive: true });
     await fs.writeFile(
-      path.join(anaDir, '.meta.json'),
+      path.join(anaDir, 'ana.json'),
       JSON.stringify({ artifactBranch }),
       'utf-8'
     );
@@ -406,7 +406,7 @@ describe('ana work status', () => {
       expect(output).toContain('No active work');
     });
 
-    it('errors when no .meta.json exists', async () => {
+    it('errors when no ana.json exists', async () => {
       // Create temp dir with git but no .ana/
       execSync('git init', { cwd: tempDir, stdio: 'ignore' });
       execSync('git config user.email "test@test.com"', { cwd: tempDir, stdio: 'ignore' });
@@ -437,11 +437,11 @@ describe('ana work status', () => {
       execSync('git config user.email "test@test.com"', { cwd: tempDir, stdio: 'ignore' });
       execSync('git config user.name "Test"', { cwd: tempDir, stdio: 'ignore' });
 
-      // Create .ana/.meta.json
+      // Create .ana/ana.json
       const anaDir = path.join(tempDir, '.ana');
       await fs.mkdir(anaDir, { recursive: true });
       await fs.writeFile(
-        path.join(anaDir, '.meta.json'),
+        path.join(anaDir, 'ana.json'),
         JSON.stringify({ artifactBranch: 'main' }),
         'utf-8'
       );
@@ -666,7 +666,7 @@ describe('ana work status', () => {
         const anaDir = path.join(tempDir, '.ana');
         await fs.mkdir(anaDir, { recursive: true });
         await fs.writeFile(
-          path.join(anaDir, '.meta.json'),
+          path.join(anaDir, 'ana.json'),
           JSON.stringify({ artifactBranch: 'main' }),
           'utf-8'
         );
@@ -687,11 +687,11 @@ describe('ana work status', () => {
         execSync('git config user.email "test@test.com"', { cwd: tempDir, stdio: 'ignore' });
         execSync('git config user.name "Test"', { cwd: tempDir, stdio: 'ignore' });
 
-        // Create .ana/.meta.json
+        // Create .ana/ana.json
         const anaDir = path.join(tempDir, '.ana');
         await fs.mkdir(anaDir, { recursive: true });
         await fs.writeFile(
-          path.join(anaDir, '.meta.json'),
+          path.join(anaDir, 'ana.json'),
           JSON.stringify({ artifactBranch: 'main' }),
           'utf-8'
         );

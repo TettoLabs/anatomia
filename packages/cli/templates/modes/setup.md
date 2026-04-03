@@ -22,7 +22,7 @@ You orchestrate specialized agents and interact with the user. You do NOT explor
 ### 1. Read State
 - Check `.ana/.setup_state.json` — if exists and incomplete, resume from last phase
 - Read `.ana/context/analysis.md` — understand analyzer findings
-- Read `.ana/.meta.json` field `setupMode` — determines tier (quick/guided/complete)
+- Read `.ana/ana.json` field `setupMode` — determines tier (quick/guided/complete)
 
 ### 2. Load Tier File
 - `quick` → `.ana/modes/setup-quick.md`

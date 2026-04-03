@@ -26,7 +26,7 @@
  *   ├── plans/
  *   │   ├── active/               (in-progress work)
  *   │   └── completed/            (completed cycles)
- *   ├── .meta.json                (framework metadata)
+ *   ├── ana.json                   (framework metadata)
  *   └── .state/
  *       └── snapshot.json         (analyzer baseline)
  *
@@ -193,7 +193,7 @@ export const initCommand = new Command('init')
       await generateScaffolds(tmpAnaPath, analysisResult, cwd);
       await copyStaticFilesWithVerification(tmpAnaPath);
       await copyHookScripts(tmpAnaPath);
-      await createMetaJson(tmpAnaPath, analysisResult, setupMode);
+      await createAnaJson(tmpAnaPath, analysisResult, setupMode);
       await storeSnapshot(tmpAnaPath, analysisResult);
       await buildSymbolIndexSafe(cwd, tmpAnaPath);
       await writeCliPath(tmpAnaPath);
@@ -266,8 +266,8 @@ async function validateInitPreconditions(
   if (!options.force) {
     console.log(chalk.yellow('\n.ana/ directory already exists.\n'));
 
-    // Check .meta.json to provide better guidance
-    const metaPath = path.join(anaPath, '.meta.json');
+    // Check ana.json to provide better guidance
+    const metaPath = path.join(anaPath, 'ana.json');
     try {
       const metaContent = await fs.readFile(metaPath, 'utf-8');
       const meta = JSON.parse(metaContent);
@@ -282,7 +282,7 @@ async function validateInitPreconditions(
         console.log('  2. Recreate: ana init --force (preserves .state/)\n');
       }
     } catch {
-      // .meta.json missing or corrupted
+      // ana.json missing or corrupted
       console.log('Use --force to overwrite.\n');
     }
 
@@ -996,7 +996,7 @@ function getTemplatesDir(): string {
 }
 
 /**
- * Phase 7: Create .meta.json
+ * Phase 7: Create ana.json
  *
  * Creates framework metadata file with initial state:
  * - setupStatus: 'pending' (setup not run yet)
@@ -1008,12 +1008,12 @@ function getTemplatesDir(): string {
  * @param analysisResult - Analyzer result or null
  * @param setupMode - User-selected setup tier
  */
-async function createMetaJson(
+async function createAnaJson(
   tmpAnaPath: string,
   analysisResult: AnalysisResult | null,
   setupMode: string
 ): Promise<void> {
-  const spinner = ora('Creating .meta.json...').start();
+  const spinner = ora('Creating ana.json...').start();
 
   const analysis = analysisResult || createEmptyAnalysisResult();
 
@@ -1037,10 +1037,10 @@ async function createMetaJson(
     sessionCount: 0,
   };
 
-  const metaPath = path.join(tmpAnaPath, '.meta.json');
+  const metaPath = path.join(tmpAnaPath, 'ana.json');
   await fs.writeFile(metaPath, JSON.stringify(meta, null, 2), 'utf-8');
 
-  spinner.succeed('Created .meta.json');
+  spinner.succeed('Created ana.json');
 }
 
 /**
