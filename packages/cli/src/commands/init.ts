@@ -250,6 +250,7 @@ async function validateInitPreconditions(
       const anaJsonContent = await fs.readFile(anaJsonPath, 'utf-8');
       const config = JSON.parse(anaJsonContent);
 
+      // Backward compat: pre-S11 projects have setupStatus instead of setupMode
       if (config.setupMode === 'not_started' || config.setupStatus === 'pending') {
         console.log('Setup is incomplete. Options:\n');
         console.log('  1. Resume setup: `claude --agent ana-setup`');
