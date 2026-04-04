@@ -6,7 +6,7 @@ description: "Anatomia git workflow. Invoke when creating branches, committing c
 # Git Workflow — Anatomia
 
 ## Branching
-- All branches created from the artifact branch (configured in `.ana/.meta.json`).
+- All branches created from the artifact branch (configured in `.ana/ana.json`).
 - One branch per scope (single-spec) or per plan (multi-spec). Branch lives until all specs complete.
 - Naming: `feature/{slug}` — matches the plan directory slug.
 - Example: `feature/ana-status` → `.ana/plans/active/ana-status/`
@@ -20,7 +20,7 @@ description: "Anatomia git workflow. Invoke when creating branches, committing c
   - `[auth-migration:s2] Add data pipeline connectors`
 - One logical unit of work per commit. Not per file, not per spec. A logical unit: one thing done that makes sense on its own.
 - Tests should pass for whatever is committed.
-- Co-author trailer on every AnaBuild commit: The co-author trailer is defined in `.meta.json` `coAuthor` field. Use it for all commits and PR bodies.
+- Co-author trailer on every AnaBuild commit: The co-author trailer is defined in `ana.json` `coAuthor` field. Use it for all commits and PR bodies.
 
 ## Before Pushing
 ```bash
@@ -39,7 +39,7 @@ All three must pass. Not enforced by hooks — manual discipline. CI catches fai
   Spec: .ana/plans/active/{slug}/spec.md
   Build report: .ana/plans/active/{slug}/build_report.md
   ```
-- PR targets the artifact branch (see `.ana/.meta.json` `artifactBranch` field, default: `main`).
+- PR targets the artifact branch (see `.ana/ana.json` `artifactBranch` field, default: `main`).
 - CI must pass (GitHub Actions: Linux/Mac/Windows × Node 20/22).
 - Merge strategy: merge commit (not squash). Preserves commit history for bisect and forensics.
 

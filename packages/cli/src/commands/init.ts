@@ -12,7 +12,6 @@
  *   │   ├── run-check.sh
  *   │   └── subagent-verify.sh
  *   ├── context/
- *   │   ├── analysis.md           (generated from analyzer)
  *   │   ├── project-overview.md   (scaffold with 40% pre-pop)
  *   │   ├── architecture.md       (scaffold with 20% pre-pop)
  *   │   ├── patterns.md           (scaffold with 50% pre-pop)
@@ -26,8 +25,8 @@
  *   ├── plans/
  *   │   ├── active/               (in-progress work)
  *   │   └── completed/            (completed cycles)
- *   ├── .meta.json                (framework metadata)
- *   └── .state/
+ *   ├── ana.json                   (framework metadata)
+ *   └── state/
  *       └── snapshot.json         (analyzer baseline)
  *
  *   .claude/
@@ -61,9 +60,8 @@ import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
-import type { AnalysisResult } from '../engine/index.js';
-import { dirname } from 'node:path';
-import { formatAnalysisBrief } from '../utils/format-analysis-brief.js';
+import type { EngineResult } from '../engine/types/engineResult.js';
+
 import {
   generateProjectOverviewScaffold,
   generateArchitectureScaffold,
@@ -80,7 +78,6 @@ import {
   FRAMEWORK_SNIPPETS,
   AGENT_FILES,
   SKILL_DIRS,
-  META_VERSION,
 } from '../constants.js';
 import { buildSymbolIndex } from './index.js';
 
@@ -93,7 +90,7 @@ interface InitCommandOptions {
 /** Pre-flight validation result */
 interface PreflightResult {
   canProceed: boolean;
-  stateBackup?: string; // Path to .state/ backup if --force used
+  stateBackup?: string; // Path to state/ backup if --force used
 }
 
 /**
@@ -102,64 +99,45 @@ interface PreflightResult {
  * Used when analyzer fails or is skipped with --skip-analysis.
  * Scaffolds handle undefined optional fields gracefully.
  *
- * @returns Minimal valid AnalysisResult
+ * @returns Minimal valid EngineResult
  */
-function createEmptyAnalysisResult(): AnalysisResult {
+function createEmptyEngineResult(): EngineResult {
   return {
-    projectType: 'unknown',
-    framework: null,
-    confidence: { projectType: 0, framework: 0 },
-    indicators: { projectType: [], framework: [] },
-    detectedAt: new Date().toISOString(),
-    version: '0.0.0',
-  } as AnalysisResult;
-}
-
-/**
- * Ask for setup tier selection
- *
- * Prompts user to choose quick/guided/complete tier.
- * Defaults to guided for non-interactive environments.
- *
- * @param _options - Command options (unused)
- * @returns Selected setup tier
- */
-async function askSetupTier(_options: InitCommandOptions): Promise<string> {
-  // Default for non-interactive environments
-  if (!process.stdout.isTTY || !process.stdin.isTTY) {
-    return 'guided';
-  }
-
-  console.log(chalk.cyan('\nSetup tier:'));
-  console.log(chalk.gray('  1. Quick     — ~2 min, no questions, uses detected data only'));
-  console.log(chalk.gray('  2. Guided    — ~5 min, asks 5-7 questions to improve accuracy'));
-  console.log(chalk.gray('  3. Complete  — ~15 min, thorough Q&A for maximum accuracy'));
-  console.log();
-
-  // Simple stdin read for single character
-  const readline = await import('node:readline');
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-
-  const answer = await new Promise<string>((resolve) => {
-    rl.question(chalk.cyan('  Choose (1/2/3, default 2): '), (ans) => {
-      rl.close();
-      resolve(ans.trim());
-    });
-  });
-
-  const tierMap: Record<string, string> = { '1': 'quick', '2': 'guided', '3': 'complete' };
-  const setupMode = tierMap[answer] || 'guided';
-  console.log(chalk.green(`  → ${setupMode} tier selected\n`));
-
-  return setupMode;
+    overview: { project: 'unknown', scannedAt: new Date().toISOString(), depth: 'surface' },
+    stack: { language: null, framework: null, database: null, auth: null, testing: null, payments: null, workspace: null },
+    files: { source: 0, test: 0, config: 0, total: 0 },
+    structure: [],
+    structureOverflow: 0,
+    commands: { build: null, test: null, lint: null, dev: null, packageManager: 'npm' },
+    git: { head: null, branch: null, commitCount: null, lastCommitAt: null, uncommittedChanges: false, contributorCount: null },
+    monorepo: { isMonorepo: false, tool: null, packages: [] },
+    externalServices: [],
+    schemas: {},
+    secrets: { envFileExists: false, envExampleExists: false, gitignoreCoversEnv: false, hardcodedKeysFound: null, envVarReferences: null },
+    projectProfile: { type: null, maturity: null, teamSize: null, hasExternalAPIs: false, hasDatabase: false, hasBrowserUI: false, hasAuthSystem: false, hasPayments: false, hasFileStorage: false },
+    blindSpots: [],
+    deployment: null,
+    patterns: null,
+    conventions: null,
+    recommendations: null,
+    health: {},
+    readiness: {},
+  };
 }
 
 /** Create init command */
 export const initCommand = new Command('init')
   .description('Initialize .ana/ context framework')
-  .option('-f, --force', 'Overwrite existing .ana/ (preserves .state/)')
+  .option('-f, --force', 'Overwrite existing .ana/ (preserves state/)')
   .option('--skip-analysis', 'Skip analyzer, create empty scaffolds')
-  .action(async (options: InitCommandOptions) => {
+  .action(async (options: InitCommandOptions, command: Command) => {
+    // Reject positional arguments (init operates on cwd)
+    if (command.args.length > 0) {
+      console.error(chalk.red(`Error: ana init does not accept a path argument.`));
+      console.error(chalk.gray('cd into the project directory and run: ana init'));
+      process.exit(1);
+    }
+
     const cwd = process.cwd();
     const anaPath = path.join(cwd, '.ana');
 
@@ -169,9 +147,6 @@ export const initCommand = new Command('init')
       return; // Exit already handled in validation
     }
 
-    // Ask for setup tier (before Phase 2)
-    const setupMode = await askSetupTier(options);
-
     // Phase 2-9: Atomic operation
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ana-init-'));
     const tmpAnaPath = path.join(tmpDir, '.ana');
@@ -180,28 +155,29 @@ export const initCommand = new Command('init')
       // Set ASTCache to write to temp directory during analysis
       // (prevents creating .ana/ in project root before atomic rename)
       const { ASTCache } = await import('../engine/index.js');
-      const tmpCacheDir = path.join(tmpAnaPath, '.state', 'cache');
+      const tmpCacheDir = path.join(tmpAnaPath, 'state', 'cache');
       ASTCache.setCacheDir(tmpCacheDir);
 
       // All operations in temp directory
-      const analysisResult = await runAnalyzer(cwd, options);
+      const scanStart = Date.now();
+      const engineResult = await runAnalyzer(cwd, options);
 
       // Reset cache override after analysis
       ASTCache.setCacheDir(null);
       await createDirectoryStructure(tmpAnaPath);
-      await generateAnalysisMd(tmpAnaPath, analysisResult, cwd);
-      await generateScaffolds(tmpAnaPath, analysisResult, cwd);
+      await generateScaffolds(tmpAnaPath, engineResult, cwd);
       await copyStaticFilesWithVerification(tmpAnaPath);
       await copyHookScripts(tmpAnaPath);
-      await createMetaJson(tmpAnaPath, analysisResult, setupMode);
-      await storeSnapshot(tmpAnaPath, analysisResult);
+      await saveScanJson(tmpAnaPath, engineResult);
+      await createAnaJson(tmpAnaPath, engineResult);
+      await storeSnapshot(tmpAnaPath, engineResult);
       await buildSymbolIndexSafe(cwd, tmpAnaPath);
       await writeCliPath(tmpAnaPath);
 
-      // Restore .state/ if --force was used
+      // Restore state/ if --force was used
       if (preflight.stateBackup) {
-        // Remove empty .state/ created by Phase 3
-        const stateDir = path.join(tmpAnaPath, '.state');
+        // Remove empty state/ created by Phase 3
+        const stateDir = path.join(tmpAnaPath, 'state');
         await fs.rm(stateDir, { recursive: true, force: true });
         // Move backup into place
         await fs.rename(preflight.stateBackup, stateDir);
@@ -211,10 +187,12 @@ export const initCommand = new Command('init')
       await atomicRename(tmpAnaPath, anaPath);
 
       // Create .claude/ configuration (outside temp directory - handles merge)
-      await createClaudeConfiguration(cwd);
+      await createClaudeConfiguration(cwd, engineResult);
 
       // Display success
-      displaySuccessMessage(analysisResult);
+      const scanTime = ((Date.now() - scanStart) / 1000).toFixed(1);
+      const projectName = await getProjectName(cwd);
+      displaySuccessMessage(engineResult, projectName, scanTime);
     } catch (error) {
       // FAILURE: Cleanup temp, no changes made
       await fs.rm(tmpDir, { recursive: true, force: true });
@@ -233,7 +211,7 @@ export const initCommand = new Command('init')
  * Checks:
  * - Directory exists and is readable
  * - .ana/ doesn't exist OR --force provided
- * - If --force: backup .state/ for preservation
+ * - If --force: backup state/ for preservation
  *
  * @param anaPath - Path to .ana/ directory
  * @param options - Command options
@@ -266,38 +244,39 @@ async function validateInitPreconditions(
   if (!options.force) {
     console.log(chalk.yellow('\n.ana/ directory already exists.\n'));
 
-    // Check .meta.json to provide better guidance
-    const metaPath = path.join(anaPath, '.meta.json');
+    // Check ana.json to provide better guidance
+    const anaJsonPath = path.join(anaPath, 'ana.json');
     try {
-      const metaContent = await fs.readFile(metaPath, 'utf-8');
-      const meta = JSON.parse(metaContent);
+      const anaJsonContent = await fs.readFile(anaJsonPath, 'utf-8');
+      const config = JSON.parse(anaJsonContent);
 
-      if (meta.setupStatus === 'pending') {
+      // Backward compat: pre-S11 projects have setupStatus instead of setupMode
+      if (config.setupMode === 'not_started' || config.setupStatus === 'pending') {
         console.log('Setup is incomplete. Options:\n');
         console.log('  1. Resume setup: `claude --agent ana-setup`');
         console.log('  2. Start over: ana init --force\n');
-      } else if (meta.setupStatus === 'complete') {
+      } else if (config.setupMode === 'complete' || config.setupStatus === 'complete') {
         console.log('Framework already set up. Options:\n');
         console.log('  1. Keep current: Do nothing');
-        console.log('  2. Recreate: ana init --force (preserves .state/)\n');
+        console.log('  2. Recreate: ana init --force (preserves state/)\n');
       }
     } catch {
-      // .meta.json missing or corrupted
+      // ana.json missing or corrupted
       console.log('Use --force to overwrite.\n');
     }
 
     process.exit(0);
   }
 
-  // --force provided: backup .state/ before deletion
-  const statePath = path.join(anaPath, '.state');
+  // --force provided: backup state/ before deletion
+  const statePath = path.join(anaPath, 'state');
   let stateBackup: string | undefined;
 
   if (await dirExists(statePath)) {
     const timestamp = Date.now();
     stateBackup = path.join(os.tmpdir(), `.ana-state-backup-${timestamp}`);
 
-    console.log(chalk.gray('Backing up .state/ directory...'));
+    console.log(chalk.gray('Backing up state/ directory...'));
     await fs.cp(statePath, stateBackup, { recursive: true });
   }
 
@@ -333,12 +312,12 @@ async function dirExists(dirPath: string): Promise<boolean> {
  *
  * @param rootPath - Project root directory
  * @param options - Command options
- * @returns AnalysisResult or null if failed/skipped
+ * @returns EngineResult or null if failed/skipped
  */
 async function runAnalyzer(
   rootPath: string,
   options: InitCommandOptions
-): Promise<AnalysisResult | null> {
+): Promise<EngineResult | null> {
   // Skip if --skip-analysis flag
   if (options.skipAnalysis) {
     console.log(chalk.gray('\nSkipping analyzer (--skip-analysis flag)'));
@@ -349,38 +328,13 @@ async function runAnalyzer(
   const spinner = ora('Analyzing project...').start();
 
   try {
-    // Use the new engine's analyzeProject() — runs deep for init (Decision 13)
     const { analyzeProject } = await import('../engine/analyze.js');
     const engineResult = await analyzeProject(rootPath, { depth: 'deep' });
 
-    // Map EngineResult back to AnalysisResult shape for downstream consumers
-    // This adapter is temporary — removed in S11 when init is redesigned
-    const result: AnalysisResult = {
-      projectType: engineResult.stack.language
-        ? Object.entries({
-            'Node.js': 'node', 'Python': 'python', 'Go': 'go', 'Rust': 'rust',
-            'Ruby': 'ruby', 'PHP': 'php', 'TypeScript': 'node',
-          }).find(([display]) => display === engineResult.stack.language)?.[1] || 'unknown'
-        : 'unknown',
-      framework: engineResult.stack.framework
-        ? Object.entries({
-            'Next.js': 'nextjs', 'React': 'react', 'Vue': 'vue', 'Express': 'express',
-            'NestJS': 'nestjs', 'FastAPI': 'fastapi', 'Django': 'django', 'Flask': 'flask',
-            'Rails': 'rails', 'Svelte': 'svelte', 'Angular': 'angular',
-          }).find(([display]) => display === engineResult.stack.framework)?.[1] || engineResult.stack.framework.toLowerCase()
-        : null,
-      confidence: { projectType: 0.9, framework: engineResult.stack.framework ? 0.9 : 0 },
-      indicators: { projectType: [], framework: [] },
-      detectedAt: engineResult.overview.scannedAt,
-      version: '0.2.0',
-      patterns: engineResult.patterns || undefined,
-      conventions: engineResult.conventions || undefined,
-    };
-
     spinner.succeed('Analysis complete');
-    displayDetectionSummary(result);
+    displayDetectionSummary(engineResult);
 
-    return result;
+    return engineResult;
   } catch (error) {
     spinner.warn('Analyzer failed — continuing with empty scaffolds');
     console.log(chalk.yellow('  Setup will work but scaffolds will have no pre-populated data'));
@@ -398,38 +352,24 @@ async function runAnalyzer(
  * Display detection summary after analysis
  * @param result
  */
-function displayDetectionSummary(result: AnalysisResult): void {
+function displayDetectionSummary(result: EngineResult): void {
   console.log();
 
-  // Framework
-  if (result.framework) {
-    console.log(chalk.bold('  Framework: ') + chalk.cyan(result.framework));
-  } else {
-    console.log(chalk.gray('  Framework: None detected'));
+  // Stack
+  const stackParts = [result.stack.language, result.stack.framework, result.stack.database, result.stack.auth, result.stack.testing].filter(Boolean);
+  if (stackParts.length > 0) {
+    console.log(chalk.bold('  Stack: ') + chalk.cyan(stackParts.join(' · ')));
   }
 
-  // Patterns
-  if (result.patterns) {
-    const detectedPatterns: string[] = [];
-    if (result.patterns.errorHandling) detectedPatterns.push('error handling');
-    if (result.patterns.validation) detectedPatterns.push('validation');
-    if (result.patterns.database) detectedPatterns.push('database');
-    if (result.patterns.auth) detectedPatterns.push('auth');
-    if (result.patterns.testing) detectedPatterns.push('testing');
-
-    if (detectedPatterns.length > 0) {
-      console.log(chalk.bold('  Patterns: ') + detectedPatterns.join(', '));
-    }
+  // Services
+  if (result.externalServices.length > 0) {
+    const names = result.externalServices.map(s => s.name).join(', ');
+    console.log(chalk.bold('  Services: ') + names);
   }
 
-  // Conventions (sample)
-  if (result.conventions?.naming?.functions) {
-    const funcNaming = result.conventions.naming.functions;
-    console.log(
-      chalk.bold('  Conventions: ') +
-        `${funcNaming.majority} functions` +
-        (funcNaming.mixed ? chalk.gray(' (mixed)') : '')
-    );
+  // Deployment
+  if (result.deployment) {
+    console.log(chalk.bold('  Deploy: ') + result.deployment.platform);
   }
 
   console.log();
@@ -444,7 +384,7 @@ function displayDetectionSummary(result: AnalysisResult): void {
  * - context/setup/
  * - context/setup/steps/
  * - context/setup/framework-snippets/
- * - .state/
+ * - state/
  *
  * @param tmpAnaPath - Path to temp .ana/ directory
  */
@@ -460,7 +400,7 @@ async function createDirectoryStructure(tmpAnaPath: string): Promise<void> {
   await fs.mkdir(path.join(tmpAnaPath, 'docs'), { recursive: true });
   await fs.mkdir(path.join(tmpAnaPath, 'plans/active'), { recursive: true });
   await fs.mkdir(path.join(tmpAnaPath, 'plans/completed'), { recursive: true });
-  await fs.mkdir(path.join(tmpAnaPath, '.state'), { recursive: true });
+  await fs.mkdir(path.join(tmpAnaPath, 'state'), { recursive: true });
 
   // Create .gitkeep files for empty plan directories
   await fs.writeFile(path.join(tmpAnaPath, 'plans/active/.gitkeep'), '', 'utf-8');
@@ -468,7 +408,7 @@ async function createDirectoryStructure(tmpAnaPath: string): Promise<void> {
 
   // Create .gitignore for runtime state files
   const gitignoreContent = `# Anatomia runtime state — local to each developer
-.state/
+state/
 .setup_qa_log.md
 .setup_exploration.md
 .setup_verification.md
@@ -481,54 +421,23 @@ async function createDirectoryStructure(tmpAnaPath: string): Promise<void> {
 }
 
 /**
- * Phase 4: Generate analysis.md
- *
- * Calls formatAnalysisBrief() and writes to context/analysis.md
- *
- * @param tmpAnaPath - Temp .ana/ path
- * @param analysisResult - Analyzer result or null
- * @param _cwd - Project root (unused)
- */
-async function generateAnalysisMd(
-  tmpAnaPath: string,
-  analysisResult: AnalysisResult | null,
-  _cwd: string
-): Promise<void> {
-  const spinner = ora('Generating analysis.md...').start();
-
-  // Use empty result if analyzer failed
-  const analysis = analysisResult || createEmptyAnalysisResult();
-
-  // Generate markdown
-  const markdown = formatAnalysisBrief(analysis);
-
-  // Write to context/analysis.md
-  const analysisPath = path.join(tmpAnaPath, 'context/analysis.md');
-  await fs.writeFile(analysisPath, markdown, 'utf-8');
-
-  // Display file size
-  const lines = markdown.split('\n').length;
-  spinner.succeed(`Generated analysis.md (${lines} lines)`);
-}
-
-/**
  * Phase 5: Generate scaffolds
  *
  * Calls all 7 scaffold generators and writes files.
  *
  * @param tmpAnaPath - Temp .ana/ path
- * @param analysisResult - Analyzer result or null
+ * @param engineResult - Engine result or null
  * @param cwd - Project root (for projectName)
  */
 async function generateScaffolds(
   tmpAnaPath: string,
-  analysisResult: AnalysisResult | null,
+  engineResult: EngineResult | null,
   cwd: string
 ): Promise<void> {
   const spinner = ora('Generating scaffolds...').start();
 
   // Use empty result if analyzer failed
-  const analysis = analysisResult || createEmptyAnalysisResult();
+  const analysis = engineResult || createEmptyEngineResult();
 
   // Get metadata
   const projectName = await getProjectName(cwd);
@@ -721,8 +630,9 @@ async function copyHookScripts(tmpAnaPath: string): Promise<void> {
  * Agent/skill files are copied without overwriting existing ones (merge-not-overwrite).
  *
  * @param cwd - Project root directory
+ * @param engineResult - Engine result for skill seeding (null if skipped)
  */
-async function createClaudeConfiguration(cwd: string): Promise<void> {
+async function createClaudeConfiguration(cwd: string, engineResult: EngineResult | null): Promise<void> {
   const spinner = ora('Creating .claude/ configuration...').start();
 
   const claudePath = path.join(cwd, '.claude');
@@ -750,6 +660,11 @@ async function createClaudeConfiguration(cwd: string): Promise<void> {
 
     // Copy all skill files
     await copySkillFiles(skillsPath, templatesDir);
+
+    // Seed skills with detected data
+    if (engineResult) {
+      await seedSkillFiles(skillsPath, engineResult);
+    }
 
     // Copy CLAUDE.md to project root
     await copyClaudeMd(cwd, templatesDir);
@@ -797,6 +712,11 @@ async function createClaudeConfiguration(cwd: string): Promise<void> {
 
   // Copy skill files (merge-not-overwrite)
   await copySkillFiles(skillsPath, templatesDir);
+
+  // Seed skills with detected data
+  if (engineResult) {
+    await seedSkillFiles(skillsPath, engineResult);
+  }
 
   // Copy CLAUDE.md to project root (merge-not-overwrite)
   await copyClaudeMd(cwd, templatesDir);
@@ -857,6 +777,117 @@ async function copySkillFiles(skillsPath: string, templatesDir: string): Promise
     // Copy with verification
     const sourcePath = path.join(templatesDir, '.claude/skills', skillDir, 'SKILL.md');
     await copyAndVerifyFile(sourcePath, destPath, `.claude/skills/${skillDir}/SKILL.md`);
+  }
+}
+
+/**
+ * Seed skill files with detected data from EngineResult
+ *
+ * Reads each copied skill template, injects a ## Detected section
+ * below the YAML frontmatter, writes back. Only enriches, never creates.
+ *
+ * @param skillsDir - Path to .claude/skills/ directory
+ * @param result - EngineResult from engine
+ */
+async function seedSkillFiles(skillsDir: string, result: EngineResult): Promise<void> {
+  const seeds: Record<string, string[]> = {};
+
+  // coding-standards
+  const codingLines: string[] = [];
+  if (result.stack?.language) {
+    codingLines.push(`- Language: ${result.stack.language}${result.stack.framework ? ` with ${result.stack.framework}` : ''}`);
+  }
+  if (result.conventions?.naming?.functions) {
+    const f = result.conventions.naming.functions;
+    codingLines.push(`- Functions: ${f.majority}${f.confidence ? ` (${(f.confidence * 100).toFixed(0)}% confidence)` : ''}`);
+  }
+  if (result.conventions?.naming?.files) {
+    codingLines.push(`- Files: ${result.conventions.naming.files.majority}`);
+  }
+  if (result.conventions?.imports) {
+    codingLines.push(`- Imports: ${result.conventions.imports.style}`);
+  }
+  if (result.conventions?.indentation) {
+    const i = result.conventions.indentation;
+    codingLines.push(`- Indentation: ${i.width ? `${i.width} ` : ''}${i.style}`);
+  }
+  if (result.patterns?.validation && !('patterns' in result.patterns.validation)) {
+    codingLines.push(`- Validation: ${result.patterns.validation.library}`);
+  }
+  if (codingLines.length > 0) seeds['coding-standards'] = codingLines;
+
+  // testing-standards
+  const testingLines: string[] = [];
+  if (result.stack?.testing) testingLines.push(`- Framework: ${result.stack.testing}`);
+  if (result.commands?.test) testingLines.push(`- Test command: \`${result.commands.test}\``);
+  if (result.files?.test !== undefined) testingLines.push(`- Test files: ${result.files.test}`);
+  if (testingLines.length > 0) seeds['testing-standards'] = testingLines;
+
+  // git-workflow
+  const gitLines: string[] = [];
+  if (result.git?.branch) gitLines.push(`- Default branch: ${result.git.branch}`);
+  if (result.git?.commitCount) gitLines.push(`- Commits: ${result.git.commitCount}`);
+  if (result.git?.contributorCount) gitLines.push(`- Contributors: ${result.git.contributorCount}`);
+  gitLines.push('- Co-author: read from `ana.json` coAuthor field');
+  if (gitLines.length > 1) seeds['git-workflow'] = gitLines; // more than just coAuthor line
+
+  // deployment
+  const deployLines: string[] = [];
+  if (result.deployment?.platform) {
+    deployLines.push(`- Platform: ${result.deployment.platform}${result.deployment.configFile ? ` (${result.deployment.configFile})` : ''}`);
+  }
+  if (result.commands?.build) deployLines.push(`- Build command: \`${result.commands.build}\``);
+  if (deployLines.length > 0) seeds['deployment'] = deployLines;
+
+  // logging-standards
+  const loggingLines: string[] = [];
+  const monitoringServices = result.externalServices?.filter(s =>
+    s.category === 'monitoring' || s.category === 'observability' || s.category === 'analytics'
+  ) || [];
+  for (const svc of monitoringServices) {
+    loggingLines.push(`- ${svc.category}: ${svc.name}${svc.configFound ? ' (config found)' : ''}`);
+  }
+  if (loggingLines.length > 0) seeds['logging-standards'] = loggingLines;
+
+  // design-principles — skip entirely (100% human philosophy)
+
+  // Inject ## Detected sections
+  for (const [skillName, lines] of Object.entries(seeds)) {
+    const filePath = path.join(skillsDir, skillName, 'SKILL.md');
+    try {
+      let content = await fs.readFile(filePath, 'utf-8');
+
+      // Skip if already seeded (prevent duplicate ## Detected on reinit)
+      if (content.includes('## Detected')) continue;
+
+      const detectedSection = `\n## Detected\n${lines.join('\n')}\n`;
+
+      // Find end of YAML frontmatter (second ---)
+      const fmEnd = content.indexOf('---', content.indexOf('---') + 3);
+      if (fmEnd !== -1) {
+        const insertPos = content.indexOf('\n', fmEnd) + 1;
+        content = content.slice(0, insertPos) + detectedSection + content.slice(insertPos);
+      }
+
+      // For testing-standards: replace commented Commands section with real commands
+      if (skillName === 'testing-standards') {
+        const commandsBlock = `\n## Commands\n\`\`\`bash\n# Build\n${result.commands?.build || 'your-build-command'}\n\n# Test (non-watch mode)\n${result.commands?.test || 'your-test-command'}\n\n# Lint (all source)\n${result.commands?.lint || 'your-lint-command'}\n\`\`\`\n`;
+
+        // Replace the HTML-commented Commands section
+        const cmdCommentStart = content.indexOf('## Commands');
+        if (cmdCommentStart !== -1) {
+          // Find the end of the commented block (closing -->)
+          const commentEnd = content.indexOf('-->', cmdCommentStart);
+          if (commentEnd !== -1) {
+            content = content.slice(0, cmdCommentStart) + commandsBlock.trim() + '\n' + content.slice(commentEnd + 3).trimStart();
+          }
+        }
+      }
+
+      await fs.writeFile(filePath, content, 'utf-8');
+    } catch {
+      // File doesn't exist (was skipped in merge-not-overwrite) — skip seeding
+    }
   }
 }
 
@@ -996,72 +1027,83 @@ function getTemplatesDir(): string {
 }
 
 /**
- * Phase 7: Create .meta.json
- *
- * Creates framework metadata file with initial state:
- * - setupStatus: 'pending' (setup not run yet)
- * - setupMode: from user selection
- * - framework: from analyzer
- * - analyzerVersion: from analyzer
+ * Save scan.json — full EngineResult for agent consumption
  *
  * @param tmpAnaPath - Temp .ana/ path
- * @param analysisResult - Analyzer result or null
- * @param setupMode - User-selected setup tier
+ * @param engineResult - Engine result or null
  */
-async function createMetaJson(
+async function saveScanJson(
   tmpAnaPath: string,
-  analysisResult: AnalysisResult | null,
-  setupMode: string
+  engineResult: EngineResult | null
 ): Promise<void> {
-  const spinner = ora('Creating .meta.json...').start();
-
-  const analysis = analysisResult || createEmptyAnalysisResult();
-
-  const meta = {
-    version: META_VERSION,
-    createdAt: new Date().toISOString(),
-    artifactBranch: 'main',
-    commands: {
-      build: 'npm run build',
-      test: 'npm test',
-      lint: 'npm run lint'
-    },
-    coAuthor: 'Ana <build@anatomia.dev>',
-    setupStatus: 'pending',
-    setupCompletedAt: null,
-    setupMode,
-    framework: analysis.framework,
-    analyzerVersion: analysis.version,
-    lastEvolve: null,
-    lastHealth: null,
-    sessionCount: 0,
-  };
-
-  const metaPath = path.join(tmpAnaPath, '.meta.json');
-  await fs.writeFile(metaPath, JSON.stringify(meta, null, 2), 'utf-8');
-
-  spinner.succeed('Created .meta.json');
+  if (!engineResult) return;
+  const spinner = ora('Saving scan.json...').start();
+  const scanPath = path.join(tmpAnaPath, 'scan.json');
+  await fs.writeFile(scanPath, JSON.stringify(engineResult, null, 2), 'utf-8');
+  spinner.succeed('Saved scan.json');
 }
 
 /**
- * Phase 8: Store analyzer snapshot
+ * Phase 7: Create ana.json
  *
- * Stores raw AnalysisResult to .state/snapshot.json.
- * Used by `ana diff` (STEP 3) as baseline for detecting drift.
+ * Creates project config with detected data:
+ * - commands from EngineResult (not hardcoded)
+ * - package manager, framework, language
+ * - setupMode: 'not_started' (setup sets the real mode when it runs)
  *
  * @param tmpAnaPath - Temp .ana/ path
- * @param analysisResult - Analyzer result or null
+ * @param engineResult - Engine result or null
+ */
+async function createAnaJson(
+  tmpAnaPath: string,
+  engineResult: EngineResult | null
+): Promise<void> {
+  const spinner = ora('Creating ana.json...').start();
+
+  const result = engineResult || createEmptyEngineResult();
+
+  const anaConfig = {
+    name: result.overview.project,
+    framework: result.stack.framework || null,
+    language: result.stack.language || null,
+    packageManager: result.commands.packageManager,
+    commands: {
+      build: result.commands.build || null,
+      test: result.commands.test || null,
+      lint: result.commands.lint || null,
+      dev: result.commands.dev || null,
+    },
+    coAuthor: 'Ana <build@anatomia.dev>',
+    artifactBranch: result.git?.branch || 'main',
+    setupMode: 'not_started',
+    scanStaleDays: 7,
+  };
+
+  const anaJsonPath = path.join(tmpAnaPath, 'ana.json');
+  await fs.writeFile(anaJsonPath, JSON.stringify(anaConfig, null, 2), 'utf-8');
+
+  spinner.succeed('Created ana.json');
+}
+
+/**
+ * Phase 8: Store engine snapshot
+ *
+ * Stores full EngineResult to state/snapshot.json.
+ * Used by `ana diff` as baseline for detecting drift.
+ *
+ * @param tmpAnaPath - Temp .ana/ path
+ * @param engineResult - Engine result or null
  */
 async function storeSnapshot(
   tmpAnaPath: string,
-  analysisResult: AnalysisResult | null
+  engineResult: EngineResult | null
 ): Promise<void> {
   const spinner = ora('Storing analyzer snapshot...').start();
 
-  const analysis = analysisResult || createEmptyAnalysisResult();
+  const result = engineResult || createEmptyEngineResult();
 
-  const snapshotPath = path.join(tmpAnaPath, '.state/snapshot.json');
-  await fs.writeFile(snapshotPath, JSON.stringify(analysis, null, 2), 'utf-8');
+  const snapshotPath = path.join(tmpAnaPath, 'state/snapshot.json');
+  await fs.writeFile(snapshotPath, JSON.stringify(result, null, 2), 'utf-8');
 
   spinner.succeed('Stored analyzer snapshot');
 }
@@ -1073,13 +1115,13 @@ async function storeSnapshot(
  * will fall back to file-only checks.
  *
  * @param cwd - Project root directory
- * @param tmpAnaPath - Temp .ana/ path (writes to .state/)
+ * @param tmpAnaPath - Temp .ana/ path (writes to state/)
  */
 async function buildSymbolIndexSafe(cwd: string, tmpAnaPath: string): Promise<void> {
   const spinner = ora('Building symbol index...').start();
 
   try {
-    const statePath = path.join(tmpAnaPath, '.state');
+    const statePath = path.join(tmpAnaPath, 'state');
     const index = await buildSymbolIndex(cwd, statePath);
     spinner.succeed(`Symbol index built (${index.symbols.length} symbols from ${index.files_parsed} files)`);
   } catch (error) {
@@ -1100,13 +1142,13 @@ async function buildSymbolIndexSafe(cwd: string, tmpAnaPath: string): Promise<vo
  * @param tmpAnaPath - Temp .ana/ path
  */
 async function writeCliPath(tmpAnaPath: string): Promise<void> {
-  const stateDir = path.join(tmpAnaPath, '.state');
+  const stateDir = path.join(tmpAnaPath, 'state');
   await fs.mkdir(stateDir, { recursive: true });
 
   // Get CLI entry point path (handles both dev and built contexts)
   // import.meta.url points to the currently executing file
   const moduleUrl = fileURLToPath(import.meta.url);
-  const moduleDir = dirname(moduleUrl);
+  const moduleDir = path.dirname(moduleUrl);
 
   // In bundled context: dist/index.js → dist/index.js is the entry
   // In dev context: src/commands/init.ts → go up to find index.ts
@@ -1157,26 +1199,61 @@ async function atomicRename(tmpAnaPath: string, anaPath: string): Promise<void> 
  *
  * Shows what was created and next steps.
  *
- * @param _analysisResult - Analyzer result (unused)
+ * @param engineResult - Engine result (null if skipped)
+ * @param projectName - Project name
+ * @param scanTime - Scan duration in seconds
  */
-function displaySuccessMessage(_analysisResult: AnalysisResult | null): void {
-  console.log(chalk.green('\n✅ .ana/ framework initialized\n'));
+function displaySuccessMessage(engineResult: EngineResult | null, projectName: string, scanTime: string): void {
+  console.log('');
 
-  console.log(chalk.bold('Created:'));
-  console.log('  • 7 context scaffolds (with analyzer data)');
-  console.log('  • 9 agents — Ana, AnaPlan, AnaBuild, AnaVerify, Setup + 4 sub-agents (.claude/agents/)');
-  console.log('  • 6 team-editable skills (.claude/skills/)');
-  console.log('  • SCHEMAS.md artifact reference (.ana/docs/)');
-  console.log('  • Plan directories (.ana/plans/)');
-  console.log('  • Hook scripts (.ana/hooks/)');
-  console.log('  • CLAUDE.md entry point');
-  console.log();
+  if (engineResult) {
+    console.log(chalk.green(`✓ Scanned ${projectName}`) + chalk.gray(` (${scanTime}s)`));
+    console.log('');
 
-  console.log(chalk.bold('Next: ') + 'Complete setup in Claude Code:');
-  console.log(chalk.cyan('  claude --agent ana-setup'));
-  console.log();
+    // Stack
+    const stackParts: string[] = [];
+    if (engineResult.stack.language) stackParts.push(engineResult.stack.language);
+    if (engineResult.stack.framework) stackParts.push(engineResult.stack.framework);
+    if (engineResult.stack.database) {
+      let db = engineResult.stack.database;
+      const prismaSchema = engineResult.schemas?.prisma;
+      if (prismaSchema?.found && prismaSchema.modelCount) {
+        db += ` (${prismaSchema.modelCount} models)`;
+      }
+      stackParts.push(db);
+    }
+    if (engineResult.stack.auth) stackParts.push(engineResult.stack.auth);
+    if (engineResult.stack.testing) stackParts.push(engineResult.stack.testing);
+    if (stackParts.length > 0) {
+      console.log(`  ${chalk.bold('Stack:')}   ${stackParts.join(' · ')}`);
+    }
 
-  console.log(chalk.gray('Setup fills your context files through codebase exploration and targeted questions (~5-15 min).'));
-  console.log(chalk.gray('After setup: claude --agent ana'));
-  console.log();
+    // Services (exclude things already in stack)
+    const serviceNames = engineResult.externalServices
+      .filter(s => !stackParts.some(p => p.includes(s.name)))
+      .map(s => s.name);
+    if (serviceNames.length > 0) {
+      console.log(`  ${chalk.bold('Services:')} ${serviceNames.join(', ')}`);
+    }
+
+    // Deploy
+    if (engineResult.deployment?.platform) {
+      console.log(`  ${chalk.bold('Deploy:')}  ${engineResult.deployment.platform}`);
+    }
+
+    console.log('');
+  }
+
+  console.log(chalk.green('✓ Context generated → .ana/context/ (7 files)'));
+  if (engineResult) {
+    console.log(chalk.green('✓ Skills seeded → .claude/skills/ (6 files)'));
+    console.log(chalk.green('✓ Scan saved → .ana/scan.json'));
+  }
+  console.log(chalk.green('✓ Config written → .ana/ana.json'));
+  console.log('');
+  console.log('  Your AI now knows your project. Next:');
+  console.log(chalk.cyan('    claude --agent ana') + '    Start working with Ana');
+  console.log(chalk.cyan('    ana scan') + '              Refresh project intelligence');
+  console.log(chalk.cyan('    ana setup') + '             Deepen context with your knowledge');
+  console.log('');
 }

@@ -1,165 +1,80 @@
-# Anatomia CLI
+# Anatomia
 
-Auto-generated AI context framework for codebases.
+Verified AI development. Ship with proof.
 
-## Installation
-
-```bash
-npm install -g anatomia-cli
-```
+Anatomia is a CLI that makes AI coding agents reliable. It scans your project, generates context, and runs every change through a four-agent pipeline with mechanical verification. Every feature ships with proof that it works.
 
 ## Quick Start
 
 ```bash
-# Initialize framework in your project
-cd your-project/
-ana init
-
-# Run setup in Claude Code
-# Reference: @.ana/modes/setup.md
-
-# Validate setup
-ana setup complete
-
-# Use framework
-# Reference: @.ana/ENTRY.md
+npx anatomia-cli scan .       # See what Ana detects
+npx anatomia-cli init         # Initialize project context
+claude --agent ana             # Start working with Ana
 ```
+
+## What It Does
+
+**Scan** reads your project — framework, database, auth, testing, services, conventions, patterns — and produces structured intelligence that agents consume.
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│  ana scan                                                           │
+│  my-saas-app                                        2026-04-03 12:00│
+└─────────────────────────────────────────────────────────────────────┘
+
+  Stack
+  ─────
+  Language     TypeScript
+  Framework    Next.js
+  Database     Prisma → PostgreSQL (23 models)
+  Auth         Clerk
+  Testing      Vitest
+
+  Services: Stripe, Supabase, Resend, Sentry, PostHog
+  Deploy:   Vercel
+```
+
+**Init** writes that intelligence to files agents already know how to read: `scan.json` for structured data, context files for human-readable summaries, skills for team standards.
+
+**The Pipeline** runs every change through four stages:
+
+| Stage | Agent | Produces |
+|-------|-------|----------|
+| **Think** | Ana | Scope — what and why |
+| **Plan** | AnaPlan | Spec + Contract — how, with assertions |
+| **Build** | AnaBuild | Code + Tests — tagged to contract |
+| **Verify** | AnaVerify | Proof — pass/fail per assertion |
+
+**Contracts** are the key. AnaPlan writes assertions ("the status command returns valid JSON", "the error handler logs to Sentry"). AnaBuild tags tests to assertions. AnaVerify checks each one independently.
+
+**Proof** is the artifact. Every pipeline run produces a verification report: which assertions passed, which failed, what the verifier found. The proof chain accumulates across features. Your project has a mechanical audit trail of every AI-assisted change.
 
 ## Commands
 
-### `ana init`
+| Command | Description |
+|---------|-------------|
+| `ana scan .` | Detect project stack, patterns, conventions |
+| `ana scan . --deep` | Include pattern and convention analysis |
+| `ana init` | Initialize `.ana/` context and `.claude/` agents |
+| `ana work status` | Show pipeline state for active work |
+| `ana artifact save` | Save pipeline artifacts with validation |
+| `ana verify pre-check` | Run contract pre-check before verification |
+| `ana proof <slug>` | Display proof chain for completed work |
+| `ana pr create <slug>` | Create PR from verified build |
 
-Initialize .ana/ context framework with analyzer-driven scaffolds.
+## Works With
 
-**Options:**
-- `-f, --force` - Overwrite existing .ana/ (preserves .state/)
-- `--skip-analysis` - Skip analyzer, create empty scaffolds
+Built for [Claude Code](https://docs.anthropic.com/en/docs/claude-code). Agents are Claude Code agent definitions (`.claude/agents/`). Skills are Claude Code skill files (`.claude/skills/`).
 
-**What it creates:**
-- `analysis.md` - Auto-generated analysis brief
-- 7 context scaffolds - Pre-populated with analyzer data
-- 7 mode files - Work modes for different tasks
-- Setup files - First-run setup experience
-- `.meta.json` - Framework metadata
-- `.state/snapshot.json` - Analyzer baseline for drift detection
-
-**Does NOT create:** `ENTRY.md` (created by `ana setup complete` after setup)
-
-**Examples:**
+## Development
 
 ```bash
-# First time setup
-ana init
-
-# Recreate (preserves .state/)
-ana init --force
-
-# Skip analyzer (faster, empty scaffolds)
-ana init --skip-analysis
+git clone https://github.com/TettoLabs/anatomia.git
+cd anatomia
+pnpm install
+pnpm build
+pnpm --filter anatomia-cli test -- --run
 ```
-
-### `ana setup complete`
-
-Validate context files and generate ENTRY.md after setup.
-
-**Options:**
-- `--mode <tier>` - Override setup tier (quick|guided|complete)
-
-**Run after:** Completing setup mode in Claude Code
-
-**Examples:**
-
-```bash
-# After setup
-ana setup complete
-
-# Override tier
-ana setup complete --mode guided
-```
-
-### `ana analyze [directory]`
-
-Run analyzer standalone - detect framework, patterns, conventions.
-
-**Options:**
-- `-o, --output <file>` - Write results to file
-- `--json` - Output JSON format
-- `-v, --verbose` - Show all signals
-- `--skip-import-scan` - Faster analysis
-- `--strict` - Fail on low confidence
-
-**Examples:**
-
-```bash
-# Analyze current directory
-ana analyze
-
-# Analyze and save
-ana analyze . -o analysis.json --json
-
-# Verbose output
-ana analyze -v
-```
-
-### `ana mode [name]`
-
-Display mode information or list all modes.
-
-**Modes:**
-- `architect` - System design and architecture
-- `code` - Implementation and coding
-- `debug` - Debugging and troubleshooting
-- `test` - Test writing
-- `docs` - Documentation
-- `general` - Quick questions and orientation
-- `setup` - First-run setup (run once)
-
-**Examples:**
-
-```bash
-# List all modes
-ana mode
-
-# Show specific mode
-ana mode code
-```
-
-## Workflow
-
-1. **Initialize:** `ana init` in your project
-2. **Setup:** Reference `@.ana/modes/setup.md` in Claude Code (~2-15 min)
-3. **Validate:** `ana setup complete` to activate framework
-4. **Use:** Reference `@.ana/ENTRY.md` in all future Claude Code sessions
-
-## Migration from v0.1.0
-
-**Breaking changes:**
-- `ana init` no longer prompts - runs analyzer automatically
-- Removed `-y, --yes` flag (init is now non-interactive)
-- Removed `node.json` (replaced by `.meta.json`)
-- ENTRY.md now generated by `ana setup complete` (not init)
-
-**Migration steps:**
-
-```bash
-# Remove old .ana/
-rm -rf .ana/
-
-# Run new init
-ana init
-
-# Run setup
-# Reference @.ana/modes/setup.md in Claude Code
-
-# Complete setup
-ana setup complete
-```
-
-## Version
-
-Current: 0.2.0
-
----
 
 ## License
 

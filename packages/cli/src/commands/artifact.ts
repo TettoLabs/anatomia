@@ -136,36 +136,36 @@ function parseArtifactType(type: string): ArtifactTypeInfo | null {
 }
 
 /**
- * Read artifactBranch from .ana/.meta.json
+ * Read artifactBranch from .ana/ana.json
  *
  * @returns The artifact branch name
  */
 export function readArtifactBranch(): string {
-  const metaPath = path.join(process.cwd(), '.ana', '.meta.json');
+  const anaJsonPath = path.join(process.cwd(), '.ana', 'ana.json');
 
   // Check if file exists
-  if (!fs.existsSync(metaPath)) {
-    console.error(chalk.red('Error: No .ana/.meta.json found. Run `ana init` first.'));
+  if (!fs.existsSync(anaJsonPath)) {
+    console.error(chalk.red('Error: No .ana/ana.json found. Run `ana init` first.'));
     process.exit(1);
   }
 
   // Read and parse
-  let meta: Record<string, unknown>;
+  let config: Record<string, unknown>;
   try {
-    const content = fs.readFileSync(metaPath, 'utf-8');
-    meta = JSON.parse(content);
+    const content = fs.readFileSync(anaJsonPath, 'utf-8');
+    config = JSON.parse(content);
   } catch {
-    console.error(chalk.red('Error: Failed to read .ana/.meta.json. File may be corrupted.'));
+    console.error(chalk.red('Error: Failed to read .ana/ana.json. File may be corrupted.'));
     process.exit(1);
   }
 
   // Check artifactBranch field outside try/catch
-  if (!meta.artifactBranch) {
-    console.error(chalk.red('Error: No artifactBranch configured in .meta.json. Run `ana init` first.'));
+  if (!config.artifactBranch) {
+    console.error(chalk.red('Error: No artifactBranch configured in ana.json. Run `ana init` first.'));
     process.exit(1);
   }
 
-  return meta.artifactBranch as string;
+  return config.artifactBranch as string;
 }
 
 /**
@@ -494,7 +494,7 @@ function validateBuildReportFormat(filePath: string): string | null {
  *
  * @param typeInfo - Parsed artifact type information
  * @param currentBranch - Current git branch
- * @param artifactBranch - Configured artifact branch from .meta.json
+ * @param artifactBranch - Configured artifact branch from ana.json
  * @param slug - Work item slug
  */
 function validateBranch(
@@ -535,7 +535,7 @@ export function saveArtifact(type: string, slug: string): void {
     process.exit(1);
   }
 
-  // 2. Read artifactBranch from .meta.json
+  // 2. Read artifactBranch from ana.json
   const artifactBranch = readArtifactBranch();
 
   // 3. Get current branch
@@ -715,15 +715,15 @@ export function saveArtifact(type: string, slug: string): void {
   }
 
   // 9. Commit
-  // Read coAuthor from .meta.json
-  const metaPath = path.join(process.cwd(), '.ana', '.meta.json');
+  // Read coAuthor from ana.json
+  const anaJsonPath = path.join(process.cwd(), '.ana', 'ana.json');
   let coAuthor = 'Ana <build@anatomia.dev>';
   try {
-    const metaContent = fs.readFileSync(metaPath, 'utf-8');
-    const meta: { coAuthor?: string } = JSON.parse(metaContent);
-    coAuthor = meta.coAuthor || 'Ana <build@anatomia.dev>';
+    const anaJsonContent = fs.readFileSync(anaJsonPath, 'utf-8');
+    const config: { coAuthor?: string } = JSON.parse(anaJsonContent);
+    coAuthor = config.coAuthor || 'Ana <build@anatomia.dev>';
   } catch {
-    // Use fallback if .meta.json can't be read
+    // Use fallback if ana.json can't be read
   }
 
   const prefix = isTracked ? 'Update: ' : '';
@@ -890,13 +890,13 @@ export function saveAllArtifacts(slug: string): void {
     }
   }
 
-  // 4. Read .meta.json for coAuthor
-  const metaPath = path.join(projectRoot, '.ana', '.meta.json');
+  // 4. Read ana.json for coAuthor
+  const anaJsonPath = path.join(projectRoot, '.ana', 'ana.json');
   let coAuthor = 'Ana <build@anatomia.dev>';
   try {
-    const metaContent = fs.readFileSync(metaPath, 'utf-8');
-    const meta: { coAuthor?: string } = JSON.parse(metaContent);
-    coAuthor = meta.coAuthor || 'Ana <build@anatomia.dev>';
+    const anaJsonContent = fs.readFileSync(anaJsonPath, 'utf-8');
+    const config: { coAuthor?: string } = JSON.parse(anaJsonContent);
+    coAuthor = config.coAuthor || 'Ana <build@anatomia.dev>';
   } catch {
     // Use fallback
   }

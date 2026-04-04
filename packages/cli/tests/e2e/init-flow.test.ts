@@ -58,7 +58,7 @@ describe('ana init E2E', () => {
       'docs',
       'plans/active',
       'plans/completed',
-      '.state',
+      'state',
     ];
 
     for (const dir of dirs) {
@@ -66,9 +66,8 @@ describe('ana init E2E', () => {
       expect(exists, `Directory missing: ${dir}`).toBe(true);
     }
 
-    // Verify generated files (8)
+    // Verify generated files (7)
     const generatedFiles = [
-      'context/analysis.md',
       'context/project-overview.md',
       'context/architecture.md',
       'context/patterns.md',
@@ -129,28 +128,28 @@ describe('ana init E2E', () => {
     expect(activeGitkeepExists).toBe(true);
     expect(completeGitkeepExists).toBe(true);
 
-    // Verify .meta.json
-    const metaExists = await fileExists(path.join(anaPath, '.meta.json'));
+    // Verify ana.json
+    const metaExists = await fileExists(path.join(anaPath, 'ana.json'));
     expect(metaExists).toBe(true);
 
-    const metaContent = await fs.readFile(path.join(anaPath, '.meta.json'), 'utf-8');
-    const meta = JSON.parse(metaContent);
-    expect(meta.setupStatus).toBe('pending');
-    expect(meta.version).toBe('1.0.0');
+    const anaJsonContent = await fs.readFile(path.join(anaPath, 'ana.json'), 'utf-8');
+    const meta = JSON.parse(anaJsonContent);
+    expect(meta.setupMode).toBeDefined();
+    expect(meta.name).toBeDefined();
 
     // Verify snapshot.json
-    const snapshotExists = await fileExists(path.join(anaPath, '.state/snapshot.json'));
+    const snapshotExists = await fileExists(path.join(anaPath, 'state/snapshot.json'));
     expect(snapshotExists).toBe(true);
 
     // Count total files in .ana/
-    // 8 generated + 10 modes + 3 setup + 8 steps + 6 snippets + 4 hooks + 1 SCHEMAS + 2 .gitkeep + 2 JSON + 1 symbol-index + 1 cli-path + 1 .gitignore = 47
+    // 7 generated + 10 modes + 3 setup + 8 steps + 6 snippets + 4 hooks + 1 SCHEMAS + 2 .gitkeep + 2 JSON + 1 symbol-index + 1 cli-path + 1 .gitignore = 46
     const allFiles = await findAllFiles(anaPath);
-    expect(allFiles.length).toBe(47);
+    expect(allFiles.length).toBe(46);
 
     // Verify .gitignore exists and excludes runtime state
     const gitignorePath = path.join(anaPath, '.gitignore');
     const gitignoreContent = await fs.readFile(gitignorePath, 'utf-8');
-    expect(gitignoreContent).toContain('.state/');
+    expect(gitignoreContent).toContain('state/');
     expect(gitignoreContent).toContain('.setup_qa_log.md');
 
     // Verify .claude/ directory was also created (outside .ana/)
@@ -210,16 +209,16 @@ describe('ana init E2E', () => {
     expect(claudeMdContent).toContain('claude --agent ana');
   }, 30000); // 30s timeout
 
-  it('--force preserves .state/ directory', async () => {
+  it('--force preserves state/ directory', async () => {
     // First init
     await execFileAsync('node', [cliPath, 'init', '--skip-analysis'], {
       cwd: tmpProject,
     });
 
     const anaPath = path.join(tmpProject, '.ana');
-    const statePath = path.join(anaPath, '.state');
+    const statePath = path.join(anaPath, 'state');
 
-    // Add test data to .state/
+    // Add test data to state/
     await fs.writeFile(path.join(statePath, 'test.json'), '{"preserved":true}');
 
     // Re-init with --force
@@ -253,6 +252,42 @@ describe('regression tests', () => {
   afterEach(async () => {
     await fs.rm(tmpProject, { recursive: true, force: true });
   });
+
+  it('creates scan.json with full engine result when analysis runs', async () => {
+    // Create a minimal project with detectable framework
+    await fs.writeFile(
+      path.join(tmpProject, 'package.json'),
+      JSON.stringify({
+        name: 'scan-test',
+        dependencies: { next: '14.0.0' },
+        scripts: { build: 'next build', test: 'vitest run' },
+      })
+    );
+
+    // Run init WITHOUT --skip-analysis
+    await execFileAsync('node', [cliPath, 'init'], {
+      cwd: tmpProject,
+    });
+
+    const anaPath = path.join(tmpProject, '.ana');
+    const scanPath = path.join(anaPath, 'scan.json');
+
+    // scan.json must exist
+    const exists = await fileExists(scanPath);
+    expect(exists).toBe(true);
+
+    // Must be valid JSON with expected top-level keys
+    const content = await fs.readFile(scanPath, 'utf-8');
+    const scan = JSON.parse(content);
+    expect(scan.overview).toBeDefined();
+    expect(scan.stack).toBeDefined();
+    expect(scan.commands).toBeDefined();
+    expect(scan.files).toBeDefined();
+    expect(scan.externalServices).toBeDefined();
+
+    // Should detect Next.js
+    expect(scan.stack.framework).toBe('Next.js');
+  }, 30000);
 
   it('ana mode shows 7 modes (general, setup added in CP4)', async () => {
     const { stdout } = await execFileAsync('node', [cliPath, 'mode', 'code'], {

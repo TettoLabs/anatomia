@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { generateConventionsScaffold } from '../../src/utils/scaffold-generators.js';
-import type { AnalysisResult } from './test-types.js';
-import { createEmptyAnalysisResult } from './test-types.js';
+import { createEmptyEngineResult } from './test-types.js';
+import type { TestEngineResult } from './test-types.js';
 
 describe('conventions.md scaffold', () => {
   const projectName = 'test-project';
@@ -9,16 +9,18 @@ describe('conventions.md scaffold', () => {
   const version = '0.2.0';
 
   it('rich Python project with full conventions', () => {
-    const richAnalysis: AnalysisResult = {
-      projectType: 'python',
-      framework: 'fastapi',
-      confidence: { projectType: 1.0, framework: 0.95 },
-      indicators: {
-        projectType: ['pyproject.toml'],
-        framework: ['fastapi in dependencies'],
+    const result: TestEngineResult = {
+      ...createEmptyEngineResult(),
+      overview: { project: projectName, scannedAt: timestamp, depth: 'deep' },
+      stack: {
+        language: 'Python',
+        framework: 'FastAPI',
+        database: null,
+        auth: null,
+        testing: 'pytest',
+        payments: null,
+        workspace: null,
       },
-      detectedAt: timestamp,
-      version: '0.2.0',
       conventions: {
         naming: {
           files: {
@@ -65,7 +67,7 @@ describe('conventions.md scaffold', () => {
     };
 
     const scaffold = generateConventionsScaffold(
-      richAnalysis,
+      result as any,
       projectName,
       timestamp,
       version
@@ -74,17 +76,19 @@ describe('conventions.md scaffold', () => {
     expect(scaffold).toMatchSnapshot();
   });
 
-  it('flat Node project with partial conventions', () => {
-    const flatAnalysis: AnalysisResult = {
-      projectType: 'node',
-      framework: 'nextjs',
-      confidence: { projectType: 1.0, framework: 0.88 },
-      indicators: {
-        projectType: ['package.json'],
-        framework: ['next in dependencies'],
+  it('TypeScript Next.js project with partial conventions', () => {
+    const result: TestEngineResult = {
+      ...createEmptyEngineResult(),
+      overview: { project: projectName, scannedAt: timestamp, depth: 'deep' },
+      stack: {
+        language: 'TypeScript',
+        framework: 'Next.js',
+        database: null,
+        auth: null,
+        testing: 'Vitest',
+        payments: null,
+        workspace: null,
       },
-      detectedAt: timestamp,
-      version: '0.2.0',
       conventions: {
         naming: {
           functions: {
@@ -102,7 +106,7 @@ describe('conventions.md scaffold', () => {
     };
 
     const scaffold = generateConventionsScaffold(
-      flatAnalysis,
+      result as any,
       projectName,
       timestamp,
       version
@@ -111,11 +115,11 @@ describe('conventions.md scaffold', () => {
     expect(scaffold).toMatchSnapshot();
   });
 
-  it('empty analysis (analyzer failed)', () => {
-    const empty = createEmptyAnalysisResult();
+  it('empty result (scan failed)', () => {
+    const empty = createEmptyEngineResult();
 
     const scaffold = generateConventionsScaffold(
-      empty,
+      empty as any,
       projectName,
       timestamp,
       version

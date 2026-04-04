@@ -9,7 +9,7 @@ description: "Anatomia testing standards. Invoke when writing tests, reviewing t
 Vitest with v8 coverage provider across both packages. Config at `packages/*/vitest.config.ts`.
 
 Run commands:
-The exact test command is stored in `.meta.json` `commands.test`. Use it as-is, including all flags.
+The exact test command is stored in `ana.json` `commands.test`. Use it as-is, including all flags.
 
 - All packages: `pnpm test`
 - Single package: `pnpm --filter anatomia-cli test` or `pnpm --filter anatomia-analyzer test`

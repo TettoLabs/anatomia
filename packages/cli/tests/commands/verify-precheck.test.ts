@@ -79,7 +79,7 @@ describe('ana verify pre-check', () => {
       const anaDir = path.join(tempDir, '.ana');
       await fs.mkdir(anaDir, { recursive: true });
       await fs.writeFile(
-        path.join(anaDir, '.meta.json'),
+        path.join(anaDir, 'ana.json'),
         JSON.stringify({ artifactBranch: 'main' }),
         'utf-8'
       );
@@ -98,11 +98,11 @@ describe('ana verify pre-check', () => {
     });
 
     it('errors when slug does not exist', async () => {
-      // Create minimal project with .meta.json
+      // Create minimal project with ana.json
       const anaDir = path.join(tempDir, '.ana');
       await fs.mkdir(anaDir, { recursive: true });
       await fs.writeFile(
-        path.join(anaDir, '.meta.json'),
+        path.join(anaDir, 'ana.json'),
         JSON.stringify({ artifactBranch: 'main' }),
         'utf-8'
       );
@@ -128,11 +128,11 @@ describe('ana verify pre-check', () => {
       execSync('git config user.email "test@test.com"', { cwd: tempDir, stdio: 'ignore' });
       execSync('git config user.name "Test"', { cwd: tempDir, stdio: 'ignore' });
 
-      // Create .meta.json
+      // Create ana.json
       const anaDir = path.join(tempDir, '.ana');
       await fs.mkdir(anaDir, { recursive: true });
       await fs.writeFile(
-        path.join(anaDir, '.meta.json'),
+        path.join(anaDir, 'ana.json'),
         JSON.stringify({ artifactBranch: 'main' }),
         'utf-8'
       );

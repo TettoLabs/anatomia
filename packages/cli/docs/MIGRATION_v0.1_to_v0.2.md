@@ -43,7 +43,7 @@ Analyzing project...
 - `-y, --yes` (init is now always non-interactive)
 
 **Added:**
-- `--force` (overwrite .ana/, preserves .state/)
+- `--force` (overwrite .ana/, preserves state/)
 - `--skip-analysis` (create empty scaffolds if analyzer unavailable)
 
 **Migration:**
@@ -58,12 +58,12 @@ Analyzing project...
 ### 4. File Structure Changes
 
 **Removed:**
-- `node.json` (replaced by `.meta.json`)
+- `node.json` (replaced by `ana.json`)
 
 **Added:**
-- `context/analysis.md` (analyzer output)
-- `.meta.json` (framework metadata)
-- `.state/snapshot.json` (analyzer baseline)
+- `ana.json` (project config with detected data)
+- `scan.json` (full engine result)
+- `state/snapshot.json` (engine baseline)
 - `context/setup/` (setup files)
 - More context scaffolds (7 total, was 2)
 
@@ -76,8 +76,8 @@ Analyzing project...
 ```bash
 cd your-project/
 
-# 1. Backup .state/ if you have sessions (STEP 3 only)
-cp -r .ana/.state .ana-state-backup
+# 1. Backup state/ if you have sessions (STEP 3 only)
+cp -r .ana/state .ana-state-backup
 
 # 2. Remove old .ana/
 rm -rf .ana/
@@ -94,8 +94,8 @@ ana setup complete
 # 6. Verify
 ls .ana/ENTRY.md  # Should exist
 
-# 7. Restore .state/ if backed up (STEP 3 only)
-# mv .ana-state-backup .ana/.state
+# 7. Restore state/ if backed up (STEP 3 only)
+# mv .ana-state-backup .ana/state
 ```
 
 ### For Scripts/Automation
@@ -131,11 +131,11 @@ New `ana setup complete` validates context files:
 - Cross-references against analyzer data
 - Generates ENTRY.md only after validation passes
 
-### .state/ Directory
+### state/ Directory
 
-New `.state/` directory for STEP 3 features:
-- `snapshot.json` - Analyzer baseline for drift detection
-- Future: `ana.db` for session history (STEP 3)
+New `state/` directory:
+- `snapshot.json` - Engine baseline for drift detection
+- `symbol-index.json` - Symbol index for citation verification
 
 ## Support
 

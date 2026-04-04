@@ -25,7 +25,7 @@ After exploration completes, proceed directly to writing context files.
 ## Content Expectations
 
 - Accept all exploration findings without deep validation
-- Use analyzer data from `analysis.md` as ground truth
+- Use detected data from `scan.json` and context files as ground truth
 - When exploration confidence is low, note "Not detected" rather than fabricating
 - Minimum line counts may be lower than Guided/Complete (see rules.md Quick allowances)
 

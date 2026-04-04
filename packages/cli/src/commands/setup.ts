@@ -9,7 +9,7 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
-import type { AnalysisResult } from '../engine/index.js';
+import type { EngineResult } from '../engine/types/engineResult.js';
 import {
   validateStructure,
   validateContent,
@@ -19,7 +19,7 @@ import {
   fileExists,
   type ValidationError,
 } from '../utils/validators.js';
-import { VALID_SETUP_TIERS, META_VERSION } from '../constants.js';
+import { VALID_SETUP_TIERS, ANA_JSON_VERSION } from '../constants.js';
 import { createCheckCommand } from './check.js';
 import { createIndexCommand } from './index.js';
 
@@ -71,7 +71,7 @@ setupCommand
     }
 
     // Load snapshot for cross-reference validation
-    const snapshotPath = path.join(anaPath, '.state/snapshot.json');
+    const snapshotPath = path.join(anaPath, 'state/snapshot.json');
     if (!(await fileExists(snapshotPath))) {
       console.error(chalk.red('Error: snapshot.json not found'));
       console.error(
@@ -80,7 +80,7 @@ setupCommand
       process.exit(1);
     }
 
-    let snapshot: AnalysisResult;
+    let snapshot: EngineResult;
     try {
       const content = await fs.readFile(snapshotPath, 'utf-8');
       snapshot = JSON.parse(content);
@@ -137,9 +137,9 @@ setupCommand
     console.log(chalk.gray('Updating CLAUDE.md...'));
     await generateClaudeMd(cwd, anaPath);
 
-    // Phase 7: Update .meta.json
-    console.log(chalk.gray('Updating .meta.json...'));
-    await updateMetaJson(anaPath, cwd, options);
+    // Phase 7: Update ana.json
+    console.log(chalk.gray('Updating ana.json...'));
+    await updateAnaJson(anaPath, cwd, options);
 
     // Success
     console.log(chalk.green('\n✅ Setup complete!\n'));
@@ -258,7 +258,7 @@ async function generateClaudeMd(cwd: string, anaPath: string): Promise<void> {
   let contextFileCount = 0;
   try {
     const files = await fs.readdir(contextDir);
-    contextFileCount = files.filter((f) => f.endsWith('.md') && f !== 'analysis.md').length;
+    contextFileCount = files.filter((f) => f.endsWith('.md')).length;
   } catch {
     contextFileCount = 7; // default
   }
@@ -315,33 +315,32 @@ async function generateClaudeMd(cwd: string, anaPath: string): Promise<void> {
 }
 
 /**
- * Update .meta.json after successful validation
+ * Update ana.json after successful validation
  *
  * Sets:
- * - setupStatus: 'complete'
+ * - setupMode: 'complete'
  * - setupCompletedAt: current timestamp
- * - setupMode: Priority: CLI --mode flag (highest) → .setup_tier file → existing .meta.json setupMode → error
  *
  * @param anaPath - Path to .ana/ directory
  * @param cwd - Project root
  * @param options - Command options (may have --mode flag)
  */
-async function updateMetaJson(
+async function updateAnaJson(
   anaPath: string,
   cwd: string,
   options: SetupCompleteOptions
 ): Promise<void> {
-  const metaPath = path.join(anaPath, '.meta.json');
+  const anaJsonPath = path.join(anaPath, 'ana.json');
 
-  // Read existing .meta.json
-  let meta: Record<string, unknown>;
+  // Read existing ana.json
+  let config: Record<string, unknown>;
   try {
-    const content = await fs.readFile(metaPath, 'utf-8');
-    meta = JSON.parse(content);
+    const content = await fs.readFile(anaJsonPath, 'utf-8');
+    config = JSON.parse(content);
   } catch (_error) {
-    // If .meta.json doesn't exist or is corrupt, create minimal
-    meta = {
-      version: META_VERSION,
+    // If ana.json doesn't exist or is corrupt, create minimal
+    config = {
+      version: ANA_JSON_VERSION,
       createdAt: new Date().toISOString(),
     };
   }
@@ -379,9 +378,9 @@ async function updateMetaJson(
         process.exit(1);
       }
     }
-    // Priority 3: Existing setupMode from .meta.json (re-running setup complete)
-    else if (meta.setupMode && isValidSetupTier(meta.setupMode)) {
-      setupMode = meta.setupMode;
+    // Priority 3: Existing setupMode from ana.json (re-running setup complete)
+    else if (config.setupMode && isValidSetupTier(config.setupMode)) {
+      setupMode = config.setupMode;
     }
     // Priority 4: Error if no source available
     else {
@@ -392,13 +391,12 @@ async function updateMetaJson(
     }
   }
 
-  // Update meta fields
-  meta.setupStatus = 'complete';
-  meta.setupCompletedAt = new Date().toISOString();
-  meta.setupMode = setupMode;
+  // Update config fields
+  config.setupMode = 'complete';
+  config.setupCompletedAt = new Date().toISOString();
 
   // Write back to file (formatted JSON)
-  await fs.writeFile(metaPath, JSON.stringify(meta, null, 2), 'utf-8');
+  await fs.writeFile(anaJsonPath, JSON.stringify(config, null, 2), 'utf-8');
 
   console.log(chalk.gray(`  Setup mode: ${setupMode}`));
 }

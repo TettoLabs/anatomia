@@ -1,160 +1,81 @@
 # Anatomia
 
-**Your AI doesn't know your codebase. Ana does.**
+Verified AI development. Ship with proof.
 
-Verified AI development through scoped planning, contract-based building, and independent verification.
-
-[![npm version](https://img.shields.io/npm/v/anatomia-cli.svg)](https://www.npmjs.com/package/anatomia-cli)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
----
+Anatomia is a CLI that makes AI coding agents reliable. It scans your project, generates context, and runs every change through a four-agent pipeline with mechanical verification. Every feature ships with proof that it works.
 
 ## Quick Start
 
 ```bash
-npx anatomia-cli scan
+npx anatomia-cli scan .       # See what Ana detects
+npx anatomia-cli init         # Initialize project context
+claude --agent ana             # Start working with Ana
 ```
 
-See what Ana detects about your project:
+## What It Does
+
+**Scan** reads your project — framework, database, auth, testing, services, conventions, patterns — and produces structured intelligence that agents consume.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │  ana scan                                                           │
-│  tetto-portal                                       2026-04-01 12:34│
+│  my-saas-app                                        2026-04-03 12:00│
 └─────────────────────────────────────────────────────────────────────┘
 
   Stack
   ─────
-  Language     Node.js
+  Language     TypeScript
   Framework    Next.js
-  Database     Supabase
-  Auth         Supabase Auth
-  Testing      Jest
+  Database     Prisma → PostgreSQL (23 models)
+  Auth         Clerk
+  Testing      Vitest
 
-  Files
-  ─────
-  Source       252
-  Tests        24
-  Config       10
-  Total        286
-
-  Structure
-  ─────────
-  app/              Application code
-  components/       UI components
-  lib/              Library code
-  supabase/         Supabase config
-
-Run `ana init` to generate full context for your AI.
+  Services: Stripe, Supabase, Resend, Sentry, PostHog
+  Deploy:   Vercel
 ```
 
----
+**Init** writes that intelligence to files agents already know how to read: `scan.json` for structured data, context files for human-readable summaries, skills for team standards.
 
-## What Ana Scans
+**The Pipeline** runs every change through four stages:
 
-- **Stack** — Language, Framework, Database, Auth, Testing, Payments
-- **Files** — Source, test, config counts
-- **Structure** — Directory purposes and organization
-- **Workspace** — Monorepo detection and package listing
+| Stage | Agent | Produces |
+|-------|-------|----------|
+| **Think** | Ana | Scope — what and why |
+| **Plan** | AnaPlan | Spec + Contract — how, with assertions |
+| **Build** | AnaBuild | Code + Tests — tagged to contract |
+| **Verify** | AnaVerify | Proof — pass/fail per assertion |
 
-Get JSON output with `--json` for programmatic use. Debug with `--verbose` to see analyzer phases.
+**Contracts** are the key. AnaPlan writes assertions ("the status command returns valid JSON", "the error handler logs to Sentry"). AnaBuild tags tests to assertions. AnaVerify checks each one independently.
 
----
+**Proof** is the artifact. Every pipeline run produces a verification report: which assertions passed, which failed, what the verifier found. The proof chain accumulates across features. Your project has a mechanical audit trail of every AI-assisted change.
 
-## The Pipeline
+## Commands
 
-Ana structures AI development through four verified stages:
+| Command | Description |
+|---------|-------------|
+| `ana scan .` | Detect project stack, patterns, conventions |
+| `ana scan . --deep` | Include pattern and convention analysis |
+| `ana init` | Initialize `.ana/` context and `.claude/` agents |
+| `ana work status` | Show pipeline state for active work |
+| `ana artifact save` | Save pipeline artifacts with validation |
+| `ana verify pre-check` | Run contract pre-check before verification |
+| `ana proof <slug>` | Display proof chain for completed work |
+| `ana pr create <slug>` | Create PR from verified build |
 
-| Stage | Agent | What It Does |
-|-------|-------|--------------|
-| **Think** | Ana | Scopes the work, explores the codebase, writes intent |
-| **Plan** | AnaPlan | Writes specs with test contracts and acceptance criteria |
-| **Build** | AnaBuild | Implements against the spec and test skeleton |
-| **Verify** | AnaVerify | Independent verification, mechanical checks, creates PR |
+## Works With
 
-Each stage produces artifacts. Each artifact is versioned in git. The pipeline enforces:
-- Scope before plan (no planning without understanding intent)
-- Plan before build (no building without a spec)
-- Build before verify (no verification without implementation)
-- Verify before merge (no merging without independent review)
-
----
-
-## Getting Started
-
-1. **Scan your project:**
-   ```bash
-   npx anatomia-cli scan
-   ```
-
-2. **Initialize context:**
-   ```bash
-   npm install -g anatomia-cli
-   ana init
-   ```
-
-3. **Scope your first feature:**
-   ```bash
-   claude --agent ana
-   ```
-
-Ana will help you explore the codebase, write a scope document, and kick off the pipeline.
-
----
-
-## Project Structure
-
-```
-anatomia/
-├── packages/
-│   ├── cli/          # CLI tool (ana commands)
-│   ├── analyzer/     # Code analysis engine
-│   └── generator/    # Context generators
-└── website/          # Demo site
-```
-
----
+Built for [Claude Code](https://docs.anthropic.com/en/docs/claude-code). Agents are Claude Code agent definitions (`.claude/agents/`). Skills are Claude Code skill files (`.claude/skills/`).
 
 ## Development
 
-**Setup:**
 ```bash
 git clone https://github.com/TettoLabs/anatomia.git
 cd anatomia
 pnpm install
 pnpm build
-```
-
-**Test:**
-```bash
 pnpm --filter anatomia-cli test -- --run
 ```
-
-**Link locally:**
-```bash
-cd packages/cli
-pnpm link --global
-ana --version
-```
-
----
-
-## Documentation
-
-- [Artifact Schemas](./.ana/docs/SCHEMAS.md) — Pipeline artifact formats
-- [CLI Package](./packages/cli/README.md) — Command reference
-- [Analyzer Package](./packages/analyzer/README.md) — Analysis engine
-
----
 
 ## License
 
 MIT
-
----
-
-## Links
-
-- **Repository:** [GitHub](https://github.com/TettoLabs/anatomia)
-- **Issues:** [Report Issues](https://github.com/TettoLabs/anatomia/issues)
-- **CLI Package:** [anatomia-cli on npm](https://www.npmjs.com/package/anatomia-cli)

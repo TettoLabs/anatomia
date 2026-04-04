@@ -1,29 +1,30 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`conventions.md scaffold > empty analysis (analyzer failed) 1`] = `
+exports[`conventions.md scaffold > TypeScript Next.js project with partial conventions 1`] = `
 "<!-- SCAFFOLD - Setup will fill this file -->
 
 # Conventions — test-project
 
+## Key Facts
+**Detected:** Functions: camelCase
+**Detected:** Imports: relative
+
 ## Naming Conventions
 
-*Naming conventions not analyzed*
-
-[Setup will add: Examples from codebase, exceptions to rules, team-specific preferences]
+**Functions:** camelCase (confidence: 0.92)
 
 ## Import Organization
 
-*Import conventions not analyzed*
-
-[Setup will add: Import grouping rules, alias patterns, ordering conventions]
+**Style:** relative
+**Confidence:** 0.75
 
 ## Code Style
 
-[Setup will add: Line length, formatting rules, linter config, code style guide]
-
-## Additional Conventions
-
-[Setup will add: Team-specific conventions, file organization, comment style, other standards]
+## Open Questions
+**Unexamined:** Examples from codebase, exceptions to rules, team-specific preferences
+**Unexamined:** Import grouping rules, alias patterns, ordering conventions
+**Unexamined:** Line length, formatting rules, linter config, code style guide
+**Unexamined:** Team-specific conventions, file organization, comment style
 
 ---
 
@@ -31,31 +32,28 @@ exports[`conventions.md scaffold > empty analysis (analyzer failed) 1`] = `
 "
 `;
 
-exports[`conventions.md scaffold > flat Node project with partial conventions 1`] = `
+exports[`conventions.md scaffold > empty result (scan failed) 1`] = `
 "<!-- SCAFFOLD - Setup will fill this file -->
 
 # Conventions — test-project
 
+## Key Facts
+
 ## Naming Conventions
 
-**Functions:** camelCase (confidence: 0.92)
-
-[Setup will add: Examples from codebase, exceptions to rules, team-specific preferences]
+*Naming conventions not analyzed*
 
 ## Import Organization
 
-**Style:** relative
-**Confidence:** 0.75
-
-[Setup will add: Import grouping rules, alias patterns, ordering conventions]
+*Import conventions not detected with sufficient confidence*
 
 ## Code Style
 
-[Setup will add: Line length, formatting rules, linter config, code style guide]
-
-## Additional Conventions
-
-[Setup will add: Team-specific conventions, file organization, comment style, other standards]
+## Open Questions
+**Unexamined:** Examples from codebase, exceptions to rules, team-specific preferences
+**Unexamined:** Import grouping rules, alias patterns, ordering conventions
+**Unexamined:** Line length, formatting rules, linter config, code style guide
+**Unexamined:** Team-specific conventions, file organization, comment style
 
 ---
 
@@ -68,6 +66,11 @@ exports[`conventions.md scaffold > rich Python project with full conventions 1`]
 
 # Conventions — test-project
 
+## Key Facts
+**Detected:** Functions: snake_case
+**Detected:** Imports: absolute
+**Detected:** Indentation: 4 spaces
+
 ## Naming Conventions
 
 **Files:** snake_case (confidence: 0.98)
@@ -77,26 +80,22 @@ exports[`conventions.md scaffold > rich Python project with full conventions 1`]
 **Constants:** SCREAMING_SNAKE_CASE (confidence: 0.90, mixed)
   Distribution: SCREAMING_SNAKE_CASE: 90%, UPPER_CASE: 10%
 
-[Setup will add: Examples from codebase, exceptions to rules, team-specific preferences]
-
 ## Import Organization
 
 **Style:** absolute
 **Confidence:** 0.85
 **Distribution:** absolute: 85%, relative: 15%
 
-[Setup will add: Import grouping rules, alias patterns, ordering conventions]
-
 ## Code Style
 
 **Indentation:** spaces (4 spaces)
 **Confidence:** 1.00 (from config file)
 
-[Setup will add: Line length, formatting rules, linter config, code style guide]
-
-## Additional Conventions
-
-[Setup will add: Team-specific conventions, file organization, comment style, other standards]
+## Open Questions
+**Unexamined:** Examples from codebase, exceptions to rules, team-specific preferences
+**Unexamined:** Import grouping rules, alias patterns, ordering conventions
+**Unexamined:** Line length, formatting rules, linter config, code style guide
+**Unexamined:** Team-specific conventions, file organization, comment style
 
 ---
 

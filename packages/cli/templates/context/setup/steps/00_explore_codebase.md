@@ -16,10 +16,10 @@ Understand this project's structure, patterns, and complexity BEFORE writing any
 
 **What to find:**
 - Project name (from package.json, pyproject.toml, go.mod, or directory name)
-- Framework and version (from analysis.md if already detected)
-- Language (from analysis.md)
+- Framework and version (from scan.json if already detected)
+- Language (from scan.json)
 - Total file count, directory count (exclude node_modules/, venv/, dist/, build/)
-- Entry points (main.py, index.ts, app.tsx, or from analysis.md)
+- Entry points (main.py, index.ts, app.tsx, or from scan.json)
 
 **How to find:**
 - Read package.json or equivalent for name, version, main entry point

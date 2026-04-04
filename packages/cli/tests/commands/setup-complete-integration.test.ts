@@ -7,7 +7,7 @@ import {
   validateContent,
   validateCrossReferences,
 } from '../../src/utils/validators.js';
-import { createEmptyAnalysisResult } from '../scaffolds/test-types.js';
+import { createEmptyEngineResult } from '../scaffolds/test-types.js';
 
 describe('ana setup complete integration', () => {
   let tmpDir: string;
@@ -19,7 +19,7 @@ describe('ana setup complete integration', () => {
 
     // Create complete .ana/ structure
     await fs.mkdir(path.join(anaPath, 'context'), { recursive: true });
-    await fs.mkdir(path.join(anaPath, '.state'), { recursive: true });
+    await fs.mkdir(path.join(anaPath, 'state'), { recursive: true });
 
     // Create all 7 context files (valid, no scaffold markers)
     const files = [
@@ -38,16 +38,16 @@ describe('ana setup complete integration', () => {
     }
 
     // Create snapshot.json
-    const snapshot = createEmptyAnalysisResult();
+    const snapshot = createEmptyEngineResult();
     await fs.writeFile(
-      path.join(anaPath, '.state/snapshot.json'),
+      path.join(anaPath, 'state/snapshot.json'),
       JSON.stringify(snapshot, null, 2)
     );
 
-    // Create .meta.json
+    // Create ana.json
     await fs.writeFile(
-      path.join(anaPath, '.meta.json'),
-      JSON.stringify({ setupStatus: 'pending', createdAt: new Date().toISOString() })
+      path.join(anaPath, 'ana.json'),
+      JSON.stringify({ setupMode: 'guided', name: 'test-project', createdAt: new Date().toISOString() })
     );
   });
 
@@ -60,7 +60,7 @@ describe('ana setup complete integration', () => {
     const overview = `# Project Overview — test\n\n## Tech Stack\n\nContent\n`.repeat(5);
     await fs.writeFile(path.join(anaPath, 'context/project-overview.md'), overview);
 
-    const snapshot = createEmptyAnalysisResult();
+    const snapshot = createEmptyEngineResult();
 
     const structuralErrors = await validateStructure(anaPath);
     const contentErrors = await validateContent(anaPath);
@@ -97,7 +97,7 @@ describe('ana setup complete integration', () => {
     const patterns = `# Patterns\n\n## Framework Patterns\n\nContent\n`;
     await fs.writeFile(path.join(anaPath, 'context/patterns.md'), patterns);
 
-    const snapshot = createEmptyAnalysisResult();
+    const snapshot = createEmptyEngineResult();
 
     const structuralErrors = await validateStructure(anaPath);
     const contentErrors = await validateContent(anaPath);

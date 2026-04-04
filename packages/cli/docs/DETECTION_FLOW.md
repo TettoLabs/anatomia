@@ -368,4 +368,4 @@ Input Path
 ## Version
 - **Tool Version**: 0.1.0
 - **Documentation Date**: 2026-02-24
-- **Detection Engine**: anatomia-analyzer
+- **Detection Engine**: anatomia-cli (unified engine)

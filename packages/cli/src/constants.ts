@@ -101,5 +101,5 @@ export const SKILL_DIRS = [
 /** Valid setupMode tiers */
 export const VALID_SETUP_TIERS = ['quick', 'guided', 'complete'] as const;
 
-/** .meta.json version */
-export const META_VERSION = '1.0.0';
+/** ana.json version */
+export const ANA_JSON_VERSION = '1.0.0';

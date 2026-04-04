@@ -1,36 +1,47 @@
 import { describe, it, expect } from 'vitest';
 import { generateArchitectureScaffold } from '../../src/utils/scaffold-generators.js';
-import type { AnalysisResult } from './test-types.js';
-import { createEmptyAnalysisResult } from './test-types.js';
+import { createEmptyEngineResult } from './test-types.js';
+import type { TestEngineResult } from './test-types.js';
 
 describe('architecture.md scaffold', () => {
   const projectName = 'test-project';
   const timestamp = '2026-03-19T10:00:00Z';
   const version = '0.2.0';
 
-  it('rich project with layered architecture', () => {
-    const richAnalysis: AnalysisResult = {
-      projectType: 'python',
-      framework: 'fastapi',
-      confidence: { projectType: 1.0, framework: 0.95 },
-      indicators: {
-        projectType: ['pyproject.toml'],
-        framework: ['fastapi in dependencies'],
+  it('rich Python FastAPI project with structure entries', () => {
+    const result: TestEngineResult = {
+      ...createEmptyEngineResult(),
+      overview: { project: projectName, scannedAt: timestamp, depth: 'deep' },
+      stack: {
+        language: 'Python',
+        framework: 'FastAPI',
+        database: 'PostgreSQL',
+        auth: null,
+        testing: 'pytest',
+        payments: null,
+        workspace: null,
       },
-      detectedAt: timestamp,
-      version: '0.2.0',
-      structure: {
-        architecture: 'layered',
-        confidence: { architecture: 0.85 },
-        entryPoints: ['src/main.py'],
-        testLocation: 'tests/',
-        directories: { src: 'src/', tests: 'tests/' },
-        configFiles: ['pyproject.toml'],
+      files: { source: 80, test: 20, config: 8, total: 108 },
+      structure: [
+        { path: 'src/', purpose: 'Application source' },
+        { path: 'src/api/', purpose: 'API routes' },
+        { path: 'src/models/', purpose: 'Database models' },
+        { path: 'src/services/', purpose: 'Business logic layer' },
+        { path: 'tests/', purpose: 'Test suite' },
+      ],
+      structureOverflow: 0,
+      commands: {
+        build: null,
+        test: 'pytest',
+        lint: 'ruff check .',
+        dev: 'uvicorn src.main:app --reload',
+        packageManager: 'pip',
       },
+      monorepo: { isMonorepo: false, tool: null, packages: [] },
     };
 
     const scaffold = generateArchitectureScaffold(
-      richAnalysis,
+      result as any,
       projectName,
       timestamp,
       version
@@ -39,29 +50,36 @@ describe('architecture.md scaffold', () => {
     expect(scaffold).toMatchSnapshot();
   });
 
-  it('flat project with unknown architecture', () => {
-    const flatAnalysis: AnalysisResult = {
-      projectType: 'node',
-      framework: 'express',
-      confidence: { projectType: 1.0, framework: 0.80 },
-      indicators: {
-        projectType: ['package.json'],
-        framework: ['express in dependencies'],
+  it('Node Express project with structure overflow', () => {
+    const result: TestEngineResult = {
+      ...createEmptyEngineResult(),
+      overview: { project: projectName, scannedAt: timestamp, depth: 'surface' },
+      stack: {
+        language: 'JavaScript',
+        framework: 'Express',
+        database: null,
+        auth: null,
+        testing: null,
+        payments: null,
+        workspace: null,
       },
-      detectedAt: timestamp,
-      version: '0.2.0',
-      structure: {
-        architecture: undefined,
-        confidence: { architecture: 0.0 },
-        entryPoints: [],
-        testLocation: undefined,
-        directories: {},
-        configFiles: [],
+      files: { source: 30, test: 5, config: 4, total: 39 },
+      structure: [
+        { path: 'src/', purpose: 'Source files' },
+        { path: 'routes/', purpose: 'Express routes' },
+      ],
+      structureOverflow: 12,
+      commands: {
+        build: null,
+        test: null,
+        lint: null,
+        dev: 'node src/index.js',
+        packageManager: 'npm',
       },
     };
 
     const scaffold = generateArchitectureScaffold(
-      flatAnalysis,
+      result as any,
       projectName,
       timestamp,
       version
@@ -70,11 +88,11 @@ describe('architecture.md scaffold', () => {
     expect(scaffold).toMatchSnapshot();
   });
 
-  it('empty analysis (analyzer failed)', () => {
-    const empty = createEmptyAnalysisResult();
+  it('empty result (scan failed)', () => {
+    const empty = createEmptyEngineResult();
 
     const scaffold = generateArchitectureScaffold(
-      empty,
+      empty as any,
       projectName,
       timestamp,
       version

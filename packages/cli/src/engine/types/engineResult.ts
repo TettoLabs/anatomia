@@ -59,6 +59,7 @@ export interface EngineResult {
     found: boolean;
     path: string | null;
     modelCount: number | null;
+    provider?: string | null;
   }>;
   secrets: {
     envFileExists: boolean;

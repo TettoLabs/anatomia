@@ -1,29 +1,15 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`debugging.md scaffold > empty analysis (analyzer failed) 1`] = `
+exports[`debugging.md scaffold > TypeScript Next.js project (no debugging-specific data) 1`] = `
 "<!-- SCAFFOLD - Setup will fill this file -->
 
 # Debugging — test-project
 
-## Logging
-
-[Setup will add: Logging framework, log levels, where logs go]
-
-## Error Tracing
-
-[Setup will add: Stack traces, error tracking tools, debugging tools]
-
-## Failure Modes
-
-[Setup will add: Common failure scenarios, error messages, troubleshooting steps]
-
-## Debugging Workflow
-
-[Setup will add: How to debug locally, remote debugging, production debugging]
-
-## Observability
-
-[Setup will add: Monitoring tools, metrics, alerting, health checks]
+## Open Questions
+**Unexamined:** Logging framework, log levels, where logs go
+**Unexamined:** Stack traces, error tracking tools, debugging tools
+**Unexamined:** Common failure scenarios, error messages, troubleshooting steps
+**Unexamined:** How to debug locally, remote debugging, production debugging
 
 ---
 
@@ -31,30 +17,16 @@ exports[`debugging.md scaffold > empty analysis (analyzer failed) 1`] = `
 "
 `;
 
-exports[`debugging.md scaffold > flat Next.js project (no debugging-specific data) 1`] = `
+exports[`debugging.md scaffold > empty result (scan failed) 1`] = `
 "<!-- SCAFFOLD - Setup will fill this file -->
 
 # Debugging — test-project
 
-## Logging
-
-[Setup will add: Logging framework, log levels, where logs go]
-
-## Error Tracing
-
-[Setup will add: Stack traces, error tracking tools, debugging tools]
-
-## Failure Modes
-
-[Setup will add: Common failure scenarios, error messages, troubleshooting steps]
-
-## Debugging Workflow
-
-[Setup will add: How to debug locally, remote debugging, production debugging]
-
-## Observability
-
-[Setup will add: Monitoring tools, metrics, alerting, health checks]
+## Open Questions
+**Unexamined:** Logging framework, log levels, where logs go
+**Unexamined:** Stack traces, error tracking tools, debugging tools
+**Unexamined:** Common failure scenarios, error messages, troubleshooting steps
+**Unexamined:** How to debug locally, remote debugging, production debugging
 
 ---
 
@@ -62,30 +34,16 @@ exports[`debugging.md scaffold > flat Next.js project (no debugging-specific dat
 "
 `;
 
-exports[`debugging.md scaffold > rich FastAPI project (no debugging-specific data) 1`] = `
+exports[`debugging.md scaffold > rich FastAPI project with stack and structure data 1`] = `
 "<!-- SCAFFOLD - Setup will fill this file -->
 
 # Debugging — test-project
 
-## Logging
-
-[Setup will add: Logging framework, log levels, where logs go]
-
-## Error Tracing
-
-[Setup will add: Stack traces, error tracking tools, debugging tools]
-
-## Failure Modes
-
-[Setup will add: Common failure scenarios, error messages, troubleshooting steps]
-
-## Debugging Workflow
-
-[Setup will add: How to debug locally, remote debugging, production debugging]
-
-## Observability
-
-[Setup will add: Monitoring tools, metrics, alerting, health checks]
+## Open Questions
+**Unexamined:** Logging framework, log levels, where logs go
+**Unexamined:** Stack traces, error tracking tools, debugging tools
+**Unexamined:** Common failure scenarios, error messages, troubleshooting steps
+**Unexamined:** How to debug locally, remote debugging, production debugging
 
 ---
 

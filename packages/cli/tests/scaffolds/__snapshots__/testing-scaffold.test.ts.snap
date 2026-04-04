@@ -1,76 +1,29 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`testing.md scaffold > empty analysis (analyzer failed) 1`] = `
+exports[`testing.md scaffold > TypeScript Next.js project with vitest 1`] = `
 "<!-- SCAFFOLD - Setup will fill this file -->
 
 # Testing — test-project
 
-## Test Framework
-
-**Detected:** None
-
-[Setup will add: Test runner config, test scripts, watch mode]
-
-## Test Structure
-
-[Setup will add: Test file organization, naming conventions, directory structure]
-
-## Fixture Patterns
-
-[Setup will add: How fixtures are organized, setup/teardown patterns, shared fixtures]
-
-## Mocking
-
-[Setup will add: Mocking strategy, what gets mocked, mock libraries used]
-
-## Coverage
-
-[Setup will add: Coverage targets, coverage tools, what's excluded]
-
-## Example Test Structure
-
-[Setup will add: Real test example from codebase showing structure, assertions, patterns]
-
----
-
-*Last updated: 2026-03-19T10:00:00Z*
-"
-`;
-
-exports[`testing.md scaffold > flat project with vitest but no test location 1`] = `
-"<!-- SCAFFOLD - Setup will fill this file -->
-
-# Testing — test-project
+## Key Facts
+**Detected:** Framework: Vitest
+**Detected:** Test command: \`npm run test\`
+**Detected:** Test files: 10
 
 ## Test Framework
 
-**Framework:** vitest
-**Confidence:** 0.92
-
+**Detected:** vitest (confidence: 0.92)
 **Evidence:**
 - vitest in dependencies
 
-[Setup will add: Test runner config, test scripts, watch mode]
-
 ## Test Structure
+**Detected:** Test-to-source ratio: 10/50 (0.20)
 
-[Setup will add: Test file organization, naming conventions, directory structure]
-
-## Fixture Patterns
-
-[Setup will add: How fixtures are organized, setup/teardown patterns, shared fixtures]
-
-## Mocking
-
-[Setup will add: Mocking strategy, what gets mocked, mock libraries used]
-
-## Coverage
-
-[Setup will add: Coverage targets, coverage tools, what's excluded]
-
-## Example Test Structure
-
-[Setup will add: Real test example from codebase showing structure, assertions, patterns]
+## Open Questions
+**Unexamined:** Test file organization, naming conventions, directory structure
+**Unexamined:** How fixtures are organized, setup/teardown patterns, shared fixtures
+**Unexamined:** Mocking strategy, what gets mocked, mock libraries used
+**Unexamined:** Coverage targets, coverage tools, what's excluded
 
 ---
 
@@ -78,44 +31,56 @@ exports[`testing.md scaffold > flat project with vitest but no test location 1`]
 "
 `;
 
-exports[`testing.md scaffold > rich project with pytest testing 1`] = `
+exports[`testing.md scaffold > empty result (scan failed) 1`] = `
 "<!-- SCAFFOLD - Setup will fill this file -->
 
 # Testing — test-project
 
+## Key Facts
+**Detected:** Test files: 0
+
 ## Test Framework
 
-**Framework:** pytest
-**Confidence:** 1.00
+## Test Structure
 
+## Open Questions
+**Unexamined:** Test file organization, naming conventions, directory structure
+**Unexamined:** How fixtures are organized, setup/teardown patterns, shared fixtures
+**Unexamined:** Mocking strategy, what gets mocked, mock libraries used
+**Unexamined:** Coverage targets, coverage tools, what's excluded
+
+---
+
+*Last updated: 2026-03-19T10:00:00Z*
+"
+`;
+
+exports[`testing.md scaffold > rich project with pytest testing and test structure 1`] = `
+"<!-- SCAFFOLD - Setup will fill this file -->
+
+# Testing — test-project
+
+## Key Facts
+**Detected:** Framework: pytest
+**Detected:** Test command: \`pytest\`
+**Detected:** Test files: 25
+
+## Test Framework
+
+**Detected:** pytest (confidence: 1.00)
 **Evidence:**
 - pytest in dependencies
 - pytest.ini found
 - tests/ directory
 
-[Setup will add: Test runner config, test scripts, watch mode]
-
 ## Test Structure
+**Detected:** Test-to-source ratio: 25/80 (0.31)
 
-**Test location:** \`tests/\`
-
-[Setup will add: Test file organization, naming conventions, directory structure]
-
-## Fixture Patterns
-
-[Setup will add: How fixtures are organized, setup/teardown patterns, shared fixtures]
-
-## Mocking
-
-[Setup will add: Mocking strategy, what gets mocked, mock libraries used]
-
-## Coverage
-
-[Setup will add: Coverage targets, coverage tools, what's excluded]
-
-## Example Test Structure
-
-[Setup will add: Real test example from codebase showing structure, assertions, patterns]
+## Open Questions
+**Unexamined:** Test file organization, naming conventions, directory structure
+**Unexamined:** How fixtures are organized, setup/teardown patterns, shared fixtures
+**Unexamined:** Mocking strategy, what gets mocked, mock libraries used
+**Unexamined:** Coverage targets, coverage tools, what's excluded
 
 ---
 

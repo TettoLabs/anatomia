@@ -46,7 +46,7 @@ CHECK_EXIT=$?
 
 # Write results to a per-file check result on disk — NO stdout
 # This prevents broadcast to parallel agents via additionalContext
-RESULT_DIR="$PROJECT_ROOT/.ana/.state"
+RESULT_DIR="$PROJECT_ROOT/.ana/state"
 mkdir -p "$RESULT_DIR"
 RESULT_FILE="$RESULT_DIR/check_result_${FILENAME}"
 

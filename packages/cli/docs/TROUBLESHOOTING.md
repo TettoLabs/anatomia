@@ -10,7 +10,7 @@
 If detection is failing, run with verbose mode first:
 
 ```bash
-ana analyze --verbose
+ana scan --verbose
 ```
 
 This shows detailed indicators and helps identify which step is failing.
@@ -120,7 +120,7 @@ sudo chown $USER:$USER package.json
 # If project is in restricted directory
 cp -r /restricted/project ~/my-project
 cd ~/my-project
-ana analyze
+ana scan
 ```
 
 ### Example
@@ -134,8 +134,8 @@ $ chmod 644 package.json
 $ ls -la package.json
 -rw-r--r-- 1 user user 234 Feb 24 10:00 package.json
 
-# Now analyze works
-$ ana analyze
+# Now scan works
+$ ana scan
 ```
 
 ---
@@ -177,7 +177,7 @@ npm install express
 
 **Option 3: Check verbose output for hints**
 ```bash
-ana analyze --verbose
+ana scan --verbose
 
 # Look for indicators that were found but didn't meet threshold
 ```
@@ -190,7 +190,7 @@ pytest==7.4.0
 black==23.0.0
 mypy==1.5.0
 
-$ ana analyze
+$ ana scan
 Framework: None detected  # Correct - this is a library
 
 # Web project (should detect):
@@ -198,7 +198,7 @@ $ cat requirements.txt
 fastapi==0.100.0
 uvicorn==0.23.0
 
-$ ana analyze
+$ ana scan
 Framework: fastapi
 Confidence: 95%
 ```
@@ -248,7 +248,7 @@ pip freeze > requirements.txt
 
 **Option 3: Check verbose output to understand why**
 ```bash
-ana analyze --verbose
+ana scan --verbose
 
 # Shows all indicators found:
 # Indicators: fastapi dependency (0.3), uvicorn detected (0.05)
@@ -261,7 +261,7 @@ ana analyze --verbose
 $ cat requirements.txt
 fastapi==0.100.0
 
-$ ana analyze
+$ ana scan
 Confidence: 30%  # Only dependency found
 
 # After (high confidence):
@@ -269,7 +269,7 @@ $ cat main.py
 from fastapi import FastAPI
 app = FastAPI()
 
-$ ana analyze
+$ ana scan
 Confidence: 95%  # Dependency + import + app creation
 ```
 
@@ -309,7 +309,7 @@ pip freeze > requirements.txt
 # 3. Flask
 # If both exist, FastAPI wins
 
-ana analyze --verbose
+ana scan --verbose
 # Check which framework has more indicators
 ```
 
@@ -324,8 +324,8 @@ mv fastapi_code services/api-fastapi/
 mv flask_code services/api-flask/
 
 # Analyze each separately
-ana analyze services/api-fastapi
-ana analyze services/api-flask
+ana scan services/api-fastapi
+ana scan services/api-flask
 ```
 
 ### Example
@@ -335,14 +335,14 @@ $ cat requirements.txt
 flask==2.3.0
 fastapi==0.100.0
 
-$ ana analyze
+$ ana scan
 Framework: fastapi  # FastAPI has higher priority
 Confidence: 70%
 
 # Clear (one framework):
 $ pip uninstall flask
 $ pip freeze > requirements.txt
-$ ana analyze
+$ ana scan
 Framework: fastapi
 Confidence: 95%
 ```
@@ -406,7 +406,7 @@ mv my-package-2 packages/
 ```bash
 # Instead of analyzing root
 cd packages/my-web-app
-ana analyze
+ana scan
 ```
 
 ### Example
@@ -420,7 +420,7 @@ $ tree -L 2
 │   └── package.json
 └── package.json
 
-$ ana analyze
+$ ana scan
 # Treats as single project, misses packages
 
 # After (detected):
@@ -429,7 +429,7 @@ packages:
   - 'api'
   - 'web'
 
-$ ana analyze
+$ ana scan
 pnpm monorepo detected (2 workspace patterns)
 ```
 
@@ -473,7 +473,7 @@ EOF
 
 **Option 3: Check verbose output**
 ```bash
-ana analyze --verbose
+ana scan --verbose
 
 # Shows detection order:
 # 1. Checking Next.js... not found
@@ -494,12 +494,12 @@ $ cat package.json
 $ ls
 # Missing next.config.js
 
-$ ana analyze
+$ ana scan
 Framework: react  # Wrong!
 
 # Fix:
 $ touch next.config.js
-$ ana analyze
+$ ana scan
 Framework: nextjs  # Correct!
 Confidence: 95%
 ```
@@ -511,7 +511,7 @@ Confidence: 95%
 ### Symptom
 ```
 # Analysis takes >2 seconds
-$ time ana analyze
+$ time ana scan
 ...
 real    0m5.234s  # Too slow
 ```
@@ -526,7 +526,7 @@ real    0m5.234s  # Too slow
 **Option 1: Skip import scanning**
 ```bash
 # Fastest - skip code scanning, use dependencies only
-ana analyze --skip-import-scan
+ana scan --skip-import-scan
 ```
 
 **Option 2: Analyze from faster location**
@@ -534,7 +534,7 @@ ana analyze --skip-import-scan
 # If on network drive, copy locally
 cp -r /network/project /tmp/project
 cd /tmp/project
-ana analyze
+ana scan
 ```
 
 **Option 3: Use .gitignore to reduce scan scope**
@@ -553,12 +553,12 @@ EOF
 ### Example
 ```bash
 # Before (slow):
-$ time ana analyze
+$ time ana scan
 Analyzing 10,000 files...
 real    0m12.456s
 
 # After (fast):
-$ time ana analyze --skip-import-scan
+$ time ana scan --skip-import-scan
 Analyzing dependencies only...
 real    0m0.834s
 
@@ -567,7 +567,7 @@ $ cat .gitignore
 node_modules/
 dist/
 
-$ time ana analyze
+$ time ana scan
 Analyzing 234 files...  # Reduced scope
 real    0m1.123s
 ```
@@ -635,7 +635,7 @@ EOF
 $ ls
 main.py  app.py  utils.py
 
-$ ana analyze
+$ ana scan
 No Python dependency files found
 
 # After (dependencies added):
@@ -643,7 +643,7 @@ $ pip freeze > requirements.txt
 $ ls
 main.py  app.py  requirements.txt
 
-$ ana analyze
+$ ana scan
 Framework: fastapi
 Confidence: 85%
 ```
@@ -701,14 +701,14 @@ ls Cargo.toml
 $ ls
 pom.xml  src/main/java/
 
-$ ana analyze
+$ ana scan
 Project Type: unknown  # Java not yet supported
 
 # Supported (Python):
 $ ls
 requirements.txt  main.py
 
-$ ana analyze
+$ ana scan
 Project Type: python
 Framework: fastapi
 ```
@@ -756,7 +756,7 @@ pip freeze > requirements.txt
 $ file requirements.txt
 requirements.txt: ISO-8859 text
 
-$ ana analyze
+$ ana scan
 Warning: Failed to parse requirements.txt: UnicodeDecodeError
 
 # After (UTF-8):
@@ -765,7 +765,7 @@ $ mv temp.txt requirements.txt
 $ file requirements.txt
 requirements.txt: UTF-8 Unicode text
 
-$ ana analyze
+$ ana scan
 Framework: flask
 ```
 
@@ -795,10 +795,10 @@ mkdir packages/shared
 ```bash
 # Instead of analyzing root
 cd packages/package-a
-ana analyze
+ana scan
 
 cd ../package-b
-ana analyze
+ana scan
 ```
 
 **Option 3: Check monorepo tool configuration**
@@ -836,10 +836,10 @@ packages/
 ### Enable Debug Mode
 ```bash
 # Maximum verbosity
-ana analyze --verbose
+ana scan --verbose
 
 # Check specific phase
-ana analyze --verbose 2>&1 | grep "phase:"
+ana scan --verbose 2>&1 | grep "phase:"
 ```
 
 ### Check System Requirements
@@ -856,7 +856,7 @@ df -h .
 
 ### Report Issues
 If none of these solutions work, file an issue with:
-1. Output of `ana analyze --verbose`
+1. Output of `ana scan --verbose`
 2. Contents of dependency files (package.json, requirements.txt)
 3. Operating system and Node.js version
 4. Project structure (`tree -L 2 -I node_modules`)

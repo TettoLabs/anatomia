@@ -38,11 +38,11 @@ describe('ana pr create', () => {
     execSync('git config user.email "test@test.com"', { cwd: tempDir, stdio: 'ignore' });
     execSync('git config user.name "Test"', { cwd: tempDir, stdio: 'ignore' });
 
-    // Create .ana/.meta.json
+    // Create .ana/ana.json
     const anaDir = path.join(tempDir, '.ana');
     await fs.mkdir(anaDir, { recursive: true });
     await fs.writeFile(
-      path.join(anaDir, '.meta.json'),
+      path.join(anaDir, 'ana.json'),
       JSON.stringify({ artifactBranch }),
       'utf-8'
     );
@@ -155,7 +155,7 @@ describe('ana pr create', () => {
       expect(() => createPr('test-feature')).toThrow();
     });
 
-    it('errors when .meta.json missing', async () => {
+    it('errors when ana.json missing', async () => {
       execSync('git init', { cwd: tempDir, stdio: 'ignore' });
       execSync('git config user.email "test@test.com"', { cwd: tempDir, stdio: 'ignore' });
       execSync('git config user.name "Test"', { cwd: tempDir, stdio: 'ignore' });

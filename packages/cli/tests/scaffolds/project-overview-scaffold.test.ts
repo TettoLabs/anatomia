@@ -1,46 +1,50 @@
 import { describe, it, expect } from 'vitest';
 import { generateProjectOverviewScaffold } from '../../src/utils/scaffold-generators.js';
-import type { AnalysisResult } from './test-types.js';
-import { createEmptyAnalysisResult } from './test-types.js';
+import { createEmptyEngineResult } from './test-types.js';
+import type { TestEngineResult } from './test-types.js';
 
 describe('project-overview.md scaffold', () => {
   const projectName = 'test-project';
   const timestamp = '2026-03-19T10:00:00Z';
   const version = '0.2.0';
 
-  it('rich FastAPI project with full structure', () => {
-    const richAnalysis: AnalysisResult = {
-      projectType: 'python',
-      framework: 'fastapi',
-      confidence: { projectType: 1.0, framework: 0.95 },
-      indicators: {
-        projectType: ['pyproject.toml'],
-        framework: ['fastapi in dependencies'],
+  it('rich TypeScript Next.js project with full data', () => {
+    const result: TestEngineResult = {
+      ...createEmptyEngineResult(),
+      overview: { project: projectName, scannedAt: timestamp, depth: 'deep' },
+      stack: {
+        language: 'TypeScript',
+        framework: 'Next.js',
+        database: 'PostgreSQL',
+        auth: 'NextAuth',
+        testing: 'Vitest',
+        payments: 'Stripe',
+        workspace: null,
       },
-      detectedAt: timestamp,
-      version: '0.2.0',
-      structure: {
-        architecture: 'layered',
-        confidence: { architecture: 0.85 },
-        entryPoints: ['src/main.py', 'src/api/app.py'],
-        testLocation: 'tests/',
-        directories: { src: 'src/', tests: 'tests/', api: 'src/api/' },
-        configFiles: ['pyproject.toml', 'pytest.ini'],
+      files: { source: 120, test: 35, config: 18, total: 173 },
+      structure: [
+        { path: 'src/app', purpose: 'Next.js app directory' },
+        { path: 'src/components', purpose: 'React components' },
+        { path: 'src/lib', purpose: 'Shared utilities' },
+        { path: 'tests', purpose: 'Test files' },
+      ],
+      structureOverflow: 0,
+      commands: {
+        build: 'npm run build',
+        test: 'npm run test',
+        lint: 'npm run lint',
+        dev: 'npm run dev',
+        packageManager: 'npm',
       },
-      patterns: {
-        testing: {
-          library: 'pytest',
-          confidence: 1.0,
-          evidence: ['pytest in dependencies'],
-        },
-        sampledFiles: 20,
-        detectionTime: 5000,
-        threshold: 0.7,
-      },
+      deployment: { platform: 'Vercel', configFile: 'vercel.json' },
+      externalServices: [
+        { name: 'Stripe', category: 'payments', source: 'package.json', configFound: true },
+        { name: 'SendGrid', category: 'email', source: 'package.json', configFound: false },
+      ],
     };
 
     const scaffold = generateProjectOverviewScaffold(
-      richAnalysis,
+      result as any,
       projectName,
       timestamp,
       version
@@ -49,21 +53,31 @@ describe('project-overview.md scaffold', () => {
     expect(scaffold).toMatchSnapshot();
   });
 
-  it('flat Next.js project with minimal data', () => {
-    const flatAnalysis: AnalysisResult = {
-      projectType: 'node',
-      framework: 'nextjs',
-      confidence: { projectType: 1.0, framework: 0.88 },
-      indicators: {
-        projectType: ['package.json'],
-        framework: ['next in dependencies'],
+  it('Python FastAPI project with minimal data', () => {
+    const result: TestEngineResult = {
+      ...createEmptyEngineResult(),
+      overview: { project: projectName, scannedAt: timestamp, depth: 'surface' },
+      stack: {
+        language: 'Python',
+        framework: 'FastAPI',
+        database: null,
+        auth: null,
+        testing: 'pytest',
+        payments: null,
+        workspace: null,
       },
-      detectedAt: timestamp,
-      version: '0.2.0',
+      files: { source: 45, test: 12, config: 5, total: 62 },
+      commands: {
+        build: null,
+        test: 'pytest',
+        lint: null,
+        dev: 'uvicorn src.main:app --reload',
+        packageManager: 'pip',
+      },
     };
 
     const scaffold = generateProjectOverviewScaffold(
-      flatAnalysis,
+      result as any,
       projectName,
       timestamp,
       version
@@ -72,11 +86,11 @@ describe('project-overview.md scaffold', () => {
     expect(scaffold).toMatchSnapshot();
   });
 
-  it('empty analysis (analyzer failed)', () => {
-    const empty = createEmptyAnalysisResult();
+  it('empty result (scan failed)', () => {
+    const empty = createEmptyEngineResult();
 
     const scaffold = generateProjectOverviewScaffold(
-      empty,
+      empty as any,
       projectName,
       timestamp,
       version

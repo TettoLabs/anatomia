@@ -1,30 +1,39 @@
 import { describe, it, expect } from 'vitest';
 import { generateTestingScaffold } from '../../src/utils/scaffold-generators.js';
-import type { AnalysisResult } from './test-types.js';
-import { createEmptyAnalysisResult } from './test-types.js';
+import { createEmptyEngineResult } from './test-types.js';
+import type { TestEngineResult } from './test-types.js';
 
 describe('testing.md scaffold', () => {
   const projectName = 'test-project';
   const timestamp = '2026-03-19T10:00:00Z';
   const version = '0.2.0';
 
-  it('rich project with pytest testing', () => {
-    const richAnalysis: AnalysisResult = {
-      projectType: 'python',
-      framework: 'fastapi',
-      confidence: { projectType: 1.0, framework: 0.95 },
-      indicators: {
-        projectType: ['pyproject.toml'],
-        framework: ['fastapi in dependencies'],
+  it('rich project with pytest testing and test structure', () => {
+    const result: TestEngineResult = {
+      ...createEmptyEngineResult(),
+      overview: { project: projectName, scannedAt: timestamp, depth: 'deep' },
+      stack: {
+        language: 'Python',
+        framework: 'FastAPI',
+        database: 'PostgreSQL',
+        auth: null,
+        testing: 'pytest',
+        payments: null,
+        workspace: null,
       },
-      detectedAt: timestamp,
-      version: '0.2.0',
-      structure: {
-        architecture: 'layered',
-        testLocation: 'tests/',
-        entryPoints: ['src/main.py'],
-        directories: { src: 'src/', tests: 'tests/' },
-        configFiles: ['pytest.ini'],
+      files: { source: 80, test: 25, config: 8, total: 113 },
+      structure: [
+        { path: 'src/', purpose: 'Application source' },
+        { path: 'tests/', purpose: 'Test suite' },
+        { path: 'tests/unit/', purpose: 'Unit tests' },
+        { path: 'tests/integration/', purpose: 'Integration tests' },
+      ],
+      commands: {
+        build: null,
+        test: 'pytest',
+        lint: 'ruff check .',
+        dev: 'uvicorn src.main:app --reload',
+        packageManager: 'pip',
       },
       patterns: {
         testing: {
@@ -39,7 +48,7 @@ describe('testing.md scaffold', () => {
     };
 
     const scaffold = generateTestingScaffold(
-      richAnalysis,
+      result as any,
       projectName,
       timestamp,
       version
@@ -48,17 +57,27 @@ describe('testing.md scaffold', () => {
     expect(scaffold).toMatchSnapshot();
   });
 
-  it('flat project with vitest but no test location', () => {
-    const flatAnalysis: AnalysisResult = {
-      projectType: 'node',
-      framework: 'nextjs',
-      confidence: { projectType: 1.0, framework: 0.88 },
-      indicators: {
-        projectType: ['package.json'],
-        framework: ['next in dependencies'],
+  it('TypeScript Next.js project with vitest', () => {
+    const result: TestEngineResult = {
+      ...createEmptyEngineResult(),
+      overview: { project: projectName, scannedAt: timestamp, depth: 'deep' },
+      stack: {
+        language: 'TypeScript',
+        framework: 'Next.js',
+        database: null,
+        auth: null,
+        testing: 'Vitest',
+        payments: null,
+        workspace: null,
       },
-      detectedAt: timestamp,
-      version: '0.2.0',
+      files: { source: 50, test: 10, config: 6, total: 66 },
+      commands: {
+        build: 'npm run build',
+        test: 'npm run test',
+        lint: 'npm run lint',
+        dev: 'npm run dev',
+        packageManager: 'npm',
+      },
       patterns: {
         testing: {
           library: 'vitest',
@@ -72,7 +91,7 @@ describe('testing.md scaffold', () => {
     };
 
     const scaffold = generateTestingScaffold(
-      flatAnalysis,
+      result as any,
       projectName,
       timestamp,
       version
@@ -81,11 +100,11 @@ describe('testing.md scaffold', () => {
     expect(scaffold).toMatchSnapshot();
   });
 
-  it('empty analysis (analyzer failed)', () => {
-    const empty = createEmptyAnalysisResult();
+  it('empty result (scan failed)', () => {
+    const empty = createEmptyEngineResult();
 
     const scaffold = generateTestingScaffold(
-      empty,
+      empty as any,
       projectName,
       timestamp,
       version

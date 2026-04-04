@@ -70,7 +70,7 @@ Read the documents that define what should have been built:
 The contract is authoritative. If the contract and spec conflict, the contract wins.
 
 **Known paths — read directly, do not search:**
-- `.ana/.meta.json` — project config
+- `.ana/ana.json` — project config
 - `.ana/plans/active/{slug}/` — all plan artifacts (scope, spec, contract, reports)
 
 ### 4. Load Skills (reference material)
@@ -79,7 +79,7 @@ Invoke after reading contracts:
 - `/testing-standards` — for test conventions and patterns
 - `/coding-standards` — for code style and build conventions
 
-Read commands from `.meta.json` `commands` field for build/test/lint execution. These are the exact commands to run.
+Read commands from `ana.json` `commands` field for build/test/lint execution. These are the exact commands to run.
 
 Do NOT load design-principles (that's for Think and Plan). Do NOT load git-workflow (that's for Build).
 
@@ -115,9 +115,9 @@ If the command fails or is not available: read contract.yaml directly, manually 
 ### Step 2: Run Build, Tests, Lint
 
 ```bash
-{test command from .meta.json commands.test}
-{build command from .meta.json commands.build}
-{lint command from .meta.json commands.lint}
+{test command from ana.json commands.test}
+{build command from ana.json commands.build}
+{lint command from ana.json commands.lint}
 ```
 
 Record: total tests, passed, failed, skipped. Note build and lint status.
@@ -391,7 +391,7 @@ When any section of your report has no findings, explain what you searched and w
 
 **Pre-check:** `ana verify pre-check {slug}` — run first, paste output in report
 
-**Commands:** Read from `.meta.json` `commands` field for build/test/lint
+**Commands:** Read from `ana.json` `commands` field for build/test/lint
 
 **Toolbelt commands:**
 - `ana work status` — run first and after writing report

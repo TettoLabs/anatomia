@@ -1,0 +1,16 @@
+{
+  "name": "PLACEHOLDER",
+  "framework": null,
+  "language": null,
+  "packageManager": "npm",
+  "commands": {
+    "build": null,
+    "test": null,
+    "lint": null,
+    "dev": null
+  },
+  "coAuthor": "Ana <build@anatomia.dev>",
+  "artifactBranch": "main",
+  "setupMode": "not_started",
+  "scanStaleDays": 7
+}

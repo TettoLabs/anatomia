@@ -13,8 +13,8 @@ import {
   extractFrameworkFromContent,
   getProjectName,
 } from '../../src/utils/validators.js';
-import type { AnalysisResult } from '../scaffolds/test-types.js';
-import { createEmptyAnalysisResult } from '../scaffolds/test-types.js';
+import type { TestEngineResult } from '../scaffolds/test-types.js';
+import { createEmptyEngineResult } from '../scaffolds/test-types.js';
 
 describe('validators', () => {
   let tmpDir: string;
@@ -25,7 +25,7 @@ describe('validators', () => {
     anaPath = path.join(tmpDir, '.ana');
     await fs.mkdir(anaPath, { recursive: true });
     await fs.mkdir(path.join(anaPath, 'context'), { recursive: true });
-    await fs.mkdir(path.join(anaPath, '.state'), { recursive: true });
+    await fs.mkdir(path.join(anaPath, 'state'), { recursive: true });
   });
 
   afterEach(async () => {
@@ -34,13 +34,13 @@ describe('validators', () => {
 
   describe('countDetectedPatterns', () => {
     it('returns 0 when patterns undefined', () => {
-      const analysis = createEmptyAnalysisResult();
+      const analysis = createEmptyEngineResult();
       expect(countDetectedPatterns(analysis)).toBe(0);
     });
 
     it('counts non-null pattern categories', () => {
-      const analysis: AnalysisResult = {
-        ...createEmptyAnalysisResult(),
+      const analysis: TestEngineResult = {
+        ...createEmptyEngineResult(),
         patterns: {
           errorHandling: { library: 'exceptions', confidence: 0.9, evidence: [] },
           validation: { library: 'pydantic', confidence: 0.9, evidence: [] },
@@ -172,8 +172,8 @@ describe('validators', () => {
   describe('validateCrossReferences - BF5', () => {
     it('fails when patterns documented < detected', async () => {
       // Snapshot says 3 patterns detected
-      const snapshot: AnalysisResult = {
-        ...createEmptyAnalysisResult(),
+      const snapshot: TestEngineResult = {
+        ...createEmptyEngineResult(),
         patterns: {
           errorHandling: { library: 'exceptions', confidence: 0.9, evidence: [] },
           validation: { library: 'pydantic', confidence: 0.9, evidence: [] },
@@ -195,8 +195,8 @@ describe('validators', () => {
     });
 
     it('passes when all patterns documented', async () => {
-      const snapshot: AnalysisResult = {
-        ...createEmptyAnalysisResult(),
+      const snapshot: TestEngineResult = {
+        ...createEmptyEngineResult(),
         patterns: {
           testing: { library: 'pytest', confidence: 1.0, evidence: [] },
           sampledFiles: 20,
@@ -216,10 +216,9 @@ describe('validators', () => {
 
   describe('validateCrossReferences - BF6', () => {
     it('fails when framework contradicts', async () => {
-      const snapshot: AnalysisResult = {
-        ...createEmptyAnalysisResult(),
-        framework: 'fastapi',
-        confidence: { projectType: 0.5, framework: 0.8 },
+      const snapshot: TestEngineResult = {
+        ...createEmptyEngineResult(),
+        stack: { ...createEmptyEngineResult().stack, framework: 'fastapi' },
       };
 
       // project-overview.md says different framework
@@ -235,9 +234,8 @@ describe('validators', () => {
     });
 
     it('passes when both have no framework', async () => {
-      const snapshot: AnalysisResult = {
-        ...createEmptyAnalysisResult(),
-        framework: null,
+      const snapshot: TestEngineResult = {
+        ...createEmptyEngineResult(),
       };
 
       const overviewContent = '# Project Overview\n\n**Framework:** None detected\n';

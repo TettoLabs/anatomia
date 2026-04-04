@@ -15,6 +15,7 @@
 
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { glob } from 'glob';
 import type { EngineResult } from './types/engineResult.js';
 import type { AnalysisResult } from './types/index.js';
@@ -216,7 +217,9 @@ async function detectSchemas(
     try {
       const content = await fs.readFile(schemaPath, 'utf-8');
       const modelCount = (content.match(/^model\s+/gm) || []).length;
-      schemas['prisma'] = { found: true, path: 'prisma/schema.prisma', modelCount };
+      const providerMatch = content.match(/provider\s*=\s*"(\w+)"/);
+      const provider = providerMatch?.[1] || null;
+      schemas['prisma'] = { found: true, path: 'prisma/schema.prisma', modelCount, provider };
     } catch {
       schemas['prisma'] = { found: false, path: null, modelCount: null };
       blindSpots.push({ area: 'Database', issue: 'Prisma dependency found but no schema.prisma', resolution: 'Create prisma/schema.prisma' });
@@ -360,6 +363,16 @@ export async function analyzeProject(
     }
     if (!stack.testing && analysis.patterns?.testing?.library) {
       stack.testing = displayName(PATTERN_DISPLAY_NAMES, analysis.patterns.testing.library);
+    }
+  }
+
+  // TypeScript override: ONLY upgrade Node.js → TypeScript
+  // Don't override null (could be Python/Go project with tsconfig for tooling)
+  if (stack.language === 'Node.js') {
+    const hasTsConfig = existsSync(path.join(rootPath, 'tsconfig.json'));
+    const hasTsDep = allDeps['typescript'] !== undefined;
+    if (hasTsConfig || hasTsDep) {
+      stack.language = 'TypeScript';
     }
   }
 
