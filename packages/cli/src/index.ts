@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Anatomia CLI - Auto-generated AI context for codebases
+ * Anatomia CLI - Verified AI development. Ship with proof.
  *
  * Usage:
  *   ana --version       Show version
@@ -28,7 +28,7 @@ const program = new Command();
 
 program
   .name('ana')
-  .description('Auto-generated AI context for codebases')
+  .description('Verified AI development. Ship with proof.')
   .version('0.1.0', '-v, --version', 'Display version number');
 
 // Register commands
