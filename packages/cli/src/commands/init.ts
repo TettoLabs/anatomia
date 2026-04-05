@@ -84,7 +84,6 @@ import { buildSymbolIndex } from './index.js';
 /** Command options */
 interface InitCommandOptions {
   force?: boolean;
-  skipAnalysis?: boolean;
 }
 
 /** Pre-flight validation result */
@@ -96,7 +95,7 @@ interface PreflightResult {
 /**
  * Create empty analysis result for fallback
  *
- * Used when analyzer fails or is skipped with --skip-analysis.
+ * Used when analyzer fails.
  * Scaffolds handle undefined optional fields gracefully.
  *
  * @returns Minimal valid EngineResult
@@ -129,7 +128,6 @@ function createEmptyEngineResult(): EngineResult {
 export const initCommand = new Command('init')
   .description('Initialize .ana/ context framework')
   .option('-f, --force', 'Overwrite existing .ana/ (preserves state/)')
-  .option('--skip-analysis', 'Skip analyzer, create empty scaffolds')
   .action(async (options: InitCommandOptions, command: Command) => {
     // Reject positional arguments (init operates on cwd)
     if (command.args.length > 0) {
@@ -312,19 +310,12 @@ async function dirExists(dirPath: string): Promise<boolean> {
  *
  * @param rootPath - Project root directory
  * @param options - Command options
- * @returns EngineResult or null if failed/skipped
+ * @returns EngineResult or null if failed
  */
 async function runAnalyzer(
   rootPath: string,
-  options: InitCommandOptions
+  _options: InitCommandOptions
 ): Promise<EngineResult | null> {
-  // Skip if --skip-analysis flag
-  if (options.skipAnalysis) {
-    console.log(chalk.gray('\nSkipping analyzer (--skip-analysis flag)'));
-    console.log(chalk.yellow('  Scaffolds will have no pre-populated data\n'));
-    return null;
-  }
-
   const spinner = ora('Analyzing project...').start();
 
   try {
