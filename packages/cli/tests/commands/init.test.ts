@@ -397,9 +397,13 @@ describe('ana init', () => {
         if (agentFile === 'ana.md') {
           expect(frontmatter).toContain('model: opus');
           expect(frontmatter).toContain('memory:');
-        } else if (agentFile === 'ana-plan.md' || agentFile === 'ana-setup.md') {
+        } else if (agentFile === 'ana-plan.md') {
           expect(frontmatter).toContain('model: opus');
           expect(frontmatter).not.toContain('tools:');
+          expect(frontmatter).not.toContain('memory:');
+        } else if (agentFile === 'ana-setup.md') {
+          expect(frontmatter).toContain('model: opus');
+          expect(frontmatter).toContain('tools:');
           expect(frontmatter).not.toContain('memory:');
         } else if (agentFile === 'ana-build.md') {
           expect(frontmatter).toContain('model: sonnet');
