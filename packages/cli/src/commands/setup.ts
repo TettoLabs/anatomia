@@ -2,7 +2,7 @@
  * ana setup - Setup-related commands
  *
  * Subcommands:
- * - complete: Validate context files and generate ENTRY.md
+ * - complete: Validate context files and finalize setup
  */
 
 import { Command } from 'commander';
@@ -15,7 +15,6 @@ import {
   validateContent,
   validateCrossReferences,
   validateQuality,
-  getProjectName,
   fileExists,
   type ValidationError,
 } from '../utils/validators.js';
@@ -50,10 +49,10 @@ setupCommand.addCommand(createIndexCommand());
 /** Add 'complete' subcommand */
 setupCommand
   .command('complete')
-  .description('Validate context files and generate ENTRY.md')
+  .description('Validate context files and finalize setup')
   .option(
     '--mode <tier>',
-    'Setup tier used (quick|guided|complete) - overrides auto-detection'
+    'Setup tier used (quick|guided) - overrides auto-detection'
   )
   .action(async (options: SetupCompleteOptions) => {
     const cwd = process.cwd();
@@ -126,14 +125,10 @@ setupCommand
       console.log();
     }
 
-    // All validation passed - proceed with generation
+    // All validation passed - proceed with finalization
     console.log(chalk.green('✅ All validations passed\n'));
 
-    // Phase 5: Generate ENTRY.md
-    console.log(chalk.gray('Generating ENTRY.md...'));
-    await generateEntryMd(anaPath, cwd);
-
-    // Phase 6: Generate/update CLAUDE.md
+    // Phase 5: Generate/update CLAUDE.md
     console.log(chalk.gray('Updating CLAUDE.md...'));
     await generateClaudeMd(cwd, anaPath);
 
@@ -169,77 +164,6 @@ function displayValidationFailures(errors: ValidationError[]): void {
 }
 
 /**
- * Generate ENTRY.md from template
- *
- * Replaces 3 variables:
- * - {{projectName}} - from package.json or directory
- * - {{timestamp}} - current ISO timestamp
- * - {{version}} - CLI version from package.json
- *
- * @param anaPath - Path to .ana/ directory
- * @param cwd - Project root (for getProjectName)
- */
-async function generateEntryMd(anaPath: string, cwd: string): Promise<void> {
-  // Get project name (priority: package.json → pyproject.toml → go.mod → dirname)
-  const projectName = await getProjectName(cwd);
-
-  // Get CLI version - detect bundle vs dev context
-  const moduleUrl = new URL('.', import.meta.url);
-  const isBundle = !moduleUrl.pathname.includes('/src/');
-  const cliPkgPath = isBundle
-    ? new URL('../package.json', import.meta.url) // dist/index.js → ../package.json = cli/package.json
-    : new URL('../../package.json', import.meta.url); // src/commands/setup.ts → ../../package.json = cli/package.json
-  const cliPkgContent = await fs.readFile(cliPkgPath, 'utf-8');
-  const cliPkg = JSON.parse(cliPkgContent);
-  const cliVersion = cliPkg.version || '0.2.0';
-
-  // Get timestamp
-  const timestamp = new Date().toISOString();
-
-  // Get template directory (handles dev vs built)
-  const templatesDir = getTemplatesDir();
-  const templatePath = path.join(templatesDir, 'ENTRY.md');
-
-  // Read template
-  const template = await fs.readFile(templatePath, 'utf-8');
-
-  // Replace variables (simple string replacement, not Handlebars)
-  const generated = template
-    .replace(/\{\{projectName\}\}/g, projectName)
-    .replace(/\{\{timestamp\}\}/g, timestamp)
-    .replace(/\{\{version\}\}/g, cliVersion);
-
-  // Write to .ana/ENTRY.md
-  const entryPath = path.join(anaPath, 'ENTRY.md');
-  await fs.writeFile(entryPath, generated, 'utf-8');
-}
-
-/**
- * Get templates directory (handles dev vs built contexts)
- *
- * Build structure (verified):
- * - dist/index.js (bundled entry point)
- * - dist/templates/ (copied from templates/)
- *
- * Dev structure:
- * - src/commands/setup.ts
- * - templates/ (at project root)
- *
- * @returns Path to templates/ directory
- */
-function getTemplatesDir(): string {
-  const fileUrl = import.meta.url;
-  const __filename = new URL(fileUrl).pathname;
-  const __dirname = path.dirname(__filename);
-
-  const isBuilt = __dirname.includes('dist');
-
-  return isBuilt
-    ? path.join(__dirname, 'templates') // dist/ → dist/templates/
-    : path.join(__dirname, '..', '..', 'templates'); // src/commands/ → templates/
-}
-
-/**
  * Generate or update CLAUDE.md with Anatomia section
  *
  * Merge strategy:
@@ -272,8 +196,6 @@ async function generateClaudeMd(cwd: string, anaPath: string): Promise<void> {
     `This project uses Anatomia for AI context management (${contextFileCount} verified context files).`,
     '',
     'Available modes: @.ana/modes/code.md · @.ana/modes/debug.md · @.ana/modes/test.md · @.ana/modes/architect.md',
-    '',
-    'For full context and all modes: @.ana/ENTRY.md',
     '<!-- End Anatomia section -->',
   ].join('\n');
 
@@ -374,7 +296,7 @@ async function updateAnaJson(
         if (error instanceof Error) {
           console.error(chalk.gray(error.message));
         }
-        console.error(chalk.gray('Run with --mode <quick|guided|complete> to specify manually.'));
+        console.error(chalk.gray('Run with --mode <quick|guided> to specify manually.'));
         process.exit(1);
       }
     }
@@ -386,13 +308,13 @@ async function updateAnaJson(
     else {
       console.error(chalk.red('Error: Cannot determine setup tier.'));
       console.error(chalk.gray('Setup should have written .ana/.setup_tier file.'));
-      console.error(chalk.gray('Run with --mode <quick|guided|complete> to specify manually.'));
+      console.error(chalk.gray('Run with --mode <quick|guided> to specify manually.'));
       process.exit(1);
     }
   }
 
   // Update config fields
-  config.setupMode = 'complete';
+  config.setupMode = setupMode;
   config.setupCompletedAt = new Date().toISOString();
 
   // Write back to file (formatted JSON)

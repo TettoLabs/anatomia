@@ -487,8 +487,6 @@ async function getCliVersion(): Promise<string> {
  * - 6 framework-snippets
  * - 1 SCHEMAS.md
  *
- * ENTRY.md template stays in CLI package (used by ana setup complete).
- *
  * Each file verified with SHA-256 hash after copy.
  *
  * @param tmpAnaPath - Temp .ana/ path

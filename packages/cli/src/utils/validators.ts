@@ -169,8 +169,7 @@ export async function getProjectName(rootPath: string): Promise<string> {
     const content = await fs.readFile(pkgPath, 'utf-8');
     const pkg = JSON.parse(content);
     if (pkg.name && typeof pkg.name === 'string') {
-      // Handle scoped packages (@scope/name) - keep full name for now
-      // If problematic in ENTRY.md title, can strip with: pkg.name.replace(/^@[^/]+\//, '')
+      // Handle scoped packages (@scope/name) - keep full name
       return pkg.name;
     }
   } catch {
