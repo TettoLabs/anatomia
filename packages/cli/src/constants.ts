@@ -92,7 +92,7 @@ export const SKILL_DIRS = [
 ] as const;
 
 /** Valid setupMode tiers */
-export const VALID_SETUP_TIERS = ['quick', 'guided', 'complete'] as const;
+export const VALID_SETUP_TIERS = ['quick', 'guided'] as const;
 
 /** ana.json version */
 export const ANA_JSON_VERSION = '1.0.0';
