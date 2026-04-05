@@ -402,7 +402,7 @@ describe('ana init', () => {
           expect(frontmatter).not.toContain('memory:');
         } else if (agentFile === 'ana-setup.md') {
           expect(frontmatter).toContain('model: opus');
-          expect(frontmatter).toContain('tools:');
+          expect(frontmatter).not.toContain('tools:');  // no tools field = all tools (including Agent for sub-agent delegation)
           expect(frontmatter).not.toContain('memory:');
         } else if (agentFile === 'ana-build.md') {
           expect(frontmatter).toContain('model: sonnet');
