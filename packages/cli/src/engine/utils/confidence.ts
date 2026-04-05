@@ -43,28 +43,3 @@ export function calculateConfidence(signals: ConfidenceSignals): number {
   return Math.min(1.0, confidence);
 }
 
-/**
- * Interpret confidence level for user display
- *
- * Based on calibration targets:
- * - High (≥0.80): Safe for auto-template application
- * - Moderate (0.50-0.79): Recommend verification
- * - Low (0.30-0.49): Require manual confirmation
- * - Uncertain (<0.30): Flag for manual review
- * @param confidence
- */
-export function interpretConfidence(confidence: number): {
-  level: 'high' | 'moderate' | 'low' | 'uncertain';
-  message: string;
-} {
-  if (confidence >= 0.80) {
-    return { level: 'high', message: 'High confidence - safe for auto-apply' };
-  }
-  if (confidence >= 0.50) {
-    return { level: 'moderate', message: 'Moderate confidence - verification recommended' };
-  }
-  if (confidence >= 0.30) {
-    return { level: 'low', message: 'Low confidence - manual confirmation required' };
-  }
-  return { level: 'uncertain', message: 'Uncertain - manual review needed' };
-}

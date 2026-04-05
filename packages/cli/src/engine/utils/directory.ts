@@ -89,4 +89,3 @@ export async function getSubdirectories(rootPath: string): Promise<string[]> {
   }
 }
 
-export { DEFAULT_IGNORE_PATTERNS };

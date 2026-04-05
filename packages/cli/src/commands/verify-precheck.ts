@@ -23,7 +23,7 @@ import { glob } from 'glob';
 /**
  * Contract pre-check result (S8+)
  */
-export interface ContractPreCheckResult {
+interface ContractPreCheckResult {
   seal: 'INTACT' | 'TAMPERED' | 'UNVERIFIABLE';
   sealCommit?: string;
   sealHash?: string;

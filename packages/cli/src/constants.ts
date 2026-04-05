@@ -46,13 +46,6 @@ export const MODE_FILES = [
   'setup-complete.md',
 ] as const;
 
-/** Setup files */
-export const SETUP_FILES = [
-  'SETUP_GUIDE.md',
-  'templates.md',
-  'rules.md',
-] as const;
-
 /** Step files */
 export const STEP_FILES = [
   '00_explore_codebase.md',
