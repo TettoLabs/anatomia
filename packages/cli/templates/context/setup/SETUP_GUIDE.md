@@ -11,7 +11,7 @@ Setup uses a sub-agent architecture:
 | Component | Location | Purpose |
 |-----------|----------|---------|
 | Orchestrator | `modes/setup.md` | User interaction, agent delegation |
-| Tier files | `modes/setup-{quick,guided,complete}.md` | Question selection per tier |
+| Tier files | `modes/setup-{quick,guided}.md` | Question selection per tier |
 | Explorer agent | `.claude/agents/ana-explorer.md` | Codebase exploration |
 | Question agent | `.claude/agents/ana-question-formulator.md` | Pre-answer formulation |
 | Writer agent | `.claude/agents/ana-writer.md` | Context file writing |

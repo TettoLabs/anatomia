@@ -92,7 +92,6 @@ describe('ana init E2E', () => {
       'modes/setup.md',
       'modes/setup-quick.md',
       'modes/setup-guided.md',
-      'modes/setup-complete.md',
     ];
 
     for (const file of modeFiles) {
@@ -141,9 +140,9 @@ describe('ana init E2E', () => {
     expect(snapshotExists).toBe(true);
 
     // Count total files in .ana/
-    // 7 generated + 10 modes + 3 setup + 8 steps + 6 snippets + 4 hooks + 1 SCHEMAS + 2 .gitkeep + 3 JSON (ana.json, snapshot.json, scan.json) + 1 symbol-index + 1 cli-path + 1 .gitignore = 47
+    // 7 generated + 9 modes + 3 setup + 8 steps + 6 snippets + 4 hooks + 1 SCHEMAS + 2 .gitkeep + 3 JSON (ana.json, snapshot.json, scan.json) + 1 symbol-index + 1 cli-path + 1 .gitignore = 46
     const allFiles = await findAllFiles(anaPath);
-    expect(allFiles.length).toBe(47);
+    expect(allFiles.length).toBe(46);
 
     // Verify .gitignore exists and excludes runtime state
     const gitignorePath = path.join(anaPath, '.gitignore');

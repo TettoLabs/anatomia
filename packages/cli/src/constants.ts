@@ -43,7 +43,6 @@ export const MODE_FILES = [
   'setup.md',
   'setup-quick.md',
   'setup-guided.md',
-  'setup-complete.md',
 ] as const;
 
 /** Step files */

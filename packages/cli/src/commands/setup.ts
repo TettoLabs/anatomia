@@ -240,7 +240,7 @@ async function generateClaudeMd(cwd: string, anaPath: string): Promise<void> {
  * Update ana.json after successful validation
  *
  * Sets:
- * - setupMode: 'complete'
+ * - setupMode: determined tier (quick/guided)
  * - setupCompletedAt: current timestamp
  *
  * @param anaPath - Path to .ana/ directory
