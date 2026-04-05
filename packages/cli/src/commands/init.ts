@@ -79,7 +79,7 @@ import {
   AGENT_FILES,
   SKILL_DIRS,
 } from '../constants.js';
-import { buildSymbolIndex } from './index.js';
+import { buildSymbolIndex } from './symbol-index.js';
 
 /** Command options */
 interface InitCommandOptions {

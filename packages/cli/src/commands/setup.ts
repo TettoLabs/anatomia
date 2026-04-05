@@ -21,7 +21,7 @@ import {
 } from '../utils/validators.js';
 import { VALID_SETUP_TIERS, ANA_JSON_VERSION } from '../constants.js';
 import { createCheckCommand } from './check.js';
-import { createIndexCommand } from './index.js';
+import { createIndexCommand } from './symbol-index.js';
 
 interface SetupCompleteOptions {
   mode?: string;

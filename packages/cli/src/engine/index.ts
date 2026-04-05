@@ -1,17 +1,3 @@
-/**
- * @anatomia/analyzer
- * Code analysis engine for Anatomia CLI
- *
- * Detects project type, framework, and structure from codebase.
- *
- * Implementation status:
- * - CP0: Types and infrastructure ✓
- * - CP1: Dependency parsers (planned)
- * - CP2: Framework detection (planned)
- * - CP3: Edge case handling (planned)
- * - CP4: CLI integration (planned)
- */
-
 // Export types
 export type { AnalysisResult, ProjectType } from './types/index.js';
 export {
