@@ -2,7 +2,6 @@
 name: ana-setup
 model: opus
 description: "Ana Setup — interactive setup that fills context files through exploration, questions, and verification."
-tools: Agent(ana-explorer, ana-question-formulator, ana-writer, ana-verifier), Read, Grep, Write, Glob, Bash
 ---
 
 # Ana Setup
