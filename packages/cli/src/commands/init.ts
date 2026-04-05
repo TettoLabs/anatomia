@@ -158,7 +158,7 @@ export const initCommand = new Command('init')
 
       // All operations in temp directory
       const scanStart = Date.now();
-      const engineResult = await runAnalyzer(cwd, options);
+      const engineResult = await runAnalyzer(cwd);
 
       // Reset cache override after analysis
       ASTCache.setCacheDir(null);
@@ -309,12 +309,10 @@ async function dirExists(dirPath: string): Promise<boolean> {
  * Graceful degradation: if analyzer fails, returns null (empty scaffolds created).
  *
  * @param rootPath - Project root directory
- * @param options - Command options
  * @returns EngineResult or null if failed
  */
 async function runAnalyzer(
-  rootPath: string,
-  _options: InitCommandOptions
+  rootPath: string
 ): Promise<EngineResult | null> {
   const spinner = ora('Analyzing project...').start();
 
