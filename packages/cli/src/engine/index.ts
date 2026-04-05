@@ -16,8 +16,6 @@
 export type { AnalysisResult, ProjectType } from './types/index.js';
 export {
   AnalysisResultSchema,
-  ProjectTypeSchema,
-  ConfidenceScoreSchema,
   createEmptyAnalysisResult,
   validateAnalysisResult,
 } from './types/index.js';
@@ -68,15 +66,11 @@ export type { Language } from './parsers/treeSitter.js';
 
 // Export sampling functions (STEP_1.3 CP3)
 export { sampleFiles } from './sampling/fileSampler.js';
-export type { SamplingOptions } from './sampling/fileSampler.js';
 
-// Export query system (STEP_1.3 CP1)
-export { QUERIES, QueryCache, queryCache } from './parsers/queries.js';
-export type { QueryType } from './parsers/queries.js';
 
 // Export caching system (STEP_1.3 CP2)
 export { ASTCache } from './cache/astCache.js';
-export type { ASTCacheEntry, CacheStats } from './cache/astCache.js';
+export type { ASTCacheEntry } from './cache/astCache.js';
 
 // Export parsed analysis types (STEP_1.3)
 export type {
@@ -133,8 +127,8 @@ export {
 export type { EngineResult } from './types/engineResult.js';
 export { analyzeProject } from './analyze.js';
 
-// Version constant
-export const VERSION = '0.1.0';
+// Version constant (internal only)
+const VERSION = '0.1.0';
 
 /**
  * Analysis options
@@ -144,7 +138,7 @@ export const VERSION = '0.1.0';
  * STEP_1.3: skipParsing, maxFiles
  * STEP_2.1: skipPatterns (NEW)
  */
-export interface AnalyzeOptions {
+interface AnalyzeOptions {
   skipImportScan?: boolean;
   skipMonorepo?: boolean;
   skipStructure?: boolean;
