@@ -1,246 +1,114 @@
-# Step 0: Explore Codebase
-
-## Goal
-
-Understand this project's structure, patterns, and complexity BEFORE writing any context files. Create a shared data file (`.ana/.setup_exploration.md`) that all subsequent steps reference.
-
-**Why this step:** Each step file (01-07) needs to know where patterns live, which files to read, whether the project is flat or structured. Exploring once and referencing everywhere is more efficient than re-exploring per file.
-
-**Time:** 5-10 minutes
-
----
-
-## Exploration Areas
-
-### 1. Project Identity
+# Step 00: Explore Codebase
 
-**What to find:**
-- Project name (from package.json, pyproject.toml, go.mod, or directory name)
-- Framework and version (from scan.json if already detected)
-- Language (from scan.json)
-- Total file count, directory count (exclude node_modules/, venv/, dist/, build/)
-- Entry points (main.py, index.ts, app.tsx, or from scan.json)
-
-**How to find:**
-- Read package.json or equivalent for name, version, main entry point
-- List directories using your tools
-- Count source files in relevant directories
-
----
-
-### 2. Pattern Inventory
-
-**Goal:** Find where each of the 5 core pattern types lives in this codebase.
-
-**Patterns to search for:** Error Handling, Validation, Database, Auth, Testing
-
-**Use these keyword tables based on detected language/framework:**
-
-**Python/FastAPI:**
-| Pattern | Search Keywords | Typical Locations |
-|---------|----------------|-------------------|
-| Error Handling | `raise HTTPException`, `raise ValueError`, `except Exception`, `except:` | api/, routes/, handlers/, middleware/ |
-| Validation | `BaseModel`, `Field(`, `@validator`, `field_validator` | models/, schemas/, app/models.py |
-| Database | `session.execute`, `async def get_`, `session.query`, `Base.metadata` | repositories/, models/, database.py, db/ |
-| Auth | `OAuth2PasswordBearer`, `Depends(get_current`, `JWT`, `decode_token` | auth/, core/security.py, api/deps.py |
-| Testing | test files (tests/, test_*.py pattern) | tests/, test/ |
-
-**TypeScript/Next.js:**
-| Pattern | Search Keywords | Typical Locations |
-|---------|----------------|-------------------|
-| Error Handling | `throw new Error`, `Response.json({error`, `NextResponse.json`, `catch (` | app/api/*/route.ts, middleware.ts, error.tsx |
-| Validation | `z.object(`, `z.string(`, `Joi.`, `yup.`, `.parse(` | lib/schemas/, app/api/*/route.ts, actions/ |
-| Database | `prisma.`, `findUnique`, `findMany`, `create(`, `.query(` | lib/db/, app/api/*/route.ts, actions/ |
-| Auth | `getSession`, `getServerSession`, `NextAuth`, `middleware`, `Bearer` | middleware.ts, app/api/auth/, lib/auth/ |
-| Testing | .test.ts, .spec.ts files | __tests__/, tests/, *.test.ts |
+You are the explorer. Your job is to understand this project deeply enough that the question formulator can ask informed questions and the writer can produce accurate context files.
 
-**TypeScript/Express:**
-| Pattern | Search Keywords | Typical Locations |
-|---------|----------------|-------------------|
-| Error Handling | `throw new Error`, `app.use(errorHandler`, `next(error)`, `catch (` | middleware/error.js, routes/, app.js |
-| Validation | `Joi.`, `yup.`, `z.object`, `.validate(` | validators/, middleware/validation.js |
-| Database | `findOne`, `findAll`, `query(`, `execute(` | models/, repositories/, db/ |
-| Auth | `passport.`, `jwt.verify`, `Bearer`, auth middleware | middleware/auth.js, auth/, passport.js |
-| Testing | .test.js, .spec.js files | test/, tests/, *.test.js |
+## Ground Truth: scan.json
 
-**Python/Django:**
-| Pattern | Search Keywords | Typical Locations |
-|---------|----------------|-------------------|
-| Error Handling | `raise ValidationError`, `try:`, `except`, exception handlers | views.py, viewsets.py, middleware/ |
-| Validation | `class.*Serializer`, `serializers.`, `Form`, `clean_` | serializers.py, forms.py |
-| Database | `objects.get`, `objects.filter`, `objects.create`, `.save()` | models.py, views.py, managers/ |
-| Auth | `@login_required`, `@permission_required`, `authenticate` | views.py, permissions.py, decorators.py |
-| Testing | `class.*TestCase`, `def test_` | tests.py, tests/ |
+**Read `.ana/scan.json` first.** This is what the engine already detected:
+- Stack (language, framework, database, auth, testing, payments)
+- File counts (source, test, config)
+- Directory structure with purposes
+- Commands (build, test, lint, dev, package manager)
+- Git info (branch, commit count, last commit, contributors)
+- External services and deployment
+- Schema locations (Prisma, SQLAlchemy, etc.)
+- Secrets posture (env files, gitignore coverage)
+- Blind spots the engine identified
 
-**Go:**
-| Pattern | Search Keywords | Typical Locations |
-|---------|----------------|-------------------|
-| Error Handling | `if err != nil`, `return fmt.Errorf`, `errors.New`, `http.Error` | handlers/, middleware/, pkg/ |
-| Validation | struct tags (`validate:"required"`), validator functions | models/, types/, internal/ |
-| Database | `sql.Open`, `db.Query`, `db.QueryRow`, `db.Exec`, `pgx.` | db/, repository/, store/ |
-| Auth | `jwt.`, `middleware`, `token`, `http.HandlerFunc` wrapping | middleware/, auth/, internal/auth/ |
-| Testing | `func Test`, `testing.T`, `*testing.T` | *_test.go files |
+**Do NOT re-derive any of this.** It's already known. Your job is to discover what scan.json can't.
 
-**For other frameworks:** Check if framework snippet file exists at `context/setup/framework-snippets/[framework].md` for framework-specific guidance. Otherwise use general patterns above.
+## Discovery 1: Business Purpose
 
-**How to search:**
-- Use your Grep tool or read files to search for these keywords
-- Note which files contain which patterns
-- For each pattern found, note the file path and approximate line range
-- Aim for 2-3 representative files per pattern (or all files if project is minimal)
+scan.json knows the stack. It doesn't know WHY this project exists.
 
-**Also check framework-specific locations:** If a framework snippet file exists for this project's framework, read it for important files to check (middleware.ts for Next.js, deps.py for FastAPI, etc.).
+Investigate in this order — stop when you have a clear answer:
+1. Read `README.md` — look for description, tagline, or mission statement
+2. Read `package.json` (or `pyproject.toml`, `go.mod`) `description` field
+3. Read the main entry point file — look for file-level doc comments
+4. Check for `/docs`, `/landing`, or `/marketing` directories with explanatory content
+5. If nothing explicit: infer from the combination of stack, naming, and structure
 
----
+Record: What does this product do? Who uses it? Two to three sentences.
 
-### 3. Config Files
+## Discovery 2: Architecture Rationale
 
-**Search for these files:**
-- .prettierrc, .prettierrc.json, prettier.config.js
-- .eslintrc, .eslintrc.json, eslint.config.js
-- .editorconfig
-- tsconfig.json, jsconfig.json
-- pyproject.toml (check [tool.black], [tool.ruff], [tool.mypy] sections)
-- setup.cfg (check [flake8], [isort] sections)
-- vitest.config.ts, jest.config.js, pytest.ini
-- .github/workflows/*.yml (CI configs)
-- vercel.json, netlify.toml (deploy configs)
+scan.json knows the framework and directory structure. It doesn't know if the architecture was a deliberate choice.
 
-**Note which exist.** This determines whether conventions.md uses config files (deterministic) or analyzer inference (probabilistic).
+Investigate:
+1. Check for `docs/architecture.md`, `docs/adr/`, or `ARCHITECTURE.md` — deliberate documentation means deliberate choices
+2. Does the directory structure follow the framework's standard conventions exactly? (Convention-driven, not custom)
+3. Look for signs of organic growth: both `/lib` and `/utils` doing similar things, inconsistent nesting depth, mixed patterns across similar files
+4. If monorepo: do packages have clear boundaries, or do they have overlapping exports and circular-feeling dependencies?
 
----
+Record: Was this architecture chosen deliberately or did it evolve organically? What specific evidence supports your conclusion?
 
-### 4. Project Shape Assessment
+## Discovery 3: Workflow Patterns
 
-**Determine if project is structured or flat/minimal.**
+scan.json has basic git info. You need the actual development workflow.
 
-**Indicators of STRUCTURED project:**
-- Multiple nested directories (3+ levels deep)
-- Separate directories for different concerns (api/, services/, repositories/, tests/)
-- Config files present (.prettierrc, .eslintrc)
-- Test files exist (tests/ directory or *.test.* files)
-- 20+ source files
+Investigate:
+1. Run `git log --oneline -20` — what do commit messages look like? Conventional commits? Freeform? Co-authored?
+2. Run `git branch -a` — feature branches? develop branch? Just main?
+3. Read CI config if it exists: `.github/workflows/`, `.gitlab-ci.yml`, `Jenkinsfile`, `Dockerfile`
+4. Read `CONTRIBUTING.md` if it exists
+5. Look at branch naming: `feature/`, `fix/`, `chore/`, or flat names?
 
-**Indicators of FLAT/MINIMAL project:**
-- Few files (5-15 source files total)
-- Minimal nesting (1-2 directory levels)
-- NO config files
-- NO test files
-- One or two large files (main.py at 800 lines, app/page.tsx at 450 lines)
+Record: How does this team develop? PR-based? Trunk-based? What CI runs? How are deploys triggered?
 
-**Make assessment:** If project has 3 or more of these 5 flat indicators: `projectShape = "minimal"`. Otherwise: `projectShape = "structured"`.
+## Discovery 4: Pattern File Locations
 
-**Why this matters:** Subsequent step files adjust behavior when projectShape = "minimal":
-- Read ALL source files (few enough)
-- One file may contain multiple patterns (cite same file at different line ranges)
-- Config-based sections note "No config detected" with recommendations
-- Testing/workflow sections use honest placeholders
+scan.json detects patterns (error handling, validation, database, auth, testing) with confidence scores. It knows WHAT patterns exist. You need to find WHERE they live.
 
----
+For each pattern in scan.json with confidence > 0.5:
+1. Find 2-3 representative files that demonstrate the pattern
+2. Note the file path and specific line numbers
+3. Note whether the pattern is applied consistently or if there are multiple conflicting approaches
 
-### 5. Request Flow Trace (Optional - Guided/Complete Mode)
+Record: For each detected pattern — the specific files, line ranges, and whether usage is consistent.
 
-**Pick one request path** (e.g., "GET /users" or "load homepage"):
-- Where does it enter? (route handler, page component)
-- What does it call? (service, repository, database)
-- What does it return? (response model, component render)
+## Discovery 5: Configuration Details
 
-**Note the flow:** "Request → route handler → service → repository → database"
+scan.json knows config files exist. You need to know what they actually configure.
 
-This helps explain architecture even if user can't articulate rationale.
+Read the contents of whichever of these exist:
+1. Lint config (`.eslintrc*`, `biome.json`, `.prettierrc*`) — what rules? How strict?
+2. TypeScript config (`tsconfig.json`) — strict mode? Path aliases? Target?
+3. Test config (`vitest.config.*`, `jest.config.*`) — coverage thresholds? Test file patterns? Setup files?
+4. Build config (`vite.config.*`, `next.config.*`, `webpack.config.*`) — custom plugins? Environment handling?
 
-**Time:** 2-3 minutes
+**Only read configs that exist.** Don't search for configs the project doesn't have.
 
----
+Record: Key settings from each config that would affect how AI writes code for this project.
 
-## Output Format
+## Output
 
-**Write all findings to `.ana/.setup_exploration.md`:**
-
-```markdown
-# Setup Exploration Results
-
-**Project:** [name]
-**Framework:** [framework] ([version if found])
-**Language:** [language]
-**Files:** [count] source files
-**Shape:** [structured / minimal]
-
----
-
-## Pattern Files
-
-**Error Handling:**
-- [file path 1] (lines ~XX-YY)
-- [file path 2] (lines ~XX-YY)
-- Keywords found: [list what you found]
-
-**Validation:**
-- [file paths with line ranges]
-
-**Database:**
-- [file paths with line ranges]
-
-**Auth:**
-- [file paths with line ranges OR "Not detected"]
-
-**Testing:**
-- [test file paths OR "No tests detected"]
-
----
-
-## Config Files Found
-
-- Formatter: [.prettierrc / None]
-- Linter: [.eslintrc / None]
-- Editor: [.editorconfig / None]
-- Test config: [vitest.config.ts / jest.config.js / pytest.ini / None]
-- CI config: [.github/workflows/*.yml / None]
-
-**Config file priority:** [if multiple configs, note Prettier > ESLint > EditorConfig]
-
----
-
-## Project Shape: [STRUCTURED / MINIMAL]
-
-**If structured:**
-- Multiple directories with clear separation
-- Config files present
-- [Add other structured indicators found]
-
-**If minimal:**
-- Few files ([count] total)
-- Flat structure (1-2 directory levels)
-- No config files
-- No tests
-- Main files: [list 1-2 main files with line counts]
-
-**Subsequent steps:** [If minimal: "Read all source files. One file may have multiple patterns. Use honest placeholders for missing infrastructure."]
-
----
-
-## Request Flow (if traced)
-
-[Entry point] → [handler/route] → [service/logic] → [database/API] → [response]
-
----
-
-**Exploration complete. Steps 01-07 reference this file.**
-```
-
----
-
-## Complete
-
-After writing .ana/.setup_exploration.md, report:
+Write all findings to `.ana/.setup_exploration.md`:
 
 ```
-✓ Codebase exploration complete
-  - [X] patterns found across [Y] files
-  - Project shape: [structured/minimal]
-  - Config files: [list or "none detected"]
+# Exploration Results
 
-Exploration results written to .ana/.setup_exploration.md
+## Business Purpose
+{What the product does, who uses it — 2-3 sentences}
 
-Proceeding to Step 1 (project-overview.md)...
+## Architecture
+{Deliberate vs evolved, evidence, key structural decisions}
+
+## Workflow
+{Development process, commit patterns, CI/CD, branching, deploy}
+
+## Pattern Evidence
+### {Pattern name} (confidence: {score})
+- `{file_path}:{line_range}` — {what this demonstrates}
+- `{file_path}:{line_range}` — {consistent/inconsistent with above}
+{Repeat for each detected pattern}
+
+## Configuration
+### {Config type}
+- {Key setting}: {value and what it means for code generation}
+{Repeat for each config read}
+
+## Observations
+{Anything surprising or noteworthy not covered above}
 ```
+
+**Important:** The exploration output is read by the question formulator and the writer. Be specific. File paths and line numbers, not vague references. Concrete findings, not summaries of summaries.
