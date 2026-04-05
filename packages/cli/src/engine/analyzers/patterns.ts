@@ -109,8 +109,8 @@ async function readNodeDevDependencies(rootPath: string): Promise<string[]> {
  */
 async function detectValidationPattern(
   deps: string[],
-  framework: string | null,
-  rootPath: string
+  _framework: string | null,
+  _rootPath: string
 ): Promise<PatternConfidence | null> {
   // Python validation libraries
   if (deps.includes('pydantic')) {
@@ -292,7 +292,7 @@ async function detectDatabasePattern(
 async function detectAuthPattern(
   deps: string[],
   framework: string | null,
-  rootPath: string
+  _rootPath: string
 ): Promise<PatternConfidence | null> {
   // JWT detection (cross-language)
   const jwtLibraries = [
@@ -482,7 +482,7 @@ async function detectErrorHandlingPattern(
   deps: string[],
   projectType: ProjectType,
   framework: string | null,
-  rootPath: string
+  _rootPath: string
 ): Promise<PatternConfidence | null> {
   // Python exception-based error handling (framework-specific)
   if (framework === 'fastapi') {
@@ -710,7 +710,7 @@ export async function confirmPatternsWithTreeSitter(
 async function confirmValidationPattern(
   patterns: Partial<Record<string, PatternConfidence>>,
   parsedFiles: ParsedFile[],
-  analysis: AnalysisResult
+  _analysis: AnalysisResult
 ): Promise<void> {
   if (!patterns['validation']) return;  // No validation pattern detected in CP0
 
@@ -874,7 +874,7 @@ async function confirmValidationPattern(
 async function confirmErrorHandlingPattern(
   patterns: Partial<Record<string, PatternConfidence>>,
   parsedFiles: ParsedFile[],
-  analysis: AnalysisResult
+  _analysis: AnalysisResult
 ): Promise<void> {
   if (!patterns['errorHandling']) return;
 
@@ -965,7 +965,7 @@ async function confirmErrorHandlingPattern(
 async function confirmDatabasePattern(
   patterns: Partial<Record<string, PatternConfidence>>,
   parsedFiles: ParsedFile[],
-  analysis: AnalysisResult
+  _analysis: AnalysisResult
 ): Promise<void> {
   if (!patterns['database']) return;
 
@@ -1145,7 +1145,7 @@ async function confirmDatabasePattern(
 async function confirmAuthPattern(
   patterns: Partial<Record<string, PatternConfidence>>,
   parsedFiles: ParsedFile[],
-  analysis: AnalysisResult
+  _analysis: AnalysisResult
 ): Promise<void> {
   if (!patterns['auth']) return;
 

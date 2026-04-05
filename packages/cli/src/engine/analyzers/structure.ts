@@ -872,7 +872,7 @@ async function findRustTestLocation(rootPath: string): Promise<TestLocationResul
 export async function findTestLocations(
   rootPath: string,
   projectType: ProjectType,
-  framework: string | null
+  _framework: string | null
 ): Promise<TestLocationResult> {
   if (projectType === 'python') {
     return await findPytestLocation(rootPath);

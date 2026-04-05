@@ -6,7 +6,7 @@
  * - Django REST Framework (API-focused)
  */
 
-import { calculateConfidence, type ConfidenceSignals } from '../../utils/confidence.js';
+import { calculateConfidence } from '../../utils/confidence.js';
 import { exists } from '../../utils/file.js';
 import * as path from 'node:path';
 import type { Detection } from './fastapi.js';
