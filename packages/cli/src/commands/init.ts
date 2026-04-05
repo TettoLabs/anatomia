@@ -1238,9 +1238,8 @@ function displaySuccessMessage(engineResult: EngineResult | null, projectName: s
   }
   console.log(chalk.green('✓ Config written → .ana/ana.json'));
   console.log('');
-  console.log('  Your AI now knows your project. Next:');
-  console.log(chalk.cyan('    claude --agent ana') + '    Start working with Ana');
-  console.log(chalk.cyan('    ana scan') + '              Refresh project intelligence');
-  console.log(chalk.cyan('    ana setup') + '             Deepen context with your knowledge');
+  console.log('  Next steps:');
+  console.log(chalk.cyan('    claude --agent ana') + '          Start working (Ana knows your stack)');
+  console.log(chalk.cyan('    claude --agent ana-setup') + '    Enrich context with Q&A (optional)');
   console.log('');
 }
