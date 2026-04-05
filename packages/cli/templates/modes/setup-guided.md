@@ -1,10 +1,18 @@
 # Setup Tier: Guided
 
-Balanced setup with 5 targeted questions. No improvisation, no paraphrasing, no skipping.
+Balanced setup with 6 targeted questions + closer. No improvisation, no paraphrasing, no skipping.
+
+---
+
+## Detected Data
+
+scan.json contains the engine's detection results (stack, structure, files, services, commands, git info). Use this as the starting point for all questions and confirmations. Do not re-derive what the engine already detected. Focus questions and confirmations on what scan.json can't detect: business purpose, architecture intent, workflow preferences, and trade-offs.
 
 ---
 
 ## Questions (ask ALL in order, do not skip, do not rephrase)
+
+Note: The exact question wording and sequence is defined in the orchestrator (setup.md / ana-setup.md). This tier file defines question BEHAVIOR, not wording. Refer to the orchestrator for the canonical Q1-Q6 + closer list.
 
 Present each question with Ana's guess from the question-formulator. Always show the guess even when confidence is high — this builds trust.
 
