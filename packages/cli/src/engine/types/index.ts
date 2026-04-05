@@ -1,34 +1,8 @@
 import { z } from 'zod';
-import { StructureAnalysis, StructureAnalysisSchema } from './structure.js';
-import {
-  ParsedAnalysis,
-  ParsedAnalysisSchema,
-  ParsedFile,
-  ParsedFileSchema,
-  FunctionInfo,
-  FunctionInfoSchema,
-  ClassInfo,
-  ClassInfoSchema,
-  ImportInfo,
-  ImportInfoSchema,
-  ExportInfo,
-  ExportInfoSchema,
-  DecoratorInfo,
-  DecoratorInfoSchema,
-  createEmptyParsedAnalysis,
-} from './parsed.js';
-import {
-  PatternAnalysis,
-  PatternAnalysisSchema,
-  PatternConfidence,
-  PatternConfidenceSchema,
-  createEmptyPatternAnalysis,
-} from './patterns.js';
-import {
-  ConventionAnalysis,
-  ConventionAnalysisSchema,
-  createEmptyConventionAnalysis,
-} from './conventions.js';
+import { StructureAnalysisSchema } from './structure.js';
+import { ParsedAnalysisSchema } from './parsed.js';
+import { PatternAnalysisSchema } from './patterns.js';
+import { ConventionAnalysisSchema } from './conventions.js';
 
 /**
  * Project types supported by Anatomia detection
