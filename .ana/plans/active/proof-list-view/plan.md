@@ -4,5 +4,5 @@
 
 ## Phases
 
-- [ ] Add summary table view when `ana proof` is called with no slug argument
+- [x] Add summary table view when `ana proof` is called with no slug argument
   - Spec: spec.md

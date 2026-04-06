@@ -1,19 +1,20 @@
 /**
- * ana proof {slug} - Display proof chain entry for completed work
+ * ana proof [slug] - Display proof chain entry for completed work
  *
- * Reads .ana/proof_chain.json and displays a terminal card showing:
- * - Feature name and completion date
- * - Verification result (PASS/FAIL)
- * - Contract compliance summary (satisfied/unsatisfied/deviated)
- * - Assertions with status icons
- * - Timing breakdown
- * - Deviations (if any)
+ * With no arguments: displays a summary table of all proof history entries.
+ * With a slug: displays a detailed terminal card for that specific entry.
+ *
+ * Reads .ana/proof_chain.json and displays:
+ * - Summary table: slug, result, assertion ratio, date (no slug)
+ * - Detail card: feature name, result, contract, assertions, timing, deviations (with slug)
  *
  * Read-only operation - creates no files, modifies nothing.
  *
  * Usage:
- *   ana proof {slug}         Display proof for work item
- *   ana proof {slug} --json  Output JSON format
+ *   ana proof               Display summary table of all proofs
+ *   ana proof --json        Output full proof chain as JSON
+ *   ana proof {slug}        Display proof detail for work item
+ *   ana proof {slug} --json Output detail JSON format
  */
 
 import { Command } from 'commander';
@@ -157,7 +158,7 @@ function formatHumanReadable(entry: ProofChainEntry): string {
 }
 
 /**
- * Format JSON output
+ * Format JSON output for a single entry
  *
  * @param entry - Proof chain entry to output
  * @returns JSON string
@@ -167,14 +168,86 @@ function formatJson(entry: ProofChainEntry): string {
 }
 
 /**
+ * Format human-readable summary table for list view
+ *
+ * @param entries - Proof chain entries to display
+ * @returns Formatted table string
+ */
+function formatListTable(entries: ProofChainEntry[]): string {
+  const lines: string[] = [];
+
+  lines.push('');
+  lines.push(chalk.bold('  Proof History'));
+  lines.push('');
+
+  // Header row
+  const slugCol = 'Slug'.padEnd(24);
+  const resultCol = 'Result'.padEnd(9);
+  const assertCol = 'Assertions'.padEnd(13);
+  const dateCol = 'Date';
+  lines.push(chalk.bold(`  ${slugCol}${resultCol}${assertCol}${dateCol}`));
+
+  // Sort entries: most recent first, undefined completed_at pushed to end
+  const sorted = [...entries].sort((a, b) => {
+    if (!a.completed_at && !b.completed_at) return 0;
+    if (!a.completed_at) return 1;
+    if (!b.completed_at) return -1;
+    return b.completed_at.localeCompare(a.completed_at);
+  });
+
+  for (const entry of sorted) {
+    const slug = entry.slug.padEnd(24);
+    const resultColor = entry.result === 'PASS' ? chalk.green : chalk.red;
+    const resultPadded = entry.result.padEnd(9);
+    const result = resultColor(resultPadded);
+    const ratio = `${entry.contract.satisfied}/${entry.contract.total}`;
+    const assertions = ratio.padEnd(13);
+    const date = entry.completed_at ? entry.completed_at.split('T')[0] ?? '' : '';
+    lines.push(`  ${slug}${result}${assertions}${date}`);
+  }
+
+  lines.push('');
+
+  return lines.join('\n');
+}
+
+/**
  * Proof command definition
  */
 export const proofCommand = new Command('proof')
   .description('Display proof chain entry for a completed work item')
-  .argument('<slug>', 'Work item slug to display proof for')
+  .argument('[slug]', 'Work item slug to display proof for')
   .option('--json', 'Output JSON format for programmatic consumption')
-  .action(async (slug: string, options: { json?: boolean }) => {
+  .action(async (slug: string | undefined, options: { json?: boolean }) => {
     const proofChainPath = path.join(process.cwd(), '.ana', 'proof_chain.json');
+
+    // List view: no slug provided
+    if (!slug) {
+      // Read chain if it exists
+      let chain: ProofChain = { entries: [] };
+      if (fs.existsSync(proofChainPath)) {
+        try {
+          const content = fs.readFileSync(proofChainPath, 'utf-8');
+          chain = JSON.parse(content);
+        } catch {
+          // If file is corrupt, treat as empty
+          chain = { entries: [] };
+        }
+      }
+
+      const entries = chain.entries ?? [];
+
+      if (options.json) {
+        console.log(JSON.stringify(chain, null, 2));
+      } else if (entries.length === 0) {
+        console.log('No proofs yet.');
+      } else {
+        console.log(formatListTable(entries));
+      }
+      return;
+    }
+
+    // Detail view: slug provided (existing behavior)
 
     // Check if proof_chain.json exists
     if (!fs.existsSync(proofChainPath)) {

@@ -94,6 +94,231 @@ describe('ana proof', () => {
     completed_at: '2026-04-01T16:30:00Z',
   };
 
+  /**
+   * Second sample entry for multi-entry testing
+   */
+  const olderEntry = {
+    slug: 'auth-refactor',
+    feature: 'Auth Refactoring',
+    result: 'FAIL' as const,
+    author: { name: 'Developer', email: 'dev@example.com' },
+    contract: {
+      total: 12,
+      covered: 12,
+      uncovered: 0,
+      satisfied: 8,
+      unsatisfied: 4,
+      deviated: 0,
+    },
+    assertions: [
+      { id: 'A001', says: 'Auth works', status: 'SATISFIED' },
+    ],
+    acceptance_criteria: { total: 5, met: 3 },
+    timing: { total_minutes: 60, think: 5, plan: 15, build: 30, verify: 10 },
+    hashes: { scope: 'sha256:111', contract: 'sha256:222' },
+    seal_commit: 'def456',
+    completed_at: '2026-03-28T12:00:00Z',
+  };
+
+  /**
+   * Entry with no completed_at for edge case testing
+   */
+  const undatedEntry = {
+    slug: 'no-date-feature',
+    feature: 'No Date Feature',
+    result: 'PASS' as const,
+    author: { name: 'Developer', email: 'dev@example.com' },
+    contract: {
+      total: 5,
+      covered: 5,
+      uncovered: 0,
+      satisfied: 5,
+      unsatisfied: 0,
+      deviated: 0,
+    },
+    assertions: [
+      { id: 'A001', says: 'Works', status: 'SATISFIED' },
+    ],
+    acceptance_criteria: { total: 2, met: 2 },
+    timing: { total_minutes: 30 },
+    hashes: { scope: 'sha256:333', contract: 'sha256:444' },
+    seal_commit: 'ghi789',
+  };
+
+  // ─── List View Tests ───────────────────────────────────────────────
+
+  // @ana A001, A002, A003, A004, A005
+  describe('displays summary table', () => {
+    it('shows table headers: Slug, Result, Assertions, Date', async () => {
+      await createProofChain([sampleEntry, olderEntry]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof([]);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('Slug');
+      expect(stdout).toContain('Result');
+      expect(stdout).toContain('Assertions');
+      expect(stdout).toContain('Date');
+    });
+
+    it('shows entry slug in table row', async () => {
+      await createProofChain([sampleEntry]);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof([]);
+      expect(stdout).toContain('stripe-payments');
+    });
+
+    it('shows entry date in table row', async () => {
+      await createProofChain([sampleEntry]);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof([]);
+      expect(stdout).toContain('2026-04-01');
+    });
+
+    it('shows Proof History title', async () => {
+      await createProofChain([sampleEntry]);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof([]);
+      expect(stdout).toContain('Proof History');
+    });
+  });
+
+  // @ana A006
+  describe('sorts entries reverse chronological', () => {
+    it('shows newer entry before older entry', async () => {
+      // Insert in wrong order to verify sorting
+      await createProofChain([olderEntry, sampleEntry]);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof([]);
+      const newerIdx = stdout.indexOf('stripe-payments');
+      const olderIdx = stdout.indexOf('auth-refactor');
+      expect(newerIdx).toBeLessThan(olderIdx);
+    });
+  });
+
+  // @ana A007
+  describe('shows assertion ratio', () => {
+    it('shows satisfied/total ratio', async () => {
+      await createProofChain([sampleEntry]);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof([]);
+      expect(stdout).toContain('20/22');
+    });
+  });
+
+  // @ana A008, A009
+  describe('handles missing proof_chain.json', () => {
+    it('outputs "No proofs yet." when file is missing', async () => {
+      // No .ana directory created
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof([]);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('No proofs yet.');
+    });
+  });
+
+  // @ana A010, A011
+  describe('handles empty entries array', () => {
+    it('outputs "No proofs yet." when entries is empty', async () => {
+      await createProofChain([]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof([]);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('No proofs yet.');
+    });
+  });
+
+  // @ana A012, A013
+  describe('outputs JSON list with --json flag', () => {
+    it('outputs valid JSON with entries array', async () => {
+      await createProofChain([sampleEntry, olderEntry]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['--json']);
+      expect(exitCode).toBe(0);
+
+      const json = JSON.parse(stdout);
+      expect(json).toBeTruthy();
+      expect(json.entries).toBeDefined();
+      expect(Array.isArray(json.entries)).toBe(true);
+      expect(json.entries).toHaveLength(2);
+    });
+  });
+
+  // @ana A014
+  describe('JSON handles missing proof_chain.json', () => {
+    it('returns empty entries array when file missing', async () => {
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['--json']);
+      expect(exitCode).toBe(0);
+
+      const json = JSON.parse(stdout);
+      expect(json.entries).toHaveLength(0);
+    });
+  });
+
+  // @ana A018
+  describe('handles single entry', () => {
+    it('renders table with one row without crashing', async () => {
+      await createProofChain([sampleEntry]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof([]);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('stripe-payments');
+      expect(stdout).toContain('Slug');
+    });
+  });
+
+  // @ana A019
+  describe('handles undefined completed_at', () => {
+    it('sorts entries with dates before entries without dates', async () => {
+      await createProofChain([undatedEntry, sampleEntry]);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof([]);
+      const datedIdx = stdout.indexOf('stripe-payments');
+      const undatedIdx = stdout.indexOf('no-date-feature');
+      expect(datedIdx).toBeLessThan(undatedIdx);
+    });
+  });
+
+  // ─── Detail View Tests (existing, unchanged) ──────────────────────
+
+  // @ana A015, A016
+  describe('detail view unchanged', () => {
+    it('still works when a slug is provided', async () => {
+      await createProofChain([sampleEntry]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['stripe-payments']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('Stripe Payment Integration');
+    });
+  });
+
+  // @ana A017
+  describe('detail JSON unchanged', () => {
+    it('still works with a slug and --json', async () => {
+      await createProofChain([sampleEntry]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['stripe-payments', '--json']);
+      expect(exitCode).toBe(0);
+
+      const json = JSON.parse(stdout);
+      expect(json.slug).toBe('stripe-payments');
+    });
+  });
+
   // @ana A001
   describe('displays proof card for valid slug', () => {
     it('displays feature name from entry', async () => {
