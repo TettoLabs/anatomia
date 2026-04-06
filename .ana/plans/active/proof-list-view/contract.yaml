@@ -1,0 +1,147 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Proof List View"
+
+assertions:
+  # AC1: Table with correct columns
+  - id: A001
+    says: "Running proof with no arguments shows a table of proof history"
+    block: "displays summary table"
+    target: "stdout"
+    matcher: "contains"
+    value: "Slug"
+
+  - id: A002
+    says: "The table includes a Result column"
+    block: "displays summary table"
+    target: "stdout"
+    matcher: "contains"
+    value: "Result"
+
+  - id: A003
+    says: "The table includes an Assertions column"
+    block: "displays summary table"
+    target: "stdout"
+    matcher: "contains"
+    value: "Assertions"
+
+  - id: A004
+    says: "Each row shows the slug of a completed work item"
+    block: "displays summary table"
+    target: "stdout"
+    matcher: "contains"
+    value: "stripe-payments"
+
+  - id: A005
+    says: "Each row shows the date the work was completed"
+    block: "displays summary table"
+    target: "stdout"
+    matcher: "contains"
+    value: "2026-04-01"
+
+  # AC2: Sort order
+  - id: A006
+    says: "Entries are sorted with most recent first"
+    block: "sorts entries reverse chronological"
+    target: "stdout.indexOf(newerSlug) < stdout.indexOf(olderSlug)"
+    matcher: "truthy"
+
+  # AC3: Assertion ratio uses satisfied/total
+  - id: A007
+    says: "Assertion ratio shows satisfied count out of total"
+    block: "shows assertion ratio"
+    target: "stdout"
+    matcher: "contains"
+    value: "20/22"
+
+  # AC4: Missing or empty file
+  - id: A008
+    says: "When no proofs exist yet, the output says so without erroring"
+    block: "handles missing proof_chain.json"
+    target: "stdout"
+    matcher: "contains"
+    value: "No proofs yet."
+
+  - id: A009
+    says: "Missing proof chain file exits successfully"
+    block: "handles missing proof_chain.json"
+    target: "exitCode"
+    matcher: "equals"
+    value: 0
+
+  - id: A010
+    says: "An empty proof chain also shows the no-proofs message"
+    block: "handles empty entries array"
+    target: "stdout"
+    matcher: "contains"
+    value: "No proofs yet."
+
+  - id: A011
+    says: "An empty proof chain exits successfully"
+    block: "handles empty entries array"
+    target: "exitCode"
+    matcher: "equals"
+    value: 0
+
+  # AC5: JSON list output
+  - id: A012
+    says: "JSON list mode outputs valid JSON"
+    block: "outputs JSON list with --json flag"
+    target: "JSON.parse(stdout)"
+    matcher: "truthy"
+
+  - id: A013
+    says: "JSON list mode includes the entries array"
+    block: "outputs JSON list with --json flag"
+    target: "json.entries"
+    matcher: "exists"
+
+  - id: A014
+    says: "JSON list with missing file returns empty entries"
+    block: "JSON handles missing proof_chain.json"
+    target: "json.entries.length"
+    matcher: "equals"
+    value: 0
+
+  # AC6: Detail card unchanged
+  - id: A015
+    says: "Detail view still works when a slug is provided"
+    block: "detail view unchanged"
+    target: "exitCode"
+    matcher: "equals"
+    value: 0
+
+  - id: A016
+    says: "Detail view still shows the feature name"
+    block: "detail view unchanged"
+    target: "stdout"
+    matcher: "contains"
+    value: "Stripe Payment Integration"
+
+  # AC7: Detail JSON unchanged
+  - id: A017
+    says: "Detail JSON still works with a slug"
+    block: "detail JSON unchanged"
+    target: "json.slug"
+    matcher: "equals"
+    value: "stripe-payments"
+
+  # Edge cases
+  - id: A018
+    says: "A single entry renders a table without crashing"
+    block: "handles single entry"
+    target: "exitCode"
+    matcher: "equals"
+    value: 0
+
+  - id: A019
+    says: "Entries missing a completion timestamp sort to the end"
+    block: "handles undefined completed_at"
+    target: "stdout.indexOf(datedSlug) < stdout.indexOf(undatedSlug)"
+    matcher: "truthy"
+
+file_changes:
+  - path: "packages/cli/src/commands/proof.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/proof.test.ts"
+    action: modify
