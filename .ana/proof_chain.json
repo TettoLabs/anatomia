@@ -1,164 +1,139 @@
 {
   "entries": [
     {
-      "slug": "proof-command",
-      "feature": "ana proof {slug} command",
+      "slug": "proof-list-view",
+      "feature": "Proof List View",
       "result": "PASS",
       "author": {
         "name": "Ryan Smith",
         "email": "ryan@rsmith.ai"
       },
       "contract": {
-        "total": 24,
-        "covered": 24,
+        "total": 19,
+        "covered": 19,
         "uncovered": 0,
-        "satisfied": 24,
+        "satisfied": 19,
         "unsatisfied": 0,
         "deviated": 0
       },
       "assertions": [
         {
           "id": "A001",
-          "says": "Running ana proof with a valid slug displays the feature name",
+          "says": "Running proof with no arguments shows a table of proof history",
           "status": "SATISFIED"
         },
         {
           "id": "A002",
-          "says": "The proof card shows the verification result prominently",
+          "says": "The table includes a Result column",
           "status": "SATISFIED"
         },
         {
           "id": "A003",
-          "says": "The proof card shows contract compliance summary",
+          "says": "The table includes an Assertions column",
           "status": "SATISFIED"
         },
         {
           "id": "A004",
-          "says": "The proof card shows deviation count in summary",
+          "says": "Each row shows the slug of a completed work item",
           "status": "SATISFIED"
         },
         {
           "id": "A005",
-          "says": "Satisfied assertions show a checkmark icon",
+          "says": "Each row shows the date the work was completed",
           "status": "SATISFIED"
         },
         {
           "id": "A006",
-          "says": "Deviated assertions show a warning icon",
+          "says": "Entries are sorted with most recent first",
           "status": "SATISFIED"
         },
         {
           "id": "A007",
-          "says": "Assertions display the says text from the contract",
+          "says": "Assertion ratio shows satisfied count out of total",
           "status": "SATISFIED"
         },
         {
           "id": "A008",
-          "says": "The timing section shows total pipeline time",
+          "says": "When no proofs exist yet, the output says so without erroring",
           "status": "SATISFIED"
         },
         {
           "id": "A009",
-          "says": "The timing section shows per-phase breakdown when available",
+          "says": "Missing proof chain file exits successfully",
           "status": "SATISFIED"
         },
         {
           "id": "A010",
-          "says": "Deviations section appears when deviations exist",
+          "says": "An empty proof chain also shows the no-proofs message",
           "status": "SATISFIED"
         },
         {
           "id": "A011",
-          "says": "Each deviation shows what was done instead",
+          "says": "An empty proof chain exits successfully",
           "status": "SATISFIED"
         },
         {
           "id": "A012",
-          "says": "Deviations section is omitted when no deviations exist",
+          "says": "JSON list mode outputs valid JSON",
           "status": "SATISFIED"
         },
         {
           "id": "A013",
-          "says": "The --json flag outputs valid JSON",
+          "says": "JSON list mode includes the entries array",
           "status": "SATISFIED"
         },
         {
           "id": "A014",
-          "says": "JSON output includes the slug field",
+          "says": "JSON list with missing file returns empty entries",
           "status": "SATISFIED"
         },
         {
           "id": "A015",
-          "says": "JSON output includes the assertions array",
+          "says": "Detail view still works when a slug is provided",
           "status": "SATISFIED"
         },
         {
           "id": "A016",
-          "says": "JSON output includes timing information",
+          "says": "Detail view still shows the feature name",
           "status": "SATISFIED"
         },
         {
           "id": "A017",
-          "says": "Unknown slug returns a helpful error message",
+          "says": "Detail JSON still works with a slug",
           "status": "SATISFIED"
         },
         {
           "id": "A018",
-          "says": "Unknown slug error suggests checking work status",
+          "says": "A single entry renders a table without crashing",
           "status": "SATISFIED"
         },
         {
           "id": "A019",
-          "says": "Missing proof_chain.json returns a helpful error",
-          "status": "SATISFIED"
-        },
-        {
-          "id": "A020",
-          "says": "Missing file error suggests using work complete",
-          "status": "SATISFIED"
-        },
-        {
-          "id": "A021",
-          "says": "Output uses box-drawing characters for the header",
-          "status": "SATISFIED"
-        },
-        {
-          "id": "A022",
-          "says": "Section headers have horizontal rule separators",
-          "status": "SATISFIED"
-        },
-        {
-          "id": "A023",
-          "says": "Command works when timing breakdown fields are missing",
-          "status": "SATISFIED"
-        },
-        {
-          "id": "A024",
-          "says": "Command exits with non-zero code on error",
+          "says": "Entries missing a completion timestamp sort to the end",
           "status": "SATISFIED"
         }
       ],
       "acceptance_criteria": {
-        "total": 11,
-        "met": 11
+        "total": 0,
+        "met": 0
       },
       "timing": {
-        "total_minutes": 38,
-        "think": 12,
-        "plan": 12,
-        "build": 8,
-        "verify": 18
+        "total_minutes": 36,
+        "think": 8,
+        "plan": 8,
+        "build": 15,
+        "verify": 13
       },
       "hashes": {
-        "scope": "sha256:39e1f2a1799e44ea684a2a6cfc28957c8efd56329ce63fec0f979e8696c8b7f4",
-        "contract": "sha256:2e86713208ce56637bbb4602f3fa187e15824a90cb15592c65afcbf9c26f9ead",
-        "plan": "sha256:55b8509608ec9ad1dc8d196721a92186535afb23e468453c22ebd82b0d4a66d7",
-        "spec": "sha256:6ac7c5d3f2074eee13792959e0af7b5696a01a34e20d6e5b65f95b247a9630f7",
-        "build-report": "sha256:093e66874b468f97be9058d171b2b0cf8e2a94546c4eb448e4c19b06c2bc66bd",
-        "verify-report": "sha256:8cbfd751aefa68afbfffa77db0dafdb5315c825e721f8e00d8cbff2451bcd201"
+        "scope": "sha256:8c61b6ae2cf22be305b416291447c27fd5537d3fe125c3eb8c72269f2a28ea8e",
+        "contract": "sha256:900a377f6ca13907f7b15e0675d2f8d7568c4eaea917f83a1d47691a6a08bb8c",
+        "plan": "sha256:a1e080b6fda3a0437f5cf19fd293b4b0eabdb9a1cc626241d6f54c8f266408a1",
+        "spec": "sha256:258d3a0104e4eefb64202287c3d25e377f092f18da181054a6f4e758ae8dbcc2",
+        "build-report": "sha256:6dda3196e08e421340f97df6ff21d38a40a296325fa31f1fbe8e34d754902316",
+        "verify-report": "sha256:10fed1db08ac629b7ffe1b4aa40d522f7efcba7841033bf070138287af94e9ea"
       },
-      "seal_commit": "d059359329c2b0147604bceadcf39e9419986af3",
-      "completed_at": "2026-04-02T00:59:53.682Z"
+      "seal_commit": "d9768360956896c440e3c69b5b9714832c291b03",
+      "completed_at": "2026-04-06T02:01:46.601Z"
     }
   ]
 }

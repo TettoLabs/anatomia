@@ -1,0 +1,137 @@
+{
+  "scope": {
+    "saved_at": "2026-04-06T01:17:28.698Z",
+    "commit": "4f228d6abe3335d522477987147fa2c94e1b717a",
+    "hash": "sha256:8c61b6ae2cf22be305b416291447c27fd5537d3fe125c3eb8c72269f2a28ea8e"
+  },
+  "contract": {
+    "saved_at": "2026-04-06T01:25:50.371Z",
+    "commit": "d9768360956896c440e3c69b5b9714832c291b03",
+    "hash": "sha256:900a377f6ca13907f7b15e0675d2f8d7568c4eaea917f83a1d47691a6a08bb8c"
+  },
+  "plan": {
+    "saved_at": "2026-04-06T01:25:50.378Z",
+    "commit": "d9768360956896c440e3c69b5b9714832c291b03",
+    "hash": "sha256:a1e080b6fda3a0437f5cf19fd293b4b0eabdb9a1cc626241d6f54c8f266408a1"
+  },
+  "spec": {
+    "saved_at": "2026-04-06T01:25:50.386Z",
+    "commit": "d9768360956896c440e3c69b5b9714832c291b03",
+    "hash": "sha256:258d3a0104e4eefb64202287c3d25e377f092f18da181054a6f4e758ae8dbcc2"
+  },
+  "build-report": {
+    "saved_at": "2026-04-06T01:40:49.959Z",
+    "commit": "50be6dd4575275ac03ffd60f4eb179cea1125d76",
+    "hash": "sha256:6dda3196e08e421340f97df6ff21d38a40a296325fa31f1fbe8e34d754902316"
+  },
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_commit": "d9768360956896c440e3c69b5b9714832c291b03",
+    "seal_hash": "sha256:900a377f6ca13907f7b15e0675d2f8d7568c4eaea917f83a1d47691a6a08bb8c",
+    "assertions": [
+      {
+        "id": "A001",
+        "says": "Running proof with no arguments shows a table of proof history",
+        "status": "COVERED"
+      },
+      {
+        "id": "A002",
+        "says": "The table includes a Result column",
+        "status": "COVERED"
+      },
+      {
+        "id": "A003",
+        "says": "The table includes an Assertions column",
+        "status": "COVERED"
+      },
+      {
+        "id": "A004",
+        "says": "Each row shows the slug of a completed work item",
+        "status": "COVERED"
+      },
+      {
+        "id": "A005",
+        "says": "Each row shows the date the work was completed",
+        "status": "COVERED"
+      },
+      {
+        "id": "A006",
+        "says": "Entries are sorted with most recent first",
+        "status": "COVERED"
+      },
+      {
+        "id": "A007",
+        "says": "Assertion ratio shows satisfied count out of total",
+        "status": "COVERED"
+      },
+      {
+        "id": "A008",
+        "says": "When no proofs exist yet, the output says so without erroring",
+        "status": "COVERED"
+      },
+      {
+        "id": "A009",
+        "says": "Missing proof chain file exits successfully",
+        "status": "COVERED"
+      },
+      {
+        "id": "A010",
+        "says": "An empty proof chain also shows the no-proofs message",
+        "status": "COVERED"
+      },
+      {
+        "id": "A011",
+        "says": "An empty proof chain exits successfully",
+        "status": "COVERED"
+      },
+      {
+        "id": "A012",
+        "says": "JSON list mode outputs valid JSON",
+        "status": "COVERED"
+      },
+      {
+        "id": "A013",
+        "says": "JSON list mode includes the entries array",
+        "status": "COVERED"
+      },
+      {
+        "id": "A014",
+        "says": "JSON list with missing file returns empty entries",
+        "status": "COVERED"
+      },
+      {
+        "id": "A015",
+        "says": "Detail view still works when a slug is provided",
+        "status": "COVERED"
+      },
+      {
+        "id": "A016",
+        "says": "Detail view still shows the feature name",
+        "status": "COVERED"
+      },
+      {
+        "id": "A017",
+        "says": "Detail JSON still works with a slug",
+        "status": "COVERED"
+      },
+      {
+        "id": "A018",
+        "says": "A single entry renders a table without crashing",
+        "status": "COVERED"
+      },
+      {
+        "id": "A019",
+        "says": "Entries missing a completion timestamp sort to the end",
+        "status": "COVERED"
+      }
+    ],
+    "covered": 19,
+    "uncovered": 0,
+    "run_at": "2026-04-06T01:53:25.598Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-04-06T01:53:25.655Z",
+    "commit": "a3facfff8350a273fff74be94d508c7664927b94",
+    "hash": "sha256:10fed1db08ac629b7ffe1b4aa40d522f7efcba7841033bf070138287af94e9ea"
+  }
+}
