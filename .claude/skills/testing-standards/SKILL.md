@@ -3,6 +3,11 @@ name: testing-standards
 description: "Anatomia testing standards. Invoke when writing tests, reviewing test coverage, verifying test quality, or checking acceptance criteria."
 ---
 
+## Detected
+- Framework: Vitest
+- Test command: `pnpm run test`
+- Test files: 77
+
 # Testing Standards — Anatomia
 
 ## Framework

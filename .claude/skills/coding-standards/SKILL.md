@@ -3,6 +3,13 @@ name: coding-standards
 description: "Anatomia coding standards. Invoke when implementing features, writing code, reviewing code quality, or planning implementation details."
 ---
 
+## Detected
+- Language: TypeScript
+- Functions: camelCase (83% confidence)
+- Files: PascalCase
+- Imports: relative
+- Indentation: 2 spaces
+
 # Coding Standards — Anatomia
 
 ## TypeScript
