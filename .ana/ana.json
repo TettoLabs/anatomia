@@ -1,0 +1,17 @@
+{
+  "name": "anatomia",
+  "framework": null,
+  "language": "TypeScript",
+  "packageManager": "pnpm",
+  "commands": {
+    "build": "pnpm run build",
+    "test": "pnpm run test",
+    "lint": "pnpm run lint",
+    "dev": "pnpm run dev"
+  },
+  "coAuthor": "Ana <build@anatomia.dev>",
+  "artifactBranch": "main",
+  "setupMode": "guided",
+  "scanStaleDays": 7,
+  "setupCompletedAt": "2026-04-06T01:04:09.194Z"
+}
