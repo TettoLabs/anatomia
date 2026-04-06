@@ -3,6 +3,9 @@ name: deployment
 description: "Anatomia deployment and release standards. Invoke after verification passes to merge PR and promote changes."
 ---
 
+## Detected
+- Build command: `pnpm run build`
+
 # Deployment Standards — Anatomia
 
 ## After AnaVerify Passes

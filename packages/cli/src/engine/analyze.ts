@@ -19,7 +19,7 @@ import { existsSync } from 'node:fs';
 import { glob } from 'glob';
 import type { EngineResult } from './types/engineResult.js';
 import type { AnalysisResult } from './types/index.js';
-import { readDependencies, detectFromDeps, detectServiceDeps, aggregateMonorepoDependencies, DATABASE_PACKAGES, AUTH_PACKAGES, TESTING_PACKAGES, PAYMENT_PACKAGES } from './detectors/dependencies.js';
+import { readDependencies, detectFromDeps, detectServiceDeps, aggregateMonorepoDependencies } from './detectors/dependencies.js';
 import { detectPackageManager } from './detectors/packageManager.js';
 import { detectGitInfo } from './detectors/git.js';
 import { detectCommands } from './detectors/commands.js';

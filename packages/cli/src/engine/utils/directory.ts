@@ -3,7 +3,7 @@
  */
 
 import { readdir } from 'node:fs/promises';
-import { join, relative, basename } from 'node:path';
+import { join, relative } from 'node:path';
 
 /**
  * Directories to ignore during walking (common large/generated dirs)
@@ -89,4 +89,3 @@ export async function getSubdirectories(rootPath: string): Promise<string[]> {
   }
 }
 
-export { DEFAULT_IGNORE_PATTERNS };

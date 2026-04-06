@@ -13,7 +13,7 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 
-export interface WriteFileOptions {
+interface WriteFileOptions {
   encoding?: BufferEncoding;
   mode?: number;
 }

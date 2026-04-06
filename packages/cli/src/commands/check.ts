@@ -499,7 +499,14 @@ async function checkFile(filename: string, contextPath: string, projectRoot: str
   const filePath = path.join(contextPath, filename);
   const content = await fs.readFile(filePath, 'utf-8');
 
+  // Detect scaffold files — skip line count minimum for unwritten scaffolds
+  const isScaffold = content.startsWith('<!-- SCAFFOLD');
+
   const lineCount = checkLineCount(content, config);
+  if (isScaffold) {
+    lineCount.pass = true; // Scaffold files are expected to be short
+  }
+
   const headers = checkHeaders(content, config);
   const placeholders = checkPlaceholders(content);
   const scaffoldMarkers = checkScaffoldMarkers(content);

@@ -4,6 +4,12 @@ Fast setup with no questions. Accepts exploration findings at face value.
 
 ---
 
+## Detected Data
+
+scan.json contains the engine's detection results (stack, structure, files, services, commands, git info). Use this as the starting point for all questions and confirmations. Do not re-derive what the engine already detected. Focus questions and confirmations on what scan.json can't detect: business purpose, architecture intent, workflow preferences, and trade-offs.
+
+---
+
 ## Question Handling
 
 **Skip the question phase entirely.** Do not invoke ana-question-formulator.
@@ -27,7 +33,7 @@ After exploration completes, proceed directly to writing context files.
 - Accept all exploration findings without deep validation
 - Use detected data from `scan.json` and context files as ground truth
 - When exploration confidence is low, note "Not detected" rather than fabricating
-- Minimum line counts may be lower than Guided/Complete (see rules.md Quick allowances)
+- Minimum line counts may be lower than Guided (see rules.md Quick allowances)
 
 ---
 

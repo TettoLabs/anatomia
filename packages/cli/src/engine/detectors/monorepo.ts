@@ -9,7 +9,7 @@
 
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import * as yaml from 'js-yaml';
+import { parse as parseYaml } from 'yaml';
 import { exists, readFile } from '../utils/file.js';
 import { DetectionEngineError, ERROR_CODES } from '../errors/index.js';
 import type { DetectionCollector } from '../errors/DetectionCollector.js';
@@ -43,7 +43,7 @@ export async function detectMonorepo(
   if (await exists(pnpmPath)) {
     try {
       const content = await readFile(pnpmPath);
-      const config = yaml.load(content) as { packages?: string[] };
+      const config = parseYaml(content) as { packages?: string[] };
 
       const patterns = config.packages || [];
 

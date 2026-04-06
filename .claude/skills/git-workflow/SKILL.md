@@ -3,6 +3,12 @@ name: git-workflow
 description: "Anatomia git workflow. Invoke when creating branches, committing code, preparing PRs, or merging changes."
 ---
 
+## Detected
+- Default branch: feature/s11-init-reset
+- Commits: 338
+- Contributors: 2
+- Co-author: read from `ana.json` coAuthor field
+
 # Git Workflow — Anatomia
 
 ## Branching

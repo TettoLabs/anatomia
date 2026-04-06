@@ -32,9 +32,6 @@ importers:
       glob:
         specifier: ^10.3.0
         version: 10.5.0
-      js-yaml:
-        specifier: ^4.1.1
-        version: 4.1.1
       ora:
         specifier: ^8.0.0
         version: 8.2.0

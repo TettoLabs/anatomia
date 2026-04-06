@@ -158,6 +158,31 @@ describe('ana setup check', () => {
       expect(result.line_count.actual).toBe(900);
       expect(exitCode).toBe(0);
     });
+
+    it('passes line count for scaffold files even when below minimum', async () => {
+      // patterns.md needs 550-1400 lines, but scaffold files should pass
+      const scaffoldContent = '<!-- SCAFFOLD - Setup will fill this file -->\n## Section 1\nDetected data here.\n';
+      await createContextFile('patterns.md', scaffoldContent);
+
+      const { stdout } = runCheck('patterns.md --json');
+      const result = JSON.parse(stdout);
+
+      expect(result.line_count.pass).toBe(true);
+      expect(result.line_count.actual).toBeLessThan(10);
+    });
+
+    it('fails line count for non-scaffold files below minimum', async () => {
+      // Non-scaffold file with too few lines should still fail
+      const content = generateContent(100, 6);
+      await createContextFile('patterns.md', content);
+
+      const { stdout, exitCode } = runCheck('patterns.md --json');
+      const result = JSON.parse(stdout);
+
+      expect(result.line_count.pass).toBe(false);
+      expect(result.line_count.actual).toBe(100);
+      expect(exitCode).toBe(1);
+    });
   });
 
   describe('placeholder detection', () => {

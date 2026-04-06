@@ -79,12 +79,11 @@ import {
   AGENT_FILES,
   SKILL_DIRS,
 } from '../constants.js';
-import { buildSymbolIndex } from './index.js';
+import { buildSymbolIndex } from './symbol-index.js';
 
 /** Command options */
 interface InitCommandOptions {
   force?: boolean;
-  skipAnalysis?: boolean;
 }
 
 /** Pre-flight validation result */
@@ -96,7 +95,7 @@ interface PreflightResult {
 /**
  * Create empty analysis result for fallback
  *
- * Used when analyzer fails or is skipped with --skip-analysis.
+ * Used when analyzer fails.
  * Scaffolds handle undefined optional fields gracefully.
  *
  * @returns Minimal valid EngineResult
@@ -129,7 +128,6 @@ function createEmptyEngineResult(): EngineResult {
 export const initCommand = new Command('init')
   .description('Initialize .ana/ context framework')
   .option('-f, --force', 'Overwrite existing .ana/ (preserves state/)')
-  .option('--skip-analysis', 'Skip analyzer, create empty scaffolds')
   .action(async (options: InitCommandOptions, command: Command) => {
     // Reject positional arguments (init operates on cwd)
     if (command.args.length > 0) {
@@ -160,7 +158,7 @@ export const initCommand = new Command('init')
 
       // All operations in temp directory
       const scanStart = Date.now();
-      const engineResult = await runAnalyzer(cwd, options);
+      const engineResult = await runAnalyzer(cwd);
 
       // Reset cache override after analysis
       ASTCache.setCacheDir(null);
@@ -255,7 +253,7 @@ async function validateInitPreconditions(
         console.log('Setup is incomplete. Options:\n');
         console.log('  1. Resume setup: `claude --agent ana-setup`');
         console.log('  2. Start over: ana init --force\n');
-      } else if (config.setupMode === 'complete' || config.setupStatus === 'complete') {
+      } else if ((config.setupMode && config.setupMode !== 'not_started') || config.setupStatus === 'complete') {
         console.log('Framework already set up. Options:\n');
         console.log('  1. Keep current: Do nothing');
         console.log('  2. Recreate: ana init --force (preserves state/)\n');
@@ -311,20 +309,11 @@ async function dirExists(dirPath: string): Promise<boolean> {
  * Graceful degradation: if analyzer fails, returns null (empty scaffolds created).
  *
  * @param rootPath - Project root directory
- * @param options - Command options
- * @returns EngineResult or null if failed/skipped
+ * @returns EngineResult or null if failed
  */
 async function runAnalyzer(
-  rootPath: string,
-  options: InitCommandOptions
+  rootPath: string
 ): Promise<EngineResult | null> {
-  // Skip if --skip-analysis flag
-  if (options.skipAnalysis) {
-    console.log(chalk.gray('\nSkipping analyzer (--skip-analysis flag)'));
-    console.log(chalk.yellow('  Scaffolds will have no pre-populated data\n'));
-    return null;
-  }
-
   const spinner = ora('Analyzing project...').start();
 
   try {
@@ -497,8 +486,6 @@ async function getCliVersion(): Promise<string> {
  * - 8 step files
  * - 6 framework-snippets
  * - 1 SCHEMAS.md
- *
- * ENTRY.md template stays in CLI package (used by ana setup complete).
  *
  * Each file verified with SHA-256 hash after copy.
  *
@@ -1251,9 +1238,8 @@ function displaySuccessMessage(engineResult: EngineResult | null, projectName: s
   }
   console.log(chalk.green('✓ Config written → .ana/ana.json'));
   console.log('');
-  console.log('  Your AI now knows your project. Next:');
-  console.log(chalk.cyan('    claude --agent ana') + '    Start working with Ana');
-  console.log(chalk.cyan('    ana scan') + '              Refresh project intelligence');
-  console.log(chalk.cyan('    ana setup') + '             Deepen context with your knowledge');
+  console.log('  Next steps:');
+  console.log(chalk.cyan('    claude --agent ana') + '          Start working (Ana knows your stack)');
+  console.log(chalk.cyan('    claude --agent ana-setup') + '    Enrich context with Q&A (optional)');
   console.log('');
 }

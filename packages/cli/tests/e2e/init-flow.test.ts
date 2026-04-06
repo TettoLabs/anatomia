@@ -40,8 +40,7 @@ describe('ana init E2E', () => {
   });
 
   it('creates all 47 files in .ana/ (modes, context, docs, plans, hooks, state)', async () => {
-    // Run ana init with --skip-analysis (faster, deterministic)
-    await execFileAsync('node', [cliPath, 'init', '--skip-analysis'], {
+    await execFileAsync('node', [cliPath, 'init'], {
       cwd: tmpProject,
     });
 
@@ -93,7 +92,6 @@ describe('ana init E2E', () => {
       'modes/setup.md',
       'modes/setup-quick.md',
       'modes/setup-guided.md',
-      'modes/setup-complete.md',
     ];
 
     for (const file of modeFiles) {
@@ -142,7 +140,7 @@ describe('ana init E2E', () => {
     expect(snapshotExists).toBe(true);
 
     // Count total files in .ana/
-    // 7 generated + 10 modes + 3 setup + 8 steps + 6 snippets + 4 hooks + 1 SCHEMAS + 2 .gitkeep + 2 JSON + 1 symbol-index + 1 cli-path + 1 .gitignore = 46
+    // 7 generated + 9 modes + 3 setup + 8 steps + 6 snippets + 4 hooks + 1 SCHEMAS + 2 .gitkeep + 3 JSON (ana.json, snapshot.json, scan.json) + 1 symbol-index + 1 cli-path + 1 .gitignore = 46
     const allFiles = await findAllFiles(anaPath);
     expect(allFiles.length).toBe(46);
 
@@ -211,7 +209,7 @@ describe('ana init E2E', () => {
 
   it('--force preserves state/ directory', async () => {
     // First init
-    await execFileAsync('node', [cliPath, 'init', '--skip-analysis'], {
+    await execFileAsync('node', [cliPath, 'init'], {
       cwd: tmpProject,
     });
 
@@ -222,7 +220,7 @@ describe('ana init E2E', () => {
     await fs.writeFile(path.join(statePath, 'test.json'), '{"preserved":true}');
 
     // Re-init with --force
-    await execFileAsync('node', [cliPath, 'init', '--force', '--skip-analysis'], {
+    await execFileAsync('node', [cliPath, 'init', '--force'], {
       cwd: tmpProject,
     });
 

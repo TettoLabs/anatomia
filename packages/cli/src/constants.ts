@@ -43,14 +43,6 @@ export const MODE_FILES = [
   'setup.md',
   'setup-quick.md',
   'setup-guided.md',
-  'setup-complete.md',
-] as const;
-
-/** Setup files */
-export const SETUP_FILES = [
-  'SETUP_GUIDE.md',
-  'templates.md',
-  'rules.md',
 ] as const;
 
 /** Step files */
@@ -99,7 +91,7 @@ export const SKILL_DIRS = [
 ] as const;
 
 /** Valid setupMode tiers */
-export const VALID_SETUP_TIERS = ['quick', 'guided', 'complete'] as const;
+export const VALID_SETUP_TIERS = ['quick', 'guided'] as const;
 
 /** ana.json version */
 export const ANA_JSON_VERSION = '1.0.0';

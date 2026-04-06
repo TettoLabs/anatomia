@@ -29,7 +29,7 @@ describe('performance benchmarks', () => {
   it('ana init completes in <20s', async () => {
     const start = Date.now();
 
-    await execFileAsync('node', [cliPath, 'init', '--skip-analysis'], {
+    await execFileAsync('node', [cliPath, 'init'], {
       cwd: tmpProject,
     });
 
