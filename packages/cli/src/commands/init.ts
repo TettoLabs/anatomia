@@ -1163,12 +1163,34 @@ async function saveScanJson(
 }
 
 /**
- * Phase 7: Create ana.json
+ * Make test command non-interactive for pipeline use
  *
- * Creates project config with detected data:
- * - commands from EngineResult (not hardcoded)
- * - package manager, framework, language
- * - setupMode: 'not_started' (setup sets the real mode when it runs)
+ * Vitest runs in watch mode by default — append --run to disable.
+ * Jest --watch is removed for CI compatibility.
+ *
+ * @param testCommand - Raw test command from package.json
+ * @param testingFramework - Detected testing framework
+ * @returns Non-interactive test command or null
+ */
+function makeTestCommandNonInteractive(
+  testCommand: string | null,
+  testingFramework: string | null
+): string | null {
+  if (!testCommand) return null;
+  if (testingFramework === 'Vitest' && !testCommand.includes('--run')) {
+    return `${testCommand} -- --run`;
+  }
+  if (testingFramework === 'Jest' && testCommand.includes('--watch')) {
+    return testCommand.replace('--watch', '').trim();
+  }
+  return testCommand;
+}
+
+/**
+ * Phase 7: Create ana.json (D1 schema)
+ *
+ * Creates project config with detected data. Every field is a contract
+ * consumed by pipeline agents — see D1 for the canonical schema.
  *
  * @param tmpAnaPath - Temp .ana/ path
  * @param engineResult - Engine result or null
@@ -1180,22 +1202,25 @@ async function createAnaJson(
   const spinner = ora('Creating ana.json...').start();
 
   const result = engineResult || createEmptyEngineResult();
+  const cliVersion = await getCliVersion();
 
   const anaConfig = {
+    anaVersion: cliVersion,
     name: result.overview.project,
-    framework: result.stack.framework || null,
     language: result.stack.language || null,
+    framework: result.stack.framework || null,
     packageManager: result.commands.packageManager,
     commands: {
       build: result.commands.build || null,
-      test: result.commands.test || null,
+      test: makeTestCommandNonInteractive(result.commands.test, result.stack.testing),
       lint: result.commands.lint || null,
       dev: result.commands.dev || null,
     },
     coAuthor: 'Ana <build@anatomia.dev>',
-    artifactBranch: result.git?.branch || 'main',
+    artifactBranch: result.git.defaultBranch ?? result.git.branch ?? 'main',
     setupMode: 'not_started',
-    scanStaleDays: 7,
+    setupCompletedAt: null,
+    lastScanAt: result.overview.scannedAt,
   };
 
   const anaJsonPath = path.join(tmpAnaPath, 'ana.json');

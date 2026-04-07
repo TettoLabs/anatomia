@@ -122,9 +122,10 @@ describe('ana init', () => {
       const engineResult = createEmptyEngineResult();
       // Simulate what createAnaJson does from an EngineResult
       const meta = {
+        anaVersion: '0.2.0',
         name: engineResult.overview.project,
-        framework: engineResult.stack.framework || null,
         language: engineResult.stack.language || null,
+        framework: engineResult.stack.framework || null,
         packageManager: engineResult.commands.packageManager,
         commands: {
           build: engineResult.commands.build || null,
@@ -133,22 +134,27 @@ describe('ana init', () => {
           dev: engineResult.commands.dev || null,
         },
         coAuthor: 'Ana <build@anatomia.dev>',
-        artifactBranch: engineResult.git?.branch || 'main',
+        artifactBranch: engineResult.git?.defaultBranch ?? engineResult.git?.branch ?? 'main',
         setupMode: 'not_started',
-        scanStaleDays: 7,
+        setupCompletedAt: null,
+        lastScanAt: engineResult.overview.scannedAt,
       };
 
       expect(meta.setupMode).toBe('not_started');
       expect(meta.name).toBe('unknown');
       expect(meta.packageManager).toBe('npm');
       expect(meta.framework).toBeNull();
+      expect(meta.anaVersion).toBeDefined();
+      expect(meta.lastScanAt).toBeDefined();
+      expect(meta.setupCompletedAt).toBeNull();
     });
 
-    it('has all required fields for new schema', () => {
+    it('has all required fields for D1 schema', () => {
       const meta = {
+        anaVersion: '0.2.0',
         name: 'my-project',
-        framework: 'FastAPI',
         language: 'Python',
+        framework: 'FastAPI',
         packageManager: 'pip',
         commands: {
           build: null,
@@ -159,14 +165,19 @@ describe('ana init', () => {
         coAuthor: 'Ana <build@anatomia.dev>',
         artifactBranch: 'main',
         setupMode: 'not_started',
-        scanStaleDays: 7,
+        setupCompletedAt: null,
+        lastScanAt: new Date().toISOString(),
       };
 
       const keys = Object.keys(meta);
+      expect(keys).toContain('anaVersion');
       expect(keys).toContain('setupMode');
+      expect(keys).toContain('setupCompletedAt');
+      expect(keys).toContain('lastScanAt');
       expect(keys).toContain('name');
       expect(keys).toContain('framework');
       expect(keys).toContain('packageManager');
+      expect(keys).not.toContain('scanStaleDays');
       expect(keys).not.toContain('setupStatus');
       expect(keys).not.toContain('analyzerVersion');
     });
