@@ -106,27 +106,6 @@ export const MODE_FILES = [
   'setup-guided.md',
 ] as const;
 
-/** Step files */
-export const STEP_FILES = [
-  '00_explore_codebase.md',
-  '01_project_overview.md',
-  '02_conventions.md',
-  '03_patterns.md',
-  '04_architecture.md',
-  '05_testing.md',
-  '06_workflow.md',
-  '07_debugging.md',
-] as const;
-
-/** Framework snippet files */
-export const FRAMEWORK_SNIPPETS = [
-  'fastapi.md',
-  'django.md',
-  'nextjs.md',
-  'express.md',
-  'go.md',
-  'generic.md',
-] as const;
 
 /** Agent definition files */
 export const AGENT_FILES = [
@@ -148,7 +127,6 @@ export const SKILL_DIRS = [
   'git-workflow',
   'deployment',
   'design-principles',
-  'logging-standards',
 ] as const;
 
 /** Valid setupMode tiers */

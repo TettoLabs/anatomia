@@ -263,8 +263,11 @@ export function generatePatternsScaffold(
 
   // Framework Patterns
   s += `---\n\n## Framework Patterns\n\n`;
-  const fwSlug = result.stack.framework?.toLowerCase().replace(/[^a-z]/g, '') || 'generic';
-  s += `**Unexamined:** Framework-specific patterns (see context/setup/framework-snippets/${fwSlug}.md)\n\n`;
+  if (result.stack.framework) {
+    s += `**Unexamined:** Framework-specific patterns for ${result.stack.framework}\n\n`;
+  } else {
+    s += `**Unexamined:** No framework detected\n\n`;
+  }
 
   s += `---\n\n*Last updated: ${timestamp}*\n`;
   return s;

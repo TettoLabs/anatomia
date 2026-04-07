@@ -71,7 +71,7 @@ describe('ana init', () => {
       const templatesDir = path.join(__dirname, '..', '..', 'templates');
 
       const expectedFiles = [
-        // 10 mode files
+        // 9 mode files
         'modes/architect.md',
         'modes/code.md',
         'modes/debug.md',
@@ -81,26 +81,9 @@ describe('ana init', () => {
         'modes/setup.md',
         'modes/setup-quick.md',
         'modes/setup-guided.md',
-        // 3 setup files
+        // 2 setup files (templates.md, step files, framework-snippets removed — D10.9)
         'context/setup/SETUP_GUIDE.md',
-        'context/setup/templates.md',
         'context/setup/rules.md',
-        // 8 step files
-        'context/setup/steps/00_explore_codebase.md',
-        'context/setup/steps/01_project_overview.md',
-        'context/setup/steps/02_conventions.md',
-        'context/setup/steps/03_patterns.md',
-        'context/setup/steps/04_architecture.md',
-        'context/setup/steps/05_testing.md',
-        'context/setup/steps/06_workflow.md',
-        'context/setup/steps/07_debugging.md',
-        // 6 framework-snippets
-        'context/setup/framework-snippets/fastapi.md',
-        'context/setup/framework-snippets/django.md',
-        'context/setup/framework-snippets/nextjs.md',
-        'context/setup/framework-snippets/express.md',
-        'context/setup/framework-snippets/go.md',
-        'context/setup/framework-snippets/generic.md',
         // 4 hook scripts
         '.ana/hooks/verify-context-file.sh',
         '.ana/hooks/quality-gate.sh',
@@ -122,18 +105,17 @@ describe('ana init', () => {
         '.claude/agents/ana-question-formulator.md',
         '.claude/agents/ana-writer.md',
         '.claude/agents/ana-verifier.md',
-        // 6 skill files
+        // 5 skill files (logging-standards removed — D6.1)
         '.claude/skills/testing-standards/SKILL.md',
         '.claude/skills/coding-standards/SKILL.md',
         '.claude/skills/git-workflow/SKILL.md',
         '.claude/skills/deployment/SKILL.md',
         '.claude/skills/design-principles/SKILL.md',
-        '.claude/skills/logging-standards/SKILL.md',
         // CLAUDE.md entry point
         'CLAUDE.md',
       ];
 
-      expect(expectedFiles).toHaveLength(50);
+      expect(expectedFiles).toHaveLength(34);
 
       for (const file of expectedFiles) {
         const filePath = path.join(templatesDir, file);
