@@ -81,9 +81,6 @@ describe('ana init', () => {
         'modes/setup.md',
         'modes/setup-quick.md',
         'modes/setup-guided.md',
-        // 2 setup files (templates.md, step files, framework-snippets removed — D10.9)
-        'context/setup/SETUP_GUIDE.md',
-        'context/setup/rules.md',
         // 4 hook scripts
         '.ana/hooks/verify-context-file.sh',
         '.ana/hooks/quality-gate.sh',
@@ -111,7 +108,7 @@ describe('ana init', () => {
         'CLAUDE.md',
       ];
 
-      expect(expectedFiles).toHaveLength(30);
+      expect(expectedFiles).toHaveLength(28);
 
       for (const file of expectedFiles) {
         const filePath = path.join(templatesDir, file);

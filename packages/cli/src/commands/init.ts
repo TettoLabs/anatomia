@@ -476,10 +476,9 @@ async function getCliVersion(): Promise<string> {
  *
  * Copies static template files from CLI templates/ to .ana/:
  * - 9 mode files
- * - 2 setup files (SETUP_GUIDE.md, rules.md)
  * - 1 SCHEMAS.md
  *
- * Step files, framework-snippets, and templates.md removed (D10.9).
+ * Step files, framework-snippets, templates.md, SETUP_GUIDE.md, rules.md removed (D10.9).
  *
  * Each file verified with SHA-256 hash after copy.
  *
@@ -495,18 +494,6 @@ async function copyStaticFilesWithVerification(tmpAnaPath: string): Promise<void
     const sourcePath = path.join(templatesDir, 'modes', file);
     const destPath = path.join(tmpAnaPath, 'modes', file);
     await copyAndVerifyFile(sourcePath, destPath, `modes/${file}`);
-  }
-
-  // 2 setup files (templates.md removed — D10.9)
-  const setupFiles = [
-    { source: 'context/setup/SETUP_GUIDE.md', dest: 'context/setup/SETUP_GUIDE.md' },
-    { source: 'context/setup/rules.md', dest: 'context/setup/rules.md' },
-  ];
-
-  for (const file of setupFiles) {
-    const sourcePath = path.join(templatesDir, file.source);
-    const destPath = path.join(tmpAnaPath, file.dest);
-    await copyAndVerifyFile(sourcePath, destPath, file.source);
   }
 
   // SCHEMAS.md

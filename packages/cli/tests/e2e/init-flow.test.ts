@@ -138,10 +138,10 @@ describe('ana init E2E', () => {
     expect(snapshotExists).toBe(true);
 
     // Count total files in .ana/
-    // 7 generated + 9 modes + 2 setup (SETUP_GUIDE + rules) + 4 hooks + 1 SCHEMAS + 2 .gitkeep + 3 JSON (ana.json, snapshot.json, scan.json) + 1 symbol-index + 1 cli-path + 1 .gitignore = 31
-    // (step files, framework-snippets, templates.md removed — D10.9)
+    // 7 generated + 9 modes + 4 hooks + 1 SCHEMAS + 2 .gitkeep + 3 JSON (ana.json, snapshot.json, scan.json) + 1 symbol-index + 1 cli-path + 1 .gitignore = 29
+    // (step files, framework-snippets, templates.md, SETUP_GUIDE, rules.md removed — D10.9)
     const allFiles = await findAllFiles(anaPath);
-    expect(allFiles.length).toBe(31);
+    expect(allFiles.length).toBe(29);
 
     // Verify .gitignore exists and excludes runtime state
     const gitignorePath = path.join(anaPath, '.gitignore');
