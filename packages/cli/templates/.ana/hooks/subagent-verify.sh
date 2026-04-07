@@ -16,12 +16,15 @@ INPUT=$(cat)
 LAST_MSG=$(echo "$INPUT" | jq -r '.last_assistant_message // empty' 2>/dev/null)
 
 # Try to extract filename from last_assistant_message
+# Uses dynamic glob instead of hardcoded file list (D8.5)
 ASSIGNED_FILE=""
 if [ -n "$LAST_MSG" ]; then
-  # Look for context filenames mentioned in the agent's final message
-  for candidate in project-overview.md conventions.md patterns.md architecture.md testing.md workflow.md debugging.md; do
-    if echo "$LAST_MSG" | grep -q "\.ana/context/$candidate"; then
-      ASSIGNED_FILE="$candidate"
+  # Look for any context file mentioned in the agent's final message
+  for candidate in "$CONTEXT_DIR"/*.md; do
+    [ -f "$candidate" ] || continue
+    fname=$(basename "$candidate")
+    if echo "$LAST_MSG" | grep -q "\.ana/context/$fname"; then
+      ASSIGNED_FILE="$fname"
       break
     fi
   done
