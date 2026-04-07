@@ -122,7 +122,6 @@ export const SKILL_DIRS = [
   'coding-standards',
   'git-workflow',
   'deployment',
-  'design-principles',
 ] as const;
 
 /** Valid setupMode tiers */

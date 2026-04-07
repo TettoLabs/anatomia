@@ -42,8 +42,7 @@
  *       ├── coding-standards/SKILL.md
  *       ├── git-workflow/SKILL.md
  *       ├── deployment/SKILL.md
- *       ├── design-principles/SKILL.md
- *       └── logging-standards/SKILL.md
+ *       └── troubleshooting/SKILL.md
  *
  *   CLAUDE.md                     (project entry point)
  */
@@ -792,7 +791,7 @@ async function seedSkillFiles(skillsDir: string, result: EngineResult): Promise<
   if (result.commands?.build) deployLines.push(`- Build command: \`${result.commands.build}\``);
   if (deployLines.length > 0) seeds['deployment'] = deployLines;
 
-  // design-principles — skip entirely (100% human philosophy)
+  // design-principles — moved to context file (D6.7), no longer a skill
   // logging-standards — removed, folded into coding-standards (D6.1)
 
   // Inject ## Detected sections

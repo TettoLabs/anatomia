@@ -81,16 +81,6 @@ describe('skill seeding', () => {
     expect(content).toContain('Default branch:');
   });
 
-  it('does not inject into design-principles', async () => {
-    await execFileAsync('node', [cliPath, 'init', '--force'], { cwd: tempDir });
-
-    const content = await fs.readFile(
-      path.join(tempDir, '.claude', 'skills', 'design-principles', 'SKILL.md'),
-      'utf-8'
-    );
-    expect(content).not.toContain('## Detected');
-  });
-
   it('does not duplicate ## Detected on reinit', async () => {
     // First init
     await execFileAsync('node', [cliPath, 'init', '--force'], { cwd: tempDir });
