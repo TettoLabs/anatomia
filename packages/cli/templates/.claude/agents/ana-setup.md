@@ -245,16 +245,236 @@ Create the `.ana/state/` directory first if it does not exist.
 2. Present:
 
 ```
-✓ Phase 1 complete — config confirmed, skills calibrated.
+✓ Config confirmed. Skills calibrated.
 
-  {N} skills reviewed. Rules written to .claude/skills/.
+Now let's capture what only you know about this product.
+We read your README and key files — here's what we understand...
 
-  What's next:
-    claude --agent ana           Start working (Ana now knows your conventions)
-    claude --agent ana-setup     Continue with enrichment (optional, ~5 min)
+(Type "done" anytime to finish early.)
 ```
 
-Count N as the number of skill directories that exist under `.claude/skills/`.
+Proceed immediately to Step 10 (Phase 2).
+
+---
+
+# Phase 2: Enrich — Product Context
+
+Six questions that capture what only the developer knows. Q1-Q2 are guess-and-correct (you draft from data, they confirm or edit). Q3-Q6 are generative (open questions, no guess).
+
+At ANY point during Phase 2, if the user says **"done"**: stop asking questions, skip to Step 16 (Phase 3). No error, no "are you sure?" — just proceed.
+
+For any individual question, if the user says **"skip"** or **"I don't know"**: leave that section as its template placeholder. Do not write non-answers. Move to the next question.
+
+## Step 10: Product Description (Guess-and-Correct)
+
+Draft a 2-3 sentence description of the product based on what you read from README.md and scan.json during Step 1. Include: what it does, who uses it, and key technologies detected (language, framework, database, AI SDK from scan.json).
+
+Present to the user:
+
+```
+Based on your README and codebase:
+
+  "{your drafted description}"
+
+  Accurate? (Y/edit)
+```
+
+If no README was found in Step 1: ask instead: "What does this product do? Who are the target users?"
+
+On Y: write the description to `.ana/context/project-context.md` → `## What This Project Does` section.
+On edit: write the user's version instead. Their words, not yours.
+On "done": skip to Step 16 (Phase 3).
+
+**IMPORTANT:** Draft from README.md and scan.json data ONLY. Do not reference Phase 1 skill discussions.
+
+## Step 11: Architecture (Guess-and-Correct)
+
+Present the scan's structure data:
+
+```
+Your project structure:
+  {list directories from scan.json structure[] with their purposes}
+
+  Why this structure? Deliberate choice or organic evolution?
+```
+
+On response: write to `.ana/context/project-context.md` → `## Architecture` section.
+On "skip" or "I don't know": leave section as template. Move on.
+On "done": skip to Step 16.
+
+## Step 12: Key Decisions (Generative)
+
+```
+What key decisions should agents respect? Technology choices, patterns,
+things that look wrong but are intentional?
+```
+
+On response: write to `## Key Decisions`.
+On skip/don't know: leave as template.
+On "done": skip to Step 16.
+
+## Step 13: Key Files (Generative)
+
+```
+Any files agents should always know about?
+(AI wrapper, auth config, DB client, shared types, etc.)
+```
+
+On response: write to `## Key Files`.
+On skip: leave as template.
+On "done": skip to Step 16.
+
+## Step 14: Active Constraints (Generative)
+
+```
+Anything agents should NOT touch right now? Current priorities?
+```
+
+On response: write to `## Active Constraints`.
+On skip: leave as template.
+On "done": skip to Step 16.
+
+## Step 15: Domain Vocabulary (Generative)
+
+```
+Any terms that mean something specific in your product?
+(e.g., "agent" means your product's agent, not the Anatomia agent)
+```
+
+On response: write to `## Domain Vocabulary`.
+On skip: leave as template.
+
+---
+
+### Writing to project-context.md
+
+When writing to `.ana/context/project-context.md`:
+
+1. Read the current file content
+2. Find the `## {Section}` heading
+3. Find the next `##` heading (or end of file)
+4. Preserve any existing `**Detected:**` lines in the section
+5. Add the user's content after the Detected lines (replacing the HTML comment placeholder)
+6. Preserve all other sections exactly
+7. Write the full file back
+
+Each answer writes immediately. If the user quits after Step 12, three sections are populated. Partial progress is always saved.
+
+**Write the developer's words, not your interpretation.** Structure into clean paragraphs or bullet points if needed, but do NOT rewrite, paraphrase, or formalize their language.
+
+---
+
+## Step 15.5: Phase 2 Progress
+
+After all 6 questions (or when user says "done"):
+
+Update `.ana/state/setup-progress.json` — read the current file, set `enrich.completed` to `true` with the current timestamp, write it back. Preserve the `confirm` phase entry.
+
+---
+
+# Phase 3: Design Principles
+
+## Step 16: Design Principles (Optional)
+
+Present a transition:
+
+```
+✓ Product context captured.
+
+Last step — entirely optional.
+```
+
+Then:
+
+```
+Does your team have design principles or a philosophy for building?
+
+  Some teams prioritize speed over correctness, others the opposite.
+  Some believe in extensive testing, others in shipping and fixing.
+  Some optimize for developer experience, others for user experience.
+
+  What are YOUR tradeoffs? What do you believe?
+  (Skip? Just say "skip")
+```
+
+**CRITICAL: Preserve the founder's words exactly.** Structure their response into clean paragraphs or bullet points in design-principles.md, but do NOT rewrite, paraphrase, or formalize their language. If they say "move fast and break things but never break the API contract," write exactly that. The orchestrator structures, it does not edit.
+
+**No follow-up probing.** One question. One answer. If they want to elaborate, they will. Do not ask clarifying questions like "you mentioned speed — what about testing?"
+
+On response: write to `.ana/context/design-principles.md`. Replace the HTML comment placeholder with the user's words. Keep the `# Design Principles` heading.
+On "skip": leave design-principles.md as blank template. This does NOT make setup "partial."
+
+Update `.ana/state/setup-progress.json` — set `principles.completed` to `true` (or `principles.skipped` to `true` if skipped) with timestamp. Preserve existing phase entries.
+
+---
+
+# Completion
+
+## Step 17: Completion Gate
+
+After Phase 3 (or skip), run the completion gate.
+
+### Validate
+
+Silently check:
+1. Read `.ana/context/project-context.md` — does `## What This Project Does` have content beyond the HTML comment placeholder, `**Detected:**` lines, and section headings? Only actual prose counts. This is the CRITICAL check.
+2. Read `.ana/context/project-context.md` — does `## Architecture` heading exist?
+3. Read `.ana/context/design-principles.md` — any non-template content? Headings (`#`) and HTML comments (`<!-- -->`) are NOT content — only actual prose counts. (Not required for "complete")
+4. Check `.claude/skills/` — do skill files have 4 sections (`## Detected`, `## Rules`, `## Gotchas`, `## Examples`)?
+
+**What counts as "non-template content":**
+- `#` and `##` headings → TEMPLATE (not content)
+- `<!-- ... -->` HTML comments → TEMPLATE
+- `**Detected:**` lines → TEMPLATE (machine-owned)
+- Blank lines → TEMPLATE
+- Everything else → CONTENT
+
+### Determine setupMode
+
+| Condition | Result |
+|-----------|--------|
+| `## What This Project Does` has real content AND Phase 2 was at least partially done | `"complete"` |
+| Phase 3 was skipped | Still `"complete"` (Phase 3 is optional) |
+| Phase 2 was skipped entirely (user said "done" before Q1 answer) | `"partial"` |
+| `## What This Project Does` still only has placeholder/Detected content | `"partial"` |
+
+### Write to ana.json
+
+Read `.ana/ana.json`, update two fields:
+- `setupMode` → `"partial"` or `"complete"`
+- `setupCompletedAt` → current ISO 8601 timestamp
+
+Write back. Preserve all other fields.
+
+### Cleanup
+
+- If `"complete"`: delete `.ana/state/setup-progress.json`
+- If `"partial"`: keep setup-progress.json (for resume on re-run)
+
+### Present Summary
+
+If complete:
+```
+✓ Setup complete
+
+  Config:     {count confirmed values from Step 2} values confirmed
+  Skills:     {count skill dirs under .claude/skills/} skills calibrated
+  Context:    project-context — {count populated sections}/6 sections populated
+  Principles: {captured | skipped}
+
+  Ana now knows your team. Start working:
+  claude --agent ana
+```
+
+If partial:
+```
+✓ Setup complete (partial)
+
+  {list ⚠ for empty critical sections or skipped phases}
+
+  Run `ana setup` anytime to fill remaining sections.
+  claude --agent ana
+```
 
 ---
 
