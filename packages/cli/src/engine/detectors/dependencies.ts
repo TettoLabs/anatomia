@@ -113,6 +113,31 @@ export const JOBS_PACKAGES: Record<string, string> = {
   '@upstash/redis': 'Upstash Redis',
 };
 
+/**
+ * AI SDK detection — branded case values for stack.aiSdk
+ * Order defines precedence when multiple SDKs detected.
+ */
+const AI_SDK_PACKAGES: Array<[string, string]> = [
+  ['@anthropic-ai/sdk', 'Anthropic'],
+  ['openai', 'OpenAI'],
+  ['@ai-sdk/core', 'Vercel AI'],
+  ['ai', 'Vercel AI'],
+  ['@google/generative-ai', 'Google AI'],
+  ['langchain', 'LangChain'],
+  ['@langchain/core', 'LangChain'],
+];
+
+/**
+ * Detect the primary AI SDK from dependencies.
+ * Returns branded name of the first/primary match, or null.
+ */
+export function detectAiSdk(allDeps: Record<string, string>): string | null {
+  for (const [pkg, name] of AI_SDK_PACKAGES) {
+    if (allDeps[pkg]) return name;
+  }
+  return null;
+}
+
 export interface DependencyDetectionResult {
   database: string | null;
   auth: string | null;

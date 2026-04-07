@@ -21,7 +21,7 @@ import type { EngineResult, PatternDetail } from './types/engineResult.js';
 import type { AnalysisResult } from './types/index.js';
 import type { PatternConfidence, MultiPattern } from './types/patterns.js';
 import { isMultiPattern } from './types/patterns.js';
-import { readDependencies, detectFromDeps, detectServiceDeps, aggregateMonorepoDependencies } from './detectors/dependencies.js';
+import { readDependencies, detectFromDeps, detectServiceDeps, detectAiSdk, aggregateMonorepoDependencies } from './detectors/dependencies.js';
 import { detectPackageManager } from './detectors/packageManager.js';
 import { detectGitInfo } from './detectors/git.js';
 import { detectCommands } from './detectors/commands.js';
@@ -508,7 +508,7 @@ export async function analyzeProject(
 
   return {
     overview: { project: projectName, scannedAt: now, depth: options.depth },
-    stack: { ...stack, aiSdk: null },
+    stack: { ...stack, aiSdk: detectAiSdk(allDeps) },
     files,
     structure: structure.items,
     structureOverflow: structure.overflow,
