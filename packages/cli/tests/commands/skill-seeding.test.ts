@@ -95,4 +95,46 @@ describe('skill seeding', () => {
     const detectedCount = (content.match(/## Detected/g) || []).length;
     expect(detectedCount).toBe(1);
   }, 30000);
+
+  it('re-init preserves ## Rules but replaces ## Detected (D6.13 boundary)', async () => {
+    // First init — creates skill files with scan data
+    await execFileAsync('node', [cliPath, 'init', '--force'], { cwd: tempDir });
+
+    const skillPath = path.join(tempDir, '.claude', 'skills', 'coding-standards', 'SKILL.md');
+
+    // Read the initial content to get the original Detected section
+    const initialContent = await fs.readFile(skillPath, 'utf-8');
+    expect(initialContent).toContain('## Detected');
+    expect(initialContent).toContain('## Rules');
+
+    // Inject custom human content into ## Rules
+    const customRules = '- CUSTOM RULE: Always use semicolons\n- CUSTOM RULE: No magic numbers\n- CUSTOM RULE: Max 3 params per function';
+    const rulesIdx = initialContent.indexOf('## Rules');
+    const nextSectionAfterRules = initialContent.indexOf('\n## ', rulesIdx + 1);
+    const beforeRules = initialContent.slice(0, rulesIdx);
+    const afterRules = nextSectionAfterRules === -1 ? '' : initialContent.slice(nextSectionAfterRules);
+    const customContent = beforeRules + '## Rules\n' + customRules + '\n' + afterRules;
+    await fs.writeFile(skillPath, customContent, 'utf-8');
+
+    // Verify custom rules are in place
+    const beforeReinit = await fs.readFile(skillPath, 'utf-8');
+    expect(beforeReinit).toContain('CUSTOM RULE: Always use semicolons');
+
+    // Re-init — should REPLACE ## Detected, preserve ## Rules
+    await execFileAsync('node', [cliPath, 'init', '--force'], { cwd: tempDir });
+
+    const afterReinit = await fs.readFile(skillPath, 'utf-8');
+
+    // ## Rules MUST be preserved exactly
+    expect(afterReinit).toContain('CUSTOM RULE: Always use semicolons');
+    expect(afterReinit).toContain('CUSTOM RULE: No magic numbers');
+    expect(afterReinit).toContain('CUSTOM RULE: Max 3 params per function');
+
+    // ## Detected MUST be refreshed (present with scan data)
+    expect(afterReinit).toContain('## Detected');
+
+    // Only one ## Detected section
+    const detectedCount = (afterReinit.match(/## Detected/g) || []).length;
+    expect(detectedCount).toBe(1);
+  }, 30000);
 }, 30000);
