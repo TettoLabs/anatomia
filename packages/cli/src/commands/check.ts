@@ -1,21 +1,21 @@
 /**
- * ana setup check - Validate context files for quality gates
+ * ana setup check - Project health dashboard
  *
  * Usage:
- *   ana setup check --json              Check all 7 context files, JSON output
- *   ana setup check project-context.md --json  Check single file, JSON output
- *   ana setup check                     Human-readable colored output
+ *   ana setup check                          ✓/○/✗ dashboard (default)
+ *   ana setup check project-context.md       Single file detail
+ *   ana setup check --json                   JSON output (context files)
  *
  * Exit codes:
- *   0 - All checks pass
- *   1 - One or more checks fail
+ *   0 - All checks pass (no ✗)
+ *   1 - One or more ✗ found
  */
 
 import { Command } from 'commander';
 import chalk from 'chalk';
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
-import type { SymbolEntry, SymbolIndex } from './index.js';
+import type { SymbolEntry, SymbolIndex } from './symbol-index.js';
 
 /** Per-file configuration for structural validation (D12.3 — no line counts) */
 interface FileConfig {
@@ -581,6 +581,493 @@ function displayFileResult(result: FileCheckResult): void {
   }
 }
 
+// ============================================================
+// S16: Setup Dashboard — ✓/○/✗ display
+// ============================================================
+
+/** Setup progress phase */
+export interface PhaseStatus {
+  completed: boolean;
+  timestamp?: string;
+}
+
+/** Setup progress file schema */
+export interface SetupProgress {
+  phases: {
+    confirm?: PhaseStatus;
+    enrich?: PhaseStatus;
+    principles?: PhaseStatus;
+  };
+}
+
+/** Skill check result */
+interface SkillCheckResult {
+  name: string;
+  symbol: string; // ✓, ○, or ✗
+  description: string;
+  detectedCount: number;
+  rulesCount: number;
+}
+
+/** Consistency check result */
+interface ConsistencyResult {
+  symbol: string;
+  label: string;
+  detail: string;
+}
+
+/**
+ * Read setup-progress.json — try .ana/state/ path
+ * @param cwd - Project root directory
+ * @returns Setup progress or null if not found
+ */
+export async function readSetupProgress(cwd: string): Promise<SetupProgress | null> {
+  const paths = [
+    path.join(cwd, '.ana', 'state', 'setup-progress.json'),
+  ];
+  for (const p of paths) {
+    try {
+      const content = await fs.readFile(p, 'utf-8');
+      return JSON.parse(content);
+    } catch {
+      continue;
+    }
+  }
+  return null;
+}
+
+/**
+ * Read scan.json — try .ana/scan.json first, fall back to .ana/state/scan.json
+ * @param cwd - Project root directory
+ * @returns Parsed scan data or null if not found
+ */
+async function readScanJson(cwd: string): Promise<Record<string, unknown> | null> {
+  const paths = [
+    path.join(cwd, '.ana', 'scan.json'),
+    path.join(cwd, '.ana', 'state', 'scan.json'),
+  ];
+  for (const p of paths) {
+    try {
+      const content = await fs.readFile(p, 'utf-8');
+      return JSON.parse(content);
+    } catch {
+      continue;
+    }
+  }
+  return null;
+}
+
+/**
+ * Read ana.json
+ * @param cwd - Project root directory
+ * @returns Parsed ana.json or null if not found
+ */
+async function readAnaJson(cwd: string): Promise<Record<string, unknown> | null> {
+  try {
+    const content = await fs.readFile(path.join(cwd, '.ana', 'ana.json'), 'utf-8');
+    return JSON.parse(content);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Count list entries (lines starting with "- ") between a heading and the next ## heading
+ * @param content - File content
+ * @param sectionName - Section heading text (without ##)
+ * @returns Number of list entries
+ */
+export function countEntriesInSection(content: string, sectionName: string): number {
+  const lines = content.split('\n');
+  let inSection = false;
+  let count = 0;
+  for (const line of lines) {
+    if (line.startsWith(`## ${sectionName}`)) {
+      inSection = true;
+      continue;
+    }
+    if (inSection && line.startsWith('## ')) {
+      break;
+    }
+    if (inSection && line.trimStart().startsWith('- ')) {
+      count++;
+    }
+  }
+  return count;
+}
+
+/**
+ * Check if a skill file has all 4 required sections in order
+ * @param content - Skill file content
+ * @returns Validation result with missing section names
+ */
+export function checkSkillSections(content: string): { valid: boolean; missing: string[] } {
+  const required = ['Detected', 'Rules', 'Gotchas', 'Examples'];
+  const found: string[] = [];
+  for (const line of content.split('\n')) {
+    const match = line.match(/^## (.+)$/);
+    if (match) {
+      const name = match[1].trim();
+      if (required.includes(name)) {
+        found.push(name);
+      }
+    }
+  }
+  const missing = required.filter(s => !found.includes(s));
+  // Check order: each found section should appear in the same order as required
+  const orderedCorrectly = found.every((s, i) => {
+    if (i === 0) return true;
+    return required.indexOf(s) > required.indexOf(found[i - 1]);
+  });
+  return { valid: missing.length === 0 && orderedCorrectly, missing };
+}
+
+/**
+ * Check if content has non-template text (not just comments/placeholders)
+ * @param content - File content
+ * @param sectionName - Section heading text (without ##)
+ * @returns True if section has real content
+ */
+function hasNonTemplateContent(content: string, sectionName: string): boolean {
+  const lines = content.split('\n');
+  let inSection = false;
+  for (const line of lines) {
+    if (line.startsWith(`## ${sectionName}`)) {
+      inSection = true;
+      continue;
+    }
+    if (inSection && line.startsWith('## ')) {
+      break;
+    }
+    if (inSection) {
+      const trimmed = line.trim();
+      // Skip empty lines, HTML comments, and placeholder patterns
+      if (trimmed === '' || trimmed.startsWith('<!--') || trimmed.startsWith('-->')) continue;
+      // Has real content
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Discover skill directories dynamically
+ * @param cwd - Project root directory
+ * @returns Sorted array of skill directory names
+ */
+async function discoverSkills(cwd: string): Promise<string[]> {
+  const skillsDir = path.join(cwd, '.claude', 'skills');
+  try {
+    const entries = await fs.readdir(skillsDir, { withFileTypes: true });
+    return entries.filter(e => e.isDirectory()).map(e => e.name).sort();
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Check a single skill file
+ * @param cwd - Project root directory
+ * @param skillName - Skill directory name
+ * @returns Skill check result with symbol and description
+ */
+export async function checkSkill(cwd: string, skillName: string): Promise<SkillCheckResult> {
+  const filePath = path.join(cwd, '.claude', 'skills', skillName, 'SKILL.md');
+  try {
+    const content = await fs.readFile(filePath, 'utf-8');
+    const sections = checkSkillSections(content);
+    const detectedCount = countEntriesInSection(content, 'Detected');
+    const rulesCount = countEntriesInSection(content, 'Rules');
+
+    if (!sections.valid) {
+      return {
+        name: skillName,
+        symbol: chalk.red('✗'),
+        description: `missing sections: ${sections.missing.join(', ')}`,
+        detectedCount,
+        rulesCount,
+      };
+    }
+
+    if (skillName === 'troubleshooting') {
+      return {
+        name: skillName,
+        symbol: chalk.yellow('○'),
+        description: 'stub (grows over time)',
+        detectedCount,
+        rulesCount,
+      };
+    }
+
+    if (detectedCount > 0 || rulesCount > 0) {
+      return {
+        name: skillName,
+        symbol: chalk.green('✓'),
+        description: `Detected: ${detectedCount} facts, Rules: ${rulesCount} entries`,
+        detectedCount,
+        rulesCount,
+      };
+    }
+
+    return {
+      name: skillName,
+      symbol: chalk.yellow('○'),
+      description: `Detected: 0 facts, Rules: 0 entries`,
+      detectedCount,
+      rulesCount,
+    };
+  } catch {
+    return {
+      name: skillName,
+      symbol: chalk.red('✗'),
+      description: 'file not found',
+      detectedCount: 0,
+      rulesCount: 0,
+    };
+  }
+}
+
+/**
+ * Check context file for dashboard display
+ * @param cwd - Project root directory
+ * @param filename - Context filename (e.g., project-context.md)
+ * @returns Symbol and description for dashboard display
+ */
+export async function checkContextForDashboard(cwd: string, filename: string): Promise<{ symbol: string; description: string }> {
+  const filePath = path.join(cwd, '.ana', 'context', filename);
+  try {
+    const content = await fs.readFile(filePath, 'utf-8');
+    const baseName = filename.replace('.md', '');
+    const config = FILE_CONFIGS[baseName];
+
+    if (baseName === 'design-principles') {
+      // Any non-template content = ✓, else ○
+      const lines = content.split('\n').filter(l => {
+        const t = l.trim();
+        return t !== '' && !t.startsWith('#') && !t.startsWith('<!--') && !t.startsWith('-->');
+      });
+      if (lines.length > 0) {
+        return { symbol: chalk.green('✓'), description: 'populated' };
+      }
+      return { symbol: chalk.yellow('○'), description: 'empty (optional — add anytime)' };
+    }
+
+    if (baseName === 'project-context' && config) {
+      const headers = checkHeaders(content, config);
+      if (!headers.pass) {
+        return { symbol: chalk.red('✗'), description: `missing sections: ${headers.duplicates.join(', ')}` };
+      }
+      // Check if "What This Project Does" has non-template content
+      if (hasNonTemplateContent(content, 'What This Project Does')) {
+        return { symbol: chalk.green('✓'), description: `${headers.actual} sections populated` };
+      }
+      return { symbol: chalk.yellow('○'), description: 'scaffold (setup will enrich)' };
+    }
+
+    return { symbol: chalk.yellow('○'), description: 'unknown format' };
+  } catch {
+    return { symbol: chalk.red('✗'), description: 'file not found' };
+  }
+}
+
+/**
+ * Run cross-reference consistency checks
+ * @param cwd - Project root directory
+ * @param anaJson - Parsed ana.json content
+ * @param scanJson - Parsed scan.json content or null
+ * @returns Array of consistency check results
+ */
+export async function checkConsistency(cwd: string, anaJson: Record<string, unknown>, scanJson: Record<string, unknown> | null): Promise<ConsistencyResult[]> {
+  const results: ConsistencyResult[] = [];
+
+  // Check ana.json ↔ skills alignment
+  const mismatches: string[] = [];
+  const language = anaJson.language as string | undefined;
+  const artifactBranch = anaJson.artifactBranch as string | undefined;
+  const commands = anaJson.commands as Record<string, string> | undefined;
+
+  // Read skill Detected sections for cross-reference
+  const skillsDir = path.join(cwd, '.claude', 'skills');
+
+  if (language) {
+    try {
+      const coding = await fs.readFile(path.join(skillsDir, 'coding-standards', 'SKILL.md'), 'utf-8');
+      const detectedSection = extractSection(coding, 'Detected');
+      if (detectedSection && detectedSection.trim() !== '' && !detectedSection.includes('<!--')) {
+        if (!detectedSection.toLowerCase().includes(language.toLowerCase())) {
+          mismatches.push(`language: ana.json says "${language}", coding-standards Detected doesn't mention it`);
+        }
+      }
+    } catch { /* skill not found — skip */ }
+  }
+
+  if (artifactBranch) {
+    try {
+      const git = await fs.readFile(path.join(skillsDir, 'git-workflow', 'SKILL.md'), 'utf-8');
+      const detectedSection = extractSection(git, 'Detected');
+      if (detectedSection && detectedSection.trim() !== '' && !detectedSection.includes('<!--')) {
+        if (!detectedSection.toLowerCase().includes(artifactBranch.toLowerCase())) {
+          mismatches.push(`branch: ana.json says "${artifactBranch}", git-workflow Detected doesn't mention it`);
+        }
+      }
+    } catch { /* skip */ }
+  }
+
+  if (commands?.test) {
+    try {
+      const testing = await fs.readFile(path.join(skillsDir, 'testing-standards', 'SKILL.md'), 'utf-8');
+      const detectedSection = extractSection(testing, 'Detected');
+      if (detectedSection && detectedSection.trim() !== '' && !detectedSection.includes('<!--')) {
+        // Check if test command or framework mentioned
+        const testCmd = commands.test.toLowerCase();
+        const detectedLower = detectedSection.toLowerCase();
+        // Look for framework name (vitest, jest, pytest, etc.)
+        const frameworks = ['vitest', 'jest', 'mocha', 'pytest', 'go test'];
+        const hasFramework = frameworks.some(f => testCmd.includes(f) || detectedLower.includes(f));
+        if (!hasFramework && detectedLower.trim() !== '') {
+          mismatches.push(`testing: ana.json test command doesn't align with testing-standards Detected`);
+        }
+      }
+    } catch { /* skip */ }
+  }
+
+  if (mismatches.length > 0) {
+    results.push({
+      symbol: chalk.red('✗'),
+      label: 'ana.json ↔ skills',
+      detail: `mismatch — ${mismatches[0]}`,
+    });
+  } else {
+    results.push({
+      symbol: chalk.green('✓'),
+      label: 'ana.json ↔ skills',
+      detail: 'aligned',
+    });
+  }
+
+  // Check Detected ↔ scan.json freshness
+  if (scanJson) {
+    const lastScanAt = anaJson.lastScanAt as string | undefined;
+    const overview = scanJson.overview as Record<string, string> | undefined;
+    const scanTimestamp = overview?.scannedAt;
+
+    if (lastScanAt && scanTimestamp && lastScanAt !== scanTimestamp) {
+      results.push({
+        symbol: chalk.red('✗'),
+        label: 'Detected ↔ scan.json',
+        detail: 'stale (scan newer than last setup)',
+      });
+    } else {
+      results.push({
+        symbol: chalk.green('✓'),
+        label: 'Detected ↔ scan.json',
+        detail: 'current',
+      });
+    }
+  }
+
+  return results;
+}
+
+/**
+ * Extract content of a section (between ## heading and next ## heading)
+ * @param content - File content
+ * @param sectionName - Section heading text (without ##)
+ * @returns Section content or null if not found
+ */
+function extractSection(content: string, sectionName: string): string | null {
+  const lines = content.split('\n');
+  let inSection = false;
+  const sectionLines: string[] = [];
+  for (const line of lines) {
+    if (line.startsWith(`## ${sectionName}`)) {
+      inSection = true;
+      continue;
+    }
+    if (inSection && line.startsWith('## ')) {
+      break;
+    }
+    if (inSection) {
+      sectionLines.push(line);
+    }
+  }
+  return inSection ? sectionLines.join('\n') : null;
+}
+
+/**
+ * Display the full ✓/○/✗ setup dashboard
+ * @param cwd - Project root directory
+ * @returns True if no errors (no ✗ symbols)
+ */
+async function displaySetupDashboard(cwd: string): Promise<boolean> {
+  let hasErrors = false;
+
+  // --- Setup Status ---
+  const progress = await readSetupProgress(cwd);
+  console.log(chalk.bold('\nSetup Status'));
+  console.log('────────────');
+
+  const phases = [
+    { key: 'confirm', label: 'Phase 1 (confirm)' },
+    { key: 'enrich', label: 'Phase 2 (enrich)' },
+    { key: 'principles', label: 'Phase 3 (principles)' },
+  ] as const;
+
+  for (const phase of phases) {
+    const status = progress?.phases?.[phase.key];
+    if (status?.completed && status.timestamp) {
+      const date = new Date(status.timestamp).toLocaleDateString();
+      console.log(`  ${chalk.green('✓')} ${phase.label}: completed ${date}`);
+    } else {
+      console.log(`  ${chalk.yellow('○')} ${phase.label}: not started`);
+    }
+  }
+
+  // --- File Health ---
+  console.log(chalk.bold('\nFile Health'));
+  console.log('───────────');
+
+  // Context files
+  console.log(chalk.gray('Context:'));
+  for (const file of ALL_CONTEXT_FILES) {
+    const result = await checkContextForDashboard(cwd, file);
+    const name = file.replace('.md', '').padEnd(22);
+    console.log(`  ${result.symbol} ${name}${result.description}`);
+    if (result.symbol.includes('✗')) hasErrors = true;
+  }
+
+  // Skills
+  console.log(chalk.gray('Skills:'));
+  const skills = await discoverSkills(cwd);
+  if (skills.length === 0) {
+    console.log(chalk.gray('  No skills found in .claude/skills/'));
+  } else {
+    for (const skill of skills) {
+      const result = await checkSkill(cwd, skill);
+      const name = result.name.padEnd(22);
+      console.log(`  ${result.symbol} ${name}${result.description}`);
+      if (result.symbol.includes('✗')) hasErrors = true;
+    }
+  }
+
+  // --- Consistency ---
+  const anaJson = await readAnaJson(cwd);
+  if (anaJson) {
+    const scanJson = await readScanJson(cwd);
+    const consistencyResults = await checkConsistency(cwd, anaJson, scanJson);
+
+    console.log(chalk.bold('\nConsistency'));
+    console.log('───────────');
+    for (const r of consistencyResults) {
+      console.log(`  ${r.symbol} ${r.label}: ${r.detail}`);
+      if (r.symbol.includes('✗')) hasErrors = true;
+    }
+  }
+
+  console.log();
+  return !hasErrors;
+}
+
 /**
  * Create the check command
  * @returns {Command} Commander command instance
@@ -594,7 +1081,19 @@ export function createCheckCommand(): Command {
       const cwd = process.cwd();
       const contextPath = path.join(cwd, '.ana', 'context');
 
-      // Check if .ana/context/ exists
+      // Dashboard mode: no filename, no --json → ✓/○/✗ display
+      if (!filename && !options.json) {
+        try {
+          const pass = await displaySetupDashboard(cwd);
+          process.exit(pass ? 0 : 1);
+        } catch (error) {
+          console.error(chalk.red(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`));
+          process.exit(1);
+        }
+        return;
+      }
+
+      // Check if .ana/context/ exists (needed for single-file and --json modes)
       try {
         await fs.access(contextPath);
       } catch {
@@ -651,8 +1150,8 @@ export function createCheckCommand(): Command {
               const config = FILE_CONFIGS[baseName];
               results.push({
                 file,
-                line_count: { actual: 0, minimum: config.minLines, maximum: config.maxLines, pass: false },
-                headers: { actual: 0, expected: config.expectedHeaders, pass: false, duplicates: [] },
+                line_count: { actual: 0, minimum: 0, maximum: 99999, pass: true },
+                headers: { actual: 0, expected: config?.expectedSections?.length ?? 0, pass: false, duplicates: [] },
                 placeholders: { count: 0, markers: [], pass: true },
                 scaffold_markers: { count: 0, pass: true },
                 citations: { total: 0, verified: 0, failed: [], pass: true, verification_level: 'file-only' },

@@ -93,9 +93,6 @@ export const MODE_FILES = [
   'docs.md',
   'test.md',
   'general.md',
-  'setup.md',
-  'setup-quick.md',
-  'setup-guided.md',
 ] as const;
 
 
