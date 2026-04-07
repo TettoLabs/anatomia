@@ -1,22 +1,22 @@
 ---
 name: git-workflow
-description: "Team git workflow. Invoke when creating branches, committing code, preparing PRs, or merging."
+description: "Invoke before any git operations — branching, committing, merging, or creating pull requests. Contains project-specific branch naming, commit format, and merge strategy."
 ---
 
 # Git Workflow
 
-## Branching
-<!-- Branch naming convention, base branch -->
+## Detected
+<!-- Populated by scan during init. Do not edit manually. -->
 
-## Commits
-<!-- Message format, granularity -->
-<!-- Co-author trailer: read from `ana.json` `coAuthor` field for all commits and PR bodies -->
+## Rules
 
-## Before Pushing
-<!-- What checks must pass before push -->
+- Create feature branches from the default branch: `feature/{description}` or `{initials}/{description}`.
+- Use conventional commits: `type: description` where type is one of feat, fix, chore, docs, test, refactor.
+- Include co-author trailer when Ana assists: `Co-authored-by: Ana <build@anatomia.dev>`.
+- Squash merge feature branches to the default branch.
 
-## Pull Requests
-<!-- PR title format, description, CI requirements -->
+## Gotchas
+<!-- Starts empty. Add failure modes as you discover them. -->
 
-## After Merge
-<!-- Branch cleanup, verification steps -->
+## Examples
+<!-- Optional. Add short snippets showing the RIGHT way. -->

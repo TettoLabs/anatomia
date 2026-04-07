@@ -801,16 +801,29 @@ async function seedSkillFiles(skillsDir: string, result: EngineResult): Promise<
     try {
       let content = await fs.readFile(filePath, 'utf-8');
 
-      // Skip if already seeded (prevent duplicate ## Detected on reinit)
-      if (content.includes('## Detected')) continue;
+      // If template has ## Detected placeholder, replace it with seeded content
+      // If already seeded (has real content after ## Detected), skip
+      const detectedIdx = content.indexOf('## Detected');
+      if (detectedIdx !== -1) {
+        // Find what follows ## Detected — if it's only an HTML comment or blank, replace it
+        const nextSection = content.indexOf('\n## ', detectedIdx + 11);
+        const betweenContent = nextSection !== -1
+          ? content.slice(detectedIdx + 11, nextSection).trim()
+          : content.slice(detectedIdx + 11).trim();
+        // Skip if already has real content (not just HTML comment)
+        if (betweenContent && !betweenContent.startsWith('<!--')) continue;
 
-      const detectedSection = `\n## Detected\n${lines.join('\n')}\n`;
-
-      // Find end of YAML frontmatter (second ---)
-      const fmEnd = content.indexOf('---', content.indexOf('---') + 3);
-      if (fmEnd !== -1) {
-        const insertPos = content.indexOf('\n', fmEnd) + 1;
-        content = content.slice(0, insertPos) + detectedSection + content.slice(insertPos);
+        // Replace the placeholder section
+        const endOfDetected = nextSection !== -1 ? nextSection : content.length;
+        content = content.slice(0, detectedIdx) + `## Detected\n${lines.join('\n')}\n` + content.slice(endOfDetected);
+      } else {
+        // Legacy templates without ## Detected: inject after frontmatter
+        const detectedSection = `\n## Detected\n${lines.join('\n')}\n`;
+        const fmEnd = content.indexOf('---', content.indexOf('---') + 3);
+        if (fmEnd !== -1) {
+          const insertPos = content.indexOf('\n', fmEnd) + 1;
+          content = content.slice(0, insertPos) + detectedSection + content.slice(insertPos);
+        }
       }
 
       // For testing-standards: replace commented Commands section with real commands

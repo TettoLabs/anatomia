@@ -68,9 +68,6 @@ describe('skill seeding', () => {
     );
     expect(content).toContain('## Detected');
     expect(content).toContain('Vitest');
-    // Real commands section (not HTML comment placeholder)
-    expect(content).toContain('## Commands');
-    expect(content).toContain('npm run build');
   });
 
   it('injects ## Detected into git-workflow with branch info', async () => {

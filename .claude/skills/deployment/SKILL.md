@@ -1,48 +1,21 @@
 ---
 name: deployment
-description: "Anatomia deployment and release standards. Invoke after verification passes to merge PR and promote changes."
+description: "Invoke when working on deployment configuration, CI/CD pipelines, environment variables, or release processes. Contains project-specific deploy platform conventions."
 ---
 
+# Deployment
+
 ## Detected
-- Build command: `pnpm run build`
+<!-- Populated by scan during init. Do not edit manually. -->
 
-# Deployment Standards — Anatomia
+## Rules
 
-## After AnaVerify Passes
-AnaVerify handles merge mechanics (see git-workflow skill for details):
-1. Create PR from feature branch to artifact branch
-2. Merge as merge commit (not squash)
-3. Verify CI passes on artifact branch after merge
-4. Delete the feature branch
-5. Run `ana work complete {slug}` to archive and clean up
+- Environment variables via platform config or `.env` files — never hardcode secrets or config values.
+- Preview deploys on pull requests when the platform supports it.
+- Production deploys only from the default branch.
 
-## Website Deployment
-The `website/` directory auto-deploys via Vercel on push to main. No configuration file in the repo — Vercel is connected directly to the GitHub repo. Check the Vercel dashboard for deployment status if website files were touched. No agent action needed.
+## Gotchas
+<!-- Starts empty. Add failure modes as you discover them. -->
 
-## npm Publishing
-Manual. Developer decision. Agents never publish.
-
-Process:
-1. Developer bumps version in `package.json` files
-2. Commits the version bump
-3. `pnpm build` locally
-4. `pnpm publish` for affected packages
-5. No CI/CD automation for publishing — intentional
-
-Current packages:
-- `anatomia-cli` (0.2.0)
-- `anatomia-analyzer` (0.1.0)
-
-## If Something Breaks After Merge
-1. Revert the merge commit: `git revert -m 1 {merge-sha}`
-2. Push the revert to artifact branch
-3. Verify Vercel redeploys with the revert (automatic)
-4. Open `claude --agent ana` to scope the fix — it goes through the pipeline again
-
-No hotfix branches. No direct patches. Fixes go through Think → Plan → Build → Verify like everything else.
-
-## For AnaVerify
-- You create PRs. The developer merges. You never publish to npm.
-- After merge, verify CI passes on artifact branch. If CI fails, report it — don't attempt to fix.
-- After developer merges, developer runs `ana work complete {slug}` to archive.
-- If website files were changed, note in the verify report that Vercel deployment should be checked.
+## Examples
+<!-- Optional. Add short snippets showing the RIGHT way. -->

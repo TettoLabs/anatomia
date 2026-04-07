@@ -1,30 +1,23 @@
 ---
 name: coding-standards
-description: "Team coding standards. Invoke when implementing features, writing code, or reviewing code quality."
+description: "Invoke when implementing features, writing code, or reviewing code quality. Contains project-specific naming conventions, error handling patterns, import style, and deviations from standard practices."
 ---
 
 # Coding Standards
 
-## Language & Framework
-<!-- Your language, version, module system, and framework rules -->
+## Detected
+<!-- Populated by scan during init. Do not edit manually. -->
 
-## Naming
-<!-- Functions, classes, constants, files — your conventions -->
+## Rules
 
-## Error Handling
-<!-- How errors are handled: throw, return, collect partial results -->
-
-## Code Structure
-<!-- Project layout, package boundaries, import rules -->
-
-## Formatting
-<!-- Formatter, linter, config locations -->
-
-## Dependencies
-<!-- How new dependencies are evaluated and added -->
+- Use camelCase for functions and variables. PascalCase for classes, React components, and type names.
+- Prefer named exports over default exports.
+- Use path aliases when configured (e.g., `@/lib`). Relative imports should not go deeper than two levels (`../../`).
+- Handle errors explicitly — never silently catch and ignore. Re-throw or log with context.
+- Use `const` by default. Use `let` only when reassignment is genuinely needed.
 
 ## Gotchas
-<!-- Project-specific traps that trip up AI agents and new contributors -->
+<!-- Starts empty. Add failure modes as you discover them. -->
 
-## Quality Bar
-<!-- What standard must code meet before merging? -->
+## Examples
+<!-- Optional. Add short snippets showing the RIGHT way. -->

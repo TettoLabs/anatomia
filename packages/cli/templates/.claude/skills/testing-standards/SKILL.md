@@ -1,48 +1,23 @@
 ---
 name: testing-standards
-description: "Team testing standards. Invoke when writing tests, reviewing coverage, or checking acceptance criteria."
+description: "Invoke when writing tests, reviewing test quality, or setting up test infrastructure. Contains project-specific testing framework conventions, fixture patterns, and coverage expectations."
 ---
 
 # Testing Standards
 
-## Framework
-<!-- Your test framework, config location -->
-<!-- Test command: read from `ana.json` `commands.test` field -->
+## Detected
+<!-- Populated by scan during init. Do not edit manually. -->
 
-## Coverage
-<!-- Coverage thresholds and how they're enforced -->
+## Rules
 
-## Test Location
-<!-- Where tests live relative to source -->
+- Co-locate test files with source: `foo.test.ts` next to `foo.ts`.
+- Use `describe`/`it` blocks, not standalone `test()` calls.
+- Prefer real I/O over mocks when feasible — mock only external services and time-dependent behavior.
+- Each test must be isolated: create its own fixtures, clean up after itself, never depend on run order.
+- Coverage minimum: 80% statements. Don't chase 100% — focus coverage on business logic and edge cases.
 
-## What to Test
-<!-- What requires tests: features, fixes, edge cases -->
+## Gotchas
+<!-- Starts empty. Add failure modes as you discover them. -->
 
-## Test Patterns
-<!-- Describe/it style, fixtures, mocking conventions -->
-
-## Specs and Tests
-Don't invent test infrastructure in specs. Point to existing test patterns. Specs provide the test matrix — not the implementation.
-
-## Before Marking Complete
-<!-- Commands that must all pass before work is done -->
-
-## Commands
-<!-- Add your exact runnable commands here. AnaBuild reads these to know how to build, test, and lint your project.
-```bash
-# Build
-your-build-command
-
-# Test (non-watch mode)
-your-test-command
-
-# Test (specific file)
-your-test-command {path}
-
-# Lint (all source)
-your-lint-command
-
-# Lint (specific files)
-your-lint-command {files}
-```
--->
+## Examples
+<!-- Optional. Add short snippets showing the RIGHT way. -->
