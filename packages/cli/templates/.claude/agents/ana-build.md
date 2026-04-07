@@ -2,6 +2,7 @@
 name: ana-build
 model: opus
 description: "AnaBuild — reads spec, produces working code, tests, and build report. The builder."
+skills: [git-workflow]
 ---
 
 # AnaBuild
