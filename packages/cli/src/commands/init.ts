@@ -55,6 +55,8 @@ import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
+import { createInterface } from 'node:readline';
+import { execSync } from 'node:child_process';
 import type { EngineResult } from '../engine/types/engineResult.js';
 
 import {
@@ -77,12 +79,45 @@ import { buildSymbolIndex } from './symbol-index.js';
 /** Command options */
 interface InitCommandOptions {
   force?: boolean;
+  yes?: boolean;
 }
+
+/** Installation state detected during pre-scan validation */
+type InitState = 'fresh' | 'reinit' | 'upgrade' | 'corrupted';
 
 /** Pre-flight validation result */
 interface PreflightResult {
   canProceed: boolean;
+  initState: InitState;
   stateBackup?: string; // Path to state/ backup if --force used
+}
+
+/**
+ * Prompt user for confirmation
+ *
+ * If stdin is not a TTY (CI, piped input, test harness), returns the default
+ * without blocking. This prevents hangs in non-interactive environments.
+ *
+ * @param message - Message to display before the (Y/n) or (y/N) suffix
+ * @param defaultYes - If true, empty input means yes; if false, empty means no
+ * @returns true if user confirmed
+ */
+async function confirm(message: string, defaultYes: boolean): Promise<boolean> {
+  // Non-interactive (CI, piped input, test harness): proceed without blocking
+  if (!process.stdin.isTTY) {
+    return true;
+  }
+
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  const suffix = defaultYes ? '(Y/n)' : '(y/N)';
+  return new Promise((resolve) => {
+    rl.question(`${message} ${suffix} `, (answer) => {
+      rl.close();
+      const trimmed = answer.trim().toLowerCase();
+      if (trimmed === '') resolve(defaultYes);
+      else resolve(trimmed === 'y' || trimmed === 'yes');
+    });
+  });
 }
 
 /**
@@ -133,6 +168,7 @@ function createEmptyEngineResult(): EngineResult {
 export const initCommand = new Command('init')
   .description('Initialize .ana/ context framework')
   .option('-f, --force', 'Overwrite existing .ana/ (preserves state/)')
+  .option('-y, --yes', 'Skip confirmation prompts (non-interactive mode)')
   .action(async (options: InitCommandOptions, command: Command) => {
     // Reject positional arguments (init operates on cwd)
     if (command.args.length > 0) {
@@ -144,8 +180,8 @@ export const initCommand = new Command('init')
     const cwd = process.cwd();
     const anaPath = path.join(cwd, '.ana');
 
-    // Phase 1: Pre-flight checks
-    const preflight = await validateInitPreconditions(anaPath, options);
+    // Phase 1: Pre-scan validation (D7)
+    const preflight = await validateInitPreconditions(cwd, anaPath, options);
     if (!preflight.canProceed) {
       return; // Exit already handled in validation
     }
@@ -209,24 +245,27 @@ export const initCommand = new Command('init')
   });
 
 /**
- * Phase 1: Pre-flight validation
+ * Phase 1: Pre-scan validation (D7)
  *
- * Checks:
- * - Directory exists and is readable
- * - .ana/ doesn't exist OR --force provided
- * - If --force: backup state/ for preservation
+ * Validates project environment before scanning:
+ * 7.1 — Project root detection
+ * 7.2 — Existing installation detection (fresh/reinit/upgrade/corrupted)
+ * 7.4 — Git validation (4 states)
+ * 7.5 — Package manager check
  *
+ * @param cwd - Current working directory
  * @param anaPath - Path to .ana/ directory
  * @param options - Command options
- * @returns Preflight result (canProceed + optional stateBackup path)
+ * @returns Preflight result (canProceed, initState, optional stateBackup path)
  */
 async function validateInitPreconditions(
+  cwd: string,
   anaPath: string,
   options: InitCommandOptions
 ): Promise<PreflightResult> {
-  const cwd = process.cwd();
+  const autoYes = options.yes || options.force;
 
-  // Check directory exists
+  // Check directory is readable/writable
   try {
     await fs.access(cwd, fs.constants.R_OK | fs.constants.W_OK);
   } catch {
@@ -235,62 +274,174 @@ async function validateInitPreconditions(
     process.exit(1);
   }
 
-  // Check if .ana/ exists
-  const anaExists = await dirExists(anaPath);
+  // 7.1 — Project root detection
+  const rootIndicators = ['package.json', 'go.mod', 'Cargo.toml', 'pyproject.toml', '.git'];
+  const hasRoot = await Promise.all(
+    rootIndicators.map(f => fileExists(path.join(cwd, f)))
+  ).then(results => results.some(Boolean));
 
-  if (!anaExists) {
-    // First run - proceed
-    return { canProceed: true };
+  if (!hasRoot) {
+    console.error(chalk.red('No project root detected in this directory.'));
+    console.error(chalk.gray("Run `ana init` from your project's root directory."));
+    process.exit(1);
   }
 
-  // .ana/ exists - check --force
-  if (!options.force) {
-    console.log(chalk.yellow('\n.ana/ directory already exists.\n'));
+  // 7.2 — Existing installation detection (4 states)
+  const anaExists = await dirExists(anaPath);
+  let initState: InitState = 'fresh';
+  let stateBackup: string | undefined;
 
-    // Check ana.json to provide better guidance
+  if (anaExists) {
     const anaJsonPath = path.join(anaPath, 'ana.json');
+    const cliVersion = await getCliVersion();
+
     try {
       const anaJsonContent = await fs.readFile(anaJsonPath, 'utf-8');
       const config = JSON.parse(anaJsonContent);
 
-      // Backward compat: pre-S11 projects have setupStatus instead of setupMode
-      if (config.setupMode === 'not_started' || config.setupStatus === 'pending') {
-        console.log('Setup is incomplete. Options:\n');
-        console.log('  1. Resume setup: `claude --agent ana-setup`');
-        console.log('  2. Start over: ana init --force\n');
-      } else if ((config.setupMode && config.setupMode !== 'not_started') || config.setupStatus === 'complete') {
-        console.log('Framework already set up. Options:\n');
-        console.log('  1. Keep current: Do nothing');
-        console.log('  2. Recreate: ana init --force (preserves state/)\n');
+      if (config.anaVersion && config.anaVersion !== cliVersion) {
+        // Upgrade: version mismatch
+        initState = 'upgrade';
+        console.log(`\nAnatomia installation detected (v${config.anaVersion}).`);
+        console.log(`Current CLI version: v${cliVersion}.\n`);
+        console.log('Re-initializing will update scan data and skill detection.');
+        console.log('Your confirmed rules, gotchas, and context files are preserved.\n');
+
+        if (!autoYes) {
+          const proceed = await confirm('Continue?', true);
+          if (!proceed) { process.exit(0); }
+        }
+      } else {
+        // Re-init: same version (or no anaVersion field yet)
+        initState = 'reinit';
+        console.log('\nExisting Anatomia installation detected.\n');
+        console.log('This will:');
+        console.log('  ✓ Refresh scan data');
+        console.log('  ✓ Update skill ## Detected sections');
+        console.log('  ✓ Add new skills if stack changes detected');
+        console.log('  ✗ Will NOT touch your confirmed rules, gotchas, or context files\n');
+
+        if (!autoYes) {
+          const proceed = await confirm('Continue?', true);
+          if (!proceed) { process.exit(0); }
+        }
       }
     } catch {
-      // ana.json missing or corrupted
-      console.log('Use --force to overwrite.\n');
+      // Corrupted: .ana/ exists but no valid ana.json
+      initState = 'corrupted';
+      console.log(chalk.yellow('\nFound .ana/ directory but no valid ana.json.'));
+      console.log('Treating as fresh initialization. Existing files may be overwritten.\n');
+
+      if (!autoYes) {
+        const proceed = await confirm('Continue?', true);
+        if (!proceed) { process.exit(0); }
+      }
     }
 
-    process.exit(0);
+    // Backup state/ before deletion for reinit/upgrade/corrupted
+    const statePath = path.join(anaPath, 'state');
+    if (await dirExists(statePath)) {
+      const timestamp = Date.now();
+      stateBackup = path.join(os.tmpdir(), `.ana-state-backup-${timestamp}`);
+      console.log(chalk.gray('Backing up state/ directory...'));
+      await fs.cp(statePath, stateBackup, { recursive: true });
+    }
+
+    // Delete existing .ana/
+    console.log(chalk.gray('Removing existing .ana/...'));
+    await fs.rm(anaPath, { recursive: true, force: true });
   }
 
-  // --force provided: backup state/ before deletion
-  const statePath = path.join(anaPath, 'state');
-  let stateBackup: string | undefined;
+  // 7.4 — Git validation (4 states)
+  const hasGit = await dirExists(path.join(cwd, '.git'));
 
-  if (await dirExists(statePath)) {
-    const timestamp = Date.now();
-    stateBackup = path.join(os.tmpdir(), `.ana-state-backup-${timestamp}`);
+  if (!hasGit) {
+    // No git at all — strong warning, default NO
+    console.log(chalk.yellow('\n⚠ No git repository detected.\n'));
+    console.log("Anatomia's pipeline requires git for:");
+    console.log('  • Feature branching (ana work start)');
+    console.log('  • Artifact commits (ana artifact save)');
+    console.log('  • Pull requests (ana pr create)');
+    console.log('  • Proof chain tracking\n');
+    console.log('Init will continue but pipeline commands will not function.');
+    console.log('Scan, skills, and context files will still work.\n');
 
-    console.log(chalk.gray('Backing up state/ directory...'));
-    await fs.cp(statePath, stateBackup, { recursive: true });
+    if (!autoYes) {
+      const proceed = await confirm('Initialize without git?', false);
+      if (!proceed) { process.exit(0); }
+    }
+  } else {
+    // Git exists — check remote and commits
+    try {
+      const hasCommits = gitHasCommits(cwd);
+      const hasRemote = gitHasRemote(cwd);
+
+      if (hasCommits && !hasRemote) {
+        console.log(chalk.blue('ℹ No remote detected. artifactBranch will use local branch names. ana pr create won\'t function until a remote is added.'));
+      } else if (!hasCommits) {
+        console.log(chalk.yellow('⚠ Empty git repository. Some scan data will be limited. Commit at least once before running the pipeline.'));
+      }
+      // Git + remote + commits = happy path, proceed silently
+    } catch {
+      // Git check failed — proceed with warning
+      console.log(chalk.yellow('⚠ Git validation failed. Proceeding with limited git detection.'));
+    }
   }
 
-  // Delete existing .ana/
-  console.log(chalk.gray('Removing existing .ana/...'));
-  await fs.rm(anaPath, { recursive: true, force: true });
+  // 7.5 — Package manager check
+  const hasPackageJson = await fileExists(path.join(cwd, 'package.json'));
+  const hasGoMod = await fileExists(path.join(cwd, 'go.mod'));
+  const hasCargo = await fileExists(path.join(cwd, 'Cargo.toml'));
+  const hasPyproject = await fileExists(path.join(cwd, 'pyproject.toml'));
+  const hasPackageManifest = hasPackageJson || hasGoMod || hasCargo || hasPyproject;
+
+  if (!hasPackageManifest) {
+    console.log(chalk.yellow('⚠ No package.json (or equivalent) found. Stack detection will be limited.'));
+  } else if (hasPackageJson) {
+    const hasNodeModules = await dirExists(path.join(cwd, 'node_modules'));
+    if (!hasNodeModules) {
+      // Detect package manager for the message
+      let pkgMgr = 'npm';
+      if (await fileExists(path.join(cwd, 'pnpm-lock.yaml'))) pkgMgr = 'pnpm';
+      else if (await fileExists(path.join(cwd, 'yarn.lock'))) pkgMgr = 'yarn';
+      else if (await fileExists(path.join(cwd, 'bun.lockb'))) pkgMgr = 'bun';
+      console.log(chalk.blue(`ℹ Dependencies not installed. Scan will use surface-tier analysis. Run ${pkgMgr} install for deeper detection.`));
+    }
+  }
 
   return {
     canProceed: true,
+    initState,
     stateBackup,
   };
+}
+
+/**
+ * Check if git repository has any commits
+ * @param cwd - Working directory
+ * @returns true if HEAD exists (has commits)
+ */
+function gitHasCommits(cwd: string): boolean {
+  try {
+    execSync('git rev-parse --verify HEAD', { cwd, stdio: 'pipe' });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Check if git repository has a remote configured
+ * @param cwd - Working directory
+ * @returns true if at least one remote exists
+ */
+function gitHasRemote(cwd: string): boolean {
+  try {
+    const output = execSync('git remote', { cwd, stdio: 'pipe', encoding: 'utf-8' });
+    return output.trim().length > 0;
+  } catch {
+    return false;
+  }
 }
 
 /**
