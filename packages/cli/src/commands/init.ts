@@ -562,11 +562,6 @@ async function createDirectoryStructure(tmpAnaPath: string): Promise<void> {
   // Create .gitignore for runtime state files
   const gitignoreContent = `# Anatomia runtime state — local to each developer
 state/
-.setup_qa_log.md
-.setup_exploration.md
-.setup_verification.md
-.setup_state.json
-.setup_tier
 `;
   await fs.writeFile(path.join(tmpAnaPath, '.gitignore'), gitignoreContent, 'utf-8');
 

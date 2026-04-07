@@ -138,7 +138,6 @@ describe('ana init E2E', () => {
     const gitignorePath = path.join(anaPath, '.gitignore');
     const gitignoreContent = await fs.readFile(gitignorePath, 'utf-8');
     expect(gitignoreContent).toContain('state/');
-    expect(gitignoreContent).toContain('.setup_qa_log.md');
 
     // Verify .claude/ directory was also created (outside .ana/)
     const claudePath = path.join(tmpProject, '.claude');
