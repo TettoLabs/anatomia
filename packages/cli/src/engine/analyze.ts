@@ -25,7 +25,7 @@ import { readDependencies, detectFromDeps, detectServiceDeps, detectAiSdk, aggre
 import { detectPackageManager } from './detectors/packageManager.js';
 import { detectGitInfo } from './detectors/git.js';
 import { detectCommands } from './detectors/commands.js';
-import { detectDeployment } from './detectors/deployment.js';
+import { detectDeployment, detectCI } from './detectors/deployment.js';
 import { countFiles } from '../utils/fileCounts.js';
 
 // Display name mappings (moved from scan.ts to be shared)
@@ -484,6 +484,7 @@ export async function analyzeProject(
   const { schemas, blindSpots } = await detectSchemas(allDeps, rootPath);
   const secrets = await detectSecrets(rootPath);
   const deployment = detectDeployment(rootPath);
+  const ci = detectCI(rootPath);
 
   // 11. Project profile
   const browserFrameworks = ['Next.js', 'React', 'Vue', 'Angular', 'Svelte', 'Nuxt'];
@@ -521,8 +522,8 @@ export async function analyzeProject(
     projectProfile,
     blindSpots,
     deployment: deployment
-      ? { ...deployment, ci: null, ciConfigFile: null }
-      : { platform: null, configFile: null, ci: null, ciConfigFile: null },
+      ? { ...deployment, ...ci }
+      : { platform: null, configFile: null, ...ci },
     patterns: mapPatterns(analysis, options.depth),
     conventions: mapConventions(analysis, options.depth),
     // Phase 1+ stubs
