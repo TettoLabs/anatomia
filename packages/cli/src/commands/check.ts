@@ -842,9 +842,11 @@ export async function checkContextForDashboard(cwd: string, filename: string): P
 
     if (baseName === 'design-principles') {
       // Any non-template content = ✓, else ○
-      const lines = content.split('\n').filter(l => {
+      // Strip HTML comments (including multiline) before checking
+      const stripped = content.replace(/<!--[\s\S]*?-->/g, '');
+      const lines = stripped.split('\n').filter(l => {
         const t = l.trim();
-        return t !== '' && !t.startsWith('#') && !t.startsWith('<!--') && !t.startsWith('-->');
+        return t !== '' && !t.startsWith('#');
       });
       if (lines.length > 0) {
         return { symbol: chalk.green('✓'), description: 'populated' };

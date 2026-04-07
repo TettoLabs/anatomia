@@ -465,6 +465,33 @@ content
     expect(result.symbol).toContain('○');
   });
 
+  it('design-principles with multiline HTML comment shows ○ (not false ✓)', async () => {
+    const contextDir = path.join(tmpDir, '.ana', 'context');
+    await fs.mkdir(contextDir, { recursive: true });
+    await fs.writeFile(
+      path.join(contextDir, 'design-principles.md'),
+      `# Design Principles
+
+<!-- What does your team believe about building software?
+     What tradeoffs do you consistently make?
+     What quality bar do you hold?
+
+     This file is yours. Write your philosophy here.
+     Ana reads this to understand HOW your team thinks,
+     not just WHAT your project does.
+
+     Examples:
+     - "Move fast and verify — ship quickly but prove it works"
+     - "User experience over developer convenience"
+     - "Every character earns its place" -->
+`
+    );
+
+    const { checkContextForDashboard } = await import('../../src/commands/check.js');
+    const result = await checkContextForDashboard(tmpDir, 'design-principles.md');
+    expect(result.symbol).toContain('○');
+  });
+
   it('design-principles with content shows ✓', async () => {
     const contextDir = path.join(tmpDir, '.ana', 'context');
     await fs.mkdir(contextDir, { recursive: true });
