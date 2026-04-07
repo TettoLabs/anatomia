@@ -96,24 +96,36 @@ interface PreflightResult {
 function createEmptyEngineResult(): EngineResult {
   return {
     overview: { project: 'unknown', scannedAt: new Date().toISOString(), depth: 'surface' },
-    stack: { language: null, framework: null, database: null, auth: null, testing: null, payments: null, workspace: null },
+    stack: { language: null, framework: null, database: null, auth: null, testing: null, payments: null, workspace: null, aiSdk: null },
     files: { source: 0, test: 0, config: 0, total: 0 },
     structure: [],
     structureOverflow: 0,
     commands: { build: null, test: null, lint: null, dev: null, packageManager: 'npm' },
-    git: { head: null, branch: null, commitCount: null, lastCommitAt: null, uncommittedChanges: false, contributorCount: null },
+    git: { head: null, branch: null, commitCount: null, lastCommitAt: null, uncommittedChanges: false, contributorCount: null, defaultBranch: null, branches: null },
     monorepo: { isMonorepo: false, tool: null, packages: [] },
     externalServices: [],
     schemas: {},
-    secrets: { envFileExists: false, envExampleExists: false, gitignoreCoversEnv: false, hardcodedKeysFound: null, envVarReferences: null },
-    projectProfile: { type: null, maturity: null, teamSize: null, hasExternalAPIs: false, hasDatabase: false, hasBrowserUI: false, hasAuthSystem: false, hasPayments: false, hasFileStorage: false },
+    secrets: { envFileExists: false, envExampleExists: false, gitignoreCoversEnv: false },
+    projectProfile: { type: null, hasExternalAPIs: false, hasDatabase: false, hasBrowserUI: false, hasAuthSystem: false, hasPayments: false, hasFileStorage: false },
     blindSpots: [],
-    deployment: null,
+    deployment: { platform: null, configFile: null, ci: null, ciConfigFile: null },
     patterns: null,
     conventions: null,
+    secretFindings: null,
+    envVarMap: null,
+    duplicates: null,
+    circularDeps: null,
+    orphanFiles: null,
+    complexityHotspots: null,
+    gitIntelligence: null,
+    dependencyIntelligence: null,
+    technicalDebtMarkers: null,
+    inconsistencies: null,
+    conventionBreaks: null,
+    aiReadinessScore: null,
     recommendations: null,
-    health: {},
-    readiness: {},
+    health: null,
+    readiness: null,
   };
 }
 
@@ -785,7 +797,7 @@ async function seedSkillFiles(skillsDir: string, result: EngineResult): Promise<
 
   // deployment
   const deployLines: string[] = [];
-  if (result.deployment?.platform) {
+  if (result.deployment.platform) {
     deployLines.push(`- Platform: ${result.deployment.platform}${result.deployment.configFile ? ` (${result.deployment.configFile})` : ''}`);
   }
   if (result.commands?.build) deployLines.push(`- Build command: \`${result.commands.build}\``);

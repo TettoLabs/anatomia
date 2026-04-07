@@ -63,7 +63,7 @@ export function generateProjectOverviewScaffold(
   if (result.stack.auth) s += `**Detected:** Auth: ${result.stack.auth}\n`;
   if (result.stack.testing) s += `**Detected:** Testing: ${result.stack.testing}\n`;
   if (result.stack.payments) s += `**Detected:** Payments: ${result.stack.payments}\n`;
-  if (result.deployment) s += `**Detected:** Deploy: ${result.deployment.platform}\n`;
+  if (result.deployment.platform) s += `**Detected:** Deploy: ${result.deployment.platform}\n`;
   s += '\n';
 
   // Services
@@ -405,7 +405,7 @@ export function generateWorkflowScaffold(
   if (result.git.contributorCount !== null) gitParts.push(`${result.git.contributorCount} contributors`);
   if (gitParts.length > 0) s += `**Detected:** ${gitParts.join(', ')}\n`;
   if (result.git.lastCommitAt) s += `**Detected:** Last activity: ${result.git.lastCommitAt}\n`;
-  if (result.deployment) s += `**Detected:** Deploy: ${result.deployment.platform}\n`;
+  if (result.deployment.platform) s += `**Detected:** Deploy: ${result.deployment.platform}\n`;
   s += '\n';
 
   // Commands

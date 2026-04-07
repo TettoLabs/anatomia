@@ -186,7 +186,7 @@ function formatHumanReadable(result: EngineResult): string {
 
   // Services + Deployment (rendered as one block)
   const hasServices = result.externalServices.length > 0;
-  const hasDeploy = result.deployment !== null;
+  const hasDeploy = result.deployment.platform !== null;
   if (hasServices || hasDeploy) {
     lines.push('');
     lines.push(chalk.bold('  Services'));
@@ -209,7 +209,7 @@ function formatHumanReadable(result: EngineResult): string {
       }
     }
     if (hasDeploy) {
-      lines.push(`  ${chalk.gray('Deploy'.padEnd(12))} ${result.deployment!.platform} ${chalk.gray(`(${result.deployment!.configFile})`)}`);
+      lines.push(`  ${chalk.gray('Deploy'.padEnd(12))} ${result.deployment.platform} ${chalk.gray(`(${result.deployment.configFile})`)}`);
     }
   }
 
@@ -292,25 +292,25 @@ function formatHumanReadable(result: EngineResult): string {
   }
 
   // Patterns (deep only)
-  if (result.patterns && typeof result.patterns === 'object') {
-    const patternKeys = Object.keys(result.patterns).filter(k =>
-      !['sampledFiles', 'detectionTime', 'threshold'].includes(k)
-    );
+  if (result.patterns) {
     const threshold = result.patterns.threshold ?? 0.7;
-    const visible = patternKeys.filter(k => {
+    const patternEntries: Array<[string, { library: string; variant: string; confidence: number; evidence: string[] }]> = [];
+    const patternLabels: Record<string, string> = {
+      errorHandling: 'Errors', validation: 'Validation', testing: 'Testing',
+      database: 'Database', auth: 'Auth',
+    };
+    const categories = ['errorHandling', 'validation', 'database', 'auth', 'testing'] as const;
+    for (const k of categories) {
       const p = result.patterns[k];
-      return p && typeof p === 'object' && p.confidence >= threshold;
-    });
-    if (visible.length > 0) {
+      if (p && p.confidence >= threshold) {
+        patternEntries.push([k, p]);
+      }
+    }
+    if (patternEntries.length > 0) {
       lines.push('');
       lines.push(chalk.bold('  Patterns'));
       lines.push(chalk.gray('  ' + BOX.horizontal.repeat(8)));
-      const patternLabels: Record<string, string> = {
-        errorHandling: 'Errors', validation: 'Validation', testing: 'Testing',
-        database: 'Database', auth: 'Auth', api: 'API',
-      };
-      for (const k of visible) {
-        const p = result.patterns[k];
+      for (const [k, p] of patternEntries) {
         const label = (patternLabels[k] || k).padEnd(12);
         const lib = p.library || p.variant || k;
         lines.push(`  ${chalk.gray(label)} ${lib} ${chalk.gray(`(${p.confidence.toFixed(2)})`)}`);
