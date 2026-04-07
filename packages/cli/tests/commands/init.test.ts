@@ -95,16 +95,12 @@ describe('ana init', () => {
         '.ana/plans/completed/.gitkeep',
         // 1 settings template
         '.claude/settings.json',
-        // 9 agent files
+        // 5 agent files
         '.claude/agents/ana.md',
         '.claude/agents/ana-plan.md',
         '.claude/agents/ana-setup.md',
         '.claude/agents/ana-build.md',
         '.claude/agents/ana-verify.md',
-        '.claude/agents/ana-explorer.md',
-        '.claude/agents/ana-question-formulator.md',
-        '.claude/agents/ana-writer.md',
-        '.claude/agents/ana-verifier.md',
         // 5 skill files (logging-standards removed — D6.1)
         '.claude/skills/testing-standards/SKILL.md',
         '.claude/skills/coding-standards/SKILL.md',
@@ -115,7 +111,7 @@ describe('ana init', () => {
         'CLAUDE.md',
       ];
 
-      expect(expectedFiles).toHaveLength(34);
+      expect(expectedFiles).toHaveLength(30);
 
       for (const file of expectedFiles) {
         const filePath = path.join(templatesDir, file);
@@ -314,10 +310,7 @@ describe('ana init', () => {
         'ana-plan.md',
         'ana-setup.md',
         'ana-build.md',
-        'ana-explorer.md',
-        'ana-question-formulator.md',
-        'ana-writer.md',
-        'ana-verifier.md',
+        'ana-verify.md',
       ];
 
       for (const agentFile of agentFiles) {
@@ -329,16 +322,14 @@ describe('ana init', () => {
       const exists = await dirExists(agentsPath);
       expect(exists).toBe(true);
 
-      // Should have 8 agent files
+      // Should have 5 agent files
       const files = await fs.readdir(agentsPath);
-      expect(files).toHaveLength(8);
+      expect(files).toHaveLength(5);
       expect(files).toContain('ana.md');
       expect(files).toContain('ana-plan.md');
       expect(files).toContain('ana-setup.md');
-      expect(files).toContain('ana-explorer.md');
-      expect(files).toContain('ana-question-formulator.md');
-      expect(files).toContain('ana-writer.md');
-      expect(files).toContain('ana-verifier.md');
+      expect(files).toContain('ana-build.md');
+      expect(files).toContain('ana-verify.md');
     });
 
     it('agent files have valid frontmatter with required fields', async () => {
@@ -350,10 +341,8 @@ describe('ana init', () => {
         'ana.md',
         'ana-plan.md',
         'ana-setup.md',
-        'ana-explorer.md',
-        'ana-question-formulator.md',
-        'ana-writer.md',
-        'ana-verifier.md',
+        'ana-build.md',
+        'ana-verify.md',
       ];
 
       for (const agentFile of agentFiles) {
@@ -386,13 +375,10 @@ describe('ana init', () => {
           expect(frontmatter).toContain('model: opus');
           expect(frontmatter).not.toContain('tools:');  // no tools field = inherit all tools including Agent
           expect(frontmatter).not.toContain('memory:');
-        } else if (agentFile === 'ana-build.md') {
-          expect(frontmatter).toContain('model: sonnet');
+        } else if (agentFile === 'ana-build.md' || agentFile === 'ana-verify.md') {
+          expect(frontmatter).toContain('model: opus');
           expect(frontmatter).not.toContain('tools:');
           expect(frontmatter).not.toContain('memory:');
-        } else {
-          expect(frontmatter).toContain('model: sonnet');
-          expect(frontmatter).toContain('tools:');
         }
       }
     });
@@ -415,10 +401,7 @@ describe('ana init', () => {
         'ana-plan.md',
         'ana-setup.md',
         'ana-build.md',
-        'ana-explorer.md',
-        'ana-question-formulator.md',
-        'ana-writer.md',
-        'ana-verifier.md',
+        'ana-verify.md',
       ];
 
       for (const agentFile of agentFiles) {
@@ -435,58 +418,9 @@ describe('ana init', () => {
         expect(exists).toBe(true);
       }
 
-      // Should still have exactly 8 files, not 16
+      // Should still have exactly 5 files, not 10
       const files = await fs.readdir(agentsPath);
-      expect(files).toHaveLength(8);
-    });
-
-    it('agent files have correct tools for their role', async () => {
-      const __filename = fileURLToPath(import.meta.url);
-      const __dirname = path.dirname(__filename);
-      const templatesDir = path.join(__dirname, '..', '..', 'templates');
-
-      // Helper to extract frontmatter tools line
-      const getToolsLine = (content: string): string => {
-        const match = content.match(/^tools:\s*\[.*\]$/m);
-        return match ? match[0] : '';
-      };
-
-      // Explorer: Read, Grep, Glob, Bash
-      const explorerContent = await fs.readFile(
-        path.join(templatesDir, '.claude/agents/ana-explorer.md'),
-        'utf-8'
-      );
-      expect(explorerContent).toContain('tools: [Read, Grep, Glob, Bash]');
-
-      // Question-formulator: Read, Grep, Glob (NO Bash, NO Write in frontmatter)
-      const questionContent = await fs.readFile(
-        path.join(templatesDir, '.claude/agents/ana-question-formulator.md'),
-        'utf-8'
-      );
-      const questionTools = getToolsLine(questionContent);
-      expect(questionTools).toBe('tools: [Read, Grep, Glob]');
-      expect(questionTools).not.toContain('Write');
-      expect(questionTools).not.toContain('Edit');
-      expect(questionTools).not.toContain('Bash');
-
-      // Writer: Read, Write, Grep, Glob, Bash
-      const writerContent = await fs.readFile(
-        path.join(templatesDir, '.claude/agents/ana-writer.md'),
-        'utf-8'
-      );
-      expect(writerContent).toContain('tools: [Read, Write, Grep, Glob, Bash]');
-
-      // Verifier: Read, Grep, Glob, Bash (NO Write, NO Edit in frontmatter)
-      const verifierContent = await fs.readFile(
-        path.join(templatesDir, '.claude/agents/ana-verifier.md'),
-        'utf-8'
-      );
-      const verifierTools = getToolsLine(verifierContent);
-      expect(verifierTools).toBe('tools: [Read, Grep, Glob, Bash]');
-      expect(verifierTools).not.toContain('Write');
-      expect(verifierTools).not.toContain('Edit');
-      // Verifier should mention it cannot write in the body
-      expect(verifierContent).toContain('CANNOT write or edit');
+      expect(files).toHaveLength(5);
     });
 
     it('merges into existing .claude/settings.json without duplicates', async () => {

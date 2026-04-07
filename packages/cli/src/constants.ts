@@ -114,10 +114,6 @@ export const AGENT_FILES = [
   'ana-setup.md',
   'ana-build.md',
   'ana-verify.md',
-  'ana-explorer.md',
-  'ana-question-formulator.md',
-  'ana-writer.md',
-  'ana-verifier.md',
 ] as const;
 
 /** Skill directories (each contains SKILL.md) */

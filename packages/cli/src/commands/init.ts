@@ -36,11 +36,7 @@
  *   │   ├── ana-plan.md           (spec generator)
  *   │   ├── ana-setup.md          (interactive setup orchestrator)
  *   │   ├── ana-build.md          (builder agent)
- *   │   ├── ana-verify.md         (quality gate agent)
- *   │   ├── ana-explorer.md       (codebase scanner)
- *   │   ├── ana-question-formulator.md
- *   │   ├── ana-writer.md         (context file writer)
- *   │   └── ana-verifier.md       (citation verifier)
+ *   │   └── ana-verify.md         (quality gate agent)
  *   └── skills/
  *       ├── testing-standards/SKILL.md
  *       ├── coding-standards/SKILL.md

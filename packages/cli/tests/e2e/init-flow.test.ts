@@ -162,17 +162,13 @@ describe('ana init E2E', () => {
     const agentsExists = await dirExists(path.join(claudePath, 'agents'));
     expect(agentsExists).toBe(true);
 
-    // Verify all 9 agent files exist
+    // Verify all 5 agent files exist
     const agentFiles = [
       'ana.md',
       'ana-plan.md',
       'ana-setup.md',
       'ana-build.md',
       'ana-verify.md',
-      'ana-explorer.md',
-      'ana-question-formulator.md',
-      'ana-writer.md',
-      'ana-verifier.md',
     ];
 
     for (const agentFile of agentFiles) {
