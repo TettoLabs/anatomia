@@ -513,7 +513,7 @@ export async function analyzeProject(
     structure: structure.items,
     structureOverflow: structure.overflow,
     commands: { ...commands, packageManager },
-    git: { ...git, defaultBranch: null, branches: null },
+    git,
     monorepo: mono,
     externalServices,
     schemas,
