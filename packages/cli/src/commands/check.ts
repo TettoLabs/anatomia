@@ -996,6 +996,171 @@ function extractSection(content: string, sectionName: string): string | null {
   return inSection ? sectionLines.join('\n') : null;
 }
 
+// --- Setup Completion Validation (D12.3) ---
+
+export interface SetupValidationResult {
+  setupMode: 'partial' | 'complete';
+  warnings: string[];
+  stats: {
+    skillsCalibrated: number;
+    contextSections: { populated: number; total: number };
+    principlesCaptured: boolean;
+  };
+}
+
+/**
+ * Check if a section has non-template content (strict).
+ * Template = headings, HTML comments, **Detected:** lines, blank lines.
+ * Everything else = content.
+ * @param content - File content
+ * @param sectionName - Section heading text (without ##)
+ * @returns True if section has real content
+ */
+function hasRealContent(content: string, sectionName: string): boolean {
+  const lines = content.split('\n');
+  let inSection = false;
+  let inComment = false;
+  for (const line of lines) {
+    if (line.startsWith(`## ${sectionName}`)) {
+      inSection = true;
+      continue;
+    }
+    if (inSection && line.startsWith('## ')) break;
+    if (inSection) {
+      const trimmed = line.trim();
+      // Track multiline HTML comments
+      if (trimmed.startsWith('<!--') && !trimmed.includes('-->')) {
+        inComment = true;
+        continue;
+      }
+      if (inComment) {
+        if (trimmed.includes('-->')) inComment = false;
+        continue;
+      }
+      // Skip template lines
+      if (trimmed === '') continue;
+      if (trimmed.startsWith('<!--') && trimmed.endsWith('-->')) continue;
+      if (trimmed.startsWith('#')) continue;
+      if (trimmed.startsWith('**Detected:**') || trimmed.startsWith('**Detected:')) continue;
+      // Real content found
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Check if a file has any non-template content at all.
+ * Strips headings, HTML comments (including multiline), blank lines.
+ * @param content - File content
+ * @returns True if file has real content beyond template
+ */
+function fileHasRealContent(content: string): boolean {
+  const stripped = content.replace(/<!--[\s\S]*?-->/g, '');
+  return stripped.split('\n').some(l => {
+    const t = l.trim();
+    return t !== '' && !t.startsWith('#');
+  });
+}
+
+/**
+ * Validate setup completion state (D12.3 criteria).
+ * Used by both `ana setup complete` CLI and referenced by orchestrator Step 17.
+ *
+ * @param cwd - Project root directory
+ * @returns Validation result with setupMode determination
+ */
+export async function validateSetupCompletion(cwd: string): Promise<SetupValidationResult> {
+  const warnings: string[] = [];
+  const contextPath = path.join(cwd, '.ana', 'context');
+  const claudePath = path.join(cwd, '.claude');
+
+  // --- 1. CRITICAL: "What This Project Does" has real content ---
+  let criticalSectionPopulated = false;
+  let architectureExists = false;
+  let populatedCount = 0;
+  const totalSections = 6;
+  const projectContextSections = [
+    'What This Project Does', 'Architecture', 'Key Decisions',
+    'Key Files', 'Active Constraints', 'Domain Vocabulary',
+  ];
+
+  try {
+    const pcContent = await fs.readFile(path.join(contextPath, 'project-context.md'), 'utf-8');
+    criticalSectionPopulated = hasRealContent(pcContent, 'What This Project Does');
+    architectureExists = pcContent.includes('## Architecture');
+
+    for (const section of projectContextSections) {
+      if (hasRealContent(pcContent, section)) populatedCount++;
+    }
+  } catch {
+    warnings.push('project-context.md not found');
+  }
+
+  if (!criticalSectionPopulated) {
+    warnings.push('## What This Project Does has no content (critical)');
+  }
+  if (!architectureExists) {
+    warnings.push('## Architecture heading missing from project-context.md');
+  }
+
+  // --- 2. Design principles (optional) ---
+  let principlesCaptured = false;
+  try {
+    const dpContent = await fs.readFile(path.join(contextPath, 'design-principles.md'), 'utf-8');
+    principlesCaptured = fileHasRealContent(dpContent);
+  } catch {
+    // File missing is fine — principles are optional
+  }
+
+  // --- 3. Skill format (D6.4) ---
+  let skillsCalibrated = 0;
+  const skills = await discoverSkills(cwd);
+  skillsCalibrated = skills.length;
+
+  for (const skill of skills) {
+    const filePath = path.join(claudePath, 'skills', skill, 'SKILL.md');
+    try {
+      const content = await fs.readFile(filePath, 'utf-8');
+      const { valid, missing } = checkSkillSections(content);
+      if (!valid) {
+        warnings.push(`skill ${skill}: missing sections — ${missing.join(', ')}`);
+      }
+    } catch {
+      warnings.push(`skill ${skill}: SKILL.md not found`);
+    }
+  }
+
+  // --- 4. Cross-reference (ana.json ↔ skill Detected) ---
+  try {
+    const anaJsonContent = await fs.readFile(path.join(cwd, '.ana', 'ana.json'), 'utf-8');
+    const anaJson = JSON.parse(anaJsonContent) as Record<string, unknown>;
+    const crossRefResults = await checkConsistency(cwd, anaJson, null);
+    for (const r of crossRefResults) {
+      if (r.detail.startsWith('mismatch')) {
+        warnings.push(`cross-reference: ${r.detail}`);
+      }
+    }
+  } catch {
+    // ana.json missing handled upstream
+  }
+
+  // --- Determine setupMode ---
+  // Phase 2 at least partially done = critical section has content
+  // Phase 3 skip = still complete
+  const setupMode: 'partial' | 'complete' = criticalSectionPopulated ? 'complete' : 'partial';
+
+  return {
+    setupMode,
+    warnings,
+    stats: {
+      skillsCalibrated,
+      contextSections: { populated: populatedCount, total: totalSections },
+      principlesCaptured,
+    },
+  };
+}
+
 /**
  * Display the full ✓/○/✗ setup dashboard
  * @param cwd - Project root directory
