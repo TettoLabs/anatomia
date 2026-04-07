@@ -618,6 +618,8 @@ interface ConsistencyResult {
 
 /**
  * Read setup-progress.json — try .ana/state/ path
+ * @param cwd - Project root directory
+ * @returns Setup progress or null if not found
  */
 export async function readSetupProgress(cwd: string): Promise<SetupProgress | null> {
   const paths = [
@@ -636,6 +638,8 @@ export async function readSetupProgress(cwd: string): Promise<SetupProgress | nu
 
 /**
  * Read scan.json — try .ana/scan.json first, fall back to .ana/state/scan.json
+ * @param cwd - Project root directory
+ * @returns Parsed scan data or null if not found
  */
 async function readScanJson(cwd: string): Promise<Record<string, unknown> | null> {
   const paths = [
@@ -655,6 +659,8 @@ async function readScanJson(cwd: string): Promise<Record<string, unknown> | null
 
 /**
  * Read ana.json
+ * @param cwd - Project root directory
+ * @returns Parsed ana.json or null if not found
  */
 async function readAnaJson(cwd: string): Promise<Record<string, unknown> | null> {
   try {
@@ -667,6 +673,9 @@ async function readAnaJson(cwd: string): Promise<Record<string, unknown> | null>
 
 /**
  * Count list entries (lines starting with "- ") between a heading and the next ## heading
+ * @param content - File content
+ * @param sectionName - Section heading text (without ##)
+ * @returns Number of list entries
  */
 export function countEntriesInSection(content: string, sectionName: string): number {
   const lines = content.split('\n');
@@ -689,6 +698,8 @@ export function countEntriesInSection(content: string, sectionName: string): num
 
 /**
  * Check if a skill file has all 4 required sections in order
+ * @param content - Skill file content
+ * @returns Validation result with missing section names
  */
 export function checkSkillSections(content: string): { valid: boolean; missing: string[] } {
   const required = ['Detected', 'Rules', 'Gotchas', 'Examples'];
@@ -713,6 +724,9 @@ export function checkSkillSections(content: string): { valid: boolean; missing: 
 
 /**
  * Check if content has non-template text (not just comments/placeholders)
+ * @param content - File content
+ * @param sectionName - Section heading text (without ##)
+ * @returns True if section has real content
  */
 function hasNonTemplateContent(content: string, sectionName: string): boolean {
   const lines = content.split('\n');
@@ -738,6 +752,8 @@ function hasNonTemplateContent(content: string, sectionName: string): boolean {
 
 /**
  * Discover skill directories dynamically
+ * @param cwd - Project root directory
+ * @returns Sorted array of skill directory names
  */
 async function discoverSkills(cwd: string): Promise<string[]> {
   const skillsDir = path.join(cwd, '.claude', 'skills');
@@ -751,6 +767,9 @@ async function discoverSkills(cwd: string): Promise<string[]> {
 
 /**
  * Check a single skill file
+ * @param cwd - Project root directory
+ * @param skillName - Skill directory name
+ * @returns Skill check result with symbol and description
  */
 export async function checkSkill(cwd: string, skillName: string): Promise<SkillCheckResult> {
   const filePath = path.join(cwd, '.claude', 'skills', skillName, 'SKILL.md');
@@ -810,8 +829,11 @@ export async function checkSkill(cwd: string, skillName: string): Promise<SkillC
 
 /**
  * Check context file for dashboard display
+ * @param cwd - Project root directory
+ * @param filename - Context filename (e.g., project-context.md)
+ * @returns Symbol and description for dashboard display
  */
-async function checkContextForDashboard(cwd: string, filename: string): Promise<{ symbol: string; description: string }> {
+export async function checkContextForDashboard(cwd: string, filename: string): Promise<{ symbol: string; description: string }> {
   const filePath = path.join(cwd, '.ana', 'context', filename);
   try {
     const content = await fs.readFile(filePath, 'utf-8');
@@ -850,6 +872,10 @@ async function checkContextForDashboard(cwd: string, filename: string): Promise<
 
 /**
  * Run cross-reference consistency checks
+ * @param cwd - Project root directory
+ * @param anaJson - Parsed ana.json content
+ * @param scanJson - Parsed scan.json content or null
+ * @returns Array of consistency check results
  */
 export async function checkConsistency(cwd: string, anaJson: Record<string, unknown>, scanJson: Record<string, unknown> | null): Promise<ConsistencyResult[]> {
   const results: ConsistencyResult[] = [];
@@ -945,6 +971,9 @@ export async function checkConsistency(cwd: string, anaJson: Record<string, unkn
 
 /**
  * Extract content of a section (between ## heading and next ## heading)
+ * @param content - File content
+ * @param sectionName - Section heading text (without ##)
+ * @returns Section content or null if not found
  */
 function extractSection(content: string, sectionName: string): string | null {
   const lines = content.split('\n');
@@ -967,6 +996,8 @@ function extractSection(content: string, sectionName: string): string | null {
 
 /**
  * Display the full ✓/○/✗ setup dashboard
+ * @param cwd - Project root directory
+ * @returns True if no errors (no ✗ symbols)
  */
 async function displaySetupDashboard(cwd: string): Promise<boolean> {
   let hasErrors = false;
