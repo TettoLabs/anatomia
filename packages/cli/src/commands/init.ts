@@ -1422,8 +1422,9 @@ function displaySuccessMessage(engineResult: EngineResult | null, projectName: s
   if (engineResult) {
     const artifactBranch = engineResult.git.defaultBranch ?? engineResult.git.branch ?? 'main';
     console.log(`  ${chalk.bold('Branch:')}   ${artifactBranch}`);
-    if (engineResult.commands.test) {
-      console.log(`  ${chalk.bold('Test:')}     ${engineResult.commands.test}`);
+    const displayTest = makeTestCommandNonInteractive(engineResult.commands.test, engineResult.stack.testing);
+    if (displayTest) {
+      console.log(`  ${chalk.bold('Test:')}     ${displayTest}`);
     }
     if (engineResult.commands.build) {
       console.log(`  ${chalk.bold('Build:')}    ${engineResult.commands.build}`);
