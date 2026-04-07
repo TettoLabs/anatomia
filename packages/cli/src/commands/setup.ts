@@ -2,37 +2,20 @@
  * ana setup - Setup-related commands
  *
  * Subcommands:
- * - complete: Validate context files and finalize setup
+ * - complete: Validate context files and finalize setup (D12.4)
  */
 
 import { Command } from 'commander';
 import chalk from 'chalk';
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
-import type { EngineResult } from '../engine/types/engineResult.js';
-import {
-  validateStructure,
-  validateContent,
-  validateCrossReferences,
-  validateQuality,
-  fileExists,
-  type ValidationError,
-} from '../utils/validators.js';
-import { VALID_SETUP_TIERS, ANA_JSON_VERSION } from '../constants.js';
+import { fileExists } from '../utils/validators.js';
 import { createCheckCommand } from './check.js';
 import { createIndexCommand } from './symbol-index.js';
+import { validateSetupCompletion } from './check.js';
 
 interface SetupCompleteOptions {
-  mode?: string;
-}
-
-/**
- * Type guard to check if string is valid setup tier
- * @param tier - Setup tier to validate
- * @returns true if valid setup tier
- */
-function isValidSetupTier(tier: string): tier is typeof VALID_SETUP_TIERS[number] {
-  return VALID_SETUP_TIERS.includes(tier as typeof VALID_SETUP_TIERS[number]);
+  force?: boolean;
 }
 
 /** Create setup parent command */
@@ -50,15 +33,11 @@ setupCommand.addCommand(createIndexCommand());
 setupCommand
   .command('complete')
   .description('Validate context files and finalize setup')
-  .option(
-    '--mode <tier>',
-    'Setup tier used (quick|guided) - overrides auto-detection'
-  )
+  .option('--force', 'Force complete regardless of validation')
   .action(async (options: SetupCompleteOptions) => {
     const cwd = process.cwd();
     const anaPath = path.join(cwd, '.ana');
-
-    console.log(chalk.blue('\n🔍 Validating setup...\n'));
+    const anaJsonPath = path.join(anaPath, 'ana.json');
 
     // Check .ana/ exists
     if (!(await fileExists(anaPath))) {
@@ -69,256 +48,73 @@ setupCommand
       process.exit(1);
     }
 
-    // Load snapshot for cross-reference validation
-    const snapshotPath = path.join(anaPath, 'state/snapshot.json');
-    if (!(await fileExists(snapshotPath))) {
-      console.error(chalk.red('Error: snapshot.json not found'));
-      console.error(
-        chalk.gray('Run `ana init` to recreate .ana/ with snapshot.')
-      );
+    // Check ana.json exists
+    if (!(await fileExists(anaJsonPath))) {
+      console.error(chalk.red('Error: ana.json not found'));
+      console.error(chalk.gray('Run `ana init` first.'));
       process.exit(1);
     }
 
-    let snapshot: EngineResult;
-    try {
-      const content = await fs.readFile(snapshotPath, 'utf-8');
-      snapshot = JSON.parse(content);
-    } catch (error) {
-      console.error(chalk.red('Error: Failed to parse snapshot.json'));
-      if (error instanceof Error) {
-        console.error(chalk.gray(error.message));
+    console.log(chalk.blue('\n🔍 Validating setup...\n'));
+
+    // Run D12.3 validation
+    const result = await validateSetupCompletion(cwd);
+
+    // --force overrides to "complete"
+    const finalMode = options.force ? 'complete' : result.setupMode;
+
+    // Display warnings
+    if (result.warnings.length > 0) {
+      for (const w of result.warnings) {
+        console.log(chalk.yellow(`  ⚠ ${w}`));
       }
-      process.exit(1);
-    }
-
-    // Phase 1: Structural validation
-    console.log(chalk.gray('Checking file structure...'));
-    const structuralErrors = await validateStructure(anaPath);
-
-    // Phase 2: Content validation
-    console.log(chalk.gray('Checking required sections...'));
-    const contentErrors = await validateContent(anaPath);
-
-    // Phase 3: Cross-reference validation
-    console.log(chalk.gray('Cross-referencing with analyzer data...'));
-    const crossRefErrors = await validateCrossReferences(anaPath, snapshot);
-
-    // Phase 4: Quality checks
-    console.log(chalk.gray('Running quality checks...'));
-    const warnings = await validateQuality(anaPath);
-
-    // Check for blocking failures
-    const allErrors = [...structuralErrors, ...contentErrors, ...crossRefErrors];
-
-    if (allErrors.length > 0) {
-      console.log(chalk.red('\n❌ Validation failed\n'));
-      displayValidationFailures(allErrors);
-      process.exit(1);
-    }
-
-    // Display soft warnings (don't block)
-    if (warnings.length > 0) {
-      console.log(chalk.yellow('\n⚠️  Quality warnings:\n'));
-      warnings.forEach((w) => {
-        console.log(chalk.yellow(`  ${w.message}`));
-      });
       console.log();
     }
 
-    // All validation passed - proceed with finalization
-    console.log(chalk.green('✅ All validations passed\n'));
-
-    // Phase 5: Generate/update CLAUDE.md
-    console.log(chalk.gray('Updating CLAUDE.md...'));
-    await generateClaudeMd(cwd, anaPath);
-
-    // Phase 7: Update ana.json
-    console.log(chalk.gray('Updating ana.json...'));
-    await updateAnaJson(anaPath, cwd, options);
-
-    // Success
-    console.log(chalk.green('\n✅ Setup complete!\n'));
-    console.log('Context files are verified and ready.');
-    console.log();
-
-    console.log(chalk.bold('Next: ') + 'claude --agent ana');
-    console.log();
-
-    console.log(chalk.gray('Ana now knows your codebase. She will help you scope, plan, build, and verify changes.'));
-    console.log();
-  });
-
-/**
- * Display validation failures in readable format
- * @param errors - Array of validation errors to display
- */
-function displayValidationFailures(errors: ValidationError[]): void {
-  errors.forEach((error) => {
-    console.log(chalk.red(`  [${error.rule}] ${error.file}`));
-    console.log(chalk.gray(`      ${error.message}`));
-    console.log();
-  });
-
-  console.log(chalk.gray('Fix the issues above and run `ana setup complete` again.'));
-  console.log();
-}
-
-/**
- * Generate or update CLAUDE.md with Anatomia section
- *
- * Merge strategy:
- * 1. If marker found: replace section between markers
- * 2. If no marker: append section at end
- * 3. If no file: create with section only
- *
- * @param cwd - Project root directory
- * @param anaPath - Path to .ana/ directory
- */
-async function generateClaudeMd(cwd: string, anaPath: string): Promise<void> {
-  const claudeMdPath = path.join(cwd, 'CLAUDE.md');
-  const contextDir = path.join(anaPath, 'context');
-
-  // Count verified context files
-  let contextFileCount = 0;
-  try {
-    const files = await fs.readdir(contextDir);
-    contextFileCount = files.filter((f) => f.endsWith('.md')).length;
-  } catch {
-    contextFileCount = 7; // default
-  }
-
-  const today = new Date().toISOString().split('T')[0];
-
-  const anatomiaSection = [
-    '<!-- Anatomia Context Framework — do not edit this section -->',
-    `<!-- Last setup: ${today} | Run \`ana setup\` to update -->`,
-    '',
-    `This project uses Anatomia for AI context management (${contextFileCount} verified context files).`,
-    '',
-    'Available modes: @.ana/modes/code.md · @.ana/modes/debug.md · @.ana/modes/test.md · @.ana/modes/architect.md',
-    '<!-- End Anatomia section -->',
-  ].join('\n');
-
-  const startMarker = '<!-- Anatomia Context Framework';
-  const endMarker = '<!-- End Anatomia section -->';
-
-  let finalContent: string;
-
-  try {
-    const existing = await fs.readFile(claudeMdPath, 'utf-8');
-    const startIdx = existing.indexOf(startMarker);
-    const endIdx = existing.indexOf(endMarker);
-
-    if (startIdx !== -1 && endIdx !== -1) {
-      // Replace existing Anatomia section
-      finalContent =
-        existing.substring(0, startIdx) +
-        anatomiaSection +
-        existing.substring(endIdx + endMarker.length);
-    } else {
-      // Append to existing file
-      finalContent = existing.trimEnd() + '\n\n' + anatomiaSection + '\n';
+    // Update ana.json
+    let config: Record<string, unknown>;
+    try {
+      const content = await fs.readFile(anaJsonPath, 'utf-8');
+      config = JSON.parse(content);
+    } catch {
+      config = {};
     }
-  } catch {
-    // No existing file — create new
-    finalContent = anatomiaSection + '\n';
-  }
 
-  try {
-    await fs.writeFile(claudeMdPath, finalContent, 'utf-8');
-    console.log(chalk.green('  ✅ CLAUDE.md updated (Anatomia section)'));
-  } catch (error) {
-    // CLAUDE.md is nice-to-have, not a gate
-    console.log(chalk.yellow('  ⚠️  Could not update CLAUDE.md (non-fatal)'));
-    if (error instanceof Error) {
-      console.log(chalk.gray(`     ${error.message}`));
-    }
-  }
-}
+    config.setupMode = finalMode;
+    config.setupCompletedAt = new Date().toISOString();
+    await fs.writeFile(anaJsonPath, JSON.stringify(config, null, 2), 'utf-8');
 
-/**
- * Update ana.json after successful validation
- *
- * Sets:
- * - setupMode: determined tier (quick/guided)
- * - setupCompletedAt: current timestamp
- *
- * @param anaPath - Path to .ana/ directory
- * @param cwd - Project root
- * @param options - Command options (may have --mode flag)
- */
-async function updateAnaJson(
-  anaPath: string,
-  cwd: string,
-  options: SetupCompleteOptions
-): Promise<void> {
-  const anaJsonPath = path.join(anaPath, 'ana.json');
-
-  // Read existing ana.json
-  let config: Record<string, unknown>;
-  try {
-    const content = await fs.readFile(anaJsonPath, 'utf-8');
-    config = JSON.parse(content);
-  } catch (_error) {
-    // If ana.json doesn't exist or is corrupt, create minimal
-    config = {
-      version: ANA_JSON_VERSION,
-      createdAt: new Date().toISOString(),
-    };
-  }
-
-  // Determine setupMode (priority order)
-  let setupMode: string;
-
-  // Priority 1: CLI flag (explicit override)
-  if (options.mode) {
-    setupMode = options.mode;
-
-    // Validate tier value
-    if (!isValidSetupTier(setupMode)) {
-      console.error(chalk.red(`Error: Invalid --mode value: ${setupMode}`));
-      console.error(chalk.gray(`Valid values: ${VALID_SETUP_TIERS.join(', ')}`));
-      process.exit(1);
-    }
-  }
-  // Priority 2: Handoff file from CC
-  else {
-    const handoffPath = path.join(anaPath, '.setup_tier');
-    if (await fileExists(handoffPath)) {
+    // Handle setup-progress.json lifecycle
+    const progressPath = path.join(anaPath, 'state', 'setup-progress.json');
+    if (finalMode === 'complete') {
+      // Delete on complete
       try {
-        setupMode = (await fs.readFile(handoffPath, 'utf-8')).trim();
-
-        // Cleanup handoff file
-        await fs.unlink(handoffPath);
-      } catch (error) {
-        // File read failed - error, don't fall back
-        console.error(chalk.red('Error: Failed to read .setup_tier file'));
-        if (error instanceof Error) {
-          console.error(chalk.gray(error.message));
-        }
-        console.error(chalk.gray('Run with --mode <quick|guided> to specify manually.'));
-        process.exit(1);
+        await fs.unlink(progressPath);
+      } catch {
+        // File may not exist — that's fine
       }
     }
-    // Priority 3: Existing setupMode from ana.json (re-running setup complete)
-    else if (config.setupMode && isValidSetupTier(config.setupMode)) {
-      setupMode = config.setupMode;
+    // If partial: keep for resume (no action needed)
+
+    // Display summary
+    const { stats } = result;
+    if (finalMode === 'complete') {
+      console.log(chalk.green('✓ Setup complete\n'));
+      console.log(`  Skills:     ${stats.skillsCalibrated} calibrated`);
+      console.log(`  Context:    ${stats.contextSections.populated}/${stats.contextSections.total} sections`);
+      console.log(`  Principles: ${stats.principlesCaptured ? 'captured' : 'skipped'}`);
+      console.log();
+      console.log(`  Ana now knows your team. Start working:`);
+      console.log(`  claude --agent ana`);
+      console.log();
+    } else {
+      console.log(chalk.yellow('✓ Setup complete (partial)\n'));
+      for (const w of result.warnings) {
+        console.log(chalk.yellow(`  ⚠ ${w}`));
+      }
+      console.log();
+      console.log(`  Run ${chalk.cyan('ana setup')} to fill remaining sections.`);
+      console.log(`  claude --agent ana`);
+      console.log();
     }
-    // Priority 4: Error if no source available
-    else {
-      console.error(chalk.red('Error: Cannot determine setup tier.'));
-      console.error(chalk.gray('Setup should have written .ana/.setup_tier file.'));
-      console.error(chalk.gray('Run with --mode <quick|guided> to specify manually.'));
-      process.exit(1);
-    }
-  }
-
-  // Update config fields
-  config.setupMode = setupMode;
-  config.setupCompletedAt = new Date().toISOString();
-
-  // Write back to file (formatted JSON)
-  await fs.writeFile(anaJsonPath, JSON.stringify(config, null, 2), 'utf-8');
-
-  console.log(chalk.gray(`  Setup mode: ${setupMode}`));
-}
+  });

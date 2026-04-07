@@ -236,6 +236,8 @@ export async function fileExists(filePath: string): Promise<boolean> {
  * @param anaPath - Path to .ana/ directory
  * @returns Array of blocking errors (empty if valid)
  */
+// NOTE: No longer called by production code (S17 replaced with validateSetupCompletion in check.ts).
+// Kept for test coverage of legacy validation logic. Safe to delete when setup.test.ts is rewritten.
 export async function validateStructure(anaPath: string): Promise<ValidationError[]> {
   const errors: ValidationError[] = [];
 
@@ -320,6 +322,8 @@ export async function validateStructure(anaPath: string): Promise<ValidationErro
  * @param anaPath - Path to .ana/ directory
  * @returns Array of blocking errors (empty if valid)
  */
+// NOTE: No longer called by production code (S17 replaced with validateSetupCompletion in check.ts).
+// Kept for test coverage of legacy validation logic. Safe to delete when setup.test.ts is rewritten.
 export async function validateContent(anaPath: string): Promise<ValidationError[]> {
   const errors: ValidationError[] = [];
   const contextPath = path.join(anaPath, 'context/project-context.md');
@@ -364,6 +368,8 @@ export async function validateContent(anaPath: string): Promise<ValidationError[
  * @param snapshot - EngineResult from state/snapshot.json
  * @returns Array of blocking errors (empty if valid)
  */
+// NOTE: No longer called by production code (S17 replaced with validateSetupCompletion in check.ts).
+// Kept for test coverage of legacy validation logic. Safe to delete when setup.test.ts is rewritten.
 export async function validateCrossReferences(
   anaPath: string,
   snapshot: EngineResult
@@ -392,6 +398,8 @@ export async function validateCrossReferences(
  * @param anaPath - Path to .ana/ directory
  * @returns Array of warnings (never blocks validation)
  */
+// NOTE: No longer called by production code (S17 replaced with validateSetupCompletion in check.ts).
+// Kept for test coverage of legacy validation logic. Safe to delete when setup.test.ts is rewritten.
 export async function validateQuality(anaPath: string): Promise<ValidationError[]> {
   const warnings: ValidationError[] = [];
 
