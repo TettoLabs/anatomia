@@ -98,16 +98,17 @@ describe('ana init', () => {
         '.claude/agents/ana-setup.md',
         '.claude/agents/ana-build.md',
         '.claude/agents/ana-verify.md',
-        // 4 skill files (design-principles moved to context — D6.7)
+        // 5 core skill files (S15: troubleshooting added via computeSkillManifest)
         '.claude/skills/testing-standards/SKILL.md',
         '.claude/skills/coding-standards/SKILL.md',
         '.claude/skills/git-workflow/SKILL.md',
         '.claude/skills/deployment/SKILL.md',
+        '.claude/skills/troubleshooting/SKILL.md',
         // CLAUDE.md entry point
         'CLAUDE.md',
       ];
 
-      expect(expectedFiles).toHaveLength(27);
+      expect(expectedFiles).toHaveLength(28);
 
       for (const file of expectedFiles) {
         const filePath = path.join(templatesDir, file);

@@ -180,6 +180,7 @@ describe('ana init E2E', () => {
       'coding-standards',
       'git-workflow',
       'deployment',
+      'troubleshooting',
     ];
 
     for (const skillDir of skillDirs) {

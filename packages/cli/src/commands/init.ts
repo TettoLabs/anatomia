@@ -62,7 +62,7 @@ import { getProjectName } from '../utils/validators.js';
 import {
   MODE_FILES,
   AGENT_FILES,
-  SKILL_DIRS,
+  computeSkillManifest,
 } from '../constants.js';
 import { buildSymbolIndex } from './symbol-index.js';
 
@@ -216,7 +216,7 @@ export const initCommand = new Command('init')
       await atomicRename(tmpAnaPath, anaPath);
 
       // Create .claude/ configuration (outside temp directory - handles merge)
-      await createClaudeConfiguration(cwd, engineResult);
+      await createClaudeConfiguration(cwd, engineResult, preflight.initState);
 
       // Display success
       const scanTime = ((Date.now() - scanStart) / 1000).toFixed(1);
@@ -719,8 +719,9 @@ async function copyHookScripts(tmpAnaPath: string): Promise<void> {
  *
  * @param cwd - Project root directory
  * @param engineResult - Engine result for skill seeding (null if skipped)
+ * @param initState - Installation state from pre-scan validation
  */
-async function createClaudeConfiguration(cwd: string, engineResult: EngineResult | null): Promise<void> {
+async function createClaudeConfiguration(cwd: string, engineResult: EngineResult | null, initState: InitState): Promise<void> {
   const spinner = ora('Creating .claude/ configuration...').start();
 
   const claudePath = path.join(cwd, '.claude');
@@ -746,13 +747,8 @@ async function createClaudeConfiguration(cwd: string, engineResult: EngineResult
     // Copy all agent files
     await copyAgentFiles(agentsPath, templatesDir);
 
-    // Copy all skill files
-    await copySkillFiles(skillsPath, templatesDir);
-
-    // Seed skills with detected data
-    if (engineResult) {
-      await seedSkillFiles(skillsPath, engineResult);
-    }
+    // Copy and seed skill files (dynamic manifest)
+    await scaffoldAndSeedSkills(skillsPath, templatesDir, engineResult, 'fresh');
 
     // Copy CLAUDE.md to project root
     await copyClaudeMd(cwd, templatesDir);
@@ -798,13 +794,8 @@ async function createClaudeConfiguration(cwd: string, engineResult: EngineResult
   // Copy agent files (merge-not-overwrite)
   await copyAgentFiles(agentsPath, templatesDir);
 
-  // Copy skill files (merge-not-overwrite)
-  await copySkillFiles(skillsPath, templatesDir);
-
-  // Seed skills with detected data
-  if (engineResult) {
-    await seedSkillFiles(skillsPath, engineResult);
-  }
+  // Copy and seed skill files (dynamic manifest, re-init aware)
+  await scaffoldAndSeedSkills(skillsPath, templatesDir, engineResult, initState);
 
   // Copy CLAUDE.md to project root (merge-not-overwrite)
   await copyClaudeMd(cwd, templatesDir);
@@ -839,148 +830,191 @@ async function copyAgentFiles(agentsPath: string, templatesDir: string): Promise
 }
 
 /**
- * Copy skill files to .claude/skills/
+ * Scaffold and seed skill files using dynamic manifest (D8.2, D8.9)
  *
- * Copies skill definition files from templates without overwriting existing ones.
- * Each skill lives in its own directory with a SKILL.md file.
+ * Uses computeSkillManifest() to determine which skills to scaffold.
+ * Fresh init: copy template + inject Detected.
+ * Re-init: read existing file, REPLACE ## Detected section, preserve human content.
+ * Custom user skills (not in manifest) are never touched.
  *
  * @param skillsPath - Path to .claude/skills/ directory
  * @param templatesDir - Path to CLI templates directory
+ * @param engineResult - Engine result for skill seeding (null if skipped)
+ * @param initState - Installation state (fresh/reinit/upgrade/corrupted)
  */
-async function copySkillFiles(skillsPath: string, templatesDir: string): Promise<void> {
-  for (const skillDir of SKILL_DIRS) {
-    const destDir = path.join(skillsPath, skillDir);
-    const destPath = path.join(destDir, 'SKILL.md');
+async function scaffoldAndSeedSkills(
+  skillsPath: string,
+  templatesDir: string,
+  engineResult: EngineResult | null,
+  initState: InitState
+): Promise<void> {
+  const analysis = engineResult || createEmptyEngineResult();
+  const skillsToScaffold = computeSkillManifest(analysis);
+  const isReinit = initState === 'reinit' || initState === 'upgrade';
 
-    // Check if file already exists (don't overwrite)
-    const exists = await fileExists(destPath);
-    if (exists) {
-      // Skip - don't overwrite existing skill files
+  for (const skillName of skillsToScaffold) {
+    const destDir = path.join(skillsPath, skillName);
+    const destPath = path.join(destDir, 'SKILL.md');
+    const sourcePath = path.join(templatesDir, '.claude/skills', skillName, 'SKILL.md');
+
+    // Check if template exists
+    const templateExists = await fileExists(sourcePath);
+    if (!templateExists) continue;
+
+    const existingSkill = await fileExists(destPath);
+
+    let content: string;
+    if (existingSkill && isReinit) {
+      // Re-init: read existing file, REPLACE ## Detected only
+      content = await fs.readFile(destPath, 'utf-8');
+    } else if (existingSkill) {
+      // Fresh/corrupted but file exists (from prior .claude/ that wasn't deleted) — skip
       continue;
+    } else {
+      // New skill: copy from template
+      await fs.mkdir(destDir, { recursive: true });
+      content = await fs.readFile(sourcePath, 'utf-8');
     }
 
-    // Create skill directory
-    await fs.mkdir(destDir, { recursive: true });
+    // Inject Detected content
+    if (engineResult) {
+      const injector = SKILL_INJECTORS[skillName];
+      if (injector) {
+        const detectedContent = injector(engineResult);
+        content = replaceDetectedSection(content, detectedContent);
+      }
+    }
 
-    // Copy with verification
-    const sourcePath = path.join(templatesDir, '.claude/skills', skillDir, 'SKILL.md');
-    await copyAndVerifyFile(sourcePath, destPath, `.claude/skills/${skillDir}/SKILL.md`);
+    await fs.writeFile(destPath, content, 'utf-8');
   }
 }
 
-/**
- * Seed skill files with detected data from EngineResult
- *
- * Reads each copied skill template, injects a ## Detected section
- * below the YAML frontmatter, writes back. Only enriches, never creates.
- *
- * @param skillsDir - Path to .claude/skills/ directory
- * @param result - EngineResult from engine
- */
-async function seedSkillFiles(skillsDir: string, result: EngineResult): Promise<void> {
-  const seeds: Record<string, string[]> = {};
+// ============================================================
+// Skill Detected Injection (D6.5, D8.2)
+// ============================================================
 
-  // coding-standards
-  const codingLines: string[] = [];
-  if (result.stack?.language) {
-    codingLines.push(`- Language: ${result.stack.language}${result.stack.framework ? ` with ${result.stack.framework}` : ''}`);
+type DetectedInjector = (result: EngineResult) => string;
+
+const SKILL_INJECTORS: Record<string, DetectedInjector> = {
+  'coding-standards': injectCodingStandards,
+  'testing-standards': injectTestingStandards,
+  'git-workflow': injectGitWorkflow,
+  'deployment': injectDeployment,
+  'troubleshooting': () => '',
+  'ai-patterns': injectAiPatterns,
+  'api-patterns': injectApiPatterns,
+  'data-access': injectDataAccess,
+};
+
+function injectCodingStandards(result: EngineResult): string {
+  const lines: string[] = [];
+  if (result.stack.language) {
+    lines.push(`- Language: ${result.stack.language}${result.stack.framework ? ` with ${result.stack.framework}` : ''}`);
   }
-  if (result.conventions?.naming?.functions) {
-    const f = result.conventions.naming.functions;
-    codingLines.push(`- Functions: ${f.majority}${f.confidence ? ` (${(f.confidence * 100).toFixed(0)}% confidence)` : ''}`);
-  }
-  if (result.conventions?.naming?.files) {
-    codingLines.push(`- Files: ${result.conventions.naming.files.majority}`);
-  }
-  if (result.conventions?.imports) {
-    codingLines.push(`- Imports: ${result.conventions.imports.style}`);
-  }
-  if (result.conventions?.indentation) {
-    const i = result.conventions.indentation;
-    codingLines.push(`- Indentation: ${i.width ? `${i.width} ` : ''}${i.style}`);
-  }
-  if (result.patterns?.validation && !('patterns' in result.patterns.validation)) {
-    codingLines.push(`- Validation: ${result.patterns.validation.library}`);
-  }
-  if (codingLines.length > 0) seeds['coding-standards'] = codingLines;
-
-  // testing-standards
-  const testingLines: string[] = [];
-  if (result.stack?.testing) testingLines.push(`- Framework: ${result.stack.testing}`);
-  if (result.commands?.test) testingLines.push(`- Test command: \`${result.commands.test}\``);
-  if (result.files?.test !== undefined) testingLines.push(`- Test files: ${result.files.test}`);
-  if (testingLines.length > 0) seeds['testing-standards'] = testingLines;
-
-  // git-workflow
-  const gitLines: string[] = [];
-  if (result.git?.branch) gitLines.push(`- Default branch: ${result.git.branch}`);
-  if (result.git?.commitCount) gitLines.push(`- Commits: ${result.git.commitCount}`);
-  if (result.git?.contributorCount) gitLines.push(`- Contributors: ${result.git.contributorCount}`);
-  gitLines.push('- Co-author: read from `ana.json` coAuthor field');
-  if (gitLines.length > 1) seeds['git-workflow'] = gitLines; // more than just coAuthor line
-
-  // deployment
-  const deployLines: string[] = [];
-  if (result.deployment.platform) {
-    deployLines.push(`- Platform: ${result.deployment.platform}${result.deployment.configFile ? ` (${result.deployment.configFile})` : ''}`);
-  }
-  if (result.commands?.build) deployLines.push(`- Build command: \`${result.commands.build}\``);
-  if (deployLines.length > 0) seeds['deployment'] = deployLines;
-
-  // design-principles — moved to context file (D6.7), no longer a skill
-  // logging-standards — removed, folded into coding-standards (D6.1)
-
-  // Inject ## Detected sections
-  for (const [skillName, lines] of Object.entries(seeds)) {
-    const filePath = path.join(skillsDir, skillName, 'SKILL.md');
-    try {
-      let content = await fs.readFile(filePath, 'utf-8');
-
-      // If template has ## Detected placeholder, replace it with seeded content
-      // If already seeded (has real content after ## Detected), skip
-      const detectedIdx = content.indexOf('## Detected');
-      if (detectedIdx !== -1) {
-        // Find what follows ## Detected — if it's only an HTML comment or blank, replace it
-        const nextSection = content.indexOf('\n## ', detectedIdx + 11);
-        const betweenContent = nextSection !== -1
-          ? content.slice(detectedIdx + 11, nextSection).trim()
-          : content.slice(detectedIdx + 11).trim();
-        // Skip if already has real content (not just HTML comment)
-        if (betweenContent && !betweenContent.startsWith('<!--')) continue;
-
-        // Replace the placeholder section
-        const endOfDetected = nextSection !== -1 ? nextSection : content.length;
-        content = content.slice(0, detectedIdx) + `## Detected\n${lines.join('\n')}\n` + content.slice(endOfDetected);
-      } else {
-        // Legacy templates without ## Detected: inject after frontmatter
-        const detectedSection = `\n## Detected\n${lines.join('\n')}\n`;
-        const fmEnd = content.indexOf('---', content.indexOf('---') + 3);
-        if (fmEnd !== -1) {
-          const insertPos = content.indexOf('\n', fmEnd) + 1;
-          content = content.slice(0, insertPos) + detectedSection + content.slice(insertPos);
-        }
-      }
-
-      // For testing-standards: replace commented Commands section with real commands
-      if (skillName === 'testing-standards') {
-        const commandsBlock = `\n## Commands\n\`\`\`bash\n# Build\n${result.commands?.build || 'your-build-command'}\n\n# Test (non-watch mode)\n${result.commands?.test || 'your-test-command'}\n\n# Lint (all source)\n${result.commands?.lint || 'your-lint-command'}\n\`\`\`\n`;
-
-        // Replace the HTML-commented Commands section
-        const cmdCommentStart = content.indexOf('## Commands');
-        if (cmdCommentStart !== -1) {
-          // Find the end of the commented block (closing -->)
-          const commentEnd = content.indexOf('-->', cmdCommentStart);
-          if (commentEnd !== -1) {
-            content = content.slice(0, cmdCommentStart) + commandsBlock.trim() + '\n' + content.slice(commentEnd + 3).trimStart();
-          }
-        }
-      }
-
-      await fs.writeFile(filePath, content, 'utf-8');
-    } catch {
-      // File doesn't exist (was skipped in merge-not-overwrite) — skip seeding
+  if (result.conventions) {
+    const naming = result.conventions.naming;
+    if (naming?.functions?.confidence > 0) {
+      lines.push(`- Functions: ${naming.functions.majority} (${Math.round(naming.functions.confidence * 100)}%)`);
+    }
+    if (naming?.classes?.confidence > 0) {
+      lines.push(`- Classes: ${naming.classes.majority} (${Math.round(naming.classes.confidence * 100)}%)`);
+    }
+    if (naming?.files?.confidence > 0) {
+      lines.push(`- Files: ${naming.files.majority} (${Math.round(naming.files.confidence * 100)}%)`);
+    }
+    if (result.conventions.imports?.style) {
+      lines.push(`- Imports: ${result.conventions.imports.style} (${Math.round(result.conventions.imports.confidence * 100)}%)`);
+    }
+    if (result.conventions.indentation?.style) {
+      lines.push(`- Indentation: ${result.conventions.indentation.style}, ${result.conventions.indentation.width} spaces`);
     }
   }
+  if (result.patterns?.errorHandling) {
+    const eh = result.patterns.errorHandling;
+    const variant = eh.variant ? ` (${eh.variant})` : '';
+    lines.push(`- Error handling: ${eh.library}${variant}`);
+  }
+  return lines.join('\n');
+}
+
+function injectTestingStandards(result: EngineResult): string {
+  const lines: string[] = [];
+  if (result.stack.testing) lines.push(`- Framework: ${result.stack.testing}`);
+  if (result.files.test > 0) lines.push(`- Test files: ${result.files.test}`);
+  if (result.commands.test) lines.push(`- Test command: ${result.commands.test}`);
+  if (result.patterns?.testing) {
+    const t = result.patterns.testing;
+    const variant = t.variant ? ` (${t.variant})` : '';
+    lines.push(`- Testing patterns: ${t.library}${variant}`);
+  }
+  return lines.join('\n');
+}
+
+function injectGitWorkflow(result: EngineResult): string {
+  const lines: string[] = [];
+  if (result.git.defaultBranch) lines.push(`- Default branch: ${result.git.defaultBranch}`);
+  if (result.git.branch) lines.push(`- Current branch: ${result.git.branch}`);
+  if (result.git.commitCount !== null) lines.push(`- Commits: ${result.git.commitCount}`);
+  if (result.git.contributorCount !== null) lines.push(`- Contributors: ${result.git.contributorCount}`);
+  return lines.join('\n');
+}
+
+function injectDeployment(result: EngineResult): string {
+  const lines: string[] = [];
+  if (result.deployment.platform) lines.push(`- Platform: ${result.deployment.platform}`);
+  if (result.deployment.configFile) lines.push(`- Config: ${result.deployment.configFile}`);
+  if (result.deployment.ci) lines.push(`- CI: ${result.deployment.ci}`);
+  return lines.join('\n');
+}
+
+function injectAiPatterns(result: EngineResult): string {
+  if (result.stack.aiSdk) return `- AI SDK: ${result.stack.aiSdk}`;
+  return '';
+}
+
+function injectApiPatterns(result: EngineResult): string {
+  if (result.stack.framework) return `- Framework: ${result.stack.framework}`;
+  return '';
+}
+
+function injectDataAccess(result: EngineResult): string {
+  const lines: string[] = [];
+  if (result.stack.database) lines.push(`- Database: ${result.stack.database}`);
+  const schemaEntries = Object.entries(result.schemas).filter(([, s]) => s.found);
+  for (const [name, schema] of schemaEntries) {
+    const parts = [name];
+    if (schema.modelCount !== null) parts.push(`${schema.modelCount} models`);
+    if (schema.path) parts.push(schema.path);
+    lines.push(`- Schema: ${parts.join(', ')}`);
+  }
+  return lines.join('\n');
+}
+
+/**
+ * Replace ## Detected section content while preserving all other sections (D6.13)
+ *
+ * Machine/human boundary: ## Detected is machine-owned (auto-refreshable),
+ * ## Rules, ## Gotchas, ## Examples are human-owned (never overwritten).
+ *
+ * @param fileContent - Full file content
+ * @param newDetectedContent - New content for the Detected section (lines only, no heading)
+ * @returns Updated file content
+ */
+function replaceDetectedSection(fileContent: string, newDetectedContent: string): string {
+  const detectedIdx = fileContent.indexOf('## Detected');
+  if (detectedIdx === -1) return fileContent;
+
+  // Find the next ## heading after ## Detected
+  const afterDetected = fileContent.indexOf('\n## ', detectedIdx + 1);
+  const endIdx = afterDetected === -1 ? fileContent.length : afterDetected;
+
+  const before = fileContent.slice(0, detectedIdx);
+  const after = afterDetected === -1 ? '' : fileContent.slice(endIdx);
+
+  const trimmed = newDetectedContent.trim();
+  const body = trimmed ? trimmed + '\n' : '';
+
+  return before + '## Detected\n' + body + after;
 }
 
 /**
