@@ -12,13 +12,8 @@
  *   │   ├── run-check.sh
  *   │   └── subagent-verify.sh
  *   ├── context/
- *   │   ├── project-overview.md   (scaffold with 40% pre-pop)
- *   │   ├── architecture.md       (scaffold with 20% pre-pop)
- *   │   ├── patterns.md           (scaffold with 50% pre-pop)
- *   │   ├── conventions.md        (scaffold with 70% pre-pop)
- *   │   ├── workflow.md           (scaffold with 10% pre-pop)
- *   │   ├── testing.md            (scaffold with 50% pre-pop)
- *   │   ├── debugging.md          (scaffold with 5% pre-pop)
+ *   │   ├── project-context.md    (scan-seeded D6.6 scaffold)
+ *   │   ├── design-principles.md  (static human-content template)
  *   │   └── setup/                (setup files)
  *   ├── docs/
  *   │   └── SCHEMAS.md            (artifact schema reference)
@@ -60,13 +55,8 @@ import { execSync } from 'node:child_process';
 import type { EngineResult } from '../engine/types/engineResult.js';
 
 import {
-  generateProjectOverviewScaffold,
-  generateArchitectureScaffold,
-  generatePatternsScaffold,
-  generateConventionsScaffold,
-  generateWorkflowScaffold,
-  generateTestingScaffold,
-  generateDebuggingScaffold,
+  generateProjectContextScaffold,
+  generateDesignPrinciplesTemplate,
 } from '../utils/scaffold-generators.js';
 import { getProjectName } from '../utils/validators.js';
 import {
@@ -204,7 +194,7 @@ export const initCommand = new Command('init')
       // Reset cache override after analysis
       ASTCache.setCacheDir(null);
       await createDirectoryStructure(tmpAnaPath);
-      await generateScaffolds(tmpAnaPath, engineResult, cwd);
+      await generateScaffolds(tmpAnaPath, engineResult);
       await copyStaticFilesWithVerification(tmpAnaPath);
       await copyHookScripts(tmpAnaPath);
       await saveScanJson(tmpAnaPath, engineResult);
@@ -566,50 +556,33 @@ state/
 }
 
 /**
- * Phase 5: Generate scaffolds
+ * Phase 5: Generate context scaffolds (D8.3 — consolidated 7→2)
  *
- * Calls all 7 scaffold generators and writes files.
+ * Writes 2 context files:
+ * - project-context.md: scan-seeded D6.6 format with 6 sections
+ * - design-principles.md: static human-content template
  *
  * @param tmpAnaPath - Temp .ana/ path
  * @param engineResult - Engine result or null
- * @param cwd - Project root (for projectName)
  */
 async function generateScaffolds(
   tmpAnaPath: string,
   engineResult: EngineResult | null,
-  cwd: string
 ): Promise<void> {
-  const spinner = ora('Generating scaffolds...').start();
+  const spinner = ora('Generating context scaffolds...').start();
 
   // Use empty result if analyzer failed
   const analysis = engineResult || createEmptyEngineResult();
 
-  // Get metadata
-  const projectName = await getProjectName(cwd);
-  const timestamp = new Date().toISOString();
-  const version = await getCliVersion();
+  // Generate 2 context files
+  const projectContext = generateProjectContextScaffold(analysis);
+  const designPrinciples = generateDesignPrinciplesTemplate();
 
-  // Generate all 7 scaffolds
-  const scaffolds = [
-    { name: 'project-overview.md', generator: generateProjectOverviewScaffold },
-    { name: 'architecture.md', generator: generateArchitectureScaffold },
-    { name: 'patterns.md', generator: generatePatternsScaffold },
-    { name: 'conventions.md', generator: generateConventionsScaffold },
-    { name: 'workflow.md', generator: generateWorkflowScaffold },
-    { name: 'testing.md', generator: generateTestingScaffold },
-    { name: 'debugging.md', generator: generateDebuggingScaffold },
-  ];
+  await fs.writeFile(path.join(tmpAnaPath, 'context', 'project-context.md'), projectContext, 'utf-8');
+  await fs.writeFile(path.join(tmpAnaPath, 'context', 'design-principles.md'), designPrinciples, 'utf-8');
 
-  let totalLines = 0;
-
-  for (const scaffold of scaffolds) {
-    const content = scaffold.generator(analysis, projectName, timestamp, version);
-    const filePath = path.join(tmpAnaPath, 'context', scaffold.name);
-    await fs.writeFile(filePath, content, 'utf-8');
-    totalLines += content.split('\n').length;
-  }
-
-  spinner.succeed(`Generated 7 scaffolds (${totalLines} lines total)`);
+  const totalLines = projectContext.split('\n').length + designPrinciples.split('\n').length;
+  spinner.succeed(`Generated 2 context scaffolds (${totalLines} lines total)`);
 }
 
 /**
@@ -1388,7 +1361,7 @@ function displaySuccessMessage(engineResult: EngineResult | null, projectName: s
     console.log('');
   }
 
-  console.log(chalk.green('✓ Context generated → .ana/context/ (7 files)'));
+  console.log(chalk.green('✓ Context generated → .ana/context/ (2 files)'));
   if (engineResult) {
     console.log(chalk.green('✓ Skills seeded → .claude/skills/ (6 files)'));
     console.log(chalk.green('✓ Scan saved → .ana/scan.json'));

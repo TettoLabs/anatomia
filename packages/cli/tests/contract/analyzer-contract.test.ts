@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { generatePatternsScaffold } from '../../src/utils/scaffold-generators.js';
+import { generateProjectContextScaffold } from '../../src/utils/scaffold-generators.js';
 import { createEmptyEngineResult } from '../scaffolds/test-types.js';
 import type { TestEngineResult } from '../scaffolds/test-types.js';
 
@@ -95,7 +95,7 @@ describe('Engine Interface Contract', () => {
 
       // Should not throw — proves scaffold generators accept EngineResult shape
       expect(() =>
-        generatePatternsScaffold(result as any, 'test', '2026-03-19T10:00:00Z', '1.0.0')
+        generateProjectContextScaffold(result as any)
       ).not.toThrow();
     });
   });
