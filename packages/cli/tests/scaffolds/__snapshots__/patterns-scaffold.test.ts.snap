@@ -43,7 +43,7 @@ exports[`patterns.md scaffold > TypeScript Next.js project with 1 pattern 1`] = 
 
 ## Framework Patterns
 
-**Unexamined:** Framework-specific patterns (see context/setup/framework-snippets/nextjs.md)
+**Unexamined:** Framework-specific patterns for Next.js
 
 ---
 
@@ -90,7 +90,7 @@ exports[`patterns.md scaffold > empty result (scan failed) 1`] = `
 
 ## Framework Patterns
 
-**Unexamined:** Framework-specific patterns (see context/setup/framework-snippets/generic.md)
+**Unexamined:** No framework detected
 
 ---
 
@@ -166,7 +166,7 @@ exports[`patterns.md scaffold > rich FastAPI project with 5 patterns 1`] = `
 
 ## Framework Patterns
 
-**Unexamined:** Framework-specific patterns (see context/setup/framework-snippets/fastapi.md)
+**Unexamined:** Framework-specific patterns for FastAPI
 
 ---
 

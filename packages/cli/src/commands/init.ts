@@ -36,18 +36,13 @@
  *   │   ├── ana-plan.md           (spec generator)
  *   │   ├── ana-setup.md          (interactive setup orchestrator)
  *   │   ├── ana-build.md          (builder agent)
- *   │   ├── ana-verify.md         (quality gate agent)
- *   │   ├── ana-explorer.md       (codebase scanner)
- *   │   ├── ana-question-formulator.md
- *   │   ├── ana-writer.md         (context file writer)
- *   │   └── ana-verifier.md       (citation verifier)
+ *   │   └── ana-verify.md         (quality gate agent)
  *   └── skills/
  *       ├── testing-standards/SKILL.md
  *       ├── coding-standards/SKILL.md
  *       ├── git-workflow/SKILL.md
  *       ├── deployment/SKILL.md
- *       ├── design-principles/SKILL.md
- *       └── logging-standards/SKILL.md
+ *       └── troubleshooting/SKILL.md
  *
  *   CLAUDE.md                     (project entry point)
  */
@@ -74,8 +69,6 @@ import {
 import { getProjectName } from '../utils/validators.js';
 import {
   MODE_FILES,
-  STEP_FILES,
-  FRAMEWORK_SNIPPETS,
   AGENT_FILES,
   SKILL_DIRS,
 } from '../constants.js';
@@ -371,9 +364,11 @@ function displayDetectionSummary(result: EngineResult): void {
  * - modes/
  * - context/
  * - context/setup/
- * - context/setup/steps/
- * - context/setup/framework-snippets/
+ * - docs/
+ * - plans/active/, plans/completed/
  * - state/
+ *
+ * Step files and framework-snippets directories removed (D10.9).
  *
  * @param tmpAnaPath - Path to temp .ana/ directory
  */
@@ -384,8 +379,6 @@ async function createDirectoryStructure(tmpAnaPath: string): Promise<void> {
   await fs.mkdir(path.join(tmpAnaPath, 'modes'), { recursive: true });
   await fs.mkdir(path.join(tmpAnaPath, 'context'), { recursive: true });
   await fs.mkdir(path.join(tmpAnaPath, 'context/setup'), { recursive: true });
-  await fs.mkdir(path.join(tmpAnaPath, 'context/setup/steps'), { recursive: true });
-  await fs.mkdir(path.join(tmpAnaPath, 'context/setup/framework-snippets'), { recursive: true });
   await fs.mkdir(path.join(tmpAnaPath, 'docs'), { recursive: true });
   await fs.mkdir(path.join(tmpAnaPath, 'plans/active'), { recursive: true });
   await fs.mkdir(path.join(tmpAnaPath, 'plans/completed'), { recursive: true });
@@ -480,12 +473,11 @@ async function getCliVersion(): Promise<string> {
 /**
  * Phase 6: Copy static files with SHA-256 verification
  *
- * Copies 28 static template files from CLI templates/ to .ana/:
- * - 10 mode files
- * - 3 setup files (SETUP_GUIDE.md, templates.md, rules.md)
- * - 8 step files
- * - 6 framework-snippets
+ * Copies static template files from CLI templates/ to .ana/:
+ * - 9 mode files
  * - 1 SCHEMAS.md
+ *
+ * Step files, framework-snippets, templates.md, SETUP_GUIDE.md, rules.md removed (D10.9).
  *
  * Each file verified with SHA-256 hash after copy.
  *
@@ -496,38 +488,11 @@ async function copyStaticFilesWithVerification(tmpAnaPath: string): Promise<void
 
   const templatesDir = getTemplatesDir();
 
-  // 10 mode files
+  // 9 mode files
   for (const file of MODE_FILES) {
     const sourcePath = path.join(templatesDir, 'modes', file);
     const destPath = path.join(tmpAnaPath, 'modes', file);
     await copyAndVerifyFile(sourcePath, destPath, `modes/${file}`);
-  }
-
-  // 3 setup files
-  const setupFiles = [
-    { source: 'context/setup/SETUP_GUIDE.md', dest: 'context/setup/SETUP_GUIDE.md' },
-    { source: 'context/setup/templates.md', dest: 'context/setup/templates.md' },
-    { source: 'context/setup/rules.md', dest: 'context/setup/rules.md' },
-  ];
-
-  for (const file of setupFiles) {
-    const sourcePath = path.join(templatesDir, file.source);
-    const destPath = path.join(tmpAnaPath, file.dest);
-    await copyAndVerifyFile(sourcePath, destPath, file.source);
-  }
-
-  // 8 step files
-  for (const file of STEP_FILES) {
-    const sourcePath = path.join(templatesDir, 'context/setup/steps', file);
-    const destPath = path.join(tmpAnaPath, 'context/setup/steps', file);
-    await copyAndVerifyFile(sourcePath, destPath, `context/setup/steps/${file}`);
-  }
-
-  // 6 framework-snippets
-  for (const file of FRAMEWORK_SNIPPETS) {
-    const sourcePath = path.join(templatesDir, 'context/setup/framework-snippets', file);
-    const destPath = path.join(tmpAnaPath, 'context/setup/framework-snippets', file);
-    await copyAndVerifyFile(sourcePath, destPath, `context/setup/framework-snippets/${file}`);
   }
 
   // SCHEMAS.md
@@ -535,7 +500,7 @@ async function copyStaticFilesWithVerification(tmpAnaPath: string): Promise<void
   const schemasDest = path.join(tmpAnaPath, 'docs/SCHEMAS.md');
   await copyAndVerifyFile(schemasSource, schemasDest, '.ana/docs/SCHEMAS.md');
 
-  spinner.succeed('Copied and verified 28 static files');
+  spinner.succeed('Copied static files');
 }
 
 /**
@@ -826,17 +791,8 @@ async function seedSkillFiles(skillsDir: string, result: EngineResult): Promise<
   if (result.commands?.build) deployLines.push(`- Build command: \`${result.commands.build}\``);
   if (deployLines.length > 0) seeds['deployment'] = deployLines;
 
-  // logging-standards
-  const loggingLines: string[] = [];
-  const monitoringServices = result.externalServices?.filter(s =>
-    s.category === 'monitoring' || s.category === 'observability' || s.category === 'analytics'
-  ) || [];
-  for (const svc of monitoringServices) {
-    loggingLines.push(`- ${svc.category}: ${svc.name}${svc.configFound ? ' (config found)' : ''}`);
-  }
-  if (loggingLines.length > 0) seeds['logging-standards'] = loggingLines;
-
-  // design-principles — skip entirely (100% human philosophy)
+  // design-principles — moved to context file (D6.7), no longer a skill
+  // logging-standards — removed, folded into coding-standards (D6.1)
 
   // Inject ## Detected sections
   for (const [skillName, lines] of Object.entries(seeds)) {
@@ -844,16 +800,29 @@ async function seedSkillFiles(skillsDir: string, result: EngineResult): Promise<
     try {
       let content = await fs.readFile(filePath, 'utf-8');
 
-      // Skip if already seeded (prevent duplicate ## Detected on reinit)
-      if (content.includes('## Detected')) continue;
+      // If template has ## Detected placeholder, replace it with seeded content
+      // If already seeded (has real content after ## Detected), skip
+      const detectedIdx = content.indexOf('## Detected');
+      if (detectedIdx !== -1) {
+        // Find what follows ## Detected — if it's only an HTML comment or blank, replace it
+        const nextSection = content.indexOf('\n## ', detectedIdx + 11);
+        const betweenContent = nextSection !== -1
+          ? content.slice(detectedIdx + 11, nextSection).trim()
+          : content.slice(detectedIdx + 11).trim();
+        // Skip if already has real content (not just HTML comment)
+        if (betweenContent && !betweenContent.startsWith('<!--')) continue;
 
-      const detectedSection = `\n## Detected\n${lines.join('\n')}\n`;
-
-      // Find end of YAML frontmatter (second ---)
-      const fmEnd = content.indexOf('---', content.indexOf('---') + 3);
-      if (fmEnd !== -1) {
-        const insertPos = content.indexOf('\n', fmEnd) + 1;
-        content = content.slice(0, insertPos) + detectedSection + content.slice(insertPos);
+        // Replace the placeholder section
+        const endOfDetected = nextSection !== -1 ? nextSection : content.length;
+        content = content.slice(0, detectedIdx) + `## Detected\n${lines.join('\n')}\n` + content.slice(endOfDetected);
+      } else {
+        // Legacy templates without ## Detected: inject after frontmatter
+        const detectedSection = `\n## Detected\n${lines.join('\n')}\n`;
+        const fmEnd = content.indexOf('---', content.indexOf('---') + 3);
+        if (fmEnd !== -1) {
+          const insertPos = content.indexOf('\n', fmEnd) + 1;
+          content = content.slice(0, insertPos) + detectedSection + content.slice(insertPos);
+        }
       }
 
       // For testing-standards: replace commented Commands section with real commands

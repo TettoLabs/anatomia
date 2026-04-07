@@ -1,22 +1,21 @@
 ---
 name: deployment
-description: "Team deployment and release standards. Invoke after verification passes to merge and promote changes."
+description: "Invoke when working on deployment configuration, CI/CD pipelines, environment variables, or release processes. Contains project-specific deploy platform conventions."
 ---
 
-# Deployment Standards
+# Deployment
 
-## After Verify Passes
-<!-- Merge strategy, CI verification, branch cleanup -->
+## Detected
+<!-- Populated by scan during init. Do not edit manually. -->
 
-## Publishing / Releasing
-<!-- How releases happen, who decides, manual vs automated -->
+## Rules
 
-## Moving to Complete
-After merge and any releasing:
-```bash
-ana work complete {slug}
-```
-This archives the work and cleans up the feature branch.
+- Environment variables via platform config or `.env` files — never hardcode secrets or config values.
+- Preview deploys on pull requests when the platform supports it.
+- Production deploys only from the default branch.
 
-## If Something Breaks After Merge
-<!-- Revert strategy, how fixes re-enter the pipeline -->
+## Gotchas
+<!-- Starts empty. Add failure modes as you discover them. -->
+
+## Examples
+<!-- Optional. Add short snippets showing the RIGHT way. -->

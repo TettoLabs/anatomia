@@ -46,14 +46,12 @@ describe('ana init E2E', () => {
 
     const anaPath = path.join(tmpProject, '.ana');
 
-    // Verify directories (10 including new docs/ and plans/)
+    // Verify directories (8 — steps/ and framework-snippets/ removed D10.9)
     const dirs = [
       'modes',
       'hooks',
       'context',
       'context/setup',
-      'context/setup/steps',
-      'context/setup/framework-snippets',
       'docs',
       'plans/active',
       'plans/completed',
@@ -140,9 +138,10 @@ describe('ana init E2E', () => {
     expect(snapshotExists).toBe(true);
 
     // Count total files in .ana/
-    // 7 generated + 9 modes + 3 setup + 8 steps + 6 snippets + 4 hooks + 1 SCHEMAS + 2 .gitkeep + 3 JSON (ana.json, snapshot.json, scan.json) + 1 symbol-index + 1 cli-path + 1 .gitignore = 46
+    // 7 generated + 9 modes + 4 hooks + 1 SCHEMAS + 2 .gitkeep + 3 JSON (ana.json, snapshot.json, scan.json) + 1 symbol-index + 1 cli-path + 1 .gitignore = 29
+    // (step files, framework-snippets, templates.md, SETUP_GUIDE, rules.md removed — D10.9)
     const allFiles = await findAllFiles(anaPath);
-    expect(allFiles.length).toBe(46);
+    expect(allFiles.length).toBe(29);
 
     // Verify .gitignore exists and excludes runtime state
     const gitignorePath = path.join(anaPath, '.gitignore');
@@ -163,17 +162,13 @@ describe('ana init E2E', () => {
     const agentsExists = await dirExists(path.join(claudePath, 'agents'));
     expect(agentsExists).toBe(true);
 
-    // Verify all 9 agent files exist
+    // Verify all 5 agent files exist
     const agentFiles = [
       'ana.md',
       'ana-plan.md',
       'ana-setup.md',
       'ana-build.md',
       'ana-verify.md',
-      'ana-explorer.md',
-      'ana-question-formulator.md',
-      'ana-writer.md',
-      'ana-verifier.md',
     ];
 
     for (const agentFile of agentFiles) {
@@ -190,8 +185,6 @@ describe('ana init E2E', () => {
       'coding-standards',
       'git-workflow',
       'deployment',
-      'design-principles',
-      'logging-standards',
     ];
 
     for (const skillDir of skillDirs) {
