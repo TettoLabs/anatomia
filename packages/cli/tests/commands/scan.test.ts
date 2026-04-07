@@ -387,13 +387,14 @@ describe('ana scan', () => {
   });
 
   describe('footer CTA (AC11)', () => {
-    it('displays init prompt in footer', async () => {
+    it('displays dynamic CTA in funnel context (no .ana/)', async () => {
       await createTestFiles({
         'package.json': '{}',
       });
 
       const { stdout } = runScan([tempDir]);
-      expect(stdout).toContain('Run `ana init` to generate full context for your AI.');
+      // Funnel context (no .ana/) — dynamic CTA based on findings count
+      expect(stdout).toContain('ana init');
     });
   });
 
@@ -403,8 +404,11 @@ describe('ana scan', () => {
         'package.json': '{"name":"test"}',
         'index.ts': 'export const x = 1;',
       });
+      // --save requires .ana/ to exist and cannot combine with path arg
+      fsSync.mkdirSync(path.join(tempDir, '.ana'), { recursive: true });
+      process.chdir(tempDir);
 
-      const { stdout, exitCode } = runScan([tempDir, '--save']);
+      const { stdout, exitCode } = runScan(['--save']);
       expect(exitCode).toBe(0);
       expect(stdout).toContain('Scan saved to .ana/scan.json');
 
@@ -434,21 +438,71 @@ describe('ana scan', () => {
       expect(fsSync.existsSync(scanJsonPath)).toBe(false);
     });
 
-    it('creates .ana directory if it does not exist', async () => {
+    it('errors when .ana directory does not exist', async () => {
       await createTestFiles({
         'package.json': '{"name":"test"}',
       });
 
-      // Verify .ana doesn't exist yet
+      // Verify .ana doesn't exist
       const anaDir = path.join(tempDir, '.ana');
       expect(fsSync.existsSync(anaDir)).toBe(false);
+      process.chdir(tempDir);
 
-      const { exitCode } = runScan([tempDir, '--save']);
+      const { stderr, exitCode } = runScan(['--save']);
+      expect(exitCode).toBe(1);
+      expect(stderr).toContain('No .ana/ directory found');
+    });
+  });
+
+  describe('--quiet flag', () => {
+    it('produces no stdout when --quiet used alone', async () => {
+      await createTestFiles({
+        'package.json': '{}',
+      });
+
+      const { stdout, exitCode } = runScan([tempDir, '--quiet']);
       expect(exitCode).toBe(0);
+      expect(stdout.trim()).toBe('');
+    });
 
-      // Verify .ana was created and scan.json written
-      expect(fsSync.existsSync(anaDir)).toBe(true);
-      expect(fsSync.existsSync(path.join(anaDir, 'scan.json'))).toBe(true);
+    it('still produces JSON when --quiet --json combined', async () => {
+      await createTestFiles({
+        'package.json': '{}',
+      });
+
+      const { stdout, exitCode } = runScan([tempDir, '--quiet', '--json']);
+      expect(exitCode).toBe(0);
+      const parsed = JSON.parse(stdout);
+      expect(parsed.overview).toBeDefined();
+      expect(parsed.stack).toBeDefined();
+    });
+  });
+
+  describe('--quick flag', () => {
+    it('forces surface tier with patterns and conventions null', async () => {
+      await createTestFiles({
+        'package.json': '{}',
+      });
+
+      const { stdout, exitCode } = runScan([tempDir, '--quick', '--json']);
+      expect(exitCode).toBe(0);
+      const parsed = JSON.parse(stdout);
+      expect(parsed.overview.depth).toBe('surface');
+      expect(parsed.patterns).toBeNull();
+      expect(parsed.conventions).toBeNull();
+    });
+  });
+
+  describe('path + --save guard', () => {
+    it('errors when path and --save combined', async () => {
+      await createTestFiles({
+        'package.json': '{}',
+      });
+
+      const { stderr, exitCode } = runScan([tempDir, '--save']);
+      // tempDir !== '.' so this should trigger path+save guard
+      expect(exitCode).toBe(1);
+      expect(stderr).toContain('Cannot combine path argument with --save');
     });
   });
 

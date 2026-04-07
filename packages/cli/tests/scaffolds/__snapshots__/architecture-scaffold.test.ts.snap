@@ -7,6 +7,7 @@ exports[`architecture.md scaffold > Node Express project with structure overflow
 
 ## Key Facts
 **Detected:** Express application
+**Detected:** Deploy: null (null)
 
 ## Open Questions
 **Unexamined:** What architecture pattern? (monolith, microservices, serverless, modular monolith)
@@ -26,6 +27,7 @@ exports[`architecture.md scaffold > empty result (scan failed) 1`] = `
 # Architecture — test-project
 
 ## Key Facts
+**Detected:** Deploy: null (null)
 
 ## Open Questions
 **Unexamined:** What architecture pattern? (monolith, microservices, serverless, modular monolith)
@@ -47,6 +49,7 @@ exports[`architecture.md scaffold > rich Python FastAPI project with structure e
 ## Key Facts
 **Detected:** FastAPI application
 **Detected:** Database: PostgreSQL
+**Detected:** Deploy: null (null)
 
 ## Open Questions
 **Unexamined:** What architecture pattern? (monolith, microservices, serverless, modular monolith)

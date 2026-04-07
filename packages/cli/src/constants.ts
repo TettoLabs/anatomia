@@ -30,12 +30,9 @@ export const CORE_SKILLS = [
 
 /**
  * Conditional skills — scaffolded only when scan detects the trigger (D6.1)
- *
- * Note: stack.aiSdk doesn't exist in EngineResult yet (D2 schema change pending).
- * Using (stack as any).aiSdk until the schema is updated in S13.
  */
 export const CONDITIONAL_SKILL_TRIGGERS: Record<string, (result: EngineResult) => boolean> = {
-  'ai-patterns': (r) => !!(r?.stack as Record<string, unknown>)?.aiSdk,
+  'ai-patterns': (r) => !!r?.stack?.aiSdk,
   'api-patterns': (r) => !!r?.stack?.framework,
   'data-access': (r) => !!r?.stack?.database,
 };
