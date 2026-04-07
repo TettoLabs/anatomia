@@ -79,15 +79,10 @@ export const PATTERN_CATEGORIES = [
   'testing',
 ] as const;
 
-/** Context files required for setup complete validation */
+/** Context files required for setup complete validation (S15: 7→2) */
 export const REQUIRED_CONTEXT_FILES = [
-  'context/project-overview.md',
-  'context/architecture.md',
-  'context/patterns.md',
-  'context/conventions.md',
-  'context/workflow.md',
-  'context/testing.md',
-  'context/debugging.md',
+  'context/project-context.md',
+  'context/design-principles.md',
 ] as const;
 
 /** Mode files */
@@ -113,13 +108,6 @@ export const AGENT_FILES = [
   'ana-verify.md',
 ] as const;
 
-/** Skill directories (each contains SKILL.md) */
-export const SKILL_DIRS = [
-  'testing-standards',
-  'coding-standards',
-  'git-workflow',
-  'deployment',
-] as const;
 
 /** Valid setupMode tiers */
 export const VALID_SETUP_TIERS = ['quick', 'guided'] as const;

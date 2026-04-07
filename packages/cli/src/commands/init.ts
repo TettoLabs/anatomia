@@ -12,13 +12,8 @@
  *   │   ├── run-check.sh
  *   │   └── subagent-verify.sh
  *   ├── context/
- *   │   ├── project-overview.md   (scaffold with 40% pre-pop)
- *   │   ├── architecture.md       (scaffold with 20% pre-pop)
- *   │   ├── patterns.md           (scaffold with 50% pre-pop)
- *   │   ├── conventions.md        (scaffold with 70% pre-pop)
- *   │   ├── workflow.md           (scaffold with 10% pre-pop)
- *   │   ├── testing.md            (scaffold with 50% pre-pop)
- *   │   ├── debugging.md          (scaffold with 5% pre-pop)
+ *   │   ├── project-context.md    (scan-seeded D6.6 scaffold)
+ *   │   ├── design-principles.md  (static human-content template)
  *   │   └── setup/                (setup files)
  *   ├── docs/
  *   │   └── SCHEMAS.md            (artifact schema reference)
@@ -55,34 +50,64 @@ import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
+import { createInterface } from 'node:readline';
+import { execSync } from 'node:child_process';
 import type { EngineResult } from '../engine/types/engineResult.js';
 
 import {
-  generateProjectOverviewScaffold,
-  generateArchitectureScaffold,
-  generatePatternsScaffold,
-  generateConventionsScaffold,
-  generateWorkflowScaffold,
-  generateTestingScaffold,
-  generateDebuggingScaffold,
+  generateProjectContextScaffold,
+  generateDesignPrinciplesTemplate,
 } from '../utils/scaffold-generators.js';
 import { getProjectName } from '../utils/validators.js';
 import {
   MODE_FILES,
   AGENT_FILES,
-  SKILL_DIRS,
+  computeSkillManifest,
 } from '../constants.js';
 import { buildSymbolIndex } from './symbol-index.js';
 
 /** Command options */
 interface InitCommandOptions {
   force?: boolean;
+  yes?: boolean;
 }
+
+/** Installation state detected during pre-scan validation */
+type InitState = 'fresh' | 'reinit' | 'upgrade' | 'corrupted';
 
 /** Pre-flight validation result */
 interface PreflightResult {
   canProceed: boolean;
+  initState: InitState;
   stateBackup?: string; // Path to state/ backup if --force used
+}
+
+/**
+ * Prompt user for confirmation
+ *
+ * If stdin is not a TTY (CI, piped input, test harness), returns the default
+ * without blocking. This prevents hangs in non-interactive environments.
+ *
+ * @param message - Message to display before the (Y/n) or (y/N) suffix
+ * @param defaultYes - If true, empty input means yes; if false, empty means no
+ * @returns true if user confirmed
+ */
+async function confirm(message: string, defaultYes: boolean): Promise<boolean> {
+  // Non-interactive (CI, piped input, test harness): proceed without blocking
+  if (!process.stdin.isTTY) {
+    return true;
+  }
+
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  const suffix = defaultYes ? '(Y/n)' : '(y/N)';
+  return new Promise((resolve) => {
+    rl.question(`${message} ${suffix} `, (answer) => {
+      rl.close();
+      const trimmed = answer.trim().toLowerCase();
+      if (trimmed === '') resolve(defaultYes);
+      else resolve(trimmed === 'y' || trimmed === 'yes');
+    });
+  });
 }
 
 /**
@@ -133,6 +158,7 @@ function createEmptyEngineResult(): EngineResult {
 export const initCommand = new Command('init')
   .description('Initialize .ana/ context framework')
   .option('-f, --force', 'Overwrite existing .ana/ (preserves state/)')
+  .option('-y, --yes', 'Skip confirmation prompts (non-interactive mode)')
   .action(async (options: InitCommandOptions, command: Command) => {
     // Reject positional arguments (init operates on cwd)
     if (command.args.length > 0) {
@@ -144,8 +170,8 @@ export const initCommand = new Command('init')
     const cwd = process.cwd();
     const anaPath = path.join(cwd, '.ana');
 
-    // Phase 1: Pre-flight checks
-    const preflight = await validateInitPreconditions(anaPath, options);
+    // Phase 1: Pre-scan validation (D7)
+    const preflight = await validateInitPreconditions(cwd, anaPath, options);
     if (!preflight.canProceed) {
       return; // Exit already handled in validation
     }
@@ -168,7 +194,7 @@ export const initCommand = new Command('init')
       // Reset cache override after analysis
       ASTCache.setCacheDir(null);
       await createDirectoryStructure(tmpAnaPath);
-      await generateScaffolds(tmpAnaPath, engineResult, cwd);
+      await generateScaffolds(tmpAnaPath, engineResult);
       await copyStaticFilesWithVerification(tmpAnaPath);
       await copyHookScripts(tmpAnaPath);
       await saveScanJson(tmpAnaPath, engineResult);
@@ -190,7 +216,7 @@ export const initCommand = new Command('init')
       await atomicRename(tmpAnaPath, anaPath);
 
       // Create .claude/ configuration (outside temp directory - handles merge)
-      await createClaudeConfiguration(cwd, engineResult);
+      await createClaudeConfiguration(cwd, engineResult, preflight.initState);
 
       // Display success
       const scanTime = ((Date.now() - scanStart) / 1000).toFixed(1);
@@ -209,24 +235,27 @@ export const initCommand = new Command('init')
   });
 
 /**
- * Phase 1: Pre-flight validation
+ * Phase 1: Pre-scan validation (D7)
  *
- * Checks:
- * - Directory exists and is readable
- * - .ana/ doesn't exist OR --force provided
- * - If --force: backup state/ for preservation
+ * Validates project environment before scanning:
+ * 7.1 — Project root detection
+ * 7.2 — Existing installation detection (fresh/reinit/upgrade/corrupted)
+ * 7.4 — Git validation (4 states)
+ * 7.5 — Package manager check
  *
+ * @param cwd - Current working directory
  * @param anaPath - Path to .ana/ directory
  * @param options - Command options
- * @returns Preflight result (canProceed + optional stateBackup path)
+ * @returns Preflight result (canProceed, initState, optional stateBackup path)
  */
 async function validateInitPreconditions(
+  cwd: string,
   anaPath: string,
   options: InitCommandOptions
 ): Promise<PreflightResult> {
-  const cwd = process.cwd();
+  const autoYes = options.yes || options.force;
 
-  // Check directory exists
+  // Check directory is readable/writable
   try {
     await fs.access(cwd, fs.constants.R_OK | fs.constants.W_OK);
   } catch {
@@ -235,62 +264,174 @@ async function validateInitPreconditions(
     process.exit(1);
   }
 
-  // Check if .ana/ exists
-  const anaExists = await dirExists(anaPath);
+  // 7.1 — Project root detection
+  const rootIndicators = ['package.json', 'go.mod', 'Cargo.toml', 'pyproject.toml', '.git'];
+  const hasRoot = await Promise.all(
+    rootIndicators.map(f => fileExists(path.join(cwd, f)))
+  ).then(results => results.some(Boolean));
 
-  if (!anaExists) {
-    // First run - proceed
-    return { canProceed: true };
+  if (!hasRoot) {
+    console.error(chalk.red('No project root detected in this directory.'));
+    console.error(chalk.gray("Run `ana init` from your project's root directory."));
+    process.exit(1);
   }
 
-  // .ana/ exists - check --force
-  if (!options.force) {
-    console.log(chalk.yellow('\n.ana/ directory already exists.\n'));
+  // 7.2 — Existing installation detection (4 states)
+  const anaExists = await dirExists(anaPath);
+  let initState: InitState = 'fresh';
+  let stateBackup: string | undefined;
 
-    // Check ana.json to provide better guidance
+  if (anaExists) {
     const anaJsonPath = path.join(anaPath, 'ana.json');
+    const cliVersion = await getCliVersion();
+
     try {
       const anaJsonContent = await fs.readFile(anaJsonPath, 'utf-8');
       const config = JSON.parse(anaJsonContent);
 
-      // Backward compat: pre-S11 projects have setupStatus instead of setupMode
-      if (config.setupMode === 'not_started' || config.setupStatus === 'pending') {
-        console.log('Setup is incomplete. Options:\n');
-        console.log('  1. Resume setup: `claude --agent ana-setup`');
-        console.log('  2. Start over: ana init --force\n');
-      } else if ((config.setupMode && config.setupMode !== 'not_started') || config.setupStatus === 'complete') {
-        console.log('Framework already set up. Options:\n');
-        console.log('  1. Keep current: Do nothing');
-        console.log('  2. Recreate: ana init --force (preserves state/)\n');
+      if (config.anaVersion && config.anaVersion !== cliVersion) {
+        // Upgrade: version mismatch
+        initState = 'upgrade';
+        console.log(`\nAnatomia installation detected (v${config.anaVersion}).`);
+        console.log(`Current CLI version: v${cliVersion}.\n`);
+        console.log('Re-initializing will update scan data and skill detection.');
+        console.log('Your confirmed rules, gotchas, and context files are preserved.\n');
+
+        if (!autoYes) {
+          const proceed = await confirm('Continue?', true);
+          if (!proceed) { process.exit(0); }
+        }
+      } else {
+        // Re-init: same version (or no anaVersion field yet)
+        initState = 'reinit';
+        console.log('\nExisting Anatomia installation detected.\n');
+        console.log('This will:');
+        console.log('  ✓ Refresh scan data');
+        console.log('  ✓ Update skill ## Detected sections');
+        console.log('  ✓ Add new skills if stack changes detected');
+        console.log('  ✗ Will NOT touch your confirmed rules, gotchas, or context files\n');
+
+        if (!autoYes) {
+          const proceed = await confirm('Continue?', true);
+          if (!proceed) { process.exit(0); }
+        }
       }
     } catch {
-      // ana.json missing or corrupted
-      console.log('Use --force to overwrite.\n');
+      // Corrupted: .ana/ exists but no valid ana.json
+      initState = 'corrupted';
+      console.log(chalk.yellow('\nFound .ana/ directory but no valid ana.json.'));
+      console.log('Treating as fresh initialization. Existing files may be overwritten.\n');
+
+      if (!autoYes) {
+        const proceed = await confirm('Continue?', true);
+        if (!proceed) { process.exit(0); }
+      }
     }
 
-    process.exit(0);
+    // Backup state/ before deletion for reinit/upgrade/corrupted
+    const statePath = path.join(anaPath, 'state');
+    if (await dirExists(statePath)) {
+      const timestamp = Date.now();
+      stateBackup = path.join(os.tmpdir(), `.ana-state-backup-${timestamp}`);
+      console.log(chalk.gray('Backing up state/ directory...'));
+      await fs.cp(statePath, stateBackup, { recursive: true });
+    }
+
+    // Delete existing .ana/
+    console.log(chalk.gray('Removing existing .ana/...'));
+    await fs.rm(anaPath, { recursive: true, force: true });
   }
 
-  // --force provided: backup state/ before deletion
-  const statePath = path.join(anaPath, 'state');
-  let stateBackup: string | undefined;
+  // 7.4 — Git validation (4 states)
+  const hasGit = await dirExists(path.join(cwd, '.git'));
 
-  if (await dirExists(statePath)) {
-    const timestamp = Date.now();
-    stateBackup = path.join(os.tmpdir(), `.ana-state-backup-${timestamp}`);
+  if (!hasGit) {
+    // No git at all — strong warning, default NO
+    console.log(chalk.yellow('\n⚠ No git repository detected.\n'));
+    console.log("Anatomia's pipeline requires git for:");
+    console.log('  • Feature branching (ana work start)');
+    console.log('  • Artifact commits (ana artifact save)');
+    console.log('  • Pull requests (ana pr create)');
+    console.log('  • Proof chain tracking\n');
+    console.log('Init will continue but pipeline commands will not function.');
+    console.log('Scan, skills, and context files will still work.\n');
 
-    console.log(chalk.gray('Backing up state/ directory...'));
-    await fs.cp(statePath, stateBackup, { recursive: true });
+    if (!autoYes) {
+      const proceed = await confirm('Initialize without git?', false);
+      if (!proceed) { process.exit(0); }
+    }
+  } else {
+    // Git exists — check remote and commits
+    try {
+      const hasCommits = gitHasCommits(cwd);
+      const hasRemote = gitHasRemote(cwd);
+
+      if (hasCommits && !hasRemote) {
+        console.log(chalk.blue('ℹ No remote detected. artifactBranch will use local branch names. ana pr create won\'t function until a remote is added.'));
+      } else if (!hasCommits) {
+        console.log(chalk.yellow('⚠ Empty git repository. Some scan data will be limited. Commit at least once before running the pipeline.'));
+      }
+      // Git + remote + commits = happy path, proceed silently
+    } catch {
+      // Git check failed — proceed with warning
+      console.log(chalk.yellow('⚠ Git validation failed. Proceeding with limited git detection.'));
+    }
   }
 
-  // Delete existing .ana/
-  console.log(chalk.gray('Removing existing .ana/...'));
-  await fs.rm(anaPath, { recursive: true, force: true });
+  // 7.5 — Package manager check
+  const hasPackageJson = await fileExists(path.join(cwd, 'package.json'));
+  const hasGoMod = await fileExists(path.join(cwd, 'go.mod'));
+  const hasCargo = await fileExists(path.join(cwd, 'Cargo.toml'));
+  const hasPyproject = await fileExists(path.join(cwd, 'pyproject.toml'));
+  const hasPackageManifest = hasPackageJson || hasGoMod || hasCargo || hasPyproject;
+
+  if (!hasPackageManifest) {
+    console.log(chalk.yellow('⚠ No package.json (or equivalent) found. Stack detection will be limited.'));
+  } else if (hasPackageJson) {
+    const hasNodeModules = await dirExists(path.join(cwd, 'node_modules'));
+    if (!hasNodeModules) {
+      // Detect package manager for the message
+      let pkgMgr = 'npm';
+      if (await fileExists(path.join(cwd, 'pnpm-lock.yaml'))) pkgMgr = 'pnpm';
+      else if (await fileExists(path.join(cwd, 'yarn.lock'))) pkgMgr = 'yarn';
+      else if (await fileExists(path.join(cwd, 'bun.lockb'))) pkgMgr = 'bun';
+      console.log(chalk.blue(`ℹ Dependencies not installed. Scan will use surface-tier analysis. Run ${pkgMgr} install for deeper detection.`));
+    }
+  }
 
   return {
     canProceed: true,
+    initState,
     stateBackup,
   };
+}
+
+/**
+ * Check if git repository has any commits
+ * @param cwd - Working directory
+ * @returns true if HEAD exists (has commits)
+ */
+function gitHasCommits(cwd: string): boolean {
+  try {
+    execSync('git rev-parse --verify HEAD', { cwd, stdio: 'pipe' });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Check if git repository has a remote configured
+ * @param cwd - Working directory
+ * @returns true if at least one remote exists
+ */
+function gitHasRemote(cwd: string): boolean {
+  try {
+    const output = execSync('git remote', { cwd, stdio: 'pipe', encoding: 'utf-8' });
+    return output.trim().length > 0;
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -343,27 +484,47 @@ async function runAnalyzer(
 }
 
 /**
- * Display detection summary after analysis
- * @param result
+ * Display scan progress after analysis (D7.6)
+ *
+ * Shows incremental detection results. Null values skipped.
+ *
+ * @param result - Engine result from scan
  */
 function displayDetectionSummary(result: EngineResult): void {
   console.log();
 
   // Stack
-  const stackParts = [result.stack.language, result.stack.framework, result.stack.database, result.stack.auth, result.stack.testing].filter(Boolean);
+  const stackParts = [result.stack.language, result.commands.packageManager, result.stack.testing].filter(Boolean);
   if (stackParts.length > 0) {
-    console.log(chalk.bold('  Stack: ') + chalk.cyan(stackParts.join(' · ')));
+    console.log(chalk.green('  ✓ Stack: ') + stackParts.join(' · '));
+  }
+
+  // Files
+  if (result.files.source > 0 || result.files.test > 0) {
+    console.log(chalk.green('  ✓ Files: ') + `${result.files.source} source, ${result.files.test} tests`);
+  }
+
+  // Git
+  const gitParts: string[] = [];
+  if (result.git.defaultBranch) gitParts.push(`${result.git.defaultBranch} branch`);
+  if (result.git.commitCount !== null) gitParts.push(`${result.git.commitCount} commits`);
+  if (result.git.contributorCount !== null) gitParts.push(`${result.git.contributorCount} contributors`);
+  if (gitParts.length > 0) {
+    console.log(chalk.green('  ✓ Git: ') + gitParts.join(', '));
+  }
+
+  // Patterns
+  if (result.patterns) {
+    const categories = ['errorHandling', 'validation', 'database', 'auth', 'testing'] as const;
+    const detected = categories.filter(c => result.patterns?.[c] != null).length;
+    const depth = result.overview.depth === 'deep' ? 'deep scan' : 'surface tier';
+    console.log(chalk.green('  ✓ Patterns: ') + `${detected} detected (${depth})`);
   }
 
   // Services
   if (result.externalServices.length > 0) {
     const names = result.externalServices.map(s => s.name).join(', ');
-    console.log(chalk.bold('  Services: ') + names);
-  }
-
-  // Deployment
-  if (result.deployment) {
-    console.log(chalk.bold('  Deploy: ') + result.deployment.platform);
+    console.log(chalk.green('  ✓ Services: ') + names);
   }
 
   console.log();
@@ -415,50 +576,33 @@ state/
 }
 
 /**
- * Phase 5: Generate scaffolds
+ * Phase 5: Generate context scaffolds (D8.3 — consolidated 7→2)
  *
- * Calls all 7 scaffold generators and writes files.
+ * Writes 2 context files:
+ * - project-context.md: scan-seeded D6.6 format with 6 sections
+ * - design-principles.md: static human-content template
  *
  * @param tmpAnaPath - Temp .ana/ path
  * @param engineResult - Engine result or null
- * @param cwd - Project root (for projectName)
  */
 async function generateScaffolds(
   tmpAnaPath: string,
   engineResult: EngineResult | null,
-  cwd: string
 ): Promise<void> {
-  const spinner = ora('Generating scaffolds...').start();
+  const spinner = ora('Generating context scaffolds...').start();
 
   // Use empty result if analyzer failed
   const analysis = engineResult || createEmptyEngineResult();
 
-  // Get metadata
-  const projectName = await getProjectName(cwd);
-  const timestamp = new Date().toISOString();
-  const version = await getCliVersion();
+  // Generate 2 context files
+  const projectContext = generateProjectContextScaffold(analysis);
+  const designPrinciples = generateDesignPrinciplesTemplate();
 
-  // Generate all 7 scaffolds
-  const scaffolds = [
-    { name: 'project-overview.md', generator: generateProjectOverviewScaffold },
-    { name: 'architecture.md', generator: generateArchitectureScaffold },
-    { name: 'patterns.md', generator: generatePatternsScaffold },
-    { name: 'conventions.md', generator: generateConventionsScaffold },
-    { name: 'workflow.md', generator: generateWorkflowScaffold },
-    { name: 'testing.md', generator: generateTestingScaffold },
-    { name: 'debugging.md', generator: generateDebuggingScaffold },
-  ];
+  await fs.writeFile(path.join(tmpAnaPath, 'context', 'project-context.md'), projectContext, 'utf-8');
+  await fs.writeFile(path.join(tmpAnaPath, 'context', 'design-principles.md'), designPrinciples, 'utf-8');
 
-  let totalLines = 0;
-
-  for (const scaffold of scaffolds) {
-    const content = scaffold.generator(analysis, projectName, timestamp, version);
-    const filePath = path.join(tmpAnaPath, 'context', scaffold.name);
-    await fs.writeFile(filePath, content, 'utf-8');
-    totalLines += content.split('\n').length;
-  }
-
-  spinner.succeed(`Generated 7 scaffolds (${totalLines} lines total)`);
+  const totalLines = projectContext.split('\n').length + designPrinciples.split('\n').length;
+  spinner.succeed(`Generated 2 context scaffolds (${totalLines} lines total)`);
 }
 
 /**
@@ -595,8 +739,9 @@ async function copyHookScripts(tmpAnaPath: string): Promise<void> {
  *
  * @param cwd - Project root directory
  * @param engineResult - Engine result for skill seeding (null if skipped)
+ * @param initState - Installation state from pre-scan validation
  */
-async function createClaudeConfiguration(cwd: string, engineResult: EngineResult | null): Promise<void> {
+async function createClaudeConfiguration(cwd: string, engineResult: EngineResult | null, initState: InitState): Promise<void> {
   const spinner = ora('Creating .claude/ configuration...').start();
 
   const claudePath = path.join(cwd, '.claude');
@@ -622,13 +767,8 @@ async function createClaudeConfiguration(cwd: string, engineResult: EngineResult
     // Copy all agent files
     await copyAgentFiles(agentsPath, templatesDir);
 
-    // Copy all skill files
-    await copySkillFiles(skillsPath, templatesDir);
-
-    // Seed skills with detected data
-    if (engineResult) {
-      await seedSkillFiles(skillsPath, engineResult);
-    }
+    // Copy and seed skill files (dynamic manifest)
+    await scaffoldAndSeedSkills(skillsPath, templatesDir, engineResult, 'fresh');
 
     // Copy CLAUDE.md to project root
     await copyClaudeMd(cwd, templatesDir);
@@ -674,13 +814,8 @@ async function createClaudeConfiguration(cwd: string, engineResult: EngineResult
   // Copy agent files (merge-not-overwrite)
   await copyAgentFiles(agentsPath, templatesDir);
 
-  // Copy skill files (merge-not-overwrite)
-  await copySkillFiles(skillsPath, templatesDir);
-
-  // Seed skills with detected data
-  if (engineResult) {
-    await seedSkillFiles(skillsPath, engineResult);
-  }
+  // Copy and seed skill files (dynamic manifest, re-init aware)
+  await scaffoldAndSeedSkills(skillsPath, templatesDir, engineResult, initState);
 
   // Copy CLAUDE.md to project root (merge-not-overwrite)
   await copyClaudeMd(cwd, templatesDir);
@@ -715,148 +850,191 @@ async function copyAgentFiles(agentsPath: string, templatesDir: string): Promise
 }
 
 /**
- * Copy skill files to .claude/skills/
+ * Scaffold and seed skill files using dynamic manifest (D8.2, D8.9)
  *
- * Copies skill definition files from templates without overwriting existing ones.
- * Each skill lives in its own directory with a SKILL.md file.
+ * Uses computeSkillManifest() to determine which skills to scaffold.
+ * Fresh init: copy template + inject Detected.
+ * Re-init: read existing file, REPLACE ## Detected section, preserve human content.
+ * Custom user skills (not in manifest) are never touched.
  *
  * @param skillsPath - Path to .claude/skills/ directory
  * @param templatesDir - Path to CLI templates directory
+ * @param engineResult - Engine result for skill seeding (null if skipped)
+ * @param initState - Installation state (fresh/reinit/upgrade/corrupted)
  */
-async function copySkillFiles(skillsPath: string, templatesDir: string): Promise<void> {
-  for (const skillDir of SKILL_DIRS) {
-    const destDir = path.join(skillsPath, skillDir);
-    const destPath = path.join(destDir, 'SKILL.md');
+async function scaffoldAndSeedSkills(
+  skillsPath: string,
+  templatesDir: string,
+  engineResult: EngineResult | null,
+  initState: InitState
+): Promise<void> {
+  const analysis = engineResult || createEmptyEngineResult();
+  const skillsToScaffold = computeSkillManifest(analysis);
+  const isReinit = initState === 'reinit' || initState === 'upgrade';
 
-    // Check if file already exists (don't overwrite)
-    const exists = await fileExists(destPath);
-    if (exists) {
-      // Skip - don't overwrite existing skill files
+  for (const skillName of skillsToScaffold) {
+    const destDir = path.join(skillsPath, skillName);
+    const destPath = path.join(destDir, 'SKILL.md');
+    const sourcePath = path.join(templatesDir, '.claude/skills', skillName, 'SKILL.md');
+
+    // Check if template exists
+    const templateExists = await fileExists(sourcePath);
+    if (!templateExists) continue;
+
+    const existingSkill = await fileExists(destPath);
+
+    let content: string;
+    if (existingSkill && isReinit) {
+      // Re-init: read existing file, REPLACE ## Detected only
+      content = await fs.readFile(destPath, 'utf-8');
+    } else if (existingSkill) {
+      // Fresh/corrupted but file exists (from prior .claude/ that wasn't deleted) — skip
       continue;
+    } else {
+      // New skill: copy from template
+      await fs.mkdir(destDir, { recursive: true });
+      content = await fs.readFile(sourcePath, 'utf-8');
     }
 
-    // Create skill directory
-    await fs.mkdir(destDir, { recursive: true });
+    // Inject Detected content
+    if (engineResult) {
+      const injector = SKILL_INJECTORS[skillName];
+      if (injector) {
+        const detectedContent = injector(engineResult);
+        content = replaceDetectedSection(content, detectedContent);
+      }
+    }
 
-    // Copy with verification
-    const sourcePath = path.join(templatesDir, '.claude/skills', skillDir, 'SKILL.md');
-    await copyAndVerifyFile(sourcePath, destPath, `.claude/skills/${skillDir}/SKILL.md`);
+    await fs.writeFile(destPath, content, 'utf-8');
   }
 }
 
-/**
- * Seed skill files with detected data from EngineResult
- *
- * Reads each copied skill template, injects a ## Detected section
- * below the YAML frontmatter, writes back. Only enriches, never creates.
- *
- * @param skillsDir - Path to .claude/skills/ directory
- * @param result - EngineResult from engine
- */
-async function seedSkillFiles(skillsDir: string, result: EngineResult): Promise<void> {
-  const seeds: Record<string, string[]> = {};
+// ============================================================
+// Skill Detected Injection (D6.5, D8.2)
+// ============================================================
 
-  // coding-standards
-  const codingLines: string[] = [];
-  if (result.stack?.language) {
-    codingLines.push(`- Language: ${result.stack.language}${result.stack.framework ? ` with ${result.stack.framework}` : ''}`);
+type DetectedInjector = (result: EngineResult) => string;
+
+const SKILL_INJECTORS: Record<string, DetectedInjector> = {
+  'coding-standards': injectCodingStandards,
+  'testing-standards': injectTestingStandards,
+  'git-workflow': injectGitWorkflow,
+  'deployment': injectDeployment,
+  'troubleshooting': () => '',
+  'ai-patterns': injectAiPatterns,
+  'api-patterns': injectApiPatterns,
+  'data-access': injectDataAccess,
+};
+
+function injectCodingStandards(result: EngineResult): string {
+  const lines: string[] = [];
+  if (result.stack.language) {
+    lines.push(`- Language: ${result.stack.language}${result.stack.framework ? ` with ${result.stack.framework}` : ''}`);
   }
-  if (result.conventions?.naming?.functions) {
-    const f = result.conventions.naming.functions;
-    codingLines.push(`- Functions: ${f.majority}${f.confidence ? ` (${(f.confidence * 100).toFixed(0)}% confidence)` : ''}`);
-  }
-  if (result.conventions?.naming?.files) {
-    codingLines.push(`- Files: ${result.conventions.naming.files.majority}`);
-  }
-  if (result.conventions?.imports) {
-    codingLines.push(`- Imports: ${result.conventions.imports.style}`);
-  }
-  if (result.conventions?.indentation) {
-    const i = result.conventions.indentation;
-    codingLines.push(`- Indentation: ${i.width ? `${i.width} ` : ''}${i.style}`);
-  }
-  if (result.patterns?.validation && !('patterns' in result.patterns.validation)) {
-    codingLines.push(`- Validation: ${result.patterns.validation.library}`);
-  }
-  if (codingLines.length > 0) seeds['coding-standards'] = codingLines;
-
-  // testing-standards
-  const testingLines: string[] = [];
-  if (result.stack?.testing) testingLines.push(`- Framework: ${result.stack.testing}`);
-  if (result.commands?.test) testingLines.push(`- Test command: \`${result.commands.test}\``);
-  if (result.files?.test !== undefined) testingLines.push(`- Test files: ${result.files.test}`);
-  if (testingLines.length > 0) seeds['testing-standards'] = testingLines;
-
-  // git-workflow
-  const gitLines: string[] = [];
-  if (result.git?.branch) gitLines.push(`- Default branch: ${result.git.branch}`);
-  if (result.git?.commitCount) gitLines.push(`- Commits: ${result.git.commitCount}`);
-  if (result.git?.contributorCount) gitLines.push(`- Contributors: ${result.git.contributorCount}`);
-  gitLines.push('- Co-author: read from `ana.json` coAuthor field');
-  if (gitLines.length > 1) seeds['git-workflow'] = gitLines; // more than just coAuthor line
-
-  // deployment
-  const deployLines: string[] = [];
-  if (result.deployment.platform) {
-    deployLines.push(`- Platform: ${result.deployment.platform}${result.deployment.configFile ? ` (${result.deployment.configFile})` : ''}`);
-  }
-  if (result.commands?.build) deployLines.push(`- Build command: \`${result.commands.build}\``);
-  if (deployLines.length > 0) seeds['deployment'] = deployLines;
-
-  // design-principles — moved to context file (D6.7), no longer a skill
-  // logging-standards — removed, folded into coding-standards (D6.1)
-
-  // Inject ## Detected sections
-  for (const [skillName, lines] of Object.entries(seeds)) {
-    const filePath = path.join(skillsDir, skillName, 'SKILL.md');
-    try {
-      let content = await fs.readFile(filePath, 'utf-8');
-
-      // If template has ## Detected placeholder, replace it with seeded content
-      // If already seeded (has real content after ## Detected), skip
-      const detectedIdx = content.indexOf('## Detected');
-      if (detectedIdx !== -1) {
-        // Find what follows ## Detected — if it's only an HTML comment or blank, replace it
-        const nextSection = content.indexOf('\n## ', detectedIdx + 11);
-        const betweenContent = nextSection !== -1
-          ? content.slice(detectedIdx + 11, nextSection).trim()
-          : content.slice(detectedIdx + 11).trim();
-        // Skip if already has real content (not just HTML comment)
-        if (betweenContent && !betweenContent.startsWith('<!--')) continue;
-
-        // Replace the placeholder section
-        const endOfDetected = nextSection !== -1 ? nextSection : content.length;
-        content = content.slice(0, detectedIdx) + `## Detected\n${lines.join('\n')}\n` + content.slice(endOfDetected);
-      } else {
-        // Legacy templates without ## Detected: inject after frontmatter
-        const detectedSection = `\n## Detected\n${lines.join('\n')}\n`;
-        const fmEnd = content.indexOf('---', content.indexOf('---') + 3);
-        if (fmEnd !== -1) {
-          const insertPos = content.indexOf('\n', fmEnd) + 1;
-          content = content.slice(0, insertPos) + detectedSection + content.slice(insertPos);
-        }
-      }
-
-      // For testing-standards: replace commented Commands section with real commands
-      if (skillName === 'testing-standards') {
-        const commandsBlock = `\n## Commands\n\`\`\`bash\n# Build\n${result.commands?.build || 'your-build-command'}\n\n# Test (non-watch mode)\n${result.commands?.test || 'your-test-command'}\n\n# Lint (all source)\n${result.commands?.lint || 'your-lint-command'}\n\`\`\`\n`;
-
-        // Replace the HTML-commented Commands section
-        const cmdCommentStart = content.indexOf('## Commands');
-        if (cmdCommentStart !== -1) {
-          // Find the end of the commented block (closing -->)
-          const commentEnd = content.indexOf('-->', cmdCommentStart);
-          if (commentEnd !== -1) {
-            content = content.slice(0, cmdCommentStart) + commandsBlock.trim() + '\n' + content.slice(commentEnd + 3).trimStart();
-          }
-        }
-      }
-
-      await fs.writeFile(filePath, content, 'utf-8');
-    } catch {
-      // File doesn't exist (was skipped in merge-not-overwrite) — skip seeding
+  if (result.conventions) {
+    const naming = result.conventions.naming;
+    if (naming?.functions?.confidence > 0) {
+      lines.push(`- Functions: ${naming.functions.majority} (${Math.round(naming.functions.confidence * 100)}%)`);
+    }
+    if (naming?.classes?.confidence > 0) {
+      lines.push(`- Classes: ${naming.classes.majority} (${Math.round(naming.classes.confidence * 100)}%)`);
+    }
+    if (naming?.files?.confidence > 0) {
+      lines.push(`- Files: ${naming.files.majority} (${Math.round(naming.files.confidence * 100)}%)`);
+    }
+    if (result.conventions.imports?.style) {
+      lines.push(`- Imports: ${result.conventions.imports.style} (${Math.round(result.conventions.imports.confidence * 100)}%)`);
+    }
+    if (result.conventions.indentation?.style) {
+      lines.push(`- Indentation: ${result.conventions.indentation.style}, ${result.conventions.indentation.width} spaces`);
     }
   }
+  if (result.patterns?.errorHandling) {
+    const eh = result.patterns.errorHandling;
+    const variant = eh.variant ? ` (${eh.variant})` : '';
+    lines.push(`- Error handling: ${eh.library}${variant}`);
+  }
+  return lines.join('\n');
+}
+
+function injectTestingStandards(result: EngineResult): string {
+  const lines: string[] = [];
+  if (result.stack.testing) lines.push(`- Framework: ${result.stack.testing}`);
+  if (result.files.test > 0) lines.push(`- Test files: ${result.files.test}`);
+  if (result.commands.test) lines.push(`- Test command: ${result.commands.test}`);
+  if (result.patterns?.testing) {
+    const t = result.patterns.testing;
+    const variant = t.variant ? ` (${t.variant})` : '';
+    lines.push(`- Testing patterns: ${t.library}${variant}`);
+  }
+  return lines.join('\n');
+}
+
+function injectGitWorkflow(result: EngineResult): string {
+  const lines: string[] = [];
+  if (result.git.defaultBranch) lines.push(`- Default branch: ${result.git.defaultBranch}`);
+  if (result.git.branch) lines.push(`- Current branch: ${result.git.branch}`);
+  if (result.git.commitCount !== null) lines.push(`- Commits: ${result.git.commitCount}`);
+  if (result.git.contributorCount !== null) lines.push(`- Contributors: ${result.git.contributorCount}`);
+  return lines.join('\n');
+}
+
+function injectDeployment(result: EngineResult): string {
+  const lines: string[] = [];
+  if (result.deployment.platform) lines.push(`- Platform: ${result.deployment.platform}`);
+  if (result.deployment.configFile) lines.push(`- Config: ${result.deployment.configFile}`);
+  if (result.deployment.ci) lines.push(`- CI: ${result.deployment.ci}`);
+  return lines.join('\n');
+}
+
+function injectAiPatterns(result: EngineResult): string {
+  if (result.stack.aiSdk) return `- AI SDK: ${result.stack.aiSdk}`;
+  return '';
+}
+
+function injectApiPatterns(result: EngineResult): string {
+  if (result.stack.framework) return `- Framework: ${result.stack.framework}`;
+  return '';
+}
+
+function injectDataAccess(result: EngineResult): string {
+  const lines: string[] = [];
+  if (result.stack.database) lines.push(`- Database: ${result.stack.database}`);
+  const schemaEntries = Object.entries(result.schemas).filter(([, s]) => s.found);
+  for (const [name, schema] of schemaEntries) {
+    const parts = [name];
+    if (schema.modelCount !== null) parts.push(`${schema.modelCount} models`);
+    if (schema.path) parts.push(schema.path);
+    lines.push(`- Schema: ${parts.join(', ')}`);
+  }
+  return lines.join('\n');
+}
+
+/**
+ * Replace ## Detected section content while preserving all other sections (D6.13)
+ *
+ * Machine/human boundary: ## Detected is machine-owned (auto-refreshable),
+ * ## Rules, ## Gotchas, ## Examples are human-owned (never overwritten).
+ *
+ * @param fileContent - Full file content
+ * @param newDetectedContent - New content for the Detected section (lines only, no heading)
+ * @returns Updated file content
+ */
+function replaceDetectedSection(fileContent: string, newDetectedContent: string): string {
+  const detectedIdx = fileContent.indexOf('## Detected');
+  if (detectedIdx === -1) return fileContent;
+
+  // Find the next ## heading after ## Detected
+  const afterDetected = fileContent.indexOf('\n## ', detectedIdx + 1);
+  const endIdx = afterDetected === -1 ? fileContent.length : afterDetected;
+
+  const before = fileContent.slice(0, detectedIdx);
+  const after = afterDetected === -1 ? '' : fileContent.slice(endIdx);
+
+  const trimmed = newDetectedContent.trim();
+  const body = trimmed ? trimmed + '\n' : '';
+
+  return before + '## Detected\n' + body + after;
 }
 
 /**
@@ -1012,12 +1190,34 @@ async function saveScanJson(
 }
 
 /**
- * Phase 7: Create ana.json
+ * Make test command non-interactive for pipeline use
  *
- * Creates project config with detected data:
- * - commands from EngineResult (not hardcoded)
- * - package manager, framework, language
- * - setupMode: 'not_started' (setup sets the real mode when it runs)
+ * Vitest runs in watch mode by default — append --run to disable.
+ * Jest --watch is removed for CI compatibility.
+ *
+ * @param testCommand - Raw test command from package.json
+ * @param testingFramework - Detected testing framework
+ * @returns Non-interactive test command or null
+ */
+function makeTestCommandNonInteractive(
+  testCommand: string | null,
+  testingFramework: string | null
+): string | null {
+  if (!testCommand) return null;
+  if (testingFramework === 'Vitest' && !testCommand.includes('--run')) {
+    return `${testCommand} -- --run`;
+  }
+  if (testingFramework === 'Jest' && testCommand.includes('--watch')) {
+    return testCommand.replace('--watch', '').trim();
+  }
+  return testCommand;
+}
+
+/**
+ * Phase 7: Create ana.json (D1 schema)
+ *
+ * Creates project config with detected data. Every field is a contract
+ * consumed by pipeline agents — see D1 for the canonical schema.
  *
  * @param tmpAnaPath - Temp .ana/ path
  * @param engineResult - Engine result or null
@@ -1029,22 +1229,25 @@ async function createAnaJson(
   const spinner = ora('Creating ana.json...').start();
 
   const result = engineResult || createEmptyEngineResult();
+  const cliVersion = await getCliVersion();
 
   const anaConfig = {
+    anaVersion: cliVersion,
     name: result.overview.project,
-    framework: result.stack.framework || null,
     language: result.stack.language || null,
+    framework: result.stack.framework || null,
     packageManager: result.commands.packageManager,
     commands: {
       build: result.commands.build || null,
-      test: result.commands.test || null,
+      test: makeTestCommandNonInteractive(result.commands.test, result.stack.testing),
       lint: result.commands.lint || null,
       dev: result.commands.dev || null,
     },
     coAuthor: 'Ana <build@anatomia.dev>',
-    artifactBranch: result.git?.branch || 'main',
+    artifactBranch: result.git.defaultBranch ?? result.git.branch ?? 'main',
     setupMode: 'not_started',
-    scanStaleDays: 7,
+    setupCompletedAt: null,
+    lastScanAt: result.overview.scannedAt,
   };
 
   const anaJsonPath = path.join(tmpAnaPath, 'ana.json');
@@ -1163,9 +1366,10 @@ async function atomicRename(tmpAnaPath: string, anaPath: string): Promise<void> 
 }
 
 /**
- * Display success message after init completes
+ * Display completion UX after init (D8.8)
  *
- * Shows what was created and next steps.
+ * Dynamic skill counts, conditional callout, two-path next steps.
+ * Null values skipped throughout.
  *
  * @param engineResult - Engine result (null if skipped)
  * @param projectName - Project name
@@ -1178,49 +1382,59 @@ function displaySuccessMessage(engineResult: EngineResult | null, projectName: s
     console.log(chalk.green(`✓ Scanned ${projectName}`) + chalk.gray(` (${scanTime}s)`));
     console.log('');
 
-    // Stack
-    const stackParts: string[] = [];
-    if (engineResult.stack.language) stackParts.push(engineResult.stack.language);
-    if (engineResult.stack.framework) stackParts.push(engineResult.stack.framework);
-    if (engineResult.stack.database) {
-      let db = engineResult.stack.database;
-      const prismaSchema = engineResult.schemas?.prisma;
-      if (prismaSchema?.found && prismaSchema.modelCount) {
-        db += ` (${prismaSchema.modelCount} models)`;
-      }
-      stackParts.push(db);
-    }
-    if (engineResult.stack.auth) stackParts.push(engineResult.stack.auth);
-    if (engineResult.stack.testing) stackParts.push(engineResult.stack.testing);
+    // Stack summary
+    const stackParts = [engineResult.stack.language, engineResult.stack.framework, engineResult.stack.database].filter(Boolean);
     if (stackParts.length > 0) {
-      console.log(`  ${chalk.bold('Stack:')}   ${stackParts.join(' · ')}`);
+      console.log(`  ${chalk.bold('Stack:')}    ${stackParts.join(' · ')}`);
     }
-
-    // Services (exclude things already in stack)
-    const serviceNames = engineResult.externalServices
-      .filter(s => !stackParts.some(p => p.includes(s.name)))
-      .map(s => s.name);
-    if (serviceNames.length > 0) {
-      console.log(`  ${chalk.bold('Services:')} ${serviceNames.join(', ')}`);
+    if (engineResult.stack.aiSdk) {
+      console.log(`  ${chalk.bold('AI:')}       ${engineResult.stack.aiSdk}`);
     }
-
-    // Deploy
+    if (engineResult.stack.testing) {
+      console.log(`  ${chalk.bold('Testing:')}  ${engineResult.stack.testing}`);
+    }
     if (engineResult.deployment?.platform) {
-      console.log(`  ${chalk.bold('Deploy:')}  ${engineResult.deployment.platform}`);
+      console.log(`  ${chalk.bold('Deploy:')}   ${engineResult.deployment.platform}`);
     }
-
     console.log('');
   }
 
-  console.log(chalk.green('✓ Context generated → .ana/context/ (7 files)'));
+  // Context files
+  console.log(chalk.green('✓ Context → .ana/context/ (2 files)'));
+
+  // Skills — dynamic count with Core/Detected breakdown
   if (engineResult) {
-    console.log(chalk.green('✓ Skills seeded → .claude/skills/ (6 files)'));
-    console.log(chalk.green('✓ Scan saved → .ana/scan.json'));
+    const analysis = engineResult;
+    const manifest = computeSkillManifest(analysis);
+    const coreSkills = ['coding-standards', 'testing-standards', 'git-workflow', 'deployment', 'troubleshooting'];
+    const conditionalSkills = manifest.filter(s => !coreSkills.includes(s));
+
+    console.log(chalk.green(`✓ Skills → .claude/skills/ (${manifest.length} skills)`));
+    console.log(`    ${chalk.gray('Core:')}      ${coreSkills.join(', ')}`);
+    if (conditionalSkills.length > 0) {
+      console.log(`    ${chalk.gray('Detected:')}  ${conditionalSkills.join(', ')}`);
+    }
   }
-  console.log(chalk.green('✓ Config written → .ana/ana.json'));
+
   console.log('');
-  console.log('  Next steps:');
+
+  // Config values
+  if (engineResult) {
+    const artifactBranch = engineResult.git.defaultBranch ?? engineResult.git.branch ?? 'main';
+    console.log(`  ${chalk.bold('Branch:')}   ${artifactBranch}`);
+    const displayTest = makeTestCommandNonInteractive(engineResult.commands.test, engineResult.stack.testing);
+    if (displayTest) {
+      console.log(`  ${chalk.bold('Test:')}     ${displayTest}`);
+    }
+    if (engineResult.commands.build) {
+      console.log(`  ${chalk.bold('Build:')}    ${engineResult.commands.build}`);
+    }
+    console.log('');
+  }
+
+  // Two-path next steps
+  console.log('  Next:');
   console.log(chalk.cyan('    claude --agent ana') + '          Start working (Ana knows your stack)');
-  console.log(chalk.cyan('    claude --agent ana-setup') + '    Enrich context with Q&A (optional)');
+  console.log(chalk.cyan('    claude --agent ana-setup') + '    Enrich with your team\'s knowledge (optional, ~10 min)');
   console.log('');
 }

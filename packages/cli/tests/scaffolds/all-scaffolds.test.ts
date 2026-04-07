@@ -1,65 +1,76 @@
 import { describe, it, expect } from 'vitest';
 import {
-  generateProjectOverviewScaffold,
-  generateArchitectureScaffold,
-  generatePatternsScaffold,
-  generateConventionsScaffold,
-  generateWorkflowScaffold,
-  generateTestingScaffold,
-  generateDebuggingScaffold,
+  generateProjectContextScaffold,
+  generateDesignPrinciplesTemplate,
 } from '../../src/utils/scaffold-generators.js';
 import { createEmptyEngineResult } from './test-types.js';
 
-describe('all scaffolds integration', () => {
+describe('scaffold generators (S15 consolidated: 2 generators)', () => {
   const result = createEmptyEngineResult() as any;
-  const projectName = 'test-project';
-  const timestamp = '2026-03-19T10:00:00Z';
-  const version = '0.2.0';
 
-  it('all 7 generators produce valid scaffolds', () => {
-    const scaffolds = [
-      generateProjectOverviewScaffold(result, projectName, timestamp, version),
-      generateArchitectureScaffold(result, projectName, timestamp, version),
-      generatePatternsScaffold(result, projectName, timestamp, version),
-      generateConventionsScaffold(result, projectName, timestamp, version),
-      generateWorkflowScaffold(result, projectName, timestamp, version),
-      generateTestingScaffold(result, projectName, timestamp, version),
-      generateDebuggingScaffold(result, projectName, timestamp, version),
-    ];
-
-    // All should have scaffold marker
-    scaffolds.forEach((scaffold) => {
-      expect(scaffold).toContain('<!-- SCAFFOLD - Setup will fill this file -->');
+  describe('generateProjectContextScaffold', () => {
+    it('produces scaffold with D6.6 sections', () => {
+      const output = generateProjectContextScaffold(result);
+      expect(output).toContain('<!-- SCAFFOLD');
+      expect(output).toContain('# Project Context');
+      expect(output).toContain('## What This Project Does');
+      expect(output).toContain('## Architecture');
+      expect(output).toContain('## Key Decisions');
+      expect(output).toContain('## Key Files');
+      expect(output).toContain('## Active Constraints');
+      expect(output).toContain('## Domain Vocabulary');
     });
 
-    // All should have project name in title
-    scaffolds.forEach((scaffold) => {
-      expect(scaffold).toContain(projectName);
+    it('has 6 sections', () => {
+      const output = generateProjectContextScaffold(result);
+      const sections = (output.match(/^## /gm) || []).length;
+      expect(sections).toBe(6);
     });
 
-    // All should have timestamp or version in footer
-    scaffolds.forEach((scaffold) => {
-      expect(scaffold).toContain(timestamp);
+    it('includes Detected lines when stack data present', () => {
+      const richResult = {
+        ...result,
+        stack: { ...result.stack, language: 'TypeScript', framework: 'Next.js', database: 'PostgreSQL' },
+        externalServices: [{ name: 'Stripe', category: 'Payments', configFound: false }],
+        commands: { ...result.commands, build: 'pnpm build', test: 'vitest' },
+      };
+
+      const output = generateProjectContextScaffold(richResult);
+      expect(output).toContain('**Detected:** TypeScript · Next.js · PostgreSQL');
+      expect(output).toContain('**Detected services:** Stripe');
+      expect(output).toContain('**Detected commands:**');
+    });
+
+    it('omits Detected lines when data is null', () => {
+      const output = generateProjectContextScaffold(result);
+      // Empty result should have no Detected lines for stack (all null)
+      expect(output).not.toMatch(/\*\*Detected:\*\* null/);
+    });
+
+    it('includes monorepo info when detected', () => {
+      const monoResult = {
+        ...result,
+        monorepo: { isMonorepo: true, tool: 'pnpm', packages: [{ name: 'api', path: 'packages/api' }, { name: 'web', path: 'packages/web' }] },
+      };
+
+      const output = generateProjectContextScaffold(monoResult);
+      expect(output).toContain('pnpm · 2 packages');
     });
   });
 
-  it('section count validation', () => {
-    const overview = generateProjectOverviewScaffold(result, projectName, timestamp, version);
-    const architecture = generateArchitectureScaffold(result, projectName, timestamp, version);
-    const patterns = generatePatternsScaffold(result, projectName, timestamp, version);
-    const conventions = generateConventionsScaffold(result, projectName, timestamp, version);
-    const workflow = generateWorkflowScaffold(result, projectName, timestamp, version);
-    const testing = generateTestingScaffold(result, projectName, timestamp, version);
-    const debugging = generateDebuggingScaffold(result, projectName, timestamp, version);
+  describe('generateDesignPrinciplesTemplate', () => {
+    it('returns static template with no scan data', () => {
+      const output = generateDesignPrinciplesTemplate();
+      expect(output).toContain('# Design Principles');
+      expect(output).toContain('What does your team believe');
+      expect(output).not.toContain('**Detected:**');
+    });
 
-    // Count ## headings (varies based on detected data for empty result)
-    // Architecture and Debugging consolidate unexamined sections into ## Open Questions
-    expect((overview.match(/^## /gm) || []).length).toBeGreaterThanOrEqual(3);
-    expect((architecture.match(/^## /gm) || []).length).toBeGreaterThanOrEqual(2);
-    expect((patterns.match(/^## /gm) || []).length).toBe(6); // 5 categories + Framework Patterns
-    expect((conventions.match(/^## /gm) || []).length).toBeGreaterThanOrEqual(4);
-    expect((workflow.match(/^## /gm) || []).length).toBeGreaterThanOrEqual(5);
-    expect((testing.match(/^## /gm) || []).length).toBeGreaterThanOrEqual(4);
-    expect((debugging.match(/^## /gm) || []).length).toBeGreaterThanOrEqual(1);
+    it('is pure placeholder content', () => {
+      const output = generateDesignPrinciplesTemplate();
+      // Should be entirely HTML comments (placeholder) plus the heading
+      expect(output).toContain('<!--');
+      expect(output).toContain('-->');
+    });
   });
 });

@@ -87,23 +87,18 @@ describe('validators', () => {
 
   describe('validateStructure - BF1', () => {
     it('fails when scaffold marker present', async () => {
-      const file = path.join(anaPath, 'context/project-overview.md');
+      const file = path.join(anaPath, 'context/project-context.md');
       await fs.writeFile(file, '<!-- SCAFFOLD - Setup will fill this file -->\n\nContent here');
-
-      // Create other required files
-      const files = ['architecture', 'patterns', 'conventions', 'workflow', 'testing', 'debugging'];
-      for (const f of files) {
-        await fs.writeFile(path.join(anaPath, `context/${f}.md`), 'Content');
-      }
+      await fs.writeFile(path.join(anaPath, 'context/design-principles.md'), 'Content');
 
       const errors = await validateStructure(anaPath);
       expect(errors).toHaveLength(1);
       expect(errors[0].rule).toBe('BF1');
-      expect(errors[0].file).toBe('context/project-overview.md');
+      expect(errors[0].file).toBe('context/project-context.md');
     });
 
     it('detects when all files have scaffold markers', async () => {
-      const files = ['project-overview', 'architecture', 'patterns', 'conventions', 'workflow', 'testing', 'debugging'];
+      const files = ['project-context', 'design-principles'];
       for (const f of files) {
         await fs.writeFile(
           path.join(anaPath, `context/${f}.md`),
@@ -121,8 +116,8 @@ describe('validators', () => {
 
   describe('validateStructure - BF2', () => {
     it('fails when file missing', async () => {
-      // Create some files but not all
-      await fs.writeFile(path.join(anaPath, 'context/project-overview.md'), 'Content');
+      // Create one file but not both
+      await fs.writeFile(path.join(anaPath, 'context/project-context.md'), 'Content');
 
       const errors = await validateStructure(anaPath);
       expect(errors.length).toBeGreaterThan(0);
@@ -132,14 +127,9 @@ describe('validators', () => {
 
   describe('validateStructure - BF3', () => {
     it('fails when file empty after marker removal', async () => {
-      const file = path.join(anaPath, 'context/project-overview.md');
+      const file = path.join(anaPath, 'context/project-context.md');
       await fs.writeFile(file, '   \n\n   \n');
-
-      // Create other files
-      const files = ['architecture', 'patterns', 'conventions', 'workflow', 'testing', 'debugging'];
-      for (const f of files) {
-        await fs.writeFile(path.join(anaPath, `context/${f}.md`), 'Content');
-      }
+      await fs.writeFile(path.join(anaPath, 'context/design-principles.md'), 'Content');
 
       const errors = await validateStructure(anaPath);
       expect(errors).toHaveLength(1);
@@ -148,99 +138,39 @@ describe('validators', () => {
   });
 
   describe('validateContent - BF4', () => {
-    it('fails when project name header missing', async () => {
+    it('fails when Project Context header missing', async () => {
       await fs.writeFile(
-        path.join(anaPath, 'context/project-overview.md'),
-        '## Tech Stack\n\nContent'
+        path.join(anaPath, 'context/project-context.md'),
+        '## What This Project Does\n\nContent'
       );
 
       const errors = await validateContent(anaPath);
-      expect(errors.some(e => e.rule === 'BF4' && e.message.includes('project name header'))).toBe(true);
+      expect(errors.some(e => e.rule === 'BF4' && e.message.includes('Project Context'))).toBe(true);
     });
 
-    it('fails when Tech Stack section missing', async () => {
+    it('fails when What This Project Does section missing', async () => {
       await fs.writeFile(
-        path.join(anaPath, 'context/project-overview.md'),
-        '# Project Overview\n\nContent'
+        path.join(anaPath, 'context/project-context.md'),
+        '# Project Context\n\nContent'
       );
 
       const errors = await validateContent(anaPath);
-      expect(errors.some(e => e.rule === 'BF4' && e.message.includes('Tech Stack'))).toBe(true);
+      expect(errors.some(e => e.rule === 'BF4' && e.message.includes('What This Project Does'))).toBe(true);
     });
   });
 
-  describe('validateCrossReferences - BF5', () => {
-    it('fails when patterns documented < detected', async () => {
-      // Snapshot says 3 patterns detected
+  describe('validateCrossReferences', () => {
+    it('returns empty errors for any snapshot (BF5/BF6 removed in S15)', async () => {
       const snapshot: TestEngineResult = {
         ...createEmptyEngineResult(),
         patterns: {
           errorHandling: { library: 'exceptions', confidence: 0.9, evidence: [] },
-          validation: { library: 'pydantic', confidence: 0.9, evidence: [] },
           testing: { library: 'pytest', confidence: 1.0, evidence: [] },
           sampledFiles: 20,
           detectionTime: 5000,
           threshold: 0.7,
         },
       };
-
-      // patterns.md only documents 2
-      const patternsContent = '## Error Handling\n\nContent\n\n## Validation\n\nContent\n';
-      await fs.writeFile(path.join(anaPath, 'context/patterns.md'), patternsContent);
-
-      const errors = await validateCrossReferences(anaPath, snapshot);
-      expect(errors).toHaveLength(1);
-      expect(errors[0].rule).toBe('BF5');
-      expect(errors[0].message).toContain('Missing: Testing');
-    });
-
-    it('passes when all patterns documented', async () => {
-      const snapshot: TestEngineResult = {
-        ...createEmptyEngineResult(),
-        patterns: {
-          testing: { library: 'pytest', confidence: 1.0, evidence: [] },
-          sampledFiles: 20,
-          detectionTime: 5000,
-          threshold: 0.7,
-        },
-      };
-
-      const patternsContent = '## Testing\n\nContent\n\n## Framework Patterns\n';
-      await fs.writeFile(path.join(anaPath, 'context/patterns.md'), patternsContent);
-      await fs.writeFile(path.join(anaPath, 'context/project-overview.md'), '**Framework:** None detected\n');
-
-      const errors = await validateCrossReferences(anaPath, snapshot);
-      expect(errors).toHaveLength(0);
-    });
-  });
-
-  describe('validateCrossReferences - BF6', () => {
-    it('fails when framework contradicts', async () => {
-      const snapshot: TestEngineResult = {
-        ...createEmptyEngineResult(),
-        stack: { ...createEmptyEngineResult().stack, framework: 'fastapi' },
-      };
-
-      // project-overview.md says different framework
-      const overviewContent = '# Project Overview\n\n**Framework:** Django\n';
-      await fs.writeFile(path.join(anaPath, 'context/project-overview.md'), overviewContent);
-      await fs.writeFile(path.join(anaPath, 'context/patterns.md'), 'Content');
-
-      const errors = await validateCrossReferences(anaPath, snapshot);
-      expect(errors).toHaveLength(1);
-      expect(errors[0].rule).toBe('BF6');
-      expect(errors[0].message).toContain('django');
-      expect(errors[0].message).toContain('fastapi');
-    });
-
-    it('passes when both have no framework', async () => {
-      const snapshot: TestEngineResult = {
-        ...createEmptyEngineResult(),
-      };
-
-      const overviewContent = '# Project Overview\n\n**Framework:** None detected\n';
-      await fs.writeFile(path.join(anaPath, 'context/project-overview.md'), overviewContent);
-      await fs.writeFile(path.join(anaPath, 'context/patterns.md'), 'Content');
 
       const errors = await validateCrossReferences(anaPath, snapshot);
       expect(errors).toHaveLength(0);
@@ -249,31 +179,11 @@ describe('validators', () => {
 
   describe('validateQuality - SW1', () => {
     it('warns when file too thin', async () => {
-      const file = path.join(anaPath, 'context/debugging.md');
-      await fs.writeFile(file, '# Debug\n\nShort\n');
-
-      const files = ['project-overview', 'architecture', 'patterns', 'conventions', 'workflow', 'testing'];
-      for (const f of files) {
-        await fs.writeFile(path.join(anaPath, `context/${f}.md`), 'Content\n'.repeat(30));
-      }
+      await fs.writeFile(path.join(anaPath, 'context/project-context.md'), '# Short\n\n');
+      await fs.writeFile(path.join(anaPath, 'context/design-principles.md'), 'Content\n'.repeat(30));
 
       const warnings = await validateQuality(anaPath);
       expect(warnings.some(w => w.rule === 'SW1')).toBe(true);
-    });
-  });
-
-  describe('validateQuality - SW3', () => {
-    it('warns when workflow.md has no git info', async () => {
-      const file = path.join(anaPath, 'context/workflow.md');
-      await fs.writeFile(file, '# Workflow\n\n## Deployment\n\nDeploy using CI/CD pipeline.\n\n## Process\n\nManual deployment steps here.\n'.repeat(3));
-
-      const files = ['project-overview', 'architecture', 'patterns', 'conventions', 'testing', 'debugging'];
-      for (const f of files) {
-        await fs.writeFile(path.join(anaPath, `context/${f}.md`), 'Content\n'.repeat(30));
-      }
-
-      const warnings = await validateQuality(anaPath);
-      expect(warnings.some(w => w.rule === 'SW3')).toBe(true);
     });
   });
 });

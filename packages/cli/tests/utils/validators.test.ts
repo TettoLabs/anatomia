@@ -249,23 +249,12 @@ describe('Scenario B — analyzer returned no/minimal data', () => {
       expect(bf6Errors).toEqual([]);
     });
 
-    it('still catches real mismatches (fastapi vs nextjs)', async () => {
-      await fs.writeFile(
-        path.join(anaPath, 'context/patterns.md'),
-        '# Patterns\n\nNo patterns.\n'
-      );
-      await fs.writeFile(
-        path.join(anaPath, 'context/project-overview.md'),
-        '# Project Overview\n\n**Framework:** FastAPI\n'
-      );
-
+    it('BF5/BF6 removed in S15 — cross-references always pass', async () => {
       const base = createScenarioBSnapshot();
       const snapshot = { ...base, stack: { ...base.stack, framework: 'nextjs' } };
       const errors = await validateCrossReferences(anaPath, snapshot as never);
 
-      const bf6Errors = errors.filter(e => e.rule === 'BF6');
-      expect(bf6Errors.length).toBe(1);
-      expect(bf6Errors[0].message).toContain('mismatch');
+      expect(errors).toHaveLength(0);
     });
   });
 });

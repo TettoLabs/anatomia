@@ -21,21 +21,10 @@ describe('ana setup complete integration', () => {
     await fs.mkdir(path.join(anaPath, 'context'), { recursive: true });
     await fs.mkdir(path.join(anaPath, 'state'), { recursive: true });
 
-    // Create all 7 context files (valid, no scaffold markers)
-    const files = [
-      'project-overview.md',
-      'architecture.md',
-      'patterns.md',
-      'conventions.md',
-      'workflow.md',
-      'testing.md',
-      'debugging.md',
-    ];
-
-    for (const file of files) {
-      const content = `# ${file.replace('.md', '').replace('-', ' ')}\n\n## Section 1\n\nContent here\n`;
-      await fs.writeFile(path.join(anaPath, 'context', file), content);
-    }
+    // Create 2 context files (S15: consolidated from 7)
+    const projectContext = `# Project Context\n\n## What This Project Does\nContent\n\n## Architecture\nContent\n\n## Key Decisions\nContent\n\n## Key Files\nContent\n\n## Active Constraints\nContent\n\n## Domain Vocabulary\nContent\n`;
+    await fs.writeFile(path.join(anaPath, 'context/project-context.md'), projectContext);
+    await fs.writeFile(path.join(anaPath, 'context/design-principles.md'), '# Design Principles\n\nContent\n');
 
     // Create snapshot.json
     const snapshot = createEmptyEngineResult();
@@ -56,10 +45,6 @@ describe('ana setup complete integration', () => {
   });
 
   it('passes validation with valid context files', async () => {
-    // Override project-overview to have required sections
-    const overview = `# Project Overview — test\n\n## Tech Stack\n\nContent\n`.repeat(5);
-    await fs.writeFile(path.join(anaPath, 'context/project-overview.md'), overview);
-
     const snapshot = createEmptyEngineResult();
 
     const structuralErrors = await validateStructure(anaPath);
@@ -73,7 +58,7 @@ describe('ana setup complete integration', () => {
 
   it('fails validation when scaffold marker present', async () => {
     const content = '<!-- SCAFFOLD - Setup will fill this file -->\n\nContent';
-    await fs.writeFile(path.join(anaPath, 'context/patterns.md'), content);
+    await fs.writeFile(path.join(anaPath, 'context/project-context.md'), content);
 
     const errors = await validateStructure(anaPath);
     expect(errors.length).toBeGreaterThan(0);
@@ -81,22 +66,13 @@ describe('ana setup complete integration', () => {
   });
 
   it('fails when required file missing', async () => {
-    // Delete one required file
-    await fs.unlink(path.join(anaPath, 'context/debugging.md'));
+    await fs.unlink(path.join(anaPath, 'context/design-principles.md'));
 
     const errors = await validateStructure(anaPath);
     expect(errors.some(e => e.rule === 'BF2')).toBe(true);
   });
 
   it('complete flow with all validations', async () => {
-    // Create valid project-overview with all sections
-    const overview = `# Project Overview — test\n\n## What This Project Is\n\nContent\n\n## Tech Stack\n\n**Framework:** None detected\n\n## Directory Structure\n\nContent\n\n## Current Status\n\nContent\n`;
-    await fs.writeFile(path.join(anaPath, 'context/project-overview.md'), overview);
-
-    // Create valid patterns.md
-    const patterns = `# Patterns\n\n## Framework Patterns\n\nContent\n`;
-    await fs.writeFile(path.join(anaPath, 'context/patterns.md'), patterns);
-
     const snapshot = createEmptyEngineResult();
 
     const structuralErrors = await validateStructure(anaPath);

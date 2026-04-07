@@ -63,15 +63,10 @@ describe('ana init E2E', () => {
       expect(exists, `Directory missing: ${dir}`).toBe(true);
     }
 
-    // Verify generated files (7)
+    // Verify generated files (2 — S15 consolidated 7→2)
     const generatedFiles = [
-      'context/project-overview.md',
-      'context/architecture.md',
-      'context/patterns.md',
-      'context/conventions.md',
-      'context/workflow.md',
-      'context/testing.md',
-      'context/debugging.md',
+      'context/project-context.md',
+      'context/design-principles.md',
     ];
 
     for (const file of generatedFiles) {
@@ -138,10 +133,10 @@ describe('ana init E2E', () => {
     expect(snapshotExists).toBe(true);
 
     // Count total files in .ana/
-    // 7 generated + 9 modes + 4 hooks + 1 SCHEMAS + 2 .gitkeep + 3 JSON (ana.json, snapshot.json, scan.json) + 1 symbol-index + 1 cli-path + 1 .gitignore = 29
-    // (step files, framework-snippets, templates.md, SETUP_GUIDE, rules.md removed — D10.9)
+    // 2 generated + 9 modes + 4 hooks + 1 SCHEMAS + 2 .gitkeep + 3 JSON (ana.json, snapshot.json, scan.json) + 1 symbol-index + 1 cli-path + 1 .gitignore = 24
+    // (S15: consolidated 7→2 context files)
     const allFiles = await findAllFiles(anaPath);
-    expect(allFiles.length).toBe(29);
+    expect(allFiles.length).toBe(24);
 
     // Verify .gitignore exists and excludes runtime state
     const gitignorePath = path.join(anaPath, '.gitignore');
@@ -185,6 +180,7 @@ describe('ana init E2E', () => {
       'coding-standards',
       'git-workflow',
       'deployment',
+      'troubleshooting',
     ];
 
     for (const skillDir of skillDirs) {

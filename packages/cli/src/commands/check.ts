@@ -3,7 +3,7 @@
  *
  * Usage:
  *   ana setup check --json              Check all 7 context files, JSON output
- *   ana setup check patterns.md --json  Check single file, JSON output
+ *   ana setup check project-context.md --json  Check single file, JSON output
  *   ana setup check                     Human-readable colored output
  *
  * Exit codes:
@@ -17,33 +17,32 @@ import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
 import type { SymbolEntry, SymbolIndex } from './index.js';
 
-/** Per-file configuration for validation */
+/** Per-file configuration for structural validation (D12.3 — no line counts) */
 interface FileConfig {
-  minLines: number;
-  maxLines: number;
-  expectedHeaders: number;
+  expectedSections: string[];
 }
 
 /** File configurations indexed by filename (without .md) */
 const FILE_CONFIGS: Record<string, FileConfig> = {
-  'project-overview': { minLines: 200, maxLines: 700, expectedHeaders: 4 },
-  'conventions': { minLines: 300, maxLines: 950, expectedHeaders: 4 },
-  'patterns': { minLines: 550, maxLines: 1400, expectedHeaders: 6 },
-  'architecture': { minLines: 200, maxLines: 700, expectedHeaders: 4 },
-  'testing': { minLines: 250, maxLines: 850, expectedHeaders: 6 },
-  'workflow': { minLines: 400, maxLines: 1000, expectedHeaders: 6 },
-  'debugging': { minLines: 200, maxLines: 700, expectedHeaders: 5 },
+  'project-context': {
+    expectedSections: [
+      'What This Project Does',
+      'Architecture',
+      'Key Decisions',
+      'Key Files',
+      'Active Constraints',
+      'Domain Vocabulary',
+    ],
+  },
+  'design-principles': {
+    expectedSections: [], // Optional content — any non-template content is valid
+  },
 };
 
-/** All context files to check */
+/** All context files to check (from CONTEXT_FILES in constants.ts) */
 const ALL_CONTEXT_FILES = [
-  'project-overview.md',
-  'conventions.md',
-  'patterns.md',
-  'architecture.md',
-  'testing.md',
-  'workflow.md',
-  'debugging.md',
+  'project-context.md',
+  'design-principles.md',
 ];
 
 /** Placeholder patterns to detect (case-insensitive) */
@@ -129,48 +128,49 @@ interface AllFilesResult {
 }
 
 /**
- * Check line count for a file
- * @param content
- * @param config
- * @returns {LineCountResult} Line count validation result
+ * Check line count for a file (D12.3 — no volumetric validation)
+ *
+ * Line counts are informational only. Always passes.
+ *
+ * @param content - File content
+ * @returns Line count result (always passes)
  */
-function checkLineCount(content: string, config: FileConfig): LineCountResult {
+function checkLineCount(content: string): LineCountResult {
   const lineCount = content.split('\n').length;
   return {
     actual: lineCount,
-    minimum: config.minLines,
-    maximum: config.maxLines,
-    pass: lineCount >= config.minLines && lineCount <= config.maxLines,
+    minimum: 0,
+    maximum: 99999,
+    pass: true,
   };
 }
 
 /**
- * Check H2 header count and detect duplicates
- * @param content
- * @param config
- * @returns {HeadersResult} Header validation result with duplicates
+ * Check expected sections are present (structural validation)
+ *
+ * @param content - File content
+ * @param config - File config with expectedSections
+ * @returns Header validation result with missing sections as duplicates
  */
 function checkHeaders(content: string, config: FileConfig): HeadersResult {
   // Remove fenced code blocks before checking (headers in examples shouldn't count)
   const contentWithoutCodeBlocks = content.replace(/```[\s\S]*?```/g, '');
   const headers = contentWithoutCodeBlocks.match(/^## .+$/gm) || [];
 
-  // Detect duplicate headers (case-insensitive)
-  const seen = new Set<string>();
-  const duplicates: string[] = [];
-  for (const header of headers) {
-    const normalized = header.toLowerCase();
-    if (seen.has(normalized)) {
-      duplicates.push(header);
+  // Check expected sections are present
+  const headerTexts = headers.map(h => h.replace(/^## /, '').trim());
+  const missing: string[] = [];
+  for (const section of config.expectedSections) {
+    if (!headerTexts.some(h => h.includes(section))) {
+      missing.push(section);
     }
-    seen.add(normalized);
   }
 
   return {
     actual: headers.length,
-    expected: config.expectedHeaders,
-    pass: headers.length >= config.expectedHeaders && duplicates.length === 0,
-    duplicates,
+    expected: config.expectedSections.length,
+    pass: missing.length === 0,
+    duplicates: missing, // Repurpose duplicates field for missing sections
   };
 }
 
@@ -499,13 +499,7 @@ async function checkFile(filename: string, contextPath: string, projectRoot: str
   const filePath = path.join(contextPath, filename);
   const content = await fs.readFile(filePath, 'utf-8');
 
-  // Detect scaffold files — skip line count minimum for unwritten scaffolds
-  const isScaffold = content.startsWith('<!-- SCAFFOLD');
-
-  const lineCount = checkLineCount(content, config);
-  if (isScaffold) {
-    lineCount.pass = true; // Scaffold files are expected to be short
-  }
+  const lineCount = checkLineCount(content);
 
   const headers = checkHeaders(content, config);
   const placeholders = checkPlaceholders(content);
@@ -594,7 +588,7 @@ function displayFileResult(result: FileCheckResult): void {
 export function createCheckCommand(): Command {
   return new Command('check')
     .description('Validate context files for quality gates')
-    .argument('[filename]', 'Specific file to check (e.g., patterns.md)')
+    .argument('[filename]', 'Specific file to check (e.g., project-context.md)')
     .option('--json', 'Output results as JSON')
     .action(async (filename: string | undefined, options: { json?: boolean }) => {
       const cwd = process.cwd();

@@ -3,6 +3,7 @@ name: ana
 model: opus
 memory: project
 description: "Ana — your project-aware thinking partner. Scopes, decomposes, navigates, advises, routes."
+initialPrompt: "Silently read .ana/context/design-principles.md and .ana/context/project-context.md if they exist. If ana.json exists and setupMode is 'not_started', show one notice: 'ℹ Setup hasn't run yet. Ana is working from scan data only. For better results: claude --agent ana-setup (~10 min)'"
 ---
 
 # Ana
