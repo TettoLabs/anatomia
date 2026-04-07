@@ -17,8 +17,10 @@ import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { glob } from 'glob';
-import type { EngineResult } from './types/engineResult.js';
+import type { EngineResult, PatternDetail } from './types/engineResult.js';
 import type { AnalysisResult } from './types/index.js';
+import type { PatternConfidence, MultiPattern } from './types/patterns.js';
+import { isMultiPattern } from './types/patterns.js';
 import { readDependencies, detectFromDeps, detectServiceDeps, aggregateMonorepoDependencies } from './detectors/dependencies.js';
 import { detectPackageManager } from './detectors/packageManager.js';
 import { detectGitInfo } from './detectors/git.js';
@@ -267,7 +269,7 @@ async function detectSecrets(rootPath: string): Promise<EngineResult['secrets']>
     gitignoreCoversEnv = gitignore.includes('.env');
   } catch { /* no .gitignore */ }
 
-  return { envFileExists, envExampleExists, gitignoreCoversEnv, hardcodedKeysFound: null, envVarReferences: null };
+  return { envFileExists, envExampleExists, gitignoreCoversEnv };
 }
 
 // --- Structure extraction from AnalysisResult ---
@@ -290,6 +292,89 @@ function extractStructure(
   const maxItems = 10;
   const overflow = Math.max(0, entries.length - maxItems);
   return { items: entries.slice(0, maxItems), overflow };
+}
+
+// --- Pattern/Convention mapping helpers ---
+
+function mapToPatternDetail(
+  raw: PatternConfidence | MultiPattern | undefined
+): PatternDetail | null {
+  if (!raw) return null;
+  if (isMultiPattern(raw)) {
+    const p = raw.primary;
+    return {
+      library: p.library,
+      variant: p.variant ?? '',
+      confidence: p.confidence,
+      evidence: p.evidence,
+    };
+  }
+  return {
+    library: raw.library,
+    variant: raw.variant ?? '',
+    confidence: raw.confidence,
+    evidence: raw.evidence,
+  };
+}
+
+function mapPatterns(
+  analysis: AnalysisResult | null,
+  depth: 'surface' | 'deep'
+): EngineResult['patterns'] {
+  if (depth !== 'deep' || !analysis?.patterns) return null;
+  const p = analysis.patterns;
+  return {
+    errorHandling: mapToPatternDetail(p.errorHandling),
+    validation: mapToPatternDetail(p.validation),
+    database: mapToPatternDetail(p.database),
+    auth: mapToPatternDetail(p.auth),
+    testing: mapToPatternDetail(p.testing),
+    sampledFiles: p.sampledFiles,
+    detectionTime: p.detectionTime,
+    threshold: p.threshold,
+  };
+}
+
+function mapConventions(
+  analysis: AnalysisResult | null,
+  depth: 'surface' | 'deep'
+): EngineResult['conventions'] {
+  if (depth !== 'deep' || !analysis?.conventions) return null;
+  const c = analysis.conventions;
+
+  const defaultConvention = {
+    majority: 'unknown',
+    confidence: 0,
+    mixed: false,
+    distribution: {},
+    sampleSize: 0,
+  };
+
+  const mapNaming = (raw: { majority: string; confidence: number; mixed: boolean; distribution: Record<string, number> } | undefined) => {
+    if (!raw) return defaultConvention;
+    return { ...raw, sampleSize: 0 };
+  };
+
+  return {
+    naming: {
+      files: mapNaming(c.naming?.files),
+      functions: mapNaming(c.naming?.functions),
+      classes: mapNaming(c.naming?.classes),
+      variables: mapNaming(c.naming?.variables),
+      constants: mapNaming(c.naming?.constants),
+    },
+    imports: c.imports
+      ? { style: c.imports.style, confidence: c.imports.confidence, distribution: c.imports.distribution }
+      : { style: 'unknown', confidence: 0, distribution: {} },
+    docstrings: c.docstrings
+      ? { format: c.docstrings.format, confidence: c.docstrings.confidence, coverage: c.docstrings.coverage }
+      : { format: 'unknown', confidence: 0, coverage: 0 },
+    indentation: c.indentation
+      ? { style: c.indentation.style, width: c.indentation.width ?? 2, confidence: c.indentation.confidence }
+      : { style: 'unknown', width: 2, confidence: 0 },
+    sampledFiles: c.sampledFiles,
+    detectionTime: c.detectionTime,
+  };
 }
 
 // --- Main function ---
@@ -405,8 +490,6 @@ export async function analyzeProject(
   const storagePackages = ['@aws-sdk/client-s3', 'aws-sdk', '@google-cloud/storage', 'cloudinary'];
   const projectProfile: EngineResult['projectProfile'] = {
     type: analysis?.framework || analysis?.projectType || null,
-    maturity: null,
-    teamSize: null,
     hasExternalAPIs: externalServices.length > 0,
     hasDatabase: stack.database !== null,
     hasBrowserUI: stack.framework !== null && browserFrameworks.includes(stack.framework),
@@ -425,23 +508,39 @@ export async function analyzeProject(
 
   return {
     overview: { project: projectName, scannedAt: now, depth: options.depth },
-    stack,
+    stack: { ...stack, aiSdk: null },
     files,
     structure: structure.items,
     structureOverflow: structure.overflow,
     commands: { ...commands, packageManager },
-    git,
+    git: { ...git, defaultBranch: null, branches: null },
     monorepo: mono,
     externalServices,
     schemas,
     secrets,
     projectProfile,
     blindSpots,
-    deployment,
-    patterns: options.depth === 'deep' && analysis?.patterns ? analysis.patterns : null,
-    conventions: options.depth === 'deep' && analysis?.conventions ? analysis.conventions : null,
-    recommendations: null, // S11: populated by recommendation engine
-    health: {} as Record<string, never>,
-    readiness: {} as Record<string, never>,
+    deployment: deployment
+      ? { ...deployment, ci: null, ciConfigFile: null }
+      : { platform: null, configFile: null, ci: null, ciConfigFile: null },
+    patterns: mapPatterns(analysis, options.depth),
+    conventions: mapConventions(analysis, options.depth),
+    // Phase 1+ stubs
+    secretFindings: null,
+    envVarMap: null,
+    duplicates: null,
+    circularDeps: null,
+    orphanFiles: null,
+    complexityHotspots: null,
+    gitIntelligence: null,
+    dependencyIntelligence: null,
+    technicalDebtMarkers: null,
+    inconsistencies: null,
+    conventionBreaks: null,
+    aiReadinessScore: null,
+    // Reserved
+    recommendations: null,
+    health: null,
+    readiness: null,
   };
 }
