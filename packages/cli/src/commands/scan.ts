@@ -2,18 +2,18 @@
  * ana scan [path] - Zero-install project scanner
  *
  * Analyzes a project and outputs a terminal report with:
- * - Stack detection (Language, Framework, Database, Auth, Testing)
+ * - Stack detection (Language, Framework, AI, Database, Auth, Testing, Payments, Workspace)
  * - File counts (source, test, config, total)
  * - Structure map (top directories with purposes)
  *
- * Read-only operation - creates no files, modifies nothing.
- * Works without .ana/ directory (no init required).
+ * Read-only operation (unless --save). Works without .ana/ directory.
  *
  * Usage:
- *   ana scan           Scan current directory
+ *   ana scan           Scan current directory (deep by default)
  *   ana scan <path>    Scan specified path
  *   ana scan --json    Output JSON format
- *   ana scan --deep    Include patterns and conventions (tree-sitter)
+ *   ana scan --quick   Surface-tier only (skip tree-sitter)
+ *   ana scan --quiet   Suppress informational stdout
  */
 
 import { Command } from 'commander';
@@ -21,6 +21,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import type { EngineResult } from '../engine/types/engineResult.js';
 import { formatNumber } from '../utils/fileCounts.js';
 
@@ -110,15 +111,32 @@ function timeAgo(date: string): string {
 }
 
 /**
- * Format human-readable terminal output from EngineResult
- *
- * Renders all engine intelligence: stack, services, commands, files, git,
- * structure, packages, patterns (--deep), conventions (--deep), blind spots.
- *
+ * Count findings for dynamic CTA (funnel context)
  * @param result - Engine analysis result
+ * @returns Number of findings (blind spots + null pattern slots)
+ */
+function countFindings(result: EngineResult): number {
+  let count = result.blindSpots.length;
+
+  // Count null pattern slots when deep scan was attempted
+  if (result.overview.depth === 'deep' && result.patterns) {
+    const categories = ['errorHandling', 'validation', 'database', 'auth', 'testing'] as const;
+    for (const k of categories) {
+      if (!result.patterns[k]) count++;
+    }
+  }
+
+  return count;
+}
+
+/**
+ * Format human-readable terminal output from EngineResult
+ * @param result - Engine analysis result
+ * @param options - Display options
+ * @param options.isFunnel - Whether in funnel context (no .ana/)
  * @returns Formatted terminal output string
  */
-function formatHumanReadable(result: EngineResult): string {
+function formatHumanReadable(result: EngineResult, options: { isFunnel: boolean }): string {
   const lines: string[] = [];
   const dateStr = result.overview.scannedAt.split('T')[0];
   const timeStr = new Date(result.overview.scannedAt).toTimeString().slice(0, 5);
@@ -139,46 +157,48 @@ function formatHumanReadable(result: EngineResult): string {
   lines.push(chalk.cyan(BOX.bottomLeft + BOX.horizontal.repeat(innerWidth) + BOX.bottomRight));
   lines.push('');
 
-  // Stack
+  // Stack — D3 order: Language, Framework, AI, Database, Auth, Testing, Payments, Workspace
   lines.push(chalk.bold('  Stack'));
   lines.push(chalk.gray('  ' + BOX.horizontal.repeat(5)));
 
-  const stackOrder = ['language', 'framework', 'database', 'auth', 'testing', 'workspace'] as const;
-  const stackLabels: Record<string, string> = {
-    language: 'Language', framework: 'Framework', database: 'Database',
-    auth: 'Auth', testing: 'Testing', workspace: 'Workspace',
-  };
+  const stackItems: Array<[string, string | null]> = [
+    ['Language', result.stack.language],
+    ['Framework', result.stack.framework],
+    ['AI', result.stack.aiSdk],
+    ['Database', result.stack.database],
+    ['Auth', result.stack.auth],
+    ['Testing', result.stack.testing],
+    ['Payments', result.stack.payments],
+    ['Workspace', result.stack.workspace],
+  ];
 
   let hasStack = false;
-  for (const key of stackOrder) {
-    const value = result.stack[key];
-    if (value) {
-      hasStack = true;
-      const label = stackLabels[key].padEnd(12);
-      // Enrich database with model count from schemas
-      let display = value;
-      if (key === 'database') {
-        const schemaKey = Object.keys(result.schemas).find(k =>
-          result.schemas[k].found
-        );
-        if (schemaKey) {
-          const schema = result.schemas[schemaKey];
-          // Arrow notation: Prisma → PostgreSQL (3 models)
-          if (schema.provider) {
-            const providerNames: Record<string, string> = {
-              postgresql: 'PostgreSQL', mysql: 'MySQL', sqlite: 'SQLite',
-              mongodb: 'MongoDB', cockroachdb: 'CockroachDB', sqlserver: 'SQL Server',
-            };
-            const providerDisplay = providerNames[schema.provider] || schema.provider;
-            display = `${value} → ${providerDisplay}`;
-          }
-          if (schema.modelCount) {
-            display += ` (${schema.modelCount} models)`;
-          }
+  for (const [label, value] of stackItems) {
+    if (!value) continue;
+    hasStack = true;
+    let display = value;
+
+    // Enrich database with model count from schemas
+    if (label === 'Database') {
+      const schemaKey = Object.keys(result.schemas).find(k =>
+        result.schemas[k].found
+      );
+      if (schemaKey) {
+        const schema = result.schemas[schemaKey];
+        if (schema.provider) {
+          const providerNames: Record<string, string> = {
+            postgresql: 'PostgreSQL', mysql: 'MySQL', sqlite: 'SQLite',
+            mongodb: 'MongoDB', cockroachdb: 'CockroachDB', sqlserver: 'SQL Server',
+          };
+          const providerDisplay = providerNames[schema.provider] || schema.provider;
+          display = `${value} → ${providerDisplay}`;
+        }
+        if (schema.modelCount) {
+          display += ` (${schema.modelCount} models)`;
         }
       }
-      lines.push(`  ${chalk.gray(label)} ${display}`);
     }
+    lines.push(`  ${chalk.gray(label.padEnd(12))} ${display}`);
   }
   if (!hasStack) {
     lines.push(chalk.gray('  No code detected'));
@@ -211,6 +231,16 @@ function formatHumanReadable(result: EngineResult): string {
     if (hasDeploy) {
       lines.push(`  ${chalk.gray('Deploy'.padEnd(12))} ${result.deployment.platform} ${chalk.gray(`(${result.deployment.configFile})`)}`);
     }
+  }
+
+  // CI in deployment
+  if (result.deployment.ci) {
+    if (!hasServices && !hasDeploy) {
+      lines.push('');
+      lines.push(chalk.bold('  Services'));
+      lines.push(chalk.gray('  ' + BOX.horizontal.repeat(8)));
+    }
+    lines.push(`  ${chalk.gray('CI'.padEnd(12))} ${result.deployment.ci} ${chalk.gray(`(${result.deployment.ciConfigFile})`)}`);
   }
 
   // Commands (only if any detected)
@@ -319,18 +349,18 @@ function formatHumanReadable(result: EngineResult): string {
   }
 
   // Conventions (deep only)
-  if (result.conventions && typeof result.conventions === 'object') {
+  if (result.conventions) {
     const conv = result.conventions;
     const convLines: string[] = [];
 
-    if (conv.naming?.functions?.majority && conv.naming.functions.majority !== 'unknown') {
+    if (conv.naming.functions.majority && conv.naming.functions.majority !== 'unknown') {
       const pct = Math.round(conv.naming.functions.confidence * 100);
       convLines.push(`  ${chalk.gray('Functions'.padEnd(12))} ${conv.naming.functions.majority} (${pct}%)`);
     }
-    if (conv.imports?.style) {
+    if (conv.imports.style) {
       convLines.push(`  ${chalk.gray('Imports'.padEnd(12))} ${conv.imports.style}`);
     }
-    if (conv.indentation?.style) {
+    if (conv.indentation.style) {
       const width = conv.indentation.width ? `${conv.indentation.width} ` : '';
       convLines.push(`  ${chalk.gray('Indentation'.padEnd(12))} ${width}${conv.indentation.style}`);
     }
@@ -358,8 +388,20 @@ function formatHumanReadable(result: EngineResult): string {
 
   lines.push('');
 
-  // Footer CTA
-  lines.push(chalk.gray('Run `ana init` to generate full context for your AI.'));
+  // Footer CTA — dynamic in funnel context
+  if (options.isFunnel) {
+    const findings = countFindings(result);
+    if (findings === 0) {
+      lines.push(chalk.gray('Your project looks clean. Run `ana init` to get started.'));
+    } else if (findings <= 2) {
+      lines.push(chalk.gray('Found issues your AI assistant will miss. Run `ana init` to fix them.'));
+    } else {
+      lines.push(chalk.gray('Found ' + findings + ' issues your AI will get wrong. Run `ana init` to fix them.'));
+    }
+  } else {
+    lines.push(chalk.gray('Run `ana init` to generate full context for your AI.'));
+  }
+
   if (result.monorepo.isMonorepo && result.monorepo.packages.length > 0) {
     const firstPkg = result.monorepo.packages[0].path;
     lines.push(chalk.gray(`Scan individual packages: ana scan ${firstPkg}`));
@@ -369,17 +411,70 @@ function formatHumanReadable(result: EngineResult): string {
 }
 
 /**
+ * Check for drift between scan result and ana.json, warn to stderr
+ * @param result - Engine analysis result
+ * @param anaJsonPath - Path to ana.json file
+ */
+function checkDrift(result: EngineResult, anaJsonPath: string): void {
+  if (!existsSync(anaJsonPath)) return;
+
+  try {
+    const anaJson = JSON.parse(readFileSync(anaJsonPath, 'utf-8'));
+    const drifts: string[] = [];
+
+    const checks: Array<[string, string | null | undefined, string | null | undefined]> = [
+      ['language', result.stack.language, anaJson.language],
+      ['framework', result.stack.framework, anaJson.framework],
+      ['packageManager', result.commands.packageManager, anaJson.packageManager],
+      ['commands.test', result.commands.test, anaJson.commands?.test],
+      ['commands.build', result.commands.build, anaJson.commands?.build],
+    ];
+
+    for (const [field, scanVal, anaVal] of checks) {
+      if (scanVal !== anaVal && (scanVal !== null || anaVal !== undefined)) {
+        drifts.push(`  ${field}: ${scanVal ?? 'null'} (was ${anaVal ?? 'null'})`);
+      }
+    }
+
+    if (drifts.length > 0) {
+      console.error(chalk.yellow('\n⚠ Scan detected changes since init:'));
+      for (const d of drifts) {
+        console.error(chalk.yellow(d));
+      }
+      console.error(chalk.yellow('Run `ana setup` to review.\n'));
+    }
+  } catch {
+    // ana.json parse error — skip drift check silently
+  }
+}
+
+interface ScanOptions {
+  json?: boolean;
+  verbose?: boolean;
+  save?: boolean;
+  quiet?: boolean;
+  quick?: boolean;
+}
+
+/**
  * Scan command definition
  */
 export const scanCommand = new Command('scan')
   .description('Scan project and display tech stack, file counts, and structure')
   .argument('[path]', 'Directory to scan (default: current directory)', '.')
   .option('--json', 'Output JSON format for programmatic consumption')
-  .option('--deep', 'Include patterns and conventions from tree-sitter analysis')
   .option('--verbose', 'Show detailed analyzer output')
   .option('--save', 'Save scan results to .ana/scan.json')
-  .action(async (targetPath: string, options: { json?: boolean; deep?: boolean; verbose?: boolean; save?: boolean }) => {
+  .option('-q, --quiet', 'Suppress informational stdout')
+  .option('--quick', 'Force surface-tier analysis (skip tree-sitter)')
+  .action(async (targetPath: string, options: ScanOptions) => {
     const rootPath = path.resolve(targetPath);
+
+    // Path + --save guard
+    if (targetPath !== '.' && options.save) {
+      console.error(chalk.red('Error: Cannot combine path argument with --save. Use --json and pipe to a file for subdirectory results.'));
+      process.exit(1);
+    }
 
     // Validate directory exists
     try {
@@ -393,18 +488,27 @@ export const scanCommand = new Command('scan')
       process.exit(1);
     }
 
-    const spinner = options.json || options.verbose ? null : ora('Scanning project...').start();
+    // --save requires .ana/
+    if (options.save) {
+      const anaDir = path.join(rootPath, '.ana');
+      if (!existsSync(anaDir)) {
+        console.error(chalk.red('No .ana/ directory found. Run `ana init` first.'));
+        process.exit(1);
+      }
+    }
+
+    const spinner = options.json || options.verbose || options.quiet ? null : ora('Scanning project...').start();
 
     try {
       // Dynamic import to avoid WASM crash at module level
       const { analyzeProject } = await import('../engine/analyze.js');
 
-      const depth = options.deep ? 'deep' as const : 'surface' as const;
+      const depth = options.quick ? 'surface' as const : 'deep' as const;
       const result = await analyzeProject(rootPath, { depth });
 
       if (spinner) spinner.stop();
 
-      // Verbose output
+      // Verbose output (stderr — visible with --quiet)
       if (options.verbose) {
         console.error(chalk.dim('\n=== ENGINE RESULT ==='));
         console.error(chalk.dim('Stack:'), JSON.stringify(result.stack));
@@ -415,20 +519,37 @@ export const scanCommand = new Command('scan')
         console.error(chalk.dim('====================\n'));
       }
 
-      // Output
+      // Output (stdout — suppressed by --quiet unless --json)
       if (options.json) {
         console.log(JSON.stringify(result, null, 2));
-      } else {
-        console.log(formatHumanReadable(result));
+      } else if (!options.quiet) {
+        const isFunnel = !existsSync(path.join(rootPath, '.ana'));
+        console.log(formatHumanReadable(result, { isFunnel }));
       }
 
       // Save
       if (options.save) {
         const anaDir = path.join(rootPath, '.ana');
         try {
-          await fs.mkdir(anaDir, { recursive: true });
           await fs.writeFile(path.join(anaDir, 'scan.json'), JSON.stringify(result, null, 2), 'utf-8');
-          console.log(chalk.gray('Scan saved to .ana/scan.json'));
+          if (!options.quiet) {
+            console.log(chalk.gray('Scan saved to .ana/scan.json'));
+          }
+
+          // Update lastScanAt in ana.json
+          const anaJsonPath = path.join(anaDir, 'ana.json');
+          if (existsSync(anaJsonPath)) {
+            try {
+              const anaJson = JSON.parse(readFileSync(anaJsonPath, 'utf-8'));
+              anaJson.lastScanAt = new Date().toISOString();
+              writeFileSync(anaJsonPath, JSON.stringify(anaJson, null, 2) + '\n');
+            } catch {
+              // ana.json parse/write error — skip silently
+            }
+          }
+
+          // Drift warning (stderr — visible even with --quiet)
+          checkDrift(result, path.join(anaDir, 'ana.json'));
         } catch (writeError) {
           console.error(chalk.yellow(`Warning: Failed to save scan results. ${writeError instanceof Error ? writeError.message : ''}`));
         }
@@ -442,3 +563,5 @@ export const scanCommand = new Command('scan')
 
 // Export helper functions for testing
 export { getLanguageDisplayName, getFrameworkDisplayName, getPatternDisplayName, formatNumber };
+// Export for testing
+export { formatHumanReadable, countFindings, checkDrift };
