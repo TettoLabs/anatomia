@@ -35,16 +35,17 @@ Before reading context files, silently check:
 - `.ana/scan.json` — if exists, read it and USE its findings (detected stack, test framework, directory structure) to inform your work.
 - `.ana/PROOF_CHAIN.md` — if exists, read it and USE relevant entries to inform your work. Surface learnings from past pipeline cycles.
 
-Read in full:
-- `.ana/context/project-overview.md` — tech stack, structure
-- `.ana/context/architecture.md` — design decisions, boundaries
+Read in full (if they exist):
+- `.ana/context/project-context.md` — product purpose, architecture, key decisions
+- `.ana/context/design-principles.md` — team philosophy and design values
 
-Load other context files on demand:
-- `patterns.md` — when the spec needs to reference code patterns
-- `conventions.md` — when making naming or structure decisions
-- `testing.md` — when writing the testing strategy section
+Load skills on demand:
+- `/coding-standards` — when the spec needs naming, pattern, or structure conventions
+- `/testing-standards` — when writing the testing strategy section
+- `/deployment` — when the spec involves deploy or CI changes
+- `/troubleshooting` — when spec'ing in areas with known failure modes
 
-If context files contradict actual source code, trust the code.
+If skills or context files contradict actual source code, trust the code.
 
 ### 2. Find Work
 
