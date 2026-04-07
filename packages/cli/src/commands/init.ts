@@ -536,7 +536,6 @@ function displayDetectionSummary(result: EngineResult): void {
  * Creates all required directories for .ana/ framework:
  * - modes/
  * - context/
- * - context/setup/
  * - docs/
  * - plans/active/, plans/completed/
  * - state/
@@ -551,7 +550,6 @@ async function createDirectoryStructure(tmpAnaPath: string): Promise<void> {
   // Create directories (recursive: true creates parents)
   await fs.mkdir(path.join(tmpAnaPath, 'modes'), { recursive: true });
   await fs.mkdir(path.join(tmpAnaPath, 'context'), { recursive: true });
-  await fs.mkdir(path.join(tmpAnaPath, 'context/setup'), { recursive: true });
   await fs.mkdir(path.join(tmpAnaPath, 'docs'), { recursive: true });
   await fs.mkdir(path.join(tmpAnaPath, 'plans/active'), { recursive: true });
   await fs.mkdir(path.join(tmpAnaPath, 'plans/completed'), { recursive: true });

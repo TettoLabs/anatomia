@@ -3,7 +3,7 @@
  *
  * Tests actual command execution in temp project directory.
  * Validates all files/directories created correctly:
- * - .ana/ with 47 files (modes, context, docs, plans, hooks, state)
+ * - .ana/ with 44 files (modes, context, docs, plans, hooks, state)
  * - .claude/ with settings.json, agents/ (9 files), and skills/ (6 dirs)
  * - CLAUDE.md at project root
  * Total: 51 files
@@ -39,19 +39,18 @@ describe('ana init E2E', () => {
     await fs.rm(tmpProject, { recursive: true, force: true });
   });
 
-  it('creates all 47 files in .ana/ (modes, context, docs, plans, hooks, state)', async () => {
+  it('creates all 44 files in .ana/ (modes, context, docs, plans, hooks, state)', async () => {
     await execFileAsync('node', [cliPath, 'init'], {
       cwd: tmpProject,
     });
 
     const anaPath = path.join(tmpProject, '.ana');
 
-    // Verify directories (8 — steps/ and framework-snippets/ removed D10.9)
+    // Verify directories (7 — setup/ removed D10.9/S16)
     const dirs = [
       'modes',
       'hooks',
       'context',
-      'context/setup',
       'docs',
       'plans/active',
       'plans/completed',
@@ -74,7 +73,7 @@ describe('ana init E2E', () => {
       expect(exists, `Generated file missing: ${file}`).toBe(true);
     }
 
-    // Verify copied mode files (10)
+    // Verify copied mode files (6 — setup tiers removed S16)
     const modeFiles = [
       'modes/architect.md',
       'modes/code.md',
@@ -82,9 +81,6 @@ describe('ana init E2E', () => {
       'modes/docs.md',
       'modes/test.md',
       'modes/general.md',
-      'modes/setup.md',
-      'modes/setup-quick.md',
-      'modes/setup-guided.md',
     ];
 
     for (const file of modeFiles) {
@@ -133,10 +129,10 @@ describe('ana init E2E', () => {
     expect(snapshotExists).toBe(true);
 
     // Count total files in .ana/
-    // 2 generated + 9 modes + 4 hooks + 1 SCHEMAS + 2 .gitkeep + 3 JSON (ana.json, snapshot.json, scan.json) + 1 symbol-index + 1 cli-path + 1 .gitignore = 24
-    // (S15: consolidated 7→2 context files)
+    // 2 generated + 6 modes + 4 hooks + 1 SCHEMAS + 2 .gitkeep + 3 JSON (ana.json, snapshot.json, scan.json) + 1 symbol-index + 1 cli-path + 1 .gitignore = 21
+    // (S16: setup tier modes removed — setup.md, setup-quick.md, setup-guided.md)
     const allFiles = await findAllFiles(anaPath);
-    expect(allFiles.length).toBe(24);
+    expect(allFiles.length).toBe(21);
 
     // Verify .gitignore exists and excludes runtime state
     const gitignorePath = path.join(anaPath, '.gitignore');
@@ -276,19 +272,18 @@ describe('regression tests', () => {
     expect(scan.stack.framework).toBe('Next.js');
   }, 30000);
 
-  it('ana mode shows 7 modes (general, setup added in CP4)', async () => {
+  it('ana mode shows 6 modes (setup tiers removed S16)', async () => {
     const { stdout } = await execFileAsync('node', [cliPath, 'mode', 'code'], {
       cwd: tmpProject,
     });
 
-    // Should list all 7 modes
+    // Should list all 6 modes
     expect(stdout).toContain('architect');
     expect(stdout).toContain('code');
     expect(stdout).toContain('debug');
     expect(stdout).toContain('docs');
     expect(stdout).toContain('test');
-    expect(stdout).toContain('general'); // Added in CP4
-    expect(stdout).toContain('setup'); // Added in CP4
+    expect(stdout).toContain('general');
   }, 10000);
 });
 
