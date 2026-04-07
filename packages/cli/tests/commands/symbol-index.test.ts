@@ -274,10 +274,8 @@ describe('ana setup check with symbol index', () => {
     }
   }
 
-  function generateContent(lines: number, headers: number): string {
-    const headerLines = Array.from({ length: headers }, (_, i) => `## Section ${i + 1}`);
-    const contentLines = Array.from({ length: lines - headers }, () => 'Some content line.');
-    return [...headerLines, ...contentLines].join('\n');
+  function generateContent(): string {
+    return `# Project Context\n\n## What This Project Does\nContent.\n\n## Architecture\nContent.\n\n## Key Decisions\nContent.\n\n## Key Files\nContent.\n\n## Active Constraints\nContent.\n\n## Domain Vocabulary\nContent.\n`;
   }
 
   async function createContextFile(filename: string, content: string): Promise<void> {
@@ -300,10 +298,10 @@ describe('ana setup check with symbol index', () => {
     await fs.writeFile(path.join(tempDir, 'src', 'utils.ts'), 'line1\nline2\nline3\n');
 
     // Create context file with citation (no symbol index)
-    const content = generateContent(850, 6) + '\n\nExample from `src/utils.ts` (lines 1-2):\n```\ncode\n```\n';
-    await createContextFile('patterns.md', content);
+    const content = generateContent() + '\n\nExample from `src/utils.ts` (lines 1-2):\n```\ncode\n```\n';
+    await createContextFile('project-context.md', content);
 
-    const { stdout, exitCode } = runCheck('patterns.md --json');
+    const { stdout, exitCode } = runCheck('project-context.md --json');
     const result = JSON.parse(stdout);
 
     // Should pass with file-only check
@@ -328,10 +326,10 @@ describe('ana setup check with symbol index', () => {
     ]);
 
     // Create context file citing the function
-    const content = generateContent(850, 6) + '\n\nThe `processData` function from `src/utils.ts` (lines 1-3):\n```\ncode\n```\n';
-    await createContextFile('patterns.md', content);
+    const content = generateContent() + '\n\nThe `processData` function from `src/utils.ts` (lines 1-3):\n```\ncode\n```\n';
+    await createContextFile('project-context.md', content);
 
-    const { stdout, exitCode } = runCheck('patterns.md --json');
+    const { stdout, exitCode } = runCheck('project-context.md --json');
     const result = JSON.parse(stdout);
 
     expect(result.citations.pass).toBe(true);
@@ -357,10 +355,10 @@ describe('ana setup check with symbol index', () => {
     ]);
 
     // Create context file citing a non-existent function
-    const content = generateContent(850, 6) + '\n\nThe `fabricatedFunction` function from `src/utils.ts` (lines 1-3):\n```\ncode\n```\n';
-    await createContextFile('patterns.md', content);
+    const content = generateContent() + '\n\nThe `fabricatedFunction` function from `src/utils.ts` (lines 1-3):\n```\ncode\n```\n';
+    await createContextFile('project-context.md', content);
 
-    const { stdout, exitCode } = runCheck('patterns.md --json');
+    const { stdout, exitCode } = runCheck('project-context.md --json');
     const result = JSON.parse(stdout);
 
     expect(result.citations.pass).toBe(false);
@@ -390,10 +388,10 @@ export function myFunction() {
     ]);
 
     // Cite the function at wrong lines (lines 1-5, but function is at 50)
-    const content = generateContent(850, 6) + '\n\nThe `myFunction` function from `src/utils.ts` (lines 1-5):\n```\ncode\n```\n';
-    await createContextFile('patterns.md', content);
+    const content = generateContent() + '\n\nThe `myFunction` function from `src/utils.ts` (lines 1-5):\n```\ncode\n```\n';
+    await createContextFile('project-context.md', content);
 
-    const { stdout, exitCode } = runCheck('patterns.md --json');
+    const { stdout, exitCode } = runCheck('project-context.md --json');
     const result = JSON.parse(stdout);
 
     // Should fail because line 1-5 is not near line 50
@@ -416,10 +414,10 @@ export function myFunction() {
     ]);
 
     // Cite function at lines 45-55 (within ±20 of actual line 50)
-    const content = generateContent(850, 6) + '\n\nThe `myFunction` function from `src/utils.ts` (lines 45-55):\n```\ncode\n```\n';
-    await createContextFile('patterns.md', content);
+    const content = generateContent() + '\n\nThe `myFunction` function from `src/utils.ts` (lines 45-55):\n```\ncode\n```\n';
+    await createContextFile('project-context.md', content);
 
-    const { stdout, exitCode } = runCheck('patterns.md --json');
+    const { stdout, exitCode } = runCheck('project-context.md --json');
     const result = JSON.parse(stdout);
 
     expect(result.citations.pass).toBe(true);

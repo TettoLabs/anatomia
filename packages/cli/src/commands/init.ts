@@ -484,27 +484,47 @@ async function runAnalyzer(
 }
 
 /**
- * Display detection summary after analysis
- * @param result
+ * Display scan progress after analysis (D7.6)
+ *
+ * Shows incremental detection results. Null values skipped.
+ *
+ * @param result - Engine result from scan
  */
 function displayDetectionSummary(result: EngineResult): void {
   console.log();
 
   // Stack
-  const stackParts = [result.stack.language, result.stack.framework, result.stack.database, result.stack.auth, result.stack.testing].filter(Boolean);
+  const stackParts = [result.stack.language, result.commands.packageManager, result.stack.testing].filter(Boolean);
   if (stackParts.length > 0) {
-    console.log(chalk.bold('  Stack: ') + chalk.cyan(stackParts.join(' · ')));
+    console.log(chalk.green('  ✓ Stack: ') + stackParts.join(' · '));
+  }
+
+  // Files
+  if (result.files.source > 0 || result.files.test > 0) {
+    console.log(chalk.green('  ✓ Files: ') + `${result.files.source} source, ${result.files.test} tests`);
+  }
+
+  // Git
+  const gitParts: string[] = [];
+  if (result.git.defaultBranch) gitParts.push(`${result.git.defaultBranch} branch`);
+  if (result.git.commitCount !== null) gitParts.push(`${result.git.commitCount} commits`);
+  if (result.git.contributorCount !== null) gitParts.push(`${result.git.contributorCount} contributors`);
+  if (gitParts.length > 0) {
+    console.log(chalk.green('  ✓ Git: ') + gitParts.join(', '));
+  }
+
+  // Patterns
+  if (result.patterns) {
+    const categories = ['errorHandling', 'validation', 'database', 'auth', 'testing'] as const;
+    const detected = categories.filter(c => result.patterns?.[c] != null).length;
+    const depth = result.overview.depth === 'deep' ? 'deep scan' : 'surface tier';
+    console.log(chalk.green('  ✓ Patterns: ') + `${detected} detected (${depth})`);
   }
 
   // Services
   if (result.externalServices.length > 0) {
     const names = result.externalServices.map(s => s.name).join(', ');
-    console.log(chalk.bold('  Services: ') + names);
-  }
-
-  // Deployment
-  if (result.deployment) {
-    console.log(chalk.bold('  Deploy: ') + result.deployment.platform);
+    console.log(chalk.green('  ✓ Services: ') + names);
   }
 
   console.log();
@@ -1346,9 +1366,10 @@ async function atomicRename(tmpAnaPath: string, anaPath: string): Promise<void> 
 }
 
 /**
- * Display success message after init completes
+ * Display completion UX after init (D8.8)
  *
- * Shows what was created and next steps.
+ * Dynamic skill counts, conditional callout, two-path next steps.
+ * Null values skipped throughout.
  *
  * @param engineResult - Engine result (null if skipped)
  * @param projectName - Project name
@@ -1361,49 +1382,58 @@ function displaySuccessMessage(engineResult: EngineResult | null, projectName: s
     console.log(chalk.green(`✓ Scanned ${projectName}`) + chalk.gray(` (${scanTime}s)`));
     console.log('');
 
-    // Stack
-    const stackParts: string[] = [];
-    if (engineResult.stack.language) stackParts.push(engineResult.stack.language);
-    if (engineResult.stack.framework) stackParts.push(engineResult.stack.framework);
-    if (engineResult.stack.database) {
-      let db = engineResult.stack.database;
-      const prismaSchema = engineResult.schemas?.prisma;
-      if (prismaSchema?.found && prismaSchema.modelCount) {
-        db += ` (${prismaSchema.modelCount} models)`;
-      }
-      stackParts.push(db);
-    }
-    if (engineResult.stack.auth) stackParts.push(engineResult.stack.auth);
-    if (engineResult.stack.testing) stackParts.push(engineResult.stack.testing);
+    // Stack summary
+    const stackParts = [engineResult.stack.language, engineResult.stack.framework, engineResult.stack.database].filter(Boolean);
     if (stackParts.length > 0) {
-      console.log(`  ${chalk.bold('Stack:')}   ${stackParts.join(' · ')}`);
+      console.log(`  ${chalk.bold('Stack:')}    ${stackParts.join(' · ')}`);
     }
-
-    // Services (exclude things already in stack)
-    const serviceNames = engineResult.externalServices
-      .filter(s => !stackParts.some(p => p.includes(s.name)))
-      .map(s => s.name);
-    if (serviceNames.length > 0) {
-      console.log(`  ${chalk.bold('Services:')} ${serviceNames.join(', ')}`);
+    if (engineResult.stack.aiSdk) {
+      console.log(`  ${chalk.bold('AI:')}       ${engineResult.stack.aiSdk}`);
     }
-
-    // Deploy
+    if (engineResult.stack.testing) {
+      console.log(`  ${chalk.bold('Testing:')}  ${engineResult.stack.testing}`);
+    }
     if (engineResult.deployment?.platform) {
-      console.log(`  ${chalk.bold('Deploy:')}  ${engineResult.deployment.platform}`);
+      console.log(`  ${chalk.bold('Deploy:')}   ${engineResult.deployment.platform}`);
     }
-
     console.log('');
   }
 
-  console.log(chalk.green('✓ Context generated → .ana/context/ (2 files)'));
+  // Context files
+  console.log(chalk.green('✓ Context → .ana/context/ (2 files)'));
+
+  // Skills — dynamic count with Core/Detected breakdown
   if (engineResult) {
-    console.log(chalk.green('✓ Skills seeded → .claude/skills/ (6 files)'));
-    console.log(chalk.green('✓ Scan saved → .ana/scan.json'));
+    const analysis = engineResult;
+    const manifest = computeSkillManifest(analysis);
+    const coreSkills = ['coding-standards', 'testing-standards', 'git-workflow', 'deployment', 'troubleshooting'];
+    const conditionalSkills = manifest.filter(s => !coreSkills.includes(s));
+
+    console.log(chalk.green(`✓ Skills → .claude/skills/ (${manifest.length} skills)`));
+    console.log(`    ${chalk.gray('Core:')}      ${coreSkills.join(', ')}`);
+    if (conditionalSkills.length > 0) {
+      console.log(`    ${chalk.gray('Detected:')}  ${conditionalSkills.join(', ')}`);
+    }
   }
-  console.log(chalk.green('✓ Config written → .ana/ana.json'));
+
   console.log('');
-  console.log('  Next steps:');
+
+  // Config values
+  if (engineResult) {
+    const artifactBranch = engineResult.git.defaultBranch ?? engineResult.git.branch ?? 'main';
+    console.log(`  ${chalk.bold('Branch:')}   ${artifactBranch}`);
+    if (engineResult.commands.test) {
+      console.log(`  ${chalk.bold('Test:')}     ${engineResult.commands.test}`);
+    }
+    if (engineResult.commands.build) {
+      console.log(`  ${chalk.bold('Build:')}    ${engineResult.commands.build}`);
+    }
+    console.log('');
+  }
+
+  // Two-path next steps
+  console.log('  Next:');
   console.log(chalk.cyan('    claude --agent ana') + '          Start working (Ana knows your stack)');
-  console.log(chalk.cyan('    claude --agent ana-setup') + '    Enrich context with Q&A (optional)');
+  console.log(chalk.cyan('    claude --agent ana-setup') + '    Enrich with your team\'s knowledge (optional, ~10 min)');
   console.log('');
 }

@@ -15,7 +15,6 @@ import {
   SCAFFOLD_MARKER,
   MIN_FILE_SIZE_WARNING,
   MAX_FILE_SIZE_WARNING,
-  MIN_DEBUGGING_FILE_SIZE,
   REQUIRED_CONTEXT_FILES,
 } from '../constants.js';
 
@@ -316,37 +315,35 @@ export async function validateStructure(anaPath: string): Promise<ValidationErro
 /**
  * Validate content requirements (BF4)
  *
- * Checks project-overview.md has required sections:
- * - Project name in header
- * - Tech Stack section
+ * Checks project-context.md has required sections (D6.6 format).
  *
  * @param anaPath - Path to .ana/ directory
  * @returns Array of blocking errors (empty if valid)
  */
 export async function validateContent(anaPath: string): Promise<ValidationError[]> {
   const errors: ValidationError[] = [];
-  const overviewPath = path.join(anaPath, 'context/project-overview.md');
+  const contextPath = path.join(anaPath, 'context/project-context.md');
 
   try {
-    const content = await fs.readFile(overviewPath, 'utf-8');
+    const content = await fs.readFile(contextPath, 'utf-8');
 
-    // BF4: Check project name header
-    if (!content.includes('# Project Overview')) {
+    // BF4: Check project context header
+    if (!content.includes('# Project Context')) {
       errors.push({
         type: 'BLOCKING',
         rule: 'BF4',
-        file: 'project-overview.md',
-        message: 'project-overview.md missing: project name header (no "# Project Overview — [name]")',
+        file: 'project-context.md',
+        message: 'project-context.md missing: "# Project Context" header',
       });
     }
 
-    // BF4: Check Tech Stack section
-    if (!content.includes('## Tech Stack')) {
+    // BF4: Check required section
+    if (!content.includes('## What This Project Does')) {
       errors.push({
         type: 'BLOCKING',
         rule: 'BF4',
-        file: 'project-overview.md',
-        message: 'project-overview.md missing: "## Tech Stack" section',
+        file: 'project-context.md',
+        message: 'project-context.md missing: "## What This Project Does" section',
       });
     }
   } catch (_error) {
@@ -379,73 +376,9 @@ export async function validateCrossReferences(
     return errors;
   }
 
-  // BF5: Pattern count check
-  const detectedCount = countDetectedPatterns(snapshot);
-  const patternsPath = path.join(anaPath, 'context/patterns.md');
+  // BF5: Pattern count check — removed, patterns now in skill templates (S15)
 
-  try {
-    const patternsContent = await fs.readFile(patternsPath, 'utf-8');
-    const documentedSections = getDocumentedPatternSections(patternsContent);
-
-    if (documentedSections.length < detectedCount) {
-      const missing = getMissingPatterns(snapshot, documentedSections);
-      errors.push({
-        type: 'BLOCKING',
-        rule: 'BF5',
-        file: 'patterns.md',
-        message: `patterns.md documents ${documentedSections.length} pattern(s) but analyzer detected ${detectedCount}. Missing: ${missing.join(', ')}`,
-      });
-    }
-  } catch (_error) {
-    // File read failed - already caught by BF2
-  }
-
-  // BF6: Framework consistency
-  // Skip the cross-reference check when analyzer returned no meaningful framework data.
-  // This is Scenario B: analyzer pipeline returned no data or low-confidence results.
-  // The writer is MORE accurate than the analyzer in these cases — don't penalize it.
-  //
-  // Skip when analyzer framework is null, "none", or "unknown".
-  // But if analyzer returned a specific framework name (like "nextjs", "fastapi"),
-  // still perform the check even with low confidence - it's a comparison point.
-  const analyzerFramework = snapshot.stack?.framework?.toLowerCase() || null;
-  const analyzerReturnedNoFramework =
-    analyzerFramework === null ||
-    analyzerFramework === 'none' ||
-    analyzerFramework === 'unknown';
-
-  if (analyzerReturnedNoFramework) {
-    // Log warning but don't add to errors - handled in calling code as soft warning
-    console.log('\x1b[33m  ⚠ Analyzer did not detect framework (known limitation). Skipping framework cross-reference.\x1b[0m');
-    return errors;
-  }
-
-  const overviewPath = path.join(anaPath, 'context/project-overview.md');
-
-  try {
-    const overviewContent = await fs.readFile(overviewPath, 'utf-8');
-    const overviewFramework = extractFrameworkFromContent(overviewContent);
-    // Scenario B: normalize "none" to null (analyzer may return framework: "none")
-    const rawSnapshotFramework = snapshot.stack?.framework?.toLowerCase() || null;
-    const snapshotFramework = rawSnapshotFramework === 'none' ? null : rawSnapshotFramework;
-
-    // Both should be null or both should match
-    if (overviewFramework !== snapshotFramework) {
-      // Allow if both are null (no framework)
-      if (overviewFramework === null && snapshotFramework === null) {
-        // OK - both agree no framework
-      } else {
-        errors.push({
-          type: 'BLOCKING',
-          rule: 'BF6',
-          file: 'project-overview.md',
-          message: `Framework mismatch: overview says '${overviewFramework || 'none'}' but analyzer detected '${snapshotFramework || 'none'}'`,
-        });
-      }
-    }
-  } catch (_error) {
-    // File read failed - already caught by BF2
-  }
+  // BF6: Framework consistency — removed, framework now in project-context.md Detected lines (S15)
 
   return errors;
 }
@@ -492,29 +425,7 @@ export async function validateQuality(anaPath: string): Promise<ValidationError[
         });
       }
 
-      // SW3: workflow.md git check
-      if (file === 'context/workflow.md') {
-        if (!content.toLowerCase().includes('git') && !content.includes('branch')) {
-          warnings.push({
-            type: 'WARNING',
-            rule: 'SW3',
-            file,
-            message: '⚠️  workflow.md has no git information. Not a git repository?',
-          });
-        }
-      }
-
-      // SW4: debugging.md minimal check
-      if (file === 'context/debugging.md') {
-        if (lines < MIN_DEBUGGING_FILE_SIZE) {
-          warnings.push({
-            type: 'WARNING',
-            rule: 'SW4',
-            file,
-            message: `⚠️  debugging.md minimal (${lines} lines). May need more user input (institutional knowledge).`,
-          });
-        }
-      }
+      // SW3/SW4: removed — workflow.md and debugging.md consolidated to skills in S15
     } catch {
       // File missing - already caught by BF2
     }
