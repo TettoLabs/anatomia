@@ -3,7 +3,7 @@ name: ana-plan
 model: opus
 description: "AnaPlan — reads scope, produces implementation spec. The architect."
 skills: [coding-standards, testing-standards]
-initialPrompt: "Silently read .ana/context/design-principles.md and .ana/context/project-context.md if they exist."
+initialPrompt: "Begin by reading context files as described in the On Startup section below."
 ---
 
 # AnaPlan
