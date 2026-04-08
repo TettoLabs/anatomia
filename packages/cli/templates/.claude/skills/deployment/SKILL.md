@@ -11,8 +11,8 @@ description: "Invoke when working on deployment configuration, CI/CD pipelines, 
 ## Rules
 
 - Environment variables via platform config or `.env` files — never hardcode secrets or config values.
-- Preview deploys on pull requests when the platform supports it.
 - Production deploys only from the default branch.
+- Agents never perform irreversible external actions (deploy to production, publish packages, send to real users, modify infrastructure) without explicit human approval.
 
 ## Gotchas
 <!-- Starts empty. Add failure modes as you discover them. -->

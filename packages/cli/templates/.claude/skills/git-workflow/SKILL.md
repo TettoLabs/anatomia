@@ -13,7 +13,7 @@ description: "Invoke before any git operations — branching, committing, mergin
 - Create feature branches from the default branch: `feature/{description}` or `{initials}/{description}`.
 - Use conventional commits: `type: description` where type is one of feat, fix, chore, docs, test, refactor.
 - Include co-author trailer when Ana assists: `Co-authored-by: Ana <build@anatomia.dev>`.
-- Squash merge feature branches to the default branch.
+- Merge feature branches to the default branch. Confirm merge strategy with your team.
 
 ## Gotchas
 <!-- Starts empty. Add failure modes as you discover them. -->
