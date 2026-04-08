@@ -410,44 +410,6 @@ function formatHumanReadable(result: EngineResult, options: { isFunnel: boolean 
   return lines.join('\n');
 }
 
-/**
- * Check for drift between scan result and ana.json, warn to stderr
- * @param result - Engine analysis result
- * @param anaJsonPath - Path to ana.json file
- */
-function checkDrift(result: EngineResult, anaJsonPath: string): void {
-  if (!existsSync(anaJsonPath)) return;
-
-  try {
-    const anaJson = JSON.parse(readFileSync(anaJsonPath, 'utf-8'));
-    const drifts: string[] = [];
-
-    const checks: Array<[string, string | null | undefined, string | null | undefined]> = [
-      ['language', result.stack.language, anaJson.language],
-      ['framework', result.stack.framework, anaJson.framework],
-      ['packageManager', result.commands.packageManager, anaJson.packageManager],
-      ['commands.test', result.commands.test, anaJson.commands?.test],
-      ['commands.build', result.commands.build, anaJson.commands?.build],
-    ];
-
-    for (const [field, scanVal, anaVal] of checks) {
-      if (scanVal !== anaVal && (scanVal !== null || anaVal !== undefined)) {
-        drifts.push(`  ${field}: ${scanVal ?? 'null'} (was ${anaVal ?? 'null'})`);
-      }
-    }
-
-    if (drifts.length > 0) {
-      console.error(chalk.yellow('\n⚠ Scan detected changes since init:'));
-      for (const d of drifts) {
-        console.error(chalk.yellow(d));
-      }
-      console.error(chalk.yellow('Run `ana setup` to review.\n'));
-    }
-  } catch {
-    // ana.json parse error — skip drift check silently
-  }
-}
-
 interface ScanOptions {
   json?: boolean;
   verbose?: boolean;
@@ -548,8 +510,7 @@ export const scanCommand = new Command('scan')
             }
           }
 
-          // Drift warning (stderr — visible even with --quiet)
-          checkDrift(result, path.join(anaDir, 'ana.json'));
+          // checkDrift removed (S18/D13)
         } catch (writeError) {
           console.error(chalk.yellow(`Warning: Failed to save scan results. ${writeError instanceof Error ? writeError.message : ''}`));
         }
@@ -564,4 +525,4 @@ export const scanCommand = new Command('scan')
 // Export helper functions for testing
 export { getLanguageDisplayName, getFrameworkDisplayName, getPatternDisplayName, formatNumber };
 // Export for testing
-export { formatHumanReadable, countFindings, checkDrift };
+export { formatHumanReadable, countFindings };

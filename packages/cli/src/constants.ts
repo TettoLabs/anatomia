@@ -37,9 +37,6 @@ export const CONDITIONAL_SKILL_TRIGGERS: Record<string, (result: EngineResult) =
   'data-access': (r) => !!r?.stack?.database,
 };
 
-/** All conditional skill names */
-export const ALL_CONDITIONAL_SKILLS = Object.keys(CONDITIONAL_SKILL_TRIGGERS) as string[];
-
 /**
  * Compute which skills to scaffold based on scan results.
  * This function IS Anatomia's adaptive intelligence. (D8.2, D8.9)
@@ -68,17 +65,6 @@ export const SCAFFOLD_MARKER = '<!-- SCAFFOLD - Setup will fill this file -->';
 /** Validation thresholds */
 export const MIN_FILE_SIZE_WARNING = 20; // Lines
 export const MAX_FILE_SIZE_WARNING = 1500; // Lines
-export const MIN_DEBUGGING_FILE_SIZE = 15; // Lines
-
-/** Pattern categories (synchronized with analyzer) */
-export const PATTERN_CATEGORIES = [
-  'errorHandling',
-  'validation',
-  'database',
-  'auth',
-  'testing',
-] as const;
-
 /** Context files required for setup complete validation (S15: 7→2) */
 export const REQUIRED_CONTEXT_FILES = [
   'context/project-context.md',
@@ -95,5 +81,3 @@ export const AGENT_FILES = [
 ] as const;
 
 
-/** ana.json version */
-export const ANA_JSON_VERSION = '1.0.0';

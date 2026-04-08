@@ -74,18 +74,4 @@ export async function walkDirectories(
   return directories;
 }
 
-/**
- * Get immediate subdirectories only (no recursion)
- * @param rootPath
- */
-export async function getSubdirectories(rootPath: string): Promise<string[]> {
-  try {
-    const entries = await readdir(rootPath, { withFileTypes: true });
-    return entries
-      .filter(entry => entry.isDirectory())
-      .map(entry => entry.name);
-  } catch {
-    return [];
-  }
-}
 

@@ -196,47 +196,6 @@ export function detectFromDeps(
   return result;
 }
 
-/**
- * Detect stack categories from package.json dependencies.
- * Only ADDS categories the analyzer didn't already detect.
- *
- * @param scanPath - Path being scanned
- * @param existingStack - Stack categories already detected by analyzer
- * @param verbose - Whether to log verbose output
- * @returns Merged stack with fallback additions
- */
-export async function detectFromPackageJson(
-  scanPath: string,
-  existingStack: Record<string, string>,
-  verbose: boolean
-): Promise<Record<string, string>> {
-  const stack = { ...existingStack };
-  const packageJsonPath = path.join(scanPath, 'package.json');
-  const allDeps = await readDependencies(packageJsonPath);
-
-  if (Object.keys(allDeps).length === 0) return stack;
-
-  const detected = detectFromDeps(allDeps);
-
-  if (!stack.database && detected.database) {
-    stack.database = detected.database;
-    if (verbose) console.error(`Fallback: Database: ${detected.database}`);
-  }
-  if (!stack.auth && detected.auth) {
-    stack.auth = detected.auth;
-    if (verbose) console.error(`Fallback: Auth: ${detected.auth}`);
-  }
-  if (!stack.testing && detected.testing) {
-    stack.testing = detected.testing;
-    if (verbose) console.error(`Fallback: Testing: ${detected.testing}`);
-  }
-  if (!stack.payments && detected.payments) {
-    stack.payments = detected.payments;
-    if (verbose) console.error(`Fallback: Payments: ${detected.payments}`);
-  }
-
-  return stack;
-}
 
 /**
  * Detect services from new category maps.
