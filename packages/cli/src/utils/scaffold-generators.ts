@@ -45,6 +45,16 @@ export function generateProjectContextScaffold(result: EngineResult): string {
   if (cmdParts.length > 0) {
     s += `**Detected commands:** ${cmdParts.join(' · ')}\n`;
   }
+  const infoParts: string[] = [];
+  if (result.commands.packageManager) infoParts.push(`${result.commands.packageManager}`);
+  if (result.stack.aiSdk) infoParts.push(`${result.stack.aiSdk} SDK`);
+  if (result.monorepo.isMonorepo) {
+    const tool = result.monorepo.tool || 'monorepo';
+    infoParts.push(`${tool} (${result.monorepo.packages.length} packages)`);
+  }
+  if (infoParts.length > 0) {
+    s += `**Detected infrastructure:** ${infoParts.join(' · ')}\n`;
+  }
   s += `<!-- What does this product do? Who uses it? Setup will capture this. -->\n\n`;
 
   // Section 2: Architecture
