@@ -80,6 +80,8 @@ interface PreflightResult {
   canProceed: boolean;
   initState: InitState;
   stateBackup?: string; // Path to state/ backup if --force used
+  contextBackup?: string; // Path to context/ backup if --force used
+  anaJsonBackup?: string; // Path to ana.json backup if --force used
 }
 
 /**
@@ -212,6 +214,29 @@ export const initCommand = new Command('init')
         await fs.rename(preflight.stateBackup, stateDir);
       }
 
+      // Restore context/ if --force was used
+      if (preflight.contextBackup) {
+        const contextDir = path.join(tmpAnaPath, 'context');
+        await fs.rm(contextDir, { recursive: true, force: true }).catch(() => {});
+        await fs.rename(preflight.contextBackup, contextDir);
+      }
+
+      // Restore ana.json then overwrite mechanical fields
+      if (preflight.anaJsonBackup) {
+        const newAnaJsonPath = path.join(tmpAnaPath, 'ana.json');
+        const restoredJson = JSON.parse(await fs.readFile(preflight.anaJsonBackup, 'utf-8'));
+        let newJson: Record<string, unknown>;
+        try {
+          newJson = JSON.parse(await fs.readFile(newAnaJsonPath, 'utf-8'));
+        } catch {
+          newJson = {};
+        }
+        // Preserve user fields from backup, overwrite only mechanical fields from new
+        const merged = { ...restoredJson, anaVersion: newJson.anaVersion, lastScanAt: newJson.lastScanAt };
+        await fs.writeFile(newAnaJsonPath, JSON.stringify(merged, null, 2) + '\n');
+        await fs.rm(preflight.anaJsonBackup).catch(() => {});
+      }
+
       // SUCCESS: Atomic rename
       await atomicRename(tmpAnaPath, anaPath);
 
@@ -280,6 +305,8 @@ async function validateInitPreconditions(
   const anaExists = await dirExists(anaPath);
   let initState: InitState = 'fresh';
   let stateBackup: string | undefined;
+  let contextBackup: string | undefined;
+  let anaJsonBackup: string | undefined;
 
   if (anaExists) {
     const anaJsonPath = path.join(anaPath, 'ana.json');
@@ -328,14 +355,30 @@ async function validateInitPreconditions(
       }
     }
 
-    // Backup state/ before deletion for reinit/upgrade/corrupted
+    // Backup before deletion for reinit/upgrade/corrupted
+    const timestamp = Date.now();
     const statePath = path.join(anaPath, 'state');
     if (await dirExists(statePath)) {
-      const timestamp = Date.now();
       stateBackup = path.join(os.tmpdir(), `.ana-state-backup-${timestamp}`);
       console.log(chalk.gray('Backing up state/ directory...'));
       await fs.cp(statePath, stateBackup, { recursive: true });
     }
+
+    // Back up context/ (user-enriched files)
+    const contextPath = path.join(anaPath, 'context');
+    if (await dirExists(contextPath)) {
+      contextBackup = path.join(os.tmpdir(), `.ana-context-backup-${timestamp}`);
+      console.log(chalk.gray('Backing up context/ directory...'));
+      await fs.cp(contextPath, contextBackup, { recursive: true });
+    }
+
+    // Back up ana.json (user fields like setupMode, coAuthor)
+    const anaJsonBackupPath = path.join(anaPath, 'ana.json');
+    try {
+      await fs.access(anaJsonBackupPath);
+      anaJsonBackup = path.join(os.tmpdir(), `.ana-json-backup-${timestamp}`);
+      await fs.cp(anaJsonBackupPath, anaJsonBackup);
+    } catch { /* no ana.json to back up */ }
 
     // Delete existing .ana/
     console.log(chalk.gray('Removing existing .ana/...'));
@@ -403,6 +446,8 @@ async function validateInitPreconditions(
     canProceed: true,
     initState,
     stateBackup,
+    contextBackup,
+    anaJsonBackup,
   };
 }
 
