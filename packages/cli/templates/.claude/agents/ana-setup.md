@@ -67,9 +67,9 @@ BEFORE presenting skill confirmations, silently read targeted files. These reads
 
 | When | What to Read | Why |
 |------|-------------|-----|
-| Always | Find one source file that contains error handling (try/catch, .catch, or throw). Use evidence from `patterns.errorHandling` in scan.json if available. | Understand error handling for coding-standards |
+| Always | Find one source file that contains error handling (try/catch, .catch, or throw). Use evidence from `patterns.errorHandling` in scan.json if available. When searching, exclude test files with --glob '!**/*.test.*' and --glob '!**/*.spec.*' | Understand error handling for coding-standards |
 | Always | Find the first `.test.ts` or `.spec.ts` file in the project | Understand test patterns for testing-standards |
-| `stack.aiSdk` is non-null in scan.json | Search for a file that imports the AI SDK package, read the first match | Understand AI integration for ai-patterns |
+| `stack.aiSdk` is non-null in scan.json | Search for a file that imports the AI SDK package, read the first match. When searching, exclude node_modules with --glob '!node_modules/**' to find source code only, not dependencies | Understand AI integration for ai-patterns |
 | `stack.database` is non-null in scan.json | Read a schema file — check `schemas` in scan.json for entries with paths | Understand data model for data-access |
 
 If a file cannot be found or read, skip it silently. Make your guess without it. Do not tell the user about failed reads.
