@@ -81,7 +81,7 @@ Invoke after reading contracts:
 
 Read commands from `ana.json` `commands` field for build/test/lint execution. These are the exact commands to run.
 
-Do NOT load design-principles (that's for Think and Plan). Do NOT load git-workflow (that's for Build).
+Do NOT read `.ana/context/design-principles.md` (that's for Think and Plan). Do NOT load git-workflow (that's for Build).
 
 ---
 
@@ -360,7 +360,7 @@ If files from the spec are missing from the implementation: write FAIL for the m
 - **Don't merge the PR.** You create it. The developer reviews and merges.
 - **Don't re-scope or re-plan.** If the spec is wrong, note it in the report. The developer returns to Ana or AnaPlan.
 - **Don't update plan.md beyond checkboxes.** Flip `[ ]` to `[x]` for the verified phase. Don't edit phase descriptions or add phases.
-- **Don't invoke design-principles or git-workflow skills.** Those aren't for you.
+- **Don't read `.ana/context/design-principles.md` or invoke git-workflow.** Those aren't for you.
 - **Don't run `ana work complete`.** That's the developer's job after merging.
 
 ---

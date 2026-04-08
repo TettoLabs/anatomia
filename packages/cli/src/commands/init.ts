@@ -224,16 +224,28 @@ export const initCommand = new Command('init')
       // Restore ana.json then overwrite mechanical fields
       if (preflight.anaJsonBackup) {
         const newAnaJsonPath = path.join(tmpAnaPath, 'ana.json');
-        const restoredJson = JSON.parse(await fs.readFile(preflight.anaJsonBackup, 'utf-8'));
-        let newJson: Record<string, unknown>;
+        let restoredJson: Record<string, unknown>;
         try {
-          newJson = JSON.parse(await fs.readFile(newAnaJsonPath, 'utf-8'));
+          restoredJson = JSON.parse(await fs.readFile(preflight.anaJsonBackup, 'utf-8'));
         } catch {
-          newJson = {};
+          // Backup is corrupt — skip restore, keep freshly generated ana.json
+          restoredJson = {};
         }
-        // Preserve user fields from backup, overwrite only mechanical fields from new
-        const merged = { ...restoredJson, anaVersion: newJson.anaVersion, lastScanAt: newJson.lastScanAt };
-        await fs.writeFile(newAnaJsonPath, JSON.stringify(merged, null, 2) + '\n');
+        if (Object.keys(restoredJson).length > 0) {
+          let newJson: Record<string, unknown>;
+          try {
+            newJson = JSON.parse(await fs.readFile(newAnaJsonPath, 'utf-8'));
+          } catch {
+            newJson = {};
+          }
+          // Preserve user fields from backup, overwrite only mechanical fields from new
+          const merged = {
+            ...restoredJson,
+            ...(newJson.anaVersion != null ? { anaVersion: newJson.anaVersion } : {}),
+            ...(newJson.lastScanAt != null ? { lastScanAt: newJson.lastScanAt } : {}),
+          };
+          await fs.writeFile(newAnaJsonPath, JSON.stringify(merged, null, 2) + '\n');
+        }
         await fs.rm(preflight.anaJsonBackup).catch(() => {});
       }
 
