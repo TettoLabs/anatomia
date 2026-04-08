@@ -37,8 +37,9 @@ test-results/
 *.tmp
 .temp/
 master_plan/
-.ana/.state/cache/
-**/.ana/.state/cache/
+# Anatomia local state (runtime caches, not source)
+**/.ana/state/cache/
+packages/cli/.ana/
 
 # Sprint investigation/diagnostic files (not source)
 *DIAGNOSTIC*.md
