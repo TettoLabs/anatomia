@@ -588,6 +588,7 @@ function displayFileResult(result: FileCheckResult): void {
 /** Setup progress phase */
 export interface PhaseStatus {
   completed: boolean;
+  skipped?: boolean;
   timestamp?: string;
 }
 

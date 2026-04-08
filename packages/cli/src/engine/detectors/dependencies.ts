@@ -125,6 +125,10 @@ const AI_SDK_PACKAGES: Array<[string, string]> = [
   ['@google/generative-ai', 'Google AI'],
   ['langchain', 'LangChain'],
   ['@langchain/core', 'LangChain'],
+  ['@ai-sdk/anthropic', 'Vercel AI'],
+  ['@ai-sdk/openai', 'Vercel AI'],
+  ['@ai-sdk/google', 'Vercel AI'],
+  ['@ai-sdk/mistral', 'Vercel AI'],
 ];
 
 /**

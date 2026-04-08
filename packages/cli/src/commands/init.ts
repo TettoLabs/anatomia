@@ -97,7 +97,7 @@ interface PreflightResult {
 async function confirm(message: string, defaultYes: boolean): Promise<boolean> {
   // Non-interactive (CI, piped input, test harness): proceed without blocking
   if (!process.stdin.isTTY) {
-    return true;
+    return defaultYes;
   }
 
   const rl = createInterface({ input: process.stdin, output: process.stdout });
@@ -996,7 +996,8 @@ function injectCodingStandards(result: EngineResult): string {
       lines.push(`- Imports: ${result.conventions.imports.style} (${Math.round(result.conventions.imports.confidence * 100)}%)`);
     }
     if (result.conventions.indentation?.style) {
-      lines.push(`- Indentation: ${result.conventions.indentation.style}, ${result.conventions.indentation.width} spaces`);
+      const indent = result.conventions.indentation;
+      lines.push(`- Indentation: ${indent.style === 'tabs' ? 'tabs' : `${indent.style}, ${indent.width} wide`}`);
     }
   }
   if (result.patterns?.errorHandling) {

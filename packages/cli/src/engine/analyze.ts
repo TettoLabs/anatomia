@@ -381,7 +381,7 @@ function mapConventions(
 
 export async function analyzeProject(
   rootPath: string,
-  options: { depth: 'surface' | 'deep' } = { depth: 'surface' }
+  options: { depth: 'surface' | 'deep' } = { depth: 'deep' }
 ): Promise<EngineResult> {
   const projectName = path.basename(rootPath);
   const now = new Date().toISOString();
