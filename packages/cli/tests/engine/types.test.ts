@@ -18,7 +18,7 @@ describe('AnalysisResult types', () => {
       expect(result.confidence.framework).toBe(0.0);
       expect(result.indicators.projectType).toEqual([]);
       expect(result.indicators.framework).toEqual([]);
-      expect(result.version).toBe('0.1.0');
+      expect(result.version).toBe('0.2.0');
     });
 
     it('includes valid ISO timestamp', () => {

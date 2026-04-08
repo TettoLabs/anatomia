@@ -12,8 +12,11 @@
  * @packageDocumentation
  */
 
+import { readFileSync } from 'node:fs';
 import { Command } from 'commander';
 import { initCommand } from './commands/init.js';
+
+const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf-8'));
 import { modeCommand } from './commands/mode.js';
 import { setupCommand } from './commands/setup.js';
 import { artifactCommand } from './commands/artifact.js';
@@ -29,7 +32,7 @@ const program = new Command();
 program
   .name('ana')
   .description('Verified AI development. Ship with proof.')
-  .version('0.1.0', '-v, --version', 'Display version number');
+  .version(pkg.version, '-v, --version', 'Display version number');
 
 // Register commands
 program.addCommand(initCommand);

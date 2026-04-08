@@ -113,8 +113,8 @@ export {
 export type { EngineResult } from './types/engineResult.js';
 export { analyzeProject } from './analyze.js';
 
-// Version constant (internal only)
-const VERSION = '0.1.0';
+// Version constant
+const VERSION = '0.2.0';
 
 /**
  * Analysis options
