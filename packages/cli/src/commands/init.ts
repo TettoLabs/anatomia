@@ -62,6 +62,8 @@ import { getProjectName } from '../utils/validators.js';
 import {
   MODE_FILES,
   AGENT_FILES,
+  CONTEXT_FILES,
+  CORE_SKILLS,
   computeSkillManifest,
 } from '../constants.js';
 import { buildSymbolIndex } from './symbol-index.js';
@@ -1451,13 +1453,13 @@ function displaySuccessMessage(engineResult: EngineResult | null, projectName: s
   }
 
   // Context files
-  console.log(chalk.green('✓ Context → .ana/context/ (2 files)'));
+  console.log(chalk.green(`✓ Context → .ana/context/ (${CONTEXT_FILES.length} files)`));
 
   // Skills — dynamic count with Core/Detected breakdown
   if (engineResult) {
     const analysis = engineResult;
     const manifest = computeSkillManifest(analysis);
-    const coreSkills = ['coding-standards', 'testing-standards', 'git-workflow', 'deployment', 'troubleshooting'];
+    const coreSkills = [...CORE_SKILLS];
     const conditionalSkills = manifest.filter(s => !coreSkills.includes(s));
 
     console.log(chalk.green(`✓ Skills → .claude/skills/ (${manifest.length} skills)`));
