@@ -33,6 +33,9 @@ describe('ana init E2E', () => {
       path.join(tmpProject, 'package.json'),
       JSON.stringify({ name: 'test-project', version: '1.0.0' })
     );
+
+    // Create .git so init doesn't hit the no-git confirm (defaultYes: false in non-TTY)
+    await fs.mkdir(path.join(tmpProject, '.git'), { recursive: true });
   });
 
   afterEach(async () => {
@@ -229,6 +232,9 @@ describe('regression tests', () => {
       path.join(tmpProject, 'package.json'),
       JSON.stringify({ name: 'test-project' })
     );
+
+    // Create .git so init doesn't hit the no-git confirm (defaultYes: false in non-TTY)
+    await fs.mkdir(path.join(tmpProject, '.git'), { recursive: true });
   });
 
   afterEach(async () => {
