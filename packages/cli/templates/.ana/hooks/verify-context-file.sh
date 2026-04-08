@@ -44,18 +44,7 @@ if [[ "$FILE_PATH" == *".claude/skills/"* && "$FILE_PATH" == *"SKILL.md"* ]]; th
     fi
   done
 
-  RESULT_DIR="$PROJECT_ROOT/.ana/state"
-  mkdir -p "$RESULT_DIR"
-  SKILL_NAME=$(basename "$(dirname "$FILE_PATH")")
-  RESULT_FILE="$RESULT_DIR/check_result_skill_${SKILL_NAME}"
-
-  if [ -n "$MISSING" ]; then
-    echo "FAIL" > "$RESULT_FILE"
-    echo "Missing sections: ${MISSING%, }" >> "$RESULT_FILE"
-  else
-    echo "PASS" > "$RESULT_FILE"
-  fi
-
+  # Validation only — no disk writes (S18/D5: orphaned result files removed)
   exit 0
 fi
 
@@ -71,17 +60,5 @@ FILENAME=$(basename "$FILE_PATH")
 RESULT=$(bash "$HOOK_DIR/run-check.sh" "$FILENAME" --json 2>&1)
 CHECK_EXIT=$?
 
-# Write results to a per-file check result on disk — NO stdout
-# This prevents broadcast to parallel agents via additionalContext
-RESULT_DIR="$PROJECT_ROOT/.ana/state"
-mkdir -p "$RESULT_DIR"
-RESULT_FILE="$RESULT_DIR/check_result_${FILENAME}"
-
-if [ $CHECK_EXIT -eq 0 ]; then
-  echo "PASS" > "$RESULT_FILE"
-else
-  echo "FAIL" > "$RESULT_FILE"
-  echo "$RESULT" >> "$RESULT_FILE"
-fi
-
+# Validation only — no disk writes (S18/D5: orphaned result files removed)
 exit 0

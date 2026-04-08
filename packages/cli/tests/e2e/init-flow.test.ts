@@ -109,14 +109,10 @@ describe('ana init E2E', () => {
     expect(meta.setupMode).toBeDefined();
     expect(meta.name).toBeDefined();
 
-    // Verify snapshot.json
-    const snapshotExists = await fileExists(path.join(anaPath, 'state/snapshot.json'));
-    expect(snapshotExists).toBe(true);
-
     // Count total files in .ana/
-    // 2 generated + 2 hooks + 1 SCHEMAS + 2 .gitkeep + 3 JSON (ana.json, snapshot.json, scan.json) + 1 symbol-index + 1 cli-path + 1 .gitignore + 2 hook results = 15
+    // 2 generated + 2 hooks + 1 SCHEMAS + 2 .gitkeep + 2 JSON (ana.json, scan.json) + 1 symbol-index + 1 cli-path + 1 .gitignore = 12
     const allFiles = await findAllFiles(anaPath);
-    expect(allFiles.length).toBe(15);
+    expect(allFiles.length).toBe(12);
 
     // Verify .gitignore exists and excludes runtime state
     const gitignorePath = path.join(anaPath, '.gitignore');

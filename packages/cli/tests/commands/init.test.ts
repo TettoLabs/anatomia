@@ -207,24 +207,13 @@ describe('ana init', () => {
       expect(verifyContent).toContain('PostToolUse hook');
       expect(verifyContent).toContain('.ana/context/');
       expect(verifyContent).toContain('run-check.sh');
-      // additionalContext removed from output, but comment explains why (no stdout broadcast)
-      expect(verifyContent).toContain('NO stdout');
+      // Result files removed (S18/D5 — orphaned writes)
       // Verify jq parsing with grep fallback
       expect(verifyContent).toContain('jq -r');
       expect(verifyContent).toContain('.tool_input.file_path');
       expect(verifyContent).toContain('Fallback: grep parsing');
 
-      // Verify quality-gate.sh
-      const gatePath = path.join(templatesDir, '.ana/hooks/quality-gate.sh');
-      const gateContent = await fs.readFile(gatePath, 'utf-8');
-      expect(gateContent).toContain('#!/bin/bash');
-      expect(gateContent).toContain('Stop hook');
-      expect(gateContent).toContain('exit 2');
-      // Verify file-based lockfile guard (uses PROJECT_ROOT for portability)
-      expect(gateContent).toContain('LOCKFILE="$PROJECT_ROOT/.ana/.stop_hook_active"');
-      expect(gateContent).toContain('if [ -f "$LOCKFILE" ]');
-      expect(gateContent).toContain('touch "$LOCKFILE"');
-      expect(gateContent).toContain("trap 'rm -f");
+      // quality-gate.sh and subagent-verify.sh removed (S18/D4)
     });
 
     it('hook scripts will be executable after copy', async () => {
@@ -239,7 +228,7 @@ describe('ana init', () => {
       const templatesDir = path.join(__dirname, '..', '..', 'templates');
 
       // Copy and set executable
-      const scripts = ['verify-context-file.sh', 'quality-gate.sh'];
+      const scripts = ['verify-context-file.sh', 'run-check.sh'];
       for (const script of scripts) {
         const sourcePath = path.join(templatesDir, '.ana/hooks', script);
         const destPath = path.join(hooksPath, script);
@@ -273,11 +262,7 @@ describe('ana init', () => {
       );
       expect(settings.hooks.PostToolUse[0].hooks[0].timeout).toBe(30);
 
-      // Verify Stop hook
-      expect(settings.hooks.Stop).toBeDefined();
-      expect(settings.hooks.Stop).toHaveLength(1);
-      expect(settings.hooks.Stop[0].hooks[0].command).toBe('"$CLAUDE_PROJECT_DIR"/.ana/hooks/quality-gate.sh');
-      expect(settings.hooks.Stop[0].hooks[0].timeout).toBe(120);
+      // Stop hook removed (S18/D4)
     });
 
     it('creates .claude/agents/ directory with 8 agent files', async () => {
@@ -444,17 +429,6 @@ describe('ana init', () => {
               ],
             },
           ],
-          Stop: [
-            {
-              hooks: [
-                {
-                  type: 'command',
-                  command: '.ana/hooks/quality-gate.sh',
-                  timeout: 120,
-                },
-              ],
-            },
-          ],
         },
       };
 
@@ -467,10 +441,9 @@ describe('ana init', () => {
       const content = await fs.readFile(settingsPath, 'utf-8');
       const result = JSON.parse(content);
 
-      // Should have all three hook types
+      // Should have both hook types
       expect(result.hooks.PreToolUse).toBeDefined();
       expect(result.hooks.PostToolUse).toBeDefined();
-      expect(result.hooks.Stop).toBeDefined();
 
       // Custom hook preserved
       expect(result.hooks.PreToolUse[0].hooks[0].command).toBe('custom-hook.sh');
@@ -496,17 +469,6 @@ describe('ana init', () => {
               ],
             },
           ],
-          Stop: [
-            {
-              hooks: [
-                {
-                  type: 'command',
-                  command: '.ana/hooks/quality-gate.sh',
-                  timeout: 120,
-                },
-              ],
-            },
-          ],
         },
       };
       await fs.writeFile(settingsPath, JSON.stringify(settingsWithOurHooks, null, 2));
@@ -516,7 +478,6 @@ describe('ana init', () => {
 
       // Check if hook already exists by command path
       const existingPostToolUse = settingsWithOurHooks.hooks.PostToolUse;
-      const templatePostToolUse = templateSettings.hooks.PostToolUse;
 
       const postToolUseHasOurHook = existingPostToolUse.some(
         (entry: { matcher?: string; hooks?: Array<{ command: string }> }) =>
@@ -528,7 +489,6 @@ describe('ana init', () => {
       // Since hook exists, we wouldn't add it again
       // Final count should be 1
       expect(settingsWithOurHooks.hooks.PostToolUse).toHaveLength(1);
-      expect(settingsWithOurHooks.hooks.Stop).toHaveLength(1);
     });
 
     it('overwrites malformed .claude/settings.json with Anatomia defaults', async () => {

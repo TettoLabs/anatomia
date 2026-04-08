@@ -199,7 +199,7 @@ export const initCommand = new Command('init')
       await copyHookScripts(tmpAnaPath);
       await saveScanJson(tmpAnaPath, engineResult);
       await createAnaJson(tmpAnaPath, engineResult);
-      await storeSnapshot(tmpAnaPath, engineResult);
+      // snapshot.json removed (S18/D5 — orphaned, nothing reads it)
       await buildSymbolIndexSafe(cwd, tmpAnaPath);
       await writeCliPath(tmpAnaPath);
 
@@ -752,7 +752,7 @@ async function copyHookScripts(tmpAnaPath: string): Promise<void> {
   await fs.mkdir(hooksDir, { recursive: true });
 
   // Hook scripts to copy
-  const hookScripts = ['run-check.sh', 'verify-context-file.sh', 'quality-gate.sh', 'subagent-verify.sh'];
+  const hookScripts = ['run-check.sh', 'verify-context-file.sh'];
 
   for (const script of hookScripts) {
     const sourcePath = path.join(templatesDir, '.ana/hooks', script);
@@ -765,7 +765,7 @@ async function copyHookScripts(tmpAnaPath: string): Promise<void> {
     await fs.chmod(destPath, 0o755);
   }
 
-  spinner.succeed('Copied hook scripts (4 files, executable)');
+  spinner.succeed('Copied hook scripts (2 files, executable)');
 }
 
 /**
@@ -1303,29 +1303,6 @@ async function createAnaJson(
   await fs.writeFile(anaJsonPath, JSON.stringify(anaConfig, null, 2), 'utf-8');
 
   spinner.succeed('Created ana.json');
-}
-
-/**
- * Phase 8: Store engine snapshot
- *
- * Stores full EngineResult to state/snapshot.json.
- * Used by `ana diff` as baseline for detecting drift.
- *
- * @param tmpAnaPath - Temp .ana/ path
- * @param engineResult - Engine result or null
- */
-async function storeSnapshot(
-  tmpAnaPath: string,
-  engineResult: EngineResult | null
-): Promise<void> {
-  const spinner = ora('Storing analyzer snapshot...').start();
-
-  const result = engineResult || createEmptyEngineResult();
-
-  const snapshotPath = path.join(tmpAnaPath, 'state/snapshot.json');
-  await fs.writeFile(snapshotPath, JSON.stringify(result, null, 2), 'utf-8');
-
-  spinner.succeed('Stored analyzer snapshot');
 }
 
 /**
