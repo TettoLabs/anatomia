@@ -1,0 +1,67 @@
+{
+  "functions": [
+    {
+      "name": "getStatusIcon",
+      "line": 52,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "formatHumanReadable",
+      "line": 73,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "formatJson",
+      "line": 166,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "formatListTable",
+      "line": 176,
+      "async": false,
+      "decorators": []
+    }
+  ],
+  "classes": [],
+  "imports": [
+    {
+      "module": "commander",
+      "names": [],
+      "line": 20
+    },
+    {
+      "module": "chalk",
+      "names": [],
+      "line": 21
+    },
+    {
+      "module": "node:path",
+      "names": [],
+      "line": 22
+    },
+    {
+      "module": "node:fs",
+      "names": [],
+      "line": 23
+    },
+    {
+      "module": "./work.js",
+      "names": [],
+      "line": 24
+    }
+  ],
+  "parseTime": 1.5995829999999387,
+  "exports": [
+    {
+      "name": "export const proofCommand = new Command('proof')\n ",
+      "type": "default",
+      "line": 217
+    }
+  ],
+  "decorators": [],
+  "mtimeMs": 1775440901033.315,
+  "cachedAt": "2026-04-08T23:34:49.587Z"
+}

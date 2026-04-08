@@ -1,0 +1,39 @@
+{
+  "functions": [
+    {
+      "name": "readNodeDependencies",
+      "line": 19,
+      "async": true,
+      "decorators": []
+    }
+  ],
+  "classes": [],
+  "imports": [
+    {
+      "module": "node:path",
+      "names": [],
+      "line": 8
+    },
+    {
+      "module": "../utils/file.js",
+      "names": [],
+      "line": 9
+    },
+    {
+      "module": "./node/package.js",
+      "names": [],
+      "line": 10
+    }
+  ],
+  "parseTime": 0.1514999999999418,
+  "exports": [
+    {
+      "name": "export async function readNodeDependencies(\n  root",
+      "type": "default",
+      "line": 19
+    }
+  ],
+  "decorators": [],
+  "mtimeMs": 1775171350274.61,
+  "cachedAt": "2026-04-08T23:34:49.577Z"
+}

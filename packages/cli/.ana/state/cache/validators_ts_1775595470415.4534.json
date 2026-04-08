@@ -1,0 +1,143 @@
+{
+  "functions": [
+    {
+      "name": "countDetectedPatterns",
+      "line": 41,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "getDocumentedPatternSections",
+      "line": 69,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "getMissingPatterns",
+      "line": 83,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "extractFrameworkFromContent",
+      "line": 127,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "getProjectName",
+      "line": 164,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "fileExists",
+      "line": 216,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "validateStructure",
+      "line": 241,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "validateContent",
+      "line": 327,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "validateCrossReferences",
+      "line": 373,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "validateQuality",
+      "line": 403,
+      "async": true,
+      "decorators": []
+    }
+  ],
+  "classes": [],
+  "imports": [
+    {
+      "module": "node:path",
+      "names": [],
+      "line": 11
+    },
+    {
+      "module": "node:fs/promises",
+      "names": [],
+      "line": 12
+    },
+    {
+      "module": "../engine/types/engineResult.js",
+      "names": [],
+      "line": 13
+    },
+    {
+      "module": "../constants.js",
+      "names": [],
+      "line": 19
+    }
+  ],
+  "parseTime": 1.1676669999999376,
+  "exports": [
+    {
+      "name": "export interface ValidationError {\n  type: 'BLOCKI",
+      "type": "default",
+      "line": 22
+    },
+    {
+      "name": "export function countDetectedPatterns(analysis: En",
+      "type": "default",
+      "line": 41
+    },
+    {
+      "name": "export function getDocumentedPatternSections(conte",
+      "type": "default",
+      "line": 69
+    },
+    {
+      "name": "export function getMissingPatterns(\n  analysis: En",
+      "type": "default",
+      "line": 83
+    },
+    {
+      "name": "export function extractFrameworkFromContent(conten",
+      "type": "default",
+      "line": 127
+    },
+    {
+      "name": "export async function getProjectName(rootPath: str",
+      "type": "default",
+      "line": 164
+    },
+    {
+      "name": "export async function fileExists(filePath: string)",
+      "type": "default",
+      "line": 216
+    },
+    {
+      "name": "export async function validateStructure(anaPath: s",
+      "type": "default",
+      "line": 241
+    },
+    {
+      "name": "export async function validateContent(anaPath: str",
+      "type": "default",
+      "line": 327
+    },
+    {
+      "name": "export async function validateCrossReferences(\n  a",
+      "type": "default",
+      "line": 373
+    }
+  ],
+  "decorators": [],
+  "mtimeMs": 1775595470415.4534,
+  "cachedAt": "2026-04-08T23:34:49.672Z"
+}

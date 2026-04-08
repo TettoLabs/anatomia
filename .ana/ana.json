@@ -13,5 +13,6 @@
   "artifactBranch": "main",
   "setupMode": "guided",
   "scanStaleDays": 7,
-  "setupCompletedAt": "2026-04-06T01:04:09.194Z"
+  "setupCompletedAt": "2026-04-06T01:04:09.194Z",
+  "lastScanAt": "2026-04-07T17:58:30.491Z"
 }

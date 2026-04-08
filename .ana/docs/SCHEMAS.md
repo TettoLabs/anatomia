@@ -41,26 +41,7 @@ What was considered and discarded, with reasoning.
 ## Open Questions
 Unresolved items for AnaPlan to investigate further.
 
-## Exploration Findings
-
-Optional for small scopes — encouraged for medium and large. Structured breadcrumbs from codebase exploration that help the planner skip redundant file reads.
-
-### Patterns Discovered
-- {file: what pattern, which lines}
-(Facts about how things work in the codebase.)
-
-### Constraints Discovered
-- {file: data structure or existing contract that must be matched}
-(Mandatory — implementation must match or deliberately evolve these.)
-
-### Test Infrastructure
-- {test file: what helpers exist, how tests are structured}
-(What the planner needs for the contract assertions.)
-
 ## For AnaPlan
-
-### Structural Analog
-Name the file that is the closest structural match to what you're building and explain why. Required field — forces exploration and gives AnaPlan an explicit starting point.
 
 ### Relevant Code Paths
 - {file path and what's there — breadcrumbs Ana found during scoping}
@@ -116,89 +97,6 @@ Written by AnaPlan. Tracks phases and maps them to spec files. Always written, e
 
 ---
 
-## contract.yaml — AnaPlan → AnaBuild → AnaVerify
-
-Written by AnaPlan (Step 7). Read by AnaBuild (Pre-Flight item 6). Verified by AnaVerify via pre-check.
-
-**Purpose:** The verification contract — structured assertions that define what "done" means. AnaBuild writes tests that satisfy these assertions and tags them with `@ana {ID}`. Pre-check greps for tags. AnaVerify assesses whether tagged tests actually satisfy the assertions.
-
-**Stored at:** `.ana/plans/active/{slug}/contract.yaml`
-
-**Saved with:** `ana artifact save contract {slug}`
-
-**Format:**
-
-```yaml
-version: "1.0"
-sealed_by: "AnaPlan"
-feature: "{Feature name from scope}"
-
-assertions:
-  - id: A001
-    says: "Creating a payment returns a successful response"
-    block: "creates payment intent"
-    target: "response.status"
-    matcher: "equals"
-    value: 200
-
-  - id: A002
-    says: "Payment response includes a client secret for the frontend"
-    block: "creates payment intent"
-    target: "response.body.clientSecret"
-    matcher: "exists"
-
-  - id: A003
-    says: "Invalid webhooks are rejected before processing"
-    block: "webhook validation"
-    target: "response.status"
-    matcher: "equals"
-    value: 400
-
-file_changes:
-  - path: "src/payments/intent.ts"
-    action: create
-  - path: "src/payments/webhook.ts"
-    action: create
-  - path: "src/config/stripe.ts"
-    action: modify
-```
-
-**Required fields per assertion:**
-- `id` — Unique ID, format A001, A002, etc. Sequential.
-- `says` — **Mandatory.** One plain-English sentence a non-engineer founder would understand. This appears on the proof card and PR compliance table.
-- `block` — Human-readable test description. Becomes the test's `it()` or `test()` label.
-- `target` — What's being checked. Dot notation for nested properties.
-- `matcher` — One of the 7 valid matchers (see below).
-- `value` — Required for some matchers (see below).
-
-**Matcher vocabulary:**
-
-| Matcher | Meaning | Value required? |
-|---------|---------|-----------------|
-| `equals` | Exact value match | Yes |
-| `exists` | Field/property exists and is not null | No |
-| `contains` | String/array contains value | Yes |
-| `greater` | Numeric greater-than comparison | Yes |
-| `truthy` | Boolean truthiness | No |
-| `not_equals` | Value does NOT match | Yes |
-| `not_contains` | String/array does NOT contain value | Yes |
-
-**`file_changes` section:**
-
-Lists every file the builder should create, modify, or delete. Single source of truth for file changes.
-
-Valid actions: `create`, `modify`, `delete`.
-
-**Contract rules:**
-- Contract is sealed at plan time — builder CANNOT modify contract.yaml
-- Pre-check detects tampering by comparing HEAD to plan commit
-- Builder tags tests with `// @ana {ID}` to mark assertions as addressed
-- Deviations are documented in build report when assertions can't be satisfied exactly
-
-**Assertion count guideline:** Fewer than 8 assertions usually means the contract is too shallow. More than 35 usually means over-specification. Target 3-5 per acceptance criterion.
-
----
-
 ## spec.md — AnaPlan → AnaBuild
 
 Written by AnaPlan after reading the scope. Describes HOW in full implementation detail.
@@ -212,9 +110,6 @@ Written by AnaPlan after reading the scope. Describes HOW in full implementation
 
 ## Approach
 Detailed implementation strategy. What pattern to follow. What existing code to build on.
-
-## Output Mockups
-Examples of what the user will see: command output, error messages, JSON structure. For commands: actual terminal output with real examples. For APIs: request/response examples. Placed near the top — the builder reads top-to-bottom and mockups define user-visible behavior.
 
 ## File Changes
 
@@ -245,264 +140,127 @@ What must exist before implementation begins.
 
 ## Constraints
 Performance, security, compatibility, or backward-compatibility requirements.
-
-## Gotchas
-Things that will break or confuse AnaBuild if not flagged upfront. Edge cases, known quirks, compatibility concerns.
-
-## Build Brief
-Curated context for the builder — specific rules, patterns, and commands for THIS build. The builder reads this instead of loading full skill files. Contains:
-- **Rules That Apply** — 5-10 relevant rules from coding-standards, testing-standards, design-principles
-- **Pattern Extracts** — 10-30 lines of code from the structural analog (existing code only, never new code)
-- **Checkpoint Commands** — exact commands from `.meta.json` `commands` field with expected results
-- **Build Baseline** — current test count, expected after build, regression focus areas
 ```
 
 **Rules:**
-- This IS the implementation blueprint, but at a STRATEGIC level. Name the patterns to follow. Reference existing files as examples. Don't write code.
+- This IS the implementation blueprint. TypeScript interfaces, schemas, function signatures belong here.
 - Every file that will be created or modified must be listed with what changes and why.
 - Acceptance criteria are the contract between Plan and Build. AnaBuild checks them off. AnaVerify verifies them.
 - AnaBuild follows this spec. It doesn't redesign or second-guess.
 
-**Detail level:** Specs describe WHAT to build and which patterns to follow. Name the pattern. Reference existing files to mirror. Warn about gotchas. Don't write code snippets, function signatures, interfaces, or line-by-line changes — AnaBuild reads the actual codebase and is capable of finding imports, creating files, and following established patterns. Spend spec tokens on WHAT COULD GO WRONG and WHAT DESIGN DECISIONS WERE MADE, not on things AnaBuild can discover in 2 seconds with grep.
+**Detail level:** Specs describe HOW at a strategic level. Name the patterns to follow, the files to mirror, the constraints to respect. Don't write code snippets or line-by-line changes — AnaBuild reads the actual codebase and is capable of finding imports, creating files, and following established patterns. Spend spec tokens on WHAT COULD GO WRONG and WHAT DESIGN DECISIONS WERE MADE, not on things AnaBuild can discover in 2 seconds with grep.
 
 ---
 
-## build_report.md — AnaBuild → Human
+## build_report.md — AnaBuild → AnaVerify
 
-Written by AnaBuild after implementation. Documents what was built, how, and any issues. Goes on the PR for the human reviewer. The verifier does not read this — it forms independent findings.
-
-**Location:** `.ana/plans/active/{slug}/build_report.md` (or `build_report_N.md` for multi-phase)
-
-**Sections (in order):**
-
-### What Was Built
-Summary of changes made. File paths with one-line descriptions of what was created, modified, or deleted.
-
-### PR Summary
-3-5 bullet points summarizing the change for a PR description. Extracted by `ana pr create` for the PR body. Write for a reviewer who hasn't read the spec.
-
-### Acceptance Criteria Coverage
-Maps every acceptance criterion to test evidence: AC ID → test file:line → assertion count. Every criterion must appear. If no test exists, state why. If a test was weakened, note here AND in Open Issues.
-
-### Implementation Decisions
-Technical choices made during the build that the spec didn't explicitly cover. Which patterns followed, which approaches considered, with reasoning.
-
-### Deviations from Contract
-Structured format per deviation, using contract assertion IDs:
+Written by AnaBuild after implementation. Summarizes what was done.
 
 ```markdown
-### A003: Successful webhook updates order to paid
-**Instead:** Webhook processing verified through event type check
-**Reason:** Stripe webhook testing requires event mocks, not direct DB assertions
-**Outcome:** Functionally equivalent — verifier should assess
+# Build Report: {task name}
+
+**Created by:** AnaBuild
+**Date:** {date}
+**Spec:** .ana/plans/active/{slug}/spec.md
+
+## What Was Built
+- `{file path}` — {one-line description of change}
+- `{file path}` — {one-line description of change}
+- `{file path}` — {one-line description of change}
+
+## Acceptance Criteria Status
+- [x] {criterion — checked off}
+- [x] {criterion — checked off}
+- [ ] {criterion — not completed, with reason}
+
+## Tests Written
+- `{test file}` — {what it tests} — PASS / FAIL
+- `{test file}` — {what it tests} — PASS / FAIL
+
+## Implementation Decisions
+Choices made during implementation that weren't in the spec:
+- **{decision}:** {what was chosen} over {alternative}, because {reasoning}
+
+## Known Concerns
+Anything uncertain. Edge cases not fully covered. Performance unknowns.
+
+## Files Changed
+Complete list for AnaVerify to inspect:
+- `{file path}`
+- `{file path}`
 ```
 
-**Required fields:**
-- Header: `### A{ID}: {says text}` — copy the `says` field from the contract
-- `**Instead:**` — one sentence, what you did instead
-- `**Reason:**` — why the contract assertion couldn't be satisfied exactly
-- `**Outcome:**` — your assessment of whether intent is preserved
-
 **Rules:**
-- Always tag the test `// @ana A{ID}` even when deviating — the tag means "addressed"
-- "None — contract followed exactly." if truly no deviations
-
-### Test Results
-Baseline (before changes), after changes, comparison. Complete test runner output with counts. New tests written with descriptions of what scenarios they cover.
-
-### Verification Commands
-Exact commands for AnaVerify to run independently. Commands from `.meta.json` `commands` field.
-
-### Git History
-Git log output showing commits made on the feature branch.
-
-### Open Issues
-Anything unfinished, concerning, or needing attention. Forced second pass: "What did I notice that I didn't write down?" Must explain if "None." An item followed by "None" is a contradiction.
-
-**Rules:**
-- Build report is proof, not claims. Test output pasted, not summarized. Git history is real, not described.
-- Acceptance criteria coverage maps each AC to specific test evidence with line numbers.
-- Deviations use structured D1/D2/D3 format with all 6 fields.
-- AnaVerify independently verifies all claims — the report must survive that scrutiny.
+- Keep it factual. What was done, not what was planned.
+- Acceptance criteria checkboxes must match the spec exactly. Check off what's done. Leave unchecked what isn't, with a reason.
+- Files Changed list is critical — AnaVerify uses it to know what to inspect.
+- Implementation Decisions documents what the spec didn't cover. Captures tribal knowledge for future cycles.
 
 ---
 
 ## verify_report.md — AnaVerify → Completion
 
-Written by AnaVerify after independent verification. The final quality gate before PR creation.
-
-**Location:** `.ana/plans/active/{slug}/verify_report.md` (or `verify_report_N.md` for multi-phase)
-
-**Result line:** `**Result:** PASS` or `**Result:** FAIL` — mandatory, machine-parsed by `ana artifact save verify-report`. Must appear in the first 10 lines. Case-insensitive.
-
-**Sections (8 total):**
-
-### Pre-Check Results
-Output from `ana verify pre-check {slug}`. Contains:
-- **Seal status:** INTACT (contract unchanged since plan commit) or TAMPERED (contract modified)
-- **Per-assertion coverage:** Each contract assertion with COVERED or UNCOVERED status
-
-Pre-check output format:
-```
-=== CONTRACT COMPLIANCE ===
-  Contract: .ana/plans/active/{slug}/contract.yaml
-  Seal: INTACT (commit abc123, hash sha256:def456)
-
-  A001  ✓ COVERED  "Creating a payment returns a successful response"
-  A002  ✓ COVERED  "Payment includes client secret"
-  A003  ✗ UNCOVERED "Invalid webhooks rejected"
-
-  22 total · 21 covered · 1 uncovered
-```
-
-### Contract Compliance
-Per-assertion assessment table. For each COVERED assertion from pre-check, verify the tagged test actually satisfies the assertion:
+Written by AnaVerify after adversarial testing and review.
 
 ```markdown
-## Contract Compliance
-| ID   | Says                                           | Status       | Evidence |
-|------|------------------------------------------------|--------------|----------|
-| A001 | Creating a payment returns success              | ✅ SATISFIED  | test line 42, asserts response.status === 200 |
-| A002 | Payment includes client secret                  | ✅ SATISFIED  | test line 43, checks clientSecret defined |
-| A003 | Webhook updates order to paid                   | ⚠️ DEVIATED   | builder used event mock — justified |
-| A004 | Invalid webhooks rejected                       | ❌ UNCOVERED  | no @ana tag found |
+# Verify Report: {task name}
+
+**Result:** PASS
+
+**Created by:** AnaVerify
+**Date:** {date}
+**Spec:** .ana/plans/active/{slug}/spec.md
+
+## Acceptance Criteria Results
+- ✅ PASS: {criterion} — {evidence}
+- ✅ PASS: {criterion} — {evidence}
+- ⚠️ PARTIAL: {criterion} — {what's partially done}
+
+## Regression Check
+- **Existing test suite:** PASS ({N} tests, {N} passed)
+- **Regressions found:** none
+
+## Edge Cases Tested
+- {edge case} — {result}
+- {edge case} — {result}
+
+## Issues Found
+None
+
+## Summary
+{2-3 sentence overall assessment}
 ```
 
-**Status values:**
-- **SATISFIED** — Tagged test actually does what the contract says
-- **UNSATISFIED** — Test is tagged but doesn't satisfy the assertion (over-claim)
-- **DEVIATED** — Builder documented a deviation; assess if intent is preserved
-- **UNCOVERED** — No `@ana {ID}` tag found in test files
+Or for failures:
 
-### Independent Findings
-What the verifier discovered from running checks and reading code. Code quality, pattern compliance, edge case handling, test quality. Includes:
-- **Over-building check:** Code, parameters, or features NOT in the spec
-- **YAGNI check:** Unused exports, dead code paths, unnecessary abstractions
+```markdown
+# Verify Report: {task name}
 
-### AC Walkthrough
-Every acceptance criterion from the spec, individually assessed: ✅ PASS, ❌ FAIL, ⚠️ PARTIAL, or 🔍 UNVERIFIABLE. Each with evidence (command output, file path, line number).
+**Result:** FAIL
 
-### Blockers
-Anything preventing shipping. If none: explain what was searched and why nothing was found.
+**Created by:** AnaVerify
+**Date:** {date}
+**Spec:** .ana/plans/active/{slug}/spec.md
 
-### Callouts
-Observations, concerns, nits. Always populated — a report with zero callouts indicates insufficient investigation.
+## Acceptance Criteria Results
+- ✅ PASS: {criterion} — {evidence}
+- ❌ FAIL: {criterion} — {what's wrong and what needs fixing}
 
-### Deployer Handoff
-What the person merging should know. Always populated.
+## Issues Found
+- **Critical:** {description} in `{file}` — {details}
 
-### Verdict
-**Shippable:** YES / NO based on verifier's findings. Evidence gathered. Commands run.
+## Items to Fix
+1. {what to fix}
+2. {what to fix}
+```
 
 **Rules:**
-- The `**Result:**` line is mandatory and machine-parsed by `ana work status` and `ana work complete`.
-- AnaVerify runs mechanical checks first (`ana verify pre-check`), forms independent findings from reading code and running commands.
-- **Hints, not facts:** Pre-check reports COVERED — that only means the builder TAGGED a test. Read each tagged test and verify it does what the contract says before marking SATISFIED.
-- **The verifier never reads the build report.** The build report goes on the PR for the human reviewer.
-- The developer compares the verify report to the build report — two independent accounts of the same work.
-- Contract Compliance table is mandatory. Every contract assertion must have a row.
-- PASS criteria: ALL contract assertions SATISFIED or justified DEVIATED, ALL ACs ✅, tests pass, no regressions.
-- FAIL criteria: ANY assertion UNSATISFIED or unjustified UNCOVERED, ANY AC ❌, test failures, regressions.
-- Over-building (extra code beyond spec) is noted as a callout, not a FAIL.
-- Live testing required: if the build includes CLI commands or user-facing output, run it with real data plus error cases.
-- FAIL means the developer opens `claude --agent ana-build` to fix the documented issues, then re-verify.
-- AnaVerify creates the PR on PASS. The developer reviews and merges.
-
----
-
-## ana scan — Zero-Install Project Scanner
-
-**Command:** `ana scan [path]` (optional: `--json`, `--verbose`)
-
-Zero-install project scanner. Analyzes a project and outputs:
-- Stack detection (Language, Framework, Database, Auth, Testing, Payments)
-- File counts (source, test, config, total)
-- Structure map (top directories with purposes)
-- Monorepo awareness (workspace type, package listing)
-
-**Works without .ana/ directory.** Read-only operation, creates no files.
-
-**Output format:**
-
-Terminal (default):
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│  ana scan                                                           │
-│  project-name                                       2026-04-01 12:34│
-└─────────────────────────────────────────────────────────────────────┘
-
-  Stack
-  ─────
-  Language     Node.js
-  Framework    Next.js
-  Database     Supabase
-  Auth         Supabase Auth
-  Testing      Vitest
-  Payments     Stripe
-  Workspace    pnpm monorepo
-
-  Files
-  ─────
-  Source       98
-  Tests        24
-  Config       10
-  Total        132
-
-  Structure
-  ─────────
-  app/              Application code
-  components/       UI components
-  hooks/            React hooks
-
-  Packages
-  ────────
-  packages/cli      anatomia-cli
-  packages/web      website
-
-Run `ana init` to generate full context for your AI.
-Scan individual packages: ana scan packages/cli
-```
-
-JSON (`--json`):
-```json
-{
-  "project": "project-name",
-  "scannedAt": "2026-04-01T12:34:56.789Z",
-  "stack": {
-    "language": "Node.js",
-    "framework": "Next.js",
-    "database": "Supabase",
-    "auth": "Supabase Auth",
-    "testing": "Vitest",
-    "payments": "Stripe",
-    "workspace": "pnpm monorepo"
-  },
-  "files": {
-    "source": 98,
-    "test": 24,
-    "config": 10,
-    "total": 132
-  },
-  "structure": [
-    { "path": "app/", "purpose": "Application code" },
-    { "path": "components/", "purpose": "UI components" }
-  ],
-  "packages": [
-    { "name": "anatomia-cli", "path": "packages/cli" },
-    { "name": "website", "path": "packages/web" }
-  ]
-}
-```
-
-**Stack detection:**
-- **Primary:** Analyzer uses tree-sitter for code-based detection
-- **Fallback:** Reads package.json dependencies for Database, Auth, Testing, Payments when tree-sitter detection doesn't fire
-- **6 categories:** Language, Framework, Database, Auth, Testing, Payments
-- **Dual-category support:** Supabase can appear as both Database (@supabase/supabase-js) and Auth (@supabase/ssr)
-
-**Flags:**
-- `--json` — Output JSON for programmatic consumption
-- `--verbose` — Show detailed analyzer phase output (stderr)
+- The `**Result:**` line is mandatory and machine-parsed by `ana work status` and `ana work complete`. It must appear near the top of the file (line 3). Case-insensitive: PASS or FAIL only.
+- AnaVerify reads the spec and the code independently. It does NOT trust the build report's self-assessment.
+- Every acceptance criterion gets ✅ PASS, ❌ FAIL, or ⚠️ PARTIAL with evidence.
+- Overall Result is binary: PASS or FAIL. If ANY criterion is ❌ FAIL, the Result is FAIL.
+- FAIL means the developer should open `claude --agent ana-build` to fix the listed items, then re-run verify.
+- AnaVerify never fixes code. It reports only.
 
 ---
 
@@ -510,7 +268,6 @@ JSON (`--json`):
 
 ```
 scope.md exists     → task is scoped, awaiting plan
-contract.yaml exists → task has contract, awaiting spec
 spec.md exists      → task is planned, awaiting build
 build_report.md     → task is built, awaiting verify
 verify_report.md    → check recommendation: PASS = done, FAIL = back to build
@@ -518,244 +275,4 @@ verify_report.md    → check recommendation: PASS = done, FAIL = back to build
 
 File existence IS the state machine. No separate status file needed.
 
-**Re-saving artifacts:** Artifacts can be updated by modifying the file and running `ana artifact save` again. The command detects whether the file is new or updated and commits accordingly. First save uses commit message `[slug] Type`. Re-saves use `[slug] Update: Type`. If the file hasn't changed since the last save, the command exits gracefully without creating an empty commit.
-
-**Batch saves:** `ana artifact save-all {slug}` saves plan.md, contract.yaml, and spec.md in a single atomic commit with validation.
-
-**Artifact validation:** Each artifact type has format validation at save time. Validation runs before git commit — if it fails, nothing is staged.
-
-Validation rules by type:
-- **Scope:** ≥3 acceptance criteria, Structural Analog heading, Intent section with content
-- **Contract:** YAML parses, version + sealed_by + feature + assertions present, valid matchers, each assertion has id + says + block + target + matcher, file_changes present
-- **Spec:** Build Brief heading present, Build Baseline exact (warns on `~` or `approx`)
-- **Plan:** Phases heading, checkbox items, each checkbox has Spec: reference
-- **Build report:** Deviations heading, Open Issues heading, AC Coverage heading, PR Summary heading
-- **Verify report:** Result line (`**Result:** PASS` or `**Result:** FAIL`) in first 10 lines
-
-**Note:** `file_changes` moved from spec.md to contract.yaml. Spec no longer requires file_changes YAML block.
-
-When a task is complete (verify passes), the developer runs `ana work complete {slug}` which archives the directory from `.ana/plans/active/{slug}/` to `.ana/plans/completed/{slug}/`, writes proof chain entries, and cleans up the feature branch. The artifacts together form the permanent record: intent, contract, plan, implementation, proof.
-
----
-
-## .meta.json — Configuration
-
-Project-wide configuration file storing framework metadata and project-specific commands. Created by `ana init`, updated by `ana setup`.
-
-**Location:** `.ana/.meta.json`
-
-**Fields:**
-
-### `commands` (object)
-Stores the exact build, test, and lint commands for this project. Agents and tools read these instead of guessing or parsing from skills.
-
-**Structure:** Object with three required string fields:
-- `build` — exact shell command to build the project (e.g., `"pnpm --filter anatomia-cli build"` or `"npm run build"`)
-- `test` — exact shell command to run tests, including all flags (e.g., `"pnpm --filter anatomia-cli test -- --run"` or `"npm test"`)
-- `lint` — exact shell command to lint the project (e.g., `"pnpm --filter anatomia-cli lint"` or `"npm run lint"`)
-
-**Who reads it:**
-- AnaVerify reads `commands` to execute build/test/lint during verification (Step 2)
-- AnaBuild reads `commands` for Pre-Flight baseline checks
-- AnaPlan reads `commands` to populate spec Build Brief checkpoint commands
-
-No toolbelt code reads `commands` programmatically — agents read `.meta.json` directly and use the command strings.
-
-**Default:** Template provides generic npm commands (`"npm run build"`, `"npm test"`, `"npm run lint"`). Teams update during setup with their actual commands.
-
-### `coAuthor` (string)
-The co-author trailer for all commits and PR bodies created by the pipeline.
-
-**Format:** Git co-author format: `Name <email>`. Example: `"Ana <build@anatomia.dev>"`.
-
-**Who reads it:**
-- `artifact.ts` adds it to commit messages when saving artifacts
-- `pr.ts` adds it to PR bodies when creating pull requests
-- `ana verify pre-check` checks for its presence in commit trailers
-- The `git-workflow` skill references this field for commit conventions
-
-**Default:** `"Ana <build@anatomia.dev>"`. Teams can customize with their own identity if desired.
-
-**Example .meta.json:**
-```json
-{
-  "version": "1.0.0",
-  "createdAt": "2026-03-25T00:57:03.132Z",
-  "artifactBranch": "main",
-  "commands": {
-    "build": "pnpm --filter anatomia-cli build",
-    "test": "pnpm --filter anatomia-cli test -- --run",
-    "lint": "pnpm --filter anatomia-cli lint"
-  },
-  "coAuthor": "Ana <build@anatomia.dev>",
-  "setupStatus": "complete",
-  "setupCompletedAt": "2026-03-25T01:31:05.140Z",
-  "setupMode": "guided",
-  "framework": null,
-  "analyzerVersion": "0.1.0",
-  "lastEvolve": null,
-  "lastHealth": {
-    "timestamp": "2026-03-29T04:05:02.122Z",
-    "totalFiles": 8,
-    "setupFiles": 7,
-    "setupFilesPresent": 7,
-    "missingSetupFiles": 0,
-    "staleFiles": 7
-  },
-  "sessionCount": 0
-}
-```
-
----
-
-## .saves.json — Artifact Save Metadata
-
-Every `ana artifact save` records metadata in `.ana/plans/active/{slug}/.saves.json`.
-
-**Location:** `.ana/plans/active/{slug}/.saves.json`
-
-**Format:**
-
-```json
-{
-  "scope": {
-    "saved_at": "2026-04-01T14:30:00Z",
-    "commit": "abc123def...",
-    "hash": "sha256:a3f8c2..."
-  },
-  "contract": {
-    "saved_at": "2026-04-01T14:45:00Z",
-    "commit": "def456...",
-    "hash": "sha256:b4e9d3..."
-  },
-  "spec": { ... },
-  "build-report": { ... },
-  "verify-report": { ... },
-  "pre-check": {
-    "seal": "INTACT",
-    "seal_commit": "def456",
-    "assertions": [
-      { "id": "A001", "says": "Creating a payment returns success", "status": "COVERED" },
-      { "id": "A002", "says": "Payment includes client secret", "status": "COVERED" },
-      { "id": "A003", "says": "Invalid webhooks rejected", "status": "UNCOVERED" }
-    ],
-    "covered": 2,
-    "uncovered": 1
-  }
-}
-```
-
-**Who writes it:**
-- Written after every successful artifact save
-- Pre-check key written automatically on verify-report save
-
-**Who reads it:**
-- `generateProofSummary` reads this for timing, hashes, and pre-check results
-- Pre-check reads seal_commit to verify contract integrity
-
-**Lifecycle:**
-- Moves with slug directory on `ana work complete`
-- Not committed to git — working tree metadata
-
----
-
-## Pre-Check Contract Mode
-
-`ana verify pre-check {slug}` operates in contract mode when `contract.yaml` exists.
-
-**Checks:**
-1. **Seal** — Compares contract at plan commit (from .saves.json) to HEAD. INTACT or TAMPERED.
-2. **Tag coverage** — Greps test files (`*.test.*`, `*.spec.*`, `test_*.*`, `*_test.*`) for `@ana {ID}` tags. COVERED or UNCOVERED per assertion.
-
-**Output:**
-
-```
-=== CONTRACT COMPLIANCE ===
-  Contract: .ana/plans/active/{slug}/contract.yaml
-  Seal: INTACT (commit abc123, hash sha256:def456)
-
-  A001  ✓ COVERED  "Creating a payment returns success"
-  A002  ✓ COVERED  "Payment includes client secret"
-  A003  ✗ UNCOVERED "Invalid webhooks rejected"
-
-  22 total · 21 covered · 1 uncovered
-```
-
-**Auto pre-check on verify-report save:**
-- Runs automatically when `ana artifact save verify-report` is called
-- TAMPERED → save blocked (hard fail)
-- UNCOVERED → save warns but proceeds
-- Results stored in .saves.json under `pre-check` key
-
-**Programmatic API:**
-- Exported for use by `artifact.ts` for auto pre-check on verify-report save
-- Returns structured results for integration with proof summary
-
----
-
-## Proof Chain
-
-Written by `ana work complete` after archiving artifacts. Accumulates pipeline history for agent learning.
-
-### JSON (authoritative): `.ana/proof_chain.json`
-
-Contains an `entries` array with full proof data per completed work item:
-
-```json
-{
-  "entries": [
-    {
-      "slug": "stripe-payments",
-      "feature": "Stripe Payment Integration",
-      "result": "PASS",
-      "author": { "name": "Developer", "email": "dev@example.com" },
-      "contract": {
-        "total": 22,
-        "covered": 22,
-        "uncovered": 0,
-        "satisfied": 20,
-        "unsatisfied": 0,
-        "deviated": 2
-      },
-      "assertions": [
-        { "id": "A001", "says": "Creating a payment returns success", "status": "SATISFIED" },
-        { "id": "A002", "says": "Payment includes client secret", "status": "SATISFIED" },
-        { "id": "A003", "says": "Webhook updates order", "status": "DEVIATED", "deviation": "used event mock" }
-      ],
-      "acceptance_criteria": { "total": 7, "met": 7 },
-      "timing": {
-        "total_minutes": 90,
-        "think": 10,
-        "plan": 25,
-        "build": 40,
-        "verify": 15
-      },
-      "hashes": {
-        "scope": "sha256:...",
-        "contract": "sha256:...",
-        "spec": "sha256:..."
-      },
-      "seal_commit": "abc123",
-      "completed_at": "2026-04-01T16:30:00Z"
-    }
-  ]
-}
-```
-
-### Markdown (agent summary): `.ana/PROOF_CHAIN.md`
-
-Append-only summary. Agents read this on startup for pipeline history and learnings.
-
-**Entry format:**
-
-```markdown
-## Stripe Payment Integration (2026-04-01)
-Result: PASS | 20/22 satisfied | 7/7 ACs | 2 deviations
-Pipeline: 90m (Think 10m, Plan 25m, Build 40m, Verify 15m)
-Deviations: A003 — used event mock; A004 — simplified error handling
-```
-
-**Who reads it:**
-- All 4 agents read PROOF_CHAIN.md on startup (if exists)
-- Ana Think surfaces relevant entries when scoping work in areas with prior history
-- Used for pipeline learning and pattern recognition across sprints
+When a task is complete (verify passes), the developer runs `ana work complete {slug}` which archives the directory from `.ana/plans/active/{slug}/` to `.ana/plans/completed/{slug}/` and cleans up the feature branch. The four artifacts together form the permanent record: intent, plan, implementation, proof.

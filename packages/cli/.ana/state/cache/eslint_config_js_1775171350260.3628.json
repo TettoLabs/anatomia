@@ -1,0 +1,31 @@
+{
+  "functions": [],
+  "classes": [],
+  "imports": [
+    {
+      "module": "@typescript-eslint/eslint-plugin",
+      "names": [],
+      "line": 1
+    },
+    {
+      "module": "@typescript-eslint/parser",
+      "names": [],
+      "line": 2
+    },
+    {
+      "module": "eslint-plugin-jsdoc",
+      "names": [],
+      "line": 3
+    }
+  ],
+  "parseTime": 3.53125,
+  "exports": [
+    {
+      "name": "export default [\n  {\n    files: ['src/**/*.ts'],\n ",
+      "type": "default",
+      "line": 5
+    }
+  ],
+  "mtimeMs": 1775171350260.3628,
+  "cachedAt": "2026-04-08T23:34:49.679Z"
+}

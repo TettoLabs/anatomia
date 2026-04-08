@@ -1,0 +1,45 @@
+{
+  "functions": [
+    {
+      "name": "parseGoMod",
+      "line": 22,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "readGoDependencies",
+      "line": 54,
+      "async": true,
+      "decorators": []
+    }
+  ],
+  "classes": [],
+  "imports": [
+    {
+      "module": "node:path",
+      "names": [],
+      "line": 8
+    },
+    {
+      "module": "../utils/file.js",
+      "names": [],
+      "line": 9
+    }
+  ],
+  "parseTime": 0.6663340000000062,
+  "exports": [
+    {
+      "name": "export function parseGoMod(content: string): strin",
+      "type": "default",
+      "line": 22
+    },
+    {
+      "name": "export async function readGoDependencies(rootPath:",
+      "type": "default",
+      "line": 54
+    }
+  ],
+  "decorators": [],
+  "mtimeMs": 1775171350274.1538,
+  "cachedAt": "2026-04-08T23:34:49.581Z"
+}

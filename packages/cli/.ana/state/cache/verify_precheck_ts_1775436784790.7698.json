@@ -1,0 +1,87 @@
+{
+  "functions": [
+    {
+      "name": "runContractPreCheck",
+      "line": 73,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "printContractResults",
+      "line": 211,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "runPreCheck",
+      "line": 244,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "registerVerifyPreCheckCommand",
+      "line": 279,
+      "async": false,
+      "decorators": []
+    }
+  ],
+  "classes": [],
+  "imports": [
+    {
+      "module": "commander",
+      "names": [],
+      "line": 15
+    },
+    {
+      "module": "chalk",
+      "names": [],
+      "line": 16
+    },
+    {
+      "module": "node:child_process",
+      "names": [],
+      "line": 17
+    },
+    {
+      "module": "node:fs",
+      "names": [],
+      "line": 18
+    },
+    {
+      "module": "node:path",
+      "names": [],
+      "line": 19
+    },
+    {
+      "module": "yaml",
+      "names": [],
+      "line": 20
+    },
+    {
+      "module": "glob",
+      "names": [],
+      "line": 21
+    }
+  ],
+  "parseTime": 1.1286250000000564,
+  "exports": [
+    {
+      "name": "export function runContractPreCheck(slug: string, ",
+      "type": "default",
+      "line": 73
+    },
+    {
+      "name": "export function runPreCheck(slug: string): void {\n",
+      "type": "default",
+      "line": 244
+    },
+    {
+      "name": "export function registerVerifyPreCheckCommand(prog",
+      "type": "default",
+      "line": 279
+    }
+  ],
+  "decorators": [],
+  "mtimeMs": 1775436784790.7698,
+  "cachedAt": "2026-04-08T23:34:49.995Z"
+}

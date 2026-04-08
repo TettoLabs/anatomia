@@ -1,0 +1,56 @@
+{
+  "functions": [
+    {
+      "name": "formatError",
+      "line": 13,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "formatAllErrors",
+      "line": 50,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "formatErrorSummary",
+      "line": 85,
+      "async": false,
+      "decorators": []
+    }
+  ],
+  "classes": [],
+  "imports": [
+    {
+      "module": "chalk",
+      "names": [],
+      "line": 6
+    },
+    {
+      "module": "./DetectionError.js",
+      "names": [],
+      "line": 7
+    }
+  ],
+  "parseTime": 0.9859589999998661,
+  "exports": [
+    {
+      "name": "export function formatError(error: DetectionError)",
+      "type": "default",
+      "line": 13
+    },
+    {
+      "name": "export function formatAllErrors(errors: DetectionE",
+      "type": "default",
+      "line": 50
+    },
+    {
+      "name": "export function formatErrorSummary(errors: Detecti",
+      "type": "default",
+      "line": 85
+    }
+  ],
+  "decorators": [],
+  "mtimeMs": 1775171350272.9194,
+  "cachedAt": "2026-04-08T23:34:49.680Z"
+}

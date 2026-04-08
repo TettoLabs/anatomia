@@ -32,7 +32,34 @@ if [ -z "$FILE_PATH" ]; then
   exit 0
 fi
 
-# Only check files inside .ana/context/
+# ── Skill file validation (.claude/skills/) ──
+if [[ "$FILE_PATH" == *".claude/skills/"* && "$FILE_PATH" == *"SKILL.md"* ]]; then
+  # D6.4 format check: 4 required sections in order
+  REQUIRED_SECTIONS=("## Detected" "## Rules" "## Gotchas" "## Examples")
+  MISSING=""
+
+  for section in "${REQUIRED_SECTIONS[@]}"; do
+    if ! grep -q "^${section}$" "$FILE_PATH" 2>/dev/null; then
+      MISSING="${MISSING}${section}, "
+    fi
+  done
+
+  RESULT_DIR="$PROJECT_ROOT/.ana/state"
+  mkdir -p "$RESULT_DIR"
+  SKILL_NAME=$(basename "$(dirname "$FILE_PATH")")
+  RESULT_FILE="$RESULT_DIR/check_result_skill_${SKILL_NAME}"
+
+  if [ -n "$MISSING" ]; then
+    echo "FAIL" > "$RESULT_FILE"
+    echo "Missing sections: ${MISSING%, }" >> "$RESULT_FILE"
+  else
+    echo "PASS" > "$RESULT_FILE"
+  fi
+
+  exit 0
+fi
+
+# ── Context file validation (.ana/context/) ──
 if [[ ! "$FILE_PATH" == *".ana/context/"* ]]; then
   exit 0
 fi
@@ -46,7 +73,7 @@ CHECK_EXIT=$?
 
 # Write results to a per-file check result on disk — NO stdout
 # This prevents broadcast to parallel agents via additionalContext
-RESULT_DIR="$PROJECT_ROOT/.ana/.state"
+RESULT_DIR="$PROJECT_ROOT/.ana/state"
 mkdir -p "$RESULT_DIR"
 RESULT_FILE="$RESULT_DIR/check_result_${FILENAME}"
 

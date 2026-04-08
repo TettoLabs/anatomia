@@ -33,7 +33,7 @@ if command -v ana &>/dev/null; then
 fi
 
 # Strategy 2: Read saved CLI path from ana init
-CLI_PATH_FILE="$PROJECT_ROOT/.ana/.state/cli-path"
+CLI_PATH_FILE="$PROJECT_ROOT/.ana/state/cli-path"
 if [ -f "$CLI_PATH_FILE" ]; then
   # Parse JSON for node and cli paths
   NODE_BIN=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$CLI_PATH_FILE','utf8')).node)" 2>/dev/null)

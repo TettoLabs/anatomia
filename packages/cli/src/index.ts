@@ -17,7 +17,6 @@ import { Command } from 'commander';
 import { initCommand } from './commands/init.js';
 
 const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf-8'));
-import { modeCommand } from './commands/mode.js';
 import { setupCommand } from './commands/setup.js';
 import { artifactCommand } from './commands/artifact.js';
 import { workCommand } from './commands/work.js';
@@ -36,7 +35,6 @@ program
 
 // Register commands
 program.addCommand(initCommand);
-program.addCommand(modeCommand);
 program.addCommand(scanCommand);
 program.addCommand(setupCommand);
 program.addCommand(artifactCommand);

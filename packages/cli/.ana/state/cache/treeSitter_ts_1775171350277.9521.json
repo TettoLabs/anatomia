@@ -1,0 +1,291 @@
+{
+  "functions": [
+    {
+      "name": "resolveWasmPath",
+      "line": 58,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "constructor",
+      "line": 139,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "getInstance",
+      "line": 148,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "initialize",
+      "line": 163,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "locateFile",
+      "line": 168,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "isInitialized",
+      "line": 194,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "tryInitialize",
+      "line": 202,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "getLanguage",
+      "line": 221,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "getParser",
+      "line": 243,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "reset",
+      "line": 266,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "resetFull",
+      "line": 276,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "detectLanguage",
+      "line": 312,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "checkIfAsync",
+      "line": 345,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "extractFunctions",
+      "line": 391,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "extractSuperclasses",
+      "line": 448,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "extractMethods",
+      "line": 485,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "extractClasses",
+      "line": 546,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "extractImports",
+      "line": 609,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "extractDecorators",
+      "line": 684,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "linkDecoratorsToFunctions",
+      "line": 765,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "linkDecoratorsToClasses",
+      "line": 793,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "extractExports",
+      "line": 823,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "countErrors",
+      "line": 852,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "parseFile",
+      "line": 888,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "parseProjectFiles",
+      "line": 1015,
+      "async": true,
+      "decorators": []
+    }
+  ],
+  "classes": [
+    {
+      "name": "ParserManager",
+      "line": 129,
+      "superclasses": [],
+      "methods": [
+        "constructor",
+        "getInstance",
+        "initialize",
+        "isInitialized",
+        "tryInitialize",
+        "getLanguage",
+        "getParser",
+        "reset",
+        "resetFull"
+      ],
+      "decorators": []
+    }
+  ],
+  "imports": [
+    {
+      "module": "node:fs",
+      "names": [],
+      "line": 19
+    },
+    {
+      "module": "node:module",
+      "names": [],
+      "line": 20
+    },
+    {
+      "module": "node:path",
+      "names": [],
+      "line": 21
+    },
+    {
+      "module": "node:url",
+      "names": [],
+      "line": 22
+    },
+    {
+      "module": "web-tree-sitter",
+      "names": [],
+      "line": 28
+    },
+    {
+      "module": "../types/parsed.js",
+      "names": [],
+      "line": 30
+    },
+    {
+      "module": "../utils/file.js",
+      "names": [],
+      "line": 31
+    },
+    {
+      "module": "../cache/astCache.js",
+      "names": [],
+      "line": 32
+    },
+    {
+      "module": "../cache/astCache.js",
+      "names": [],
+      "line": 33
+    },
+    {
+      "module": "../sampling/fileSampler.js",
+      "names": [],
+      "line": 34
+    },
+    {
+      "module": "../types/index.js",
+      "names": [],
+      "line": 35
+    },
+    {
+      "module": "./queries.js",
+      "names": [],
+      "line": 37
+    }
+  ],
+  "parseTime": 4.836500000000115,
+  "exports": [
+    {
+      "name": "export type { Tree } from 'web-tree-sitter';",
+      "type": "default",
+      "line": 40
+    },
+    {
+      "name": "export type SyntaxNode = TSNode;",
+      "type": "default",
+      "line": 42
+    },
+    {
+      "name": "export type Language = 'python' | 'typescript' | '",
+      "type": "default",
+      "line": 44
+    },
+    {
+      "name": "export class ParserManager {\n  private static inst",
+      "type": "default",
+      "line": 129
+    },
+    {
+      "name": "export const parserManager = ParserManager.getInst",
+      "type": "default",
+      "line": 284
+    },
+    {
+      "name": "export function detectLanguage(filePath: string): ",
+      "type": "default",
+      "line": 312
+    },
+    {
+      "name": "export function extractFunctions(\n  tree: Tree,\n  ",
+      "type": "default",
+      "line": 391
+    },
+    {
+      "name": "export function extractClasses(\n  tree: Tree,\n  so",
+      "type": "default",
+      "line": 546
+    },
+    {
+      "name": "export function extractImports(\n  tree: Tree,\n  so",
+      "type": "default",
+      "line": 609
+    },
+    {
+      "name": "export function extractDecorators(\n  tree: Tree,\n ",
+      "type": "default",
+      "line": 684
+    }
+  ],
+  "decorators": [],
+  "mtimeMs": 1775171350277.9521,
+  "cachedAt": "2026-04-08T23:34:49.664Z"
+}

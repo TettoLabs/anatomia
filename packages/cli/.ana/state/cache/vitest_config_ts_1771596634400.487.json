@@ -1,0 +1,22 @@
+{
+  "functions": [],
+  "classes": [],
+  "imports": [
+    {
+      "module": "vitest/config",
+      "names": [],
+      "line": 1
+    }
+  ],
+  "parseTime": 0.2307499999999436,
+  "exports": [
+    {
+      "name": "export default defineConfig({\n  test: {\n    global",
+      "type": "default",
+      "line": 3
+    }
+  ],
+  "decorators": [],
+  "mtimeMs": 1771596634400.487,
+  "cachedAt": "2026-04-08T23:34:49.666Z"
+}

@@ -1,0 +1,1194 @@
+{
+  "functions": [
+    {
+      "name": "computeSkillManifest",
+      "line": 37,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "generateProjectContextScaffold",
+      "line": 56,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "generateDesignPrinciplesTemplate",
+      "line": 128,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "getProjectName",
+      "line": 149,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "fileExists",
+      "line": 180,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "detectLanguage",
+      "line": 196,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "extractTSSymbols",
+      "line": 214,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "visit",
+      "line": 217,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "extractPythonSymbols",
+      "line": 300,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "visit",
+      "line": 303,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "extractGoSymbols",
+      "line": 343,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "visit",
+      "line": 346,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "buildSymbolIndex",
+      "line": 406,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "createIndexCommand",
+      "line": 484,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "confirm",
+      "line": 517,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "createEmptyEngineResult",
+      "line": 532,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "validateInitPreconditions",
+      "line": 648,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "gitHasCommits",
+      "line": 794,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "gitHasRemote",
+      "line": 802,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "dirExists",
+      "line": 810,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "runAnalyzer",
+      "line": 818,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "displayDetectionSummary",
+      "line": 836,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "createDirectoryStructure",
+      "line": 864,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "generateScaffolds",
+      "line": 879,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "getCliVersion",
+      "line": 889,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "copyStaticFilesWithVerification",
+      "line": 901,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "copyAndVerifyFile",
+      "line": 909,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "copyHookScripts",
+      "line": 924,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "createClaudeConfiguration",
+      "line": 938,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "copyAgentFiles",
+      "line": 989,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "scaffoldAndSeedSkills",
+      "line": 1000,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "injectCodingStandards",
+      "line": 1049,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "injectTestingStandards",
+      "line": 1080,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "injectGitWorkflow",
+      "line": 1092,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "injectDeployment",
+      "line": 1100,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "injectAiPatterns",
+      "line": 1107,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "injectApiPatterns",
+      "line": 1111,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "injectDataAccess",
+      "line": 1115,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "replaceDetectedSection",
+      "line": 1127,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "copyClaudeMd",
+      "line": 1138,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "fileExists2",
+      "line": 1147,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "mergeHooksSettings",
+      "line": 1155,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "hookEntryMatches",
+      "line": 1177,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "getTemplatesDir",
+      "line": 1185,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "saveScanJson",
+      "line": 1191,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "makeTestCommandNonInteractive",
+      "line": 1198,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "createAnaJson",
+      "line": 1208,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "storeSnapshot",
+      "line": 1234,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "buildSymbolIndexSafe",
+      "line": 1241,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "writeCliPath",
+      "line": 1254,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "atomicRename",
+      "line": 1268,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "displaySuccessMessage",
+      "line": 1280,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "checkLineCount",
+      "line": 1375,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "checkHeaders",
+      "line": 1384,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "checkPlaceholders",
+      "line": 1402,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "checkScaffoldMarkers",
+      "line": 1419,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "isValidFilePath",
+      "line": 1427,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "loadSymbolIndex",
+      "line": 1434,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "isIndexedSourceFile",
+      "line": 1444,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "isInExcludedDirectory",
+      "line": 1449,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "extractCitedSymbol",
+      "line": 1467,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "findSymbolInFile",
+      "line": 1481,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "checkCitations",
+      "line": 1496,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "checkFile",
+      "line": 1583,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "displayFileResult",
+      "line": 1607,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "readSetupProgress",
+      "line": 1651,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "readScanJson",
+      "line": 1665,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "readAnaJson",
+      "line": 1680,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "countEntriesInSection",
+      "line": 1688,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "checkSkillSections",
+      "line": 1706,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "hasNonTemplateContent",
+      "line": 1725,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "discoverSkills",
+      "line": 1744,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "checkSkill",
+      "line": 1753,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "checkContextForDashboard",
+      "line": 1804,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "checkConsistency",
+      "line": 1836,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "extractSection",
+      "line": 1916,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "hasRealContent",
+      "line": 1934,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "fileHasRealContent",
+      "line": 1963,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "validateSetupCompletion",
+      "line": 1970,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "displaySetupDashboard",
+      "line": 2045,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "createCheckCommand",
+      "line": 2099,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "runContractPreCheck",
+      "line": 2286,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "printContractResults",
+      "line": 2392,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "runPreCheck",
+      "line": 2414,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "registerVerifyPreCheckCommand",
+      "line": 2436,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "writeSaveMetadata",
+      "line": 2445,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "parseArtifactType",
+      "line": 2464,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "readArtifactBranch",
+      "line": 2503,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "getCurrentBranch",
+      "line": 2523,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "validatePlanFormat",
+      "line": 2530,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "validateVerifyReportFormat",
+      "line": 2551,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "validateScopeFormat",
+      "line": 2561,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "validateSpecFormat",
+      "line": 2593,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "validateContractFormat",
+      "line": 2613,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "validateBuildReportFormat",
+      "line": 2692,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "validateBranch",
+      "line": 2707,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "saveArtifact",
+      "line": 2722,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "saveAllArtifacts",
+      "line": 2909,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "parseComplianceTable",
+      "line": 3107,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "parseResult",
+      "line": 3130,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "parseACResults",
+      "line": 3134,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "parseDeviations",
+      "line": 3143,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "computeTiming",
+      "line": 3164,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "getAuthor",
+      "line": 3182,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "generateProofSummary",
+      "line": 3191,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "fileExistsOnBranch",
+      "line": 3304,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "readFileOnBranch",
+      "line": 3312,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "getFeatureBranch",
+      "line": 3319,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "countPhases",
+      "line": 3331,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "getVerifyResult",
+      "line": 3352,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "discoverSlugs",
+      "line": 3357,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "gatherArtifactState",
+      "line": 3379,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "determineStage",
+      "line": 3463,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "getNextAction",
+      "line": 3530,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "printHumanReadable",
+      "line": 3560,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "getWorkStatus",
+      "line": 3613,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "writeProofChain",
+      "line": 3670,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "completeWork",
+      "line": 3716,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "timeAgo",
+      "line": 3866,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "countFindings",
+      "line": 3874,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "formatHumanReadable",
+      "line": 3884,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "checkDrift",
+      "line": 4127,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "getStatusIcon",
+      "line": 4245,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "formatHumanReadable2",
+      "line": 4259,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "formatJson",
+      "line": 4318,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "formatListTable",
+      "line": 4321,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "extractPrSummary",
+      "line": 4409,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "extractVerifyResult",
+      "line": 4416,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "extractTestInfo",
+      "line": 4420,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "countPhases2",
+      "line": 4424,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "extractTitle",
+      "line": 4428,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "renderProofMarkdown",
+      "line": 4439,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "createPr",
+      "line": 4476,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "registerPrCommand",
+      "line": 4588,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "parseFrontmatter",
+      "line": 4600,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "listAgents",
+      "line": 4618,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "registerAgentsCommand",
+      "line": 4650,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "main",
+      "line": 4669,
+      "async": true,
+      "decorators": []
+    }
+  ],
+  "classes": [],
+  "imports": [
+    {
+      "module": "./chunk-VQ23333D.js",
+      "names": [],
+      "line": 4
+    },
+    {
+      "module": "fs",
+      "names": [],
+      "line": 7
+    },
+    {
+      "module": "commander",
+      "names": [],
+      "line": 8
+    },
+    {
+      "module": "commander",
+      "names": [],
+      "line": 11
+    },
+    {
+      "module": "chalk",
+      "names": [],
+      "line": 12
+    },
+    {
+      "module": "ora",
+      "names": [],
+      "line": 13
+    },
+    {
+      "module": "path",
+      "names": [],
+      "line": 14
+    },
+    {
+      "module": "fs/promises",
+      "names": [],
+      "line": 15
+    },
+    {
+      "module": "os",
+      "names": [],
+      "line": 16
+    },
+    {
+      "module": "url",
+      "names": [],
+      "line": 17
+    },
+    {
+      "module": "crypto",
+      "names": [],
+      "line": 18
+    },
+    {
+      "module": "readline",
+      "names": [],
+      "line": 19
+    },
+    {
+      "module": "child_process",
+      "names": [],
+      "line": 20
+    },
+    {
+      "module": "path",
+      "names": [],
+      "line": 147
+    },
+    {
+      "module": "fs/promises",
+      "names": [],
+      "line": 148
+    },
+    {
+      "module": "commander",
+      "names": [],
+      "line": 190
+    },
+    {
+      "module": "chalk",
+      "names": [],
+      "line": 191
+    },
+    {
+      "module": "ora",
+      "names": [],
+      "line": 192
+    },
+    {
+      "module": "path",
+      "names": [],
+      "line": 193
+    },
+    {
+      "module": "fs/promises",
+      "names": [],
+      "line": 194
+    },
+    {
+      "module": "glob",
+      "names": [],
+      "line": 195
+    },
+    {
+      "module": "commander",
+      "names": [],
+      "line": 1332
+    },
+    {
+      "module": "chalk",
+      "names": [],
+      "line": 1333
+    },
+    {
+      "module": "path",
+      "names": [],
+      "line": 1334
+    },
+    {
+      "module": "fs/promises",
+      "names": [],
+      "line": 1335
+    },
+    {
+      "module": "commander",
+      "names": [],
+      "line": 1338
+    },
+    {
+      "module": "chalk",
+      "names": [],
+      "line": 1339
+    },
+    {
+      "module": "path",
+      "names": [],
+      "line": 1340
+    },
+    {
+      "module": "fs/promises",
+      "names": [],
+      "line": 1341
+    },
+    {
+      "module": "commander",
+      "names": [],
+      "line": 2270
+    },
+    {
+      "module": "chalk",
+      "names": [],
+      "line": 2271
+    },
+    {
+      "module": "child_process",
+      "names": [],
+      "line": 2272
+    },
+    {
+      "module": "fs",
+      "names": [],
+      "line": 2273
+    },
+    {
+      "module": "path",
+      "names": [],
+      "line": 2274
+    },
+    {
+      "module": "crypto",
+      "names": [],
+      "line": 2275
+    },
+    {
+      "module": "yaml",
+      "names": [],
+      "line": 2276
+    },
+    {
+      "module": "commander",
+      "names": [],
+      "line": 2279
+    },
+    {
+      "module": "chalk",
+      "names": [],
+      "line": 2280
+    },
+    {
+      "module": "child_process",
+      "names": [],
+      "line": 2281
+    },
+    {
+      "module": "fs",
+      "names": [],
+      "line": 2282
+    },
+    {
+      "module": "path",
+      "names": [],
+      "line": 2283
+    },
+    {
+      "module": "yaml",
+      "names": [],
+      "line": 2284
+    },
+    {
+      "module": "glob",
+      "names": [],
+      "line": 2285
+    },
+    {
+      "module": "commander",
+      "names": [],
+      "line": 3095
+    },
+    {
+      "module": "chalk",
+      "names": [],
+      "line": 3096
+    },
+    {
+      "module": "child_process",
+      "names": [],
+      "line": 3097
+    },
+    {
+      "module": "fs",
+      "names": [],
+      "line": 3098
+    },
+    {
+      "module": "fs/promises",
+      "names": [],
+      "line": 3099
+    },
+    {
+      "module": "path",
+      "names": [],
+      "line": 3100
+    },
+    {
+      "module": "child_process",
+      "names": [],
+      "line": 3103
+    },
+    {
+      "module": "fs",
+      "names": [],
+      "line": 3104
+    },
+    {
+      "module": "path",
+      "names": [],
+      "line": 3105
+    },
+    {
+      "module": "yaml",
+      "names": [],
+      "line": 3106
+    },
+    {
+      "module": "commander",
+      "names": [],
+      "line": 3852
+    },
+    {
+      "module": "chalk",
+      "names": [],
+      "line": 3853
+    },
+    {
+      "module": "ora",
+      "names": [],
+      "line": 3854
+    },
+    {
+      "module": "path",
+      "names": [],
+      "line": 3855
+    },
+    {
+      "module": "fs/promises",
+      "names": [],
+      "line": 3856
+    },
+    {
+      "module": "fs",
+      "names": [],
+      "line": 3857
+    },
+    {
+      "module": "commander",
+      "names": [],
+      "line": 4227
+    },
+    {
+      "module": "chalk",
+      "names": [],
+      "line": 4228
+    },
+    {
+      "module": "path",
+      "names": [],
+      "line": 4229
+    },
+    {
+      "module": "fs",
+      "names": [],
+      "line": 4230
+    },
+    {
+      "module": "commander",
+      "names": [],
+      "line": 4404
+    },
+    {
+      "module": "chalk",
+      "names": [],
+      "line": 4405
+    },
+    {
+      "module": "child_process",
+      "names": [],
+      "line": 4406
+    },
+    {
+      "module": "fs",
+      "names": [],
+      "line": 4407
+    },
+    {
+      "module": "path",
+      "names": [],
+      "line": 4408
+    },
+    {
+      "module": "chalk",
+      "names": [],
+      "line": 4597
+    },
+    {
+      "module": "fs",
+      "names": [],
+      "line": 4598
+    },
+    {
+      "module": "path",
+      "names": [],
+      "line": 4599
+    }
+  ],
+  "parseTime": 19.556917,
+  "exports": [],
+  "mtimeMs": 1775691285558.3955,
+  "cachedAt": "2026-04-08T23:34:49.533Z"
+}

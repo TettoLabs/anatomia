@@ -1,0 +1,23 @@
+{
+  "functions": [
+    {
+      "name": "parseRequirementsTxt",
+      "line": 43,
+      "async": false,
+      "decorators": []
+    }
+  ],
+  "classes": [],
+  "imports": [],
+  "parseTime": 0.37962500000003274,
+  "exports": [
+    {
+      "name": "export function parseRequirementsTxt(content: stri",
+      "type": "default",
+      "line": 43
+    }
+  ],
+  "decorators": [],
+  "mtimeMs": 1775171350276.817,
+  "cachedAt": "2026-04-08T23:34:49.682Z"
+}

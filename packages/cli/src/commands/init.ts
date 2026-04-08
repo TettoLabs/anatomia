@@ -5,12 +5,9 @@
  *
  * Creates:
  *   .ana/
- *   ├── modes/                    (10 mode files)
  *   ├── hooks/                    (CC hook scripts)
  *   │   ├── verify-context-file.sh
- *   │   ├── quality-gate.sh
- *   │   ├── run-check.sh
- *   │   └── subagent-verify.sh
+ *   │   └── run-check.sh
  *   ├── context/
  *   │   ├── project-context.md    (scan-seeded D6.6 scaffold)
  *   │   ├── design-principles.md  (static human-content template)
@@ -60,7 +57,6 @@ import {
 } from '../utils/scaffold-generators.js';
 import { getProjectName } from '../utils/validators.js';
 import {
-  MODE_FILES,
   AGENT_FILES,
   CONTEXT_FILES,
   CORE_SKILLS,
@@ -593,7 +589,6 @@ function displayDetectionSummary(result: EngineResult): void {
  * Phase 3: Create directory structure
  *
  * Creates all required directories for .ana/ framework:
- * - modes/
  * - context/
  * - docs/
  * - plans/active/, plans/completed/
@@ -607,7 +602,6 @@ async function createDirectoryStructure(tmpAnaPath: string): Promise<void> {
   const spinner = ora('Creating directory structure...').start();
 
   // Create directories (recursive: true creates parents)
-  await fs.mkdir(path.join(tmpAnaPath, 'modes'), { recursive: true });
   await fs.mkdir(path.join(tmpAnaPath, 'context'), { recursive: true });
   await fs.mkdir(path.join(tmpAnaPath, 'docs'), { recursive: true });
   await fs.mkdir(path.join(tmpAnaPath, 'plans/active'), { recursive: true });
@@ -695,13 +689,6 @@ async function copyStaticFilesWithVerification(tmpAnaPath: string): Promise<void
   const spinner = ora('Copying static files...').start();
 
   const templatesDir = getTemplatesDir();
-
-  // 9 mode files
-  for (const file of MODE_FILES) {
-    const sourcePath = path.join(templatesDir, 'modes', file);
-    const destPath = path.join(tmpAnaPath, 'modes', file);
-    await copyAndVerifyFile(sourcePath, destPath, `modes/${file}`);
-  }
 
   // SCHEMAS.md
   const schemasSource = path.join(templatesDir, '.ana/docs/SCHEMAS.md');

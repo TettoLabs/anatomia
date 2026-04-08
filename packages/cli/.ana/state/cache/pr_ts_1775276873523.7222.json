@@ -1,0 +1,106 @@
+{
+  "functions": [
+    {
+      "name": "extractPrSummary",
+      "line": 26,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "extractVerifyResult",
+      "line": 40,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "extractTestInfo",
+      "line": 51,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "countPhases",
+      "line": 62,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "extractTitle",
+      "line": 73,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "renderProofMarkdown",
+      "line": 95,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "createPr",
+      "line": 149,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "registerPrCommand",
+      "line": 308,
+      "async": false,
+      "decorators": []
+    }
+  ],
+  "classes": [],
+  "imports": [
+    {
+      "module": "commander",
+      "names": [],
+      "line": 12
+    },
+    {
+      "module": "chalk",
+      "names": [],
+      "line": 13
+    },
+    {
+      "module": "node:child_process",
+      "names": [],
+      "line": 14
+    },
+    {
+      "module": "node:fs",
+      "names": [],
+      "line": 15
+    },
+    {
+      "module": "node:path",
+      "names": [],
+      "line": 16
+    },
+    {
+      "module": "./artifact.js",
+      "names": [],
+      "line": 17
+    },
+    {
+      "module": "../utils/proofSummary.js",
+      "names": [],
+      "line": 18
+    }
+  ],
+  "parseTime": 2.2619999999999436,
+  "exports": [
+    {
+      "name": "export function createPr(slug: string): void {\n  c",
+      "type": "default",
+      "line": 149
+    },
+    {
+      "name": "export function registerPrCommand(program: Command",
+      "type": "default",
+      "line": 308
+    }
+  ],
+  "decorators": [],
+  "mtimeMs": 1775276873523.7222,
+  "cachedAt": "2026-04-08T23:34:49.979Z"
+}

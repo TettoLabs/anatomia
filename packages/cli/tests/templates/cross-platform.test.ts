@@ -21,7 +21,6 @@ describe('Cross-Platform Path Handling', () => {
     const initContent = await fs.readFile('src/commands/init.ts', 'utf-8');
 
     // Verify path.join used for .ana/ paths (tmpAnaPath in new implementation)
-    expect(initContent).toContain("path.join(tmpAnaPath, 'modes'");
     expect(initContent).toContain("path.join(tmpAnaPath, 'context'");
   });
 

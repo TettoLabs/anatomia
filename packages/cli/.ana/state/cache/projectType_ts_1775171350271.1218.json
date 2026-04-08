@@ -1,0 +1,50 @@
+{
+  "functions": [
+    {
+      "name": "exists",
+      "line": 22,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "detectProjectType",
+      "line": 38,
+      "async": true,
+      "decorators": []
+    }
+  ],
+  "classes": [],
+  "imports": [
+    {
+      "module": "node:fs/promises",
+      "names": [],
+      "line": 8
+    },
+    {
+      "module": "node:path",
+      "names": [],
+      "line": 9
+    },
+    {
+      "module": "../types/index.js",
+      "names": [],
+      "line": 10
+    }
+  ],
+  "parseTime": 0.9644580000001497,
+  "exports": [
+    {
+      "name": "export interface ProjectTypeResult {\n  type: Proje",
+      "type": "default",
+      "line": 12
+    },
+    {
+      "name": "export async function detectProjectType(\n  rootPat",
+      "type": "default",
+      "line": 38
+    }
+  ],
+  "decorators": [],
+  "mtimeMs": 1775171350271.1218,
+  "cachedAt": "2026-04-08T23:34:49.983Z"
+}

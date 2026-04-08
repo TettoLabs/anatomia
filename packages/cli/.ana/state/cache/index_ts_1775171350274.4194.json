@@ -1,0 +1,61 @@
+{
+  "functions": [],
+  "classes": [],
+  "imports": [],
+  "parseTime": 0.2151249999999436,
+  "exports": [
+    {
+      "name": "export { readPythonDependencies } from './python.j",
+      "type": "default",
+      "line": 6
+    },
+    {
+      "name": "export { readNodeDependencies } from './node.js';",
+      "type": "default",
+      "line": 7
+    },
+    {
+      "name": "export { readGoDependencies } from './go.js';",
+      "type": "default",
+      "line": 8
+    },
+    {
+      "name": "export { readRustDependencies } from './rust.js';",
+      "type": "default",
+      "line": 9
+    },
+    {
+      "name": "export { readRubyDependencies } from './ruby.js';",
+      "type": "default",
+      "line": 10
+    },
+    {
+      "name": "export { readPhpDependencies } from './php.js';",
+      "type": "default",
+      "line": 11
+    },
+    {
+      "name": "export { parseRequirementsTxt } from './python/req",
+      "type": "default",
+      "line": 14
+    },
+    {
+      "name": "export { parsePyprojectToml } from './python/pypro",
+      "type": "default",
+      "line": 15
+    },
+    {
+      "name": "export { parsePipfile } from './python/Pipfile.js'",
+      "type": "default",
+      "line": 16
+    },
+    {
+      "name": "export { parsePackageJson } from './node/package.j",
+      "type": "default",
+      "line": 17
+    }
+  ],
+  "decorators": [],
+  "mtimeMs": 1775171350274.4194,
+  "cachedAt": "2026-04-08T23:34:49.635Z"
+}

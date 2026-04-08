@@ -1,0 +1,45 @@
+{
+  "functions": [
+    {
+      "name": "classifyDocstringFormat",
+      "line": 39,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "analyzeDocstrings",
+      "line": 94,
+      "async": false,
+      "decorators": []
+    }
+  ],
+  "classes": [],
+  "imports": [
+    {
+      "module": "../../types/conventions.js",
+      "names": [],
+      "line": 8
+    }
+  ],
+  "parseTime": 0.3282919999999194,
+  "exports": [
+    {
+      "name": "export function classifyDocstringFormat(docstring:",
+      "type": "default",
+      "line": 39
+    },
+    {
+      "name": "export interface FunctionWithDocstring {\n  name: s",
+      "type": "default",
+      "line": 71
+    },
+    {
+      "name": "export function analyzeDocstrings(\n  functions: Fu",
+      "type": "default",
+      "line": 94
+    }
+  ],
+  "decorators": [],
+  "mtimeMs": 1775171350263.2336,
+  "cachedAt": "2026-04-08T23:34:49.986Z"
+}

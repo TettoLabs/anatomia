@@ -1,0 +1,110 @@
+{
+  "functions": [
+    {
+      "name": "getLanguageDisplayName",
+      "line": 65,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "getFrameworkDisplayName",
+      "line": 74,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "getPatternDisplayName",
+      "line": 83,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "timeAgo",
+      "line": 104,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "countFindings",
+      "line": 118,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "formatHumanReadable",
+      "line": 139,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "checkDrift",
+      "line": 418,
+      "async": false,
+      "decorators": []
+    }
+  ],
+  "classes": [],
+  "imports": [
+    {
+      "module": "commander",
+      "names": [],
+      "line": 19
+    },
+    {
+      "module": "chalk",
+      "names": [],
+      "line": 20
+    },
+    {
+      "module": "ora",
+      "names": [],
+      "line": 21
+    },
+    {
+      "module": "node:path",
+      "names": [],
+      "line": 22
+    },
+    {
+      "module": "node:fs/promises",
+      "names": [],
+      "line": 23
+    },
+    {
+      "module": "node:fs",
+      "names": [],
+      "line": 24
+    },
+    {
+      "module": "../engine/types/engineResult.js",
+      "names": [],
+      "line": 25
+    },
+    {
+      "module": "../utils/fileCounts.js",
+      "names": [],
+      "line": 26
+    }
+  ],
+  "parseTime": 3.5943750000001273,
+  "exports": [
+    {
+      "name": "export const scanCommand = new Command('scan')\n  .",
+      "type": "default",
+      "line": 462
+    },
+    {
+      "name": "export { getLanguageDisplayName, getFrameworkDispl",
+      "type": "default",
+      "line": 565
+    },
+    {
+      "name": "export { formatHumanReadable, countFindings, check",
+      "type": "default",
+      "line": 567
+    }
+  ],
+  "decorators": [],
+  "mtimeMs": 1775585235464.022,
+  "cachedAt": "2026-04-08T23:34:50.014Z"
+}

@@ -39,13 +39,11 @@ describe('ana init', () => {
       await fs.mkdir(anaPath);
 
       // Simulate Phase 3
-      await fs.mkdir(path.join(anaPath, 'modes'), { recursive: true });
       await fs.mkdir(path.join(anaPath, 'context'), { recursive: true });
       await fs.mkdir(path.join(anaPath, 'state'), { recursive: true });
 
       // Verify all exist
       const dirs = [
-        'modes',
         'context',
         'state',
       ];
@@ -65,18 +63,9 @@ describe('ana init', () => {
       const templatesDir = path.join(__dirname, '..', '..', 'templates');
 
       const expectedFiles = [
-        // 9 mode files
-        'modes/architect.md',
-        'modes/code.md',
-        'modes/debug.md',
-        'modes/docs.md',
-        'modes/test.md',
-        'modes/general.md',
-        // 4 hook scripts
+        // 2 hook scripts
         '.ana/hooks/verify-context-file.sh',
-        '.ana/hooks/quality-gate.sh',
         '.ana/hooks/run-check.sh',
-        '.ana/hooks/subagent-verify.sh',
         // SCHEMAS.md and plan directories
         '.ana/docs/SCHEMAS.md',
         '.ana/plans/active/.gitkeep',
@@ -99,7 +88,7 @@ describe('ana init', () => {
         'CLAUDE.md',
       ];
 
-      expect(expectedFiles).toHaveLength(25);
+      expect(expectedFiles).toHaveLength(17);
 
       for (const file of expectedFiles) {
         const filePath = path.join(templatesDir, file);

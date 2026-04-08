@@ -1,0 +1,50 @@
+{
+  "functions": [
+    {
+      "name": "constructor",
+      "line": 53,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "toDetectionError",
+      "line": 85,
+      "async": false,
+      "decorators": []
+    }
+  ],
+  "classes": [
+    {
+      "name": "DetectionEngineError",
+      "line": 45,
+      "superclasses": [],
+      "methods": [
+        "constructor",
+        "toDetectionError"
+      ],
+      "decorators": []
+    }
+  ],
+  "imports": [],
+  "parseTime": 0.5732920000000377,
+  "exports": [
+    {
+      "name": "export interface DetectionError {\n  /** Machine-re",
+      "type": "default",
+      "line": 13
+    },
+    {
+      "name": "export class DetectionEngineError extends Error {\n",
+      "type": "default",
+      "line": 45
+    },
+    {
+      "name": "export const ERROR_CODES = {\n  // File operations\n",
+      "type": "default",
+      "line": 106
+    }
+  ],
+  "decorators": [],
+  "mtimeMs": 1775171350272.4536,
+  "cachedAt": "2026-04-08T23:34:50.004Z"
+}

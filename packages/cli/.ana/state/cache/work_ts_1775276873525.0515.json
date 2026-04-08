@@ -1,0 +1,151 @@
+{
+  "functions": [
+    {
+      "name": "fileExistsOnBranch",
+      "line": 95,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "readFileOnBranch",
+      "line": 111,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "getFeatureBranch",
+      "line": 125,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "countPhases",
+      "line": 147,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "getVerifyResult",
+      "line": 177,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "discoverSlugs",
+      "line": 190,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "gatherArtifactState",
+      "line": 232,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "determineStage",
+      "line": 350,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "getNextAction",
+      "line": 449,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "printHumanReadable",
+      "line": 495,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "getWorkStatus",
+      "line": 575,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "writeProofChain",
+      "line": 684,
+      "async": true,
+      "decorators": []
+    },
+    {
+      "name": "completeWork",
+      "line": 753,
+      "async": true,
+      "decorators": []
+    }
+  ],
+  "classes": [],
+  "imports": [
+    {
+      "module": "commander",
+      "names": [],
+      "line": 13
+    },
+    {
+      "module": "chalk",
+      "names": [],
+      "line": 14
+    },
+    {
+      "module": "node:child_process",
+      "names": [],
+      "line": 15
+    },
+    {
+      "module": "node:fs",
+      "names": [],
+      "line": 16
+    },
+    {
+      "module": "node:fs/promises",
+      "names": [],
+      "line": 17
+    },
+    {
+      "module": "node:path",
+      "names": [],
+      "line": 18
+    },
+    {
+      "module": "./artifact.js",
+      "names": [],
+      "line": 19
+    },
+    {
+      "module": "../utils/proofSummary.js",
+      "names": [],
+      "line": 20
+    }
+  ],
+  "parseTime": 6.300000000000068,
+  "exports": [
+    {
+      "name": "export function getWorkStatus(options: { json?: bo",
+      "type": "default",
+      "line": 575
+    },
+    {
+      "name": "export interface ProofChainEntry {\n  slug: string;",
+      "type": "default",
+      "line": 652
+    },
+    {
+      "name": "export async function completeWork(slug: string): ",
+      "type": "default",
+      "line": 753
+    },
+    {
+      "name": "export const workCommand = new Command('work')\n  .",
+      "type": "default",
+      "line": 924
+    }
+  ],
+  "decorators": [],
+  "mtimeMs": 1775276873525.0515,
+  "cachedAt": "2026-04-08T23:34:49.555Z"
+}

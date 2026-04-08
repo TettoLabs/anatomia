@@ -85,17 +85,6 @@ export const REQUIRED_CONTEXT_FILES = [
   'context/design-principles.md',
 ] as const;
 
-/** Mode files */
-export const MODE_FILES = [
-  'architect.md',
-  'code.md',
-  'debug.md',
-  'docs.md',
-  'test.md',
-  'general.md',
-] as const;
-
-
 /** Agent definition files */
 export const AGENT_FILES = [
   'ana.md',

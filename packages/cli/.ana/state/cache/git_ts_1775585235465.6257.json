@@ -1,0 +1,52 @@
+{
+  "functions": [
+    {
+      "name": "gitExec",
+      "line": 21,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "detectDefaultBranch",
+      "line": 36,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "detectBranches",
+      "line": 67,
+      "async": false,
+      "decorators": []
+    },
+    {
+      "name": "detectGitInfo",
+      "line": 91,
+      "async": true,
+      "decorators": []
+    }
+  ],
+  "classes": [],
+  "imports": [
+    {
+      "module": "node:child_process",
+      "names": [],
+      "line": 8
+    }
+  ],
+  "parseTime": 0.6837090000000217,
+  "exports": [
+    {
+      "name": "export interface GitInfo {\n  head: string | null;\n",
+      "type": "default",
+      "line": 10
+    },
+    {
+      "name": "export async function detectGitInfo(cwd: string): ",
+      "type": "default",
+      "line": 91
+    }
+  ],
+  "decorators": [],
+  "mtimeMs": 1775585235465.6257,
+  "cachedAt": "2026-04-08T23:34:49.558Z"
+}
