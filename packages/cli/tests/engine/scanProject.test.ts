@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { analyzeProject } from '../../src/engine/analyze.js';
+import { scanProject } from '../../src/engine/scan-engine.js';
 import { writeFile, mkdir, rm } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
-describe('analyzeProject()', () => {
+describe('scanProject()', () => {
   let tempDir: string;
 
   beforeEach(async () => {
@@ -30,7 +30,7 @@ describe('analyzeProject()', () => {
       'package.json': JSON.stringify({ name: 'test', version: '1.0.0' }),
     });
 
-    const result = await analyzeProject(tempDir, { depth: 'surface' });
+    const result = await scanProject(tempDir, { depth: 'surface' });
 
     const expectedKeys = [
       'overview', 'stack', 'files', 'structure', 'structureOverflow',
@@ -55,7 +55,7 @@ describe('analyzeProject()', () => {
       }),
     });
 
-    const result = await analyzeProject(tempDir, { depth: 'surface' });
+    const result = await scanProject(tempDir, { depth: 'surface' });
 
     expect(result.stack.framework).toBe('Next.js');
     expect(result.stack.database).toBe('Prisma');
@@ -70,7 +70,7 @@ describe('analyzeProject()', () => {
       cwd: tempDir, stdio: 'pipe',
     });
 
-    const result = await analyzeProject(tempDir, { depth: 'surface' });
+    const result = await scanProject(tempDir, { depth: 'surface' });
 
     expect(result.git.head).not.toBeNull();
     expect(result.git.branch).not.toBeNull();
@@ -85,7 +85,7 @@ describe('analyzeProject()', () => {
       }),
     });
 
-    const result = await analyzeProject(tempDir, { depth: 'surface' });
+    const result = await scanProject(tempDir, { depth: 'surface' });
 
     expect(result.commands.build).not.toBeNull();
     expect(result.commands.test).not.toBeNull();
@@ -102,7 +102,7 @@ describe('analyzeProject()', () => {
       'prisma/schema.prisma': 'model User { id Int @id }\nmodel Post { id Int @id }',
     });
 
-    const result = await analyzeProject(tempDir, { depth: 'surface' });
+    const result = await scanProject(tempDir, { depth: 'surface' });
 
     expect(result.externalServices.length).toBeGreaterThan(0);
     expect(result.externalServices.some(s => s.name === 'Stripe')).toBe(true);
@@ -112,7 +112,7 @@ describe('analyzeProject()', () => {
   });
 
   it('handles empty directory gracefully', async () => {
-    const result = await analyzeProject(tempDir, { depth: 'surface' });
+    const result = await scanProject(tempDir, { depth: 'surface' });
 
     expect(result.overview.project).toBeDefined();
     expect(result.stack.language).toBeNull();

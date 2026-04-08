@@ -34,9 +34,9 @@ describe('TypeScript language detection', () => {
       '{ "compilerOptions": { "strict": true } }'
     );
 
-    // Use analyzeProject to test full flow
-    const { analyzeProject } = await import('../../../src/engine/analyze.js');
-    const result = await analyzeProject(tempDir, { depth: 'surface' });
+    // Use scanProject to test full flow
+    const { scanProject } = await import('../../../src/engine/scan-engine.js');
+    const result = await scanProject(tempDir, { depth: 'surface' });
     expect(result.stack.language).toBe('TypeScript');
   });
 
@@ -47,8 +47,8 @@ describe('TypeScript language detection', () => {
     );
     await fs.writeFile(path.join(tempDir, 'index.js'), 'console.log("hi")');
 
-    const { analyzeProject } = await import('../../../src/engine/analyze.js');
-    const result = await analyzeProject(tempDir, { depth: 'surface' });
+    const { scanProject } = await import('../../../src/engine/scan-engine.js');
+    const result = await scanProject(tempDir, { depth: 'surface' });
     expect(result.stack.language).toBe('Node.js');
   });
 
@@ -58,8 +58,8 @@ describe('TypeScript language detection', () => {
       JSON.stringify({ name: 'ts-app', devDependencies: { typescript: '5.0.0' } })
     );
 
-    const { analyzeProject } = await import('../../../src/engine/analyze.js');
-    const result = await analyzeProject(tempDir, { depth: 'surface' });
+    const { scanProject } = await import('../../../src/engine/scan-engine.js');
+    const result = await scanProject(tempDir, { depth: 'surface' });
     expect(result.stack.language).toBe('TypeScript');
   });
 });
@@ -88,8 +88,8 @@ generator client { provider = "prisma-client-js" }
 model User { id Int @id name String }`
     );
 
-    const { analyzeProject } = await import('../../../src/engine/analyze.js');
-    const result = await analyzeProject(tempDir, { depth: 'surface' });
+    const { scanProject } = await import('../../../src/engine/scan-engine.js');
+    const result = await scanProject(tempDir, { depth: 'surface' });
     expect(result.schemas.prisma).toBeDefined();
     expect(result.schemas.prisma.found).toBe(true);
     expect(result.schemas.prisma.provider).toBe('postgresql');
@@ -108,8 +108,8 @@ model User { id Int @id name String }`
 model User { id Int @id name String }`
     );
 
-    const { analyzeProject } = await import('../../../src/engine/analyze.js');
-    const result = await analyzeProject(tempDir, { depth: 'surface' });
+    const { scanProject } = await import('../../../src/engine/scan-engine.js');
+    const result = await scanProject(tempDir, { depth: 'surface' });
     expect(result.schemas.prisma.found).toBe(true);
     expect(result.schemas.prisma.provider).toBeNull();
   });

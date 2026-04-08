@@ -518,8 +518,8 @@ async function runAnalyzer(
   const spinner = ora('Analyzing project...').start();
 
   try {
-    const { analyzeProject } = await import('../engine/analyze.js');
-    const engineResult = await analyzeProject(rootPath, { depth: 'deep' });
+    const { scanProject } = await import('../engine/scan-engine.js');
+    const engineResult = await scanProject(rootPath, { depth: 'deep' });
 
     spinner.succeed('Analysis complete');
     displayDetectionSummary(engineResult);

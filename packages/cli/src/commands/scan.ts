@@ -463,10 +463,10 @@ export const scanCommand = new Command('scan')
 
     try {
       // Dynamic import to avoid WASM crash at module level
-      const { analyzeProject } = await import('../engine/analyze.js');
+      const { scanProject } = await import('../engine/scan-engine.js');
 
       const depth = options.quick ? 'surface' as const : 'deep' as const;
-      const result = await analyzeProject(rootPath, { depth });
+      const result = await scanProject(rootPath, { depth });
 
       if (spinner) spinner.stop();
 

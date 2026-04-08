@@ -1,7 +1,7 @@
 /**
  * EngineResult — the unified scan output schema.
  *
- * Returned by analyzeProject(). Consumed by scan.ts for terminal/JSON output
+ * Returned by scanProject(). Consumed by scan.ts for terminal/JSON output
  * and by init.ts for context generation. D2-compliant schema with typed
  * patterns, conventions, deployment, and Phase 1+ null stubs.
  */

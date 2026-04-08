@@ -1,5 +1,5 @@
 /**
- * analyzeProject() — top-level engine function
+ * scanProject() — top-level engine function
  *
  * Composes EngineResult from multiple detection sources:
  * 1. Dependency detection (primary — always runs)
@@ -379,7 +379,7 @@ function mapConventions(
 
 // --- Main function ---
 
-export async function analyzeProject(
+export async function scanProject(
   rootPath: string,
   options: { depth: 'surface' | 'deep' } = { depth: 'deep' }
 ): Promise<EngineResult> {
