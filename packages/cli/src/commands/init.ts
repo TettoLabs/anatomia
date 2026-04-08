@@ -940,7 +940,16 @@ async function scaffoldAndSeedSkills(
       // Re-init: read existing file, REPLACE ## Detected only
       content = await fs.readFile(destPath, 'utf-8');
     } else if (existingSkill) {
-      // Fresh/corrupted but file exists (from prior .claude/ that wasn't deleted) — skip
+      // Fresh/corrupted but file exists — refresh Detected section only (D8)
+      content = await fs.readFile(destPath, 'utf-8');
+      if (engineResult) {
+        const injector = SKILL_INJECTORS[skillName];
+        if (injector) {
+          const detectedContent = injector(engineResult);
+          content = replaceDetectedSection(content, detectedContent);
+        }
+      }
+      await fs.writeFile(destPath, content, 'utf-8');
       continue;
     } else {
       // New skill: copy from template
