@@ -26,63 +26,9 @@ import type { EngineResult } from '../engine/types/engineResult.js';
 import { formatNumber } from '../utils/fileCounts.js';
 
 /**
- * Display name mappings kept here for test exports (backward compat)
+ * Display names imported from shared utility
  */
-const LANGUAGE_DISPLAY_NAMES: Record<string, string> = {
-  node: 'Node.js', python: 'Python', go: 'Go', rust: 'Rust',
-  ruby: 'Ruby', php: 'PHP', java: 'Java', kotlin: 'Kotlin',
-  swift: 'Swift', csharp: 'C#', cpp: 'C++', c: 'C',
-  typescript: 'TypeScript', unknown: 'Unknown',
-};
-
-const FRAMEWORK_DISPLAY_NAMES: Record<string, string> = {
-  nextjs: 'Next.js', react: 'React', vue: 'Vue', angular: 'Angular',
-  svelte: 'Svelte', express: 'Express', fastify: 'Fastify', nestjs: 'NestJS',
-  fastapi: 'FastAPI', django: 'Django', flask: 'Flask', rails: 'Rails',
-  sinatra: 'Sinatra', gin: 'Gin', echo: 'Echo', fiber: 'Fiber',
-  actix: 'Actix', rocket: 'Rocket', spring: 'Spring',
-  laravel: 'Laravel', symfony: 'Symfony',
-};
-
-const PATTERN_DISPLAY_NAMES: Record<string, string> = {
-  prisma: 'Prisma', drizzle: 'Drizzle', typeorm: 'TypeORM',
-  sequelize: 'Sequelize', mongoose: 'Mongoose', sqlalchemy: 'SQLAlchemy',
-  django_orm: 'Django ORM', activerecord: 'ActiveRecord', gorm: 'GORM',
-  diesel: 'Diesel', nextauth: 'NextAuth', 'next-auth': 'NextAuth',
-  passport: 'Passport', clerk: 'Clerk', auth0: 'Auth0',
-  firebase_auth: 'Firebase Auth', supabase_auth: 'Supabase Auth',
-  jwt: 'JWT', oauth: 'OAuth', vitest: 'Vitest', jest: 'Jest',
-  mocha: 'Mocha', pytest: 'pytest', unittest: 'unittest',
-  rspec: 'RSpec', minitest: 'Minitest', go_testing: 'Go testing',
-  cargo_test: 'Cargo test', junit: 'JUnit', phpunit: 'PHPUnit',
-};
-
-/**
- * Get display name for a language/project type
- * @param projectType - Internal project type identifier
- * @returns Human-readable display name
- */
-function getLanguageDisplayName(projectType: string): string {
-  return LANGUAGE_DISPLAY_NAMES[projectType.toLowerCase()] || projectType;
-}
-
-/**
- * Get display name for a framework
- * @param framework - Internal framework identifier
- * @returns Human-readable display name
- */
-function getFrameworkDisplayName(framework: string): string {
-  return FRAMEWORK_DISPLAY_NAMES[framework.toLowerCase()] || framework;
-}
-
-/**
- * Get display name for a pattern
- * @param pattern - Internal pattern identifier
- * @returns Human-readable display name
- */
-function getPatternDisplayName(pattern: string): string {
-  return PATTERN_DISPLAY_NAMES[pattern.toLowerCase()] || pattern;
-}
+import { getLanguageDisplayName, getFrameworkDisplayName, getPatternDisplayName } from '../utils/displayNames.js';
 
 /**
  * Box-drawing characters for terminal output
@@ -523,6 +469,7 @@ export const scanCommand = new Command('scan')
   });
 
 // Export helper functions for testing
-export { getLanguageDisplayName, getFrameworkDisplayName, getPatternDisplayName, formatNumber };
+export { getLanguageDisplayName, getFrameworkDisplayName, getPatternDisplayName } from '../utils/displayNames.js';
+export { formatNumber };
 // Export for testing
 export { formatHumanReadable, countFindings };

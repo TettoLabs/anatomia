@@ -28,39 +28,7 @@ import { detectCommands } from './detectors/commands.js';
 import { detectDeployment, detectCI } from './detectors/deployment.js';
 import { countFiles } from '../utils/fileCounts.js';
 
-// Display name mappings (moved from scan.ts to be shared)
-const LANGUAGE_DISPLAY_NAMES: Record<string, string> = {
-  node: 'Node.js', python: 'Python', go: 'Go', rust: 'Rust',
-  ruby: 'Ruby', php: 'PHP', java: 'Java', kotlin: 'Kotlin',
-  swift: 'Swift', csharp: 'C#', cpp: 'C++', c: 'C',
-  typescript: 'TypeScript', unknown: 'Unknown',
-};
-
-const FRAMEWORK_DISPLAY_NAMES: Record<string, string> = {
-  nextjs: 'Next.js', react: 'React', vue: 'Vue', angular: 'Angular',
-  svelte: 'Svelte', express: 'Express', fastify: 'Fastify', nestjs: 'NestJS',
-  fastapi: 'FastAPI', django: 'Django', flask: 'Flask', rails: 'Rails',
-  sinatra: 'Sinatra', gin: 'Gin', echo: 'Echo', fiber: 'Fiber',
-  actix: 'Actix', rocket: 'Rocket', spring: 'Spring',
-  laravel: 'Laravel', symfony: 'Symfony',
-};
-
-const PATTERN_DISPLAY_NAMES: Record<string, string> = {
-  prisma: 'Prisma', drizzle: 'Drizzle', typeorm: 'TypeORM',
-  sequelize: 'Sequelize', mongoose: 'Mongoose', sqlalchemy: 'SQLAlchemy',
-  django_orm: 'Django ORM', activerecord: 'ActiveRecord', gorm: 'GORM',
-  diesel: 'Diesel', nextauth: 'NextAuth', 'next-auth': 'NextAuth',
-  passport: 'Passport', clerk: 'Clerk', auth0: 'Auth0',
-  firebase_auth: 'Firebase Auth', supabase_auth: 'Supabase Auth',
-  jwt: 'JWT', oauth: 'OAuth', vitest: 'Vitest', jest: 'Jest',
-  mocha: 'Mocha', pytest: 'pytest', unittest: 'unittest',
-  rspec: 'RSpec', minitest: 'Minitest', go_testing: 'Go testing',
-  cargo_test: 'Cargo test', junit: 'JUnit', phpunit: 'PHPUnit',
-};
-
-function displayName(map: Record<string, string>, key: string): string {
-  return map[key.toLowerCase()] || key;
-}
+import { getLanguageDisplayName, getFrameworkDisplayName, getPatternDisplayName } from '../utils/displayNames.js';
 
 interface MonorepoInfo {
   isMonorepo: boolean;
@@ -434,20 +402,20 @@ export async function scanProject(
   // Enrich from analyzer
   if (analysis) {
     if (analysis.projectType && analysis.projectType !== 'unknown') {
-      stack.language = displayName(LANGUAGE_DISPLAY_NAMES, analysis.projectType);
+      stack.language = getLanguageDisplayName(analysis.projectType);
     }
     if (analysis.framework) {
-      stack.framework = displayName(FRAMEWORK_DISPLAY_NAMES, analysis.framework);
+      stack.framework = getFrameworkDisplayName(analysis.framework);
     }
     // Analyzer patterns can fill gaps
     if (!stack.database && analysis.patterns?.database?.library) {
-      stack.database = displayName(PATTERN_DISPLAY_NAMES, analysis.patterns.database.library);
+      stack.database = getPatternDisplayName(analysis.patterns.database.library);
     }
     if (!stack.auth && analysis.patterns?.auth?.library) {
-      stack.auth = displayName(PATTERN_DISPLAY_NAMES, analysis.patterns.auth.library);
+      stack.auth = getPatternDisplayName(analysis.patterns.auth.library);
     }
     if (!stack.testing && analysis.patterns?.testing?.library) {
-      stack.testing = displayName(PATTERN_DISPLAY_NAMES, analysis.patterns.testing.library);
+      stack.testing = getPatternDisplayName(analysis.patterns.testing.library);
     }
   }
 
