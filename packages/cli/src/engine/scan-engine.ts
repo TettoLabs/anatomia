@@ -517,6 +517,7 @@ export async function scanProject(
   }
 
   return {
+    schemaVersion: '1.0',
     overview: { project: projectName, scannedAt: now, depth: options.depth },
     stack: { ...stack, aiSdk: detectAiSdk(allDeps) },
     files,

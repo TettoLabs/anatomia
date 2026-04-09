@@ -425,6 +425,7 @@ Silently check:
 **What counts as "non-template content":**
 - `#` and `##` headings → TEMPLATE (not content)
 - `<!-- ... -->` HTML comments → TEMPLATE
+- `*Not yet captured...` italic markers → TEMPLATE
 - `**Detected:**` lines → TEMPLATE (machine-owned)
 - Blank lines → TEMPLATE
 - Everything else → CONTENT
@@ -484,7 +485,7 @@ When writing to a skill file (`.claude/skills/{skill}/SKILL.md`):
 
 1. Read the current file content
 2. Find the `## Rules` section
-3. IF Rules section is empty or contains only HTML comment placeholders (`<!-- ... -->`) and blank lines:
+3. IF Rules section is empty or contains only placeholders (`<!-- ... -->` HTML comments, `*Not yet captured...*` markers) and blank lines:
    Replace it with the confirmed rules
 4. IF Rules section already contains rules from a prior setup (any lines that are NOT HTML comments and NOT blank):
    Append new confirmed rules to the end (do not duplicate existing rules)

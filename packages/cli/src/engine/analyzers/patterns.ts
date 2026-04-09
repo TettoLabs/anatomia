@@ -173,6 +173,38 @@ async function detectValidationPattern(
     };
   }
 
+  if (deps.includes('ajv')) {
+    return {
+      library: 'ajv',
+      confidence: 0.75,
+      evidence: ['ajv in dependencies'],
+    };
+  }
+
+  if (deps.includes('validator')) {
+    return {
+      library: 'validator',
+      confidence: 0.70,
+      evidence: ['validator in dependencies'],
+    };
+  }
+
+  if (deps.includes('superstruct')) {
+    return {
+      library: 'superstruct',
+      confidence: 0.75,
+      evidence: ['superstruct in dependencies'],
+    };
+  }
+
+  if (deps.includes('valibot')) {
+    return {
+      library: 'valibot',
+      confidence: 0.75,
+      evidence: ['valibot in dependencies'],
+    };
+  }
+
   return null;  // No validation library detected
 }
 

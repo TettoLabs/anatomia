@@ -52,6 +52,7 @@ const PLACEHOLDER_PATTERNS = [
   /\[INSERT/i,
   /\[ADD/i,
   /\[FILL/i,
+  /Not yet captured/i,
 ];
 
 /** Citation regex patterns — match various formats the writer uses

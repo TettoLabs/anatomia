@@ -65,7 +65,7 @@ export function generateProjectContextScaffold(result: EngineResult): string {
   if (infoParts.length > 0) {
     s += `**Detected infrastructure:** ${infoParts.join(' · ')}\n`;
   }
-  s += `<!-- What does this product do? Who uses it? Setup will capture this. -->\n\n`;
+  s += `*Not yet captured. Run \`claude --agent ana-setup\` to fill this.*\n\n`;
 
   // Section 2: Architecture
   s += `## Architecture\n`;
@@ -83,23 +83,23 @@ export function generateProjectContextScaffold(result: EngineResult): string {
     const topDirs = result.structure.slice(0, 8).map(e => e.path).join(', ');
     s += `**Detected:** ${dirCount} directories mapped: ${topDirs}\n`;
   }
-  s += `<!-- Why is it structured this way? Setup will capture rationale. -->\n\n`;
+  s += `*Not yet captured. Run \`claude --agent ana-setup\` to fill this.*\n\n`;
 
   // Section 3: Key Decisions
   s += `## Key Decisions\n`;
-  s += `<!-- Setup will capture your architectural decisions -->\n\n`;
+  s += `*Not yet captured. Run \`claude --agent ana-setup\` to fill this.*\n\n`;
 
   // Section 4: Key Files
   s += `## Key Files\n`;
-  s += `<!-- Key navigation points for agents -->\n\n`;
+  s += `*Not yet captured. Run \`claude --agent ana-setup\` to fill this.*\n\n`;
 
   // Section 5: Active Constraints
   s += `## Active Constraints\n`;
-  s += `<!-- Current priorities and things not to touch -->\n\n`;
+  s += `*Not yet captured. Run \`claude --agent ana-setup\` to fill this.*\n\n`;
 
   // Section 6: Domain Vocabulary
   s += `## Domain Vocabulary\n`;
-  s += `<!-- Project-specific terms and their meaning in this context -->\n`;
+  s += `*Not yet captured. Run \`claude --agent ana-setup\` to fill this.*\n`;
 
   return s;
 }

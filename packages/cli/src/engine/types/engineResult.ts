@@ -22,6 +22,7 @@ export interface ConventionDetail {
 }
 
 export interface EngineResult {
+  schemaVersion: string;
   overview: {
     project: string;
     scannedAt: string;

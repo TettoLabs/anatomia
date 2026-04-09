@@ -120,6 +120,7 @@ async function confirm(message: string, defaultYes: boolean): Promise<boolean> {
  */
 function createEmptyEngineResult(): EngineResult {
   return {
+    schemaVersion: '1.0',
     overview: { project: 'unknown', scannedAt: new Date().toISOString(), depth: 'surface' },
     stack: { language: null, framework: null, database: null, auth: null, testing: null, payments: null, workspace: null, aiSdk: null },
     files: { source: 0, test: 0, config: 0, total: 0 },
@@ -1036,6 +1037,7 @@ function injectDeployment(result: EngineResult): string {
   if (result.deployment.platform) lines.push(`- Platform: ${result.deployment.platform}`);
   if (result.deployment.configFile) lines.push(`- Config: ${result.deployment.configFile}`);
   if (result.deployment.ci) lines.push(`- CI: ${result.deployment.ci}`);
+  if (result.deployment.ciConfigFile) lines.push(`- CI config: ${result.deployment.ciConfigFile}`);
   return lines.join('\n');
 }
 

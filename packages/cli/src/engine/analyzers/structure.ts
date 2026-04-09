@@ -58,6 +58,7 @@ const DIRECTORY_PURPOSES: Record<string, string> = {
   'middleware': 'Request middleware',
   'middlewares': 'Request middleware',
   'config': 'Configuration',
+  'engine': 'Engine code',
   'shared': 'Shared utilities',
   'common': 'Common utilities',
   // Tests
@@ -72,6 +73,7 @@ const DIRECTORY_PURPOSES: Record<string, string> = {
   'fixtures': 'Test fixtures',
   // Documentation
   'docs': 'Documentation',
+  'email-templates': 'Email templates',
   'documentation': 'Documentation',
   // Frontend
   'components': 'UI components',
@@ -129,6 +131,7 @@ const DIRECTORY_PURPOSES: Record<string, string> = {
   'docker': 'Docker configurations',
   'templates': 'Template files',
   'examples': 'Example code',
+  'prompts': 'LLM prompts',
   'benchmarks': 'Performance benchmarks',
   // Ruby/Rails
   'concerns': 'Rails concerns',
