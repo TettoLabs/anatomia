@@ -810,7 +810,7 @@ async function createClaudeConfiguration(cwd: string, engineResult: EngineResult
     await scaffoldAndSeedSkills(skillsPath, templatesDir, engineResult, 'fresh');
 
     // Copy CLAUDE.md to project root
-    await copyClaudeMd(cwd, templatesDir);
+    await copyClaudeMd(cwd, templatesDir, engineResult);
 
     spinner.succeed('Created .claude/ configuration');
     return;
@@ -857,7 +857,7 @@ async function createClaudeConfiguration(cwd: string, engineResult: EngineResult
   await scaffoldAndSeedSkills(skillsPath, templatesDir, engineResult, initState);
 
   // Copy CLAUDE.md to project root (merge-not-overwrite)
-  await copyClaudeMd(cwd, templatesDir);
+  await copyClaudeMd(cwd, templatesDir, engineResult);
 
   spinner.succeed('Created .claude/ configuration (merged)');
 }
@@ -1090,26 +1090,48 @@ function replaceDetectedSection(fileContent: string, newDetectedContent: string)
 }
 
 /**
- * Copy CLAUDE.md to project root
+ * Copy CLAUDE.md to project root with project name + stack interpolation
  *
- * Copies CLAUDE.md entry point without overwriting existing one.
+ * Reads template, replaces header with project name, optionally adds stack summary.
+ * Does not overwrite existing CLAUDE.md.
  *
  * @param cwd - Project root directory
  * @param templatesDir - Path to CLI templates directory
+ * @param engineResult - Engine result for stack interpolation (null if skipped)
  */
-async function copyClaudeMd(cwd: string, templatesDir: string): Promise<void> {
+async function copyClaudeMd(cwd: string, templatesDir: string, engineResult: EngineResult | null): Promise<void> {
   const destPath = path.join(cwd, 'CLAUDE.md');
 
   // Check if file already exists (don't overwrite)
   const exists = await fileExists(destPath);
   if (exists) {
-    // Skip - don't overwrite existing CLAUDE.md
     return;
   }
 
-  // Copy with verification
+  // Read template and interpolate
   const sourcePath = path.join(templatesDir, 'CLAUDE.md');
-  await copyAndVerifyFile(sourcePath, destPath, 'CLAUDE.md');
+  let content = await fs.readFile(sourcePath, 'utf-8');
+
+  // Replace header with project name
+  const projectName = await getProjectName(cwd);
+  content = content.replace(/^# .*$/m, `# ${projectName}`);
+
+  // Add stack summary after header
+  if (engineResult) {
+    const stackParts = [
+      engineResult.stack.language,
+      engineResult.stack.framework,
+      engineResult.stack.database,
+      engineResult.stack.testing,
+      engineResult.stack.aiSdk,
+      engineResult.stack.payments,
+    ].filter(Boolean);
+    if (stackParts.length > 0) {
+      content = content.replace(/^(# .*)$/m, `$1\n\n**Stack:** ${stackParts.join(' · ')}`);
+    }
+  }
+
+  await fs.writeFile(destPath, content, 'utf-8');
 }
 
 /**

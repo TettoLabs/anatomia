@@ -139,10 +139,10 @@ export async function sampleFiles(
       );
     });
 
-    // Random sample 10-15 files from src/
+    // Deterministic sample — alphabetical, respecting caller's maxFiles
     const sampled = filtered
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 15);
+      .sort()
+      .slice(0, maxFiles);
 
     files.push(...sampled);
   } catch {

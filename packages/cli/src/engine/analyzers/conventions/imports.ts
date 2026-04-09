@@ -308,7 +308,7 @@ async function parsePyprojectName(rootPath: string): Promise<string | null> {
  * @param rootPath - Project root
  * @returns Alias prefix (e.g., '@/') or null
  */
-async function parseTsconfigAlias(rootPath: string): Promise<string | null> {
+export async function parseTsconfigAlias(rootPath: string): Promise<string | null> {
   const tsconfigPath = joinPath(rootPath, 'tsconfig.json');
 
   if (!(await exists(tsconfigPath))) {

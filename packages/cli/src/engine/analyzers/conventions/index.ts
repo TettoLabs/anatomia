@@ -18,7 +18,7 @@ import {
   analyzeVariableNaming,
   analyzeConstantNaming,
 } from './naming.js';
-import { analyzeImportConvention, detectProjectRoot } from './imports.js';
+import { analyzeImportConvention, detectProjectRoot, parseTsconfigAlias } from './imports.js';
 import { analyzeTypeHints } from './typeHints.js';
 import { analyzeDocstrings } from './docstrings.js';
 import { analyzeIndentation } from './indentation.js';
@@ -84,15 +84,17 @@ export async function detectConventions(
       constants: constantNaming,
     };
 
-    // Detect project root for import classification
+    // Detect project root and tsconfig aliases for import classification
     const projectRoot = await detectProjectRoot(rootPath, projectType);
+    const tsconfigAlias = projectType === 'node' ? await parseTsconfigAlias(rootPath) : null;
+    const aliasPatterns = tsconfigAlias ? [`${tsconfigAlias}*`] : undefined;
 
     // Analyze import conventions (uses parsed imports)
     const imports = analyzeImportConvention(
       parsedFiles.flatMap(f => f.imports),
       projectType,
       projectRoot,
-      undefined  // tsconfig aliases - could parse if needed in future
+      aliasPatterns
     );
 
     // Analyze type hints (Python only)
