@@ -173,6 +173,23 @@ async function detectExternalServices(
 
 // --- Schema detection ---
 
+/**
+ * Count unique table names from SQL files via CREATE TABLE regex
+ */
+async function countUniqueTables(rootPath: string, sqlFiles: string[]): Promise<number> {
+  const tableNames = new Set<string>();
+  const regex = /CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(?:public\.)?["']?(\w+)["']?/gi;
+  for (const f of sqlFiles) {
+    try {
+      const content = await fs.readFile(path.join(rootPath, f), 'utf-8');
+      for (const match of content.matchAll(regex)) {
+        tableNames.add(match[1].toLowerCase());
+      }
+    } catch { /* skip unreadable files */ }
+  }
+  return tableNames.size;
+}
+
 async function detectSchemas(
   allDeps: Record<string, string>,
   rootPath: string
@@ -206,13 +223,34 @@ async function detectSchemas(
     }
   }
 
-  // Supabase migrations
+  // Supabase migrations — count unique tables, not files
   if (allDeps['@supabase/supabase-js']) {
     try {
       const files = await glob('supabase/migrations/*.sql', { cwd: rootPath });
-      schemas['supabase'] = { found: files.length > 0, path: files.length > 0 ? 'supabase/migrations/' : null, modelCount: files.length };
+      if (files.length > 0) {
+        const modelCount = await countUniqueTables(rootPath, files);
+        schemas['supabase'] = { found: true, path: 'supabase/migrations/', modelCount };
+      } else {
+        schemas['supabase'] = { found: false, path: null, modelCount: null };
+      }
     } catch {
       schemas['supabase'] = { found: false, path: null, modelCount: null };
+    }
+  }
+
+  // Fallback: check common SQL directories for projects without standard ORM
+  if (!schemas['supabase']?.found && !schemas['prisma']?.found && !schemas['drizzle']?.found) {
+    for (const dir of ['database', 'db', 'migrations', 'sql']) {
+      try {
+        const sqlFiles = await glob(`${dir}/**/*.sql`, { cwd: rootPath });
+        if (sqlFiles.length > 0) {
+          const modelCount = await countUniqueTables(rootPath, sqlFiles);
+          if (modelCount > 0) {
+            schemas['sql'] = { found: true, path: `${dir}/`, modelCount };
+            break;
+          }
+        }
+      } catch { /* skip */ }
     }
   }
 
