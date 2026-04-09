@@ -168,7 +168,7 @@ export class ParserManager {
       locateFile(scriptName: string) {
         return resolveWasmPath('web-tree-sitter', scriptName);
       }
-    } as any); // Cast to any - web-tree-sitter types reference undefined EmscriptenModule
+    } as unknown as object); // web-tree-sitter types reference undefined EmscriptenModule
 
     // Pre-load all grammars
     const grammarPaths: Record<Language, [string, string]> = {
@@ -719,7 +719,7 @@ export function extractDecorators(
       } else if (capture.name === 'decorator.object') {
         // Attribute decorator: @app.get - combine with method
         const methodCapture = captures.find(
-          (c: any) => c.name === 'decorator.method' && c.node.startPosition.row === node.startPosition.row
+          (c: { name: string; node: { startPosition: { row: number }; text: string } }) => c.name === 'decorator.method' && c.node.startPosition.row === node.startPosition.row
         );
         if (methodCapture) {
           decoratorName = `${node.text}.${methodCapture.node.text}`;
@@ -731,7 +731,7 @@ export function extractDecorators(
 
       // Look for arguments on same line
       const argsCapture = captures.find(
-        (c: any) => c.name === 'decorator.args' && c.node.startPosition.row === (line - 1)
+        (c: { name: string; node: { startPosition: { row: number }; text: string } }) => c.name === 'decorator.args' && c.node.startPosition.row === (line - 1)
       );
       if (argsCapture) {
         decoratorArgs = [argsCapture.node.text];
@@ -830,7 +830,7 @@ function extractExports(
     const query = queryCache.getQuery(language as Language, 'exports', tsLang);
     const captures = query.captures(tree.rootNode);
 
-    return captures.slice(0, 10).map((capture: any) => ({
+    return captures.slice(0, 10).map((capture: { node: { text: string; startPosition: { row: number } } }) => ({
       name: capture.node.text.slice(0, 50),  // First 50 chars
       type: 'default' as const,
       line: capture.node.startPosition.row + 1,
@@ -970,7 +970,7 @@ export async function parseFile(
 
     // Store in cache for next run (CP2 integration)
     if (cache) {
-      const cacheData: any = {
+      const cacheData: Record<string, unknown> = {
         functions: result.functions,
         classes: result.classes,
         imports: result.imports,

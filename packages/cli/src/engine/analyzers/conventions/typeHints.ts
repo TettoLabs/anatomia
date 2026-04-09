@@ -48,8 +48,9 @@ export function analyzeTypeHints(functions: FunctionInfo[]): TypeHintConvention 
 
   for (const func of functions) {
     // Check if function has return type OR parameter types
-    const hasReturnType = (func as any).returnType !== undefined;
-    const hasParamTypes = (func as any).parameters?.some((p: any) => p.type) ?? false;
+    const funcRecord = func as unknown as Record<string, unknown>;
+    const hasReturnType = funcRecord.returnType !== undefined;
+    const hasParamTypes = (funcRecord.parameters as Array<{ type?: string }> | undefined)?.some(p => p.type) ?? false;
 
     if (hasReturnType || hasParamTypes) {
       withTypes++;

@@ -627,11 +627,11 @@ export async function inferPatterns(
     // Build PatternAnalysis result
     const result: PatternAnalysis = {
       // Spread filtered patterns into category fields
-      errorHandling: filteredPatterns['errorHandling'] as any,
-      validation: filteredPatterns['validation'] as any,
-      database: filteredPatterns['database'] as any,
-      auth: filteredPatterns['auth'] as any,
-      testing: filteredPatterns['testing'] as any,
+      errorHandling: filteredPatterns['errorHandling'] as PatternAnalysis['errorHandling'],
+      validation: filteredPatterns['validation'] as PatternAnalysis['validation'],
+      database: filteredPatterns['database'] as PatternAnalysis['database'],
+      auth: filteredPatterns['auth'] as PatternAnalysis['auth'],
+      testing: filteredPatterns['testing'] as PatternAnalysis['testing'],
 
       // Metadata
       sampledFiles,
@@ -978,7 +978,7 @@ async function confirmDatabasePattern(
 
     if (multiPattern && 'patterns' in multiPattern) {
       // Multi-pattern detected - replace with MultiPattern object
-      patterns['database'] = multiPattern as any;  // Type union handles this
+      patterns['database'] = multiPattern as PatternAnalysis['database'];  // Type union handles this
       return;  // Multi-pattern replaces single pattern, no further boosting
     }
 

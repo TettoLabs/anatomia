@@ -28,8 +28,6 @@ import { formatNumber } from '../utils/fileCounts.js';
 /**
  * Display names imported from shared utility
  */
-import { getLanguageDisplayName, getFrameworkDisplayName, getPatternDisplayName } from '../utils/displayNames.js';
-
 /**
  * Box-drawing characters for terminal output
  */

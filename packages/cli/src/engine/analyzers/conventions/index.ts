@@ -105,7 +105,7 @@ export async function detectConventions(
     // Analyze docstrings (all languages)
     const allFunctions = parsedFiles.flatMap(f => f.functions);
     const docstrings = analyzeDocstrings(
-      allFunctions.map(f => ({ name: f.name, docstring: (f as any).docstring }))
+      allFunctions.map(f => ({ name: f.name, docstring: (f as unknown as { docstring?: string }).docstring }))
     );
 
     // Analyze indentation (only first 10 files for efficiency)

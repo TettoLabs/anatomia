@@ -37,14 +37,29 @@ function displayName(map: Record<string, string>, key: string | null | undefined
   return map[key.toLowerCase()] || key;
 }
 
+/**
+ * Get human-readable display name for a language/project type
+ * @param key - Internal language identifier
+ * @returns Human-readable display name
+ */
 export function getLanguageDisplayName(key: string | null | undefined): string {
   return displayName(LANGUAGE_DISPLAY_NAMES, key);
 }
 
+/**
+ * Get human-readable display name for a framework
+ * @param key - Internal framework identifier
+ * @returns Human-readable display name
+ */
 export function getFrameworkDisplayName(key: string | null | undefined): string {
   return displayName(FRAMEWORK_DISPLAY_NAMES, key);
 }
 
+/**
+ * Get human-readable display name for a pattern (database, auth, testing library)
+ * @param key - Internal pattern identifier
+ * @returns Human-readable display name
+ */
 export function getPatternDisplayName(key: string | null | undefined): string {
   return displayName(PATTERN_DISPLAY_NAMES, key);
 }
