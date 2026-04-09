@@ -17,7 +17,7 @@ description: "Invoke when writing tests, reviewing test quality, or setting up t
 - Coverage minimum: 80% statements. Don't chase 100% — focus coverage on business logic and edge cases.
 
 ## Gotchas
-<!-- Starts empty. Add failure modes as you discover them. -->
+*Not yet captured. Add as you discover them during development.*
 
 ## Examples
-<!-- Optional. Add short snippets showing the RIGHT way. -->
+*Not yet captured. Add short snippets showing the RIGHT way.*

@@ -16,7 +16,7 @@ description: "Invoke before any git operations — branching, committing, mergin
 - Merge feature branches to the default branch. Confirm merge strategy with your team.
 
 ## Gotchas
-<!-- Starts empty. Add failure modes as you discover them. -->
+*Not yet captured. Add as you discover them during development.*
 
 ## Examples
-<!-- Optional. Add short snippets showing the RIGHT way. -->
+*Not yet captured. Add short snippets showing the RIGHT way.*

@@ -15,7 +15,7 @@ description: "Invoke when working on deployment configuration, CI/CD pipelines, 
 - Agents never perform irreversible external actions (deploy to production, publish packages, send to real users, modify infrastructure) without explicit human approval.
 
 ## Gotchas
-<!-- Starts empty. Add failure modes as you discover them. -->
+*Not yet captured. Add as you discover them during development.*
 
 ## Examples
-<!-- Optional. Add short snippets showing the RIGHT way. -->
+*Not yet captured. Add short snippets showing the RIGHT way.*

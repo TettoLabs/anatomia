@@ -17,7 +17,7 @@ description: "Invoke when implementing API routes, request handling, middleware,
 - Return appropriate HTTP status codes. Not everything is 200 or 500.
 
 ## Gotchas
-<!-- Starts empty. Add failure modes as you discover them. -->
+*Not yet captured. Add as you discover them during development.*
 
 ## Examples
-<!-- Optional. Add short snippets showing the RIGHT way. -->
+*Not yet captured. Add short snippets showing the RIGHT way.*

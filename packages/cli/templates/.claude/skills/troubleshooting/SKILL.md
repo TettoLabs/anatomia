@@ -6,13 +6,13 @@ description: "Invoke when debugging failures, diagnosing unexpected behavior, or
 # Troubleshooting
 
 ## Detected
-<!-- No scan data for troubleshooting. This section stays empty. -->
+*No scan data for troubleshooting.*
 
 ## Rules
-<!-- No prescribed defaults. This section grows from real debugging sessions. -->
+*Not yet captured. This section grows from real debugging sessions.*
 
 ## Gotchas
-<!-- Starts empty. Add failure modes as you discover them. -->
+*Not yet captured. Add as you discover them during development.*
 
 ## Examples
-<!-- Optional. Add diagnostic workflows showing how to investigate common failures. -->
+*Not yet captured. Add diagnostic workflows showing how to investigate common failures.*

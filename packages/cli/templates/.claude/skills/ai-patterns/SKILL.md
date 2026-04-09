@@ -19,7 +19,7 @@ description: "Invoke when working with LLM integrations, prompt management, stre
 - Test AI features with deterministic inputs and snapshot expected outputs. Don't assert on LLM creativity — assert on structure, format, and constraint adherence.
 
 ## Gotchas
-<!-- Starts empty. Add failure modes as you discover them. -->
+*Not yet captured. Add as you discover them during development.*
 
 ## Examples
-<!-- Optional. Add short snippets showing the RIGHT way. -->
+*Not yet captured. Add short snippets showing the RIGHT way.*

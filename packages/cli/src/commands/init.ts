@@ -963,9 +963,9 @@ async function scaffoldAndSeedSkills(
       const skillGotchas = gotchas.get(skillName);
       if (skillGotchas && skillGotchas.length > 0) {
         const gotchaLines = skillGotchas.map(g => `- ${g}`).join('\n');
-        // Replace Gotchas placeholder comment with gotcha entries
+        // Replace Gotchas placeholder marker with gotcha entries
         content = content.replace(
-          /^(## Gotchas)\n<!-- [^>]+ -->/m,
+          /^(## Gotchas)\n\*Not yet captured[^*]*\*/m,
           `$1\n${gotchaLines}`
         );
       }

@@ -17,7 +17,7 @@ description: "Invoke when working with database queries, schema changes, migrati
 - Index foreign keys and frequently queried columns.
 
 ## Gotchas
-<!-- Starts empty. Add failure modes as you discover them. -->
+*Not yet captured. Add as you discover them during development.*
 
 ## Examples
-<!-- Optional. Add short snippets showing the RIGHT way. -->
+*Not yet captured. Add short snippets showing the RIGHT way.*
