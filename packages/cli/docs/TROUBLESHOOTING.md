@@ -1,7 +1,7 @@
 # Troubleshooting Guide - Common Detection Issues
 
 **Audience:** Users encountering detection problems
-**Updated:** 2026-02-24
+**Updated:** 2026-04-08
 
 ---
 

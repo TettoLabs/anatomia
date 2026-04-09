@@ -1,13 +1,13 @@
 # Template Guide - How Anatomia Templates Work
 
 **Audience:** Contributors, advanced users customizing templates
-**Updated:** 2026-02-20
+**Updated:** 2026-04-08
 
 ---
 
 ## Overview
 
-Anatomia uses Handlebars-based templates to generate `.ana/` context folders. This guide explains template structure, customization, and quality standards.
+Anatomia uses static templates and TypeScript scaffold generators to create `.ana/` and `.claude/` directories. This guide explains template structure, customization, and quality standards.
 
 ---
 
@@ -109,7 +109,7 @@ They're not just starter files - they define:
 
 ---
 
-### 4. node.json (Project Metadata)
+### 4. ana.json (Project Metadata)
 
 **Purpose:** Machine-readable project identity for tooling.
 
@@ -144,9 +144,9 @@ They're not just starter files - they define:
 **To modify templates:**
 
 1. **Edit template file** in `packages/cli/templates/`
-   - For ENTRY.md: Edit ENTRY.md.hbs
-   - For modes: Edit architect.md.hbs, code.md.hbs, etc.
-   - For context: Edit main.md, patterns.md, conventions.md
+   - For agents: Edit `.claude/agents/ana.md`, etc.
+   - For skills: Edit `.claude/skills/{skill}/SKILL.md`
+   - For scaffolds: Edit `src/utils/scaffold-generators.ts`
 
 2. **Maintain structure:**
    - Keep 4-layer pattern for modes (Purpose, Produces, Delegates, Constraints)
@@ -156,8 +156,7 @@ They're not just starter files - they define:
 3. **Test changes:**
    ```bash
    pnpm test                      # Run automated tests
-   pnpm tsx src/test-templates.ts # Run validation script
-   ana init --yes                 # Test rendering
+   pnpm build && ana init --yes   # Test rendering
    ```
 
 4. **Validate quality:**

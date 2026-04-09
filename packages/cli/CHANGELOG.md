@@ -44,6 +44,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 See README.md "Migration from v0.1.0" section.
 
+### S17 — Setup Phases 2-3
+- Enrich project-context (6 questions, guess-and-correct + generative)
+- Design principles capture (founder's words verbatim)
+- Completion gate, setupMode transitions
+- setup-progress.json lifecycle
+
+### S16 — Setup Phase 1
+- Config confirmation with detection sources
+- Skill batch with ✓/⚠ flags
+- coding-standards and ai-patterns deep-dives
+- Contradiction handling, immediate writes
+
+### S15 — Init Pipeline
+- ana.json D1 schema (14 fields)
+- Skill seeding with replaceDetectedSection()
+- Conditional skill gating via computeSkillManifest()
+- Agent frontmatter routing (D6.10)
+
+### S14 — Scan Engine
+- EngineResult D2 schema with typed PatternDetail/ConventionDetail
+- Deployment and git always-present fields
+
+### S13 — Vault Foundations
+- Deleted 10,219 lines of legacy infrastructure
+- Authored all 8 skill templates (5 core + 3 conditional)
+- Reduced context from 7 files to 2 (project-context.md, design-principles.md)
+
+### S12 — The Prove It Sprint
+- Validated full four-agent pipeline end-to-end (19/19 contract assertions satisfied)
+- First complete dogfood run producing proof chain entry
+
 ---
 
 ## [0.1.0] - 2026-03-08

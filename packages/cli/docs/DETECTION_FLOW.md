@@ -366,6 +366,6 @@ Input Path
 6. **Type Safety**: All results validated with Zod schemas
 
 ## Version
-- **Tool Version**: 0.1.0
-- **Documentation Date**: 2026-02-24
+- **Tool Version**: 0.2.0
+- **Documentation Date**: 2026-04-08
 - **Detection Engine**: anatomia-cli (unified engine)

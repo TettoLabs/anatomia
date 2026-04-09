@@ -21,7 +21,7 @@ pnpm build
 **Running locally:**
 ```bash
 cd packages/cli
-npm link
+pnpm link --global
 ana --version
 ```
 
@@ -33,22 +33,22 @@ ana --version
 packages/cli/
 ├── src/
 │   ├── index.ts           # CLI entry point
-│   ├── commands/          # Command implementations
-│   │   ├── init.ts       # ana init command
-│   │   └── mode.ts       # ana mode command
-│   └── utils/
-│       ├── file-writer.ts      # File operations
-│       └── template-loader.ts  # Template rendering
-├── templates/             # Handlebars templates
-│   ├── ENTRY.md.hbs      # Orientation contract
-│   ├── node.json.hbs     # Project metadata
-│   ├── *.md.hbs          # Mode templates (5 files)
-│   └── *.md              # Context templates (3 files)
-├── tests/                # Vitest test suite
-│   ├── commands/        # Command tests
-│   ├── utils/           # Utility tests
-│   └── templates/       # Template tests
-└── docs/                # Documentation
+│   ├── commands/          # 12 command implementations (init, scan, setup, etc.)
+│   ├── engine/            # Scan engine (detectors, analyzers, parsers)
+│   └── utils/             # Shared utilities (validators, scaffold generators)
+├── templates/
+│   ├── .ana/hooks/        # Hook scripts (verify-context-file.sh, run-check.sh)
+│   ├── .claude/agents/    # Agent definitions (ana.md, ana-plan.md, etc.)
+│   ├── .claude/skills/    # Skill templates (coding-standards, etc.)
+│   ├── .claude/settings.json
+│   ├── CLAUDE.md          # Project entry point template
+│   └── .ana/docs/         # Static docs (SCHEMAS.md)
+├── tests/                 # Vitest test suite
+│   ├── commands/          # Command tests
+│   ├── engine/            # Engine tests
+│   ├── e2e/               # End-to-end tests
+│   └── templates/         # Template tests
+└── docs/                  # Documentation
 ```
 
 ---
@@ -77,38 +77,29 @@ pnpm test tests/templates/  # Template tests only
 ## Modifying Templates
 
 **Template locations:**
-- `.hbs templates:` packages/cli/templates/*.hbs (ENTRY, modes)
-- `Static templates:` packages/cli/templates/*.md (context files)
+- `Agent templates:` packages/cli/templates/.claude/agents/
+- `Skill templates:` packages/cli/templates/.claude/skills/
+- `Hook scripts:` packages/cli/templates/.ana/hooks/
 
 **Development workflow:**
 
-1. **Edit template file**
-   ```bash
-   # Example: Modify architect mode
-   vi packages/cli/templates/architect.md.hbs
-   ```
+1. **Edit template file** in `packages/cli/templates/`
 
 2. **Run tests**
    ```bash
-   pnpm test tests/templates/
-   # All tests must pass
+   cd packages/cli && pnpm test
    ```
 
 3. **Test locally**
    ```bash
    pnpm build
-   cd /tmp && mkdir test-template && cd test-template
+   cd /tmp && mkdir test-template && cd test-template && git init
    ana init
-   # Review generated .ana/ files
+   # Review generated .ana/ and .claude/ files
    ```
 
-4. **Run quality rubric** (for mode changes)
-   - Orientation test: If changed ENTRY.md (≤30s target)
-   - Boundary test: If changed mode (≤10% violations)
-   - Manual review: Professional tone maintained
-
-5. **Submit PR**
-   - Include: Test results, rubric results (if applicable), rationale
+4. **Submit PR**
+   - Include: Test results, rationale
    - Describe: What changed, why, how quality verified
 
 **Testing requirements:**
@@ -126,7 +117,7 @@ pnpm test tests/templates/  # Template tests only
 - **Examples included:** 5 good + 5 bad per mode
 - **Professional tone:** Imperative, clear, no jargon without explanation
 
-See [docs/TEMPLATE_GUIDE.md](./docs/TEMPLATE_GUIDE.md) for details.
+See [packages/cli/docs/TEMPLATE_GUIDE.md](./packages/cli/docs/TEMPLATE_GUIDE.md) for details.
 
 ---
 
