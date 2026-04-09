@@ -56,6 +56,7 @@ import {
   generateDesignPrinciplesTemplate,
 } from '../utils/scaffold-generators.js';
 import { getProjectName } from '../utils/validators.js';
+import { matchGotchas } from '../utils/gotchas.js';
 import {
   AGENT_FILES,
   CONTEXT_FILES,
@@ -812,6 +813,7 @@ async function createClaudeConfiguration(cwd: string, engineResult: EngineResult
 
     // Copy CLAUDE.md to project root
     await copyClaudeMd(cwd, templatesDir, engineResult);
+    await generateAgentsMd(cwd, engineResult);  // Cross-tool AI standard
 
     spinner.succeed('Created .claude/ configuration');
     return;
@@ -857,8 +859,9 @@ async function createClaudeConfiguration(cwd: string, engineResult: EngineResult
   // Copy and seed skill files (dynamic manifest, re-init aware)
   await scaffoldAndSeedSkills(skillsPath, templatesDir, engineResult, initState);
 
-  // Copy CLAUDE.md to project root (merge-not-overwrite)
+  // Copy CLAUDE.md + AGENTS.md to project root (merge-not-overwrite)
   await copyClaudeMd(cwd, templatesDir, engineResult);
+  await generateAgentsMd(cwd, engineResult);
 
   spinner.succeed('Created .claude/ configuration (merged)');
 }
@@ -951,6 +954,20 @@ async function scaffoldAndSeedSkills(
       if (injector) {
         const detectedContent = injector(engineResult);
         content = replaceDetectedSection(content, detectedContent);
+      }
+    }
+
+    // Inject pre-populated gotchas on fresh init only
+    if (!isReinit && engineResult) {
+      const gotchas = matchGotchas(engineResult);
+      const skillGotchas = gotchas.get(skillName);
+      if (skillGotchas && skillGotchas.length > 0) {
+        const gotchaLines = skillGotchas.map(g => `- ${g}`).join('\n');
+        // Replace Gotchas placeholder comment with gotcha entries
+        content = content.replace(
+          /^(## Gotchas)\n<!-- [^>]+ -->/m,
+          `$1\n${gotchaLines}`
+        );
       }
     }
 
@@ -1143,6 +1160,85 @@ async function copyClaudeMd(cwd: string, templatesDir: string, engineResult: Eng
   }
 
   await fs.writeFile(destPath, content, 'utf-8');
+}
+
+/**
+ * Generate AGENTS.md for cross-tool AI coding compatibility.
+ *
+ * AGENTS.md is the Linux Foundation standard read by Cursor, Copilot,
+ * Codex, Windsurf, and other AI coding tools. Does not overwrite existing.
+ *
+ * @param cwd - Project root directory
+ * @param engineResult - Engine result for stack/convention interpolation
+ */
+async function generateAgentsMd(cwd: string, engineResult: EngineResult | null): Promise<void> {
+  const destPath = path.join(cwd, 'AGENTS.md');
+  if (await fileExists(destPath)) return;
+
+  const projectName = await getProjectName(cwd);
+  const lines: string[] = [];
+
+  lines.push(`# ${projectName}`);
+  lines.push('');
+
+  if (engineResult) {
+    const stackParts = [
+      engineResult.stack.language,
+      engineResult.stack.framework,
+      engineResult.stack.database,
+      engineResult.stack.testing,
+      engineResult.stack.aiSdk,
+      engineResult.stack.payments,
+    ].filter(Boolean);
+    if (stackParts.length > 0) {
+      lines.push(`${stackParts.join(' · ')}`);
+      lines.push('');
+    }
+  }
+
+  if (engineResult) {
+    const cmds = engineResult.commands;
+    const cmdLines: string[] = [];
+    if (cmds.build) cmdLines.push(`- Build: \`${cmds.build}\``);
+    if (cmds.test) {
+      const testCmd = makeTestCommandNonInteractive(cmds.test, engineResult.stack.testing);
+      cmdLines.push(`- Test: \`${testCmd}\``);
+    }
+    if (cmds.lint) cmdLines.push(`- Lint: \`${cmds.lint}\``);
+    if (cmds.dev) cmdLines.push(`- Dev: \`${cmds.dev}\``);
+    if (cmdLines.length > 0) {
+      lines.push('## Commands');
+      lines.push(...cmdLines);
+      lines.push('');
+    }
+  }
+
+  if (engineResult?.conventions) {
+    const convLines: string[] = [];
+    const naming = engineResult.conventions.naming;
+    if (naming?.functions?.majority && naming.functions.majority !== 'unknown') {
+      convLines.push(`- Functions: ${naming.functions.majority}`);
+    }
+    if (naming?.files?.majority && naming.files.majority !== 'unknown') {
+      convLines.push(`- Files: ${naming.files.majority}`);
+    }
+    if (engineResult.conventions.indentation?.style) {
+      const indent = engineResult.conventions.indentation;
+      convLines.push(`- Indentation: ${indent.style}, ${indent.width} wide`);
+    }
+    if (convLines.length > 0) {
+      lines.push('## Conventions');
+      lines.push(...convLines);
+      lines.push('');
+    }
+  }
+
+  lines.push('## Constraints');
+  lines.push('- Follow existing patterns in the codebase');
+  lines.push('- Run tests before committing');
+  lines.push('');
+
+  await fs.writeFile(destPath, lines.join('\n'), 'utf-8');
 }
 
 /**

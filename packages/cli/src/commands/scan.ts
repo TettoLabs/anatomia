@@ -332,6 +332,11 @@ function formatHumanReadable(result: EngineResult, options: { isFunnel: boolean 
     }
   }
 
+  // Env security warning
+  if (result.secrets.envFileExists && !result.secrets.gitignoreCoversEnv) {
+    lines.push(chalk.yellow('  ⚠ .env is not in .gitignore — secrets may be committed'));
+  }
+
   lines.push('');
 
   // Footer CTA — dynamic in funnel context
