@@ -21,27 +21,26 @@ They're not just starter files - they define:
 - What constraints AI must follow (hard limits)
 
 **Quality bar: ≥8/10** measured by:
-1. **Orientation speed:** AI understands project in ≤30 seconds (ENTRY.md clarity)
-2. **Boundary discipline:** AI respects mode constraints ≤2% violations (mode files clear)
+1. **Orientation speed:** AI understands project in ≤30 seconds (CLAUDE.md + context files)
+2. **Boundary discipline:** AI respects agent constraints (agent templates clear)
 3. **Naturalness:** ≥4/5 developers say "reads well" (professional tone)
 
 ---
 
 ## Template Types
 
-### 1. ENTRY.md (Orientation Contract)
+### 1. CLAUDE.md (Project Entry Point)
 
-**Purpose:** First file AI reads. Orients AI to project in ≤30 seconds.
+**Purpose:** First file AI reads. Orients AI to project and points to Ana.
 
 **Structure:**
-- What is .ana/? (explains directory structure)
-- 5 Modes (lists architect, code, debug, docs, test)
-- 7 Non-Negotiable Principles (mode boundaries, context quality, testing, documentation)
-- How to Use Modes (ana mode <name> command)
-- Federation (conditional, only if multi-service)
-- Safety Guidelines (when to ask human)
+- Project name and Anatomia integration
+- How to start: `claude --agent ana`
+- Context files location (.ana/context/)
+- Team standards location (.claude/skills/)
+- Optional setup prompt
 
-**Length:** 60-80 lines (HARD LIMIT: max 80)
+**Length:** Concise (under 20 lines)
 
 **Variables:**
 - `{{projectName}}` - Project name from init prompt
@@ -149,9 +148,8 @@ They're not just starter files - they define:
    - For scaffolds: Edit `src/utils/scaffold-generators.ts`
 
 2. **Maintain structure:**
-   - Keep 4-layer pattern for modes (Purpose, Produces, Delegates, Constraints)
-   - Keep length limits (ENTRY 60-80, modes 90-110)
    - Keep strong constraint language ("NEVER", not "try to avoid")
+   - Maintain skill 4-section structure (Detected, Rules, Gotchas, Examples)
 
 3. **Test changes:**
    ```bash
@@ -160,15 +158,7 @@ They're not just starter files - they define:
    ```
 
 4. **Validate quality:**
-   - Orientation test (≤30s with changed ENTRY.md)
-   - Boundary test (≤10% violations with changed mode)
-   - Manual review (reads professionally)
-
-5. **Build and test:**
-   ```bash
-   pnpm build
-   cd /tmp && ana init && cat .ana/ENTRY.md
-   ```
+   - Manual review (reads professionally, constraints are clear)
 
 ---
 
@@ -176,15 +166,13 @@ They're not just starter files - they define:
 
 **≥8/10 Quality = ALL criteria met:**
 
-**Criterion 1: ENTRY.md Orientation (≤30 seconds)**
-- Test: Load ENTRY.md in fresh Claude Code, ask 5 questions, measure time
+**Criterion 1: Orientation (≤30 seconds)**
+- Test: Load CLAUDE.md + context files in fresh Claude Code, ask 5 questions
 - Pass: Average ≤30 seconds over 5 sessions
-- Why: If orientation >30s, users skip reading (defeats purpose)
 
-**Criterion 2: Mode Boundary Discipline (≤2% violations)**
-- Test: 20 boundary-crossing queries per mode (100 total), count violations
-- Pass: ≤10 total violations (≤2 per mode)
-- Why: If boundaries don't work (AI implements in architect mode), core value proposition fails
+**Criterion 2: Agent Boundary Discipline (≤2% violations)**
+- Test: Boundary-crossing queries per agent, count violations
+- Pass: ≤2% violations across agents
 
 **Criterion 3: Template Naturalness (≥4/5 rating)**
 - Test: Survey 5 developers, ask "Rate readability 1-5"

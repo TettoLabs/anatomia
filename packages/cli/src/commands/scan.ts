@@ -466,8 +466,5 @@ export const scanCommand = new Command('scan')
     }
   });
 
-// Export helper functions for testing
+// Re-export display names for test backward compatibility
 export { getLanguageDisplayName, getFrameworkDisplayName, getPatternDisplayName } from '../utils/displayNames.js';
-export { formatNumber };
-// Export for testing
-export { formatHumanReadable, countFindings };
