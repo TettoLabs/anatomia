@@ -102,7 +102,7 @@ const DIRECTORY_PURPOSES: Record<string, string> = {
   // Features/Modules (DDD)
   'features': 'Feature modules',
   'modules': 'Feature modules',
-  'contexts': 'Bounded contexts',
+  'contexts': 'Contexts',
   'domains': 'Domain modules',
   'infrastructure': 'Infrastructure code',
   // Multiple services (Microservices)

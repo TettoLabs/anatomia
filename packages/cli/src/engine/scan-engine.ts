@@ -229,9 +229,12 @@ async function detectSecrets(rootPath: string): Promise<EngineResult['secrets']>
   for (const f of ['.env', '.env.local', '.env.production']) {
     try { await fs.access(path.join(rootPath, f)); envFileExists = true; break; } catch { /* nope */ }
   }
-  for (const f of ['.env.example', '.env.template']) {
-    try { await fs.access(path.join(rootPath, f)); envExampleExists = true; break; } catch { /* nope */ }
-  }
+  try {
+    const rootFiles = await fs.readdir(rootPath);
+    envExampleExists = rootFiles.some(f =>
+      (f.startsWith('.env') && f.endsWith('.example')) || f === '.env.template'
+    );
+  } catch { /* readdir failed */ }
   try {
     const gitignore = await fs.readFile(path.join(rootPath, '.gitignore'), 'utf-8');
     gitignoreCoversEnv = gitignore.includes('.env');
@@ -318,9 +321,9 @@ function mapConventions(
     sampleSize: 0,
   };
 
-  const mapNaming = (raw: { majority: string; confidence: number; mixed: boolean; distribution: Record<string, number> } | undefined) => {
+  const mapNaming = (raw: { majority: string; confidence: number; mixed: boolean; distribution: Record<string, number>; sampleSize?: number } | undefined) => {
     if (!raw) return defaultConvention;
-    return { ...raw, sampleSize: 0 };
+    return { ...raw, sampleSize: raw.sampleSize ?? 0 };
   };
 
   return {

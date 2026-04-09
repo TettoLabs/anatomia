@@ -448,7 +448,7 @@ async function validateInitPreconditions(
       if (await fileExists(path.join(cwd, 'pnpm-lock.yaml'))) pkgMgr = 'pnpm';
       else if (await fileExists(path.join(cwd, 'yarn.lock'))) pkgMgr = 'yarn';
       else if (await fileExists(path.join(cwd, 'bun.lockb'))) pkgMgr = 'bun';
-      console.log(chalk.blue(`ℹ Dependencies not installed. Scan will use surface-tier analysis. Run ${pkgMgr} install for deeper detection.`));
+      console.log(chalk.blue(`ℹ Dependencies not installed. Convention detection may be limited. Run ${pkgMgr} install for deeper detection.`));
     }
   }
 
@@ -1421,6 +1421,10 @@ function displaySuccessMessage(engineResult: EngineResult | null, projectName: s
     }
     if (engineResult.deployment?.platform) {
       console.log(`  ${chalk.bold('Deploy:')}   ${engineResult.deployment.platform}`);
+    }
+    if (engineResult.externalServices.length > 0) {
+      const names = engineResult.externalServices.map((s: { name: string }) => s.name).join(', ');
+      console.log(`  ${chalk.bold('Services:')} ${names}`);
     }
     console.log('');
   }

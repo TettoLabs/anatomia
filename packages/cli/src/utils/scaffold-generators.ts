@@ -46,7 +46,10 @@ export function generateProjectContextScaffold(result: EngineResult): string {
     s += `**Detected commands:** ${cmdParts.join(' · ')}\n`;
   }
   const infoParts: string[] = [];
-  if (result.commands.packageManager) infoParts.push(`${result.commands.packageManager}`);
+  if (result.commands.packageManager &&
+      !(result.monorepo.isMonorepo && result.monorepo.tool === result.commands.packageManager)) {
+    infoParts.push(`${result.commands.packageManager}`);
+  }
   if (result.stack.aiSdk) infoParts.push(`${result.stack.aiSdk} SDK`);
   if (result.monorepo.isMonorepo) {
     const tool = result.monorepo.tool || 'monorepo';

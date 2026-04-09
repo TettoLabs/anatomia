@@ -192,6 +192,7 @@ function formatHumanReadable(result: EngineResult, options: { isFunnel: boolean 
     ['Build', result.commands.build],
     ['Test', result.commands.test],
     ['Lint', result.commands.lint],
+    ['Dev', result.commands.dev],
   ].filter(([, v]) => v) as [string, string][];
 
   if (cmdEntries.length > 0) {
