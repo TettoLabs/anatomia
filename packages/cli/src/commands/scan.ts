@@ -24,6 +24,7 @@ import * as fs from 'node:fs/promises';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import type { EngineResult } from '../engine/types/engineResult.js';
 import { formatNumber } from '../utils/fileCounts.js';
+import { computeSkillManifest, CORE_SKILLS } from '../constants.js';
 
 /**
  * Display names imported from shared utility
@@ -344,7 +345,22 @@ function formatHumanReadable(result: EngineResult, options: { isFunnel: boolean 
       lines.push(chalk.gray('Found ' + findings + ' issues your AI will get wrong. Run `ana init` to fix them.'));
     }
   } else {
-    lines.push(chalk.gray('Run `ana init` to generate full context for your AI.'));
+    // Dynamic footer: preview what init would create
+    const skills = computeSkillManifest(result);
+    const conditional = skills.filter((s: string) => !(CORE_SKILLS as readonly string[]).includes(s));
+    const stackParts = [result.stack.language, result.stack.framework, result.stack.database].filter(Boolean);
+
+    lines.push('');
+    lines.push(chalk.bold('Run `ana init` to give your AI:'));
+    if (conditional.length > 0) {
+      lines.push(`  ✓ ${skills.length} tailored skills (${CORE_SKILLS.length} core + ${conditional.join(', ')})`);
+    } else {
+      lines.push(`  ✓ ${skills.length} skills for ${stackParts.join(' · ')}`);
+    }
+    if (result.externalServices.length > 0) {
+      const svcNames = result.externalServices.map((s: { name: string }) => s.name).join(', ');
+      lines.push(`  ✓ ${svcNames} integration context`);
+    }
   }
 
   if (result.monorepo.isMonorepo && result.monorepo.packages.length > 0) {

@@ -978,18 +978,21 @@ const SKILL_INJECTORS: Record<string, DetectedInjector> = {
 function injectCodingStandards(result: EngineResult): string {
   const lines: string[] = [];
   if (result.stack.language) {
-    lines.push(`- Language: ${result.stack.language}${result.stack.framework ? ` with ${result.stack.framework}` : ''}`);
+    const fileSuffix = result.files.source > 0 ? ` (${result.files.source} source files)` : '';
+    lines.push(`- Language: ${result.stack.language}${result.stack.framework ? ` with ${result.stack.framework}` : ''}${fileSuffix}`);
   }
   if (result.conventions) {
     const naming = result.conventions.naming;
     if (naming?.functions?.confidence > 0) {
-      lines.push(`- Functions: ${naming.functions.majority} (${Math.round(naming.functions.confidence * 100)}%)`);
+      const sample = naming.functions.sampleSize > 0 ? `, ${naming.functions.sampleSize} sampled` : '';
+      lines.push(`- Functions: ${naming.functions.majority} (${Math.round(naming.functions.confidence * 100)}%${sample})`);
     }
     if (naming?.classes?.confidence > 0) {
       lines.push(`- Classes: ${naming.classes.majority} (${Math.round(naming.classes.confidence * 100)}%)`);
     }
     if (naming?.files?.confidence > 0) {
-      lines.push(`- Files: ${naming.files.majority} (${Math.round(naming.files.confidence * 100)}%)`);
+      const sample = naming.files.sampleSize > 0 ? `, ${naming.files.sampleSize} sampled` : '';
+      lines.push(`- Files: ${naming.files.majority} (${Math.round(naming.files.confidence * 100)}%${sample})`);
     }
     if (result.conventions.imports?.style) {
       lines.push(`- Imports: ${result.conventions.imports.style} (${Math.round(result.conventions.imports.confidence * 100)}%)`);
@@ -1009,8 +1012,10 @@ function injectCodingStandards(result: EngineResult): string {
 
 function injectTestingStandards(result: EngineResult): string {
   const lines: string[] = [];
-  if (result.stack.testing) lines.push(`- Framework: ${result.stack.testing}`);
-  if (result.files.test > 0) lines.push(`- Test files: ${result.files.test}`);
+  if (result.stack.testing) {
+    const testCount = result.files.test > 0 ? ` (${result.files.test} test files)` : '';
+    lines.push(`- Framework: ${result.stack.testing}${testCount}`);
+  }
   if (result.commands.test) {
     const testCmd = makeTestCommandNonInteractive(result.commands.test, result.stack.testing);
     lines.push(`- Test command: ${testCmd}`);
@@ -1025,7 +1030,11 @@ function injectTestingStandards(result: EngineResult): string {
 
 function injectGitWorkflow(result: EngineResult): string {
   const lines: string[] = [];
-  if (result.git.defaultBranch) lines.push(`- Default branch: ${result.git.defaultBranch}`);
+  if (result.git.defaultBranch) {
+    const branchCount = result.git.branches?.length ?? 0;
+    const branchSuffix = branchCount > 1 ? ` (${branchCount} branches)` : '';
+    lines.push(`- Default branch: ${result.git.defaultBranch}${branchSuffix}`);
+  }
   if (result.git.branch) lines.push(`- Current branch: ${result.git.branch}`);
   if (result.git.commitCount !== null) lines.push(`- Commits: ${result.git.commitCount}`);
   if (result.git.contributorCount !== null) lines.push(`- Contributors: ${result.git.contributorCount}`);
