@@ -29,7 +29,14 @@ export function generateProjectContextScaffold(result: EngineResult): string {
 
   // Section 1: What This Project Does
   s += `## What This Project Does\n`;
-  const stackParts = [result.stack.language, result.stack.framework, result.stack.database].filter(Boolean);
+  const stackParts = [
+    result.stack.language,
+    result.stack.framework,
+    result.stack.database,
+    result.stack.testing,
+    result.stack.aiSdk,
+    result.stack.payments,
+  ].filter(Boolean);
   if (stackParts.length > 0) {
     s += `**Detected:** ${stackParts.join(' · ')}\n`;
   }

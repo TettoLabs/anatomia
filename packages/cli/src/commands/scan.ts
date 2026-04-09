@@ -395,12 +395,11 @@ export const scanCommand = new Command('scan')
       process.exit(1);
     }
 
-    // --save requires .ana/
+    // --save creates .ana/ if needed
     if (options.save) {
       const anaDir = path.join(rootPath, '.ana');
       if (!existsSync(anaDir)) {
-        console.error(chalk.red('No .ana/ directory found. Run `ana init` first.'));
-        process.exit(1);
+        await fs.mkdir(anaDir, { recursive: true });
       }
     }
 

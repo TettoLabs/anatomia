@@ -100,9 +100,9 @@ export function classifyNamingStyle(name: string): NamingStyle {
     return 'camelCase';
   }
 
-  // Single lowercase word (ambiguous - no clear style)
+  // Single lowercase word
   if (/^[a-z][a-z0-9]*$/.test(coreName)) {
-    return 'unknown';  // Let statistical analysis decide majority
+    return 'lowercase';
   }
 
   return 'unknown';

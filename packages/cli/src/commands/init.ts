@@ -1010,7 +1010,10 @@ function injectTestingStandards(result: EngineResult): string {
   const lines: string[] = [];
   if (result.stack.testing) lines.push(`- Framework: ${result.stack.testing}`);
   if (result.files.test > 0) lines.push(`- Test files: ${result.files.test}`);
-  if (result.commands.test) lines.push(`- Test command: ${result.commands.test}`);
+  if (result.commands.test) {
+    const testCmd = makeTestCommandNonInteractive(result.commands.test, result.stack.testing);
+    lines.push(`- Test command: ${testCmd}`);
+  }
   if (result.patterns?.testing) {
     const t = result.patterns.testing;
     const variant = t.variant ? ` (${t.variant})` : '';

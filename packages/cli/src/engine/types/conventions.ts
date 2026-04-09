@@ -57,6 +57,7 @@ export const NamingStyleSchema = z.enum([
   'PascalCase',
   'kebab-case',
   'SCREAMING_SNAKE_CASE',
+  'lowercase',
   'unknown'
 ]);
 

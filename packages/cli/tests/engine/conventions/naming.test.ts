@@ -42,13 +42,16 @@ describe('classifyNamingStyle', () => {
 
   it('handles leading/trailing underscores', () => {
     expect(classifyNamingStyle('_private_var')).toBe('snake_case');  // Strips _ → private_var
-    expect(classifyNamingStyle('__dunder__')).toBe('unknown');  // Strips __ → dunder → unknown
+    expect(classifyNamingStyle('__dunder__')).toBe('lowercase');  // Strips __ → dunder → lowercase
     expect(classifyNamingStyle('_userName')).toBe('camelCase');  // Strips _ → userName
   });
 
+  it('returns lowercase for single lowercase words', () => {
+    expect(classifyNamingStyle('user')).toBe('lowercase');
+    expect(classifyNamingStyle('data')).toBe('lowercase');
+  });
+
   it('returns unknown for ambiguous names', () => {
-    expect(classifyNamingStyle('user')).toBe('unknown');  // Single word
-    expect(classifyNamingStyle('data')).toBe('unknown');  // Single word
     expect(classifyNamingStyle('x')).toBe('unknown');  // Single char
     expect(classifyNamingStyle('')).toBe('unknown');  // Empty
   });

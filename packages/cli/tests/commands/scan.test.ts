@@ -438,7 +438,7 @@ describe('ana scan', () => {
       expect(fsSync.existsSync(scanJsonPath)).toBe(false);
     });
 
-    it('errors when .ana directory does not exist', async () => {
+    it('auto-creates .ana/ when --save used without init', async () => {
       await createTestFiles({
         'package.json': '{"name":"test"}',
       });
@@ -448,9 +448,9 @@ describe('ana scan', () => {
       expect(fsSync.existsSync(anaDir)).toBe(false);
       process.chdir(tempDir);
 
-      const { stderr, exitCode } = runScan(['--save']);
-      expect(exitCode).toBe(1);
-      expect(stderr).toContain('No .ana/ directory found');
+      const { exitCode } = runScan(['--save']);
+      expect(exitCode).toBe(0);
+      expect(fsSync.existsSync(anaDir)).toBe(true);
     });
   });
 
