@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { findEntryPoints } from '../../../src/engine/analyzers/structure.js';
+import { findEntryPoints } from '../../../src/engine/analyzers/structure/index.js';
 import { mkdir, writeFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 

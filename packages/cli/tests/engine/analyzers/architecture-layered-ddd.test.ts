@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { classifyArchitecture } from '../../../src/engine/analyzers/structure.js';
+import { classifyArchitecture } from '../../../src/engine/analyzers/structure/index.js';
 
 describe('Architecture classification - Layered', () => {
   it('detects layered with all 3 layers (models + services + api)', () => {

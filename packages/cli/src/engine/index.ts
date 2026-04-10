@@ -7,7 +7,7 @@ export { ParserManager } from './parsers/treeSitter.js';
 // Internal imports for analyze()
 import { detectProjectType } from './detectors/projectType.js';
 import { detectFramework } from './detectors/framework.js';
-import { analyzeStructure } from './analyzers/structure.js';
+import { analyzeStructure } from './analyzers/structure/index.js';
 
 // Version constant
 const VERSION = '0.2.0';

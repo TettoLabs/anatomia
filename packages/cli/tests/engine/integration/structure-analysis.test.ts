@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { analyzeStructure } from '../../../src/engine/analyzers/structure.js';
+import { analyzeStructure } from '../../../src/engine/analyzers/structure/index.js';
 import { analyze } from '../../../src/engine/index.js';
 import { mkdir, writeFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
