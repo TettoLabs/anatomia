@@ -16,6 +16,12 @@ import type {
   PatternConfidence,
   MultiPattern,
 } from '../../src/engine/types/patterns.js';
+import type { DetectedCommands } from '../../src/engine/detectors/commands.js';
+import type { GitInfo } from '../../src/engine/detectors/git.js';
+import type {
+  DetectedDeployment,
+  DetectedCI,
+} from '../../src/engine/detectors/deployment.js';
 
 describe('AnalysisResult types', () => {
   describe('createEmptyAnalysisResult', () => {
@@ -152,6 +158,54 @@ describe('type-unification compile-time assertions', () => {
     const _asMulti: DatabasePattern = {} as MultiPattern | undefined;
     void _asSingle;
     void _asMulti;
+
+    expect(true).toBe(true);
+  });
+
+  it('EngineResult.commands composes DetectedCommands & { packageManager } (Item 7a)', () => {
+    // Item 7a: scan-engine composes detectCommands() output with packageManager.
+    // If EngineResult['commands'] regresses to an inline type that omits any
+    // DetectedCommands field, this block fails to compile.
+    const commandsField = {} as EngineResult['commands'];
+    const _detected: DetectedCommands = commandsField;  // must be assignable both ways
+    const _composed: EngineResult['commands'] = {
+      ...({} as DetectedCommands),
+      packageManager: 'pnpm',
+    };
+    // The composition adds exactly `packageManager: string` on top.
+    const _pm: string = commandsField.packageManager;
+    void _detected;
+    void _composed;
+    void _pm;
+
+    expect(true).toBe(true);
+  });
+
+  it('EngineResult.git is GitInfo directly (Item 7b)', () => {
+    // Item 7b: inline git shape was byte-identical to GitInfo, so the field
+    // imports the detector type directly. Any inline divergence fails here.
+    const _a: GitInfo = {} as EngineResult['git'];
+    const _b: EngineResult['git'] = {} as GitInfo;
+    void _a;
+    void _b;
+
+    expect(true).toBe(true);
+  });
+
+  it('EngineResult.deployment composes DetectedDeployment & DetectedCI (Item 7d)', () => {
+    // Item 7d: scan-engine merges detectDeployment() + detectCI() via spread.
+    // The field type matches that runtime shape exactly — both halves must
+    // be assignable from EngineResult['deployment'] and vice versa.
+    const deployField = {} as EngineResult['deployment'];
+    const _asDeploy: DetectedDeployment = deployField;
+    const _asCI: DetectedCI = deployField;
+    const _composed: EngineResult['deployment'] = {
+      ...({} as DetectedDeployment),
+      ...({} as DetectedCI),
+    };
+    void _asDeploy;
+    void _asCI;
+    void _composed;
 
     expect(true).toBe(true);
   });
