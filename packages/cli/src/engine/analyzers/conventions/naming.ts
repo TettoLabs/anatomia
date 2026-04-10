@@ -189,6 +189,7 @@ export function analyzeNamingConvention(
     PascalCase: 0,
     'kebab-case': 0,
     SCREAMING_SNAKE_CASE: 0,
+    lowercase: 0,  // added when NamingStyle gained 'lowercase' (Item 2.4)
     unknown: 0,
   };
 

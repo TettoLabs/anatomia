@@ -121,6 +121,29 @@ export function isMultiPattern(
 }
 
 /**
+ * Get the primary library name from a pattern, handling both single and multi-pattern cases.
+ *
+ * Returns null if the pattern is undefined or has no detectable library. Lives next to
+ * `isMultiPattern` because both exist to handle the PatternConfidence | MultiPattern union
+ * at consumer sites. Centralized here so there's ONE place to look for pattern-union helpers
+ * instead of scattered `isMultiPattern ? primary.library : library` ternaries at every consumer.
+ *
+ * @param pattern
+ * @returns The primary library name, or null if unset.
+ * @example
+ * ```typescript
+ * const libName = getPatternLibrary(analysis.patterns?.database);
+ * if (libName) stack.database = getPatternDisplayName(libName);
+ * ```
+ */
+export function getPatternLibrary(
+  pattern: PatternConfidence | MultiPattern | undefined
+): string | null {
+  if (!pattern) return null;
+  return isMultiPattern(pattern) ? pattern.primary.library : pattern.library;
+}
+
+/**
  * Complete pattern analysis result
  *
  * Contains detected patterns for 5 categories (all optional - may not detect all).

@@ -15,6 +15,7 @@ import { readGoDependencies } from '../parsers/go.js';
 import { exists, joinPath, readFile } from '../utils/file.js';
 import type { ProjectType, AnalysisResult, ParsedFile } from '../types/index.js';
 import type { PatternConfidence, MultiPattern, PatternAnalysis } from '../types/patterns.js';
+import { isMultiPattern } from '../types/patterns.js';
 import { createEmptyPatternAnalysis } from '../types/patterns.js';
 
 /**
@@ -995,13 +996,25 @@ async function confirmErrorHandlingPattern(
  * @param analysis
  */
 async function confirmDatabasePattern(
-  patterns: Partial<Record<string, PatternConfidence>>,
+  patterns: Partial<Record<string, PatternConfidence | MultiPattern>>,
   parsedFiles: ParsedFile[],
   _analysis: AnalysisResult
 ): Promise<void> {
-  if (!patterns['database']) return;
+  // Parameter type widened to accept the full union — previously narrowed to
+  // PatternConfidence but the function assigns MultiPattern at line below via
+  // a cast that silenced the type mismatch (Item 2.5 root fix). After this
+  // change the cast is unnecessary and the isMultiPattern guard below makes
+  // the code honest about which branch is running.
+  const dbPattern = patterns['database'];
+  if (!dbPattern) return;
 
-  const library = patterns['database'].library;
+  // If already a multi-pattern (e.g., from a prior confirmation pass), skip
+  // the single-pattern boost logic below — the fields (variant, confidence,
+  // evidence) don't exist directly on MultiPattern; they live on primary.
+  if (isMultiPattern(dbPattern)) return;
+
+  // From here on, dbPattern is narrowed to PatternConfidence.
+  const library = dbPattern.library;
 
   // SQLAlchemy confirmation with multi-pattern detection (CP3)
   if (library === 'sqlalchemy') {
@@ -1009,8 +1022,9 @@ async function confirmDatabasePattern(
     const multiPattern = await detectMultipleDatabasePatterns(parsedFiles);
 
     if (multiPattern && 'patterns' in multiPattern) {
-      // Multi-pattern detected - replace with MultiPattern object
-      patterns['database'] = multiPattern as PatternAnalysis['database'];  // Type union handles this
+      // Multi-pattern detected — replace the single pattern with MultiPattern.
+      // No cast needed now: the widened parameter type accepts both branches.
+      patterns['database'] = multiPattern;
       return;  // Multi-pattern replaces single pattern, no further boosting
     }
 
@@ -1039,17 +1053,13 @@ async function confirmDatabasePattern(
     );
 
     if (hasAsyncImports) {
-      patterns['database'].variant = 'async';
-      patterns['database'].confidence = Math.min(1.0,
-        patterns['database'].confidence + 0.15
-      );
-      patterns['database'].evidence.push('AsyncSession imports found (async variant confirmed)');
+      dbPattern.variant = 'async';
+      dbPattern.confidence = Math.min(1.0, dbPattern.confidence + 0.15);
+      dbPattern.evidence.push('AsyncSession imports found (async variant confirmed)');
     } else if (hasSyncImports) {
-      patterns['database'].variant = 'sync';
-      patterns['database'].confidence = Math.min(1.0,
-        patterns['database'].confidence + 0.10  // Slightly lower boost (sync is legacy)
-      );
-      patterns['database'].evidence.push('Session imports found (sync variant confirmed)');
+      dbPattern.variant = 'sync';
+      dbPattern.confidence = Math.min(1.0, dbPattern.confidence + 0.10);  // Slightly lower boost (sync is legacy)
+      dbPattern.evidence.push('Session imports found (sync variant confirmed)');
     }
 
     // Count async route handlers with database usage
@@ -1064,10 +1074,8 @@ async function confirmDatabasePattern(
       );
 
     if (asyncDbFunctions.length > 0) {
-      patterns['database'].confidence = Math.min(1.0,
-        patterns['database'].confidence + 0.05
-      );
-      patterns['database'].evidence.push(
+      dbPattern.confidence = Math.min(1.0, dbPattern.confidence + 0.05);
+      dbPattern.evidence.push(
         `${asyncDbFunctions.length} async route handler(s) with database usage`
       );
     }
@@ -1083,10 +1091,8 @@ async function confirmDatabasePattern(
     );
 
     if (hasPrismaImports) {
-      patterns['database'].confidence = Math.min(1.0,
-        patterns['database'].confidence + 0.15
-      );
-      patterns['database'].evidence.push('PrismaClient imports found');
+      dbPattern.confidence = Math.min(1.0, dbPattern.confidence + 0.15);
+      dbPattern.evidence.push('PrismaClient imports found');
     }
   }
 
@@ -1097,10 +1103,8 @@ async function confirmDatabasePattern(
     );
 
     if (hasTypeORMImports) {
-      patterns['database'].confidence = Math.min(1.0,
-        patterns['database'].confidence + 0.15
-      );
-      patterns['database'].evidence.push('TypeORM imports found');
+      dbPattern.confidence = Math.min(1.0, dbPattern.confidence + 0.15);
+      dbPattern.evidence.push('TypeORM imports found');
     }
   }
 
@@ -1111,10 +1115,8 @@ async function confirmDatabasePattern(
     );
 
     if (hasGORMImports) {
-      patterns['database'].confidence = Math.min(1.0,
-        patterns['database'].confidence + 0.10
-      );
-      patterns['database'].evidence.push('GORM imports found');
+      dbPattern.confidence = Math.min(1.0, dbPattern.confidence + 0.10);
+      dbPattern.evidence.push('GORM imports found');
     }
   }
 
@@ -1125,10 +1127,8 @@ async function confirmDatabasePattern(
     );
 
     if (hasSequelizeImports) {
-      patterns['database'].confidence = Math.min(1.0,
-        patterns['database'].confidence + 0.15
-      );
-      patterns['database'].evidence.push('Sequelize imports found');
+      dbPattern.confidence = Math.min(1.0, dbPattern.confidence + 0.15);
+      dbPattern.evidence.push('Sequelize imports found');
     }
   }
 
@@ -1139,17 +1139,15 @@ async function confirmDatabasePattern(
     );
 
     if (hasDrizzleImports) {
-      patterns['database'].confidence = Math.min(1.0,
-        patterns['database'].confidence + 0.15
-      );
-      patterns['database'].evidence.push('Drizzle ORM imports found');
+      dbPattern.confidence = Math.min(1.0, dbPattern.confidence + 0.15);
+      dbPattern.evidence.push('Drizzle ORM imports found');
     }
   }
 
   // Django ORM (built-in, high confidence already)
   else if (library === 'django-orm') {
     // Django ORM is built-in, no boost needed (confidence already 1.0)
-    patterns['database'].evidence.push('Django ORM confirmed (built-in to framework)');
+    dbPattern.evidence.push('Django ORM confirmed (built-in to framework)');
   }
 
   // sqlc confirmation
@@ -1160,10 +1158,8 @@ async function confirmDatabasePattern(
     );
 
     if (hasSqlcPatterns) {
-      patterns['database'].confidence = Math.min(1.0,
-        patterns['database'].confidence + 0.10
-      );
-      patterns['database'].evidence.push('sqlc patterns detected');
+      dbPattern.confidence = Math.min(1.0, dbPattern.confidence + 0.10);
+      dbPattern.evidence.push('sqlc patterns detected');
     }
   }
 }

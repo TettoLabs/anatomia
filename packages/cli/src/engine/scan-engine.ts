@@ -20,7 +20,7 @@ import { glob } from 'glob';
 import type { EngineResult, PatternDetail } from './types/engineResult.js';
 import type { AnalysisResult } from './types/index.js';
 import type { PatternConfidence, MultiPattern } from './types/patterns.js';
-import { isMultiPattern } from './types/patterns.js';
+import { isMultiPattern, getPatternLibrary } from './types/patterns.js';
 import { readDependencies, detectFromDeps, detectServiceDeps, detectAiSdk, aggregateMonorepoDependencies } from './detectors/dependencies.js';
 import { detectPackageManager } from './detectors/packageManager.js';
 import { detectGitInfo } from './detectors/git.js';
@@ -397,6 +397,9 @@ export async function scanProject(
   }
 
   // 5. Build stack (dependency primary, analyzer enriches)
+  // aiSdk is initialized null and populated immediately — Item 2.1 (was missing
+  // at construction, relying on a later spread that failed type-check). All 8
+  // fields must be present at construction time so the type matches.
   const stack: EngineResult['stack'] = {
     language: null,
     framework: null,
@@ -405,7 +408,9 @@ export async function scanProject(
     testing: depResult.testing,
     payments: depResult.payments,
     workspace: mono.isMonorepo ? `${mono.tool} monorepo` : null,
+    aiSdk: null,
   };
+  stack.aiSdk = detectAiSdk(allDeps);
 
   // Enrich from analyzer
   if (analysis) {
@@ -415,15 +420,19 @@ export async function scanProject(
     if (analysis.framework) {
       stack.framework = getFrameworkDisplayName(analysis.framework);
     }
-    // Analyzer patterns can fill gaps
-    if (!stack.database && analysis.patterns?.database?.library) {
-      stack.database = getPatternDisplayName(analysis.patterns.database.library);
+    // Analyzer patterns can fill gaps — use getPatternLibrary helper to
+    // handle both PatternConfidence and MultiPattern union members (Item 2.3).
+    const dbLib = getPatternLibrary(analysis.patterns?.database);
+    if (!stack.database && dbLib) {
+      stack.database = getPatternDisplayName(dbLib);
     }
-    if (!stack.auth && analysis.patterns?.auth?.library) {
-      stack.auth = getPatternDisplayName(analysis.patterns.auth.library);
+    const authLib = getPatternLibrary(analysis.patterns?.auth);
+    if (!stack.auth && authLib) {
+      stack.auth = getPatternDisplayName(authLib);
     }
-    if (!stack.testing && analysis.patterns?.testing?.library) {
-      stack.testing = getPatternDisplayName(analysis.patterns.testing.library);
+    const testLib = getPatternLibrary(analysis.patterns?.testing);
+    if (!stack.testing && testLib) {
+      stack.testing = getPatternDisplayName(testLib);
     }
   }
 
@@ -486,7 +495,7 @@ export async function scanProject(
   return {
     schemaVersion: '1.0',
     overview: { project: projectName, scannedAt: now, depth: options.depth },
-    stack: { ...stack, aiSdk: detectAiSdk(allDeps) },
+    stack,
     files,
     structure: structure.items,
     structureOverflow: structure.overflow,

@@ -28,8 +28,11 @@ export async function readNodeDependencies(
       const content = await readFile(packageJsonPath);
       const packageDeps = parsePackageJson(content);
       packageDeps.forEach((d) => deps.add(d));
-    } catch (_error) {
-      // Corrupted file - could try package-lock.json fallback in future
+    } catch (error) {
+      // Corrupted file - could try package-lock.json fallback in future.
+      // Catch binding was `_error` but references below used `error`, which
+      // threw ReferenceError at runtime when a package.json was malformed.
+      // Renamed the binding to match the references (Item 2.7).
       console.warn(
         `Warning: Failed to parse package.json: ${error instanceof Error ? error.message : 'unknown error'}`
       );

@@ -1622,7 +1622,10 @@ function displaySuccessMessage(engineResult: EngineResult | null, projectName: s
   if (engineResult) {
     const analysis = engineResult;
     const manifest = computeSkillManifest(analysis);
-    const coreSkills = [...CORE_SKILLS];
+    // Widen coreSkills to string[] so .includes() accepts the any-string
+    // manifest entries (Item 2.6 — CORE_SKILLS is a readonly literal union
+    // tuple, .includes() expects its narrow union, manifest is string[]).
+    const coreSkills: string[] = [...CORE_SKILLS];
     const conditionalSkills = manifest.filter(s => !coreSkills.includes(s));
 
     console.log(chalk.green(`✓ Skills → .claude/skills/ (${manifest.length} skills)`));
