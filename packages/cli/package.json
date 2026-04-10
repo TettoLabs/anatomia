@@ -40,6 +40,7 @@
     "build": "tsup && cp -r templates dist/",
     "dev": "tsup --watch",
     "test": "vitest",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
     "prepublishOnly": "pnpm build && pnpm test"
