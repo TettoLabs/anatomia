@@ -62,6 +62,7 @@ import {
   CONTEXT_FILES,
   CORE_SKILLS,
   computeSkillManifest,
+  getStackSummary,
 } from '../constants.js';
 import { buildSymbolIndex } from './symbol-index.js';
 
@@ -551,7 +552,7 @@ function displayDetectionSummary(result: EngineResult): void {
   console.log();
 
   // Stack
-  const stackParts = [result.stack.language, result.commands.packageManager, result.stack.testing].filter(Boolean);
+  const stackParts = getStackSummary(result);
   if (stackParts.length > 0) {
     console.log(chalk.green('  ✓ Stack: ') + stackParts.join(' · '));
   }
@@ -1150,14 +1151,7 @@ async function copyClaudeMd(cwd: string, templatesDir: string, engineResult: Eng
 
   // Add stack summary after header
   if (engineResult) {
-    const stackParts = [
-      engineResult.stack.language,
-      engineResult.stack.framework,
-      engineResult.stack.database,
-      engineResult.stack.testing,
-      engineResult.stack.aiSdk,
-      engineResult.stack.payments,
-    ].filter(Boolean);
+    const stackParts = getStackSummary(engineResult);
     if (stackParts.length > 0) {
       content = content.replace(/^(# .*)$/m, `$1\n\n**Stack:** ${stackParts.join(' · ')}`);
     }
@@ -1186,14 +1180,7 @@ async function generateAgentsMd(cwd: string, engineResult: EngineResult | null):
   lines.push('');
 
   if (engineResult) {
-    const stackParts = [
-      engineResult.stack.language,
-      engineResult.stack.framework,
-      engineResult.stack.database,
-      engineResult.stack.testing,
-      engineResult.stack.aiSdk,
-      engineResult.stack.payments,
-    ].filter(Boolean);
+    const stackParts = getStackSummary(engineResult);
     if (stackParts.length > 0) {
       lines.push(`${stackParts.join(' · ')}`);
       lines.push('');
@@ -1575,24 +1562,18 @@ function displaySuccessMessage(engineResult: EngineResult | null, projectName: s
     console.log(chalk.green(`✓ Scanned ${projectName}`) + chalk.gray(` (${scanTime}s)`));
     console.log('');
 
-    // Stack summary (unified — matches CLAUDE.md logic)
-    const stackParts = [
-      engineResult.stack.language,
-      engineResult.stack.framework,
-      engineResult.stack.database,
-      engineResult.stack.testing,
-      engineResult.stack.aiSdk,
-      engineResult.stack.payments,
-    ].filter(Boolean);
+    // Stack summary (shared definition in constants.ts)
+    const stackParts = getStackSummary(engineResult);
     if (stackParts.length > 0) {
       console.log(`  ${chalk.bold('Stack:')}    ${stackParts.join(' · ')}`);
     }
     if (engineResult.deployment?.platform) {
       console.log(`  ${chalk.bold('Deploy:')}   ${engineResult.deployment.platform}`);
     }
-    // Services (deduped against stack)
+    // Services (deduped against stack + deployment)
     if (engineResult.externalServices.length > 0) {
       const stackValues = Object.values(engineResult.stack).filter(Boolean) as string[];
+      if (engineResult.deployment?.platform) stackValues.push(engineResult.deployment.platform);
       const uniqueServices = engineResult.externalServices.filter(
         svc => !stackValues.some(v => v.includes(svc.name))
       );

@@ -54,6 +54,25 @@ export function computeSkillManifest(engineResult: EngineResult): string[] {
   return skills;
 }
 
+/**
+ * Get stack summary as a filtered array of non-null stack fields.
+ * Single source of truth — used by CLAUDE.md, AGENTS.md, init success, scaffold generators.
+ *
+ * @param result - Scan engine result
+ * @returns Array of display-ready stack strings (e.g., ["TypeScript", "Next.js", "Supabase"])
+ */
+export function getStackSummary(result: EngineResult): string[] {
+  return [
+    result.stack.language,
+    result.stack.framework,
+    result.stack.database,
+    result.stack.auth,
+    result.stack.testing,
+    result.stack.aiSdk,
+    result.stack.payments,
+  ].filter(Boolean) as string[];
+}
+
 // ============================================================
 // LEGACY CONSTANTS (pre-vault — still referenced by current code)
 // These will be migrated to vault constants as init/validators are rewritten.

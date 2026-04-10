@@ -33,4 +33,10 @@ export const GOTCHAS: GotchaEntry[] = [
     skill: 'coding-standards',
     text: "Next.js App Router components are Server Components by default. Add `'use client'` only when the component needs browser APIs, event handlers, or React hooks like useState/useEffect.",
   },
+  {
+    id: 'prisma-generate',
+    triggers: { database: 'Prisma' },
+    skill: 'data-access',
+    text: 'Always run `npx prisma generate` after schema changes. The Prisma client is generated code — schema changes are not reflected until regenerated.',
+  },
 ];

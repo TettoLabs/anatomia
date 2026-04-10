@@ -150,8 +150,9 @@ function formatHumanReadable(result: EngineResult, options: { isFunnel: boolean 
   }
 
   // Services + Deployment (rendered as one block)
-  // Dedup services already shown in Stack section
+  // Dedup services already shown in Stack or Deploy sections
   const stackValues = Object.values(result.stack).filter(Boolean) as string[];
+  if (result.deployment.platform) stackValues.push(result.deployment.platform);
   const filteredServices = result.externalServices.filter(
     svc => !stackValues.some(v => v.includes(svc.name))
   );

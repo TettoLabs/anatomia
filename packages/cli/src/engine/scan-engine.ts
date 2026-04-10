@@ -29,6 +29,7 @@ import { detectDeployment, detectCI } from './detectors/deployment.js';
 import { countFiles } from '../utils/fileCounts.js';
 
 import { getLanguageDisplayName, getFrameworkDisplayName, getPatternDisplayName } from '../utils/displayNames.js';
+import { getProjectName } from '../utils/validators.js';
 
 interface MonorepoInfo {
   isMonorepo: boolean;
@@ -394,7 +395,7 @@ export async function scanProject(
   rootPath: string,
   options: { depth: 'surface' | 'deep' } = { depth: 'deep' }
 ): Promise<EngineResult> {
-  const projectName = path.basename(rootPath);
+  const projectName = await getProjectName(rootPath);
   const now = new Date().toISOString();
 
   // 1. Monorepo detection

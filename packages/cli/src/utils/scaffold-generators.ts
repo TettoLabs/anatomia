@@ -12,7 +12,7 @@
  */
 
 import type { EngineResult } from '../engine/types/engineResult.js';
-import { SCAFFOLD_MARKER } from '../constants.js';
+import { SCAFFOLD_MARKER, getStackSummary } from '../constants.js';
 
 /**
  * Generate project-context.md scaffold (D6.6 format)
@@ -29,14 +29,7 @@ export function generateProjectContextScaffold(result: EngineResult): string {
 
   // Section 1: What This Project Does
   s += `## What This Project Does\n`;
-  const stackParts = [
-    result.stack.language,
-    result.stack.framework,
-    result.stack.database,
-    result.stack.testing,
-    result.stack.aiSdk,
-    result.stack.payments,
-  ].filter(Boolean);
+  const stackParts = getStackSummary(result);
   if (stackParts.length > 0) {
     s += `**Detected:** ${stackParts.join(' · ')}\n`;
   }
