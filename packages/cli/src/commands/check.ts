@@ -13,10 +13,12 @@
 
 import { Command } from 'commander';
 import chalk from 'chalk';
+import { ZodError } from 'zod';
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
 import type { SymbolEntry, SymbolIndex } from '../types/symbol-index.js';
 import { CONTEXT_FILES } from '../constants.js';
+import { parseEngineResultPartial } from '../engine/types/engineResult-partial.js';
 
 /** Per-file configuration for structural validation (D12.3 — no line counts) */
 interface FileConfig {
@@ -638,9 +640,16 @@ export async function readSetupProgress(cwd: string): Promise<SetupProgress | nu
 }
 
 /**
- * Read scan.json — try .ana/scan.json first, fall back to .ana/state/scan.json
+ * Read scan.json — try `.ana/scan.json` first, fall back to `.ana/state/scan.json`.
+ *
+ * Runs the parsed JSON through `parseEngineResultPartial` (Item 27) to catch
+ * schemaVersion drift, missing stack fields, and malformed commands. On Zod
+ * validation failure, logs a warning and treats the file as missing —
+ * preserves the fail-soft null-return contract the diagnostic command
+ * expects (one corrupt scan.json should NOT crash `ana setup check`).
+ *
  * @param cwd - Project root directory
- * @returns Parsed scan data or null if not found
+ * @returns Parsed scan data or null if not found / unreadable / invalid
  */
 async function readScanJson(cwd: string): Promise<Record<string, unknown> | null> {
   const paths = [
@@ -648,12 +657,39 @@ async function readScanJson(cwd: string): Promise<Record<string, unknown> | null
     path.join(cwd, '.ana', 'state', 'scan.json'),
   ];
   for (const p of paths) {
+    let content: string;
     try {
-      const content = await fs.readFile(p, 'utf-8');
-      return JSON.parse(content);
+      content = await fs.readFile(p, 'utf-8');
     } catch {
+      continue;  // File missing or unreadable — try next path
+    }
+    let raw: unknown;
+    try {
+      raw = JSON.parse(content);
+    } catch {
+      // Malformed JSON — treat as missing and surface the issue
+      console.warn(chalk.yellow(`Warning: ${p} is not valid JSON; treating as missing.`));
       continue;
     }
+    try {
+      parseEngineResultPartial(raw);
+    } catch (err) {
+      // Validation failed — scan.json parses but violates the partial schema.
+      // Surface the exact Zod issue so the user can regenerate via `ana scan --save`.
+      if (err instanceof ZodError) {
+        const firstIssue = err.issues[0];
+        const where = firstIssue?.path.length ? firstIssue.path.join('.') : '(root)';
+        const what = firstIssue?.message ?? 'unknown';
+        console.warn(
+          chalk.yellow(
+            `Warning: ${p} failed schema validation at \`${where}\`: ${what}. ` +
+            `Run \`ana scan --save\` to regenerate.`
+          )
+        );
+      }
+      continue;
+    }
+    return raw as Record<string, unknown>;
   }
   return null;
 }
