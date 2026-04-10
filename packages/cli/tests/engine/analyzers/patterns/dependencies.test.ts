@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { detectFromDependencies } from '../../../../src/engine/analyzers/patterns.js';
+import { detectFromDependencies } from '../../../../src/engine/analyzers/patterns/index.js';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { mkdtemp } from 'fs/promises';

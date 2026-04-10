@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { analyze } from '../../../../src/engine/index.js';
-import { inferPatterns } from '../../../../src/engine/analyzers/patterns.js';
+import { inferPatterns } from '../../../../src/engine/analyzers/patterns/index.js';
 import { testProjects } from './fixtures/testProjects.js';
 import type { AnalysisResult } from '../../../../src/engine/types/index.js';
 import { ParserManager } from '../../../../src/engine/parsers/treeSitter.js';

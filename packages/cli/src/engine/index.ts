@@ -108,7 +108,7 @@ export async function analyze(
     let patterns: import('./types/patterns.js').PatternAnalysis | undefined;
     if (!options.skipPatterns && parsed) {
       try {
-        const { inferPatterns } = await import('./analyzers/patterns.js');
+        const { inferPatterns } = await import('./analyzers/patterns/index.js');
         patterns = await inferPatterns(rootPath, withParsed);
       } catch {
         patterns = undefined;

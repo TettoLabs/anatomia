@@ -4,7 +4,7 @@ import {
   interpretConfidence,
   calculateECE,
   type PatternDetectionResult,
-} from '../../../../src/engine/analyzers/patterns.js';
+} from '../../../../src/engine/analyzers/patterns/index.js';
 import type { PatternConfidence } from '../../../../src/engine/types/patterns.js';
 
 describe('Confidence Scoring and Filtering', () => {

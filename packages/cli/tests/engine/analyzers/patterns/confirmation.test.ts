@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { confirmPatternsWithTreeSitter } from '../../../../src/engine/analyzers/patterns.js';
+import { confirmPatternsWithTreeSitter } from '../../../../src/engine/analyzers/patterns/index.js';
 import type { AnalysisResult, ParsedFile } from '../../../../src/engine/types/index.js';
 import type { PatternConfidence } from '../../../../src/engine/types/patterns.js';
 import { ParserManager } from '../../../../src/engine/parsers/treeSitter.js';

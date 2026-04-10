@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { detectMultipleDatabasePatterns } from '../../../../src/engine/analyzers/patterns.js';
+import { detectMultipleDatabasePatterns } from '../../../../src/engine/analyzers/patterns/index.js';
 import { isMultiPattern } from '../../../../src/engine/types/patterns.js';
 import type { ParsedFile } from '../../../../src/engine/types/index.js';
 import type { MultiPattern, PatternConfidence } from '../../../../src/engine/types/patterns.js';
