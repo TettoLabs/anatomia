@@ -18,6 +18,7 @@ import type { NamingStyle, NamingConventionResult } from '../../types/convention
 // Re-export so existing consumers can import NamingConventionResult from this module.
 // The canonical definition lives in types/conventions.ts (Zod-inferred, single source of truth).
 export type { NamingConventionResult };
+import { isHttpMethodName, isRouteHandlerFile } from '../../utils/routeHandlers.js';
 import { queryCache } from '../../parsers/queries.js';
 import { parserManager, type Language } from '../../parsers/treeSitter.js';
 
@@ -368,17 +369,20 @@ export async function extractVariables(
  * }
  * ```
  */
-// HTTP method names exported by Next.js route handlers — not user naming conventions
-const HTTP_METHODS = new Set(['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS']);
-
 export function analyzeFunctionNaming(
   files: ParsedFile[],
   language: string
 ): NamingConventionResult {
-  // Extract function names, filtering out HTTP method route handlers
-  const functionNames = files.flatMap(f =>
-    f.functions.map(fn => fn.name).filter(name => !HTTP_METHODS.has(name))
-  );
+  // Extract function names. HTTP method names (GET/POST/...) are filtered
+  // ONLY inside route-handler files — Item 9 file-scoped filter. In any other
+  // file, a function named GET is a regular identifier (and would be
+  // classified as SCREAMING_SNAKE_CASE) rather than framework convention.
+  const functionNames = files.flatMap(f => {
+    const inRouteHandler = isRouteHandlerFile(f.file);
+    return f.functions
+      .map(fn => fn.name)
+      .filter(name => !(inRouteHandler && isHttpMethodName(name)));
+  });
 
   return analyzeNamingConvention(functionNames, language);
 }
