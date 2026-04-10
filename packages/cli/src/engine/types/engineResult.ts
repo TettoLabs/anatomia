@@ -128,6 +128,7 @@ export interface EngineResult {
       style: string;
       confidence: number;
       distribution: Record<string, number>;
+      aliasPattern: string | null;
     };
     docstrings: {
       format: string;

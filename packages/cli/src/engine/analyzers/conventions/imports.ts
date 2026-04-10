@@ -198,6 +198,7 @@ export function analyzeImportConvention(
       style: 'mixed',
       confidence: 0,
       distribution: { absolute: 0, relative: 0 },
+      aliasPattern: null,
     };
   }
 
@@ -227,6 +228,7 @@ export function analyzeImportConvention(
       absolute: absolutePercent,
       relative: relativePercent,
     },
+    aliasPattern: aliases && aliases.length > 0 ? aliases[0].replace('*', '') : null,
   };
 }
 

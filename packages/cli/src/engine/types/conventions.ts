@@ -122,6 +122,7 @@ export const ImportConventionSchema = z.object({
     absolute: z.number(),
     relative: z.number(),
   }),
+  aliasPattern: z.string().nullable().optional(),
 });
 
 export type ImportConvention = z.infer<typeof ImportConventionSchema>;

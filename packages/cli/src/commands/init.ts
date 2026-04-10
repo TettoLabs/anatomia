@@ -1012,7 +1012,11 @@ function injectCodingStandards(result: EngineResult): string {
       lines.push(`- Files: ${naming.files.majority} (${Math.round(naming.files.confidence * 100)}%${sample})`);
     }
     if (result.conventions.imports?.style) {
-      lines.push(`- Imports: ${result.conventions.imports.style} (${Math.round(result.conventions.imports.confidence * 100)}%)`);
+      const imp = result.conventions.imports;
+      const importStyle = (imp.style === 'absolute' && imp.aliasPattern)
+        ? `path aliases (${imp.aliasPattern})`
+        : imp.style;
+      lines.push(`- Imports: ${importStyle} (${Math.round(imp.confidence * 100)}%)`);
     }
     if (result.conventions.indentation?.style) {
       const indent = result.conventions.indentation;

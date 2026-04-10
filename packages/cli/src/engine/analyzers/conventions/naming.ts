@@ -409,12 +409,17 @@ export function analyzeFileNaming(
  * }
  * ```
  */
+// HTTP method names exported by Next.js route handlers — not user naming conventions
+const HTTP_METHODS = new Set(['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS']);
+
 export function analyzeFunctionNaming(
   files: ParsedFile[],
   language: string
 ): NamingConventionResult {
-  // Extract function names from all files
-  const functionNames = files.flatMap(f => f.functions.map(fn => fn.name));
+  // Extract function names, filtering out HTTP method route handlers
+  const functionNames = files.flatMap(f =>
+    f.functions.map(fn => fn.name).filter(name => !HTTP_METHODS.has(name))
+  );
 
   return analyzeNamingConvention(functionNames, language);
 }

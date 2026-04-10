@@ -226,10 +226,12 @@ async function detectSchemas(
   // Supabase migrations — count unique tables, not files
   if (allDeps['@supabase/supabase-js']) {
     try {
-      const files = await glob('supabase/migrations/*.sql', { cwd: rootPath });
+      const migrationFiles = await glob('supabase/migrations/*.sql', { cwd: rootPath }).catch(() => [] as string[]);
+      const schemaFiles = await glob('schema/**/*.sql', { cwd: rootPath }).catch(() => [] as string[]);
+      const files = [...migrationFiles, ...schemaFiles];
       if (files.length > 0) {
         const modelCount = await countUniqueTables(rootPath, files);
-        schemas['supabase'] = { found: true, path: 'supabase/migrations/', modelCount };
+        schemas['supabase'] = { found: true, path: migrationFiles.length > 0 ? 'supabase/migrations/' : 'schema/', modelCount };
       } else {
         schemas['supabase'] = { found: false, path: null, modelCount: null };
       }
@@ -240,7 +242,7 @@ async function detectSchemas(
 
   // Fallback: check common SQL directories for projects without standard ORM
   if (!schemas['supabase']?.found && !schemas['prisma']?.found && !schemas['drizzle']?.found) {
-    for (const dir of ['database', 'db', 'migrations', 'sql']) {
+    for (const dir of ['database', 'db', 'migrations', 'sql', 'schema']) {
       try {
         const sqlFiles = await glob(`${dir}/**/*.sql`, { cwd: rootPath });
         if (sqlFiles.length > 0) {
@@ -373,8 +375,8 @@ function mapConventions(
       constants: mapNaming(c.naming?.constants),
     },
     imports: c.imports
-      ? { style: c.imports.style, confidence: c.imports.confidence, distribution: c.imports.distribution }
-      : { style: 'unknown', confidence: 0, distribution: {} },
+      ? { style: c.imports.style, confidence: c.imports.confidence, distribution: c.imports.distribution, aliasPattern: c.imports.aliasPattern ?? null }
+      : { style: 'unknown', confidence: 0, distribution: {}, aliasPattern: null },
     docstrings: c.docstrings
       ? { format: c.docstrings.format, confidence: c.docstrings.confidence, coverage: c.docstrings.coverage }
       : { format: 'unknown', confidence: 0, coverage: 0 },

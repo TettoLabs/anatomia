@@ -304,7 +304,10 @@ function formatHumanReadable(result: EngineResult, options: { isFunnel: boolean 
       convLines.push(`  ${chalk.gray('Functions'.padEnd(12))} ${conv.naming.functions.majority} (${pct}%)`);
     }
     if (conv.imports.style) {
-      convLines.push(`  ${chalk.gray('Imports'.padEnd(12))} ${conv.imports.style}`);
+      const importLabel = (conv.imports.style === 'absolute' && conv.imports.aliasPattern)
+        ? `path aliases (${conv.imports.aliasPattern})`
+        : conv.imports.style;
+      convLines.push(`  ${chalk.gray('Imports'.padEnd(12))} ${importLabel}`);
     }
     if (conv.indentation.style) {
       const width = conv.indentation.width ? `${conv.indentation.width} ` : '';
