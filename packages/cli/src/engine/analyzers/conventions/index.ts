@@ -19,19 +19,19 @@ import {
   analyzeConstantNaming,
 } from './naming.js';
 import { analyzeImportConvention, detectProjectRoot, parseTsconfigAlias } from './imports.js';
-import { analyzeTypeHints } from './typeHints.js';
-import { analyzeDocstrings } from './docstrings.js';
 import { analyzeIndentation } from './indentation.js';
 
 /**
  * Detect conventions from project code
  *
- * Orchestrates all 5 convention analyzers:
+ * Orchestrates 3 convention analyzers:
  * 1. Naming (files, variables, functions, classes, constants)
  * 2. Imports (absolute vs relative)
- * 3. Type hints (Python: always/sometimes/never)
- * 4. Docstrings (Google/NumPy/JSDoc/rst/none)
- * 5. Indentation (spaces/tabs with width)
+ * 3. Indentation (spaces/tabs with width)
+ *
+ * typeHints + docstrings were removed (Item 4) — they read fields that don't
+ * exist on FunctionInfo and always returned defaults. Phantom detection
+ * deleted rather than shipped as zeros.
  *
  * Samples 50 files (broader than patterns' 20) for statistical validity.
  *
@@ -99,19 +99,6 @@ export async function detectConventions(
       aliasPatterns
     );
 
-    // Analyze type hints (Python only)
-    let typeHints: ReturnType<typeof analyzeTypeHints> | undefined;
-    if (projectType === 'python') {
-      const allFunctions = parsedFiles.flatMap(f => f.functions);
-      typeHints = analyzeTypeHints(allFunctions);
-    }
-
-    // Analyze docstrings (all languages)
-    const allFunctions = parsedFiles.flatMap(f => f.functions);
-    const docstrings = analyzeDocstrings(
-      allFunctions.map(f => ({ name: f.name, docstring: (f as unknown as { docstring?: string }).docstring }))
-    );
-
     // Analyze indentation (only first 10 files for efficiency)
     const indentSamplePaths = sampledFilePaths.slice(0, 10);
     const indentContents = await Promise.all(
@@ -125,8 +112,6 @@ export async function detectConventions(
     return {
       naming,
       imports,
-      typeHints,
-      docstrings,
       indentation,
       sampledFiles: sampledFilePaths.length,
       detectionTime,

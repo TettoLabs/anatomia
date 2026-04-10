@@ -347,47 +347,11 @@ function mapPatterns(
   };
 }
 
-function mapConventions(
-  analysis: AnalysisResult | null,
-  depth: 'surface' | 'deep'
-): EngineResult['conventions'] {
-  if (depth !== 'deep' || !analysis?.conventions) return null;
-  const c = analysis.conventions;
-
-  const defaultConvention = {
-    majority: 'unknown',
-    confidence: 0,
-    mixed: false,
-    distribution: {},
-    sampleSize: 0,
-  };
-
-  const mapNaming = (raw: { majority: string; confidence: number; mixed: boolean; distribution: Record<string, number>; sampleSize?: number } | undefined) => {
-    if (!raw) return defaultConvention;
-    return { ...raw, sampleSize: raw.sampleSize ?? 0 };
-  };
-
-  return {
-    naming: {
-      files: mapNaming(c.naming?.files),
-      functions: mapNaming(c.naming?.functions),
-      classes: mapNaming(c.naming?.classes),
-      variables: mapNaming(c.naming?.variables),
-      constants: mapNaming(c.naming?.constants),
-    },
-    imports: c.imports
-      ? { aliasPattern: null, ...c.imports }
-      : { style: 'unknown', confidence: 0, distribution: {}, aliasPattern: null },
-    docstrings: c.docstrings
-      ? { ...c.docstrings }
-      : { format: 'unknown', confidence: 0, coverage: 0 },
-    indentation: c.indentation
-      ? { width: 2, ...c.indentation }
-      : { style: 'unknown', width: 2, confidence: 0 },
-    sampledFiles: c.sampledFiles,
-    detectionTime: c.detectionTime,
-  };
-}
+// mapConventions + mapNaming deleted (Item 3). The analyzer's ConventionAnalysis
+// type is now EngineResult.conventions directly — no translation layer that
+// silently drops fields when they're added. The bug class this prevents: every
+// new convention field had to be added in 3 places (Zod schema, shadow interface,
+// EngineResult inline type) and the mapping function. Single source of truth now.
 
 // --- Main function ---
 
@@ -538,7 +502,7 @@ export async function scanProject(
       ? { ...deployment, ...ci }
       : { platform: null, configFile: null, ...ci },
     patterns: mapPatterns(analysis, options.depth),
-    conventions: mapConventions(analysis, options.depth),
+    conventions: (options.depth === 'deep' && analysis?.conventions) ? analysis.conventions : null,
     // Phase 1+ stubs
     secretFindings: null,
     envVarMap: null,

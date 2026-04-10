@@ -6,19 +6,13 @@
  * patterns, conventions, deployment, and Phase 1+ null stubs.
  */
 
+import type { ConventionAnalysis } from './conventions.js';
+
 export interface PatternDetail {
   library: string;
   variant: string;
   confidence: number;
   evidence: string[];
-}
-
-export interface ConventionDetail {
-  majority: string;
-  confidence: number;
-  mixed: boolean;
-  distribution: Record<string, number>;
-  sampleSize: number;
 }
 
 export interface EngineResult {
@@ -117,33 +111,10 @@ export interface EngineResult {
     detectionTime: number;
     threshold: number;
   } | null;
-  conventions: {
-    naming: {
-      files: ConventionDetail;
-      functions: ConventionDetail;
-      classes: ConventionDetail;
-      variables: ConventionDetail;
-      constants: ConventionDetail;
-    };
-    imports: {
-      style: string;
-      confidence: number;
-      distribution: Record<string, number>;
-      aliasPattern: string | null;
-    };
-    docstrings: {
-      format: string;
-      confidence: number;
-      coverage: number;
-    };
-    indentation: {
-      style: string;
-      width: number;
-      confidence: number;
-    };
-    sampledFiles: number;
-    detectionTime: number;
-  } | null;
+  // Convention analysis uses the analyzer's type directly (Item 3 unification —
+  // previously had a duplicate ConventionDetail-based inline type and a
+  // mapConventions wash in scan-engine that dropped fields when they were added.)
+  conventions: ConventionAnalysis | null;
 
   // Phase 1: Secret Intelligence
   secretFindings: Array<{

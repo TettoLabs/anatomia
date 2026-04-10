@@ -1011,26 +1011,29 @@ function injectCodingStandards(result: EngineResult): string {
   }
   if (result.conventions) {
     const naming = result.conventions.naming;
-    if (naming?.functions?.confidence > 0) {
-      const sample = naming.functions.sampleSize > 0 ? `, ${naming.functions.sampleSize} sampled` : '';
-      lines.push(`- Functions: ${naming.functions.majority} (${Math.round(naming.functions.confidence * 100)}%${sample})`);
+    const fn = naming?.functions;
+    if (fn && fn.confidence > 0) {
+      const sample = fn.sampleSize > 0 ? `, ${fn.sampleSize} sampled` : '';
+      lines.push(`- Functions: ${fn.majority} (${Math.round(fn.confidence * 100)}%${sample})`);
     }
-    if (naming?.classes?.confidence > 0) {
-      lines.push(`- Classes: ${naming.classes.majority} (${Math.round(naming.classes.confidence * 100)}%)`);
+    const cls = naming?.classes;
+    if (cls && cls.confidence > 0) {
+      lines.push(`- Classes: ${cls.majority} (${Math.round(cls.confidence * 100)}%)`);
     }
-    if (naming?.files?.confidence > 0) {
-      const sample = naming.files.sampleSize > 0 ? `, ${naming.files.sampleSize} sampled` : '';
-      lines.push(`- Files: ${naming.files.majority} (${Math.round(naming.files.confidence * 100)}%${sample})`);
+    const fl = naming?.files;
+    if (fl && fl.confidence > 0) {
+      const sample = fl.sampleSize > 0 ? `, ${fl.sampleSize} sampled` : '';
+      lines.push(`- Files: ${fl.majority} (${Math.round(fl.confidence * 100)}%${sample})`);
     }
-    if (result.conventions.imports?.style) {
-      const imp = result.conventions.imports;
+    const imp = result.conventions.imports;
+    if (imp) {
       const importStyle = (imp.style === 'absolute' && imp.aliasPattern)
         ? `path aliases (${imp.aliasPattern})`
         : imp.style;
       lines.push(`- Imports: ${importStyle} (${Math.round(imp.confidence * 100)}%)`);
     }
-    if (result.conventions.indentation?.style) {
-      const indent = result.conventions.indentation;
+    const indent = result.conventions.indentation;
+    if (indent) {
       lines.push(`- Indentation: ${indent.style === 'tabs' ? 'tabs' : `${indent.style}, ${indent.width} wide`}`);
     }
   }
@@ -1231,21 +1234,21 @@ async function generateAgentsMd(cwd: string, engineResult: EngineResult | null):
   if (engineResult?.conventions) {
     const convLines: string[] = [];
     const naming = engineResult.conventions.naming;
-    if (naming?.functions?.majority && naming.functions.majority !== 'unknown') {
+    if (naming?.functions && naming.functions.majority !== 'unknown') {
       convLines.push(`- Functions: ${naming.functions.majority}`);
     }
-    if (naming?.files?.majority && naming.files.majority !== 'unknown') {
+    if (naming?.files && naming.files.majority !== 'unknown') {
       convLines.push(`- Files: ${naming.files.majority}`);
     }
-    if (engineResult.conventions.imports?.style) {
-      const imp = engineResult.conventions.imports;
+    const imp = engineResult.conventions.imports;
+    if (imp) {
       const importStyle = (imp.style === 'absolute' && imp.aliasPattern)
         ? `path aliases (${imp.aliasPattern})`
         : imp.style;
       convLines.push(`- Imports: ${importStyle}`);
     }
-    if (engineResult.conventions.indentation?.style) {
-      const indent = engineResult.conventions.indentation;
+    const indent = engineResult.conventions.indentation;
+    if (indent) {
       convLines.push(`- Indentation: ${indent.style}, ${indent.width} wide`);
     }
     if (convLines.length > 0) {

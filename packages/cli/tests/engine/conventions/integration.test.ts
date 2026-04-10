@@ -68,40 +68,8 @@ describe.skipIf(!wasmAvailable)('detectConventions orchestrator', () => {
     expect(conventions.detectionTime).toBeGreaterThanOrEqual(0);
   });
 
-  it('includes typeHints only for Python projects', async () => {
-
-    const pythonAnalysis: AnalysisResult = {
-      ...createEmptyAnalysisResult(),
-      projectType: 'python',
-      structure: {
-        directories: {},
-        entryPoints: ['test.py'],
-        testLocation: null,
-        architecture: 'unknown',
-        directoryTree: '',
-        configFiles: [],
-        confidence: { entryPoints: 1.0, testLocation: 0, architecture: 0, overall: 0.5 },
-      },
-      parsed: {
-        files: [{
-          file: 'test.py',
-          language: 'python',
-          functions: [{ name: 'func', line: 1, async: false, decorators: [] }],
-          classes: [],
-          imports: [],
-          parseTime: 0,
-          parseMethod: 'cached',
-          errors: 0,
-        }],
-        totalParsed: 1,
-        cacheHits: 0,
-        cacheMisses: 1,
-      },
-    };
-
-    const conventions = await detectConventions('/tmp', pythonAnalysis);
-    expect(conventions.typeHints).toBeDefined();
-  });
+  // "includes typeHints only for Python projects" test removed — typeHints
+  // analyzer was deleted (Item 4, phantom detection).
 
   it('naming includes all 5 sub-categories', async () => {
 

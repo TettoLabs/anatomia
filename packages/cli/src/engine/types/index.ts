@@ -151,30 +151,23 @@ export {
 } from './patterns.js';
 
 // Export convention analysis types (STEP_2.2)
+// typeHints + docstrings exports removed — phantom analyzers deleted (Item 4).
 export type {
   ConventionAnalysis,
   NamingConvention,
   ImportConvention,
-  TypeHintConvention,
-  DocstringConvention,
   IndentationConvention,
   NamingStyle,
   ImportStyle,
-  TypeHintUsage,
-  DocstringFormat,
   IndentStyle,
 } from './conventions.js';
 export {
   ConventionAnalysisSchema,
   NamingConventionSchema,
   ImportConventionSchema,
-  TypeHintConventionSchema,
-  DocstringConventionSchema,
   IndentationConventionSchema,
   NamingStyleSchema,
   ImportStyleSchema,
-  TypeHintUsageSchema,
-  DocstringFormatSchema,
   IndentStyleSchema,
   createEmptyConventionAnalysis,
 } from './conventions.js';

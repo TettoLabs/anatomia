@@ -90,42 +90,8 @@ describe.skipIf(!wasmAvailable)('Convention Detection Edge Cases', () => {
     expect(conventions.naming?.functions).toBeDefined();
   });
 
-  it('handles TypeScript project (no type hints)', async () => {
-
-    const analysis: AnalysisResult = {
-      ...createEmptyAnalysisResult(),
-      projectType: 'node',  // TypeScript projects
-      structure: {
-        directories: {},
-        entryPoints: ['index.ts'],
-        testLocation: null,
-        architecture: 'unknown',
-        directoryTree: '',
-        configFiles: [],
-        confidence: { entryPoints: 1.0, testLocation: 0, architecture: 0, overall: 0.5 },
-      },
-      parsed: {
-        files: [{
-          file: 'index.ts',
-          language: 'typescript',
-          functions: [{ name: 'myFunction', line: 1, async: false, decorators: [] }],
-          classes: [],
-          imports: [],
-          parseTime: 0,
-          parseMethod: 'cached',
-          errors: 0,
-        }],
-        totalParsed: 1,
-        cacheHits: 0,
-        cacheMisses: 1,
-      },
-    };
-
-    const conventions = await detectConventions('/tmp', analysis);
-
-    // TypeScript projects should skip type hint analysis
-    expect(conventions.typeHints).toBeUndefined();
-  });
+  // "handles TypeScript project (no type hints)" test removed — typeHints analyzer
+  // was deleted (Item 4, phantom detection on nonexistent fields).
 
   it('handles all unknown naming (ambiguous single-word names)', async () => {
 
@@ -212,46 +178,11 @@ describe.skipIf(!wasmAvailable)('Convention Detection Edge Cases', () => {
     expect(conventions.imports?.confidence).toBe(0);
   });
 
-  it('handles no docstrings (coverage 0%)', async () => {
-
-    const analysis: AnalysisResult = {
-      ...createEmptyAnalysisResult(),
-      projectType: 'python',
-      structure: {
-        directories: {},
-        entryPoints: ['test.py'],
-        testLocation: null,
-        architecture: 'unknown',
-        directoryTree: '',
-        configFiles: [],
-        confidence: { entryPoints: 1.0, testLocation: 0, architecture: 0, overall: 0.5 },
-      },
-      parsed: {
-        files: [{
-          file: 'test.py',
-          language: 'python',
-          functions: [
-            { name: 'func1', line: 1, async: false, decorators: [] },
-            { name: 'func2', line: 5, async: false, decorators: [] },
-          ],
-          classes: [],
-          imports: [],
-          parseTime: 0,
-          parseMethod: 'cached',
-          errors: 0,
-        }],
-        totalParsed: 1,
-        cacheHits: 0,
-        cacheMisses: 1,
-      },
-    };
-
-    const conventions = await detectConventions('/tmp', analysis);
-
-    expect(conventions.docstrings).toBeDefined();
-    expect(conventions.docstrings?.format).toBe('none');
-    expect(conventions.docstrings?.coverage).toBe(0);
-  });
+  // "handles no docstrings (coverage 0%)" test removed — docstrings analyzer
+  // was deleted (Item 4). The prior test was a THP Q3 "sentinel test": it
+  // asserted coverage === 0, but the analyzer ALWAYS returned 0 regardless of
+  // input because it read a `docstring` field that doesn't exist on FunctionInfo
+  // via an `as unknown as` cast. The test would have passed on any input.
 
   it('handles mixed indentation gracefully', async () => {
 

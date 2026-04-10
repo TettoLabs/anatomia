@@ -305,23 +305,24 @@ function formatHumanReadable(result: EngineResult, options: { isFunnel: boolean 
     const conv = result.conventions;
     const convLines: string[] = [];
 
-    if (conv.naming.functions.majority && conv.naming.functions.majority !== 'unknown') {
-      const pct = Math.round(conv.naming.functions.confidence * 100);
-      convLines.push(`  ${chalk.gray('Functions'.padEnd(12))} ${conv.naming.functions.majority} (${pct}%)`);
+    const functions = conv.naming?.functions;
+    if (functions && functions.majority !== 'unknown') {
+      const pct = Math.round(functions.confidence * 100);
+      convLines.push(`  ${chalk.gray('Functions'.padEnd(12))} ${functions.majority} (${pct}%)`);
     }
-    if (conv.imports.style) {
-      const importLabel = (conv.imports.style === 'absolute' && conv.imports.aliasPattern)
-        ? `path aliases (${conv.imports.aliasPattern})`
-        : conv.imports.style;
+    if (conv.imports) {
+      const imp = conv.imports;
+      const importLabel = (imp.style === 'absolute' && imp.aliasPattern)
+        ? `path aliases (${imp.aliasPattern})`
+        : imp.style;
       convLines.push(`  ${chalk.gray('Imports'.padEnd(12))} ${importLabel}`);
     }
-    if (conv.indentation.style) {
-      const width = conv.indentation.width ? `${conv.indentation.width} ` : '';
-      convLines.push(`  ${chalk.gray('Indentation'.padEnd(12))} ${width}${conv.indentation.style}`);
+    if (conv.indentation) {
+      const indent = conv.indentation;
+      const width = indent.width ? `${indent.width} ` : '';
+      convLines.push(`  ${chalk.gray('Indentation'.padEnd(12))} ${width}${indent.style}`);
     }
-    if (conv.docstrings && conv.docstrings.coverage > 0) {
-      convLines.push(`  ${chalk.gray('Docstrings'.padEnd(12))} ${Math.round(conv.docstrings.coverage * 100)}% coverage`);
-    }
+    // Docstring display removed — phantom analyzer deleted (Item 4).
 
     if (convLines.length > 0) {
       lines.push('');

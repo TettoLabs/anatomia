@@ -40,7 +40,6 @@ export interface TestEngineResult {
       constants: { majority: string; confidence: number; mixed: boolean; distribution: Record<string, number>; sampleSize: number };
     };
     imports: { style: string; confidence: number; distribution: Record<string, number> };
-    docstrings: { format: string; confidence: number; coverage: number };
     indentation: { style: string; width: number; confidence: number };
     sampledFiles: number;
     detectionTime: number;

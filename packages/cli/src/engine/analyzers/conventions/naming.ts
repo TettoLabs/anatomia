@@ -14,7 +14,10 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { ParsedFile } from '../../types/parsed.js';
-import type { NamingStyle } from '../../types/conventions.js';
+import type { NamingStyle, NamingConventionResult } from '../../types/conventions.js';
+// Re-export so existing consumers can import NamingConventionResult from this module.
+// The canonical definition lives in types/conventions.ts (Zod-inferred, single source of truth).
+export type { NamingConventionResult };
 import { queryCache } from '../../parsers/queries.js';
 import { parserManager, type Language } from '../../parsers/treeSitter.js';
 
@@ -134,17 +137,6 @@ export function isKeyword(name: string, language: string): boolean {
     default:
       return false;
   }
-}
-
-/**
- * Naming convention analysis result
- */
-export interface NamingConventionResult {
-  majority: NamingStyle;
-  confidence: number;          // 0.0-1.0 (majority percentage)
-  mixed: boolean;              // true if majority < 0.7
-  distribution: Record<NamingStyle, number>;  // percentages
-  sampleSize: number;
 }
 
 /**

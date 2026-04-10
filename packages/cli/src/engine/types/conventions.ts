@@ -46,6 +46,7 @@ export const ConventionResultSchema = <T extends z.ZodTypeAny>(valueSchema: T) =
     confidence: z.number().min(0).max(1),
     mixed: z.boolean(),  // true if confidence < 0.7
     distribution: z.record(z.string(), z.number()),  // All detected values with percentages
+    sampleSize: z.number(),  // Number of names examined (0 for empty input)
   });
 
 /**
@@ -122,71 +123,15 @@ export const ImportConventionSchema = z.object({
     absolute: z.number(),
     relative: z.number(),
   }),
-  aliasPattern: z.string().nullable().optional(),
+  aliasPattern: z.string().nullable(),  // analyzer always sets this (null or string) — no .optional()
 });
 
 export type ImportConvention = z.infer<typeof ImportConventionSchema>;
 
-/**
- * Type hint usage enumeration (Python gradual typing)
- */
-export const TypeHintUsageSchema = z.enum(['always', 'sometimes', 'never']);
-
-export type TypeHintUsage = z.infer<typeof TypeHintUsageSchema>;
-
-/**
- * Type hint convention result (Python-specific)
- *
- * @example Always typed
- * ```typescript
- * {
- *   usage: 'always',
- *   confidence: 0.95,
- *   percentage: 0.98  // 98% of functions have type hints
- * }
- * ```
- */
-export const TypeHintConventionSchema = z.object({
-  usage: TypeHintUsageSchema,
-  confidence: z.number().min(0).max(1),
-  percentage: z.number().min(0).max(1),
-});
-
-export type TypeHintConvention = z.infer<typeof TypeHintConventionSchema>;
-
-/**
- * Docstring format enumeration
- */
-export const DocstringFormatSchema = z.enum([
-  'google',
-  'numpy',
-  'rst',
-  'jsdoc',
-  'tsdoc',
-  'none'
-]);
-
-export type DocstringFormat = z.infer<typeof DocstringFormatSchema>;
-
-/**
- * Docstring convention result
- *
- * @example Google style
- * ```typescript
- * {
- *   format: 'google',
- *   confidence: 0.90,
- *   coverage: 0.75  // 75% of functions have docstrings
- * }
- * ```
- */
-export const DocstringConventionSchema = z.object({
-  format: DocstringFormatSchema,
-  confidence: z.number().min(0).max(1),
-  coverage: z.number().min(0).max(1),  // % of functions with docstrings
-});
-
-export type DocstringConvention = z.infer<typeof DocstringConventionSchema>;
+// typeHints + docstrings analyzers were deleted (Item 4) — they ran on fields
+// that don't exist on FunctionInfo via `as unknown as` casts and always returned
+// defaults. Phantom detection removed entirely, not shipped as zeros pretending
+// to be measurements. Re-add only when tree-sitter extraction supplies real data.
 
 /**
  * Indentation style enumeration
@@ -238,11 +183,9 @@ export type IndentationConvention = z.infer<typeof IndentationConventionSchema>;
  * ```
  */
 export const ConventionAnalysisSchema = z.object({
-  // 5 convention categories (all optional - may not detect all)
+  // 3 convention categories (all optional - may not detect all)
   naming: NamingConventionSchema.optional(),
   imports: ImportConventionSchema.optional(),
-  typeHints: TypeHintConventionSchema.optional(),
-  docstrings: DocstringConventionSchema.optional(),
   indentation: IndentationConventionSchema.optional(),
 
   // Metadata
