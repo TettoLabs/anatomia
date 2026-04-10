@@ -36,6 +36,18 @@ interface AnalyzeOptions {
  * Analyze a project directory and return detection results
  *
  * Orchestrates all detection phases (consumed by 7 test files).
+ *
+ * NOTE: this function deliberately uses `await import(...)` for every engine
+ * module below instead of top-of-file ESM imports. The reason is tree-sitter:
+ * `parsers/treeSitter.js` (and everything that transitively imports it) loads
+ * native WASM at module-evaluation time, which crashes the CLI if it runs on
+ * the `ana init --help` / version-only codepaths. Dynamic-importing pushes
+ * the WASM load until `analyze()` is actually called. That shape matters for
+ * rename-safety: the module specifiers below are STRING LITERALS and are
+ * therefore invisible to `grep`, `madge`, static refactor tooling, and most
+ * IDE "find references" features. If you rename a file here, grep by path
+ * literal (`'./detectors/monorepo.js'` etc.) to catch every dynamic site.
+ * Sites: lines 47-49 plus phases 5-7 below.
  */
 export async function analyze(
   rootPath: string,

@@ -344,6 +344,10 @@ export async function scanProject(
   // 4. Run existing analyze() for project type, framework, structure (and deep tier)
   let analysis: AnalysisResult | null = null;
   try {
+    // DYNAMIC IMPORT — `analyze` transitively loads WASM; dynamic-importing
+    // defers that until scanProject() is actually invoked. String literal
+    // specifier is invisible to grep/madge — rename engine/index.ts with
+    // care and search for './index.js' here if you do.
     const { analyze } = await import('./index.js');
     if (options.depth === 'deep') {
       analysis = await analyze(rootPath, { skipImportScan: true, maxFiles: 50 });

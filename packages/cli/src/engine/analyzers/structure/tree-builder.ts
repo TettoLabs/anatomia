@@ -22,6 +22,9 @@ export async function buildAsciiTree(
   maxDepth: number = 4,
   maxDirs: number = 40
 ): Promise<string> {
+  // DYNAMIC IMPORT — string literal specifier is invisible to grep/madge.
+  // If renaming utils/directory.ts, search for '../../utils/directory.js'
+  // to catch this site along with any top-of-file imports.
   const { walkDirectories } = await import('../../utils/directory.js');
 
   const directories = await walkDirectories(rootPath, maxDepth);

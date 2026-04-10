@@ -84,6 +84,14 @@ export function computeSkillManifest(engineResult: EngineResult): string[] {
  * Get stack summary as a filtered array of non-null stack fields.
  * Single source of truth — used by CLAUDE.md, AGENTS.md, init success, scaffold generators.
  *
+ * NOTE: `result.stack.workspace` (e.g., "pnpm monorepo") is deliberately
+ * EXCLUDED from this summary. The 7 fields below are "what the project is
+ * built with"; workspace is "how the project is structured." The Phase 2
+ * testing report (N1 finding) flagged this as an open UX question: should
+ * "pnpm monorepo" appear in the CLAUDE.md Stack line? Current answer is
+ * no — workspace is surfaced in the Monorepo section of scan output and
+ * in AGENTS.md metadata, not in the identity line. S19 may revisit.
+ *
  * @param result - Scan engine result
  * @returns Array of display-ready stack strings (e.g., ["TypeScript", "Next.js", "Supabase"])
  */
