@@ -360,10 +360,11 @@ export async function scanProject(
     // Engine failure — continue with dependency detection only
   }
 
-  // 5. Build stack (dependency primary, analyzer enriches)
-  // aiSdk is initialized null and populated immediately — Item 2.1 (was missing
-  // at construction, relying on a later spread that failed type-check). All 8
-  // fields must be present at construction time so the type matches.
+  // 5. Build stack (dependency primary, analyzer enriches).
+  // All 8 fields assigned at construction time — detectAiSdk is a pure
+  // function over allDeps, so inlining it here is equivalent to a later
+  // assignment but keeps construction and population in one expression
+  // (Item 2.1 fix + cosmetic inline).
   const stack: EngineResult['stack'] = {
     language: null,
     framework: null,
@@ -372,9 +373,8 @@ export async function scanProject(
     testing: depResult.testing,
     payments: depResult.payments,
     workspace: mono.isMonorepo ? `${mono.tool} monorepo` : null,
-    aiSdk: null,
+    aiSdk: detectAiSdk(allDeps),
   };
-  stack.aiSdk = detectAiSdk(allDeps);
 
   // Enrich from analyzer
   if (analysis) {

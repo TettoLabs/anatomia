@@ -23,7 +23,7 @@ import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import type { EngineResult } from '../engine/types/engineResult.js';
-import { getPatternLibrary, isMultiPattern } from '../engine/types/patterns.js';
+import { getPatternLibrary } from '../engine/types/patterns.js';
 import { formatNumber } from '../utils/fileCounts.js';
 import { computeSkillManifest, CORE_SKILLS } from '../constants.js';
 
@@ -289,7 +289,9 @@ function formatHumanReadable(result: EngineResult, options: { isFunnel: boolean 
     for (const k of categories) {
       const p = result.patterns[k];
       if (!p) continue;
-      const confidence = isMultiPattern(p) ? p.confidence : p.confidence;
+      // Both PatternConfidence and MultiPattern expose `confidence` at the
+      // top level, so no narrowing is needed to read it.
+      const confidence = p.confidence;
       if (confidence < threshold) continue;
       const library = getPatternLibrary(p);
       if (!library) continue;
