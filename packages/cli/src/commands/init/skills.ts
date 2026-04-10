@@ -1,5 +1,25 @@
 /**
- * Skill scaffolding + Detected injection (Item 14c — extracted from init.ts).
+ * Skill scaffolding and Detected-section injection.
+ *
+ * The .claude/skills/ pipeline: copies SKILL.md templates from the CLI's
+ * bundled templates into the user's project, and replaces the ## Detected
+ * section of each skill with live scan data. On fresh install, also
+ * pre-populates the ## Gotchas section with stack-specific warnings
+ * matched via src/utils/gotchas.ts. On re-init, gotchas are deliberately
+ * NOT touched so user customizations in the Gotchas section survive.
+ *
+ * The `scaffoldAndSeedSkills` orchestrator exports the one public entry
+ * point. Internal helpers (inject* per-skill Detected generators, the
+ * SKILL_INJECTORS map that wires them up, and replaceDetectedSection)
+ * stay private — they're consumed only through SKILL_INJECTORS inside
+ * this file. Declaration order relies on function hoisting: SKILL_INJECTORS
+ * is defined before the inject* functions it references.
+ *
+ * Path protection semantic (Item 12): re-init AND partial install (fresh
+ * init where skill file already exists from manual creation or prior
+ * install with deleted .ana/) both refresh Detected but skip gotcha
+ * injection. The `allowGotchaInjection` flag makes this explicit rather
+ * than relying on a load-bearing `continue`.
  */
 
 import * as fs from 'node:fs/promises';

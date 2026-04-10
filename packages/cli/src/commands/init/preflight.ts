@@ -1,5 +1,17 @@
 /**
- * Pre-flight validation for ana init (Item 14c — extracted from init.ts).
+ * Pre-flight validation for ana init.
+ *
+ * Runs before any filesystem mutation. Verifies the current directory is
+ * a valid project root, detects any existing .ana/ installation state
+ * (fresh / reinit / upgrade / corrupted), backs up state/context/ana.json
+ * before deletion on re-init, warns on missing git or package manifest,
+ * and returns a PreflightResult telling the orchestrator whether to
+ * proceed.
+ *
+ * Exported helpers (dirExists, fileExists) are reused by sibling modules
+ * (assets.ts uses them for mkdir/copy logic; skills.ts uses fileExists
+ * for SKILL.md existence checks). confirm() lives in state.ts (not here)
+ * to break a preflight ↔ state cycle — preflight → state is one-way.
  */
 
 import chalk from 'chalk';

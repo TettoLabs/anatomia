@@ -1,5 +1,28 @@
 /**
- * Asset scaffolding for ana init (Item 14c — extracted from init.ts).
+ * Asset scaffolding for ana init — everything that writes files or
+ * directories.
+ *
+ * This is the widest module in the split (~500 lines). It orchestrates
+ * the file-generation phase of init:
+ *
+ * - createDirectoryStructure: bootstrap .ana/ sub-dirs in the tmp work
+ *   area before atomic rename
+ * - generateScaffolds: project-context.md + design-principles.md from
+ *   scan data (scaffold-generators.ts templates)
+ * - copyStaticFilesWithVerification + copyAndVerifyFile: hash-verified
+ *   copy of bundled .ana/docs/ and related static content
+ * - copyHookScripts: .ana/hooks/*.sh for Claude Code integration
+ * - createClaudeConfiguration: the .claude/ tree (agents, skills,
+ *   settings.json) — delegates skill copies to skills.scaffoldAndSeedSkills
+ * - copyAgentFiles: .claude/agents/*.md without overwriting user edits
+ * - copyClaudeMd + generateAgentsMd: the cross-tool CLAUDE.md and
+ *   AGENTS.md entry points at the project root
+ * - mergeHooksSettings + hookEntryMatches: dedup-safe merge of our hooks
+ *   into an existing .claude/settings.json
+ *
+ * Only the entry points called from index.ts are exported; private
+ * helpers (copyAgentFiles, copyClaudeMd, generateAgentsMd, hook merge
+ * helpers) stay internal.
  */
 
 import chalk from 'chalk';
