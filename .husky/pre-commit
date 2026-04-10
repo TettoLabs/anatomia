@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+# Pre-commit: run the packages/cli typecheck + test-typecheck + lint.
+# Runs ~9s locally. If this gets painful, switch to lint-staged to scope
+# the checks to changed files only (Item 20 decision — skipped lint-staged
+# because the full checks fit comfortably under the 10s "pre-commit feels
+# fast" threshold).
+#
+# To bypass intentionally (e.g., WIP commit): git commit --no-verify.
+# Do NOT --no-verify unless you're explicitly handing off a broken tree.
+
+set -e
+
+cd packages/cli
+pnpm typecheck
+pnpm typecheck:tests
+pnpm lint
