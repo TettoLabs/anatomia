@@ -212,13 +212,16 @@ function formatListTable(entries: ProofChainEntry[]): string {
 }
 
 /**
- * Proof command definition
+ * Register the `proof` command.
+ *
+ * @param program - Commander program instance.
  */
-export const proofCommand = new Command('proof')
-  .description('Display proof chain entry for a completed work item')
-  .argument('[slug]', 'Work item slug to display proof for')
-  .option('--json', 'Output JSON format for programmatic consumption')
-  .action(async (slug: string | undefined, options: { json?: boolean }) => {
+export function registerProofCommand(program: Command): void {
+  const proofCommand = new Command('proof')
+    .description('Display proof chain entry for a completed work item')
+    .argument('[slug]', 'Work item slug to display proof for')
+    .option('--json', 'Output JSON format for programmatic consumption')
+    .action(async (slug: string | undefined, options: { json?: boolean }) => {
     const proofChainPath = path.join(process.cwd(), '.ana', 'proof_chain.json');
 
     // List view: no slug provided
@@ -286,3 +289,6 @@ export const proofCommand = new Command('proof')
       console.log(formatHumanReadable(entry));
     }
   });
+
+  program.addCommand(proofCommand);
+}

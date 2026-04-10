@@ -947,25 +947,31 @@ export function saveAllArtifacts(slug: string): void {
 }
 
 /**
- * Command definition for artifact management
+ * Register the `artifact` command (with `save` and `save-all` sub-commands).
+ *
+ * @param program - Commander program instance.
  */
-export const artifactCommand = new Command('artifact')
-  .description('Manage pipeline artifacts');
+export function registerArtifactCommand(program: Command): void {
+  const artifactCommand = new Command('artifact')
+    .description('Manage pipeline artifacts');
 
-const saveCommand = new Command('save')
-  .description('Commit a pipeline artifact to the correct branch')
-  .argument('<type>', 'Artifact type: scope, plan, spec, spec-N, contract, build-report, build-report-N, verify-report, verify-report-N')
-  .argument('<slug>', 'Work item slug (e.g., add-status-command)')
-  .action((type: string, slug: string) => {
-    saveArtifact(type, slug);
-  });
+  const saveCommand = new Command('save')
+    .description('Commit a pipeline artifact to the correct branch')
+    .argument('<type>', 'Artifact type: scope, plan, spec, spec-N, contract, build-report, build-report-N, verify-report, verify-report-N')
+    .argument('<slug>', 'Work item slug (e.g., add-status-command)')
+    .action((type: string, slug: string) => {
+      saveArtifact(type, slug);
+    });
 
-const saveAllCommand = new Command('save-all')
-  .description('Commit all artifacts in a plan directory atomically')
-  .argument('<slug>', 'Work item slug (e.g., add-status-command)')
-  .action((slug: string) => {
-    saveAllArtifacts(slug);
-  });
+  const saveAllCommand = new Command('save-all')
+    .description('Commit all artifacts in a plan directory atomically')
+    .argument('<slug>', 'Work item slug (e.g., add-status-command)')
+    .action((slug: string) => {
+      saveAllArtifacts(slug);
+    });
 
-artifactCommand.addCommand(saveCommand);
-artifactCommand.addCommand(saveAllCommand);
+  artifactCommand.addCommand(saveCommand);
+  artifactCommand.addCommand(saveAllCommand);
+
+  program.addCommand(artifactCommand);
+}

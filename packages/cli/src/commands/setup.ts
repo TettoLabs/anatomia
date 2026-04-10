@@ -18,23 +18,24 @@ interface SetupCompleteOptions {
   force?: boolean;
 }
 
-/** Create setup parent command */
-export const setupCommand = new Command('setup').description(
-  'Setup-related commands'
-);
+/**
+ * Register the `setup` command (with `check`, `index`, `complete` sub-commands).
+ *
+ * @param program - Commander program instance.
+ */
+export function registerSetupCommand(program: Command): void {
+  const setupCommand = new Command('setup').description(
+    'Setup-related commands'
+  );
 
-/** Add 'check' subcommand */
-setupCommand.addCommand(createCheckCommand());
+  setupCommand.addCommand(createCheckCommand());
+  setupCommand.addCommand(createIndexCommand());
 
-/** Add 'index' subcommand */
-setupCommand.addCommand(createIndexCommand());
-
-/** Add 'complete' subcommand */
-setupCommand
-  .command('complete')
-  .description('Validate context files and finalize setup')
-  .option('--force', 'Force complete regardless of validation')
-  .action(async (options: SetupCompleteOptions) => {
+  setupCommand
+    .command('complete')
+    .description('Validate context files and finalize setup')
+    .option('--force', 'Force complete regardless of validation')
+    .action(async (options: SetupCompleteOptions) => {
     const cwd = process.cwd();
     const anaPath = path.join(cwd, '.ana');
     const anaJsonPath = path.join(anaPath, 'ana.json');
@@ -118,3 +119,6 @@ setupCommand
       console.log();
     }
   });
+
+  program.addCommand(setupCommand);
+}
