@@ -324,9 +324,13 @@ export async function parseTsconfigAlias(rootPath: string): Promise<string | nul
     const paths = config.compilerOptions?.paths;
     if (!paths) return null;
 
-    // Look for @/* or similar alias patterns
+    // Look for @/* path alias patterns (not @scope/* package scopes)
     const aliasKeys = Object.keys(paths);
-    const alias = aliasKeys.find(key => key.startsWith('@'));
+    const alias = aliasKeys.find(key => {
+      if (!key.startsWith('@')) return false;
+      const scope = key.split('/')[0];
+      return scope.length <= 2; // @/ or @x = path alias, @scope = package
+    });
 
     if (alias) {
       // @/* → @/

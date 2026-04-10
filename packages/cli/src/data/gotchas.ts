@@ -39,4 +39,10 @@ export const GOTCHAS: GotchaEntry[] = [
     skill: 'data-access',
     text: 'Always run `npx prisma generate` after schema changes. The Prisma client is generated code — schema changes are not reflected until regenerated.',
   },
+  {
+    id: 'drizzle-push',
+    triggers: { database: 'Drizzle' },
+    skill: 'data-access',
+    text: 'Drizzle schema changes update TypeScript types immediately, but the database is NOT synced automatically. Run `npx drizzle-kit push` (development) or `drizzle-kit generate` + `drizzle-kit migrate` (production) after schema changes.',
+  },
 ];

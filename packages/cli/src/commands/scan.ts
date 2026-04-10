@@ -372,8 +372,19 @@ function formatHumanReadable(result: EngineResult, options: { isFunnel: boolean 
       lines.push(`  ✓ ${skills.length} skills for ${stackParts.join(' · ')}`);
     }
     if (result.externalServices.length > 0) {
-      const svcNames = result.externalServices.map((s: { name: string }) => s.name).join(', ');
-      lines.push(`  ✓ ${svcNames} integration context`);
+      // Dedup against stack + deployment (same logic as body)
+      const footerStackValues = Object.values(result.stack).filter(Boolean) as string[];
+      if (result.deployment.platform) footerStackValues.push(result.deployment.platform);
+      const footerServices = result.externalServices.filter(
+        svc => !footerStackValues.some(v => v.includes(svc.name))
+      );
+      if (footerServices.length > 0) {
+        const MAX_DISPLAY = 4;
+        const svcNames = footerServices.length > MAX_DISPLAY
+          ? footerServices.slice(0, MAX_DISPLAY).map((s: { name: string }) => s.name).join(', ') + `, and ${footerServices.length - MAX_DISPLAY} more`
+          : footerServices.map((s: { name: string }) => s.name).join(', ');
+        lines.push(`  ✓ ${svcNames} integration context`);
+      }
     }
   }
 

@@ -579,10 +579,20 @@ function displayDetectionSummary(result: EngineResult): void {
     console.log(chalk.green('  ✓ Patterns: ') + `${detected} detected (${depth})`);
   }
 
-  // Services
+  // Services (deduped against stack + deployment, truncated for readability)
   if (result.externalServices.length > 0) {
-    const names = result.externalServices.map(s => s.name).join(', ');
-    console.log(chalk.green('  ✓ Services: ') + names);
+    const stkValues = Object.values(result.stack).filter(Boolean) as string[];
+    if (result.deployment?.platform) stkValues.push(result.deployment.platform);
+    const dedupedSvcs = result.externalServices.filter(
+      svc => !stkValues.some(v => v.includes(svc.name))
+    );
+    if (dedupedSvcs.length > 0) {
+      const MAX_DISPLAY = 4;
+      const names = dedupedSvcs.length > MAX_DISPLAY
+        ? dedupedSvcs.slice(0, MAX_DISPLAY).map(s => s.name).join(', ') + `, and ${dedupedSvcs.length - MAX_DISPLAY} more`
+        : dedupedSvcs.map(s => s.name).join(', ');
+      console.log(chalk.green('  ✓ Services: ') + names);
+    }
   }
 
   console.log();
