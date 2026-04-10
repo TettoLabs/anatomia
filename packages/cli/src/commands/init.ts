@@ -579,13 +579,9 @@ function displayDetectionSummary(result: EngineResult): void {
     console.log(chalk.green('  ✓ Patterns: ') + `${detected} detected (${depth})`);
   }
 
-  // Services (deduped against stack + deployment, truncated for readability)
+  // Services (deduped against stack + deployment via annotated stackRoles, Item 5).
   if (result.externalServices.length > 0) {
-    const stkValues = Object.values(result.stack).filter(Boolean) as string[];
-    if (result.deployment?.platform) stkValues.push(result.deployment.platform);
-    const dedupedSvcs = result.externalServices.filter(
-      svc => !stkValues.some(v => v.includes(svc.name))
-    );
+    const dedupedSvcs = result.externalServices.filter(svc => svc.stackRoles.length === 0);
     if (dedupedSvcs.length > 0) {
       const MAX_DISPLAY = 4;
       const names = dedupedSvcs.length > MAX_DISPLAY
@@ -1597,13 +1593,9 @@ function displaySuccessMessage(engineResult: EngineResult | null, projectName: s
     if (engineResult.deployment?.platform) {
       console.log(`  ${chalk.bold('Deploy:')}   ${engineResult.deployment.platform}`);
     }
-    // Services (deduped against stack + deployment)
+    // Services (deduped via annotated stackRoles, Item 5).
     if (engineResult.externalServices.length > 0) {
-      const stackValues = Object.values(engineResult.stack).filter(Boolean) as string[];
-      if (engineResult.deployment?.platform) stackValues.push(engineResult.deployment.platform);
-      const uniqueServices = engineResult.externalServices.filter(
-        svc => !stackValues.some(v => v.includes(svc.name))
-      );
+      const uniqueServices = engineResult.externalServices.filter(svc => svc.stackRoles.length === 0);
       if (uniqueServices.length > 0) {
         const MAX_DISPLAY = 4;
         const names = uniqueServices.length > MAX_DISPLAY

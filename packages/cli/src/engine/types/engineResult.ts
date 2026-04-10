@@ -68,6 +68,12 @@ export interface EngineResult {
     category: string;
     source: string;
     configFound: boolean;
+    // Stack roles the service fulfills. Empty array = service is not part of
+    // the stack (e.g., a standalone analytics service). Populated by
+    // annotateServiceRoles() at scan time. Consumers filter for display with
+    // `stackRoles.length === 0` instead of fragile substring matching
+    // (Item 5 — replaced 4 copies of `!stackValues.some(v => v.includes(svc.name))`).
+    stackRoles: string[];
   }>;
   schemas: Record<string, {
     found: boolean;

@@ -26,6 +26,7 @@ import { detectPackageManager } from './detectors/packageManager.js';
 import { detectGitInfo } from './detectors/git.js';
 import { detectCommands } from './detectors/commands.js';
 import { detectDeployment, detectCI } from './detectors/deployment.js';
+import { annotateServiceRoles } from './utils/serviceAnnotation.js';
 import { countFiles } from '../utils/fileCounts.js';
 
 import { getLanguageDisplayName, getFrameworkDisplayName, getPatternDisplayName } from '../utils/displayNames.js';
@@ -165,7 +166,7 @@ async function detectExternalServices(
           } catch { /* not found */ }
         }
       }
-      services.push({ name: info.name, category: info.category, source: 'dependency', configFound });
+      services.push({ name: info.name, category: info.category, source: 'dependency', configFound, stackRoles: [] });
     }
   }
 
@@ -463,13 +464,22 @@ export async function scanProject(
   // Add services from new category maps (AI, email, monitoring, jobs)
   for (const svc of detectServiceDeps(allDeps)) {
     if (!externalServices.some(s => s.name === svc.name)) {
-      externalServices.push({ name: svc.name, category: svc.category, source: 'dependency', configFound: false });
+      externalServices.push({ name: svc.name, category: svc.category, source: 'dependency', configFound: false, stackRoles: [] });
     }
   }
   const { schemas, blindSpots } = await detectSchemas(allDeps, rootPath);
   const secrets = await detectSecrets(rootPath);
   const deployment = detectDeployment(rootPath);
   const ci = detectCI(rootPath);
+
+  // Annotate services with the stack roles they fulfill. Display code uses
+  // `stackRoles.length === 0` to filter standalone services, replacing 4 copies
+  // of fragile substring dedup (Item 5).
+  const annotatedServices = annotateServiceRoles(
+    externalServices,
+    stack,
+    deployment?.platform ?? null
+  );
 
   // 11. Project profile
   const browserFrameworks = ['Next.js', 'React', 'Vue', 'Angular', 'Svelte', 'Nuxt'];
@@ -502,7 +512,7 @@ export async function scanProject(
     commands: { ...commands, packageManager },
     git,
     monorepo: mono,
-    externalServices,
+    externalServices: annotatedServices,
     schemas,
     secrets,
     projectProfile,

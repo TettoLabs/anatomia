@@ -149,13 +149,12 @@ function formatHumanReadable(result: EngineResult, options: { isFunnel: boolean 
     lines.push(chalk.gray('  No code detected'));
   }
 
-  // Services + Deployment (rendered as one block)
-  // Dedup services already shown in Stack or Deploy sections
-  const stackValues = Object.values(result.stack).filter(Boolean) as string[];
-  if (result.deployment.platform) stackValues.push(result.deployment.platform);
-  const filteredServices = result.externalServices.filter(
-    svc => !stackValues.some(v => v.includes(svc.name))
-  );
+  // Services + Deployment (rendered as one block).
+  // Dedup is annotated at detection via annotateServiceRoles (Item 5) — if a
+  // service fulfills any stack role (database, auth, payments, aiSdk, deployment)
+  // it is filtered here. Replaces the old substring-matching `stackValues.some(v => v.includes(svc.name))`
+  // pattern that failed when one stack name was a prefix of another.
+  const filteredServices = result.externalServices.filter(svc => svc.stackRoles.length === 0);
   const hasServices = filteredServices.length > 0;
   const hasDeploy = result.deployment.platform !== null;
   if (hasServices || hasDeploy) {
@@ -373,12 +372,8 @@ function formatHumanReadable(result: EngineResult, options: { isFunnel: boolean 
       lines.push(`  ✓ ${skills.length} skills for ${stackParts.join(' · ')}`);
     }
     if (result.externalServices.length > 0) {
-      // Dedup against stack + deployment (same logic as body)
-      const footerStackValues = Object.values(result.stack).filter(Boolean) as string[];
-      if (result.deployment.platform) footerStackValues.push(result.deployment.platform);
-      const footerServices = result.externalServices.filter(
-        svc => !footerStackValues.some(v => v.includes(svc.name))
-      );
+      // Dedup via annotated stackRoles (Item 5 — same as the body filter).
+      const footerServices = result.externalServices.filter(svc => svc.stackRoles.length === 0);
       if (footerServices.length > 0) {
         const MAX_DISPLAY = 4;
         const svcNames = footerServices.length > MAX_DISPLAY
