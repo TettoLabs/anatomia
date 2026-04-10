@@ -319,6 +319,68 @@ function extractStructure(
 
 // --- Main function ---
 
+/**
+ * Scan a project directory and return the unified scan result.
+ *
+ * This is the **public entry point** for `ana scan`. It composes 11 detection
+ * phases (monorepo, package manager, dependencies, engine analysis, stack
+ * construction, file counts, structure, commands, git, external services +
+ * schemas + secrets + deployment, service-role annotation) into a single
+ * strongly-typed `EngineResult`. Every display surface in the CLI —
+ * `ana scan` terminal output, `ana init` success message, `CLAUDE.md`,
+ * `AGENTS.md`, skill Detected sections — reads from this one return value,
+ * so adding a field to `EngineResult` propagates everywhere automatically.
+ *
+ * Depth modes:
+ * - `deep` (default): runs tree-sitter parsing, pattern inference, and
+ *   convention detection. Used by `ana scan` without `--quick` and by
+ *   `ana init`. Sub-5s for typical projects; sub-15s for 10K-file monorepos.
+ * - `surface`: skips tree-sitter parsing entirely (no patterns, no
+ *   conventions). Used by `ana scan --quick` for fast stack-only
+ *   detection. Sub-1s even on large projects.
+ *
+ * Relationship to `analyze()`: `scanProject` is the public scan API;
+ * `analyze()` (in `engine/index.ts`) is the legacy orchestrator that
+ * `scanProject` dynamic-imports internally for the project-type / framework
+ * / structure / parsed / patterns / conventions phases. The dynamic import
+ * is deliberate — tree-sitter loads native WASM at module-evaluation time
+ * and top-level imports would crash `ana --help`. Do not call `analyze()`
+ * directly from new code; go through `scanProject()`.
+ *
+ * Failure modes: the engine phases are fail-soft. If `analyze()` throws,
+ * `scanProject` continues with dependency-only detection and a truncated
+ * stack. If an optional detector (patterns, git, schemas) fails, the
+ * corresponding `EngineResult` field is `null` or empty. The function
+ * does NOT throw for normal project-shape variations (missing `package.json`,
+ * non-git directory, empty project) — it returns a well-formed
+ * `EngineResult` with the absent data reported as blind spots.
+ *
+ * @param rootPath - Absolute path to the project root (the directory
+ *   containing `package.json`, `go.mod`, etc.). Must exist and be a
+ *   directory; the caller is responsible for that precondition.
+ * @param options - Scan options.
+ * @param options.depth - `'deep'` (default) for full analysis including
+ *   patterns and conventions; `'surface'` to skip tree-sitter entirely.
+ * @returns A `Promise<EngineResult>` containing the unified scan output.
+ *   The result is always well-formed — check `stack.language` and the
+ *   `blindSpots` array to determine what was successfully detected.
+ *
+ * @example Deep scan (default)
+ * ```typescript
+ * import { scanProject } from './engine/scan-engine.js';
+ * const result = await scanProject('/path/to/my-project');
+ * console.log(result.stack.language);  // 'TypeScript'
+ * console.log(result.stack.framework); // 'Next.js'
+ * console.log(result.patterns?.database?.library); // 'prisma' (deep only)
+ * ```
+ *
+ * @example Surface scan (fast, no tree-sitter)
+ * ```typescript
+ * const result = await scanProject('/path/to/my-project', { depth: 'surface' });
+ * // result.patterns === null, result.conventions === null
+ * // stack fields populated from dependency detection + analyzer basics
+ * ```
+ */
 export async function scanProject(
   rootPath: string,
   options: { depth: 'surface' | 'deep' } = { depth: 'deep' }
