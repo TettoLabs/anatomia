@@ -323,9 +323,9 @@ ${complianceTable}
       // Verify proof data is populated correctly
       expect(proof.feature).toBe('Test Feature');
       expect(proof.assertions.length).toBe(2);
-      expect(proof.assertions[0].id).toBe('A001');
-      expect(proof.assertions[0].says).toBe('Creates item successfully');
-      expect(proof.assertions[0].verifyStatus).toBe('SATISFIED');
+      expect(proof.assertions[0]!.id).toBe('A001');
+      expect(proof.assertions[0]!.says).toBe('Creates item successfully');
+      expect(proof.assertions[0]!.verifyStatus).toBe('SATISFIED');
       expect(proof.contract.total).toBe(2);
       expect(proof.contract.satisfied).toBe(2);
     });

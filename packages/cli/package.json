@@ -41,6 +41,7 @@
     "dev": "tsup --watch",
     "test": "vitest",
     "typecheck": "tsc --noEmit",
+    "typecheck:tests": "tsc --noEmit -p tsconfig.test.json",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
     "prepublishOnly": "pnpm build && pnpm test"

@@ -125,7 +125,7 @@ describe.skipIf(!wasmAvailable)('analyze() with tree-sitter integration', () => 
     // Files might be empty if sampling doesn't pick them up, so check >= 0
     // The key is that parsed structure exists and is valid
     if (result.parsed && result.parsed.files.length > 0) {
-      const firstFile = result.parsed.files[0];
+      const firstFile = result.parsed.files[0]!;
       expect(firstFile.file).toBeDefined();
       expect(firstFile.language).toBeDefined();
       expect(firstFile.functions).toBeInstanceOf(Array);

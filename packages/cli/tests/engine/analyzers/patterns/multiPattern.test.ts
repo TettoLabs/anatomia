@@ -40,7 +40,7 @@ describe('Multi-Pattern Handling', () => {
       const result = await detectMultipleDatabasePatterns(parsedFiles);
 
       expect(result).toBeDefined();
-      expect(isMultiPattern(result)).toBe(true);  // MultiPattern structure
+      expect(isMultiPattern(result ?? undefined)).toBe(true);  // MultiPattern structure
 
       const multiPattern = result as MultiPattern;
       expect(multiPattern.patterns).toHaveLength(2);
@@ -65,7 +65,7 @@ describe('Multi-Pattern Handling', () => {
       const result = await detectMultipleDatabasePatterns(parsedFiles);
 
       expect(result).toBeDefined();
-      expect(isMultiPattern(result)).toBe(false);  // Single PatternConfidence
+      expect(isMultiPattern(result ?? undefined)).toBe(false);  // Single PatternConfidence
 
       const singlePattern = result as PatternConfidence;
       expect(singlePattern.variant).toBe('async');
@@ -82,7 +82,7 @@ describe('Multi-Pattern Handling', () => {
       const result = await detectMultipleDatabasePatterns(parsedFiles);
 
       expect(result).toBeDefined();
-      expect(isMultiPattern(result)).toBe(false);
+      expect(isMultiPattern(result ?? undefined)).toBe(false);
 
       const singlePattern = result as PatternConfidence;
       expect(singlePattern.variant).toBe('sync');
@@ -104,7 +104,7 @@ describe('Multi-Pattern Handling', () => {
 
       const result = await detectMultipleDatabasePatterns(parsedFiles);
 
-      expect(isMultiPattern(result)).toBe(true);
+      expect(isMultiPattern(result ?? undefined)).toBe(true);
       const multiPattern = result as MultiPattern;
 
       expect(multiPattern.primary.variant).toBe('async');
@@ -128,7 +128,7 @@ describe('Multi-Pattern Handling', () => {
 
       const result = await detectMultipleDatabasePatterns(parsedFiles);
 
-      expect(isMultiPattern(result)).toBe(true);
+      expect(isMultiPattern(result ?? undefined)).toBe(true);
       const multiPattern = result as MultiPattern;
 
       expect(multiPattern.primary.variant).toBe('sync');  // More files = primary
@@ -149,7 +149,7 @@ describe('Multi-Pattern Handling', () => {
 
       const result = await detectMultipleDatabasePatterns(parsedFiles);
 
-      expect(isMultiPattern(result)).toBe(true);
+      expect(isMultiPattern(result ?? undefined)).toBe(true);
       const multiPattern = result as MultiPattern;
 
       // When tied, prefer async (modern pattern)
@@ -217,7 +217,7 @@ describe('Multi-Pattern Handling', () => {
       const result = await detectMultipleDatabasePatterns(parsedFiles);
 
       // Should detect only async (sync import in same file as asyncio excluded)
-      expect(isMultiPattern(result)).toBe(false);
+      expect(isMultiPattern(result ?? undefined)).toBe(false);
       const single = result as PatternConfidence;
       expect(single.variant).toBe('async');
     });

@@ -107,8 +107,8 @@ describe('scanProject()', () => {
     expect(result.externalServices.length).toBeGreaterThan(0);
     expect(result.externalServices.some(s => s.name === 'Stripe')).toBe(true);
     expect(result.schemas['prisma']).toBeDefined();
-    expect(result.schemas['prisma'].found).toBe(true);
-    expect(result.schemas['prisma'].modelCount).toBe(2);
+    expect(result.schemas['prisma']!.found).toBe(true);
+    expect(result.schemas['prisma']!.modelCount).toBe(2);
   });
 
   it('handles empty directory gracefully', async () => {

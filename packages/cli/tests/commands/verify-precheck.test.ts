@@ -342,7 +342,7 @@ file_changes:
       });
 
       const result = runContractPreCheck('test-slug', tempDir);
-      expect(result.assertions[0].says).toBe('Creating a payment returns success');
+      expect(result.assertions[0]!.says).toBe('Creating a payment returns success');
     });
 
     it('reports UNVERIFIABLE when no .saves.json', async () => {

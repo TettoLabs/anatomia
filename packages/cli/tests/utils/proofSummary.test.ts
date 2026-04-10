@@ -114,10 +114,10 @@ file_changes:
     expect(summary.contract.satisfied).toBe(2);
     expect(summary.contract.deviated).toBe(1);
     expect(summary.deviations).toHaveLength(1);
-    expect(summary.deviations[0].contract_id).toBe('A003');
-    expect(summary.deviations[0].instead).toBe('Event mock verification');
+    expect(summary.deviations[0]!.contract_id).toBe('A003');
+    expect(summary.deviations[0]!.instead).toBe('Event mock verification');
     expect(summary.seal_commit).toBe('def456');
-    expect(summary.hashes.scope).toBe('sha256:scope123');
+    expect(summary.hashes['scope']).toBe('sha256:scope123');
     expect(summary.acceptance_criteria.total).toBe(2);
     expect(summary.acceptance_criteria.met).toBe(2);
   });
@@ -152,8 +152,8 @@ file_changes:
     expect(summary.feature).toBe('Test Feature');
     expect(summary.result).toBe('UNKNOWN');
     expect(summary.assertions).toHaveLength(1);
-    expect(summary.assertions[0].preCheckStatus).toBe('COVERED');
-    expect(summary.assertions[0].verifyStatus).toBeNull();
+    expect(summary.assertions[0]!.preCheckStatus).toBe('COVERED');
+    expect(summary.assertions[0]!.verifyStatus).toBeNull();
   });
 
   it('handles missing .saves.json gracefully', async () => {
@@ -176,7 +176,7 @@ file_changes:
     expect(summary.hashes).toEqual({});
     expect(summary.timing.total_minutes).toBe(0);
     expect(summary.assertions).toHaveLength(1);
-    expect(summary.assertions[0].preCheckStatus).toBe('UNCOVERED');
+    expect(summary.assertions[0]!.preCheckStatus).toBe('UNCOVERED');
   });
 
   it('parses deviations from build report', async () => {
@@ -213,11 +213,11 @@ file_changes:
     const summary = generateProofSummary(slugDir);
 
     expect(summary.deviations).toHaveLength(2);
-    expect(summary.deviations[0].contract_id).toBe('A001');
-    expect(summary.deviations[0].instead).toBe('Did something else');
-    expect(summary.deviations[0].reason).toBe('Technical constraint');
-    expect(summary.deviations[0].outcome).toBe('Same result');
-    expect(summary.deviations[1].contract_id).toBe('A002');
+    expect(summary.deviations[0]!.contract_id).toBe('A001');
+    expect(summary.deviations[0]!.instead).toBe('Did something else');
+    expect(summary.deviations[0]!.reason).toBe('Technical constraint');
+    expect(summary.deviations[0]!.outcome).toBe('Same result');
+    expect(summary.deviations[1]!.contract_id).toBe('A002');
   });
 
   it('merges pre-check and verify statuses', async () => {
