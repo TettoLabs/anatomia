@@ -911,24 +911,30 @@ export async function completeWork(slug: string): Promise<void> {
 }
 
 /**
- * Command definition for work management
+ * Register the `work` command (with `status` and `complete` sub-commands).
+ *
+ * @param program - Commander program instance.
  */
-export const workCommand = new Command('work')
-  .description('Manage pipeline work items');
+export function registerWorkCommand(program: Command): void {
+  const workCommand = new Command('work')
+    .description('Manage pipeline work items');
 
-const statusCommand = new Command('status')
-  .description('Show pipeline state for all active work items')
-  .option('--json', 'Output JSON format for programmatic consumption')
-  .action((options: { json?: boolean }) => {
-    getWorkStatus(options);
-  });
+  const statusCommand = new Command('status')
+    .description('Show pipeline state for all active work items')
+    .option('--json', 'Output JSON format for programmatic consumption')
+    .action((options: { json?: boolean }) => {
+      getWorkStatus(options);
+    });
 
-const completeCommand = new Command('complete')
-  .description('Archive completed work after PR merge')
-  .argument('<slug>', 'Work item slug to complete')
-  .action(async (slug: string) => {
-    await completeWork(slug);
-  });
+  const completeCommand = new Command('complete')
+    .description('Archive completed work after PR merge')
+    .argument('<slug>', 'Work item slug to complete')
+    .action(async (slug: string) => {
+      await completeWork(slug);
+    });
 
-workCommand.addCommand(statusCommand);
-workCommand.addCommand(completeCommand);
+  workCommand.addCommand(statusCommand);
+  workCommand.addCommand(completeCommand);
+
+  program.addCommand(workCommand);
+}

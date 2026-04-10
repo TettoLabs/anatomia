@@ -1,11 +1,17 @@
 /**
- * Main framework detector (orchestrates language-specific detectors)
+ * Main framework detector (dispatches to language-specific registries).
  *
- * Implements priority-based disambiguation:
- * - Next.js before React (Next includes React)
- * - Nest.js before Express (Nest uses Express)
- * - Django DRF vs plain Django
- * - Typer before Click (Typer uses Click)
+ * Item 17: per-language detector order used to live here as hand-rolled
+ * `if (x.framework) return x` chains, duplicating the priority chain that
+ * was also implicit in each detector file's companion comment. The order
+ * now lives in `detectors/node/framework-registry.ts` and
+ * `detectors/python/framework-registry.ts` as an array of detector
+ * references. Adding or reordering a detector is a single-file edit in
+ * the registry; this file just iterates.
+ *
+ * Go and Rust don't need registries yet: each language has a SINGLE
+ * detector function that handles all frameworks internally. When either
+ * language grows to multiple detector files, add a similar registry.
  */
 
 import type { ProjectType } from '../types/index.js';
@@ -14,20 +20,8 @@ import { readNodeDependencies } from '../parsers/node.js';
 import { readGoDependencies } from '../parsers/go.js';
 import { readRustDependencies } from '../parsers/rust.js';
 
-// Python detectors
-import { detectFastAPI } from './python/fastapi.js';
-import { detectDjango } from './python/django.js';
-import { detectFlask } from './python/flask.js';
-import { detectPythonCli } from './python/cli.js';
-
-// Node detectors
-import { detectNextjs } from './node/nextjs.js';
-import { detectReact } from './node/react.js';
-import { detectNestjs } from './node/nestjs.js';
-import { detectExpress } from './node/express.js';
-import { detectOtherNodeFrameworks } from './node/other.js';
-
-// Go/Rust detectors
+import { NODE_FRAMEWORK_DETECTORS } from './node/framework-registry.js';
+import { PYTHON_FRAMEWORK_DETECTORS } from './python/framework-registry.js';
 import { detectGoFramework } from './go.js';
 import { detectRustFramework } from './rust.js';
 
@@ -38,9 +32,10 @@ export interface FrameworkResult {
 }
 
 /**
- * Detect framework for a project
+ * Detect framework for a project.
  *
- * Uses priority-based disambiguation to prevent false positives
+ * Dispatches to the per-language registry (Node/Python) or the single
+ * detector function (Go/Rust) based on project type.
  *
  * @param rootPath - Project root directory
  * @param projectType - Detected project type
@@ -64,64 +59,47 @@ export async function detectFramework(
   }
 }
 
+const NOT_FOUND: FrameworkResult = {
+  framework: null,
+  confidence: 0.0,
+  indicators: [],
+};
+
 /**
- * Detect Python framework (priority order)
  * @param rootPath
  */
 async function detectPythonFramework(rootPath: string): Promise<FrameworkResult> {
   const deps = await readPythonDependencies(rootPath);
-
-  const fastapi = await detectFastAPI(rootPath, deps);
-  if (fastapi.framework) return fastapi;
-
-  const django = await detectDjango(rootPath, deps);
-  if (django.framework) return django;
-
-  const flask = await detectFlask(rootPath, deps);
-  if (flask.framework) return flask;
-
-  const cli = await detectPythonCli(deps);
-  if (cli.framework) return cli;
-
-  return { framework: null, confidence: 0.0, indicators: [] };
+  for (const detect of PYTHON_FRAMEWORK_DETECTORS) {
+    const result = await detect(rootPath, deps);
+    if (result.framework) return result;
+  }
+  return NOT_FOUND;
 }
 
 /**
- * Detect Node framework (priority order)
- * CRITICAL: Next before React, Nest before Express
  * @param rootPath
  */
 async function detectNodeFramework(rootPath: string): Promise<FrameworkResult> {
   const deps = await readNodeDependencies(rootPath);
-
-  // 1. Next.js (BEFORE React)
-  const nextjs = await detectNextjs(rootPath, deps);
-  if (nextjs.framework) return nextjs;
-
-  // 2. Nest.js (BEFORE Express)
-  const nestjs = await detectNestjs(rootPath, deps);
-  if (nestjs.framework) return nestjs;
-
-  // 3. Express
-  const express = await detectExpress(rootPath, deps);
-  if (express.framework) return express;
-
-  // 4. React
-  const react = await detectReact(rootPath, deps);
-  if (react.framework) return react;
-
-  // 5. Other
-  const other = await detectOtherNodeFrameworks(deps);
-  if (other.framework) return other;
-
-  return { framework: null, confidence: 0.0, indicators: [] };
+  for (const detect of NODE_FRAMEWORK_DETECTORS) {
+    const result = await detect(rootPath, deps);
+    if (result.framework) return result;
+  }
+  return NOT_FOUND;
 }
 
+/**
+ * @param rootPath
+ */
 async function detectGoFrameworkFromProject(rootPath: string): Promise<FrameworkResult> {
   const deps = await readGoDependencies(rootPath);
   return detectGoFramework(deps);
 }
 
+/**
+ * @param rootPath
+ */
 async function detectRustFrameworkFromProject(rootPath: string): Promise<FrameworkResult> {
   const deps = await readRustDependencies(rootPath);
   return detectRustFramework(deps);

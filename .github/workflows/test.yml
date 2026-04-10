@@ -36,7 +36,22 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build packages
+        # Build runs `pnpm typecheck && tsup` internally (Item 1), so this
+        # step also gates production type errors. Kept separate from the
+        # test-typecheck step below because that file's tsconfig is
+        # different and the failures look different in CI logs.
         run: pnpm build
+
+      - name: Typecheck tests
+        # Item 19: test files have their own tsconfig.test.json so that
+        # strict-mode violations in test code block CI the same way src/
+        # violations do. The husky pre-commit hook runs this locally.
+        run: cd packages/cli && pnpm typecheck:tests
+
+      - name: Lint
+        # Item 21: lint was not previously part of CI. 0 errors enforced
+        # via eslint + the husky hook; CI is the backstop.
+        run: cd packages/cli && pnpm lint
 
       - name: Run tests
         run: pnpm test --run

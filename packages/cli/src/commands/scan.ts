@@ -410,17 +410,20 @@ interface ScanOptions {
 }
 
 /**
- * Scan command definition
+ * Register the `scan` command.
+ *
+ * @param program - Commander program instance.
  */
-export const scanCommand = new Command('scan')
-  .description('Scan project and display tech stack, file counts, and structure')
-  .argument('[path]', 'Directory to scan (default: current directory)', '.')
-  .option('--json', 'Output JSON format for programmatic consumption')
-  .option('--verbose', 'Show detailed analyzer output')
-  .option('--save', 'Save scan results to .ana/scan.json')
-  .option('-q, --quiet', 'Suppress informational stdout')
-  .option('--quick', 'Force surface-tier analysis (skip tree-sitter)')
-  .action(async (targetPath: string, options: ScanOptions) => {
+export function registerScanCommand(program: Command): void {
+  const scanCommand = new Command('scan')
+    .description('Scan project and display tech stack, file counts, and structure')
+    .argument('[path]', 'Directory to scan (default: current directory)', '.')
+    .option('--json', 'Output JSON format for programmatic consumption')
+    .option('--verbose', 'Show detailed analyzer output')
+    .option('--save', 'Save scan results to .ana/scan.json')
+    .option('-q, --quiet', 'Suppress informational stdout')
+    .option('--quick', 'Force surface-tier analysis (skip tree-sitter)')
+    .action(async (targetPath: string, options: ScanOptions) => {
     const rootPath = path.resolve(targetPath);
 
     // Path + --save guard
@@ -511,6 +514,9 @@ export const scanCommand = new Command('scan')
       process.exit(1);
     }
   });
+
+  program.addCommand(scanCommand);
+}
 
 // Re-export display names for test backward compatibility
 export { getLanguageDisplayName, getFrameworkDisplayName, getPatternDisplayName } from '../utils/displayNames.js';

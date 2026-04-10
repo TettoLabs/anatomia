@@ -131,7 +131,7 @@ describe.skipIf(!wasmAvailable)('Convention Detection Edge Cases', () => {
 
     // Should handle gracefully (unknown majority with 0 confidence)
     expect(conventions.naming?.functions).toBeDefined();
-    if (conventions.naming?.functions.majority === 'unknown') {
+    if (conventions.naming?.functions?.majority === 'unknown') {
       expect(conventions.naming.functions.confidence).toBe(0);
     }
   });

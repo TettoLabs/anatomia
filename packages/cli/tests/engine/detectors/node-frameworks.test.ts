@@ -364,7 +364,7 @@ describe('Other Node frameworks detector', () => {
   });
 
   it('returns null with 0.0 confidence when no supported framework in dependencies', async () => {
-    const result = await detectOtherNodeFrameworks(['react', 'express']);
+    const result = await detectOtherNodeFrameworks('', ['react', 'express']);
 
     expect(result.framework).toBe(null);
     expect(result.confidence).toBe(0.0);
@@ -372,7 +372,7 @@ describe('Other Node frameworks detector', () => {
   });
 
   it('detects fastify with 0.85 confidence', async () => {
-    const result = await detectOtherNodeFrameworks(['fastify']);
+    const result = await detectOtherNodeFrameworks('', ['fastify']);
 
     expect(result.framework).toBe('fastify');
     expect(result.confidence).toBe(0.85);
@@ -380,7 +380,7 @@ describe('Other Node frameworks detector', () => {
   });
 
   it('detects koa with 0.85 confidence', async () => {
-    const result = await detectOtherNodeFrameworks(['koa']);
+    const result = await detectOtherNodeFrameworks('', ['koa']);
 
     expect(result.framework).toBe('koa');
     expect(result.confidence).toBe(0.85);
@@ -388,7 +388,7 @@ describe('Other Node frameworks detector', () => {
   });
 
   it('prioritizes fastify over koa when both present', async () => {
-    const result = await detectOtherNodeFrameworks(['koa', 'fastify']);
+    const result = await detectOtherNodeFrameworks('', ['koa', 'fastify']);
 
     expect(result.framework).toBe('fastify');
     expect(result.confidence).toBe(0.85);
@@ -507,7 +507,7 @@ describe('CRITICAL: Disambiguation tests', () => {
       const nextResult = await detectNextjs('/test/project', ['next', 'react', 'express', 'fastify']);
       const reactResult = await detectReact('/test/project', ['next', 'react', 'express', 'fastify']);
       const expressResult = await detectExpress('/test/project', ['next', 'react', 'express', 'fastify']);
-      const fastifyResult = await detectOtherNodeFrameworks(['next', 'react', 'express', 'fastify']);
+      const fastifyResult = await detectOtherNodeFrameworks('', ['next', 'react', 'express', 'fastify']);
 
       expect(nextResult.framework).toBe('nextjs');
       expect(reactResult.framework).toBe(null);

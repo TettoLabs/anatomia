@@ -91,11 +91,11 @@ describe.skipIf(!wasmAvailable)('ASTCache', () => {
       // Then: Returns cached data and increments hits
       expect(result).not.toBeNull();
       expect(result!.functions).toHaveLength(1);
-      expect(result!.functions[0].name).toBe('hello');
+      expect(result!.functions[0]!.name).toBe('hello');
       expect(result!.classes).toHaveLength(1);
-      expect(result!.classes[0].name).toBe('World');
+      expect(result!.classes[0]!.name).toBe('World');
       expect(result!.imports).toHaveLength(1);
-      expect(result!.imports[0].module).toBe('os');
+      expect(result!.imports[0]!.module).toBe('os');
       expect(result!.parseTime).toBe(42);
       expect(cache.getStats().hits).toBe(1);
       expect(cache.getStats().misses).toBe(0);
@@ -140,7 +140,7 @@ describe.skipIf(!wasmAvailable)('ASTCache', () => {
       // Then: Data retrieved from disk cache
       expect(result).not.toBeNull();
       expect(result!.functions).toHaveLength(1);
-      expect(result!.functions[0].name).toBe('persistent');
+      expect(result!.functions[0]!.name).toBe('persistent');
       expect(result!.parseTime).toBe(50);
       expect(newCache.getStats().hits).toBe(1);
     });
@@ -167,7 +167,7 @@ describe.skipIf(!wasmAvailable)('ASTCache', () => {
       expect(cache.getStats().hits).toBe(2);
 
       // Then: Both results are identical (same memory reference)
-      expect(secondResult!.functions[0].name).toBe('test');
+      expect(secondResult!.functions[0]!.name).toBe('test');
       expect(secondResult!.parseTime).toBe(30);
     });
   });
@@ -290,7 +290,7 @@ describe.skipIf(!wasmAvailable)('ASTCache', () => {
       // Verify cache hit
       let result = await cache.get(testFilePath);
       expect(result).not.toBeNull();
-      expect(result!.functions[0].name).toBe('original');
+      expect(result!.functions[0]!.name).toBe('original');
       expect(cache.getStats().hits).toBe(1);
 
       // When: File is modified (changing mtime)
@@ -347,7 +347,7 @@ describe.skipIf(!wasmAvailable)('ASTCache - invalidation scenarios', () => {
       // Verify cache hit
       let result = await cache.get(testFilePath);
       expect(result).not.toBeNull();
-      expect(result!.functions[0].name).toBe('hello');
+      expect(result!.functions[0]!.name).toBe('hello');
 
       // When: File modified (mtime changes)
       await new Promise(resolve => setTimeout(resolve, 10));
@@ -377,11 +377,11 @@ describe.skipIf(!wasmAvailable)('ASTCache - invalidation scenarios', () => {
 
       // Then: All return cached data (no invalidation)
       expect(result1).not.toBeNull();
-      expect(result1!.functions[0].name).toBe('stable');
+      expect(result1!.functions[0]!.name).toBe('stable');
       expect(result2).not.toBeNull();
-      expect(result2!.functions[0].name).toBe('stable');
+      expect(result2!.functions[0]!.name).toBe('stable');
       expect(result3).not.toBeNull();
-      expect(result3!.functions[0].name).toBe('stable');
+      expect(result3!.functions[0]!.name).toBe('stable');
 
       // Stats show all hits, no misses
       const stats = cache.getStats();
@@ -452,15 +452,15 @@ describe.skipIf(!wasmAvailable)('ASTCache - invalidation scenarios', () => {
       const result3 = await cache.get(file3);
 
       expect(result1).not.toBeNull();
-      expect(result1!.functions[0].name).toBe('func1');
+      expect(result1!.functions[0]!.name).toBe('func1');
       expect(result1!.parseTime).toBe(10);
 
       expect(result2).not.toBeNull();
-      expect(result2!.functions[0].name).toBe('func2');
+      expect(result2!.functions[0]!.name).toBe('func2');
       expect(result2!.parseTime).toBe(15);
 
       expect(result3).not.toBeNull();
-      expect(result3!.functions[0].name).toBe('func3');
+      expect(result3!.functions[0]!.name).toBe('func3');
       expect(result3!.parseTime).toBe(20);
 
       // Verify cache statistics
@@ -502,7 +502,7 @@ describe.skipIf(!wasmAvailable)('ASTCache - invalidation scenarios', () => {
       // When: Corrupt the disk cache JSON file
       const cacheDir = join(tempDir, '.ana/state/cache');
       const files = await readdir(cacheDir);
-      const cacheFile = join(cacheDir, files[0]);
+      const cacheFile = join(cacheDir, files[0]!);
       await writeFile(cacheFile, 'CORRUPTED{invalid json', 'utf8');
 
       // When: New cache instance reads corrupted disk cache
@@ -549,10 +549,10 @@ describe.skipIf(!wasmAvailable)('ASTCache - invalidation scenarios', () => {
       const result2 = await cache.get(file2);
 
       expect(result1).not.toBeNull();
-      expect(result1!.functions[0].name).toBe('func1');
+      expect(result1!.functions[0]!.name).toBe('func1');
 
       expect(result2).not.toBeNull();
-      expect(result2!.functions[0].name).toBe('func2');
+      expect(result2!.functions[0]!.name).toBe('func2');
 
       // Both files cached independently
       expect(cache.getStats().files).toBe(2);
@@ -571,7 +571,7 @@ describe.skipIf(!wasmAvailable)('ASTCache - invalidation scenarios', () => {
       // Then: parseMethod is 'tree-sitter' (slow path)
       expect(result1.parseMethod).toBe('tree-sitter');
       expect(result1.functions).toHaveLength(1);
-      expect(result1.functions[0].name).toBe('hello');
+      expect(result1.functions[0]!.name).toBe('hello');
 
       // When: Second parse (cache hit)
       const result2 = await parseFile(testFilePath, 'python', cache);
@@ -579,7 +579,7 @@ describe.skipIf(!wasmAvailable)('ASTCache - invalidation scenarios', () => {
       // Then: parseMethod is 'cached' (fast path)
       expect(result2.parseMethod).toBe('cached');
       expect(result2.functions).toHaveLength(1);
-      expect(result2.functions[0].name).toBe('hello');
+      expect(result2.functions[0]!.name).toBe('hello');
 
       // Cache statistics confirm hit
       const stats = cache.getStats();

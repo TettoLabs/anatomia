@@ -63,6 +63,30 @@ describe('readNodeDependencies', () => {
     expect(result).toEqual([]);
   });
 
+  it('returns empty array when package.json is a directory (EISDIR case)', async () => {
+    // Edge case: a directory literally named `package.json` at project root.
+    // Observed in some monorepo snapshots and tarball archives. The inner
+    // `readFile` utility (src/engine/utils/file.ts) swallows the EISDIR and
+    // returns '', then parsePackageJson returns [] for empty input — both
+    // upstream of readNodeDependencies' own catch block. Outcome: no crash,
+    // no warning, just an empty dep list.
+    //
+    // Phase 2 finding: because of that upstream swallowing, the outer catch
+    // in readNodeDependencies is not reachable from any input we can
+    // construct (the file utility and parsePackageJson both have their own
+    // try/catch). Item 2.7's `_error` → `error` rename was therefore a
+    // correctness-of-dead-code fix — worth doing for future-proofing but
+    // not exercisable via an integration test without monkey-patching fs.
+    // Noted for a future cleanup pass (delete the dead catch or remove the
+    // inner swallow in utils/file.ts so errors surface).
+    const eisdirDir = path.join(tempDir, 'eisdir-package');
+    await fs.mkdir(eisdirDir, { recursive: true });
+    await fs.mkdir(path.join(eisdirDir, 'package.json'), { recursive: true });
+
+    const result = await readNodeDependencies(eisdirDir);
+    expect(result).toEqual([]);
+  });
+
   it('handles scoped packages correctly', async () => {
     const scopedDir = path.join(tempDir, 'scoped');
     await fs.mkdir(scopedDir, { recursive: true });

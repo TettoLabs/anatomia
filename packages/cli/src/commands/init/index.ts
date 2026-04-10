@@ -1,8 +1,9 @@
 /**
  * ana init - Initialize .ana/ context framework (Item 14c orchestrator).
  *
- * Exports initCommand (Command object). The action handler orchestrates
- * the 9-phase init pipeline by calling into sibling modules.
+ * Exports registerInitCommand (Item 22 registration consistency). The
+ * action handler orchestrates the 9-phase init pipeline by calling into
+ * sibling modules.
  */
 
 import { Command } from 'commander';
@@ -30,12 +31,17 @@ import {
   displaySuccessMessage,
 } from './state.js';
 
-/** Create init command */
-export const initCommand = new Command('init')
-  .description('Initialize .ana/ context framework')
-  .option('-f, --force', 'Overwrite existing .ana/ (preserves state/)')
-  .option('-y, --yes', 'Skip confirmation prompts (non-interactive mode)')
-  .action(async (options: InitCommandOptions, command: Command) => {
+/**
+ * Register the `init` command.
+ *
+ * @param program - Commander program instance.
+ */
+export function registerInitCommand(program: Command): void {
+  const initCommand = new Command('init')
+    .description('Initialize .ana/ context framework')
+    .option('-f, --force', 'Overwrite existing .ana/ (preserves state/)')
+    .option('-y, --yes', 'Skip confirmation prompts (non-interactive mode)')
+    .action(async (options: InitCommandOptions, command: Command) => {
     // Reject positional arguments (init operates on cwd)
     if (command.args.length > 0) {
       console.error(chalk.red(`Error: ana init does not accept a path argument.`));
@@ -144,3 +150,6 @@ export const initCommand = new Command('init')
       process.exit(1);
     }
   });
+
+  program.addCommand(initCommand);
+}

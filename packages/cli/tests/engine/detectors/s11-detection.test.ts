@@ -90,10 +90,11 @@ model User { id Int @id name String }`
 
     const { scanProject } = await import('../../../src/engine/scan-engine.js');
     const result = await scanProject(tempDir, { depth: 'surface' });
-    expect(result.schemas.prisma).toBeDefined();
-    expect(result.schemas.prisma.found).toBe(true);
-    expect(result.schemas.prisma.provider).toBe('postgresql');
-    expect(result.schemas.prisma.modelCount).toBe(1);
+    const prismaSchema = result.schemas['prisma'];
+    expect(prismaSchema).toBeDefined();
+    expect(prismaSchema!.found).toBe(true);
+    expect(prismaSchema!.provider).toBe('postgresql');
+    expect(prismaSchema!.modelCount).toBe(1);
   });
 
   it('returns null provider when schema has no datasource', async () => {
@@ -110,8 +111,9 @@ model User { id Int @id name String }`
 
     const { scanProject } = await import('../../../src/engine/scan-engine.js');
     const result = await scanProject(tempDir, { depth: 'surface' });
-    expect(result.schemas.prisma.found).toBe(true);
-    expect(result.schemas.prisma.provider).toBeNull();
+    const prismaSchema = result.schemas['prisma'];
+    expect(prismaSchema!.found).toBe(true);
+    expect(prismaSchema!.provider).toBeNull();
   });
 });
 

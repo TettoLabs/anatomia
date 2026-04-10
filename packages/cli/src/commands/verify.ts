@@ -272,11 +272,11 @@ export function runPreCheck(slug: string): void {
 }
 
 /**
- * Register verify pre-check command
+ * Register the `verify` command (with `pre-check` sub-command).
  *
  * @param program - Commander program instance
  */
-export function registerVerifyPreCheckCommand(program: Command): void {
+export function registerVerifyCommand(program: Command): void {
   const verifyCommand = new Command('verify')
     .description('Verification tools');
 

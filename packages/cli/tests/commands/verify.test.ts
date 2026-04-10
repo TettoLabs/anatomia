@@ -4,7 +4,7 @@ import * as fsSync from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
 import { execSync } from 'node:child_process';
-import { runPreCheck, runContractPreCheck } from '../../src/commands/verify-precheck.js';
+import { runPreCheck, runContractPreCheck } from '../../src/commands/verify.js';
 
 /**
  * Tests for `ana verify pre-check` command
@@ -17,7 +17,7 @@ describe('ana verify pre-check', () => {
   let originalCwd: string;
 
   beforeEach(async () => {
-    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'verify-precheck-test-'));
+    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'verify-test-'));
     originalCwd = process.cwd();
     process.chdir(tempDir);
   });
@@ -342,7 +342,7 @@ file_changes:
       });
 
       const result = runContractPreCheck('test-slug', tempDir);
-      expect(result.assertions[0].says).toBe('Creating a payment returns success');
+      expect(result.assertions[0]!.says).toBe('Creating a payment returns success');
     });
 
     it('reports UNVERIFIABLE when no .saves.json', async () => {
