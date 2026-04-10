@@ -16,8 +16,9 @@ import { execSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as fsPromises from 'node:fs/promises';
 import * as path from 'node:path';
-import { readArtifactBranch, getCurrentBranch } from './artifact.js';
+import { readArtifactBranch, getCurrentBranch } from '../utils/git-operations.js';
 import { generateProofSummary, type ProofSummary } from '../utils/proofSummary.js';
+import type { ProofChainEntry } from '../types/proof.js';
 
 /**
  * Artifact state for a work item
@@ -646,27 +647,8 @@ export function getWorkStatus(options: { json?: boolean }): void {
   }
 }
 
-/**
- * Proof chain JSON entry
- */
-export interface ProofChainEntry {
-  slug: string;
-  feature: string;
-  result: string;
-  author: { name: string; email: string };
-  contract: ProofSummary['contract'];
-  assertions: Array<{
-    id: string;
-    says: string;
-    status: string;
-    deviation?: string;
-  }>;
-  acceptance_criteria: ProofSummary['acceptance_criteria'];
-  timing: ProofSummary['timing'];
-  hashes: Record<string, string>;
-  seal_commit: string | null;
-  completed_at: string;
-}
+// ProofChainEntry moved to src/types/proof.ts (Item 13).
+// Imported above for internal use in this file.
 
 /**
  * Proof chain JSON structure

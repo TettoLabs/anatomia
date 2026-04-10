@@ -20,6 +20,10 @@ import * as path from 'node:path';
 import { createHash } from 'node:crypto';
 import * as yaml from 'yaml';
 import { runContractPreCheck } from './verify-precheck.js';
+// readArtifactBranch + getCurrentBranch moved to utils/git-operations.ts (Item 13).
+// artifact.ts still uses them internally; pr.ts and work.ts now import directly
+// from utils/ instead of cross-command-importing from here.
+import { readArtifactBranch, getCurrentBranch } from '../utils/git-operations.js';
 
 /**
  * Save metadata entry for .saves.json
@@ -135,51 +139,8 @@ function parseArtifactType(type: string): ArtifactTypeInfo | null {
   return { category, fileName, displayName, baseType };
 }
 
-/**
- * Read artifactBranch from .ana/ana.json
- *
- * @returns The artifact branch name
- */
-export function readArtifactBranch(): string {
-  const anaJsonPath = path.join(process.cwd(), '.ana', 'ana.json');
-
-  // Check if file exists
-  if (!fs.existsSync(anaJsonPath)) {
-    console.error(chalk.red('Error: No .ana/ana.json found. Run `ana init` first.'));
-    process.exit(1);
-  }
-
-  // Read and parse
-  let config: Record<string, unknown>;
-  try {
-    const content = fs.readFileSync(anaJsonPath, 'utf-8');
-    config = JSON.parse(content);
-  } catch {
-    console.error(chalk.red('Error: Failed to read .ana/ana.json. File may be corrupted.'));
-    process.exit(1);
-  }
-
-  // Check artifactBranch field outside try/catch
-  if (!config.artifactBranch) {
-    console.error(chalk.red('Error: No artifactBranch configured in ana.json. Run `ana init` first.'));
-    process.exit(1);
-  }
-
-  return config.artifactBranch as string;
-}
-
-/**
- * Get current git branch name
- *
- * @returns Current branch name or null if not a git repo
- */
-export function getCurrentBranch(): string | null {
-  try {
-    return execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf-8', stdio: 'pipe' }).trim();
-  } catch {
-    return null;
-  }
-}
+// readArtifactBranch + getCurrentBranch moved to utils/git-operations.ts
+// (Item 13). Imported at the top of this file for internal use.
 
 /**
  * Validate plan.md format

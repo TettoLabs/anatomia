@@ -21,7 +21,7 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import * as path from 'node:path';
 import * as fs from 'node:fs';
-import type { ProofChainEntry } from './work.js';
+import type { ProofChainEntry } from '../types/proof.js';
 
 /**
  * Proof chain JSON structure

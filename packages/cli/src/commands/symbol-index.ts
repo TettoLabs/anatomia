@@ -17,22 +17,12 @@ import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
 import { glob } from 'glob';
 import type { Tree, Node as TSNode } from 'web-tree-sitter';
+import type { SymbolEntry, SymbolIndex } from '../types/symbol-index.js';
 
-/** Symbol entry in the index */
-export interface SymbolEntry {
-  name: string;
-  type: 'function' | 'class' | 'method' | 'variable';
-  file: string;
-  line: number;
-  exported: boolean;
-}
-
-/** Full symbol index structure */
-export interface SymbolIndex {
-  generated: string;
-  files_parsed: number;
-  symbols: SymbolEntry[];
-}
+// SymbolEntry + SymbolIndex moved to src/types/symbol-index.ts (Item 13).
+// Imported above for internal use. No re-export from this file — consumers
+// (check.ts) now import directly from src/types/ to eliminate cross-command
+// type imports.
 
 /** Language type matching analyzer */
 type Language = 'python' | 'typescript' | 'tsx' | 'javascript' | 'go';

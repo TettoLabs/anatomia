@@ -15,7 +15,7 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
-import type { SymbolEntry, SymbolIndex } from './symbol-index.js';
+import type { SymbolEntry, SymbolIndex } from '../types/symbol-index.js';
 import { CONTEXT_FILES } from '../constants.js';
 
 /** Per-file configuration for structural validation (D12.3 — no line counts) */
