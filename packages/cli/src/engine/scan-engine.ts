@@ -417,7 +417,7 @@ export async function scanProject(
   try {
     const { analyze } = await import('./index.js');
     if (options.depth === 'deep') {
-      analysis = await analyze(rootPath, { skipImportScan: true });
+      analysis = await analyze(rootPath, { skipImportScan: true, maxFiles: 50 });
     } else {
       // Surface: skip tree-sitter parsing, patterns, conventions
       analysis = await analyze(rootPath, {

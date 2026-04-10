@@ -57,7 +57,7 @@ export function generateProjectContextScaffold(result: EngineResult): string {
       !(result.monorepo.isMonorepo && result.monorepo.tool === result.commands.packageManager)) {
     infoParts.push(`${result.commands.packageManager}`);
   }
-  if (result.stack.aiSdk) infoParts.push(`${result.stack.aiSdk} SDK`);
+  // aiSdk removed — already shown in Stack Detected line (Item 6)
   if (result.monorepo.isMonorepo) {
     const tool = result.monorepo.tool || 'monorepo';
     infoParts.push(`${tool} (${result.monorepo.packages.length} packages)`);

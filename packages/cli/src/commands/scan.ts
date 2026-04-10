@@ -150,7 +150,12 @@ function formatHumanReadable(result: EngineResult, options: { isFunnel: boolean 
   }
 
   // Services + Deployment (rendered as one block)
-  const hasServices = result.externalServices.length > 0;
+  // Dedup services already shown in Stack section
+  const stackValues = Object.values(result.stack).filter(Boolean) as string[];
+  const filteredServices = result.externalServices.filter(
+    svc => !stackValues.some(v => v.includes(svc.name))
+  );
+  const hasServices = filteredServices.length > 0;
   const hasDeploy = result.deployment.platform !== null;
   if (hasServices || hasDeploy) {
     lines.push('');
@@ -158,7 +163,7 @@ function formatHumanReadable(result: EngineResult, options: { isFunnel: boolean 
     lines.push(chalk.gray('  ' + BOX.horizontal.repeat(8)));
     if (hasServices) {
       const byCategory = new Map<string, string[]>();
-      for (const svc of result.externalServices) {
+      for (const svc of filteredServices) {
         const list = byCategory.get(svc.category) || [];
         list.push(svc.name);
         byCategory.set(svc.category, list);
@@ -289,7 +294,7 @@ function formatHumanReadable(result: EngineResult, options: { isFunnel: boolean 
       for (const [k, p] of patternEntries) {
         const label = (patternLabels[k] || k).padEnd(12);
         const lib = p.library || p.variant || k;
-        lines.push(`  ${chalk.gray(label)} ${lib} ${chalk.gray(`(${p.confidence.toFixed(2)})`)}`);
+        lines.push(`  ${chalk.gray(label)} ${lib} ${chalk.gray(`(${Math.round(p.confidence * 100)}%)`)}`);
       }
     }
   }

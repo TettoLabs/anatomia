@@ -1226,6 +1226,13 @@ async function generateAgentsMd(cwd: string, engineResult: EngineResult | null):
     if (naming?.files?.majority && naming.files.majority !== 'unknown') {
       convLines.push(`- Files: ${naming.files.majority}`);
     }
+    if (engineResult.conventions.imports?.style) {
+      const imp = engineResult.conventions.imports;
+      const importStyle = (imp.style === 'absolute' && imp.aliasPattern)
+        ? `path aliases (${imp.aliasPattern})`
+        : imp.style;
+      convLines.push(`- Imports: ${importStyle}`);
+    }
     if (engineResult.conventions.indentation?.style) {
       const indent = engineResult.conventions.indentation;
       convLines.push(`- Indentation: ${indent.style}, ${indent.width} wide`);
@@ -1237,9 +1244,33 @@ async function generateAgentsMd(cwd: string, engineResult: EngineResult | null):
     }
   }
 
+  // Services (from external service detection)
+  if (engineResult && engineResult.externalServices.length > 0) {
+    lines.push('## Services');
+    for (const svc of engineResult.externalServices) {
+      lines.push(`- ${svc.name} (${svc.category})`);
+    }
+    lines.push('');
+  }
+
+  // Scan-derived constraints
   lines.push('## Constraints');
-  lines.push('- Follow existing patterns in the codebase');
-  lines.push('- Run tests before committing');
+  const constraintLines: string[] = [];
+  if (engineResult?.conventions?.naming?.functions?.majority &&
+      engineResult.conventions.naming.functions.majority !== 'unknown') {
+    constraintLines.push(`- ${engineResult.conventions.naming.functions.majority} for function names`);
+  }
+  if (engineResult?.conventions?.imports?.aliasPattern) {
+    constraintLines.push(`- Use ${engineResult.conventions.imports.aliasPattern} path aliases for imports`);
+  }
+  if (engineResult?.commands.build) {
+    constraintLines.push(`- Run \`${engineResult.commands.build}\` before committing`);
+  }
+  if (constraintLines.length === 0) {
+    constraintLines.push('- Follow existing patterns in the codebase');
+  }
+  constraintLines.push('- Run tests before committing');
+  lines.push(...constraintLines);
   lines.push('');
 
   await fs.writeFile(destPath, lines.join('\n'), 'utf-8');
@@ -1544,23 +1575,31 @@ function displaySuccessMessage(engineResult: EngineResult | null, projectName: s
     console.log(chalk.green(`✓ Scanned ${projectName}`) + chalk.gray(` (${scanTime}s)`));
     console.log('');
 
-    // Stack summary
-    const stackParts = [engineResult.stack.language, engineResult.stack.framework, engineResult.stack.database].filter(Boolean);
+    // Stack summary (unified — matches CLAUDE.md logic)
+    const stackParts = [
+      engineResult.stack.language,
+      engineResult.stack.framework,
+      engineResult.stack.database,
+      engineResult.stack.testing,
+      engineResult.stack.aiSdk,
+      engineResult.stack.payments,
+    ].filter(Boolean);
     if (stackParts.length > 0) {
       console.log(`  ${chalk.bold('Stack:')}    ${stackParts.join(' · ')}`);
-    }
-    if (engineResult.stack.aiSdk) {
-      console.log(`  ${chalk.bold('AI:')}       ${engineResult.stack.aiSdk}`);
-    }
-    if (engineResult.stack.testing) {
-      console.log(`  ${chalk.bold('Testing:')}  ${engineResult.stack.testing}`);
     }
     if (engineResult.deployment?.platform) {
       console.log(`  ${chalk.bold('Deploy:')}   ${engineResult.deployment.platform}`);
     }
+    // Services (deduped against stack)
     if (engineResult.externalServices.length > 0) {
-      const names = engineResult.externalServices.map((s: { name: string }) => s.name).join(', ');
-      console.log(`  ${chalk.bold('Services:')} ${names}`);
+      const stackValues = Object.values(engineResult.stack).filter(Boolean) as string[];
+      const uniqueServices = engineResult.externalServices.filter(
+        svc => !stackValues.some(v => v.includes(svc.name))
+      );
+      if (uniqueServices.length > 0) {
+        const names = uniqueServices.map((s: { name: string }) => s.name).join(', ');
+        console.log(`  ${chalk.bold('Services:')} ${names}`);
+      }
     }
     console.log('');
   }
@@ -1580,7 +1619,17 @@ function displaySuccessMessage(engineResult: EngineResult | null, projectName: s
     if (conditionalSkills.length > 0) {
       console.log(`    ${chalk.gray('Detected:')}  ${conditionalSkills.join(', ')}`);
     }
+
+    // Gotcha count
+    const gotchas = matchGotchas(engineResult);
+    const totalGotchas = Array.from(gotchas.values()).reduce((sum, arr) => sum + arr.length, 0);
+    if (totalGotchas > 0) {
+      console.log(chalk.green(`  ✓ ${totalGotchas} gotcha${totalGotchas > 1 ? 's' : ''} pre-populated`));
+    }
   }
+
+  // Cross-tool files
+  console.log(chalk.green('  ✓ Cross-tool: CLAUDE.md + AGENTS.md'));
 
   console.log('');
 

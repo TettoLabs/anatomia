@@ -5,14 +5,14 @@
  * Based on: START_HERE.md lines 1059-1098
  */
 
-import { join } from 'node:path';
+import { join, basename } from 'node:path';
 import type { AnalysisResult } from '../../types/index.js';
 import type { ConventionAnalysis } from '../../types/conventions.js';
 import { createEmptyConventionAnalysis } from '../../types/conventions.js';
 import { sampleFiles } from '../../sampling/fileSampler.js';
 import { readFile } from '../../utils/file.js';
 import {
-  analyzeFileNaming,
+  analyzeNamingConvention,
   analyzeFunctionNaming,
   analyzeClassNaming,
   analyzeVariableNaming,
@@ -67,8 +67,10 @@ export async function detectConventions(
     // Sample 50 files (broader than patterns' 20 - conventions span codebase)
     const sampledFilePaths = await sampleFiles(rootPath, analysis, { maxFiles: 50 });
 
-    // Analyze naming conventions (uses parsed.files data + variable extraction)
-    const fileNaming = analyzeFileNaming(parsedFiles, projectType);
+    // File naming uses sampledFilePaths (50 files) — only needs basenames, no AST
+    const fileNamingNames = sampledFilePaths.map(p => basename(p).replace(/\.[^.]+$/, ''));
+    const fileNaming = analyzeNamingConvention(fileNamingNames, projectType);
+    // Function/class naming uses parsedFiles (tree-sitter AST needed)
     const functionNaming = analyzeFunctionNaming(parsedFiles, projectType);
     const classNaming = analyzeClassNaming(parsedFiles, projectType);
 
