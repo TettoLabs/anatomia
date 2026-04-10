@@ -96,6 +96,61 @@ describe('skill seeding', () => {
     expect(detectedCount).toBe(1);
   }, 30000);
 
+  it('Path B: re-init preserves user-edited ## Gotchas (Item 12 allowGotchaInjection semantic)', async () => {
+    // Item 12 collapsed Path A (reinit: .ana/ present + skill file exists) and
+    // Path B (partial install: .ana/ missing + skill file exists) onto a single
+    // branch that sets `allowGotchaInjection = false` when the skill file
+    // already exists. This test pins the semantic: once the user has edited
+    // ## Gotchas, a subsequent init MUST NOT overwrite their content even
+    // though the stack (Vitest → vitest-watch-mode) would otherwise trigger
+    // automatic gotcha injection.
+    //
+    // The test writes Vitest into package.json so the vitest-watch-mode gotcha
+    // is a candidate for injection. Without the allowGotchaInjection guard,
+    // a re-init would overwrite the custom gotchas section. With the guard,
+    // it must be preserved verbatim.
+
+    // First init: Vitest is in deps, so vitest-watch-mode gotcha is injected
+    // on the fresh-install path.
+    await execFileAsync('node', [cliPath, 'init', '--force'], { cwd: tempDir });
+
+    const skillPath = path.join(tempDir, '.claude', 'skills', 'testing-standards', 'SKILL.md');
+    const afterFirstInit = await fs.readFile(skillPath, 'utf-8');
+    expect(afterFirstInit).toContain('watch mode');  // gotcha was injected
+
+    // Simulate user editing ## Gotchas with their own content + delete .ana/
+    // to put the project in the "partial install" Path B state.
+    const customGotchas = '- CUSTOM GOTCHA: do not mock the database in integration tests\n- CUSTOM GOTCHA: tests that touch /tmp must clean up in afterEach';
+    const gotchasIdx = afterFirstInit.indexOf('## Gotchas');
+    const nextSectionAfterGotchas = afterFirstInit.indexOf('\n## ', gotchasIdx + 1);
+    const beforeGotchas = afterFirstInit.slice(0, gotchasIdx);
+    const afterGotchas = nextSectionAfterGotchas === -1 ? '' : afterFirstInit.slice(nextSectionAfterGotchas);
+    const customContent = beforeGotchas + '## Gotchas\n' + customGotchas + '\n' + afterGotchas;
+    await fs.writeFile(skillPath, customContent, 'utf-8');
+    await fs.rm(path.join(tempDir, '.ana'), { recursive: true, force: true });
+
+    // Re-init: Path B (skill file exists, .ana/ missing). Should preserve
+    // custom gotchas and refresh Detected, but NOT re-inject vitest-watch-mode.
+    await execFileAsync('node', [cliPath, 'init', '--force'], { cwd: tempDir });
+
+    const afterReinit = await fs.readFile(skillPath, 'utf-8');
+
+    // Custom gotchas MUST be preserved verbatim.
+    expect(afterReinit).toContain('CUSTOM GOTCHA: do not mock the database in integration tests');
+    expect(afterReinit).toContain('CUSTOM GOTCHA: tests that touch /tmp must clean up in afterEach');
+
+    // The "default watch mode" gotcha text MUST NOT have been re-injected
+    // alongside the custom content (that would double the gotchas section).
+    // The user replaced the whole section — so any occurrence of "watch mode"
+    // would only come from re-injection, which is the failure mode.
+    expect(afterReinit).not.toContain('watch mode');
+
+    // ## Detected MUST still be refreshed (machine-owned section).
+    expect(afterReinit).toContain('## Detected');
+    const detectedCount = (afterReinit.match(/## Detected/g) || []).length;
+    expect(detectedCount).toBe(1);
+  }, 30000);
+
   it('re-init preserves ## Rules but replaces ## Detected (D6.13 boundary)', async () => {
     // First init — creates skill files with scan data
     await execFileAsync('node', [cliPath, 'init', '--force'], { cwd: tempDir });

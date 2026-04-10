@@ -261,7 +261,20 @@ function injectDeployment(result: EngineResult): string {
   return lines.join('\n');
 }
 
-function injectAiPatterns(result: EngineResult): string {
+/**
+ * Build the `ai-patterns` skill's Detected section body.
+ *
+ * Shows the detected AI SDK (if any) and a deduped "Also detected" line for
+ * additional AI services that aren't the same SDK. The 3-way filter handles
+ * the Vercel AI naming split (Item 18 will collapse this to exact match).
+ *
+ * Exported for direct unit testing (Item 16) — the filter logic is the only
+ * non-trivial branch in the injector family and warrants dedicated coverage.
+ *
+ * @param result - Engine scan result.
+ * @returns Detected section body (empty string if no AI data).
+ */
+export function injectAiPatterns(result: EngineResult): string {
   const lines: string[] = [];
   if (result.stack.aiSdk) lines.push(`- AI SDK: ${result.stack.aiSdk}`);
   const sdk = result.stack.aiSdk || '';
