@@ -234,7 +234,7 @@ describe('Python CLI detector', () => {
   });
 
   it('returns null with 0.0 confidence when no CLI framework present', async () => {
-    const result = await detectPythonCli(['flask', 'django']);
+    const result = await detectPythonCli('', ['flask', 'django']);
 
     expect(result.framework).toBe(null);
     expect(result.confidence).toBe(0.0);
@@ -242,7 +242,7 @@ describe('Python CLI detector', () => {
   });
 
   it('detects typer with 0.85 confidence', async () => {
-    const result = await detectPythonCli(['typer']);
+    const result = await detectPythonCli('', ['typer']);
 
     expect(result.framework).toBe('typer');
     expect(result.confidence).toBe(0.85);
@@ -250,7 +250,7 @@ describe('Python CLI detector', () => {
   });
 
   it('detects click with 0.75 confidence', async () => {
-    const result = await detectPythonCli(['click']);
+    const result = await detectPythonCli('', ['click']);
 
     expect(result.framework).toBe('click');
     expect(result.confidence).toBe(0.75);
@@ -258,7 +258,7 @@ describe('Python CLI detector', () => {
   });
 
   it('prioritizes typer over click when both present', async () => {
-    const result = await detectPythonCli(['click', 'typer']);
+    const result = await detectPythonCli('', ['click', 'typer']);
 
     expect(result.framework).toBe('typer');
     expect(result.confidence).toBe(0.85);
@@ -266,14 +266,14 @@ describe('Python CLI detector', () => {
   });
 
   it('prioritizes typer over click (different order)', async () => {
-    const result = await detectPythonCli(['typer', 'click', 'requests']);
+    const result = await detectPythonCli('', ['typer', 'click', 'requests']);
 
     expect(result.framework).toBe('typer');
     expect(result.confidence).toBe(0.85);
   });
 
   it('detects click when mixed with non-CLI frameworks', async () => {
-    const result = await detectPythonCli(['flask', 'click', 'sqlalchemy']);
+    const result = await detectPythonCli('', ['flask', 'click', 'sqlalchemy']);
 
     expect(result.framework).toBe('click');
     expect(result.confidence).toBe(0.75);
