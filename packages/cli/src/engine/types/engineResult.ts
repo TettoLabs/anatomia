@@ -52,6 +52,7 @@ export interface EngineResult {
     lint: string | null;
     dev: string | null;
     packageManager: string;
+    all: Record<string, string>;
   };
   git: {
     head: string | null;

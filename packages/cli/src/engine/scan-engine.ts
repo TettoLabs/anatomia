@@ -376,13 +376,13 @@ function mapConventions(
       constants: mapNaming(c.naming?.constants),
     },
     imports: c.imports
-      ? { style: c.imports.style, confidence: c.imports.confidence, distribution: c.imports.distribution, aliasPattern: c.imports.aliasPattern ?? null }
+      ? { aliasPattern: null, ...c.imports }
       : { style: 'unknown', confidence: 0, distribution: {}, aliasPattern: null },
     docstrings: c.docstrings
-      ? { format: c.docstrings.format, confidence: c.docstrings.confidence, coverage: c.docstrings.coverage }
+      ? { ...c.docstrings }
       : { format: 'unknown', confidence: 0, coverage: 0 },
     indentation: c.indentation
-      ? { style: c.indentation.style, width: c.indentation.width ?? 2, confidence: c.indentation.confidence }
+      ? { width: 2, ...c.indentation }
       : { style: 'unknown', width: 2, confidence: 0 },
     sampledFiles: c.sampledFiles,
     detectionTime: c.detectionTime,

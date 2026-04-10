@@ -128,7 +128,7 @@ function createEmptyEngineResult(): EngineResult {
     files: { source: 0, test: 0, config: 0, total: 0 },
     structure: [],
     structureOverflow: 0,
-    commands: { build: null, test: null, lint: null, dev: null, packageManager: 'npm' },
+    commands: { build: null, test: null, lint: null, dev: null, packageManager: 'npm', all: {} },
     git: { head: null, branch: null, commitCount: null, lastCommitAt: null, uncommittedChanges: false, contributorCount: null, defaultBranch: null, branches: null },
     monorepo: { isMonorepo: false, tool: null, packages: [] },
     externalServices: [],
@@ -1057,6 +1057,12 @@ function injectTestingStandards(result: EngineResult): string {
     const variant = t.variant ? ` (${t.variant})` : '';
     lines.push(`- Testing patterns: ${t.library}${variant}`);
   }
+  const hasTestsDir = result.structure.some(s => s.path === 'tests/' || s.path === 'test/');
+  if (hasTestsDir) {
+    lines.push(`- Test location: dedicated test directory`);
+  } else if (result.files.test > 0) {
+    lines.push(`- Test location: co-located with source`);
+  }
   return lines.join('\n');
 }
 
@@ -1083,8 +1089,16 @@ function injectDeployment(result: EngineResult): string {
 }
 
 function injectAiPatterns(result: EngineResult): string {
-  if (result.stack.aiSdk) return `- AI SDK: ${result.stack.aiSdk}`;
-  return '';
+  const lines: string[] = [];
+  if (result.stack.aiSdk) lines.push(`- AI SDK: ${result.stack.aiSdk}`);
+  const sdk = result.stack.aiSdk || '';
+  const aiServices = result.externalServices
+    .filter(s => s.category === 'ai' && s.name !== sdk && s.name !== `${sdk} SDK` && s.name !== sdk.replace(' SDK', ''))
+    .map(s => s.name);
+  if (aiServices.length > 0) {
+    lines.push(`- Also detected: ${aiServices.join(', ')}`);
+  }
+  return lines.join('\n');
 }
 
 function injectApiPatterns(result: EngineResult): string {

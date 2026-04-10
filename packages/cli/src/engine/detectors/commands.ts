@@ -12,6 +12,7 @@ export interface DetectedCommands {
   test: string | null;
   lint: string | null;
   dev: string | null;
+  all: Record<string, string>;
 }
 
 /**
@@ -27,12 +28,15 @@ export async function detectCommands(
     test: null,
     lint: null,
     dev: null,
+    all: {},
   };
 
   try {
     const content = await fs.readFile(path.join(cwd, 'package.json'), 'utf-8');
     const pkg = JSON.parse(content);
     const scripts = pkg.scripts || {};
+
+    result.all = scripts;
 
     const prefix = packageManager === 'npm' ? 'npm run' : `${packageManager} run`;
 

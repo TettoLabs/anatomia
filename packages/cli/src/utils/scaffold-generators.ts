@@ -82,9 +82,20 @@ export function generateProjectContextScaffold(result: EngineResult): string {
   s += `## Key Decisions\n`;
   s += `*Not yet captured. Run \`claude --agent ana-setup\` to fill this.*\n\n`;
 
-  // Section 4: Key Files
+  // Section 4: Key Files (partially seeded from scan)
   s += `## Key Files\n`;
-  s += `*Not yet captured. Run \`claude --agent ana-setup\` to fill this.*\n\n`;
+  const keyFiles: string[] = [];
+  for (const [, schema] of Object.entries(result.schemas)) {
+    if (schema.found && schema.path) keyFiles.push(`- Database schema: \`${schema.path}\``);
+  }
+  if (result.deployment.configFile) keyFiles.push(`- Deployment config: \`${result.deployment.configFile}\``);
+  if (result.deployment.ciConfigFile) keyFiles.push(`- CI pipeline: \`${result.deployment.ciConfigFile}\``);
+  if (keyFiles.length > 0) {
+    s += keyFiles.join('\n') + '\n';
+    s += `*Scan detected the items above. Run \`claude --agent ana-setup\` to add: database client, auth config, AI client locations, test helpers.*\n\n`;
+  } else {
+    s += `*Not yet captured. Run \`claude --agent ana-setup\` to fill this.*\n\n`;
+  }
 
   // Section 5: Active Constraints
   s += `## Active Constraints\n`;

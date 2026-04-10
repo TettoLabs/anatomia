@@ -14,6 +14,8 @@ const DEPLOYMENT_FILES: Record<string, string> = {
   'Dockerfile': 'Docker',
   'docker-compose.yml': 'Docker Compose',
   'docker-compose.yaml': 'Docker Compose',
+  'compose.yml': 'Docker Compose',
+  'compose.yaml': 'Docker Compose',
   'Procfile': 'Heroku',
   'app.yaml': 'Google Cloud',
   'firebase.json': 'Firebase',
