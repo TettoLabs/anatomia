@@ -19,7 +19,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { createHash } from 'node:crypto';
 import * as yaml from 'yaml';
-import { runContractPreCheck } from './verify-precheck.js';
+import { runContractPreCheck } from './verify.js';
 // readArtifactBranch + getCurrentBranch moved to utils/git-operations.ts (Item 13).
 // artifact.ts still uses them internally; pr.ts and work.ts now import directly
 // from utils/ instead of cross-command-importing from here.

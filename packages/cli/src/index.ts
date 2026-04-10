@@ -23,7 +23,7 @@ import { scanCommand } from './commands/scan.js';
 import { proofCommand } from './commands/proof.js';
 import { registerPrCommand } from './commands/pr.js';
 import { registerAgentsCommand } from './commands/agents.js';
-import { registerVerifyPreCheckCommand } from './commands/verify-precheck.js';
+import { registerVerifyCommand } from './commands/verify.js';
 
 const program = new Command();
 
@@ -41,7 +41,7 @@ program.addCommand(workCommand);
 program.addCommand(proofCommand);
 registerPrCommand(program);
 registerAgentsCommand(program);
-registerVerifyPreCheckCommand(program);
+registerVerifyCommand(program);
 
 // Parse arguments with async support
 // CRITICAL: Use parseAsync() not parse() for async action handlers
