@@ -67,13 +67,21 @@ export const PAYMENT_PACKAGES: Record<string, string> = {
 };
 
 /**
- * AI/LLM packages
+ * AI/LLM packages.
+ *
+ * Naming convention (Item 18): the base SDK uses `'Vercel AI'` to match the
+ * stack identity in AI_SDK_PACKAGES below. Provider integrations use
+ * parenthesized variants (`'Vercel AI (Anthropic)'`, `(OpenAI)`, `(Google)`).
+ * This keeps one SDK identity, multiple provider integrations — and lets the
+ * B1 filter in injectAiPatterns use a plain `s.name !== sdk` exact match
+ * instead of the previous 3-way match covering the `Vercel AI` / `Vercel AI SDK`
+ * naming split.
  */
 export const AI_PACKAGES: Record<string, string> = {
   '@anthropic-ai/sdk': 'Anthropic',
   'openai': 'OpenAI',
   '@google/generative-ai': 'Google AI',
-  'ai': 'Vercel AI SDK',
+  'ai': 'Vercel AI',
   '@ai-sdk/anthropic': 'Vercel AI (Anthropic)',
   '@ai-sdk/openai': 'Vercel AI (OpenAI)',
   '@ai-sdk/google': 'Vercel AI (Google)',

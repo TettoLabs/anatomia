@@ -25,17 +25,17 @@ function makeService(name: string, category: string): ExternalService {
   return { name, category, source: 'dep', configFound: false, stackRoles: [] };
 }
 
-describe('injectAiPatterns (B1 filter)', () => {
+describe('injectAiPatterns (B1 filter — simplified to exact match in Item 18)', () => {
   it('shows both SDK and a distinct provider variant', () => {
     const result = createEmptyEngineResult();
     result.stack.aiSdk = 'OpenAI';
     result.externalServices = [
-      makeService('Vercel AI SDK', 'ai'),
+      makeService('Vercel AI', 'ai'),
       makeService('OpenAI', 'ai'),
     ];
     const body = injectAiPatterns(result);
     expect(body).toContain('- AI SDK: OpenAI');
-    expect(body).toContain('Vercel AI SDK');
+    expect(body).toContain('Vercel AI');
   });
 
   it('includes branded Vercel AI variants in the "Also detected" line', () => {
@@ -50,31 +50,16 @@ describe('injectAiPatterns (B1 filter)', () => {
   });
 
   it('filters the exact-match duplicate (sdk === svc.name)', () => {
+    // Post-Item 18 this is the ONLY dedup path. AI_PACKAGES['ai'] now returns
+    // 'Vercel AI', matching AI_SDK_PACKAGES, so the stack and service have
+    // identical names and a plain `s.name !== sdk` is sufficient. The old
+    // 3-way match (`${sdk} SDK` + `sdk.replace(' SDK', '')`) was dead code
+    // after the naming standardization.
     const result = createEmptyEngineResult();
     result.stack.aiSdk = 'Vercel AI';
     result.externalServices = [makeService('Vercel AI', 'ai')];
     const body = injectAiPatterns(result);
     expect(body).toContain('- AI SDK: Vercel AI');
-    expect(body).not.toContain('Also detected');
-  });
-
-  it('filters the "X SDK" suffix variant (3-way match leg A)', () => {
-    // Old naming split: AI_SDK_PACKAGES used 'Vercel AI', AI_PACKAGES used
-    // 'Vercel AI SDK'. The filter removes the SDK-suffixed duplicate.
-    const result = createEmptyEngineResult();
-    result.stack.aiSdk = 'Vercel AI';
-    result.externalServices = [makeService('Vercel AI SDK', 'ai')];
-    const body = injectAiPatterns(result);
-    expect(body).not.toContain('Also detected');
-  });
-
-  it('filters the "strip SDK" reverse variant (3-way match leg B)', () => {
-    // Same split from the other direction: if stack said "X SDK" and
-    // services said "X", replace(' SDK', '') covers the reverse case.
-    const result = createEmptyEngineResult();
-    result.stack.aiSdk = 'Vercel AI SDK';
-    result.externalServices = [makeService('Vercel AI', 'ai')];
-    const body = injectAiPatterns(result);
     expect(body).not.toContain('Also detected');
   });
 

@@ -265,11 +265,13 @@ function injectDeployment(result: EngineResult): string {
  * Build the `ai-patterns` skill's Detected section body.
  *
  * Shows the detected AI SDK (if any) and a deduped "Also detected" line for
- * additional AI services that aren't the same SDK. The 3-way filter handles
- * the Vercel AI naming split (Item 18 will collapse this to exact match).
+ * additional AI services that aren't the same SDK. After Item 18, the filter
+ * is a plain exact-match (`s.name !== sdk`) — the previous 3-way match
+ * existed only because AI_PACKAGES named the base SDK `'Vercel AI SDK'`
+ * while AI_SDK_PACKAGES used `'Vercel AI'`. That split was the root cause of
+ * the filter complexity; standardizing on `'Vercel AI'` collapses both sides.
  *
- * Exported for direct unit testing (Item 16) — the filter logic is the only
- * non-trivial branch in the injector family and warrants dedicated coverage.
+ * Exported for direct unit testing (Item 16).
  *
  * @param result - Engine scan result.
  * @returns Detected section body (empty string if no AI data).
@@ -279,7 +281,7 @@ export function injectAiPatterns(result: EngineResult): string {
   if (result.stack.aiSdk) lines.push(`- AI SDK: ${result.stack.aiSdk}`);
   const sdk = result.stack.aiSdk || '';
   const aiServices = result.externalServices
-    .filter(s => s.category === 'ai' && s.name !== sdk && s.name !== `${sdk} SDK` && s.name !== sdk.replace(' SDK', ''))
+    .filter(s => s.category === 'ai' && s.name !== sdk)
     .map(s => s.name);
   if (aiServices.length > 0) {
     lines.push(`- Also detected: ${aiServices.join(', ')}`);
