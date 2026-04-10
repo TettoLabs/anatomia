@@ -50,6 +50,7 @@ import { createHash } from 'node:crypto';
 import { createInterface } from 'node:readline';
 import { execSync } from 'node:child_process';
 import type { EngineResult } from '../engine/types/engineResult.js';
+import { getPatternLibrary, isMultiPattern } from '../engine/types/patterns.js';
 
 import {
   generateProjectContextScaffold,
@@ -1033,10 +1034,15 @@ function injectCodingStandards(result: EngineResult): string {
       lines.push(`- Indentation: ${indent.style === 'tabs' ? 'tabs' : `${indent.style}, ${indent.width} wide`}`);
     }
   }
-  if (result.patterns?.errorHandling) {
-    const eh = result.patterns.errorHandling;
-    const variant = eh.variant ? ` (${eh.variant})` : '';
-    lines.push(`- Error handling: ${eh.library}${variant}`);
+  // Pattern display — handles PatternConfidence | MultiPattern union via
+  // getPatternLibrary helper (Item 6). MultiPattern cases show the primary
+  // library name; variant is looked up from the single-pattern case only
+  // (MultiPattern's primary already represents the chosen variant).
+  const ehLib = getPatternLibrary(result.patterns?.errorHandling);
+  if (ehLib) {
+    const eh = result.patterns?.errorHandling;
+    const variant = eh && !isMultiPattern(eh) && eh.variant ? ` (${eh.variant})` : '';
+    lines.push(`- Error handling: ${ehLib}${variant}`);
   }
   return lines.join('\n');
 }
@@ -1051,10 +1057,11 @@ function injectTestingStandards(result: EngineResult): string {
     const testCmd = makeTestCommandNonInteractive(result.commands.test, result.stack.testing);
     lines.push(`- Test command: ${testCmd}`);
   }
-  if (result.patterns?.testing) {
-    const t = result.patterns.testing;
-    const variant = t.variant ? ` (${t.variant})` : '';
-    lines.push(`- Testing patterns: ${t.library}${variant}`);
+  const testLib = getPatternLibrary(result.patterns?.testing);
+  if (testLib) {
+    const t = result.patterns?.testing;
+    const variant = t && !isMultiPattern(t) && t.variant ? ` (${t.variant})` : '';
+    lines.push(`- Testing patterns: ${testLib}${variant}`);
   }
   const hasTestsDir = result.structure.some(s => s.path === 'tests/' || s.path === 'test/');
   if (hasTestsDir) {

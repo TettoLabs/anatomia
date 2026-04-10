@@ -23,6 +23,7 @@ import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import type { EngineResult } from '../engine/types/engineResult.js';
+import { getPatternLibrary, isMultiPattern } from '../engine/types/patterns.js';
 import { formatNumber } from '../utils/fileCounts.js';
 import { computeSkillManifest, CORE_SKILLS } from '../constants.js';
 
@@ -272,29 +273,35 @@ function formatHumanReadable(result: EngineResult, options: { isFunnel: boolean 
     }
   }
 
-  // Patterns (deep only)
+  // Patterns (deep only). Item 6 unification: result.patterns is now
+  // PatternAnalysis directly, whose category fields are PatternConfidence | MultiPattern
+  // unions. Use getPatternLibrary + isMultiPattern narrowing instead of the
+  // previous lossy PatternDetail shape.
   if (result.patterns) {
     const threshold = result.patterns.threshold ?? 0.7;
-    const patternEntries: Array<[string, { library: string; variant: string; confidence: number; evidence: string[] }]> = [];
     const patternLabels: Record<string, string> = {
       errorHandling: 'Errors', validation: 'Validation', testing: 'Testing',
       database: 'Database', auth: 'Auth',
     };
     const categories = ['errorHandling', 'validation', 'database', 'auth', 'testing'] as const;
+    type PatternLine = { key: string; library: string; confidence: number };
+    const patternLines: PatternLine[] = [];
     for (const k of categories) {
       const p = result.patterns[k];
-      if (p && p.confidence >= threshold) {
-        patternEntries.push([k, p]);
-      }
+      if (!p) continue;
+      const confidence = isMultiPattern(p) ? p.confidence : p.confidence;
+      if (confidence < threshold) continue;
+      const library = getPatternLibrary(p);
+      if (!library) continue;
+      patternLines.push({ key: k, library, confidence });
     }
-    if (patternEntries.length > 0) {
+    if (patternLines.length > 0) {
       lines.push('');
       lines.push(chalk.bold('  Patterns'));
       lines.push(chalk.gray('  ' + BOX.horizontal.repeat(8)));
-      for (const [k, p] of patternEntries) {
-        const label = (patternLabels[k] || k).padEnd(12);
-        const lib = p.library || p.variant || k;
-        lines.push(`  ${chalk.gray(label)} ${lib} ${chalk.gray(`(${Math.round(p.confidence * 100)}%)`)}`);
+      for (const { key, library, confidence } of patternLines) {
+        const label = (patternLabels[key] || key).padEnd(12);
+        lines.push(`  ${chalk.gray(label)} ${library} ${chalk.gray(`(${Math.round(confidence * 100)}%)`)}`);
       }
     }
   }

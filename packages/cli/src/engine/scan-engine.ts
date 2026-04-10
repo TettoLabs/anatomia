@@ -17,10 +17,9 @@ import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { glob } from 'glob';
-import type { EngineResult, PatternDetail } from './types/engineResult.js';
+import type { EngineResult } from './types/engineResult.js';
 import type { AnalysisResult } from './types/index.js';
-import type { PatternConfidence, MultiPattern } from './types/patterns.js';
-import { isMultiPattern, getPatternLibrary } from './types/patterns.js';
+import { getPatternLibrary } from './types/patterns.js';
 import { readDependencies, detectFromDeps, detectServiceDeps, detectAiSdk, aggregateMonorepoDependencies } from './detectors/dependencies.js';
 import { detectPackageManager } from './detectors/packageManager.js';
 import { detectGitInfo } from './detectors/git.js';
@@ -307,52 +306,16 @@ function extractStructure(
   return { items: entries.slice(0, maxItems), overflow };
 }
 
-// --- Pattern/Convention mapping helpers ---
-
-function mapToPatternDetail(
-  raw: PatternConfidence | MultiPattern | undefined
-): PatternDetail | null {
-  if (!raw) return null;
-  if (isMultiPattern(raw)) {
-    const p = raw.primary;
-    return {
-      library: p.library,
-      variant: p.variant ?? '',
-      confidence: p.confidence,
-      evidence: p.evidence,
-    };
-  }
-  return {
-    library: raw.library,
-    variant: raw.variant ?? '',
-    confidence: raw.confidence,
-    evidence: raw.evidence,
-  };
-}
-
-function mapPatterns(
-  analysis: AnalysisResult | null,
-  depth: 'surface' | 'deep'
-): EngineResult['patterns'] {
-  if (depth !== 'deep' || !analysis?.patterns) return null;
-  const p = analysis.patterns;
-  return {
-    errorHandling: mapToPatternDetail(p.errorHandling),
-    validation: mapToPatternDetail(p.validation),
-    database: mapToPatternDetail(p.database),
-    auth: mapToPatternDetail(p.auth),
-    testing: mapToPatternDetail(p.testing),
-    sampledFiles: p.sampledFiles,
-    detectionTime: p.detectionTime,
-    threshold: p.threshold,
-  };
-}
+// mapToPatternDetail + mapPatterns deleted (Item 6) — same rationale as Item 3
+// for conventions. EngineResult.patterns now uses PatternAnalysis directly, so
+// no translation layer. The old mapToPatternDetail coalesced `variant` to the
+// empty string `''` (lossy — couldn't distinguish "no variant" from "variant is
+// empty string") and discarded the MultiPattern union member entirely by only
+// returning the .primary. Direct assignment preserves both.
 
 // mapConventions + mapNaming deleted (Item 3). The analyzer's ConventionAnalysis
 // type is now EngineResult.conventions directly — no translation layer that
-// silently drops fields when they're added. The bug class this prevents: every
-// new convention field had to be added in 3 places (Zod schema, shadow interface,
-// EngineResult inline type) and the mapping function. Single source of truth now.
+// silently drops fields when they're added.
 
 // --- Main function ---
 
@@ -520,7 +483,7 @@ export async function scanProject(
     deployment: deployment
       ? { ...deployment, ...ci }
       : { platform: null, configFile: null, ...ci },
-    patterns: mapPatterns(analysis, options.depth),
+    patterns: (options.depth === 'deep' && analysis?.patterns) ? analysis.patterns : null,
     conventions: (options.depth === 'deep' && analysis?.conventions) ? analysis.conventions : null,
     // Phase 1+ stubs
     secretFindings: null,

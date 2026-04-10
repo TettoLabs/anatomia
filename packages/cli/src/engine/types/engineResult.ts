@@ -7,13 +7,7 @@
  */
 
 import type { ConventionAnalysis } from './conventions.js';
-
-export interface PatternDetail {
-  library: string;
-  variant: string;
-  confidence: number;
-  evidence: string[];
-}
+import type { PatternAnalysis } from './patterns.js';
 
 export interface EngineResult {
   schemaVersion: string;
@@ -106,17 +100,12 @@ export interface EngineResult {
     ci: string | null;
     ciConfigFile: string | null;
   };
-  // Deep tier only (null when surface)
-  patterns: {
-    errorHandling: PatternDetail | null;
-    validation: PatternDetail | null;
-    database: PatternDetail | null;
-    auth: PatternDetail | null;
-    testing: PatternDetail | null;
-    sampledFiles: number;
-    detectionTime: number;
-    threshold: number;
-  } | null;
+  // Deep tier only (null when surface). Item 6 unification: pattern detection
+  // uses the analyzer's PatternAnalysis type directly — previously there was a
+  // duplicate PatternDetail-based inline type and a mapToPatternDetail wash in
+  // scan-engine that coalesced `variant` to `''` (lossy) and dropped MultiPattern
+  // information entirely. Same mapping-trap pattern as Item 3 (conventions).
+  patterns: PatternAnalysis | null;
   // Convention analysis uses the analyzer's type directly (Item 3 unification —
   // previously had a duplicate ConventionDetail-based inline type and a
   // mapConventions wash in scan-engine that dropped fields when they were added.)
