@@ -8,6 +8,7 @@
 
 import type { ConventionAnalysis } from './conventions.js';
 import type { PatternAnalysis } from './patterns.js';
+import type { DetectedCommands } from '../detectors/commands.js';
 
 export interface EngineResult {
   schemaVersion: string;
@@ -34,14 +35,10 @@ export interface EngineResult {
   };
   structure: Array<{ path: string; purpose: string }>;
   structureOverflow: number;
-  commands: {
-    build: string | null;
-    test: string | null;
-    lint: string | null;
-    dev: string | null;
-    packageManager: string;
-    all: Record<string, string>;
-  };
+  // Composed from the detector's DetectedCommands (Item 7a) — adding a field
+  // to DetectedCommands now flows through automatically. The only extra field
+  // scan-engine appends on top is packageManager.
+  commands: DetectedCommands & { packageManager: string };
   git: {
     head: string | null;
     branch: string | null;
