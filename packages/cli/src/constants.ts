@@ -19,6 +19,32 @@ import type { EngineResult } from './engine/types/engineResult.js';
 /** Context files in .ana/context/ (D6.1) */
 export const CONTEXT_FILES = ['design-principles', 'project-context'] as const;
 
+/**
+ * Directory names recognized as test directories (Item 10).
+ *
+ * Single source of truth for "is this entry a test dir?" checks. Used by
+ * init.ts's injectTestingStandards to decide "dedicated test directory" vs
+ * "co-located with source." Must stay in sync with the structure analyzer's
+ * DIRECTORY_PURPOSES map in engine/analyzers/structure.ts — if you add a
+ * test convention here, add the corresponding purpose label there so scan
+ * output labels it correctly.
+ *
+ * Why not derived from DIRECTORY_PURPOSES: that map is keyed by dir name but
+ * valued by a free-text label ('Tests', 'Jest tests', 'E2E tests', etc.), so
+ * filtering it by purpose-contains-"test" is string-matching fragile. An
+ * explicit list here is simpler and the drift window is small (8 entries).
+ */
+export const TEST_DIRECTORY_NAMES: ReadonlySet<string> = new Set([
+  'tests',
+  'test',
+  '__tests__',
+  'spec',
+  'e2e',
+  'integration',
+  'cypress',
+  'playwright',
+]);
+
 /** Core skills — always scaffolded (D6.1) */
 export const CORE_SKILLS = [
   'coding-standards',

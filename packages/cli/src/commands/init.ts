@@ -63,6 +63,7 @@ import {
   AGENT_FILES,
   CONTEXT_FILES,
   CORE_SKILLS,
+  TEST_DIRECTORY_NAMES,
   computeSkillManifest,
   getStackSummary,
 } from '../constants.js';
@@ -1031,7 +1032,14 @@ function injectTestingStandards(result: EngineResult): string {
     const variant = t && !isMultiPattern(t) && t.variant ? ` (${t.variant})` : '';
     lines.push(`- Testing patterns: ${testLib}${variant}`);
   }
-  const hasTestsDir = result.structure.some(s => s.path === 'tests/' || s.path === 'test/');
+  // Item 10 — use TEST_DIRECTORY_NAMES (single source of truth) so projects
+  // with __tests__/, spec/, e2e/, cypress/, etc. are recognized as having a
+  // dedicated test directory. Previously only tests/ and test/ counted, so
+  // Jest-convention and E2E-only projects incorrectly reported "co-located."
+  const hasTestsDir = result.structure.some(s => {
+    const name = s.path.replace(/\/$/, '');
+    return TEST_DIRECTORY_NAMES.has(name);
+  });
   if (hasTestsDir) {
     lines.push(`- Test location: dedicated test directory`);
   } else if (result.files.test > 0) {
