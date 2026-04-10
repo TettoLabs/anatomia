@@ -3,7 +3,6 @@ import {
   classifyNamingStyle,
   analyzeNamingConvention,
   isKeyword,
-  analyzeFileNaming,
   analyzeFunctionNaming,
   analyzeClassNaming,
 } from '../../../src/engine/analyzers/conventions/naming.js';
@@ -152,13 +151,6 @@ describe('analyze*Naming integration', () => {
       errors: 0,
     },
   ];
-
-  it('analyzes file naming from paths', () => {
-    const result = analyzeFileNaming(sampleFiles, 'python');
-
-    expect(result.majority).toBe('snake_case');
-    expect(result.confidence).toBe(1.0);
-  });
 
   it('analyzes function naming from parsed.files', () => {
     const result = analyzeFunctionNaming(sampleFiles, 'python');

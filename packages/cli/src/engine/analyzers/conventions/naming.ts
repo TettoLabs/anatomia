@@ -11,7 +11,6 @@
  * Based on: START_HERE.md lines 95-224 (regex patterns, classification algorithm)
  */
 
-import { basename } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { ParsedFile } from '../../types/parsed.js';
@@ -354,39 +353,6 @@ export async function extractVariables(
   }
 
   return variables;
-}
-
-/**
- * Analyze file naming convention
- *
- * Extracts file names from parsed files, classifies with regex, determines majority.
- *
- * @param files - Parsed files from STEP_1.3
- * @param language - Project language for keyword filtering
- * @returns File naming convention with confidence
- *
- * @example
- * ```typescript
- * // Files: user_service.py, auth_middleware.py, api_response.py
- * {
- *   majority: 'snake_case',
- *   confidence: 1.0,
- *   mixed: false,
- *   distribution: { snake_case: 1.0 }
- * }
- * ```
- */
-export function analyzeFileNaming(
-  files: ParsedFile[],
-  language: string
-): NamingConventionResult {
-  // Extract file names (without extension)
-  const fileNames = files.map(f => {
-    const base = basename(f.file);  // 'user_service.py' → 'user_service.py'
-    return base.replace(/\.[^.]+$/, '');  // Remove extension: 'user_service'
-  });
-
-  return analyzeNamingConvention(fileNames, language);
 }
 
 /**
