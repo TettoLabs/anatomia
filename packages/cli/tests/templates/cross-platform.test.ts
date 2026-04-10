@@ -8,9 +8,10 @@ describe('Cross-Platform Path Handling', () => {
   it('should not have hardcoded forward slashes in TypeScript code', async () => {
     const fs = await import('node:fs/promises');
 
-    // Check init.ts uses path.join
-    const initContent = await fs.readFile('src/commands/init.ts', 'utf-8');
-    expect(initContent).toContain('path.join');
+    // After Item 14c init.ts split, the path-using scaffolding code lives
+    // in commands/init/assets.ts. Check it uses path.join.
+    const assetsContent = await fs.readFile('src/commands/init/assets.ts', 'utf-8');
+    expect(assetsContent).toContain('path.join');
 
     // Should not have hardcoded path separators in code
     // (Templates can have example paths in markdown - that's documentation)
@@ -18,10 +19,10 @@ describe('Cross-Platform Path Handling', () => {
 
   it('should use path.join pattern in file operations', async () => {
     const fs = await import('node:fs/promises');
-    const initContent = await fs.readFile('src/commands/init.ts', 'utf-8');
+    const assetsContent = await fs.readFile('src/commands/init/assets.ts', 'utf-8');
 
-    // Verify path.join used for .ana/ paths (tmpAnaPath in new implementation)
-    expect(initContent).toContain("path.join(tmpAnaPath, 'context'");
+    // Verify path.join used for .ana/ paths (tmpAnaPath in split assets.ts)
+    expect(assetsContent).toContain("path.join(tmpAnaPath, 'context'");
   });
 
   it('FileWriter utility uses path.join (from STEP_0.1)', async () => {

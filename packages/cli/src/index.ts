@@ -14,7 +14,7 @@
 
 import { readFileSync } from 'node:fs';
 import { Command } from 'commander';
-import { initCommand } from './commands/init.js';
+import { initCommand } from './commands/init/index.js';
 
 const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf-8'));
 import { setupCommand } from './commands/setup.js';
