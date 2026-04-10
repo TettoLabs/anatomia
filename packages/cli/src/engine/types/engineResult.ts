@@ -9,6 +9,7 @@
 import type { ConventionAnalysis } from './conventions.js';
 import type { PatternAnalysis } from './patterns.js';
 import type { DetectedCommands } from '../detectors/commands.js';
+import type { GitInfo } from '../detectors/git.js';
 
 export interface EngineResult {
   schemaVersion: string;
@@ -39,16 +40,10 @@ export interface EngineResult {
   // to DetectedCommands now flows through automatically. The only extra field
   // scan-engine appends on top is packageManager.
   commands: DetectedCommands & { packageManager: string };
-  git: {
-    head: string | null;
-    branch: string | null;
-    commitCount: number | null;
-    lastCommitAt: string | null;
-    uncommittedChanges: boolean;
-    contributorCount: number | null;
-    defaultBranch: string | null;
-    branches: string[] | null;
-  };
+  // Imported directly from the git detector (Item 7b) — inline shape was
+  // byte-identical to GitInfo, so importing eliminates a drift trap at zero
+  // semantic cost.
+  git: GitInfo;
   monorepo: {
     isMonorepo: boolean;
     tool: string | null;
