@@ -235,3 +235,53 @@ export interface EngineResult {
   health: null;
   readiness: null;
 }
+
+/**
+ * Build a minimal valid EngineResult with every field at its "empty" default.
+ *
+ * Used as a fallback when scan fails gracefully and downstream scaffolds still
+ * need a well-typed result to operate on. Lives next to the EngineResult type
+ * definition (Item 8) so that adding a field to EngineResult is a single-file
+ * edit — the factory was previously in commands/init.ts, requiring a parallel
+ * update whenever a new field was added to the type.
+ *
+ * Contract: EVERY field on EngineResult must be assigned here. Do not use
+ * `as EngineResult` — the explicit return-type annotation makes TypeScript
+ * enforce completeness, which is the whole point of having this factory.
+ */
+export function createEmptyEngineResult(): EngineResult {
+  return {
+    schemaVersion: '1.0',
+    overview: { project: 'unknown', scannedAt: new Date().toISOString(), depth: 'surface' },
+    stack: { language: null, framework: null, database: null, auth: null, testing: null, payments: null, workspace: null, aiSdk: null },
+    files: { source: 0, test: 0, config: 0, total: 0 },
+    structure: [],
+    structureOverflow: 0,
+    commands: { build: null, test: null, lint: null, dev: null, packageManager: 'npm', all: {} },
+    git: { head: null, branch: null, commitCount: null, lastCommitAt: null, uncommittedChanges: false, contributorCount: null, defaultBranch: null, branches: null },
+    monorepo: { isMonorepo: false, tool: null, packages: [] },
+    externalServices: [],
+    schemas: {},
+    secrets: { envFileExists: false, envExampleExists: false, gitignoreCoversEnv: false },
+    projectProfile: { type: null, hasExternalAPIs: false, hasDatabase: false, hasBrowserUI: false, hasAuthSystem: false, hasPayments: false, hasFileStorage: false },
+    blindSpots: [],
+    deployment: { platform: null, configFile: null, ci: null, ciConfigFile: null },
+    patterns: null,
+    conventions: null,
+    secretFindings: null,
+    envVarMap: null,
+    duplicates: null,
+    circularDeps: null,
+    orphanFiles: null,
+    complexityHotspots: null,
+    gitIntelligence: null,
+    dependencyIntelligence: null,
+    technicalDebtMarkers: null,
+    inconsistencies: null,
+    conventionBreaks: null,
+    aiReadinessScore: null,
+    recommendations: null,
+    health: null,
+    readiness: null,
+  };
+}

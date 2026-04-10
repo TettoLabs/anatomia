@@ -50,6 +50,7 @@ import { createHash } from 'node:crypto';
 import { createInterface } from 'node:readline';
 import { execSync } from 'node:child_process';
 import type { EngineResult } from '../engine/types/engineResult.js';
+import { createEmptyEngineResult } from '../engine/types/engineResult.js';
 import { getPatternLibrary, isMultiPattern } from '../engine/types/patterns.js';
 
 import {
@@ -121,42 +122,9 @@ async function confirm(message: string, defaultYes: boolean): Promise<boolean> {
  *
  * @returns Minimal valid EngineResult
  */
-function createEmptyEngineResult(): EngineResult {
-  return {
-    schemaVersion: '1.0',
-    overview: { project: 'unknown', scannedAt: new Date().toISOString(), depth: 'surface' },
-    stack: { language: null, framework: null, database: null, auth: null, testing: null, payments: null, workspace: null, aiSdk: null },
-    files: { source: 0, test: 0, config: 0, total: 0 },
-    structure: [],
-    structureOverflow: 0,
-    commands: { build: null, test: null, lint: null, dev: null, packageManager: 'npm', all: {} },
-    git: { head: null, branch: null, commitCount: null, lastCommitAt: null, uncommittedChanges: false, contributorCount: null, defaultBranch: null, branches: null },
-    monorepo: { isMonorepo: false, tool: null, packages: [] },
-    externalServices: [],
-    schemas: {},
-    secrets: { envFileExists: false, envExampleExists: false, gitignoreCoversEnv: false },
-    projectProfile: { type: null, hasExternalAPIs: false, hasDatabase: false, hasBrowserUI: false, hasAuthSystem: false, hasPayments: false, hasFileStorage: false },
-    blindSpots: [],
-    deployment: { platform: null, configFile: null, ci: null, ciConfigFile: null },
-    patterns: null,
-    conventions: null,
-    secretFindings: null,
-    envVarMap: null,
-    duplicates: null,
-    circularDeps: null,
-    orphanFiles: null,
-    complexityHotspots: null,
-    gitIntelligence: null,
-    dependencyIntelligence: null,
-    technicalDebtMarkers: null,
-    inconsistencies: null,
-    conventionBreaks: null,
-    aiReadinessScore: null,
-    recommendations: null,
-    health: null,
-    readiness: null,
-  };
-}
+// createEmptyEngineResult moved to types/engineResult.ts (Item 8) — the
+// factory lives next to the type definition so adding a field is a
+// single-file edit.
 
 /** Create init command */
 export const initCommand = new Command('init')
