@@ -37,7 +37,7 @@
     "docs"
   ],
   "scripts": {
-    "build": "tsup && cp -r templates dist/",
+    "build": "pnpm typecheck && tsup && cp -r templates dist/",
     "dev": "tsup --watch",
     "test": "vitest",
     "typecheck": "tsc --noEmit",

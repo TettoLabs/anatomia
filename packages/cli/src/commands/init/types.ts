@@ -20,7 +20,7 @@ export type InitState = 'fresh' | 'reinit' | 'upgrade' | 'corrupted';
 export interface PreflightResult {
   canProceed: boolean;
   initState: InitState;
-  stateBackup?: string; // Path to state/ backup if --force used
-  contextBackup?: string; // Path to context/ backup if --force used
-  anaJsonBackup?: string; // Path to ana.json backup if --force used
+  stateBackup?: string | undefined; // Path to state/ backup if --force used
+  contextBackup?: string | undefined; // Path to context/ backup if --force used
+  anaJsonBackup?: string | undefined; // Path to ana.json backup if --force used
 }

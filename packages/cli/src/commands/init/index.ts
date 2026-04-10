@@ -115,8 +115,8 @@ export const initCommand = new Command('init')
           // Preserve user fields from backup, overwrite only mechanical fields from new
           const merged = {
             ...restoredJson,
-            ...(newJson.anaVersion != null ? { anaVersion: newJson.anaVersion } : {}),
-            ...(newJson.lastScanAt != null ? { lastScanAt: newJson.lastScanAt } : {}),
+            ...(newJson['anaVersion'] != null ? { anaVersion: newJson['anaVersion'] } : {}),
+            ...(newJson['lastScanAt'] != null ? { lastScanAt: newJson['lastScanAt'] } : {}),
           };
           await fs.writeFile(newAnaJsonPath, JSON.stringify(merged, null, 2) + '\n');
         }

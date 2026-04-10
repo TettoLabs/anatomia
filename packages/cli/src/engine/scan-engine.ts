@@ -184,7 +184,7 @@ async function countUniqueTables(rootPath: string, sqlFiles: string[]): Promise<
     try {
       const content = await fs.readFile(path.join(rootPath, f), 'utf-8');
       for (const match of content.matchAll(regex)) {
-        tableNames.add(match[1].toLowerCase());
+        if (match[1]) tableNames.add(match[1].toLowerCase());
       }
     } catch { /* skip unreadable files */ }
   }
@@ -218,7 +218,7 @@ async function detectSchemas(
   if (allDeps['drizzle-orm']) {
     try {
       const files = await glob('drizzle/**/*.ts', { cwd: rootPath });
-      schemas['drizzle'] = { found: files.length > 0, path: files.length > 0 ? files[0] : null, modelCount: null };
+      schemas['drizzle'] = { found: files.length > 0, path: files.length > 0 ? (files[0] ?? null) : null, modelCount: null };
     } catch {
       schemas['drizzle'] = { found: false, path: null, modelCount: null };
     }

@@ -80,8 +80,8 @@ setupCommand
       config = {};
     }
 
-    config.setupMode = finalMode;
-    config.setupCompletedAt = new Date().toISOString();
+    config['setupMode'] = finalMode;
+    config['setupCompletedAt'] = new Date().toISOString();
     await fs.writeFile(anaJsonPath, JSON.stringify(config, null, 2), 'utf-8');
 
     // Handle setup-progress.json lifecycle

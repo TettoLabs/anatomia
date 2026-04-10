@@ -322,7 +322,7 @@ function extractCitedSymbol(fullMatch: string, filePath: string): string | null 
   const explicitPattern = /`([A-Za-z_][A-Za-z0-9_]*)`\s+(?:function|method|class)\s+from\s+`/i;
   const match = fullMatch.match(explicitPattern);
   if (match) {
-    return match[1];
+    return match[1] ?? null;
   }
 
   // Don't try to extract symbols from other patterns - too risky for false positives
@@ -387,6 +387,7 @@ async function checkCitations(content: string, projectRoot: string): Promise<Cit
 
     while ((match = regex.exec(content)) !== null) {
       const filePath = match[1];
+      if (!filePath) continue;
 
       // Skip non-file citations (commands, directories, etc.)
       if (!isValidFilePath(filePath)) {
@@ -706,7 +707,7 @@ export function checkSkillSections(content: string): { valid: boolean; missing: 
   const found: string[] = [];
   for (const line of content.split('\n')) {
     const match = line.match(/^## (.+)$/);
-    if (match) {
+    if (match && match[1]) {
       const name = match[1].trim();
       if (required.includes(name)) {
         found.push(name);
@@ -717,7 +718,8 @@ export function checkSkillSections(content: string): { valid: boolean; missing: 
   // Check order: each found section should appear in the same order as required
   const orderedCorrectly = found.every((s, i) => {
     if (i === 0) return true;
-    return required.indexOf(s) > required.indexOf(found[i - 1]);
+    const prev = found[i - 1];
+    return prev !== undefined && required.indexOf(s) > required.indexOf(prev);
   });
   return { valid: missing.length === 0 && orderedCorrectly, missing };
 }
@@ -884,9 +886,9 @@ export async function checkConsistency(cwd: string, anaJson: Record<string, unkn
 
   // Check ana.json ↔ skills alignment
   const mismatches: string[] = [];
-  const language = anaJson.language as string | undefined;
-  const artifactBranch = anaJson.artifactBranch as string | undefined;
-  const commands = anaJson.commands as Record<string, string> | undefined;
+  const language = anaJson['language'] as string | undefined;
+  const artifactBranch = anaJson['artifactBranch'] as string | undefined;
+  const commands = anaJson['commands'] as Record<string, string> | undefined;
 
   // Read skill Detected sections for cross-reference
   const skillsDir = path.join(cwd, '.claude', 'skills');
@@ -915,13 +917,13 @@ export async function checkConsistency(cwd: string, anaJson: Record<string, unkn
     } catch { /* skip */ }
   }
 
-  if (commands?.test) {
+  if (commands?.['test']) {
     try {
       const testing = await fs.readFile(path.join(skillsDir, 'testing-standards', 'SKILL.md'), 'utf-8');
       const detectedSection = extractSection(testing, 'Detected');
       if (detectedSection && detectedSection.trim() !== '' && !detectedSection.includes('<!--')) {
         // Check if test command or framework mentioned
-        const testCmd = commands.test.toLowerCase();
+        const testCmd = commands['test'].toLowerCase();
         const detectedLower = detectedSection.toLowerCase();
         // Look for framework name (vitest, jest, pytest, etc.)
         const frameworks = ['vitest', 'jest', 'mocha', 'pytest', 'go test'];
@@ -949,9 +951,9 @@ export async function checkConsistency(cwd: string, anaJson: Record<string, unkn
 
   // Check Detected ↔ scan.json freshness
   if (scanJson) {
-    const lastScanAt = anaJson.lastScanAt as string | undefined;
-    const overview = scanJson.overview as Record<string, string> | undefined;
-    const scanTimestamp = overview?.scannedAt;
+    const lastScanAt = anaJson['lastScanAt'] as string | undefined;
+    const overview = scanJson['overview'] as Record<string, string> | undefined;
+    const scanTimestamp = overview?.['scannedAt'];
 
     if (lastScanAt && scanTimestamp && lastScanAt !== scanTimestamp) {
       results.push({

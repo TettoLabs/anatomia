@@ -147,12 +147,12 @@ function parseComplianceTable(content: string): Array<{
     // Parse table row: | ID | Says | Status | Evidence |
     const cells = line.split('|').map(c => c.trim()).filter(c => c);
     if (cells.length >= 3) {
-      const id = cells[0];
-      const says = cells[1];
+      const id = cells[0] ?? '';
+      const says = cells[1] ?? '';
       // Extract status from emoji + text (e.g., "✅ SATISFIED")
-      const statusCell = cells[2];
+      const statusCell = cells[2] ?? '';
       const statusMatch = statusCell.match(/(SATISFIED|UNSATISFIED|DEVIATED|UNCOVERED)/i);
-      const status = statusMatch ? statusMatch[1].toUpperCase() : 'UNKNOWN';
+      const status = statusMatch && statusMatch[1] ? statusMatch[1].toUpperCase() : 'UNKNOWN';
       const evidence = cells[3] || '';
 
       results.push({ id, says, status, evidence });
@@ -170,7 +170,7 @@ function parseComplianceTable(content: string): Array<{
  */
 function parseResult(content: string): string {
   const match = content.match(/\*\*Result:\*\*\s*(PASS|FAIL)/i);
-  return match ? match[1].toUpperCase() : 'UNKNOWN';
+  return match && match[1] ? match[1].toUpperCase() : 'UNKNOWN';
 }
 
 /**
@@ -207,8 +207,10 @@ function parseDeviations(content: string): ProofDeviation[] {
 
   while ((match = deviationPattern.exec(content)) !== null) {
     const contractId = match[1];
-    const says = match[2].trim();
+    const saysRaw = match[2];
     const body = match[3];
+    if (!contractId || saysRaw === undefined || body === undefined) continue;
+    const says = saysRaw.trim();
 
     // Extract Instead, Reason, Outcome
     const insteadMatch = body.match(/\*\*Instead:\*\*\s*([^\n]+)/);
@@ -218,9 +220,9 @@ function parseDeviations(content: string): ProofDeviation[] {
     deviations.push({
       contract_id: contractId,
       says,
-      instead: insteadMatch ? insteadMatch[1].trim() : null,
-      reason: reasonMatch ? reasonMatch[1].trim() : null,
-      outcome: outcomeMatch ? outcomeMatch[1].trim() : null,
+      instead: insteadMatch && insteadMatch[1] ? insteadMatch[1].trim() : null,
+      reason: reasonMatch && reasonMatch[1] ? reasonMatch[1].trim() : null,
+      outcome: outcomeMatch && outcomeMatch[1] ? outcomeMatch[1].trim() : null,
     });
   }
 
@@ -246,13 +248,20 @@ function computeTiming(saves: SavesData): ProofSummary['timing'] {
 
   const totalMs = (verifyTime && scopeTime) ? verifyTime - scopeTime : 0;
 
-  return {
+  const timing: ProofSummary['timing'] = {
     total_minutes: Math.round(totalMs / 60000),
-    think: (contractTime && scopeTime) ? Math.round((contractTime - scopeTime) / 60000) : undefined,
-    plan: (contractTime && scopeTime) ? Math.round((contractTime - scopeTime) / 60000) : undefined,
-    build: (buildTime && contractTime) ? Math.round((buildTime - contractTime) / 60000) : undefined,
-    verify: (verifyTime && buildTime) ? Math.round((verifyTime - buildTime) / 60000) : undefined,
   };
+  if (contractTime && scopeTime) {
+    timing.think = Math.round((contractTime - scopeTime) / 60000);
+    timing.plan = Math.round((contractTime - scopeTime) / 60000);
+  }
+  if (buildTime && contractTime) {
+    timing.build = Math.round((buildTime - contractTime) / 60000);
+  }
+  if (verifyTime && buildTime) {
+    timing.verify = Math.round((verifyTime - buildTime) / 60000);
+  }
+  return timing;
 }
 
 /**
@@ -338,7 +347,6 @@ export function generateProofSummary(slugDir: string): ProofSummary {
             says: a.says,
             preCheckStatus: a.status,
             verifyStatus: null,
-            evidence: undefined,
           }));
 
           summary.contract.total = preCheck.assertions.length;
@@ -367,7 +375,6 @@ export function generateProofSummary(slugDir: string): ProofSummary {
           says: a.says,
           preCheckStatus: 'UNCOVERED' as const,
           verifyStatus: null,
-          evidence: undefined,
         }));
         summary.contract.total = contract.assertions.length;
         summary.contract.uncovered = contract.assertions.length;

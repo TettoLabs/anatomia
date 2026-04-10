@@ -39,14 +39,14 @@ function detectDefaultBranch(cwd: string, currentBranch: string | null): string 
   if (symbolicRef) {
     // "refs/remotes/origin/main" → "main"
     const parts = symbolicRef.split('/');
-    return parts[parts.length - 1];
+    return parts[parts.length - 1] ?? null;
   }
 
   // Step 2: remote show origin → parse "HEAD branch:" line
   const remoteShow = gitExec('git remote show origin', cwd);
   if (remoteShow) {
     const match = remoteShow.match(/HEAD branch:\s*(.+)/);
-    if (match && match[1].trim() !== '(unknown)') {
+    if (match && match[1] && match[1].trim() !== '(unknown)') {
       return match[1].trim();
     }
   }

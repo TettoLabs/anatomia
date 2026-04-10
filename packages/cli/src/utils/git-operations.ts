@@ -39,12 +39,12 @@ export function readArtifactBranch(): string {
     process.exit(1);
   }
 
-  if (!config.artifactBranch) {
+  if (!config['artifactBranch']) {
     console.error(chalk.red('Error: No artifactBranch configured in ana.json. Run `ana init` first.'));
     process.exit(1);
   }
 
-  return config.artifactBranch as string;
+  return config['artifactBranch'] as string;
 }
 
 /**

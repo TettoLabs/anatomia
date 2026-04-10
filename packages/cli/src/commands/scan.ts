@@ -127,11 +127,11 @@ function formatHumanReadable(result: EngineResult, options: { isFunnel: boolean 
     // Enrich database with model count from schemas
     if (label === 'Database') {
       const schemaKey = Object.keys(result.schemas).find(k =>
-        result.schemas[k].found
+        result.schemas[k]?.found
       );
       if (schemaKey) {
         const schema = result.schemas[schemaKey];
-        if (schema.provider) {
+        if (schema?.provider) {
           const providerNames: Record<string, string> = {
             postgresql: 'PostgreSQL', mysql: 'MySQL', sqlite: 'SQLite',
             mongodb: 'MongoDB', cockroachdb: 'CockroachDB', sqlserver: 'SQL Server',
@@ -139,7 +139,7 @@ function formatHumanReadable(result: EngineResult, options: { isFunnel: boolean 
           const providerDisplay = providerNames[schema.provider] || schema.provider;
           display = `${value} → ${providerDisplay}`;
         }
-        if (schema.modelCount) {
+        if (schema?.modelCount) {
           display += ` (${schema.modelCount} models)`;
         }
       }
@@ -392,8 +392,8 @@ function formatHumanReadable(result: EngineResult, options: { isFunnel: boolean 
   }
 
   if (result.monorepo.isMonorepo && result.monorepo.packages.length > 0) {
-    const firstPkg = result.monorepo.packages[0].path;
-    lines.push(chalk.gray(`Scan individual packages: ana scan ${firstPkg}`));
+    const firstPkg = result.monorepo.packages[0]?.path;
+    if (firstPkg) lines.push(chalk.gray(`Scan individual packages: ana scan ${firstPkg}`));
   }
 
   return lines.join('\n');

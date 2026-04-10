@@ -228,7 +228,7 @@ export function analyzeImportConvention(
       absolute: absolutePercent,
       relative: relativePercent,
     },
-    aliasPattern: aliases && aliases.length > 0 ? aliases[0].replace('*', '') : null,
+    aliasPattern: aliases && aliases.length > 0 ? (aliases[0] ?? '').replace('*', '') : null,
   };
 }
 
@@ -329,7 +329,7 @@ export async function parseTsconfigAlias(rootPath: string): Promise<string | nul
     const alias = aliasKeys.find(key => {
       if (!key.startsWith('@')) return false;
       const scope = key.split('/')[0];
-      return scope.length <= 2; // @/ or @x = path alias, @scope = package
+      return scope !== undefined && scope.length <= 2; // @/ or @x = path alias, @scope = package
     });
 
     if (alias) {

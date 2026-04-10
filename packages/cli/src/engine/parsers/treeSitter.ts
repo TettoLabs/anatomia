@@ -29,7 +29,7 @@ import {
 
 import type { ParsedFile, FunctionInfo, ClassInfo, ImportInfo, DecoratorInfo, ExportInfo, ParsedAnalysis } from '../types/parsed.js';
 import { readFile, joinPath } from '../utils/file.js';
-import type { ASTCache } from '../cache/astCache.js';
+import type { ASTCache, ASTCacheEntry } from '../cache/astCache.js';
 import { ASTCache as ASTCacheClass } from '../cache/astCache.js';
 import { sampleFiles } from '../sampling/fileSampler.js';
 import type { AnalysisResult } from '../types/index.js';
@@ -970,7 +970,7 @@ export async function parseFile(
 
     // Store in cache for next run (CP2 integration)
     if (cache) {
-      const cacheData: Record<string, unknown> = {
+      const cacheData: Omit<ASTCacheEntry, 'mtimeMs' | 'cachedAt'> = {
         functions: result.functions,
         classes: result.classes,
         imports: result.imports,

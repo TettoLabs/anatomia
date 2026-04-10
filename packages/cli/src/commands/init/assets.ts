@@ -463,12 +463,12 @@ function mergeHooksSettings(
   const merged = { ...existing };
 
   // Ensure hooks object exists
-  if (!merged.hooks || typeof merged.hooks !== 'object') {
-    merged.hooks = {};
+  if (!merged['hooks'] || typeof merged['hooks'] !== 'object') {
+    merged['hooks'] = {};
   }
 
-  const mergedHooks = merged.hooks as Record<string, unknown[]>;
-  const templateHooks = (template.hooks || {}) as Record<string, unknown[]>;
+  const mergedHooks = merged['hooks'] as Record<string, unknown[]>;
+  const templateHooks = (template['hooks'] || {}) as Record<string, unknown[]>;
 
   // Merge each hook type (PostToolUse, Stop, etc.)
   for (const hookType of Object.keys(templateHooks)) {

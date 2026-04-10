@@ -166,6 +166,7 @@ function validatePlanFormat(filePath: string): string | null {
   const lines = content.split('\n');
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
+    if (line === undefined) continue; // noUncheckedIndexedAccess guard
     if (checkboxPattern.test(line)) {
       // Check this line and next 2 lines for Spec: reference
       const nextLines = lines.slice(i, i + 3).join('\n');
@@ -363,6 +364,7 @@ function validateContractFormat(filePath: string): string[] {
 
     for (let i = 0; i < contract.assertions.length; i++) {
       const assertion = contract.assertions[i];
+      if (!assertion) continue; // noUncheckedIndexedAccess guard
       const prefix = assertion.id ? `Assertion ${assertion.id}` : `Assertion ${i + 1}`;
 
       // Required fields
@@ -409,6 +411,7 @@ function validateContractFormat(filePath: string): string[] {
     const validActions = ['create', 'modify', 'delete'];
     for (let i = 0; i < contract.file_changes.length; i++) {
       const change = contract.file_changes[i];
+      if (!change) continue; // noUncheckedIndexedAccess guard
       const prefix = `file_changes[${i}]`;
 
       if (!change.path || typeof change.path !== 'string') {

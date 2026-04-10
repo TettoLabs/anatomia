@@ -25,8 +25,8 @@ import { glob } from 'glob';
  */
 interface ContractPreCheckResult {
   seal: 'INTACT' | 'TAMPERED' | 'UNVERIFIABLE';
-  sealCommit?: string;
-  sealHash?: string;
+  sealCommit?: string | undefined;
+  sealHash?: string | undefined;
   assertions: Array<{
     id: string;
     says: string;
@@ -91,9 +91,9 @@ export function runContractPreCheck(slug: string, projectRoot: string = process.
   if (fs.existsSync(savesPath)) {
     try {
       const saves: Record<string, { commit?: string; hash?: string }> = JSON.parse(fs.readFileSync(savesPath, 'utf-8'));
-      if (saves.contract) {
-        sealCommit = saves.contract.commit;
-        sealHash = saves.contract.hash;
+      if (saves['contract']) {
+        sealCommit = saves['contract'].commit;
+        sealHash = saves['contract'].hash;
       }
     } catch {
       // Ignore parse errors

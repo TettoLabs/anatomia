@@ -160,7 +160,7 @@ function countPhases(planContent: string): { total: number; specs: string[] } {
     }
     if (inPhases) {
       const specMatch = line.match(/Spec:\s*(spec(?:-\d+)?\.md)/);
-      if (specMatch) {
+      if (specMatch && specMatch[1]) {
         specs.push(specMatch[1]);
       }
     }
@@ -177,7 +177,7 @@ function countPhases(planContent: string): { total: number; specs: string[] } {
  */
 function getVerifyResult(content: string): 'PASS' | 'FAIL' | 'unknown' {
   const match = content.match(/\*\*Result:\*\*\s*(PASS|FAIL)/i);
-  if (!match) return 'unknown';
+  if (!match || !match[1]) return 'unknown';
   return match[1].toUpperCase() as 'PASS' | 'FAIL';
 }
 
@@ -244,13 +244,14 @@ function gatherArtifactState(
     if (onArtifactBranch) {
       const fullPath = path.join(process.cwd(), filePath);
       const exists = fs.existsSync(fullPath);
-      return { exists, location: exists ? artifactBranch : undefined };
+      const info: ArtifactInfo = { exists };
+      if (exists) info.location = artifactBranch;
+      return info;
     } else {
       const exists = fileExistsOnBranch(branch, filePath);
-      return {
-        exists,
-        location: exists ? artifactBranch : undefined,
-      };
+      const info: ArtifactInfo = { exists };
+      if (exists) info.location = artifactBranch;
+      return info;
     }
   };
 
@@ -380,7 +381,7 @@ function determineStage(slug: string, artifacts: ArtifactState, featureBranch: s
     }
 
     if (hasVerifyReport) {
-      const result = verifyReports[0].result;
+      const result = verifyReports[0]?.result;
       if (result === 'PASS') {
         return 'ready-to-merge';
       } else if (result === 'FAIL') {
@@ -400,8 +401,10 @@ function determineStage(slug: string, artifacts: ArtifactState, featureBranch: s
     // Determine which phase we're on
     for (let i = 0; i < totalPhases; i++) {
       const phaseNum = i + 1;
-      const expectedBuildReport = specs[i].file === 'spec.md' ? 'build_report.md' : `build_report_${phaseNum}.md`;
-      const expectedVerifyReport = specs[i].file === 'spec.md' ? 'verify_report.md' : `verify_report_${phaseNum}.md`;
+      const spec = specs[i];
+      if (!spec) continue;
+      const expectedBuildReport = spec.file === 'spec.md' ? 'build_report.md' : `build_report_${phaseNum}.md`;
+      const expectedVerifyReport = spec.file === 'spec.md' ? 'verify_report.md' : `verify_report_${phaseNum}.md`;
 
       const phaseBuildReport = buildReports.find(r => r.file === expectedBuildReport);
       const phaseVerifyReport = verifyReports.find(r => r.file === expectedVerifyReport);
@@ -529,8 +532,10 @@ function printHumanReadable(output: StatusOutput): void {
     if (item.totalPhases > 1) {
       for (let i = 0; i < item.totalPhases; i++) {
         const phaseNum = i + 1;
-        const expectedBuildReport = item.artifacts.specs[i].file === 'spec.md' ? 'build_report.md' : `build_report_${phaseNum}.md`;
-        const expectedVerifyReport = item.artifacts.specs[i].file === 'spec.md' ? 'verify_report.md' : `verify_report_${phaseNum}.md`;
+        const phaseSpec = item.artifacts.specs[i];
+        if (!phaseSpec) continue;
+        const expectedBuildReport = phaseSpec.file === 'spec.md' ? 'build_report.md' : `build_report_${phaseNum}.md`;
+        const expectedVerifyReport = phaseSpec.file === 'spec.md' ? 'verify_report.md' : `verify_report_${phaseNum}.md`;
 
         const hasBuild = item.artifacts.buildReports.some(r => r.file === expectedBuildReport);
         const verify = item.artifacts.verifyReports.find(r => r.file === expectedVerifyReport);
@@ -690,14 +695,18 @@ async function writeProofChain(slug: string, proof: ProofSummary): Promise<void>
     result: proof.result,
     author: proof.author,
     contract: proof.contract,
-    assertions: proof.assertions.map(a => ({
-      id: a.id,
-      says: a.says,
-      status: a.verifyStatus || a.preCheckStatus,
-      ...(a.verifyStatus === 'DEVIATED'
-        ? { deviation: proof.deviations.find(d => d.contract_id === a.id)?.instead || undefined }
-        : {}),
-    })),
+    assertions: proof.assertions.map(a => {
+      const base: { id: string; says: string; status: string; deviation?: string } = {
+        id: a.id,
+        says: a.says,
+        status: a.verifyStatus || a.preCheckStatus,
+      };
+      if (a.verifyStatus === 'DEVIATED') {
+        const deviation = proof.deviations.find(d => d.contract_id === a.id)?.instead;
+        if (deviation) base.deviation = deviation;
+      }
+      return base;
+    }),
     acceptance_criteria: proof.acceptance_criteria,
     timing: proof.timing,
     hashes: proof.hashes,
@@ -811,6 +820,7 @@ export async function completeWork(slug: string): Promise<void> {
   for (let i = 0; i < specs.length; i++) {
     const phaseNum = i + 1;
     const specFile = specs[i];
+    if (!specFile) continue;
 
     // Determine verify report filename
     let verifyReportFile: string;

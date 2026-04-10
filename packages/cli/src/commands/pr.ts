@@ -25,7 +25,7 @@ import { generateProofSummary, type ProofSummary } from '../utils/proofSummary.j
  */
 function extractPrSummary(content: string): string {
   const match = content.match(/## PR Summary\s*\n([\s\S]*?)(?=\n## |$)/);
-  if (match && match[1].trim()) {
+  if (match && match[1] && match[1].trim()) {
     return match[1].trim();
   }
   return 'See build report for details.';
@@ -39,7 +39,7 @@ function extractPrSummary(content: string): string {
  */
 function extractVerifyResult(content: string): string | null {
   const match = content.match(/\*\*Result:\*\*\s*(PASS|FAIL)/i);
-  return match ? match[1].toUpperCase() : null;
+  return match && match[1] ? match[1].toUpperCase() : null;
 }
 
 /**
@@ -50,7 +50,7 @@ function extractVerifyResult(content: string): string | null {
  */
 function extractTestInfo(content: string): string {
   const match = content.match(/Tests:\s*(\d+\s+passed[^\\n]*)/i);
-  return match ? match[1] : 'See verify report';
+  return match && match[1] ? match[1] : 'See verify report';
 }
 
 /**
@@ -73,13 +73,13 @@ function countPhases(content: string): number {
 function extractTitle(content: string): string {
   // Try first # heading
   const headingMatch = content.match(/^#\s+(.+)$/m);
-  if (headingMatch) {
+  if (headingMatch && headingMatch[1]) {
     return headingMatch[1].trim().replace(/^Scope:\s*/i, '');
   }
 
   // Try ## Intent section first line
   const intentMatch = content.match(/## Intent\s*\n(.+)/);
-  if (intentMatch) {
+  if (intentMatch && intentMatch[1]) {
     return intentMatch[1].trim();
   }
 

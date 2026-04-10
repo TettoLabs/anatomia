@@ -36,11 +36,12 @@ function parseFrontmatter(content: string): AgentInfo | null {
   }
 
   const frontmatter = match[1];
+  if (!frontmatter) return null;
   const nameMatch = frontmatter.match(/^name:\s*(.+)$/m);
   const modelMatch = frontmatter.match(/^model:\s*(.+)$/m);
   const descMatch = frontmatter.match(/^description:\s*["']?(.+?)["']?$/m);
 
-  if (!nameMatch || !modelMatch || !descMatch) {
+  if (!nameMatch?.[1] || !modelMatch?.[1] || !descMatch?.[1]) {
     return null;
   }
 
