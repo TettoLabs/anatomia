@@ -882,6 +882,31 @@ async function copyAgentFiles(agentsPath: string, templatesDir: string): Promise
  * @param engineResult - Engine result for skill seeding (null if skipped)
  * @param initState - Installation state (fresh/reinit/upgrade/corrupted)
  */
+/**
+ * Inject the Detected section into a skill's content if an injector exists
+ * for that skill and engineResult is available. Returns content unchanged
+ * otherwise.
+ *
+ * Extracted helper (Item 12) so the old 2-copies-of-Detected-injection
+ * (Path B inline + Paths A/C shared) collapse to a single call site.
+ *
+ * @param content - Skill file content (SKILL.md)
+ * @param skillName - Skill name used to look up its Detected injector
+ * @param engineResult - Scan result, or null when no scan data is available
+ * @returns Content with Detected section refreshed (or unchanged if no injector)
+ */
+function injectDetectedIfAvailable(
+  content: string,
+  skillName: string,
+  engineResult: EngineResult | null
+): string {
+  if (!engineResult) return content;
+  const injector = SKILL_INJECTORS[skillName];
+  if (!injector) return content;
+  const detectedContent = injector(engineResult);
+  return replaceDetectedSection(content, detectedContent);
+}
+
 async function scaffoldAndSeedSkills(
   skillsPath: string,
   templatesDir: string,
@@ -897,50 +922,43 @@ async function scaffoldAndSeedSkills(
     const destPath = path.join(destDir, 'SKILL.md');
     const sourcePath = path.join(templatesDir, '.claude/skills', skillName, 'SKILL.md');
 
-    // Check if template exists
-    const templateExists = await fileExists(sourcePath);
-    if (!templateExists) continue;
+    if (!(await fileExists(sourcePath))) continue;
 
     const existingSkill = await fileExists(destPath);
-
     let content: string;
-    if (existingSkill && isReinit) {
-      // Re-init: read existing file, REPLACE ## Detected only
+    let allowGotchaInjection: boolean;
+
+    if (existingSkill) {
+      // Paths A + B collapsed: an existing SKILL.md may have human edits
+      // in ## Rules or ## Gotchas. Refresh the ## Detected section but
+      // DO NOT touch gotchas — this protects user customization both on
+      // re-init (Path A: .ana/ present + skill exists) and on partial
+      // install (Path B: .ana/ missing but skill file exists, e.g. manually
+      // created before running init, or .ana/ deleted after a prior init).
+      // The old code split these two cases into separate branches with an
+      // inline write + `continue` in Path B; the `allowGotchaInjection`
+      // flag + single shared write at the bottom of the loop makes the
+      // semantic explicit instead of control-flow-implicit.
       content = await fs.readFile(destPath, 'utf-8');
-    } else if (existingSkill) {
-      // Fresh/corrupted but file exists — refresh Detected section only (D8)
-      content = await fs.readFile(destPath, 'utf-8');
-      if (engineResult) {
-        const injector = SKILL_INJECTORS[skillName];
-        if (injector) {
-          const detectedContent = injector(engineResult);
-          content = replaceDetectedSection(content, detectedContent);
-        }
-      }
-      await fs.writeFile(destPath, content, 'utf-8');
-      continue;
+      allowGotchaInjection = false;
     } else {
-      // New skill: copy from template
+      // Path C: no existing file — copy template, allow gotcha injection
+      // only on a fresh install (not re-init/upgrade where pre-populated
+      // gotchas would be noise on top of already-confirmed user content).
       await fs.mkdir(destDir, { recursive: true });
       content = await fs.readFile(sourcePath, 'utf-8');
+      allowGotchaInjection = !isReinit;
     }
 
-    // Inject Detected content
-    if (engineResult) {
-      const injector = SKILL_INJECTORS[skillName];
-      if (injector) {
-        const detectedContent = injector(engineResult);
-        content = replaceDetectedSection(content, detectedContent);
-      }
-    }
+    // Shared: inject Detected across all paths (single helper, no duplication)
+    content = injectDetectedIfAvailable(content, skillName, engineResult);
 
-    // Inject pre-populated gotchas on fresh init only
-    if (!isReinit && engineResult) {
+    // Shared: pre-populate gotchas on fresh install new-skill path only
+    if (allowGotchaInjection && engineResult) {
       const gotchas = matchGotchas(engineResult);
       const skillGotchas = gotchas.get(skillName);
       if (skillGotchas && skillGotchas.length > 0) {
         const gotchaLines = skillGotchas.map(g => `- ${g}`).join('\n');
-        // Replace Gotchas placeholder marker with gotcha entries
         content = content.replace(
           /^(## Gotchas)\n\*Not yet captured[^*]*\*/m,
           `$1\n${gotchaLines}`
