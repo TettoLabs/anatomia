@@ -7,7 +7,6 @@
  *   ana --version       Show version
  *   ana --help          Show help
  *   ana init            Initialize .ana/ context
- *   ana mode <name>     Reference a mode file
  *
  * @packageDocumentation
  */
