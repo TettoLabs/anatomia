@@ -93,10 +93,16 @@ export const EMAIL_PACKAGES: Record<string, string> = {
 };
 
 /**
- * Monitoring/analytics packages
+ * Monitoring packages.
+ *
+ * PostHog deliberately NOT listed here — it lives in EXTERNAL_SERVICE_PACKAGES
+ * (scan-engine.ts) with category 'analytics'. Previously duplicated here as
+ * 'monitoring', which meant whichever detection loop ran first "won" the
+ * category. Latent drift trap (Item 11) — if detection order changed, PostHog
+ * would flip from 'analytics' to 'monitoring' without anyone noticing.
+ * Single source of truth now.
  */
 export const MONITORING_PACKAGES: Record<string, string> = {
-  'posthog-js': 'PostHog', 'posthog-node': 'PostHog',
   '@sentry/nextjs': 'Sentry', '@sentry/node': 'Sentry', '@sentry/react': 'Sentry',
   'logrocket': 'LogRocket',
   '@amplitude/analytics-browser': 'Amplitude',
