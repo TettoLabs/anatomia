@@ -1588,7 +1588,10 @@ function displaySuccessMessage(engineResult: EngineResult | null, projectName: s
         svc => !stackValues.some(v => v.includes(svc.name))
       );
       if (uniqueServices.length > 0) {
-        const names = uniqueServices.map((s: { name: string }) => s.name).join(', ');
+        const MAX_DISPLAY = 4;
+        const names = uniqueServices.length > MAX_DISPLAY
+          ? uniqueServices.slice(0, MAX_DISPLAY).map((s: { name: string }) => s.name).join(', ') + `, and ${uniqueServices.length - MAX_DISPLAY} more`
+          : uniqueServices.map((s: { name: string }) => s.name).join(', ');
         console.log(`  ${chalk.bold('Services:')} ${names}`);
       }
     }
