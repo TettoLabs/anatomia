@@ -22,18 +22,37 @@ const DEPLOYMENT_FILES: Record<string, string> = {
 };
 
 /**
+ * Detected deployment platform metadata. Both fields null when no platform
+ * detected — a single always-populated shape instead of `{...} | null`
+ * simplifies composition at the consumer (Item 7d). scan.json output is
+ * unchanged: `platform: null` was always the "no deployment" sentinel.
+ */
+export interface DetectedDeployment {
+  platform: string | null;
+  configFile: string | null;
+}
+
+/**
+ * Detected CI system metadata. Both fields null when no CI detected.
+ */
+export interface DetectedCI {
+  ci: string | null;
+  ciConfigFile: string | null;
+}
+
+/**
  * Detect deployment platform from config files in the project root.
  *
  * @param rootPath - Project root directory
- * @returns Deployment info or null if no platform detected
+ * @returns Deployment info. Both fields null if no platform detected.
  */
-export function detectDeployment(rootPath: string): { platform: string; configFile: string } | null {
+export function detectDeployment(rootPath: string): DetectedDeployment {
   for (const [file, platform] of Object.entries(DEPLOYMENT_FILES)) {
     if (existsSync(join(rootPath, file))) {
       return { platform, configFile: file };
     }
   }
-  return null;
+  return { platform: null, configFile: null };
 }
 
 /**
@@ -42,7 +61,7 @@ export function detectDeployment(rootPath: string): { platform: string; configFi
  * @param rootPath - Project root directory
  * @returns CI info with ci name and config file path, or nulls
  */
-export function detectCI(rootPath: string): { ci: string | null; ciConfigFile: string | null } {
+export function detectCI(rootPath: string): DetectedCI {
   // GitHub Actions — check for .github/workflows/*.yml
   const workflowsDir = join(rootPath, '.github', 'workflows');
   if (existsSync(workflowsDir)) {

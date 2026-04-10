@@ -10,6 +10,7 @@ import type { ConventionAnalysis } from './conventions.js';
 import type { PatternAnalysis } from './patterns.js';
 import type { DetectedCommands } from '../detectors/commands.js';
 import type { GitInfo } from '../detectors/git.js';
+import type { DetectedDeployment, DetectedCI } from '../detectors/deployment.js';
 
 export interface EngineResult {
   schemaVersion: string;
@@ -86,12 +87,11 @@ export interface EngineResult {
     issue: string;
     resolution: string;
   }>;
-  deployment: {
-    platform: string | null;
-    configFile: string | null;
-    ci: string | null;
-    ciConfigFile: string | null;
-  };
+  // Composed from the deployment detectors (Item 7d). detectDeployment returns
+  // DetectedDeployment (platform+configFile nullable), detectCI returns
+  // DetectedCI (ci+ciConfigFile nullable). scan-engine merges them with
+  // object spread — the type matches the runtime shape exactly now.
+  deployment: DetectedDeployment & DetectedCI;
   // Deep tier only (null when surface). Item 6 unification: pattern detection
   // uses the analyzer's PatternAnalysis type directly — previously there was a
   // duplicate PatternDetail-based inline type and a mapToPatternDetail wash in

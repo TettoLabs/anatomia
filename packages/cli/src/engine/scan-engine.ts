@@ -441,7 +441,7 @@ export async function scanProject(
   const annotatedServices = annotateServiceRoles(
     externalServices,
     stack,
-    deployment?.platform ?? null
+    deployment.platform
   );
 
   // 11. Project profile
@@ -480,9 +480,9 @@ export async function scanProject(
     secrets,
     projectProfile,
     blindSpots,
-    deployment: deployment
-      ? { ...deployment, ...ci }
-      : { platform: null, configFile: null, ...ci },
+    // detectDeployment always returns a DetectedDeployment shape now (null
+    // fields for "no deployment"), so the construction is a clean spread.
+    deployment: { ...deployment, ...ci },
     patterns: (options.depth === 'deep' && analysis?.patterns) ? analysis.patterns : null,
     conventions: (options.depth === 'deep' && analysis?.conventions) ? analysis.conventions : null,
     // Phase 1+ stubs
