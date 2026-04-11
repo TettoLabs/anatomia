@@ -6,7 +6,9 @@ description: "Invoke when writing tests, reviewing test quality, or setting up t
 # Testing Standards
 
 ## Detected
-<!-- Populated by scan during init. Do not edit manually. -->
+- Framework: Vitest (78 test files)
+- Test command: pnpm run test -- --run
+- Test location: co-located with source
 
 ## Rules
 
@@ -17,7 +19,7 @@ description: "Invoke when writing tests, reviewing test quality, or setting up t
 - Coverage minimum: 80% statements. Don't chase 100% — focus coverage on business logic and edge cases.
 
 ## Gotchas
-<!-- Starts empty. Add failure modes as you discover them. -->
+- Vitest defaults to watch mode. Always pass `--run` in CI and non-interactive environments (e.g., `pnpm run test -- --run`).
 
 ## Examples
-<!-- Optional. Add short snippets showing the RIGHT way. -->
+*Not yet captured. Add short snippets showing the RIGHT way.*

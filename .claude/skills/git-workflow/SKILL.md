@@ -6,17 +6,20 @@ description: "Invoke before any git operations — branching, committing, mergin
 # Git Workflow
 
 ## Detected
-<!-- Populated by scan during init. Do not edit manually. -->
+- Default branch: main (41 branches)
+- Current branch: s19/lane-1
+- Commits: 508
+- Contributors: 2
 
 ## Rules
 
 - Create feature branches from the default branch: `feature/{description}` or `{initials}/{description}`.
 - Use conventional commits: `type: description` where type is one of feat, fix, chore, docs, test, refactor.
 - Include co-author trailer when Ana assists: `Co-authored-by: Ana <build@anatomia.dev>`.
-- Squash merge feature branches to the default branch.
+- Merge feature branches to the default branch. Confirm merge strategy with your team.
 
 ## Gotchas
-<!-- Starts empty. Add failure modes as you discover them. -->
+*Not yet captured. Add as you discover them during development.*
 
 ## Examples
-<!-- Optional. Add short snippets showing the RIGHT way. -->
+*Not yet captured. Add short snippets showing the RIGHT way.*

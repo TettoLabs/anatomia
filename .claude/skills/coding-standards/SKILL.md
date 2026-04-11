@@ -6,7 +6,13 @@ description: "Invoke when implementing features, writing code, or reviewing code
 # Coding Standards
 
 ## Detected
-<!-- Populated by scan during init. Do not edit manually. -->
+- Language: TypeScript (118 source files)
+- Functions: camelCase (96%, 220 sampled)
+- Classes: PascalCase (100%)
+- Files: lowercase (82%, 50 sampled)
+- Imports: relative (100%)
+- Indentation: spaces, 2 wide
+- Error handling: exceptions (generic)
 
 ## Rules
 
@@ -17,7 +23,7 @@ description: "Invoke when implementing features, writing code, or reviewing code
 - Use `const` by default. Use `let` only when reassignment is genuinely needed.
 
 ## Gotchas
-<!-- Starts empty. Add failure modes as you discover them. -->
+*Not yet captured. Add as you discover them during development.*
 
 ## Examples
-<!-- Optional. Add short snippets showing the RIGHT way. -->
+*Not yet captured. Add short snippets showing the RIGHT way.*

@@ -6,16 +6,17 @@ description: "Invoke when working on deployment configuration, CI/CD pipelines, 
 # Deployment
 
 ## Detected
-<!-- Populated by scan during init. Do not edit manually. -->
+- CI: GitHub Actions
+- CI config: .github/workflows/test.yml
 
 ## Rules
 
 - Environment variables via platform config or `.env` files — never hardcode secrets or config values.
-- Preview deploys on pull requests when the platform supports it.
 - Production deploys only from the default branch.
+- Agents never perform irreversible external actions (deploy to production, publish packages, send to real users, modify infrastructure) without explicit human approval.
 
 ## Gotchas
-<!-- Starts empty. Add failure modes as you discover them. -->
+*Not yet captured. Add as you discover them during development.*
 
 ## Examples
-<!-- Optional. Add short snippets showing the RIGHT way. -->
+*Not yet captured. Add short snippets showing the RIGHT way.*
