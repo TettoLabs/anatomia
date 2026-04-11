@@ -9,8 +9,8 @@
  *   area before atomic rename
  * - generateScaffolds: project-context.md + design-principles.md from
  *   scan data (scaffold-generators.ts templates)
- * - copyStaticFilesWithVerification + copyAndVerifyFile: hash-verified
- *   copy of bundled .ana/docs/ and related static content
+ * - copyAndVerifyFile: SHA-256 hash-verified copy (used for hook scripts
+ *   and agent files)
  * - copyHookScripts: .ana/hooks/*.sh for Claude Code integration
  * - createClaudeConfiguration: the .claude/ tree (agents, skills,
  *   settings.json) — delegates skill copies to skills.scaffoldAndSeedSkills
@@ -48,11 +48,13 @@ import { scaffoldAndSeedSkills } from './skills.js';
  *
  * Creates all required directories for .ana/ framework:
  * - context/
- * - docs/
  * - plans/active/, plans/completed/
  * - state/
  *
  * Step files and framework-snippets directories removed (D10.9).
+ * docs/ directory removed (S18 Phase 3 Pass 2 — SCHEMAS.md was the only
+ * file that lived here and it had drifted catastrophically vs. the agent
+ * definitions; agent files in templates/.claude/agents/ are the spec).
  *
  * @param tmpAnaPath - Path to temp .ana/ directory
  */
@@ -61,7 +63,6 @@ export async function createDirectoryStructure(tmpAnaPath: string): Promise<void
 
   // Create directories (recursive: true creates parents)
   await fs.mkdir(path.join(tmpAnaPath, 'context'), { recursive: true });
-  await fs.mkdir(path.join(tmpAnaPath, 'docs'), { recursive: true });
   await fs.mkdir(path.join(tmpAnaPath, 'plans/active'), { recursive: true });
   await fs.mkdir(path.join(tmpAnaPath, 'plans/completed'), { recursive: true });
   await fs.mkdir(path.join(tmpAnaPath, 'state'), { recursive: true });
@@ -107,32 +108,6 @@ export async function generateScaffolds(
 
   const totalLines = projectContext.split('\n').length + designPrinciples.split('\n').length;
   spinner.succeed(`Generated 2 context scaffolds (${totalLines} lines total)`);
-}
-
-/**
- * Phase 6: Copy static files with SHA-256 verification
- *
- * Copies static template files from CLI templates/ to .ana/:
- * - 9 mode files
- * - 1 SCHEMAS.md
- *
- * Step files, framework-snippets, templates.md, SETUP_GUIDE.md, rules.md removed (D10.9).
- *
- * Each file verified with SHA-256 hash after copy.
- *
- * @param tmpAnaPath - Temp .ana/ path
- */
-export async function copyStaticFilesWithVerification(tmpAnaPath: string): Promise<void> {
-  const spinner = ora('Copying static files...').start();
-
-  const templatesDir = getTemplatesDir();
-
-  // SCHEMAS.md
-  const schemasSource = path.join(templatesDir, '.ana/docs/SCHEMAS.md');
-  const schemasDest = path.join(tmpAnaPath, 'docs/SCHEMAS.md');
-  await copyAndVerifyFile(schemasSource, schemasDest, '.ana/docs/SCHEMAS.md');
-
-  spinner.succeed('Copied static files');
 }
 
 /**

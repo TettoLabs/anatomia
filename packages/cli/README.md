@@ -53,8 +53,8 @@ claude --agent ana             # Start working with Ana
 
 | Command | Description |
 |---------|-------------|
-| `ana scan .` | Detect project stack, patterns, conventions |
-| `ana scan . --deep` | Include pattern and convention analysis |
+| `ana scan .` | Detect project stack, patterns, conventions (deep by default) |
+| `ana scan . --quick` | Fast surface-tier scan (skip tree-sitter) |
 | `ana init` | Initialize `.ana/` context and `.claude/` agents |
 | `ana work status` | Show pipeline state for active work |
 | `ana artifact save` | Save pipeline artifacts with validation |

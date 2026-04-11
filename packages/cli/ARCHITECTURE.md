@@ -218,6 +218,8 @@ The matcher is `matchGotchas()` at `src/utils/gotchas.ts:16` — called by `scaf
 
 **tsc is the enforcement layer.** `pnpm build` runs `tsc --noEmit` before `tsup`. Husky pre-commit runs typecheck + typecheck:tests + lint. CI runs the same three on Ubuntu/macOS/Windows × Node 20/22. No path for untyped code to reach main.
 
+**Templates are behavioral contracts.** Skill templates (`packages/cli/templates/.claude/skills/<name>/SKILL.md`) aren't documentation — they're executable behavioral contracts that shape how AI tools interact with the project. The `## Detected` section is machine-owned (refreshed on every `ana init`); `## Rules`, `## Gotchas`, and `## Examples` are human-owned and preserved across regeneration.
+
 ---
 
 ## Known Debt

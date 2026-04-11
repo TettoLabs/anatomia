@@ -25,10 +25,9 @@
 
 ### Other Static Files
 - templates/.claude/settings.json
-- templates/.ana/docs/SCHEMAS.md
 - templates/CLAUDE.md
 
-**Copy method:** `copyAndVerifyFile()` with SHA-256 verification
+**Copy method:** `copyAndVerifyFile()` with SHA-256 verification (used for hook scripts and agent files)
 
 ---
 
