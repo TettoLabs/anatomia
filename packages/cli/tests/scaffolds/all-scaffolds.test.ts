@@ -3,10 +3,10 @@ import {
   generateProjectContextScaffold,
   generateDesignPrinciplesTemplate,
 } from '../../src/utils/scaffold-generators.js';
-import { createEmptyEngineResult } from './test-types.js';
+import { createEmptyEngineResult } from '../../src/engine/types/engineResult.js';
 
 describe('scaffold generators (S15 consolidated: 2 generators)', () => {
-  const result = createEmptyEngineResult() as any;
+  const result = createEmptyEngineResult();
 
   describe('generateProjectContextScaffold', () => {
     it('produces scaffold with D6.6 sections', () => {
@@ -31,7 +31,7 @@ describe('scaffold generators (S15 consolidated: 2 generators)', () => {
       const richResult = {
         ...result,
         stack: { ...result.stack, language: 'TypeScript', framework: 'Next.js', database: 'PostgreSQL' },
-        externalServices: [{ name: 'Stripe', category: 'Payments', configFound: false }],
+        externalServices: [{ name: 'Stripe', category: 'Payments', source: 'dependency', configFound: false, stackRoles: [] }],
         commands: { ...result.commands, build: 'pnpm build', test: 'vitest' },
       };
 

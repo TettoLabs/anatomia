@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import * as os from 'node:os';
-import { createEmptyEngineResult } from '../scaffolds/test-types.js';
+import { createEmptyEngineResult } from '../../src/engine/types/engineResult.js';
 
 async function dirExists(dirPath: string): Promise<boolean> {
   try {
