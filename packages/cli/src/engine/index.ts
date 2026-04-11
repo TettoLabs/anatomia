@@ -92,10 +92,17 @@ export async function analyze(
   const collector = new DetectionCollector();
 
   try {
-    // Phase 1: Monorepo detection
-    const monorepoResult = options.skipMonorepo
+    // Phase 1: Monorepo detection. The result is unused in this path —
+    // scanProject() runs its own monorepo detection via detectMonorepoInfo
+    // which is the one that populates EngineResult.monorepo. This call
+    // exists only to let detectMonorepo push warnings into the collector
+    // (which is currently unused; tracked for S19+ as NEW-003). Kept as
+    // an underscore-prefixed var to preserve the side effect without
+    // tripping the unused-locals lint rule.
+    const _monorepoResult = options.skipMonorepo
       ? { isMonorepo: false, tool: null }
       : await detectMonorepo(rootPath, collector);
+    void _monorepoResult;
 
     // Phase 2: Project type detection
     const projectTypeResult = await detectProjectType(rootPath);
