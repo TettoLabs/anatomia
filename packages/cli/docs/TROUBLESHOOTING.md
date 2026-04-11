@@ -866,8 +866,8 @@ If none of these solutions work, file an issue with:
 ## Related Documentation
 
 - **README.md** - Installation and basic usage
-- **TEMPLATE_GUIDE.md** - How templates work
-- **API.md** - Programmatic usage
+- **CONTRIBUTING.md** - Contributor guide (extension guides, patterns, conventions)
+- **ARCHITECTURE.md** - Module map and detection pipeline
 
 ---
 
@@ -882,7 +882,7 @@ If none of these solutions work, file an issue with:
 | Multiple frameworks | Remove unused dependencies |
 | Monorepo not detected | Add pnpm-workspace.yaml |
 | Wrong framework | Verify framework config files exist |
-| Slow detection | Use `--skip-import-scan` flag |
+| Slow detection | Use `--quick` flag |
 | No dependencies found | Run `pip freeze > requirements.txt` |
 | Unsupported language | Check language is supported |
 | Encoding error | Convert file to UTF-8 with `iconv` |

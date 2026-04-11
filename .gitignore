@@ -44,3 +44,27 @@ packages/cli/.ana/
 # Sprint investigation/diagnostic files (not source)
 *DIAGNOSTIC*.md
 *DOSSIER*.md
+
+# Claude Code per-machine config (must not be committed)
+**/.claude/settings.local.json
+
+# Other AI tool per-machine config
+.aider*
+.cursor/
+
+# Sprint scratch, investigation, handoff, audit docs (internal only)
+/APRIL_*.md
+/S[0-9]*.md
+/ITEM_*.md
+/*_HANDOFF.md
+/*_INVESTIGATION.md
+/*_AUDIT*.md
+/*_TESTING*.md
+/BACKLOG_*.md
+/SCAN_ENGINE_*.md
+/VERIFICATION_REPORT.md
+/docs/
+
+# Local scan / dogfood state (don't commit working-tree scan outputs)
+**/.ana/scan.json
+website/.ana/

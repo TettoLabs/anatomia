@@ -67,7 +67,7 @@ packages/cli/
 │   ├── contract/          # Cross-module contract tests
 │   ├── scaffolds/         # Scaffold generator tests
 │   └── utils/             # Utility tests
-├── docs/                  # TEMPLATE_GUIDE, DETECTION_FLOW, FILE_TYPES, TROUBLESHOOTING
+├── docs/                  # FILE_TYPES, TROUBLESHOOTING
 └── tsconfig.test.json     # Test-specific tsconfig (includes tests/, used by `pnpm typecheck:tests`)
 ```
 
@@ -122,7 +122,7 @@ pnpm test tests/templates/  # Template tests only
 - **Professional tone:** Imperative, clear, no jargon without explanation
 - **Section structure for skills:** `## Detected`, `## Rules`, `## Gotchas`, `## Examples` — the Detected section is machine-owned (auto-refreshed by `scaffoldAndSeedSkills`); the other three are human-owned and preserved on re-init.
 
-See [docs/TEMPLATE_GUIDE.md](./docs/TEMPLATE_GUIDE.md) for details.
+See the "Templates are behavioral contracts" note in [ARCHITECTURE.md](./ARCHITECTURE.md) for the framing.
 
 ---
 
