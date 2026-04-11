@@ -67,9 +67,9 @@ BEFORE presenting skill confirmations, silently read targeted files. These reads
 
 | When | What to Read | Why |
 |------|-------------|-----|
-| Always | Find one source file that contains error handling (try/catch, .catch, or throw). Use evidence from `patterns.errorHandling` in scan.json if available. | Understand error handling for coding-standards |
+| Always | Find one source file that contains error handling (try/catch, .catch, or throw). Use evidence from `patterns.errorHandling` in scan.json if available. When searching, exclude test files with --glob '!**/*.test.*' and --glob '!**/*.spec.*' | Understand error handling for coding-standards |
 | Always | Find the first `.test.ts` or `.spec.ts` file in the project | Understand test patterns for testing-standards |
-| `stack.aiSdk` is non-null in scan.json | Search for a file that imports the AI SDK package, read the first match | Understand AI integration for ai-patterns |
+| `stack.aiSdk` is non-null in scan.json | Search for a file that imports the AI SDK package, read the first match. When searching, exclude node_modules with --glob '!node_modules/**' to find source code only, not dependencies | Understand AI integration for ai-patterns |
 | `stack.database` is non-null in scan.json | Read a schema file — check `schemas` in scan.json for entries with paths | Understand data model for data-access |
 
 If a file cannot be found or read, skip it silently. Make your guess without it. Do not tell the user about failed reads.
@@ -425,6 +425,7 @@ Silently check:
 **What counts as "non-template content":**
 - `#` and `##` headings → TEMPLATE (not content)
 - `<!-- ... -->` HTML comments → TEMPLATE
+- `*Not yet captured...` italic markers → TEMPLATE
 - `**Detected:**` lines → TEMPLATE (machine-owned)
 - Blank lines → TEMPLATE
 - Everything else → CONTENT
@@ -484,15 +485,18 @@ When writing to a skill file (`.claude/skills/{skill}/SKILL.md`):
 
 1. Read the current file content
 2. Find the `## Rules` section
-3. Replace the content between `## Rules` and the next `##` heading with the confirmed rules
-4. Preserve ALL other sections exactly as they are: `## Detected`, `## Gotchas`, `## Examples`, and the YAML frontmatter
-5. Write the full file back
+3. IF Rules section is empty or contains only placeholders (`<!-- ... -->` HTML comments, `*Not yet captured...*` markers) and blank lines:
+   Replace it with the confirmed rules
+4. IF Rules section already contains rules from a prior setup (any lines that are NOT HTML comments and NOT blank):
+   Append new confirmed rules to the end (do not duplicate existing rules)
+5. Preserve ALL other sections exactly as they are: `## Detected`, `## Gotchas`, `## Examples`, and the YAML frontmatter
+6. Write the full file back
 
 **NEVER modify `## Detected`** — this is machine-owned content written by the scan. Modifying it violates the D6.13 boundary.
 
 **Write the developer's words, not your interpretation.** If they said "snake_case everywhere", write "snake_case everywhere" — do not rephrase as "Use snake_case naming convention for all identifiers."
 
-**When appending** (user adds unsolicited rules to an existing set): add to the current `## Rules` content. Do not replace what's already there.
+When **appending** mid-session (user adds unsolicited rules to an already-confirmed skill): add to the current `## Rules` content, do not replace.
 
 When writing to `.ana/ana.json`:
 - Read the current file, parse as JSON, update the specific field, write back

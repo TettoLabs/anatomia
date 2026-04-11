@@ -5,7 +5,7 @@
 import { describe, it, expect } from 'vitest';
 import { detectAiSdk } from '../../../src/engine/detectors/dependencies.js';
 import { computeSkillManifest } from '../../../src/constants.js';
-import { createEmptyEngineResult } from '../../scaffolds/test-types.js';
+import { createEmptyEngineResult } from '../../../src/engine/types/engineResult.js';
 
 describe('AI SDK detection', () => {
   it('returns null when no AI SDK present', () => {

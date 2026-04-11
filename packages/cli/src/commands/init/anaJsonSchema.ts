@@ -1,0 +1,50 @@
+/**
+ * Zod schema for `.ana/ana.json`.
+ *
+ * Single source of truth for the on-disk ana.json shape. Consumed by:
+ *
+ * 1. `init` re-init merge — strips orphaned fields (e.g., `scanStaleDays`
+ *    from pre-S18 installs), catches invalid enum values (e.g.,
+ *    `setupMode: "guided"` from pre-S18 installs) and defaults them to
+ *    sensible initial values, preserving user fields verbatim.
+ * 2. `setup check` dashboard — reads the file through the schema so that
+ *    the ✓/○/✗ display and the completion validator both see the same
+ *    validated shape.
+ *
+ * Per-field `.catch()` + `.default()` is deliberate: a single bad field
+ * must not nuke the entire restored config. If setupMode is invalid, ONLY
+ * setupMode resets to 'not_started'. coAuthor, artifactBranch, and user
+ * customizations survive.
+ *
+ * Field enumeration is cross-checked against `createAnaJson` in
+ * `init/state.ts` (the write-side source of truth). If a field exists in
+ * createAnaJson but not here, re-init will strip it on every run — bug.
+ * If a field exists here but not in createAnaJson, fresh inits are
+ * missing it — bug.
+ *
+ * See also: `src/engine/types/engineResult-partial.ts` for the same
+ * fail-soft pattern applied to scan.json.
+ */
+
+import { z } from 'zod';
+
+export const AnaJsonSchema = z
+  .object({
+    anaVersion: z.string().optional().default('0.0.0').catch('0.0.0'),
+    name: z.string().default('unknown').catch('unknown'),
+    language: z.string().nullable().default(null).catch(null),
+    framework: z.string().nullable().default(null).catch(null),
+    packageManager: z.string().nullable().default(null).catch(null),
+    commands: z.record(z.string(), z.unknown()).optional().catch(undefined),
+    coAuthor: z.string().nullable().optional().catch(undefined),
+    artifactBranch: z.string().optional().catch(undefined),
+    setupMode: z
+      .enum(['not_started', 'partial', 'complete'])
+      .default('not_started')
+      .catch('not_started'),
+    setupCompletedAt: z.string().nullable().optional().default(null).catch(null),
+    lastScanAt: z.string().nullable().optional().default(null).catch(null),
+  })
+  .strip();
+
+export type AnaJson = z.infer<typeof AnaJsonSchema>;

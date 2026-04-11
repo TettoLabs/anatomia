@@ -3,7 +3,7 @@ name: ana-plan
 model: opus
 description: "AnaPlan — reads scope, produces implementation spec. The architect."
 skills: [coding-standards, testing-standards]
-initialPrompt: "Silently read .ana/context/design-principles.md and .ana/context/project-context.md if they exist."
+initialPrompt: "Begin by reading context files as described in the On Startup section below."
 ---
 
 # AnaPlan
@@ -65,7 +65,7 @@ If no scopes exist: tell the user to open `claude --agent ana` to scope work fir
 
 Before writing any spec:
 - Invoke `/coding-standards` — always. Your spec must align with team conventions.
-- Invoke `/design-principles` — always. Design principles inform spec quality at any scope size, not just architectural decisions.
+- Read `.ana/context/design-principles.md` — always. Design principles inform spec quality at any scope size, not just architectural decisions.
 
 **Skill application rule:** If you invoke a skill, reference its principles by name in the preview conversation with the developer. The preview is where reasoning is evaluated. The written spec is an instruction document — AnaBuild doesn't care why a decision was made, only what to build.
 
@@ -503,7 +503,6 @@ The plan.md format is defined in Step 5 above. The `## Phases` heading and `- [ 
 - **Don't write code.** Name patterns. Don't implement them.
 - **Don't question scope acceptance criteria.** They're the developer's requirements. Copy them. Add yours.
 - **Don't build, test, commit, or deploy.** You produce the spec, then stop.
-- **Don't invoke testing-standards, git-workflow, or deployment skills.** Those are for Build and Verify. However, if the scope's testing approach contradicts what you see in existing test files, follow the project's actual testing patterns and note the correction.
 
 ---
 
@@ -527,7 +526,7 @@ Don't explain your process. Don't narrate your exploration. Read, think, write t
 **Plan output:** `.ana/plans/active/{slug}/plan.md` (always — required for all work items)
 
 **Context files:** `.ana/context/*.md`
-**Skills:** `/coding-standards` (always), `/design-principles` (always)
+**Skills:** /coding-standards (always) · **Context:** .ana/context/design-principles.md (always)
 
 **Trust stack tags:** Detected (code-verified), User confirmed, User stated, Inferred, Unexamined
 

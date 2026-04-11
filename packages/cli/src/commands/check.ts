@@ -19,23 +19,38 @@ import * as fs from 'node:fs/promises';
 import type { SymbolEntry, SymbolIndex } from '../types/symbol-index.js';
 import { CONTEXT_FILES } from '../constants.js';
 import { parseEngineResultPartial } from '../engine/types/engineResult-partial.js';
+import { AnaJsonSchema, type AnaJson } from './init/anaJsonSchema.js';
+
+/**
+ * The 6 canonical sections of project-context.md.
+ *
+ * Single source of truth for the project-context schema. Consumed by:
+ *   - FILE_CONFIGS below (single-file validation)
+ *   - countPopulatedContextSections (dashboard per-section count)
+ *   - validateSetupCompletion (setup complete check)
+ *
+ * Previously duplicated at FILE_CONFIGS['project-context'].expectedSections
+ * and inside validateSetupCompletion. Adding a section required updating
+ * both places; S19/NEW-FOUND-1 caught the drift.
+ */
+const PROJECT_CONTEXT_SECTIONS = [
+  'What This Project Does',
+  'Architecture',
+  'Key Decisions',
+  'Key Files',
+  'Active Constraints',
+  'Domain Vocabulary',
+] as const;
 
 /** Per-file configuration for structural validation (D12.3 — no line counts) */
 interface FileConfig {
-  expectedSections: string[];
+  expectedSections: readonly string[];
 }
 
 /** File configurations indexed by filename (without .md) */
 const FILE_CONFIGS: Record<string, FileConfig> = {
   'project-context': {
-    expectedSections: [
-      'What This Project Does',
-      'Architecture',
-      'Key Decisions',
-      'Key Files',
-      'Active Constraints',
-      'Domain Vocabulary',
-    ],
+    expectedSections: PROJECT_CONTEXT_SECTIONS,
   },
   'design-principles': {
     expectedSections: [], // Optional content — any non-template content is valid
@@ -695,17 +710,27 @@ async function readScanJson(cwd: string): Promise<Record<string, unknown> | null
 }
 
 /**
- * Read ana.json
+ * Read ana.json through the canonical schema.
+ *
+ * S19/NEW-008: uses AnaJsonSchema (same schema the init re-init merge
+ * consumes) so the dashboard, the completion validator, and the init
+ * pipeline all see the same validated shape. Per-field `.catch()`
+ * handles drift from pre-S18 installs gracefully — setupMode: "guided"
+ * becomes 'not_started', scanStaleDays gets stripped, etc.
+ *
  * @param cwd - Project root directory
- * @returns Parsed ana.json or null if not found
+ * @returns Validated ana.json or null if not found / unreadable
  */
-async function readAnaJson(cwd: string): Promise<Record<string, unknown> | null> {
+async function readAnaJson(cwd: string): Promise<AnaJson | null> {
+  let raw: unknown;
   try {
     const content = await fs.readFile(path.join(cwd, '.ana', 'ana.json'), 'utf-8');
-    return JSON.parse(content);
+    raw = JSON.parse(content);
   } catch {
     return null;
   }
+  const parsed = AnaJsonSchema.safeParse(raw);
+  return parsed.success ? parsed.data : null;
 }
 
 /**
@@ -758,34 +783,6 @@ export function checkSkillSections(content: string): { valid: boolean; missing: 
     return prev !== undefined && required.indexOf(s) > required.indexOf(prev);
   });
   return { valid: missing.length === 0 && orderedCorrectly, missing };
-}
-
-/**
- * Check if content has non-template text (not just comments/placeholders)
- * @param content - File content
- * @param sectionName - Section heading text (without ##)
- * @returns True if section has real content
- */
-function hasNonTemplateContent(content: string, sectionName: string): boolean {
-  const lines = content.split('\n');
-  let inSection = false;
-  for (const line of lines) {
-    if (line.startsWith(`## ${sectionName}`)) {
-      inSection = true;
-      continue;
-    }
-    if (inSection && line.startsWith('## ')) {
-      break;
-    }
-    if (inSection) {
-      const trimmed = line.trim();
-      // Skip empty lines, HTML comments, and placeholder patterns
-      if (trimmed === '' || trimmed.startsWith('<!--') || trimmed.startsWith('-->')) continue;
-      // Has real content
-      return true;
-    }
-  }
-  return false;
 }
 
 /**
@@ -897,11 +894,17 @@ export async function checkContextForDashboard(cwd: string, filename: string): P
       if (!headers.pass) {
         return { symbol: chalk.red('✗'), description: `missing sections: ${headers.duplicates.join(', ')}` };
       }
-      // Check if "What This Project Does" has non-template content
-      if (hasNonTemplateContent(content, 'What This Project Does')) {
-        return { symbol: chalk.green('✓'), description: `${headers.actual} sections populated` };
+      // Per-section count using hasRealContent (same function validateSetupCompletion
+      // uses — guarantees dashboard and validator agree on the same file)
+      const populated = countPopulatedContextSections(content, PROJECT_CONTEXT_SECTIONS);
+      const total = PROJECT_CONTEXT_SECTIONS.length;
+      if (populated === 0) {
+        return { symbol: chalk.yellow('○'), description: 'scaffold (setup will enrich)' };
       }
-      return { symbol: chalk.yellow('○'), description: 'scaffold (setup will enrich)' };
+      if (populated < total) {
+        return { symbol: chalk.yellow('○'), description: `${populated}/${total} sections populated` };
+      }
+      return { symbol: chalk.green('✓'), description: `${populated}/${total} sections populated` };
     }
 
     return { symbol: chalk.yellow('○'), description: 'unknown format' };
@@ -911,71 +914,113 @@ export async function checkContextForDashboard(cwd: string, filename: string): P
 }
 
 /**
- * Run cross-reference consistency checks
+ * Run cross-reference consistency checks.
+ *
+ * Ternary result model (S19/SETUP-025):
+ *   ✓ aligned            — every skill with a populated Detected section
+ *                          mentions the corresponding ana.json field
+ *   ✗ mismatch           — at least one skill's Detected contradicts ana.json
+ *   ○ awaiting setup     — no mismatches, but one or more skills have an
+ *                          empty/comment-only Detected section (nothing to
+ *                          verify against — the previous code would silently
+ *                          report this as ✓ aligned, which was phantom
+ *                          verification)
+ *
+ * Priority when mixed: mismatch > awaiting setup > aligned. Show the
+ * worst state.
+ *
  * @param cwd - Project root directory
- * @param anaJson - Parsed ana.json content
- * @param scanJson - Parsed scan.json content or null
+ * @param anaJson - Schema-validated ana.json
+ * @param scanJson - Parsed scan.json or null
  * @returns Array of consistency check results
  */
-export async function checkConsistency(cwd: string, anaJson: Record<string, unknown>, scanJson: Record<string, unknown> | null): Promise<ConsistencyResult[]> {
+export async function checkConsistency(
+  cwd: string,
+  anaJson: AnaJson,
+  scanJson: Record<string, unknown> | null
+): Promise<ConsistencyResult[]> {
   const results: ConsistencyResult[] = [];
 
-  // Check ana.json ↔ skills alignment
   const mismatches: string[] = [];
-  const language = anaJson['language'] as string | undefined;
-  const artifactBranch = anaJson['artifactBranch'] as string | undefined;
-  const commands = anaJson['commands'] as Record<string, string> | undefined;
+  const notYetVerified: string[] = [];
+  const language = anaJson.language ?? undefined;
+  const artifactBranch = anaJson.artifactBranch;
+  const commands = anaJson.commands as Record<string, unknown> | undefined;
 
   // Read skill Detected sections for cross-reference
   const skillsDir = path.join(cwd, '.claude', 'skills');
+
+  const isUnpopulated = (section: string | null): boolean => {
+    if (!section) return true;
+    const trimmed = section.trim();
+    if (trimmed === '') return true;
+    // Comment-only section (HTML comments are the scaffold placeholder)
+    return /^<!--[\s\S]*-->$/m.test(trimmed) && !trimmed.replace(/<!--[\s\S]*?-->/g, '').trim();
+  };
 
   if (language) {
     try {
       const coding = await fs.readFile(path.join(skillsDir, 'coding-standards', 'SKILL.md'), 'utf-8');
       const detectedSection = extractSection(coding, 'Detected');
-      if (detectedSection && detectedSection.trim() !== '' && !detectedSection.includes('<!--')) {
-        if (!detectedSection.toLowerCase().includes(language.toLowerCase())) {
-          mismatches.push(`language: ana.json says "${language}", coding-standards Detected doesn't mention it`);
-        }
+      if (isUnpopulated(detectedSection)) {
+        notYetVerified.push('coding-standards');
+      } else if (!detectedSection!.toLowerCase().includes(language.toLowerCase())) {
+        mismatches.push(`language: ana.json says "${language}", coding-standards Detected doesn't mention it`);
       }
-    } catch { /* skill not found — skip */ }
+    } catch { /* skill not found — skip (no skill to check against) */ }
   }
 
   if (artifactBranch) {
     try {
       const git = await fs.readFile(path.join(skillsDir, 'git-workflow', 'SKILL.md'), 'utf-8');
       const detectedSection = extractSection(git, 'Detected');
-      if (detectedSection && detectedSection.trim() !== '' && !detectedSection.includes('<!--')) {
-        if (!detectedSection.toLowerCase().includes(artifactBranch.toLowerCase())) {
-          mismatches.push(`branch: ana.json says "${artifactBranch}", git-workflow Detected doesn't mention it`);
-        }
+      if (isUnpopulated(detectedSection)) {
+        notYetVerified.push('git-workflow');
+      } else if (!detectedSection!.toLowerCase().includes(artifactBranch.toLowerCase())) {
+        mismatches.push(`branch: ana.json says "${artifactBranch}", git-workflow Detected doesn't mention it`);
       }
     } catch { /* skip */ }
   }
 
-  if (commands?.['test']) {
+  const testCmdRaw = commands?.['test'];
+  const testCmd = typeof testCmdRaw === 'string' ? testCmdRaw : null;
+  if (testCmd) {
     try {
       const testing = await fs.readFile(path.join(skillsDir, 'testing-standards', 'SKILL.md'), 'utf-8');
       const detectedSection = extractSection(testing, 'Detected');
-      if (detectedSection && detectedSection.trim() !== '' && !detectedSection.includes('<!--')) {
-        // Check if test command or framework mentioned
-        const testCmd = commands['test'].toLowerCase();
-        const detectedLower = detectedSection.toLowerCase();
-        // Look for framework name (vitest, jest, pytest, etc.)
-        const frameworks = ['vitest', 'jest', 'mocha', 'pytest', 'go test'];
-        const hasFramework = frameworks.some(f => testCmd.includes(f) || detectedLower.includes(f));
-        if (!hasFramework && detectedLower.trim() !== '') {
-          mismatches.push(`testing: ana.json test command doesn't align with testing-standards Detected`);
+      if (isUnpopulated(detectedSection)) {
+        notYetVerified.push('testing-standards');
+      } else {
+        // Semantic cross-ref (S19/SETUP-026): prefer detected stack.testing
+        // from scan.json over a hardcoded keyword list. Falls back to the
+        // test command itself if scan.json is unavailable.
+        const testingStack = (scanJson?.['stack'] as Record<string, unknown> | undefined)?.['testing'];
+        const referenceName = typeof testingStack === 'string' && testingStack.length > 0
+          ? testingStack
+          : testCmd;
+        if (!detectedSection!.toLowerCase().includes(referenceName.toLowerCase())) {
+          mismatches.push(
+            `testing: ana.json test command set but testing-standards Detected doesn't mention "${referenceName}"`
+          );
         }
       }
     } catch { /* skip */ }
   }
 
+  // Render ana.json ↔ skills result: mismatch > awaiting > aligned
   if (mismatches.length > 0) {
     results.push({
       symbol: chalk.red('✗'),
       label: 'ana.json ↔ skills',
       detail: `mismatch — ${mismatches[0]}`,
+    });
+  } else if (notYetVerified.length > 0) {
+    const count = notYetVerified.length;
+    const plural = count === 1 ? 'skill' : 'skills';
+    results.push({
+      symbol: chalk.yellow('○'),
+      label: 'ana.json ↔ skills',
+      detail: `${count} ${plural} awaiting setup enrichment (${notYetVerified.join(', ')})`,
     });
   } else {
     results.push({
@@ -987,7 +1032,7 @@ export async function checkConsistency(cwd: string, anaJson: Record<string, unkn
 
   // Check Detected ↔ scan.json freshness
   if (scanJson) {
-    const lastScanAt = anaJson['lastScanAt'] as string | undefined;
+    const lastScanAt = anaJson.lastScanAt ?? undefined;
     const overview = scanJson['overview'] as Record<string, string> | undefined;
     const scanTimestamp = overview?.['scannedAt'];
 
@@ -1088,6 +1133,28 @@ function hasRealContent(content: string, sectionName: string): boolean {
 }
 
 /**
+ * Count how many of the given sections have real (non-template) content.
+ *
+ * Shared by `checkContextForDashboard` (dashboard display) and
+ * `validateSetupCompletion` (completion validator). Before S19, the
+ * dashboard used a looser `hasNonTemplateContent` variant and the
+ * validator used the stricter `hasRealContent` — the two disagreed on
+ * multiline HTML comments and gave contradictory verdicts on the same
+ * file. Unifying on this single helper + `hasRealContent` guarantees
+ * "the dashboard and the validator always give the same answer."
+ *
+ * @param content - Markdown file content
+ * @param sectionNames - Section headings to check (without the `## ` prefix)
+ * @returns Number of sections whose content passes `hasRealContent`
+ */
+function countPopulatedContextSections(
+  content: string,
+  sectionNames: readonly string[]
+): number {
+  return sectionNames.filter(s => hasRealContent(content, s)).length;
+}
+
+/**
  * Check if a file has any non-template content at all.
  * Strips headings, HTML comments (including multiline), blank lines.
  * @param content - File content
@@ -1117,20 +1184,13 @@ export async function validateSetupCompletion(cwd: string): Promise<SetupValidat
   let criticalSectionPopulated = false;
   let architectureExists = false;
   let populatedCount = 0;
-  const totalSections = 6;
-  const projectContextSections = [
-    'What This Project Does', 'Architecture', 'Key Decisions',
-    'Key Files', 'Active Constraints', 'Domain Vocabulary',
-  ];
+  const totalSections = PROJECT_CONTEXT_SECTIONS.length;
 
   try {
     const pcContent = await fs.readFile(path.join(contextPath, 'project-context.md'), 'utf-8');
     criticalSectionPopulated = hasRealContent(pcContent, 'What This Project Does');
     architectureExists = pcContent.includes('## Architecture');
-
-    for (const section of projectContextSections) {
-      if (hasRealContent(pcContent, section)) populatedCount++;
-    }
+    populatedCount = countPopulatedContextSections(pcContent, PROJECT_CONTEXT_SECTIONS);
   } catch {
     warnings.push('project-context.md not found');
   }
@@ -1170,17 +1230,14 @@ export async function validateSetupCompletion(cwd: string): Promise<SetupValidat
   }
 
   // --- 4. Cross-reference (ana.json ↔ skill Detected) ---
-  try {
-    const anaJsonContent = await fs.readFile(path.join(cwd, '.ana', 'ana.json'), 'utf-8');
-    const anaJson = JSON.parse(anaJsonContent) as Record<string, unknown>;
+  const anaJson = await readAnaJson(cwd);
+  if (anaJson) {
     const crossRefResults = await checkConsistency(cwd, anaJson, null);
     for (const r of crossRefResults) {
       if (r.detail.startsWith('mismatch')) {
         warnings.push(`cross-reference: ${r.detail}`);
       }
     }
-  } catch {
-    // ana.json missing handled upstream
   }
 
   // --- Determine setupMode ---
@@ -1208,23 +1265,43 @@ async function displaySetupDashboard(cwd: string): Promise<boolean> {
   let hasErrors = false;
 
   // --- Setup Status ---
-  const progress = await readSetupProgress(cwd);
+  // S19/SETUP-008: ana.json is the source of truth for setup completion.
+  // setup-progress.json is a transient coordination file used only when
+  // setup is actively partial. Once setupMode === 'complete', the progress
+  // file is deleted by `ana setup complete` and phase granularity is
+  // meaningless post-completion — show a single "setup complete" line.
   console.log(chalk.bold('\nSetup Status'));
   console.log('────────────');
 
-  const phases = [
-    { key: 'confirm', label: 'Phase 1 (confirm)' },
-    { key: 'enrich', label: 'Phase 2 (enrich)' },
-    { key: 'principles', label: 'Phase 3 (principles)' },
-  ] as const;
+  const anaJsonForStatus = await readAnaJson(cwd);
+  const setupMode = anaJsonForStatus?.setupMode ?? 'not_started';
+  const completedAt = anaJsonForStatus?.setupCompletedAt;
 
-  for (const phase of phases) {
-    const status = progress?.phases?.[phase.key];
-    if (status?.completed && status.timestamp) {
-      const date = new Date(status.timestamp).toLocaleDateString();
-      console.log(`  ${chalk.green('✓')} ${phase.label}: completed ${date}`);
-    } else {
-      console.log(`  ${chalk.yellow('○')} ${phase.label}: not started`);
+  if (setupMode === 'complete' && completedAt) {
+    const date = new Date(completedAt).toLocaleDateString();
+    console.log(`  ${chalk.green('✓')} Setup complete (${date})`);
+  } else {
+    // Partial / not started — consult progress file for per-phase detail
+    const progress = await readSetupProgress(cwd);
+    const phases = [
+      { key: 'confirm', label: 'Phase 1 (confirm)' },
+      { key: 'enrich', label: 'Phase 2 (enrich)' },
+      { key: 'principles', label: 'Phase 3 (principles)' },
+    ] as const;
+
+    for (const phase of phases) {
+      const status = progress?.phases?.[phase.key];
+      if (status?.completed && status.timestamp) {
+        const date = new Date(status.timestamp).toLocaleDateString();
+        console.log(`  ${chalk.green('✓')} ${phase.label}: completed ${date}`);
+      } else if (status?.skipped) {
+        // S19/SETUP-044: the setup agent writes `skipped: true` for phases
+        // the user deliberately skipped (e.g., design-principles). Render
+        // that explicit state rather than showing "not started."
+        console.log(`  ${chalk.gray('⊘')} ${phase.label}: skipped`);
+      } else {
+        console.log(`  ${chalk.yellow('○')} ${phase.label}: not started`);
+      }
     }
   }
 

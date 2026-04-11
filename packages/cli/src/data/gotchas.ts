@@ -45,4 +45,14 @@ export const GOTCHAS: GotchaEntry[] = [
     skill: 'data-access',
     text: 'Drizzle schema changes update TypeScript types immediately, but the database is NOT synced automatically. Run `npx drizzle-kit push` (development) or `drizzle-kit generate` + `drizzle-kit migrate` (production) after schema changes.',
   },
+  {
+    // S19/SETUP-042: first consumer of the service-category trigger path.
+    // `{ jobs: 'Inngest' }` matches against externalServices where
+    // category === 'jobs' && name === 'Inngest' — wired through
+    // JOBS_PACKAGES in engine/detectors/dependencies.ts.
+    id: 'inngest-function-invocation',
+    triggers: { jobs: 'Inngest' },
+    skill: 'api-patterns',
+    text: 'Inngest functions run in a separate worker process — local development requires the `inngest-cli` dev server (`npx inngest-cli dev`). Functions are invoked by sending events (`inngest.send({ name: "user.created", data: {...} })`), not by calling the function directly. Event names use dot-notation and function signatures take `{ event, step }` — use `step.run()` for idempotent work and `step.sleep()` for delays so the durable execution engine can replay safely.',
+  },
 ];

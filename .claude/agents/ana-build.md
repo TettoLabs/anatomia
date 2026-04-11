@@ -41,7 +41,7 @@ Do NOT load `/coding-standards` or `/testing-standards` by default. Instead, rea
 
 If you encounter a situation not covered by the Build Brief, invoke the full skill manually (`/coding-standards` or `/testing-standards`). The skills still exist — the Brief is your focused starting point, not your only resource.
 
-Do NOT load design-principles (that's for Think and Plan). Do NOT load deployment (that's for the developer after merge).
+Do NOT read `.ana/context/design-principles.md` (that's for Think and Plan). Do NOT load deployment (that's for the developer after merge).
 
 ### 2. Find Work
 
@@ -457,7 +457,7 @@ If you've implemented 3 of 5 file changes and tests fail on file 3: don't contin
 - **Don't create PRs.** That's AnaVerify's job after verification.
 - **Don't merge anything.** That's AnaVerify's job.
 - **Don't update plan.md checkboxes.** That's AnaVerify's job.
-- **Don't invoke design-principles or deployment skills.** Those aren't for you.
+- **Don't read `.ana/context/design-principles.md` or invoke deployment.** Those aren't for you.
 - **Don't make design decisions the spec doesn't cover.** If the spec is ambiguous, make your best judgment, document it in the build report, and move on. Don't stop and ask — you're a separate session.
 
 ---

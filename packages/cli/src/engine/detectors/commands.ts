@@ -18,10 +18,14 @@ export interface DetectedCommands {
 /**
  * Detect build/test/lint/dev commands from package.json scripts.
  * Prefixes with the detected package manager.
+ *
+ * If packageManager is null (no lockfile found — typically a non-Node
+ * project), returns all-null commands without attempting to read
+ * package.json. S19/SCAN-032.
  */
 export async function detectCommands(
   cwd: string,
-  packageManager: string
+  packageManager: string | null
 ): Promise<DetectedCommands> {
   const result: DetectedCommands = {
     build: null,
@@ -30,6 +34,10 @@ export async function detectCommands(
     dev: null,
     all: {},
   };
+
+  if (packageManager === null) {
+    return result;
+  }
 
   try {
     const content = await fs.readFile(path.join(cwd, 'package.json'), 'utf-8');

@@ -25,6 +25,7 @@
 
 import type { Detection } from '../python/fastapi.js';
 import { detectNextjs } from './nextjs.js';
+import { detectRemix } from './remix.js';
 import { detectNestjs } from './nestjs.js';
 import { detectExpress } from './express.js';
 import { detectReact } from './react.js';
@@ -40,13 +41,18 @@ export type NodeFrameworkDetector = (
  *
  * Rationale for ordering:
  *   1. Next.js — bundles React; must beat plain React detection.
- *   2. Nest.js — wraps Express; must beat plain Express detection.
- *   3. Express — a common direct dependency, checked before React.
- *   4. React — fallback for pure React (no Next) projects.
- *   5. Other (Fastify/Koa) — catch-all for simpler frameworks.
+ *   2. Remix / React Router v7 — bundles React; must beat plain React
+ *      detection. Only fires on @react-router/dev or @remix-run/*,
+ *      NOT on bare react-router (which is a routing lib, not the
+ *      framework).
+ *   3. Nest.js — wraps Express; must beat plain Express detection.
+ *   4. Express — a common direct dependency, checked before React.
+ *   5. React — fallback for pure React (no Next/Remix) projects.
+ *   6. Other (Fastify/Koa/Hono) — catch-all for simpler frameworks.
  */
 export const NODE_FRAMEWORK_DETECTORS: NodeFrameworkDetector[] = [
   detectNextjs,
+  detectRemix,
   detectNestjs,
   detectExpress,
   detectReact,

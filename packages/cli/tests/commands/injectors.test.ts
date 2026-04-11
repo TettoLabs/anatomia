@@ -195,4 +195,66 @@ describe('matchGotchas', () => {
     expect(testing).toBeDefined();
     expect(testing?.some(g => g.includes('watch mode'))).toBe(true);
   });
+
+  // S19/SETUP-042: matchGotchas was extended to match triggers against
+  // externalServices by category, not just primary stack fields. The
+  // above tests all exercise the stack-field path (database/framework/
+  // testing). These tests exercise the externalServices-category path
+  // so a regression in the extension is caught — the old code would
+  // have silently ignored service-category triggers.
+
+  it('matches a service-category trigger via externalServices (Inngest jobs path)', () => {
+    // Inngest is detected as a service in the 'jobs' category via
+    // JOBS_PACKAGES, NOT as a stack field. Pre-S19 the gotcha system
+    // could not reach it because triggers only matched against
+    // result.stack. After the extension, { jobs: 'Inngest' } triggers
+    // match against externalServices where category='jobs' && name='Inngest'.
+    const result = createEmptyEngineResult();
+    result.externalServices = [{
+      name: 'Inngest',
+      category: 'jobs',
+      source: 'dependency',
+      configFound: false,
+      stackRoles: [],
+    }];
+
+    const matches = matchGotchas(result);
+    const apiPatterns = matches.get('api-patterns');
+    expect(apiPatterns).toBeDefined();
+    expect(apiPatterns?.some(g => g.includes('Inngest'))).toBe(true);
+  });
+
+  it('does NOT fire service-category trigger when category matches but name does not', () => {
+    // Sanity check: the match requires BOTH category === key AND name === value.
+    // A 'jobs' service that isn't Inngest should not fire the Inngest gotcha.
+    const result = createEmptyEngineResult();
+    result.externalServices = [{
+      name: 'BullMQ',
+      category: 'jobs',
+      source: 'dependency',
+      configFound: false,
+      stackRoles: [],
+    }];
+
+    const matches = matchGotchas(result);
+    const apiPatterns = matches.get('api-patterns');
+    expect(apiPatterns?.some(g => g.includes('Inngest')) ?? false).toBe(false);
+  });
+
+  it('does NOT fire service-category trigger when name matches but category does not', () => {
+    // Defensive: a service named Inngest in a different category should
+    // not match { jobs: 'Inngest' } — the trigger is scoped by category.
+    const result = createEmptyEngineResult();
+    result.externalServices = [{
+      name: 'Inngest',
+      category: 'wrong-category',
+      source: 'dependency',
+      configFound: false,
+      stackRoles: [],
+    }];
+
+    const matches = matchGotchas(result);
+    const apiPatterns = matches.get('api-patterns');
+    expect(apiPatterns?.some(g => g.includes('Inngest')) ?? false).toBe(false);
+  });
 });

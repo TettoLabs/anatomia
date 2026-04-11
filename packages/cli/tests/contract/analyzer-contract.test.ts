@@ -9,8 +9,8 @@
 
 import { describe, it, expect } from 'vitest';
 import { generateProjectContextScaffold } from '../../src/utils/scaffold-generators.js';
-import { createEmptyEngineResult } from '../scaffolds/test-types.js';
-import type { TestEngineResult } from '../scaffolds/test-types.js';
+import { createEmptyEngineResult } from '../../src/engine/types/engineResult.js';
+import type { EngineResult } from '../../src/engine/types/engineResult.js';
 
 describe('Engine Interface Contract', () => {
   describe('required fields access', () => {
@@ -21,19 +21,19 @@ describe('Engine Interface Contract', () => {
       expect(result.overview.project).toBe('unknown');
       expect(result.stack.language).toBeNull();
       expect(result.stack.framework).toBeNull();
-      expect(result.commands.packageManager).toBe('npm');
+      expect(result.commands.packageManager).toBeNull();
       expect(result.files.total).toBe(0);
     });
 
     it('catches field renames at compile time', () => {
-      const result: TestEngineResult = createEmptyEngineResult();
+      const result: EngineResult = createEmptyEngineResult();
 
       // Required field access — TypeScript will fail if these are renamed
       const _project: string = result.overview.project;
       const _scannedAt: string = result.overview.scannedAt;
       const _language: string | null = result.stack.language;
       const _framework: string | null = result.stack.framework;
-      const _packageManager: string = result.commands.packageManager;
+      const _packageManager: string | null = result.commands.packageManager;
       const _total: number = result.files.total;
       const _structure: Array<{ path: string; purpose: string }> = result.structure;
 
@@ -41,7 +41,7 @@ describe('Engine Interface Contract', () => {
       expect(_scannedAt).toBeDefined();
       expect(_language).toBeNull();
       expect(_framework).toBeNull();
-      expect(_packageManager).toBe('npm');
+      expect(_packageManager).toBeNull();
       expect(_total).toBe(0);
       expect(_structure).toHaveLength(0);
     });
@@ -49,7 +49,7 @@ describe('Engine Interface Contract', () => {
 
   describe('optional fields access', () => {
     it('handles full EngineResult with patterns and conventions', () => {
-      const result: TestEngineResult = {
+      const result: EngineResult = {
         ...createEmptyEngineResult(),
         overview: { project: 'test', scannedAt: '2026-03-19T10:00:00Z', depth: 'deep' },
         stack: {
@@ -65,8 +65,6 @@ describe('Engine Interface Contract', () => {
         patterns: {
           errorHandling: { library: 'exceptions', variant: '', confidence: 0.9, evidence: [] },
           validation: { library: 'pydantic', variant: '', confidence: 0.95, evidence: [] },
-          database: null,
-          auth: null,
           testing: { library: 'pytest', variant: '', confidence: 1.0, evidence: [] },
           sampledFiles: 20,
           detectionTime: 5000,
@@ -114,6 +112,7 @@ describe('Engine Interface Contract', () => {
             style: 'absolute',
             confidence: 0.85,
             distribution: { absolute: 0.85, relative: 0.15 },
+            aliasPattern: null,
           },
           indentation: {
             style: 'spaces',
@@ -138,6 +137,7 @@ describe('Engine Interface Contract', () => {
       const keys = Object.keys(result);
 
       const expectedKeys = [
+        'schemaVersion',
         'overview',
         'stack',
         'files',

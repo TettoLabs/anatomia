@@ -9,9 +9,7 @@
  *   area before atomic rename
  * - generateScaffolds: project-context.md + design-principles.md from
  *   scan data (scaffold-generators.ts templates)
- * - copyAndVerifyFile: SHA-256 hash-verified copy (used for hook scripts
- *   and agent files)
- * - copyHookScripts: .ana/hooks/*.sh for Claude Code integration
+ * - copyAndVerifyFile: SHA-256 hash-verified copy (used for agent files)
  * - createClaudeConfiguration: the .claude/ tree (agents, skills,
  *   settings.json) — delegates skill copies to skills.scaffoldAndSeedSkills
  * - copyAgentFiles: .claude/agents/*.md without overwriting user edits
@@ -145,39 +143,6 @@ async function copyAndVerifyFile(
         'File may be corrupted during copy.'
     );
   }
-}
-
-/**
- * Copy hook scripts to .ana/hooks/
- *
- * Copies hook scripts and sets executable permissions.
- *
- * @param tmpAnaPath - Temp .ana/ path
- */
-export async function copyHookScripts(tmpAnaPath: string): Promise<void> {
-  const spinner = ora('Copying hook scripts...').start();
-
-  const templatesDir = getTemplatesDir();
-  const hooksDir = path.join(tmpAnaPath, 'hooks');
-
-  // Create hooks directory
-  await fs.mkdir(hooksDir, { recursive: true });
-
-  // Hook scripts to copy
-  const hookScripts = ['run-check.sh', 'verify-context-file.sh'];
-
-  for (const script of hookScripts) {
-    const sourcePath = path.join(templatesDir, '.ana/hooks', script);
-    const destPath = path.join(hooksDir, script);
-
-    // Copy with verification
-    await copyAndVerifyFile(sourcePath, destPath, `.ana/hooks/${script}`);
-
-    // Set executable permissions (chmod +x)
-    await fs.chmod(destPath, 0o755);
-  }
-
-  spinner.succeed('Copied hook scripts (2 files, executable)');
 }
 
 /**
@@ -420,8 +385,12 @@ async function generateAgentsMd(cwd: string, engineResult: EngineResult | null):
     lines.push('');
   }
 
-  // Scan-derived constraints
-  lines.push('## Constraints');
+  // Scan-derived constraints — real constraints only, no generic
+  // boilerplate. S19/CLI-011: removed two slop lines that used to ship
+  // here unconditionally ("Follow existing patterns in the codebase" and
+  // "Run tests before committing"). Both were content-free and violated
+  // "every character earns its place." If nothing was detected, skip
+  // the section entirely rather than rendering a vacuous one.
   const constraintLines: string[] = [];
   if (engineResult?.conventions?.naming?.functions?.majority &&
       engineResult.conventions.naming.functions.majority !== 'unknown') {
@@ -433,12 +402,11 @@ async function generateAgentsMd(cwd: string, engineResult: EngineResult | null):
   if (engineResult?.commands.build) {
     constraintLines.push(`- Run \`${engineResult.commands.build}\` before committing`);
   }
-  if (constraintLines.length === 0) {
-    constraintLines.push('- Follow existing patterns in the codebase');
+  if (constraintLines.length > 0) {
+    lines.push('## Constraints');
+    lines.push(...constraintLines);
+    lines.push('');
   }
-  constraintLines.push('- Run tests before committing');
-  lines.push(...constraintLines);
-  lines.push('');
 
   await fs.writeFile(destPath, lines.join('\n'), 'utf-8');
 }

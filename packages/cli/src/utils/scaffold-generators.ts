@@ -15,6 +15,12 @@ import type { EngineResult } from '../engine/types/engineResult.js';
 import { SCAFFOLD_MARKER, getStackSummary } from '../constants.js';
 
 /**
+ * Placeholder line for sections the scan couldn't seed.
+ * S19/CLI-010: extracted from 6 identical inline copies.
+ */
+const NOT_YET_CAPTURED = '*Not yet captured. Run `claude --agent ana-setup` to fill this.*';
+
+/**
  * Generate project-context.md scaffold (D6.6 format)
  *
  * Produces 6 sections with scan-seeded **Detected:** lines.
@@ -58,7 +64,7 @@ export function generateProjectContextScaffold(result: EngineResult): string {
   if (infoParts.length > 0) {
     s += `**Detected infrastructure:** ${infoParts.join(' · ')}\n`;
   }
-  s += `*Not yet captured. Run \`claude --agent ana-setup\` to fill this.*\n\n`;
+  s += `${NOT_YET_CAPTURED}\n\n`;
 
   // Section 2: Architecture
   s += `## Architecture\n`;
@@ -76,11 +82,11 @@ export function generateProjectContextScaffold(result: EngineResult): string {
     const topDirs = result.structure.slice(0, 8).map(e => e.path).join(', ');
     s += `**Detected:** ${dirCount} directories mapped: ${topDirs}\n`;
   }
-  s += `*Not yet captured. Run \`claude --agent ana-setup\` to fill this.*\n\n`;
+  s += `${NOT_YET_CAPTURED}\n\n`;
 
   // Section 3: Key Decisions
   s += `## Key Decisions\n`;
-  s += `*Not yet captured. Run \`claude --agent ana-setup\` to fill this.*\n\n`;
+  s += `${NOT_YET_CAPTURED}\n\n`;
 
   // Section 4: Key Files (partially seeded from scan)
   s += `## Key Files\n`;
@@ -94,16 +100,16 @@ export function generateProjectContextScaffold(result: EngineResult): string {
     s += keyFiles.join('\n') + '\n';
     s += `*Scan detected the items above. Run \`claude --agent ana-setup\` to add: database client, auth config, AI client locations, test helpers.*\n\n`;
   } else {
-    s += `*Not yet captured. Run \`claude --agent ana-setup\` to fill this.*\n\n`;
+    s += `${NOT_YET_CAPTURED}\n\n`;
   }
 
   // Section 5: Active Constraints
   s += `## Active Constraints\n`;
-  s += `*Not yet captured. Run \`claude --agent ana-setup\` to fill this.*\n\n`;
+  s += `${NOT_YET_CAPTURED}\n\n`;
 
   // Section 6: Domain Vocabulary
   s += `## Domain Vocabulary\n`;
-  s += `*Not yet captured. Run \`claude --agent ana-setup\` to fill this.*\n`;
+  s += `${NOT_YET_CAPTURED}\n`;
 
   return s;
 }

@@ -1,4 +1,6 @@
-# Anatomia Project
+# anatomia-workspace
+
+**Stack:** TypeScript · Vitest
 
 This project uses Anatomia for AI-assisted development.
 
@@ -6,15 +8,7 @@ This project uses Anatomia for AI-assisted development.
 
 Ana knows this codebase. She'll help you scope, plan, build, and verify changes.
 
-Context files: `.ana/context/` (7 verified files)
-Team standards: `.claude/skills/` (editable)
+Context files: `.ana/context/` (2 context files)
+Team standards: `.claude/skills/` (scan-seeded, editable)
 
 Want richer context? `claude --agent ana-setup` (optional)
-
-<!-- Anatomia Context Framework — do not edit this section -->
-<!-- Last setup: 2026-04-06 | Run `ana setup` to update -->
-
-This project uses Anatomia for AI context management (7 verified context files).
-
-Available modes: @.ana/modes/code.md · @.ana/modes/debug.md · @.ana/modes/test.md · @.ana/modes/architect.md
-<!-- End Anatomia section -->

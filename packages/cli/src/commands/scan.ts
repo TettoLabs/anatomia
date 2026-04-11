@@ -80,9 +80,13 @@ function countFindings(result: EngineResult): number {
  * @param result - Engine analysis result
  * @param options - Display options
  * @param options.isFunnel - Whether in funnel context (no .ana/)
+ * @param options.rootPath - The directory that was scanned (for ancestor-walk fallback message)
  * @returns Formatted terminal output string
  */
-function formatHumanReadable(result: EngineResult, options: { isFunnel: boolean }): string {
+function formatHumanReadable(
+  result: EngineResult,
+  options: { isFunnel: boolean; rootPath: string }
+): string {
   const lines: string[] = [];
   const dateStr = result.overview.scannedAt.split('T')[0];
   const timeStr = new Date(result.overview.scannedAt).toTimeString().slice(0, 5);
@@ -147,7 +151,30 @@ function formatHumanReadable(result: EngineResult, options: { isFunnel: boolean 
     lines.push(`  ${chalk.gray(label.padEnd(12))} ${display}`);
   }
   if (!hasStack) {
-    lines.push(chalk.gray('  No code detected'));
+    // S19/SCAN-045: if the scanned directory has no package manifest but
+    // an ancestor does, the user probably ran `ana scan .` from a
+    // subdirectory. Tell them where the real project root is instead of
+    // showing an opaque "No code detected."
+    const manifestMarkers = ['package.json', 'go.mod', 'Cargo.toml', 'pyproject.toml'];
+    const MAX_ANCESTOR_DEPTH = 5;
+    let ancestorRoot: string | null = null;
+    let walkDir = path.resolve(options.rootPath);
+    for (let i = 0; i < MAX_ANCESTOR_DEPTH; i++) {
+      const parent = path.dirname(walkDir);
+      if (parent === walkDir) break;
+      walkDir = parent;
+      if (manifestMarkers.some(m => existsSync(path.join(walkDir, m)))) {
+        ancestorRoot = walkDir;
+        break;
+      }
+    }
+    if (ancestorRoot) {
+      lines.push(chalk.gray('  No package manifest in this directory'));
+      lines.push(chalk.yellow(`  Run \`ana scan\` from the project root for full detection.`));
+      lines.push(chalk.gray(`  (package.json/go.mod/Cargo.toml/pyproject.toml found at ${ancestorRoot})`));
+    } else {
+      lines.push(chalk.gray('  No code detected'));
+    }
   }
 
   // Services + Deployment (rendered as one block).
@@ -279,8 +306,12 @@ function formatHumanReadable(result: EngineResult, options: { isFunnel: boolean 
   // previous lossy PatternDetail shape.
   if (result.patterns) {
     const threshold = result.patterns.threshold ?? 0.7;
+    // S19/SCAN-048: 'testing' → 'Test framework' to disambiguate from the
+    // Stack section's 'Testing: <name>' line, which is dependency-based
+    // detection. This label is for the Patterns section which reports
+    // code-level pattern inference.
     const patternLabels: Record<string, string> = {
-      errorHandling: 'Errors', validation: 'Validation', testing: 'Testing',
+      errorHandling: 'Errors', validation: 'Validation', testing: 'Test framework',
       database: 'Database', auth: 'Auth',
     };
     const categories = ['errorHandling', 'validation', 'database', 'auth', 'testing'] as const;
@@ -463,15 +494,16 @@ export function registerScanCommand(program: Command): void {
 
       if (spinner) spinner.stop();
 
-      // Verbose output (stderr — visible with --quiet)
+      // S19/NEW-006 Part B: the previous --verbose output printed a
+      // 4-line summary of Stack/Commands/Git/service count/blind-spot
+      // count — every field already visible in the default human-readable
+      // output. Decorative duplication, not diagnostic signal. Deleted.
+      // Flag stays wired on Commander (see registerScanCommand below) so
+      // users don't see "unknown option" errors; a real --verbose
+      // implementation (per-phase timing, WASM status, detection-
+      // collector contents) is tracked for a future sprint.
       if (options.verbose) {
-        console.error(chalk.dim('\n=== ENGINE RESULT ==='));
-        console.error(chalk.dim('Stack:'), JSON.stringify(result.stack));
-        console.error(chalk.dim('Commands:'), JSON.stringify(result.commands));
-        console.error(chalk.dim('Git:'), JSON.stringify(result.git));
-        console.error(chalk.dim('External services:'), result.externalServices.length);
-        console.error(chalk.dim('Blind spots:'), result.blindSpots.length);
-        console.error(chalk.dim('====================\n'));
+        console.error(chalk.gray('  (--verbose: detailed output not yet implemented)'));
       }
 
       // Output (stdout — suppressed by --quiet unless --json)
@@ -479,7 +511,7 @@ export function registerScanCommand(program: Command): void {
         console.log(JSON.stringify(result, null, 2));
       } else if (!options.quiet) {
         const isFunnel = !existsSync(path.join(rootPath, '.ana'));
-        console.log(formatHumanReadable(result, { isFunnel }));
+        console.log(formatHumanReadable(result, { isFunnel, rootPath }));
       }
 
       // Save
@@ -491,12 +523,21 @@ export function registerScanCommand(program: Command): void {
             console.log(chalk.gray('Scan saved to .ana/scan.json'));
           }
 
-          // Update lastScanAt in ana.json
+          // Update lastScanAt in ana.json.
+          //
+          // S19/NEW-004 (reframed): must use result.overview.scannedAt,
+          // not a fresh new Date(). The check.ts dashboard compares
+          // ana.json.lastScanAt against scan.json.overview.scannedAt with
+          // string equality — if these two timestamps disagree by a few
+          // milliseconds (as a fresh Date() always would), every dashboard
+          // run after --save reports "stale (scan newer than last setup)"
+          // even when the scan JUST happened. Use the same source of
+          // truth for both fields.
           const anaJsonPath = path.join(anaDir, 'ana.json');
           if (existsSync(anaJsonPath)) {
             try {
               const anaJson = JSON.parse(readFileSync(anaJsonPath, 'utf-8'));
-              anaJson.lastScanAt = new Date().toISOString();
+              anaJson.lastScanAt = result.overview.scannedAt;
               writeFileSync(anaJsonPath, JSON.stringify(anaJson, null, 2) + '\n');
             } catch {
               // ana.json parse/write error — skip silently

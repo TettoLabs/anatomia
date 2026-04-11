@@ -1,18 +1,18 @@
 {
-  "name": "anatomia",
-  "framework": null,
+  "anaVersion": "0.2.0",
+  "name": "anatomia-workspace",
   "language": "TypeScript",
+  "framework": null,
   "packageManager": "pnpm",
   "commands": {
     "build": "pnpm run build",
-    "test": "pnpm run test",
+    "test": "pnpm run test -- --run",
     "lint": "pnpm run lint",
     "dev": "pnpm run dev"
   },
   "coAuthor": "Ana <build@anatomia.dev>",
   "artifactBranch": "main",
-  "setupMode": "guided",
-  "scanStaleDays": 7,
-  "setupCompletedAt": "2026-04-06T01:04:09.194Z",
-  "lastScanAt": "2026-04-07T17:58:30.491Z"
+  "setupMode": "not_started",
+  "setupCompletedAt": null,
+  "lastScanAt": "2026-04-11T18:20:35.089Z"
 }

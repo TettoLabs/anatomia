@@ -22,7 +22,7 @@ import type { DetectedDeployment, DetectedCI } from '../detectors/deployment.js'
  *
  * After Phase 1 (Items 3, 6, 7a/b/d), five sub-fields compose their detector
  * types directly rather than duplicating them inline:
- * - `commands: DetectedCommands & { packageManager: string }`
+ * - `commands: DetectedCommands & { packageManager: string | null }`
  * - `git: GitInfo`
  * - `deployment: DetectedDeployment & DetectedCI`
  * - `patterns: PatternAnalysis | null`
@@ -58,8 +58,11 @@ export interface EngineResult {
   structureOverflow: number;
   // Composed from the detector's DetectedCommands (Item 7a) — adding a field
   // to DetectedCommands now flows through automatically. The only extra field
-  // scan-engine appends on top is packageManager.
-  commands: DetectedCommands & { packageManager: string };
+  // scan-engine appends on top is packageManager, which is nullable because
+  // non-Node projects (Python, Go, Rust) have no package manager in the Node
+  // sense (S19/SCAN-032 — pre-fix, the detector fell back to "npm" which was
+  // a semantic lie that propagated into ana.json for every non-Node project).
+  commands: DetectedCommands & { packageManager: string | null };
   // Imported directly from the git detector (Item 7b) — inline shape was
   // byte-identical to GitInfo, so importing eliminates a drift trap at zero
   // semantic cost.
@@ -276,7 +279,7 @@ export function createEmptyEngineResult(): EngineResult {
     files: { source: 0, test: 0, config: 0, total: 0 },
     structure: [],
     structureOverflow: 0,
-    commands: { build: null, test: null, lint: null, dev: null, packageManager: 'npm', all: {} },
+    commands: { build: null, test: null, lint: null, dev: null, packageManager: null, all: {} },
     git: { head: null, branch: null, commitCount: null, lastCommitAt: null, uncommittedChanges: false, contributorCount: null, defaultBranch: null, branches: null },
     monorepo: { isMonorepo: false, tool: null, packages: [] },
     externalServices: [],

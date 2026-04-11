@@ -31,6 +31,21 @@ export function registerSetupCommand(program: Command): void {
   setupCommand.addCommand(createCheckCommand());
   setupCommand.addCommand(createIndexCommand());
 
+  // S19/SETUP-002: bare `ana setup` should tell the user that setup is an
+  // agent flow, not a CLI action. `ana init` and `ana scan` have root
+  // actions because they ARE CLI operations; `ana setup` is different —
+  // the main operation runs inside a Claude Code agent. Showing auto-
+  // generated help gives the user nothing actionable.
+  setupCommand.action(() => {
+    console.log(chalk.bold('\nSetup is an interactive agent flow.\n'));
+    console.log(`  ${chalk.cyan('claude --agent ana-setup')}`);
+    console.log();
+    console.log(chalk.gray('Subcommands:'));
+    console.log(chalk.gray('  ana setup check     — validate setup state'));
+    console.log(chalk.gray('  ana setup complete  — finalize setup'));
+    console.log();
+  });
+
   setupCommand
     .command('complete')
     .description('Validate context files and finalize setup')

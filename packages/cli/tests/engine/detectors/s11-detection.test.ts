@@ -140,10 +140,12 @@ describe('Package manager inheritance', () => {
     expect(pm).toBe('pnpm');
   });
 
-  it('falls back to npm when no lockfile found', async () => {
-    // No lockfile anywhere in temp dir
+  it('returns null when no lockfile found (S19/SCAN-032)', async () => {
+    // No lockfile anywhere in temp dir. Pre-S19 this fell back to 'npm',
+    // which was a semantic lie for non-Node projects (Python/Go/Rust).
+    // Now null — downstream display code already guards with truthy check.
     const pm = await detectPackageManager(tempDir);
-    expect(pm).toBe('npm');
+    expect(pm).toBeNull();
   });
 
   it('finds lockfile in current directory first', async () => {
@@ -157,5 +159,84 @@ describe('Package manager inheritance', () => {
     await fs.writeFile(path.join(tempDir, 'yarn.lock'), '');
     const pm = await detectPackageManager(tempDir);
     expect(pm).toBe('pnpm');
+  });
+
+  // S19/SCAN-032 refinement: package.json's `packageManager` field is
+  // the corepack-standard way to declare manager intent. A project with
+  // that field set but no lockfile yet (fresh install) should respect
+  // the declaration rather than defaulting to 'npm'. The alternative
+  // would silently lie to bun/yarn/pnpm users whose projects happen to
+  // be in a pre-install state.
+
+  it('respects package.json packageManager field for fresh bun project', async () => {
+    // Fresh bun project — no bun.lockb yet, but packageManager field declares intent
+    await fs.writeFile(
+      path.join(tempDir, 'package.json'),
+      JSON.stringify({ name: 'test', packageManager: 'bun@1.1.0' })
+    );
+    const pm = await detectPackageManager(tempDir);
+    expect(pm).toBe('bun');
+  });
+
+  it('respects package.json packageManager field for fresh pnpm project', async () => {
+    await fs.writeFile(
+      path.join(tempDir, 'package.json'),
+      JSON.stringify({ name: 'test', packageManager: 'pnpm@8.6.12' })
+    );
+    const pm = await detectPackageManager(tempDir);
+    expect(pm).toBe('pnpm');
+  });
+
+  it('respects package.json packageManager field for fresh yarn project', async () => {
+    await fs.writeFile(
+      path.join(tempDir, 'package.json'),
+      JSON.stringify({ name: 'test', packageManager: 'yarn@4.0.0' })
+    );
+    const pm = await detectPackageManager(tempDir);
+    expect(pm).toBe('yarn');
+  });
+
+  it('lockfile wins over package.json packageManager field (lockfile is authoritative)', async () => {
+    // If both signals exist, the lockfile proves what actually ran install;
+    // the packageManager field is just declared intent.
+    await fs.writeFile(path.join(tempDir, 'bun.lockb'), '');
+    await fs.writeFile(
+      path.join(tempDir, 'package.json'),
+      JSON.stringify({ name: 'test', packageManager: 'pnpm@8.6.12' })
+    );
+    const pm = await detectPackageManager(tempDir);
+    expect(pm).toBe('bun');
+  });
+
+  it('defaults to npm when package.json exists without packageManager field', async () => {
+    // Plain `npm init` project — Node project, no declared intent, no lockfile yet.
+    // Default to 'npm' because that's the bare-install convention.
+    await fs.writeFile(
+      path.join(tempDir, 'package.json'),
+      JSON.stringify({ name: 'test' })
+    );
+    const pm = await detectPackageManager(tempDir);
+    expect(pm).toBe('npm');
+  });
+
+  it('ignores unrecognized packageManager field values', async () => {
+    // Defensive: if package.json declares something we don't recognize
+    // (e.g., a typo or an experimental tool), fall through to the 'npm'
+    // default rather than trusting arbitrary strings.
+    await fs.writeFile(
+      path.join(tempDir, 'package.json'),
+      JSON.stringify({ name: 'test', packageManager: 'bogus@1.0.0' })
+    );
+    const pm = await detectPackageManager(tempDir);
+    expect(pm).toBe('npm');
+  });
+
+  it('ignores malformed packageManager field (non-string)', async () => {
+    await fs.writeFile(
+      path.join(tempDir, 'package.json'),
+      JSON.stringify({ name: 'test', packageManager: { wrong: 'shape' } })
+    );
+    const pm = await detectPackageManager(tempDir);
+    expect(pm).toBe('npm');
   });
 });

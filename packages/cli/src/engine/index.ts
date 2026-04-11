@@ -28,8 +28,10 @@ interface AnalyzeOptions {
   skipPatterns?: boolean;
   skipConventions?: boolean;
   maxFiles?: number;
+  /** If true, rethrow on engine errors instead of returning an empty
+   *  AnalysisResult. Useful for test code that wants to see real failures
+   *  instead of silent fallback. Not set by the production scan path. */
   strictMode?: boolean;
-  verbose?: boolean;
 }
 
 /**
@@ -71,8 +73,10 @@ interface AnalyzeOptions {
  *   imports, indentation).
  * @param options.maxFiles - Cap on the number of files passed to
  *   tree-sitter sampling. Default is per-language.
- * @param options.strictMode - Reserved; currently unused.
- * @param options.verbose - Enable per-phase console output.
+ * @param options.strictMode - If true, rethrow engine errors instead of
+ *   returning an empty AnalysisResult. Used by diagnostic/test callers
+ *   that want to see real failures; the production scan path leaves it
+ *   unset so errors fail-soft.
  * @returns An `AnalysisResult` — a narrower shape than `EngineResult` that
  *   focuses on what tree-sitter can confirm. `scanProject()` composes this
  *   with dependency detection to build the full `EngineResult`.
@@ -88,14 +92,17 @@ export async function analyze(
   const collector = new DetectionCollector();
 
   try {
-    // Phase 1: Monorepo detection
-    const monorepoResult = options.skipMonorepo
+    // Phase 1: Monorepo detection. The result is unused in this path —
+    // scanProject() runs its own monorepo detection via detectMonorepoInfo
+    // which is the one that populates EngineResult.monorepo. This call
+    // exists only to let detectMonorepo push warnings into the collector
+    // (which is currently unused; tracked for S19+ as NEW-003). Kept as
+    // an underscore-prefixed var to preserve the side effect without
+    // tripping the unused-locals lint rule.
+    const _monorepoResult = options.skipMonorepo
       ? { isMonorepo: false, tool: null }
       : await detectMonorepo(rootPath, collector);
-
-    if (monorepoResult.isMonorepo && options.verbose) {
-      // Log monorepo info in verbose mode
-    }
+    void _monorepoResult;
 
     // Phase 2: Project type detection
     const projectTypeResult = await detectProjectType(rootPath);

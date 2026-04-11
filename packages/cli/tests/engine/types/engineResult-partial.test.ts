@@ -111,9 +111,19 @@ describe('EngineResultPartialSchema', () => {
     expect(() => parseEngineResultPartial(data)).toThrow(ZodError);
   });
 
-  it('rejects commands.packageManager being null (it is required non-null)', () => {
+  it('accepts commands.packageManager: null (non-Node projects have no package manager)', () => {
+    // S19/SCAN-032: packageManager is nullable because Python/Go/Rust
+    // projects legitimately have no package manager in the Node sense.
+    // The pre-fix schema required a string, which forced scan-engine to
+    // fall back to 'npm' for every non-Node project — a semantic lie.
     const data = validShape() as unknown as { commands: { packageManager: unknown } };
     data.commands.packageManager = null;
+    expect(() => parseEngineResultPartial(data)).not.toThrow();
+  });
+
+  it('rejects commands.packageManager being a number (nullable string, not any)', () => {
+    const data = validShape() as unknown as { commands: { packageManager: unknown } };
+    data.commands.packageManager = 42;
     expect(() => parseEngineResultPartial(data)).toThrow(ZodError);
   });
 
