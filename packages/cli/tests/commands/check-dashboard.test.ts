@@ -13,6 +13,16 @@ import {
   checkSkill,
   checkConsistency,
 } from '../../src/commands/check.js';
+import { AnaJsonSchema } from '../../src/commands/init/anaJsonSchema.js';
+
+/**
+ * Helper to build a fully-validated AnaJson from a partial test object.
+ * Uses the real schema so defaults + catches are applied, matching how
+ * `check.ts:readAnaJson` parses ana.json at runtime.
+ */
+function mockAnaJson(partial: Record<string, unknown> = {}) {
+  return AnaJsonSchema.parse(partial);
+}
 
 let tmpDir: string;
 
@@ -326,8 +336,11 @@ describe('skill check', () => {
 // ── Consistency Checks ──
 
 describe('consistency checks', () => {
-  it('reports aligned when Detected is empty (no cross-reference possible)', async () => {
-    // Create skill files with empty Detected (template state)
+  it('reports "awaiting setup enrichment" when Detected is empty (S19/SETUP-025)', async () => {
+    // Create skill files with empty Detected (template state). The pre-S19
+    // behavior silently reported "aligned" here, which was phantom
+    // verification: the check was skipped because there was nothing to
+    // compare against, but the ✓ symbol implied verification had passed.
     const codingDir = path.join(tmpDir, '.claude', 'skills', 'coding-standards');
     await fs.mkdir(codingDir, { recursive: true });
     await fs.writeFile(
@@ -335,12 +348,14 @@ describe('consistency checks', () => {
       `# Coding Standards\n\n## Detected\n<!-- empty -->\n\n## Rules\n\n## Gotchas\n\n## Examples\n`
     );
 
-    const anaJson = { language: 'TypeScript', artifactBranch: 'main', commands: { test: 'vitest' } };
+    const anaJson = mockAnaJson({ language: 'TypeScript', artifactBranch: 'main', commands: { test: 'vitest' } });
     const results = await checkConsistency(tmpDir, anaJson, null);
 
-    // Should be aligned — empty Detected can't mismatch
+    // Empty Detected → ○ awaiting enrichment (NOT ✓ aligned)
     const skillResult = results.find(r => r.label === 'ana.json ↔ skills');
-    expect(skillResult?.detail).toBe('aligned');
+    expect(skillResult?.symbol).toContain('○');
+    expect(skillResult?.detail).toContain('awaiting setup enrichment');
+    expect(skillResult?.detail).toContain('coding-standards');
   });
 
   it('reports mismatch when Detected content contradicts ana.json', async () => {
@@ -351,7 +366,7 @@ describe('consistency checks', () => {
       `# Coding Standards\n\n## Detected\n- Python detected\n- snake_case functions\n\n## Rules\n\n## Gotchas\n\n## Examples\n`
     );
 
-    const anaJson = { language: 'TypeScript', artifactBranch: 'main', commands: {} };
+    const anaJson = mockAnaJson({ language: 'TypeScript', artifactBranch: 'main', commands: {} });
     const results = await checkConsistency(tmpDir, anaJson, null);
 
     const skillResult = results.find(r => r.label === 'ana.json ↔ skills');
@@ -360,7 +375,7 @@ describe('consistency checks', () => {
   });
 
   it('reports stale when scan.json is newer', async () => {
-    const anaJson = { lastScanAt: '2026-04-06T00:00:00.000Z' };
+    const anaJson = mockAnaJson({ lastScanAt: '2026-04-06T00:00:00.000Z' });
     const scanJson = { overview: { scannedAt: '2026-04-07T00:00:00.000Z' } };
     const results = await checkConsistency(tmpDir, anaJson, scanJson);
 
@@ -371,7 +386,7 @@ describe('consistency checks', () => {
 
   it('reports current when timestamps match', async () => {
     const ts = '2026-04-07T12:00:00.000Z';
-    const anaJson = { lastScanAt: ts };
+    const anaJson = mockAnaJson({ lastScanAt: ts });
     const scanJson = { overview: { scannedAt: ts } };
     const results = await checkConsistency(tmpDir, anaJson, scanJson);
 
@@ -381,7 +396,7 @@ describe('consistency checks', () => {
   });
 
   it('skips staleness check when no scan.json', async () => {
-    const anaJson = { lastScanAt: '2026-04-06T00:00:00.000Z' };
+    const anaJson = mockAnaJson({ lastScanAt: '2026-04-06T00:00:00.000Z' });
     const results = await checkConsistency(tmpDir, anaJson, null);
 
     const freshness = results.find(r => r.label === 'Detected ↔ scan.json');
@@ -506,5 +521,77 @@ Simplicity over complexity. Ship incrementally.
     const { checkContextForDashboard } = await import('../../src/commands/check.js');
     const result = await checkContextForDashboard(tmpDir, 'design-principles.md');
     expect(result.symbol).toContain('✓');
+  });
+
+  // S19/SETUP-024 + SETUP-027: dashboard and validator must agree on
+  // per-section content. Before the unification, the dashboard showed
+  // "6 sections populated" based on the raw heading count even when
+  // only 1 section had real content, because it used a different
+  // (looser) content-detection function than the completion validator.
+
+  it('project-context with 1 section populated shows ○ with accurate count', async () => {
+    const contextDir = path.join(tmpDir, '.ana', 'context');
+    await fs.mkdir(contextDir, { recursive: true });
+    await fs.writeFile(
+      path.join(contextDir, 'project-context.md'),
+      `# Project Context
+
+## What This Project Does
+Real content only here.
+
+## Architecture
+<!-- populated via setup -->
+
+## Key Decisions
+<!-- populated via setup -->
+
+## Key Files
+<!-- populated via setup -->
+
+## Active Constraints
+<!-- populated via setup -->
+
+## Domain Vocabulary
+<!-- populated via setup -->
+`
+    );
+
+    const { checkContextForDashboard } = await import('../../src/commands/check.js');
+    const result = await checkContextForDashboard(tmpDir, 'project-context.md');
+    // Not ✓ — only 1 of 6 has real content
+    expect(result.symbol).toContain('○');
+    expect(result.description).toBe('1/6 sections populated');
+  });
+
+  it('project-context with multiline comment in critical section reports empty (SETUP-027)', async () => {
+    // The pre-S19 dashboard used hasNonTemplateContent which didn't track
+    // multiline HTML comment state, so a multiline comment was treated as
+    // real content. The completion validator used hasRealContent which
+    // DID track it correctly. Same file, opposite verdicts. Unified here.
+    const contextDir = path.join(tmpDir, '.ana', 'context');
+    await fs.mkdir(contextDir, { recursive: true });
+    await fs.writeFile(
+      path.join(contextDir, 'project-context.md'),
+      `# Project Context
+
+## What This Project Does
+<!--
+This is a multiline comment
+spanning several lines. It is NOT real content.
+-->
+
+## Architecture
+## Key Decisions
+## Key Files
+## Active Constraints
+## Domain Vocabulary
+`
+    );
+
+    const { checkContextForDashboard } = await import('../../src/commands/check.js');
+    const result = await checkContextForDashboard(tmpDir, 'project-context.md');
+    // All sections empty — ○ scaffold, not ✓
+    expect(result.symbol).toContain('○');
+    expect(result.description).toBe('scaffold (setup will enrich)');
   });
 });
