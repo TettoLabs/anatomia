@@ -12,6 +12,25 @@ import type { DetectedCommands } from '../detectors/commands.js';
 import type { GitInfo } from '../detectors/git.js';
 import type { DetectedDeployment, DetectedCI } from '../detectors/deployment.js';
 
+/**
+ * The unified scan result returned by `scanProject()` and consumed by every
+ * display surface in the CLI (`ana scan` terminal output, `ana init` success
+ * message, `CLAUDE.md`, `AGENTS.md`, and the Detected section of every
+ * `.claude/skills/<name>/SKILL.md`). Adding a field here is the single edit
+ * point — `tsc` then forces `createEmptyEngineResult()` below to populate it
+ * and any consumer that destructures the shape to handle it.
+ *
+ * After Phase 1 (Items 3, 6, 7a/b/d), five sub-fields compose their detector
+ * types directly rather than duplicating them inline:
+ * - `commands: DetectedCommands & { packageManager: string }`
+ * - `git: GitInfo`
+ * - `deployment: DetectedDeployment & DetectedCI`
+ * - `patterns: PatternAnalysis | null`
+ * - `conventions: ConventionAnalysis | null`
+ *
+ * Each composition has a compile-time assertion in `tests/engine/types.test.ts`
+ * that fails if the field regresses to an inline type.
+ */
 export interface EngineResult {
   schemaVersion: string;
   overview: {

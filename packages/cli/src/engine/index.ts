@@ -33,9 +33,16 @@ interface AnalyzeOptions {
 }
 
 /**
- * Analyze a project directory and return detection results
+ * Legacy orchestrator for the engine's per-phase detection pipeline.
  *
- * Orchestrates all detection phases (consumed by 7 test files).
+ * `analyze()` is the **internal** counterpart to `scanProject()`
+ * (in `./scan-engine.ts`). It returns an `AnalysisResult` — the older,
+ * tree-sitter-centric shape used during engine development — while
+ * `scanProject()` returns the unified `EngineResult` that every display
+ * surface consumes. External callers should use `scanProject()`; `analyze()`
+ * is retained because it's reached via dynamic import from `scanProject` for
+ * the project-type / framework / structure / parsed / patterns / conventions
+ * phases, and because 7 test files exercise it directly.
  *
  * NOTE: this function deliberately uses `await import(...)` for every engine
  * module below instead of top-of-file ESM imports. The reason is tree-sitter:
@@ -48,6 +55,27 @@ interface AnalyzeOptions {
  * IDE "find references" features. If you rename a file here, grep by path
  * literal (`'./detectors/monorepo.js'` etc.) to catch every dynamic site.
  * Sites: lines 47-49 plus phases 5-7 below.
+ *
+ * @param rootPath - Absolute path to the project root.
+ * @param options - Analysis options.
+ * @param options.skipImportScan - Skip import-scanner-based framework
+ *   disambiguation (faster, used by surface-tier scans).
+ * @param options.skipStructure - Skip structure analysis (directory tree,
+ *   entry points, test locations, architecture style).
+ * @param options.skipParsing - Skip tree-sitter parsing entirely. Forces
+ *   `parsed: undefined` and therefore `patterns`/`conventions` to
+ *   `undefined` as well (those phases need parsed files as input).
+ * @param options.skipPatterns - Skip pattern inference (errorHandling,
+ *   validation, database, auth, testing).
+ * @param options.skipConventions - Skip convention detection (naming,
+ *   imports, indentation).
+ * @param options.maxFiles - Cap on the number of files passed to
+ *   tree-sitter sampling. Default is per-language.
+ * @param options.strictMode - Reserved; currently unused.
+ * @param options.verbose - Enable per-phase console output.
+ * @returns An `AnalysisResult` — a narrower shape than `EngineResult` that
+ *   focuses on what tree-sitter can confirm. `scanProject()` composes this
+ *   with dependency detection to build the full `EngineResult`.
  */
 export async function analyze(
   rootPath: string,
