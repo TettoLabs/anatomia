@@ -49,9 +49,9 @@ describe('ana init E2E', () => {
 
     const anaPath = path.join(tmpProject, '.ana');
 
-    // Verify directories (5 — modes removed S18, setup/ removed D10.9/S16, docs/ removed S18 Phase 3 Pass 2)
+    // Verify directories (4 — hooks removed S19/NEW-005, modes removed S18,
+    // setup/ removed D10.9/S16, docs/ removed S18 Phase 3 Pass 2)
     const dirs = [
-      'hooks',
       'context',
       'plans/active',
       'plans/completed',
@@ -74,20 +74,8 @@ describe('ana init E2E', () => {
       expect(exists, `Generated file missing: ${file}`).toBe(true);
     }
 
-    // Verify hook scripts (2 — quality-gate and subagent-verify removed S18)
-    const hookScripts = [
-      'hooks/verify-context-file.sh',
-      'hooks/run-check.sh',
-    ];
-
-    for (const script of hookScripts) {
-      const exists = await fileExists(path.join(anaPath, script));
-      expect(exists, `Hook script missing: ${script}`).toBe(true);
-
-      // Verify executable permissions
-      const stats = await fs.stat(path.join(anaPath, script));
-      expect(stats.mode & 0o111).toBeGreaterThan(0);
-    }
+    // .ana/hooks/ removed (S19/NEW-005 — the dead PostToolUse hook chain
+    // was computing validation then discarding it; entire chain deleted)
 
     // Verify .gitkeep files in plan directories
     const activeGitkeepExists = await fileExists(path.join(anaPath, 'plans/active/.gitkeep'));
@@ -105,9 +93,9 @@ describe('ana init E2E', () => {
     expect(meta.name).toBeDefined();
 
     // Count total files in .ana/
-    // 2 generated + 2 hooks + 2 .gitkeep + 2 JSON (ana.json, scan.json) + 1 symbol-index + 1 cli-path + 1 .gitignore = 11
+    // 2 generated + 2 .gitkeep + 2 JSON (ana.json, scan.json) + 1 symbol-index + 1 .gitignore = 8
     const allFiles = await findAllFiles(anaPath);
-    expect(allFiles.length).toBe(11);
+    expect(allFiles.length).toBe(8);
 
     // Verify .gitignore exists and excludes runtime state
     const gitignorePath = path.join(anaPath, '.gitignore');

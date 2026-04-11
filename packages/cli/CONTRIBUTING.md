@@ -99,7 +99,6 @@ pnpm test tests/templates/  # Template tests only
 **Template locations:**
 - `Agent templates:` templates/.claude/agents/
 - `Skill templates:` templates/.claude/skills/
-- `Hook scripts:` templates/.ana/hooks/
 
 **Development workflow:**
 

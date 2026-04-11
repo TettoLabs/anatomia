@@ -289,40 +289,6 @@ export async function buildSymbolIndexSafe(cwd: string, tmpAnaPath: string): Pro
 }
 
 /**
- * Write CLI path for hook scripts to find the CLI
- *
- * Writes absolute paths to node binary and CLI entry point.
- * Used by run-check.sh to invoke ana commands from external projects.
- *
- * @param tmpAnaPath - Temp .ana/ path
- */
-export async function writeCliPath(tmpAnaPath: string): Promise<void> {
-  const stateDir = path.join(tmpAnaPath, 'state');
-  await fs.mkdir(stateDir, { recursive: true });
-
-  // Get CLI entry point path (handles both dev and built contexts)
-  // import.meta.url points to the currently executing file
-  const moduleUrl = fileURLToPath(import.meta.url);
-  const moduleDir = path.dirname(moduleUrl);
-
-  // In bundled context: dist/index.js → dist/index.js is the entry
-  // In dev context: src/commands/init.ts → go up to find index.ts
-  const isBundle = !moduleDir.includes('/src/');
-  const cliEntry = isBundle
-    ? moduleUrl // dist/index.js IS the entry
-    : path.join(moduleDir, '..', 'index.js'); // src/commands/init.ts → src/index.js (compiled)
-
-  // Store node executable path
-  const nodeExec = process.execPath;
-
-  await fs.writeFile(
-    path.join(stateDir, 'cli-path'),
-    JSON.stringify({ node: nodeExec, cli: cliEntry }),
-    'utf-8'
-  );
-}
-
-/**
  * Phase 9: Atomic rename
  *
  * Moves temp .ana/ to final location atomically.

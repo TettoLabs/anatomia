@@ -63,9 +63,6 @@ describe('ana init', () => {
       const templatesDir = path.join(__dirname, '..', '..', 'templates');
 
       const expectedFiles = [
-        // 2 hook scripts
-        '.ana/hooks/verify-context-file.sh',
-        '.ana/hooks/run-check.sh',
         // 1 settings template
         '.claude/settings.json',
         // 5 agent files
@@ -84,7 +81,7 @@ describe('ana init', () => {
         'CLAUDE.md',
       ];
 
-      expect(expectedFiles).toHaveLength(14);
+      expect(expectedFiles).toHaveLength(12);
 
       for (const file of expectedFiles) {
         const filePath = path.join(templatesDir, file);
@@ -189,58 +186,12 @@ describe('ana init', () => {
     });
   });
 
-  describe('.ana/hooks/', () => {
-    it('hook scripts are created with correct content', async () => {
-      // Get templates directory
-      const __filename = fileURLToPath(import.meta.url);
-      const __dirname = path.dirname(__filename);
-      const templatesDir = path.join(__dirname, '..', '..', 'templates');
-
-      // Verify verify-context-file.sh
-      const verifyPath = path.join(templatesDir, '.ana/hooks/verify-context-file.sh');
-      const verifyContent = await fs.readFile(verifyPath, 'utf-8');
-      expect(verifyContent).toContain('#!/bin/bash');
-      expect(verifyContent).toContain('PostToolUse hook');
-      expect(verifyContent).toContain('.ana/context/');
-      expect(verifyContent).toContain('run-check.sh');
-      // Result files removed (S18/D5 — orphaned writes)
-      // Verify jq parsing with grep fallback
-      expect(verifyContent).toContain('jq -r');
-      expect(verifyContent).toContain('.tool_input.file_path');
-      expect(verifyContent).toContain('Fallback: grep parsing');
-
-      // quality-gate.sh and subagent-verify.sh removed (S18/D4)
-    });
-
-    it('hook scripts will be executable after copy', async () => {
-      const anaPath = path.join(tmpDir, '.ana');
-      const hooksPath = path.join(anaPath, 'hooks');
-
-      // Simulate copying hooks with chmod
-      await fs.mkdir(hooksPath, { recursive: true });
-
-      const __filename = fileURLToPath(import.meta.url);
-      const __dirname = path.dirname(__filename);
-      const templatesDir = path.join(__dirname, '..', '..', 'templates');
-
-      // Copy and set executable
-      const scripts = ['verify-context-file.sh', 'run-check.sh'];
-      for (const script of scripts) {
-        const sourcePath = path.join(templatesDir, '.ana/hooks', script);
-        const destPath = path.join(hooksPath, script);
-        await fs.copyFile(sourcePath, destPath);
-        await fs.chmod(destPath, 0o755);
-
-        // Verify executable permission
-        const stats = await fs.stat(destPath);
-        // Check that at least user execute bit is set (0o100)
-        expect(stats.mode & 0o111).toBeGreaterThan(0);
-      }
-    });
-  });
-
   describe('.claude/ configuration', () => {
-    it('creates .claude/settings.json with correct hooks structure', async () => {
+    it('ships empty hooks object in settings template', async () => {
+      // S19: PostToolUse hook chain removed (S18/D5 left it dead — hook
+      // computed validation results then discarded them). Template ships
+      // with empty hooks object as placeholder; if future hooks are added
+      // the merge logic in mergeHooksSettings handles user-settings merging.
       const __filename = fileURLToPath(import.meta.url);
       const __dirname = path.dirname(__filename);
       const templatesDir = path.join(__dirname, '..', '..', 'templates');
@@ -249,16 +200,7 @@ describe('ana init', () => {
       const content = await fs.readFile(settingsPath, 'utf-8');
       const settings = JSON.parse(content);
 
-      // Verify PostToolUse hook
-      expect(settings.hooks.PostToolUse).toBeDefined();
-      expect(settings.hooks.PostToolUse).toHaveLength(1);
-      expect(settings.hooks.PostToolUse[0].matcher).toBe('Write|Edit|MultiEdit');
-      expect(settings.hooks.PostToolUse[0].hooks[0].command).toBe(
-        '"$CLAUDE_PROJECT_DIR"/.ana/hooks/verify-context-file.sh'
-      );
-      expect(settings.hooks.PostToolUse[0].hooks[0].timeout).toBe(30);
-
-      // Stop hook removed (S18/D4)
+      expect(settings.hooks).toEqual({});
     });
 
     it('creates .claude/agents/ directory with 8 agent files', async () => {

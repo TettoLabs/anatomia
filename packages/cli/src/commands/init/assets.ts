@@ -9,9 +9,7 @@
  *   area before atomic rename
  * - generateScaffolds: project-context.md + design-principles.md from
  *   scan data (scaffold-generators.ts templates)
- * - copyAndVerifyFile: SHA-256 hash-verified copy (used for hook scripts
- *   and agent files)
- * - copyHookScripts: .ana/hooks/*.sh for Claude Code integration
+ * - copyAndVerifyFile: SHA-256 hash-verified copy (used for agent files)
  * - createClaudeConfiguration: the .claude/ tree (agents, skills,
  *   settings.json) — delegates skill copies to skills.scaffoldAndSeedSkills
  * - copyAgentFiles: .claude/agents/*.md without overwriting user edits
@@ -145,39 +143,6 @@ async function copyAndVerifyFile(
         'File may be corrupted during copy.'
     );
   }
-}
-
-/**
- * Copy hook scripts to .ana/hooks/
- *
- * Copies hook scripts and sets executable permissions.
- *
- * @param tmpAnaPath - Temp .ana/ path
- */
-export async function copyHookScripts(tmpAnaPath: string): Promise<void> {
-  const spinner = ora('Copying hook scripts...').start();
-
-  const templatesDir = getTemplatesDir();
-  const hooksDir = path.join(tmpAnaPath, 'hooks');
-
-  // Create hooks directory
-  await fs.mkdir(hooksDir, { recursive: true });
-
-  // Hook scripts to copy
-  const hookScripts = ['run-check.sh', 'verify-context-file.sh'];
-
-  for (const script of hookScripts) {
-    const sourcePath = path.join(templatesDir, '.ana/hooks', script);
-    const destPath = path.join(hooksDir, script);
-
-    // Copy with verification
-    await copyAndVerifyFile(sourcePath, destPath, `.ana/hooks/${script}`);
-
-    // Set executable permissions (chmod +x)
-    await fs.chmod(destPath, 0o755);
-  }
-
-  spinner.succeed('Copied hook scripts (2 files, executable)');
 }
 
 /**

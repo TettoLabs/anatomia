@@ -17,7 +17,6 @@ import { validateInitPreconditions } from './preflight.js';
 import {
   createDirectoryStructure,
   generateScaffolds,
-  copyHookScripts,
   createClaudeConfiguration,
 } from './assets.js';
 import {
@@ -25,7 +24,6 @@ import {
   saveScanJson,
   createAnaJson,
   buildSymbolIndexSafe,
-  writeCliPath,
   atomicRename,
   displaySuccessMessage,
 } from './state.js';
@@ -76,12 +74,10 @@ export function registerInitCommand(program: Command): void {
       ASTCache.setCacheDir(null);
       await createDirectoryStructure(tmpAnaPath);
       await generateScaffolds(tmpAnaPath, engineResult);
-      await copyHookScripts(tmpAnaPath);
       await saveScanJson(tmpAnaPath, engineResult);
       await createAnaJson(tmpAnaPath, engineResult);
       // snapshot.json removed (S18/D5 — orphaned, nothing reads it)
       await buildSymbolIndexSafe(cwd, tmpAnaPath);
-      await writeCliPath(tmpAnaPath);
 
       // Restore state/ if --force was used
       if (preflight.stateBackup) {
