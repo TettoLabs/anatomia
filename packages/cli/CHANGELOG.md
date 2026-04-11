@@ -5,6 +5,47 @@ All notable changes to anatomia-cli will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### S18 — Cleanup Sprint
+
+- **Breaking:** `ana mode <name>` and the modes system (architect/code/debug/docs/test) removed. Superseded by the four-agent pipeline (Ana → AnaPlan → AnaBuild → AnaVerify).
+- **Added:** `AGENTS.md` generation alongside `CLAUDE.md` — cross-tool support for Cursor, Copilot, Windsurf, Codex, and Claude Code.
+- **Added:** 5 pre-populated gotchas on fresh `ana init` with compound triggers (Vitest watch-mode, Next.js server components, Prisma generate, Drizzle push, Next+Supabase server client).
+- **Added:** `ARCHITECTURE.md` + rewritten `CONTRIBUTING.md` with step-by-step extension guides (framework detectors, gotchas, services, skill templates).
+- **Added:** Husky pre-commit hook + GitHub Actions CI matrix (Ubuntu/macOS/Windows × Node 20/22). Strict TypeScript enforced at build + commit + CI.
+
+### S17 — Setup Enrich + Complete
+
+- `ana setup` Phase 2: project-context enrichment via 6 guess-and-correct questions.
+- `ana setup` Phase 3: design-principles capture in the founder's own words.
+- `ana setup complete` validation gate and `setupMode` state machine.
+
+### S16 — Setup Confirm
+
+- `ana setup` Phase 1: user confirms detected stack before scaffolding.
+- `ana setup check` redesign: ✓/○/✗ dashboard with contradiction detection in context files.
+
+### S15 — Init Pipeline
+
+- `ana.json` project metadata (stack, commands, git branch, setup state).
+- Conditional skill scaffolding — only skills relevant to the detected stack get created.
+- `ana scan --save` writes full scan output to `.ana/scan.json` for agent consumption.
+- `ana scan` overhaul: added `--quick` / `--quiet` / `--save`, removed `--deep` (deep analysis is now the default).
+
+### S14 — Scan Engine
+
+- Unified `EngineResult` schema — one typed shape consumed by every display surface (terminal, JSON, `.ana/scan.json`, `CLAUDE.md`, `AGENTS.md`, skill Detected sections).
+- `deployment` and `git` are now always-present top-level fields in scan output.
+
+### S13 — Vault Foundations
+
+- **Breaking:** skill and context layout redesigned. 5 core skills (coding-standards, testing-standards, git-workflow, deployment, troubleshooting) + 3 conditional (ai-patterns, api-patterns, data-access). Context files reduced from 7 to 2 (`project-context.md`, `design-principles.md`).
+
+### S12 — The Prove It Sprint
+
+- Four-agent pipeline (Ana → AnaPlan → AnaBuild → AnaVerify) validated end-to-end on a real feature: 19/19 contract assertions satisfied. First completed dogfood run producing a full proof chain entry.
+
 ## [0.2.0] - 2026-03-20
 
 ### Added
@@ -43,37 +84,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Migration
 
 See README.md "Migration from v0.1.0" section.
-
-### S17 — Setup Phases 2-3
-- Enrich project-context (6 questions, guess-and-correct + generative)
-- Design principles capture (founder's words verbatim)
-- Completion gate, setupMode transitions
-- setup-progress.json lifecycle
-
-### S16 — Setup Phase 1
-- Config confirmation with detection sources
-- Skill batch with ✓/⚠ flags
-- coding-standards and ai-patterns deep-dives
-- Contradiction handling, immediate writes
-
-### S15 — Init Pipeline
-- ana.json D1 schema (14 fields)
-- Skill seeding with replaceDetectedSection()
-- Conditional skill gating via computeSkillManifest()
-- Agent frontmatter routing (D6.10)
-
-### S14 — Scan Engine
-- EngineResult D2 schema with typed PatternDetail/ConventionDetail
-- Deployment and git always-present fields
-
-### S13 — Vault Foundations
-- Deleted 10,219 lines of legacy infrastructure
-- Authored all 8 skill templates (5 core + 3 conditional)
-- Reduced context from 7 files to 2 (project-context.md, design-principles.md)
-
-### S12 — The Prove It Sprint
-- Validated full four-agent pipeline end-to-end (19/19 contract assertions satisfied)
-- First complete dogfood run producing proof chain entry
 
 ---
 
