@@ -27,6 +27,7 @@ import {
   atomicRename,
   displaySuccessMessage,
 } from './state.js';
+import { AnaJsonSchema } from './anaJsonSchema.js';
 
 /**
  * Register the `init` command.
@@ -95,26 +96,36 @@ export function registerInitCommand(program: Command): void {
         await fs.rename(preflight.contextBackup, contextDir);
       }
 
-      // Restore ana.json then overwrite mechanical fields
+      // Restore ana.json: parse user backup through AnaJsonSchema (strips
+      // orphaned fields like scanStaleDays, catches invalid enum values),
+      // then overwrite mechanical fields (anaVersion, lastScanAt) from the
+      // freshly-created ana.json in tmpAnaPath. Note: this block is
+      // replaced entirely in S19/NEW-001 Option B (swap-based atomic
+      // rename) — the schema-validated merge moves into preserveUserState.
       if (preflight.anaJsonBackup) {
         const newAnaJsonPath = path.join(tmpAnaPath, 'ana.json');
-        let restoredJson: Record<string, unknown>;
+        let restoredRaw: unknown;
         try {
-          restoredJson = JSON.parse(await fs.readFile(preflight.anaJsonBackup, 'utf-8'));
+          restoredRaw = JSON.parse(await fs.readFile(preflight.anaJsonBackup, 'utf-8'));
         } catch {
           // Backup is corrupt — skip restore, keep freshly generated ana.json
-          restoredJson = {};
+          restoredRaw = {};
         }
-        if (Object.keys(restoredJson).length > 0) {
+        const parsed = AnaJsonSchema.safeParse(restoredRaw);
+        if (parsed.success && Object.keys(restoredRaw as Record<string, unknown>).length > 0) {
           let newJson: Record<string, unknown>;
           try {
             newJson = JSON.parse(await fs.readFile(newAnaJsonPath, 'utf-8'));
           } catch {
             newJson = {};
           }
-          // Preserve user fields from backup, overwrite only mechanical fields from new
+          // Preserve schema-validated user fields; refresh mechanical ones.
+          // Note: only anaVersion + lastScanAt refresh here — language,
+          // framework, packageManager, commands stay from the old ana.json
+          // (pre-existing behavior; full mechanical-field refresh is a
+          // separate design decision tracked for a later sprint).
           const merged = {
-            ...restoredJson,
+            ...parsed.data,
             ...(newJson['anaVersion'] != null ? { anaVersion: newJson['anaVersion'] } : {}),
             ...(newJson['lastScanAt'] != null ? { lastScanAt: newJson['lastScanAt'] } : {}),
           };
