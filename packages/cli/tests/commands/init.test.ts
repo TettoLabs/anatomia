@@ -116,7 +116,11 @@ describe('ana init', () => {
 
       expect(meta.setupMode).toBe('not_started');
       expect(meta.name).toBe('unknown');
-      expect(meta.packageManager).toBe('npm');
+      // S19/SCAN-032: createEmptyEngineResult defaults packageManager to
+      // null because a project with no detected lockfile has no package
+      // manager in the Node sense. Previously this was 'npm', which was
+      // a semantic lie for Python/Go/Rust projects.
+      expect(meta.packageManager).toBeNull();
       expect(meta.framework).toBeNull();
       expect(meta.anaVersion).toBeDefined();
       expect(meta.lastScanAt).toBeDefined();

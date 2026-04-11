@@ -172,8 +172,8 @@ describe('type-unification compile-time assertions', () => {
       ...({} as DetectedCommands),
       packageManager: 'pnpm',
     };
-    // The composition adds exactly `packageManager: string` on top.
-    const _pm: string = commandsField.packageManager;
+    // The composition adds exactly `packageManager: string | null` on top.
+    const _pm: string | null = commandsField.packageManager;
     void _detected;
     void _composed;
     void _pm;

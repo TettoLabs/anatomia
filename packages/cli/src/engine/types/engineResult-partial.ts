@@ -49,7 +49,7 @@ export const EngineResultPartialSchema = z.object({
     test: z.string().nullable(),
     lint: z.string().nullable(),
     dev: z.string().nullable(),
-    packageManager: z.string(),
+    packageManager: z.string().nullable(),
     all: z.record(z.string(), z.string()),
   }),
 });

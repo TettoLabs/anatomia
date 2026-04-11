@@ -20,14 +20,24 @@ const LOCKFILE_MAP: Array<[string, string]> = [
 const MAX_WALK_DEPTH = 5;
 
 /**
- * Detect the package manager used in a project by checking lockfiles.
- * Walks up from cwd to find the nearest lockfile (inherits from parent).
- * Priority: pnpm > yarn > bun > npm (fallback)
+ * Detect the package manager used in a project.
+ *
+ * Resolution order:
+ *   1. Walk up from cwd looking for a lockfile (pnpm > yarn > bun > npm).
+ *      If found, return the matching manager name.
+ *   2. If no lockfile but `package.json` exists in cwd, default to 'npm'.
+ *      This handles fresh Node projects where deps have been declared but
+ *      not installed yet — the project is Node, the default tool is npm,
+ *      even before a lockfile materializes.
+ *   3. Otherwise return null. Non-Node projects (Python / Go / Rust) have
+ *      no package manager in the Node sense; pre-S19 this fell back to
+ *      'npm' which was a semantic lie that propagated into ana.json for
+ *      every non-Node project (S19/SCAN-032).
  *
  * @param cwd - Directory to start searching from
- * @returns Detected package manager name
+ * @returns Detected package manager name, or null if not a Node project
  */
-export async function detectPackageManager(cwd: string): Promise<string> {
+export async function detectPackageManager(cwd: string): Promise<string | null> {
   let dir = path.resolve(cwd);
   let depth = 0;
 
@@ -47,5 +57,12 @@ export async function detectPackageManager(cwd: string): Promise<string> {
     depth++;
   }
 
-  return 'npm';
+  // No lockfile found — fall back to 'npm' only if this is clearly a
+  // Node project (package.json in cwd). Otherwise null.
+  try {
+    await fs.access(path.join(path.resolve(cwd), 'package.json'));
+    return 'npm';
+  } catch {
+    return null;
+  }
 }

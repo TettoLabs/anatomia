@@ -21,7 +21,7 @@ describe('Engine Interface Contract', () => {
       expect(result.overview.project).toBe('unknown');
       expect(result.stack.language).toBeNull();
       expect(result.stack.framework).toBeNull();
-      expect(result.commands.packageManager).toBe('npm');
+      expect(result.commands.packageManager).toBeNull();
       expect(result.files.total).toBe(0);
     });
 
@@ -33,7 +33,7 @@ describe('Engine Interface Contract', () => {
       const _scannedAt: string = result.overview.scannedAt;
       const _language: string | null = result.stack.language;
       const _framework: string | null = result.stack.framework;
-      const _packageManager: string = result.commands.packageManager;
+      const _packageManager: string | null = result.commands.packageManager;
       const _total: number = result.files.total;
       const _structure: Array<{ path: string; purpose: string }> = result.structure;
 
@@ -41,7 +41,7 @@ describe('Engine Interface Contract', () => {
       expect(_scannedAt).toBeDefined();
       expect(_language).toBeNull();
       expect(_framework).toBeNull();
-      expect(_packageManager).toBe('npm');
+      expect(_packageManager).toBeNull();
       expect(_total).toBe(0);
       expect(_structure).toHaveLength(0);
     });
