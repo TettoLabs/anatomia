@@ -12,7 +12,7 @@
  */
 
 import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, isAbsolute } from 'node:path';
 import type { ParsedFile } from '../../types/parsed.js';
 import type { NamingStyle, NamingConventionResult } from '../../types/conventions.js';
 // Re-export so existing consumers can import NamingConventionResult from this module.
@@ -297,7 +297,10 @@ export async function extractVariables(
     }
 
     // Read file content
-    const filePath = join(rootPath, file.file);
+    // file.file is set to an absolute path by parseProjectFiles (treeSitter.ts),
+    // so joining with rootPath would produce a doubled non-existent path. Guard
+    // defensively in case future callers pass relative paths.
+    const filePath = isAbsolute(file.file) ? file.file : join(rootPath, file.file);
     let content: string;
     try {
       content = await readFile(filePath, 'utf-8');
