@@ -85,6 +85,13 @@ export const QUERIES: Record<Language, Record<string, string>> = {
     )
   )
 )`,
+
+    // STEP_2.2 convention detection queries (CP0)
+    // Identical to the tsx.variables entry — both grammars share the same base
+    // and use the same lexical_declaration → variable_declarator structure.
+    variables: `(lexical_declaration
+  (variable_declarator
+    name: (identifier) @variable.name))`,
   },
 
   tsx: {

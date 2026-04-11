@@ -1,12 +1,19 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { writeFile, mkdir, mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import {
   classifyNamingStyle,
   analyzeNamingConvention,
   isKeyword,
   analyzeFunctionNaming,
   analyzeClassNaming,
+  analyzeVariableNaming,
+  analyzeConstantNaming,
 } from '../../../src/engine/analyzers/conventions/naming.js';
 import type { ParsedFile } from '../../../src/engine/types/parsed.js';
+import { ParserManager } from '../../../src/engine/parsers/treeSitter.js';
+import { skipIfNoWasm } from '../fixtures.js';
 
 describe('classifyNamingStyle', () => {
   it('detects snake_case', () => {
@@ -164,5 +171,101 @@ describe('analyze*Naming integration', () => {
 
     expect(result.majority).toBe('PascalCase');
     expect(result.confidence).toBe(1.0);
+  });
+});
+
+// Regression: extractVariables previously joined rootPath with file.file even
+// though file.file is already absolute (set by parseProjectFiles in
+// treeSitter.ts). The doubled path didn't exist on disk, readFile threw
+// ENOENT, the catch silently continued, and variable/constant naming returned
+// sampleSize: 0 for every language on every scan. Test asserts the analyzer
+// actually reads files and surfaces their variable declarations.
+const wasmAvailable = await skipIfNoWasm();
+
+describe.skipIf(!wasmAvailable)('variable extraction reads files from disk', () => {
+  let tempDir: string;
+
+  beforeAll(async () => {
+    await ParserManager.getInstance().initialize();
+    tempDir = await mkdtemp(join(tmpdir(), 'naming-varfix-'));
+    await mkdir(tempDir, { recursive: true });
+  });
+
+  afterAll(async () => {
+    await rm(tempDir, { recursive: true, force: true });
+  });
+
+  it('extracts variables from .tsx files (Commit 1 regression)', async () => {
+    const filePath = join(tempDir, 'fixture.tsx');
+    await writeFile(
+      filePath,
+      `const TOP_LEVEL = 42;
+const anotherVar = 'hello';
+export const EXPORTED_CONST = true;
+let mutableVar = 0;
+`,
+      'utf-8',
+    );
+
+    // file.file is absolute (matches how parseProjectFiles sets it)
+    const files: ParsedFile[] = [
+      {
+        file: filePath,
+        language: 'tsx',
+        functions: [],
+        classes: [],
+        imports: [],
+        parseTime: 0,
+        parseMethod: 'tree-sitter',
+        errors: 0,
+      },
+    ];
+
+    const variables = await analyzeVariableNaming(files, 'node', tempDir);
+    const constants = await analyzeConstantNaming(files, 'node', tempDir);
+
+    // Path-doubling bug made these 0 on every scan ever run.
+    expect(variables.sampleSize).toBeGreaterThan(0);
+    expect(['camelCase', 'SCREAMING_SNAKE_CASE', 'snake_case', 'PascalCase', 'lowercase', 'mixed'])
+      .toContain(variables.majority);
+
+    // Fixture has two SCREAMING_SNAKE constants (TOP_LEVEL, EXPORTED_CONST).
+    expect(constants.sampleSize).toBeGreaterThanOrEqual(2);
+    expect(constants.majority).toBe('SCREAMING_SNAKE_CASE');
+  });
+
+  it('extracts variables from .ts files (Commit 2 regression — typescript grammar query)', async () => {
+    // Must be .ts (not .tsx) — the typescript grammar entry in queries.ts was
+    // missing a `variables` query, so every .ts file silently skipped
+    // extraction even after the path-doubling fix.
+    const filePath = join(tempDir, 'fixture.ts');
+    await writeFile(
+      filePath,
+      `const DATABASE_URL = 'postgres://localhost';
+const appConfig = { port: 3000 };
+export const API_VERSION = 'v2';
+`,
+      'utf-8',
+    );
+
+    const files: ParsedFile[] = [
+      {
+        file: filePath,
+        language: 'typescript',
+        functions: [],
+        classes: [],
+        imports: [],
+        parseTime: 0,
+        parseMethod: 'tree-sitter',
+        errors: 0,
+      },
+    ];
+
+    const variables = await analyzeVariableNaming(files, 'node', tempDir);
+    const constants = await analyzeConstantNaming(files, 'node', tempDir);
+
+    expect(variables.sampleSize).toBeGreaterThan(0);
+    expect(constants.sampleSize).toBeGreaterThanOrEqual(2);
+    expect(constants.majority).toBe('SCREAMING_SNAKE_CASE');
   });
 });
