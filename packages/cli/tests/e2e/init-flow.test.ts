@@ -49,11 +49,10 @@ describe('ana init E2E', () => {
 
     const anaPath = path.join(tmpProject, '.ana');
 
-    // Verify directories (6 — modes removed S18, setup/ removed D10.9/S16)
+    // Verify directories (5 — modes removed S18, setup/ removed D10.9/S16, docs/ removed S18 Phase 3 Pass 2)
     const dirs = [
       'hooks',
       'context',
-      'docs',
       'plans/active',
       'plans/completed',
       'state',
@@ -90,10 +89,6 @@ describe('ana init E2E', () => {
       expect(stats.mode & 0o111).toBeGreaterThan(0);
     }
 
-    // Verify SCHEMAS.md
-    const schemasExists = await fileExists(path.join(anaPath, 'docs/SCHEMAS.md'));
-    expect(schemasExists).toBe(true);
-
     // Verify .gitkeep files in plan directories
     const activeGitkeepExists = await fileExists(path.join(anaPath, 'plans/active/.gitkeep'));
     const completeGitkeepExists = await fileExists(path.join(anaPath, 'plans/completed/.gitkeep'));
@@ -110,9 +105,9 @@ describe('ana init E2E', () => {
     expect(meta.name).toBeDefined();
 
     // Count total files in .ana/
-    // 2 generated + 2 hooks + 1 SCHEMAS + 2 .gitkeep + 2 JSON (ana.json, scan.json) + 1 symbol-index + 1 cli-path + 1 .gitignore = 12
+    // 2 generated + 2 hooks + 2 .gitkeep + 2 JSON (ana.json, scan.json) + 1 symbol-index + 1 cli-path + 1 .gitignore = 11
     const allFiles = await findAllFiles(anaPath);
-    expect(allFiles.length).toBe(12);
+    expect(allFiles.length).toBe(11);
 
     // Verify .gitignore exists and excludes runtime state
     const gitignorePath = path.join(anaPath, '.gitignore');

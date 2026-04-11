@@ -17,7 +17,6 @@ import { validateInitPreconditions } from './preflight.js';
 import {
   createDirectoryStructure,
   generateScaffolds,
-  copyStaticFilesWithVerification,
   copyHookScripts,
   createClaudeConfiguration,
 } from './assets.js';
@@ -77,7 +76,6 @@ export function registerInitCommand(program: Command): void {
       ASTCache.setCacheDir(null);
       await createDirectoryStructure(tmpAnaPath);
       await generateScaffolds(tmpAnaPath, engineResult);
-      await copyStaticFilesWithVerification(tmpAnaPath);
       await copyHookScripts(tmpAnaPath);
       await saveScanJson(tmpAnaPath, engineResult);
       await createAnaJson(tmpAnaPath, engineResult);

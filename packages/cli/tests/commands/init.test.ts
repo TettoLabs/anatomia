@@ -66,10 +66,6 @@ describe('ana init', () => {
         // 2 hook scripts
         '.ana/hooks/verify-context-file.sh',
         '.ana/hooks/run-check.sh',
-        // SCHEMAS.md and plan directories
-        '.ana/docs/SCHEMAS.md',
-        '.ana/plans/active/.gitkeep',
-        '.ana/plans/completed/.gitkeep',
         // 1 settings template
         '.claude/settings.json',
         // 5 agent files
@@ -88,7 +84,7 @@ describe('ana init', () => {
         'CLAUDE.md',
       ];
 
-      expect(expectedFiles).toHaveLength(17);
+      expect(expectedFiles).toHaveLength(14);
 
       for (const file of expectedFiles) {
         const filePath = path.join(templatesDir, file);
