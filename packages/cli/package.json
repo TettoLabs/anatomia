@@ -33,11 +33,13 @@
   },
   "files": [
     "dist",
-    "templates",
-    "docs"
+    "docs",
+    "ARCHITECTURE.md",
+    "CONTRIBUTING.md",
+    "CHANGELOG.md"
   ],
   "scripts": {
-    "build": "pnpm typecheck && tsup && cp -r templates dist/",
+    "build": "pnpm typecheck && rm -rf dist && tsup && cp -r templates dist/",
     "dev": "tsup --watch",
     "test": "vitest",
     "typecheck": "tsc --noEmit",
