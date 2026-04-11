@@ -16,11 +16,18 @@ export interface InitCommandOptions {
 /** Installation state detected during pre-scan validation */
 export type InitState = 'fresh' | 'reinit' | 'upgrade' | 'corrupted';
 
-/** Pre-flight validation result */
+/** Pre-flight validation result.
+ *
+ * S19/NEW-001: Backup paths removed — the swap-based atomic rename no
+ * longer copies user state to /tmp before deleting .ana/. Instead, the
+ * existing .ana/ is left in place until the replacement is fully built,
+ * then swapped atomically via preserveUserState + oldPath rename. User
+ * state is sourced directly from the live .ana/ (which still exists).
+ */
 export interface PreflightResult {
   canProceed: boolean;
   initState: InitState;
-  stateBackup?: string | undefined; // Path to state/ backup if --force used
-  contextBackup?: string | undefined; // Path to context/ backup if --force used
-  anaJsonBackup?: string | undefined; // Path to ana.json backup if --force used
+  /** Whether an existing `.ana/` directory was detected. Signals to the
+   *  orchestrator whether to run preserveUserState and the swap rename. */
+  anaExisted: boolean;
 }

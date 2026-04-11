@@ -3,10 +3,16 @@
  *
  * Runs before any filesystem mutation. Verifies the current directory is
  * a valid project root, detects any existing .ana/ installation state
- * (fresh / reinit / upgrade / corrupted), backs up state/context/ana.json
- * before deletion on re-init, warns on missing git or package manifest,
- * and returns a PreflightResult telling the orchestrator whether to
- * proceed.
+ * (fresh / reinit / upgrade / corrupted), warns on missing git or package
+ * manifest, and returns a PreflightResult telling the orchestrator whether
+ * to proceed.
+ *
+ * S19/NEW-001: preflight no longer backs up or deletes `.ana/`. The
+ * existing installation is left in place until the atomic swap at the
+ * end of the pipeline. User state is copied from the live `.ana/` into
+ * tmpDir by preserveUserState (state.ts). "No changes made" in the
+ * catch block is now true — if the swap never happens, the old `.ana/`
+ * is untouched.
  *
  * Exported helpers (dirExists, fileExists) are reused by sibling modules
  * (assets.ts uses them for mkdir/copy logic; skills.ts uses fileExists
@@ -17,7 +23,6 @@
 import chalk from 'chalk';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import * as os from 'node:os';
 import { execSync } from 'node:child_process';
 import type { InitCommandOptions, InitState, PreflightResult } from './types.js';
 import { confirm, getCliVersion } from './state.js';
@@ -34,7 +39,7 @@ import { confirm, getCliVersion } from './state.js';
  * @param cwd - Current working directory
  * @param anaPath - Path to .ana/ directory
  * @param options - Command options
- * @returns Preflight result (canProceed, initState, optional stateBackup path)
+ * @returns Preflight result (canProceed, initState, anaExisted)
  */
 export async function validateInitPreconditions(
   cwd: string,
@@ -52,6 +57,32 @@ export async function validateInitPreconditions(
     process.exit(1);
   }
 
+  // SIGKILL recovery check — refuse to proceed if a prior init was
+  // interrupted between rename(anaPath → .old) and rename(tmpDir → anaPath).
+  // The user must manually resolve to prevent silent data loss.
+  const parentDir = path.dirname(anaPath);
+  const parentName = path.basename(anaPath);
+  try {
+    const siblings = await fs.readdir(parentDir);
+    const staleOld = siblings.find(n => n.startsWith(`${parentName}.old-`));
+    if (staleOld) {
+      const staleOldPath = path.join(parentDir, staleOld);
+      console.error(chalk.yellow('\n⚠ Found incomplete init from a previous run:'));
+      console.error(chalk.gray(`  ${staleOldPath}`));
+      console.error('');
+      console.error('This usually means a prior `ana init` was interrupted mid-swap.');
+      console.error('To recover:');
+      console.error(chalk.cyan(`  mv ${staleOld} .ana`) + chalk.gray('  (restore the previous install)'));
+      console.error(chalk.gray('  — or —'));
+      console.error(chalk.cyan(`  rm -rf ${staleOld}`) + chalk.gray('   (discard and run `ana init` fresh)'));
+      console.error('');
+      console.error(chalk.red('Refusing to proceed until resolved.'));
+      process.exit(1);
+    }
+  } catch {
+    // parentDir may not exist on first init — not an error
+  }
+
   // 7.1 — Project root detection
   const rootIndicators = ['package.json', 'go.mod', 'Cargo.toml', 'pyproject.toml', '.git'];
   const hasRoot = await Promise.all(
@@ -67,9 +98,6 @@ export async function validateInitPreconditions(
   // 7.2 — Existing installation detection (4 states)
   const anaExists = await dirExists(anaPath);
   let initState: InitState = 'fresh';
-  let stateBackup: string | undefined;
-  let contextBackup: string | undefined;
-  let anaJsonBackup: string | undefined;
 
   if (anaExists) {
     const anaJsonPath = path.join(anaPath, 'ana.json');
@@ -118,34 +146,11 @@ export async function validateInitPreconditions(
       }
     }
 
-    // Backup before deletion for reinit/upgrade/corrupted
-    const timestamp = Date.now();
-    const statePath = path.join(anaPath, 'state');
-    if (await dirExists(statePath)) {
-      stateBackup = path.join(os.tmpdir(), `.ana-state-backup-${timestamp}`);
-      console.log(chalk.gray('Backing up state/ directory...'));
-      await fs.cp(statePath, stateBackup, { recursive: true });
-    }
-
-    // Back up context/ (user-enriched files)
-    const contextPath = path.join(anaPath, 'context');
-    if (await dirExists(contextPath)) {
-      contextBackup = path.join(os.tmpdir(), `.ana-context-backup-${timestamp}`);
-      console.log(chalk.gray('Backing up context/ directory...'));
-      await fs.cp(contextPath, contextBackup, { recursive: true });
-    }
-
-    // Back up ana.json (user fields like setupMode, coAuthor)
-    const anaJsonBackupPath = path.join(anaPath, 'ana.json');
-    try {
-      await fs.access(anaJsonBackupPath);
-      anaJsonBackup = path.join(os.tmpdir(), `.ana-json-backup-${timestamp}`);
-      await fs.cp(anaJsonBackupPath, anaJsonBackup);
-    } catch { /* no ana.json to back up */ }
-
-    // Delete existing .ana/
-    console.log(chalk.gray('Removing existing .ana/...'));
-    await fs.rm(anaPath, { recursive: true, force: true });
+    // S19/NEW-001: No backup, no deletion. The existing .ana/ stays put
+    // until the atomic swap at the end of the pipeline. preserveUserState
+    // (state.ts) will read context/, state/setup-progress.json, and
+    // ana.json directly from the live .ana/ when building the replacement
+    // in tmpDir.
   }
 
   // 7.4 — Git validation (4 states)
@@ -208,9 +213,7 @@ export async function validateInitPreconditions(
   return {
     canProceed: true,
     initState,
-    stateBackup,
-    contextBackup,
-    anaJsonBackup,
+    anaExisted: anaExists,
   };
 }
 

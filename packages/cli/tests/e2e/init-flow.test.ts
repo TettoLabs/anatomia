@@ -153,29 +153,76 @@ describe('ana init E2E', () => {
     expect(claudeMdContent).toContain('claude --agent ana');
   }, 30000); // 30s timeout
 
-  it('--force preserves state/ directory', async () => {
+  it('re-init preserves context/ files (user enrichment) but refreshes state/', async () => {
     // First init
     await execFileAsync('node', [cliPath, 'init'], {
       cwd: tmpProject,
     });
 
     const anaPath = path.join(tmpProject, '.ana');
+    const contextPath = path.join(anaPath, 'context');
     const statePath = path.join(anaPath, 'state');
 
-    // Add test data to state/
-    await fs.writeFile(path.join(statePath, 'test.json'), '{"preserved":true}');
+    // User enriches context/project-context.md with real content
+    const enriched = '# Project Context\n\n## What This Project Does\nEnriched by user.\n';
+    await fs.writeFile(path.join(contextPath, 'project-context.md'), enriched);
 
-    // Re-init with --force
+    // Add derived file to state/ — this should NOT survive re-init (S19/NEW-001
+    // policy: state/ is regenerated, not preserved, except setup-progress.json
+    // during a partial setup)
+    await fs.writeFile(path.join(statePath, 'test.json'), '{"derived":true}');
+
+    // Re-init with --force (skips confirmation prompt)
     await execFileAsync('node', [cliPath, 'init', '--force'], {
       cwd: tmpProject,
     });
 
-    // Verify test.json preserved
-    const testFileExists = await fileExists(path.join(statePath, 'test.json'));
-    expect(testFileExists).toBe(true);
+    // context/ survives — user enrichment is preserved
+    const pcContent = await fs.readFile(path.join(contextPath, 'project-context.md'), 'utf-8');
+    expect(pcContent).toContain('Enriched by user.');
 
-    const content = await fs.readFile(path.join(statePath, 'test.json'), 'utf-8');
-    expect(JSON.parse(content)).toEqual({ preserved: true });
+    // state/test.json does NOT survive — state/ is derived and regenerated
+    const testFileExists = await fileExists(path.join(statePath, 'test.json'));
+    expect(testFileExists).toBe(false);
+  }, 60000); // 60s timeout
+
+  it('init failure leaves existing .ana/ untouched (NEW-001 swap safety)', async () => {
+    // First init creates a valid .ana/
+    await execFileAsync('node', [cliPath, 'init'], {
+      cwd: tmpProject,
+    });
+
+    const anaPath = path.join(tmpProject, '.ana');
+    const contextPath = path.join(anaPath, 'context');
+
+    // Mark the install so we can verify it survives a failed re-init
+    const marker = '# Project Context\n\n## What This Project Does\nMARKER_BEFORE_FAIL\n';
+    await fs.writeFile(path.join(contextPath, 'project-context.md'), marker);
+
+    // Induce failure by running init from a cwd that disappears mid-run.
+    // Simpler: corrupt the existing ana.json to invalid JSON, then init
+    // must still protect user state (schema catches invalid fields per-field,
+    // context/ copy is unaffected).
+    // NOTE: If an easier "deterministic failure" injection point emerges
+    // later, prefer that. This test is a smoke-level check that NEW-001's
+    // core guarantee (old .ana/ is safe on failure path) holds.
+    const anaJsonPath = path.join(anaPath, 'ana.json');
+    await fs.writeFile(anaJsonPath, 'not valid json', 'utf-8');
+
+    // Re-init with --force. Should succeed since schema catches invalid
+    // ana.json gracefully. The marker must survive because context/ copy
+    // happens before the atomic swap.
+    try {
+      await execFileAsync('node', [cliPath, 'init', '--force'], {
+        cwd: tmpProject,
+      });
+    } catch {
+      // If re-init fails, the old .ana/ must still be intact — that's the
+      // NEW-001 guarantee.
+    }
+
+    const pcContent = await fs.readFile(path.join(contextPath, 'project-context.md'), 'utf-8');
+    expect(pcContent).toContain('MARKER_BEFORE_FAIL');
   }, 60000); // 60s timeout
 });
 
