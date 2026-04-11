@@ -563,6 +563,171 @@ Real content only here.
     expect(result.description).toBe('1/6 sections populated');
   });
 
+  // S19 polish: hasRealContent used to count scaffold-template lines
+  // (italic *Not yet captured* placeholders and **Detected:** scan-seeded
+  // lines) as real content. A fresh `ana init` on a healthy project
+  // generated a project-context.md that reported "6/6 sections populated"
+  // in the dashboard — a lie that confused users into thinking setup
+  // enrichment was done when it hadn't been started. These tests lock
+  // in the stricter detection.
+
+  it('project-context fresh scaffold reports ○ scaffold, not 6/6 populated', async () => {
+    // This is the shape of a fresh `ana init` scaffold on a TypeScript
+    // + Vitest project — including the **Detected:** scan-seeded lines
+    // and italic *Not yet captured* placeholder references to the setup
+    // agent. Every section is scaffold output. None is user content.
+    const contextDir = path.join(tmpDir, '.ana', 'context');
+    await fs.mkdir(contextDir, { recursive: true });
+    await fs.writeFile(
+      path.join(contextDir, 'project-context.md'),
+      `<!-- SCAFFOLD - Setup will fill this file -->
+
+# Project Context
+
+## What This Project Does
+**Detected:** TypeScript · Vitest
+**Detected commands:** build: \`pnpm run build\` · test: \`pnpm run test\`
+**Detected infrastructure:** pnpm (2 packages)
+*Not yet captured. Run \`claude --agent ana-setup\` to fill this.*
+
+## Architecture
+**Detected:** pnpm · 2 packages (anatomia-cli, demo-site)
+*Not yet captured. Run \`claude --agent ana-setup\` to fill this.*
+
+## Key Decisions
+*Not yet captured. Run \`claude --agent ana-setup\` to fill this.*
+
+## Key Files
+*Not yet captured. Run \`claude --agent ana-setup\` to fill this.*
+
+## Active Constraints
+*Not yet captured. Run \`claude --agent ana-setup\` to fill this.*
+
+## Domain Vocabulary
+*Not yet captured. Run \`claude --agent ana-setup\` to fill this.*
+`
+    );
+
+    const { checkContextForDashboard } = await import('../../src/commands/check.js');
+    const result = await checkContextForDashboard(tmpDir, 'project-context.md');
+    expect(result.symbol).toContain('○');
+    expect(result.description).toBe('scaffold (setup will enrich)');
+  });
+
+  it('project-context section with only **Detected:** scan data is NOT counted as populated', async () => {
+    // Scan-seeded **Detected:** line is template, not user enrichment.
+    const contextDir = path.join(tmpDir, '.ana', 'context');
+    await fs.mkdir(contextDir, { recursive: true });
+    await fs.writeFile(
+      path.join(contextDir, 'project-context.md'),
+      `# Project Context
+
+## What This Project Does
+**Detected:** TypeScript · Vitest
+
+## Architecture
+## Key Decisions
+## Key Files
+## Active Constraints
+## Domain Vocabulary
+`
+    );
+
+    const { checkContextForDashboard } = await import('../../src/commands/check.js');
+    const result = await checkContextForDashboard(tmpDir, 'project-context.md');
+    expect(result.symbol).toContain('○');
+    expect(result.description).toBe('scaffold (setup will enrich)');
+  });
+
+  it('project-context **Detected commands/services/infrastructure variants are NOT counted as populated', async () => {
+    // Guards against the pre-polish bug where the old prefix check
+    // `startsWith('**Detected:**') || startsWith('**Detected:')` only
+    // matched the base marker and let every variant (**Detected
+    // commands:**, **Detected services:**, **Detected infrastructure:**)
+    // fall through to "real content."
+    const contextDir = path.join(tmpDir, '.ana', 'context');
+    await fs.mkdir(contextDir, { recursive: true });
+    await fs.writeFile(
+      path.join(contextDir, 'project-context.md'),
+      `# Project Context
+
+## What This Project Does
+**Detected commands:** build: \`pnpm run build\` · test: \`pnpm run test\`
+**Detected services:** Stripe
+**Detected infrastructure:** pnpm (2 packages)
+
+## Architecture
+## Key Decisions
+## Key Files
+## Active Constraints
+## Domain Vocabulary
+`
+    );
+
+    const { checkContextForDashboard } = await import('../../src/commands/check.js');
+    const result = await checkContextForDashboard(tmpDir, 'project-context.md');
+    expect(result.symbol).toContain('○');
+  });
+
+  it('project-context with legitimate italic content IS counted as populated (no over-correction)', async () => {
+    // Guard against over-correction: ordinary italic paragraphs — a
+    // reasonable thing a user might write — must still count as real
+    // content. The skip rule is specifically for italic lines that
+    // reference the setup agent ("Run `claude --agent ana-setup`"),
+    // not all italic lines.
+    const contextDir = path.join(tmpDir, '.ana', 'context');
+    await fs.mkdir(contextDir, { recursive: true });
+    await fs.writeFile(
+      path.join(contextDir, 'project-context.md'),
+      `# Project Context
+
+## What This Project Does
+*This is a note the user wrote in italic.*
+
+## Architecture
+The system is organized into three layers: presentation, logic, and data.
+
+## Key Decisions
+Decision 1 made on 2026-01-15.
+
+## Key Files
+- src/index.ts
+- src/config.ts
+
+## Active Constraints
+No breaking changes to public APIs.
+
+## Domain Vocabulary
+Widget, Gadget, Thingamajig.
+`
+    );
+
+    const { checkContextForDashboard } = await import('../../src/commands/check.js');
+    const result = await checkContextForDashboard(tmpDir, 'project-context.md');
+    expect(result.symbol).toContain('✓');
+    expect(result.description).toBe('6/6 sections populated');
+  });
+
+  it('design-principles with only a scaffold placeholder line reports ○ empty', async () => {
+    // fileHasRealContent fix: a design-principles.md that contains only
+    // a *Not yet captured...* placeholder used to report "populated"
+    // because the inline check and fileHasRealContent both only skipped
+    // blank+heading lines.
+    const contextDir = path.join(tmpDir, '.ana', 'context');
+    await fs.mkdir(contextDir, { recursive: true });
+    await fs.writeFile(
+      path.join(contextDir, 'design-principles.md'),
+      `# Design Principles
+
+*Not yet captured. Run \`claude --agent ana-setup\` to fill this.*
+`
+    );
+
+    const { checkContextForDashboard } = await import('../../src/commands/check.js');
+    const result = await checkContextForDashboard(tmpDir, 'design-principles.md');
+    expect(result.symbol).toContain('○');
+  });
+
   it('project-context with multiline comment in critical section reports empty (SETUP-027)', async () => {
     // The pre-S19 dashboard used hasNonTemplateContent which didn't track
     // multiline HTML comment state, so a multiline comment was treated as
