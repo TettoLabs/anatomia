@@ -92,10 +92,9 @@ describe('ana init E2E', () => {
     expect(meta.setupMode).toBeDefined();
     expect(meta.name).toBeDefined();
 
-    // Count total files in .ana/
-    // 2 generated + 2 .gitkeep + 2 JSON (ana.json, scan.json) + 1 symbol-index + 1 .gitignore = 8
-    const allFiles = await findAllFiles(anaPath);
-    expect(allFiles.length).toBe(8);
+    // Count assertion removed (S19/INFRA-011 — each expected file is
+    // already individually asserted above by name; the total count added
+    // zero information and required manual updates on every manifest change)
 
     // Verify .gitignore exists and excludes runtime state
     const gitignorePath = path.join(anaPath, '.gitignore');
@@ -258,19 +257,3 @@ async function fileExists(filePath: string): Promise<boolean> {
   }
 }
 
-async function findAllFiles(dirPath: string): Promise<string[]> {
-  const files: string[] = [];
-  const entries = await fs.readdir(dirPath, { withFileTypes: true });
-
-  for (const entry of entries) {
-    const fullPath = path.join(dirPath, entry.name);
-    if (entry.isDirectory()) {
-      const subFiles = await findAllFiles(fullPath);
-      files.push(...subFiles);
-    } else {
-      files.push(fullPath);
-    }
-  }
-
-  return files;
-}
