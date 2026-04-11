@@ -279,8 +279,12 @@ function formatHumanReadable(result: EngineResult, options: { isFunnel: boolean 
   // previous lossy PatternDetail shape.
   if (result.patterns) {
     const threshold = result.patterns.threshold ?? 0.7;
+    // S19/SCAN-048: 'testing' → 'Test framework' to disambiguate from the
+    // Stack section's 'Testing: <name>' line, which is dependency-based
+    // detection. This label is for the Patterns section which reports
+    // code-level pattern inference.
     const patternLabels: Record<string, string> = {
-      errorHandling: 'Errors', validation: 'Validation', testing: 'Testing',
+      errorHandling: 'Errors', validation: 'Validation', testing: 'Test framework',
       database: 'Database', auth: 'Auth',
     };
     const categories = ['errorHandling', 'validation', 'database', 'auth', 'testing'] as const;

@@ -11,6 +11,7 @@ import { detectReact } from '../../../src/engine/detectors/node/react';
 import { detectNestjs } from '../../../src/engine/detectors/node/nestjs';
 import { detectExpress } from '../../../src/engine/detectors/node/express';
 import { detectOtherNodeFrameworks } from '../../../src/engine/detectors/node/other';
+import { detectRemix } from '../../../src/engine/detectors/node/remix';
 
 // Mock modules — paths must match the actual module specifiers used by the source
 vi.mock('../../../src/engine/utils/importScanner.js', () => ({
@@ -393,6 +394,54 @@ describe('Other Node frameworks detector', () => {
     expect(result.framework).toBe('fastify');
     expect(result.confidence).toBe(0.85);
     expect(result.indicators).toEqual(['fastify in dependencies']);
+  });
+
+  it('detects hono with 0.85 confidence (S19/SCAN-041)', async () => {
+    const result = await detectOtherNodeFrameworks('', ['hono']);
+
+    expect(result.framework).toBe('hono');
+    expect(result.confidence).toBe(0.85);
+    expect(result.indicators).toEqual(['hono in dependencies']);
+  });
+});
+
+describe('Remix / React Router v7 detector (S19/SCAN-040)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('detects React Router v7 via @react-router/dev', async () => {
+    const result = await detectRemix('/test/project', ['@react-router/dev', 'react']);
+    expect(result.framework).toBe('react-router');
+    expect(result.confidence).toBe(0.90);
+    expect(result.indicators[0]).toContain('@react-router/dev');
+  });
+
+  it('detects legacy Remix via @remix-run/* packages', async () => {
+    const result = await detectRemix('/test/project', ['@remix-run/node', '@remix-run/react']);
+    expect(result.framework).toBe('remix');
+    expect(result.confidence).toBe(0.90);
+    expect(result.indicators[0]).toContain('@remix-run/');
+  });
+
+  it('prefers React Router v7 name when both @react-router/dev and @remix-run/* present', async () => {
+    const result = await detectRemix('/test/project', ['@react-router/dev', '@remix-run/node']);
+    expect(result.framework).toBe('react-router');
+  });
+
+  it('does NOT detect on bare react-router (the routing library, not the framework)', async () => {
+    // Common React SPAs use react-router for client-side routing WITHOUT
+    // being Remix/React-Router-v7 apps. Pre-fix this would have been a
+    // false-positive trap.
+    const result = await detectRemix('/test/project', ['react', 'react-router', 'react-router-dom']);
+    expect(result.framework).toBe(null);
+    expect(result.confidence).toBe(0.0);
+  });
+
+  it('returns null when neither Remix nor React Router v7 deps present', async () => {
+    const result = await detectRemix('/test/project', ['react', 'express']);
+    expect(result.framework).toBe(null);
+    expect(result.confidence).toBe(0.0);
   });
 });
 

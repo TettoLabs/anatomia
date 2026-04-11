@@ -530,6 +530,23 @@ export async function scanProject(
   if (secrets.envFileExists && !secrets.gitignoreCoversEnv) {
     blindSpots.push({ area: 'Secrets', issue: '.env file exists but .gitignore may not cover it', resolution: 'Add .env to .gitignore' });
   }
+  // S19/SCAN-033: flag missing test coverage. Two-state model lets us
+  // distinguish "no testing at all" (actionable) from "tests exist but
+  // framework unrecognized" (informational — common for Go's built-in
+  // `go test` and lesser-known frameworks).
+  if (stack.testing === null && files.test === 0) {
+    blindSpots.push({
+      area: 'Testing',
+      issue: 'No test framework or test files detected',
+      resolution: 'Add a test framework (vitest, jest, pytest) and write tests, or confirm tests live elsewhere.',
+    });
+  } else if (stack.testing === null && files.test > 0) {
+    blindSpots.push({
+      area: 'Testing',
+      issue: `${files.test} test files found but test framework not identified in dependencies`,
+      resolution: 'Scanner may not recognize your test framework. Informational — your tests still work.',
+    });
+  }
 
   return {
     schemaVersion: '1.0',
