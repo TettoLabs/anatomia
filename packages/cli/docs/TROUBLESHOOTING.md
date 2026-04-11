@@ -523,10 +523,10 @@ real    0m5.234s  # Too slow
 
 ### Solution
 
-**Option 1: Skip import scanning**
+**Option 1: Use the quick (surface) tier**
 ```bash
-# Fastest - skip code scanning, use dependencies only
-ana scan --skip-import-scan
+# Fastest - skip tree-sitter import/convention/pattern analysis
+ana scan --quick
 ```
 
 **Option 2: Analyze from faster location**
@@ -558,7 +558,7 @@ Analyzing 10,000 files...
 real    0m12.456s
 
 # After (fast):
-$ time ana scan --skip-import-scan
+$ time ana scan --quick
 Analyzing dependencies only...
 real    0m0.834s
 
