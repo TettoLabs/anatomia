@@ -234,4 +234,38 @@ let mutableVar = 0;
     expect(constants.majority).toBe('SCREAMING_SNAKE_CASE');
   });
 
+  it('extracts variables from .ts files (Commit 2 regression — typescript grammar query)', async () => {
+    // Must be .ts (not .tsx) — the typescript grammar entry in queries.ts was
+    // missing a `variables` query, so every .ts file silently skipped
+    // extraction even after the path-doubling fix.
+    const filePath = join(tempDir, 'fixture.ts');
+    await writeFile(
+      filePath,
+      `const DATABASE_URL = 'postgres://localhost';
+const appConfig = { port: 3000 };
+export const API_VERSION = 'v2';
+`,
+      'utf-8',
+    );
+
+    const files: ParsedFile[] = [
+      {
+        file: filePath,
+        language: 'typescript',
+        functions: [],
+        classes: [],
+        imports: [],
+        parseTime: 0,
+        parseMethod: 'tree-sitter',
+        errors: 0,
+      },
+    ];
+
+    const variables = await analyzeVariableNaming(files, 'node', tempDir);
+    const constants = await analyzeConstantNaming(files, 'node', tempDir);
+
+    expect(variables.sampleSize).toBeGreaterThan(0);
+    expect(constants.sampleSize).toBeGreaterThanOrEqual(2);
+    expect(constants.majority).toBe('SCREAMING_SNAKE_CASE');
+  });
 });
