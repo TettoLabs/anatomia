@@ -405,6 +405,7 @@ export async function scanProject(
 
   // 4. Run existing analyze() for project type, framework, structure (and deep tier)
   let analysis: AnalysisResult | null = null;
+  let analyzerFailure: string | null = null;
   try {
     // DYNAMIC IMPORT — `analyze` transitively loads WASM; dynamic-importing
     // defers that until scanProject() is actually invoked. String literal
@@ -422,8 +423,14 @@ export async function scanProject(
         skipConventions: true,
       });
     }
-  } catch {
-    // Engine failure — continue with dependency detection only
+  } catch (err) {
+    // S19/NEW-007: analyze()'s own outer catch handles internal errors
+    // — if we got here, the dynamic import itself failed (WASM loading
+    // crash, missing module, platform issue). Deep analysis is
+    // unavailable; dependency-based stack detection continues. Record
+    // a blind spot so the user knows the scan was partially degraded
+    // instead of silently trusting an empty patterns/conventions block.
+    analyzerFailure = err instanceof Error ? err.message : 'unknown error';
   }
 
   // 5. Build stack (dependency primary, analyzer enriches).
@@ -524,6 +531,13 @@ export async function scanProject(
   };
 
   // 12. Additional blind spots
+  if (analyzerFailure) {
+    blindSpots.push({
+      area: 'Analyzer',
+      issue: `Tree-sitter analysis unavailable: ${analyzerFailure}`,
+      resolution: 'Patterns and conventions detection skipped. Dependency-based stack detection continues.',
+    });
+  }
   if (!git.head) {
     blindSpots.push({ area: 'Git', issue: 'No git repository detected', resolution: 'Run git init' });
   }

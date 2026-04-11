@@ -385,8 +385,12 @@ async function generateAgentsMd(cwd: string, engineResult: EngineResult | null):
     lines.push('');
   }
 
-  // Scan-derived constraints
-  lines.push('## Constraints');
+  // Scan-derived constraints — real constraints only, no generic
+  // boilerplate. S19/CLI-011: removed two slop lines that used to ship
+  // here unconditionally ("Follow existing patterns in the codebase" and
+  // "Run tests before committing"). Both were content-free and violated
+  // "every character earns its place." If nothing was detected, skip
+  // the section entirely rather than rendering a vacuous one.
   const constraintLines: string[] = [];
   if (engineResult?.conventions?.naming?.functions?.majority &&
       engineResult.conventions.naming.functions.majority !== 'unknown') {
@@ -398,12 +402,11 @@ async function generateAgentsMd(cwd: string, engineResult: EngineResult | null):
   if (engineResult?.commands.build) {
     constraintLines.push(`- Run \`${engineResult.commands.build}\` before committing`);
   }
-  if (constraintLines.length === 0) {
-    constraintLines.push('- Follow existing patterns in the codebase');
+  if (constraintLines.length > 0) {
+    lines.push('## Constraints');
+    lines.push(...constraintLines);
+    lines.push('');
   }
-  constraintLines.push('- Run tests before committing');
-  lines.push(...constraintLines);
-  lines.push('');
 
   await fs.writeFile(destPath, lines.join('\n'), 'utf-8');
 }

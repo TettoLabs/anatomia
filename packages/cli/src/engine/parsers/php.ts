@@ -1,14 +1,12 @@
 /**
- * PHP dependency parser (composer.json)
- */
-
-import * as path from 'node:path';
-import { readFile, exists } from '../utils/file.js';
-
-/**
+ * PHP dependency parser (composer.json).
  *
- * @param content
+ * Low-level parser only — `readPhpDependencies` (the higher-level
+ * reader that wrapped this) was deleted in S19/INFRA-013 as dead code.
+ * No production code path consumes PHP dependency data today; the
+ * parser is retained as a tested utility in case PHP support ships later.
  */
+
 export function parseComposerJson(content: string): string[] {
   try {
      
@@ -47,19 +45,4 @@ export function parseComposerJson(content: string): string[] {
   } catch {
     return [];
   }
-}
-
-/**
- *
- * @param rootPath
- */
-export async function readPhpDependencies(rootPath: string): Promise<string[]> {
-  const composerPath = path.join(rootPath, 'composer.json');
-
-  if (await exists(composerPath)) {
-    const content = await readFile(composerPath);
-    return parseComposerJson(content);
-  }
-
-  return [];
 }
