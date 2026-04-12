@@ -27,6 +27,9 @@ import { createEmptyPatternAnalysis } from '../../types/patterns.js';
 import { detectFromDependencies } from './dependencies.js';
 import { confirmPatternsWithTreeSitter } from './confirmation.js';
 import { filterByConfidence } from './confidence.js';
+import { readNodeDependencies } from '../../parsers/node.js';
+import { readPythonDependencies } from '../../parsers/python.js';
+import { readGoDependencies } from '../../parsers/go.js';
 
 // ============================================================================
 // MAIN ORCHESTRATOR (CP4)
@@ -63,11 +66,35 @@ export async function inferPatterns(
 
   try {
     // Stage 1: Dependency-based detection (CP0)
+    // Read deps at call site — detectFromDependencies now receives pre-read lists.
+    // This legacy path reads from filesystem; census-based callers pass census.allDeps.
     const stage1Start = Date.now();
+    let deps: string[] = [];
+    let devDeps: string[] = [];
+    try {
+      const pt = analysis.projectType;
+      if (pt === 'python') {
+        deps = await readPythonDependencies(rootPath);
+      } else if (pt === 'node') {
+        deps = await readNodeDependencies(rootPath);
+        // devDeps read from package.json for testing pattern detection
+        try {
+          const { readFile } = await import('../../utils/file.js');
+          const { joinPath } = await import('../../utils/file.js');
+          const content = await readFile(joinPath(rootPath, 'package.json'));
+          devDeps = Object.keys(JSON.parse(content).devDependencies || {});
+        } catch { /* no package.json */ }
+      } else if (pt === 'go') {
+        deps = await readGoDependencies(rootPath);
+      }
+    } catch { /* dep parsing failed — continue with empty */ }
+
     const dependencyPatterns = await detectFromDependencies(
-      rootPath,
+      deps,
+      devDeps,
       analysis.projectType,
-      analysis.framework
+      analysis.framework,
+      rootPath,
     );
     const stage1Duration = Date.now() - stage1Start;
 

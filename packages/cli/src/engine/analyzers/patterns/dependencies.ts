@@ -12,96 +12,63 @@
  * + one call in detectFromDependencies.
  */
 
-import { readPythonDependencies } from '../../parsers/python.js';
-import { readNodeDependencies } from '../../parsers/node.js';
-import { readGoDependencies } from '../../parsers/go.js';
-import { exists, joinPath, readFile } from '../../utils/file.js';
+import { exists, joinPath } from '../../utils/file.js';
 import type { ProjectType } from '../../types/index.js';
 import type { PatternConfidence } from '../../types/patterns.js';
+import type { SchemaFileEntry } from '../../types/census.js';
 
+/**
+ * Detect patterns from pre-read dependency lists.
+ *
+ * @param deps - Package names (production dependencies)
+ * @param devDeps - Package names (dev dependencies)
+ * @param projectType - Language/platform type
+ * @param framework - Detected framework (for error handling patterns)
+ * @param rootPath - Project root (still needed for config file existence checks)
+ * @param schemaFiles - Census schema entries (replaces rootPath schema.prisma check)
+ */
 export async function detectFromDependencies(
-  rootPath: string,
+  deps: string[],
+  devDeps: string[],
   projectType: ProjectType,
-  framework: string | null
+  framework: string | null,
+  rootPath: string,
+  schemaFiles: SchemaFileEntry[] = []
 ): Promise<Partial<Record<string, PatternConfidence>>> {
   const patterns: Partial<Record<string, PatternConfidence>> = {};
 
-  // Get dependencies using STEP_1.1 parsers
-  let deps: string[] = [];
-  let devDeps: string[] = [];
-
-  try {
-    if (projectType === 'python') {
-      deps = await readPythonDependencies(rootPath);
-    } else if (projectType === 'node') {
-      deps = await readNodeDependencies(rootPath);
-      devDeps = await readNodeDevDependencies(rootPath);
-    } else if (projectType === 'go') {
-      deps = await readGoDependencies(rootPath);
-    } else {
-      // Rust, Ruby, PHP - not yet supported for pattern inference
-      return patterns;
-    }
-  } catch (_error) {
-    // Dependency parsing failed - return empty (graceful degradation)
-    return patterns;
-  }
-
   // Detect validation patterns
-  const validation = await detectValidationPattern(deps, framework, rootPath);
+  const validation = detectValidationPattern(deps, framework);
   if (validation) patterns['validation'] = validation;
 
   // Detect database patterns
-  const database = await detectDatabasePattern(deps, framework, rootPath);
+  const database = detectDatabasePattern(deps, framework, schemaFiles);
   if (database) patterns['database'] = database;
 
   // Detect auth patterns
-  const auth = await detectAuthPattern(deps, framework, rootPath);
+  const auth = detectAuthPattern(deps, framework);
   if (auth) patterns['auth'] = auth;
 
-  // Detect testing patterns
+  // Detect testing patterns (rootPath still needed for config file checks)
   const testing = await detectTestingPattern(deps, devDeps, framework, rootPath);
   if (testing) patterns['testing'] = testing;
 
   // Detect error handling patterns (framework-specific)
-  const errorHandling = await detectErrorHandlingPattern(deps, projectType, framework, rootPath);
+  const errorHandling = detectErrorHandlingPattern(deps, projectType, framework);
   if (errorHandling) patterns['errorHandling'] = errorHandling;
 
   return patterns;
 }
 
 /**
- * Helper: Read Node.js dev dependencies
- * Testing frameworks often in devDependencies, not dependencies
- * @param rootPath
- */
-async function readNodeDevDependencies(rootPath: string): Promise<string[]> {
-  try {
-    const packageJsonPath = joinPath(rootPath, 'package.json');
-    if (await exists(packageJsonPath)) {
-      const content = await readFile(packageJsonPath);
-      const pkg = JSON.parse(content);
-      return Object.keys(pkg.devDependencies || {});
-    }
-  } catch (_error) {
-    // Failed to read - return empty
-  }
-  return [];
-}
-
-/**
  * Detect validation pattern from dependencies
  *
  * Checks for: pydantic, zod, joi, class-validator, djangorestframework, go-playground/validator
- * @param deps
- * @param framework
- * @param rootPath
  */
-async function detectValidationPattern(
+function detectValidationPattern(
   deps: string[],
   _framework: string | null,
-  _rootPath: string
-): Promise<PatternConfidence | null> {
+): PatternConfidence | null {
   // Python validation libraries
   if (deps.includes('pydantic')) {
     return {
@@ -203,15 +170,12 @@ async function detectValidationPattern(
  *
  * Checks for: sqlalchemy, prisma, typeorm, gorm, sqlc, sequelize, drizzle-orm
  * Detects variants: SQLAlchemy async vs sync based on async drivers
- * @param deps
- * @param framework
- * @param rootPath
  */
-async function detectDatabasePattern(
+function detectDatabasePattern(
   deps: string[],
   framework: string | null,
-  rootPath: string
-): Promise<PatternConfidence | null> {
+  schemaFiles: SchemaFileEntry[],
+): PatternConfidence | null {
   // Python database libraries
   if (deps.includes('sqlalchemy')) {
     // Detect async variant by checking for async drivers
@@ -238,8 +202,8 @@ async function detectDatabasePattern(
 
   // TypeScript/JavaScript database libraries
   if (deps.includes('@prisma/client') || deps.includes('prisma')) {
-    // Check for schema.prisma file (definitive signal)
-    const hasPrismaSchema = await exists(joinPath(rootPath, 'schema.prisma'));
+    // Check for schema.prisma via census (replaces rootPath filesystem check)
+    const hasPrismaSchema = schemaFiles.some(s => s.orm === 'prisma');
 
     return {
       library: 'prisma',
@@ -307,15 +271,11 @@ async function detectDatabasePattern(
  * Detect auth pattern from dependencies
  *
  * Checks for: JWT libraries, OAuth, session management, third-party (Clerk, NextAuth)
- * @param deps
- * @param framework
- * @param rootPath
  */
-async function detectAuthPattern(
+function detectAuthPattern(
   deps: string[],
   framework: string | null,
-  _rootPath: string
-): Promise<PatternConfidence | null> {
+): PatternConfidence | null {
   // JWT detection (cross-language)
   const jwtLibraries = [
     'pyjwt',                  // Python
@@ -495,17 +455,12 @@ async function detectTestingPattern(
  *
  * Mostly framework-specific (FastAPI → HTTPException, Go → error returns)
  * Only detects when we have dependencies or framework information
- * @param deps
- * @param projectType
- * @param framework
- * @param rootPath
  */
-async function detectErrorHandlingPattern(
+function detectErrorHandlingPattern(
   deps: string[],
   projectType: ProjectType,
   framework: string | null,
-  _rootPath: string
-): Promise<PatternConfidence | null> {
+): PatternConfidence | null {
   // Python exception-based error handling (framework-specific)
   if (framework === 'fastapi') {
     return {
