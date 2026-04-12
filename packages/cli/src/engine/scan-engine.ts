@@ -29,6 +29,7 @@ import { detectCommands } from './detectors/commands.js';
 import { detectDeployment, detectCI } from './detectors/deployment.js';
 import { annotateServiceRoles } from './utils/serviceAnnotation.js';
 import { countFiles } from '../utils/fileCounts.js';
+import { buildCensus } from './census.js';
 
 import { getLanguageDisplayName, getFrameworkDisplayName, getPatternDisplayName } from '../utils/displayNames.js';
 import { getProjectName } from '../utils/validators.js';
@@ -463,6 +464,9 @@ export async function scanProject(
 ): Promise<EngineResult> {
   const projectName = await getProjectName(rootPath);
   const now = new Date().toISOString();
+
+  // 0. Census — build alongside existing detection, not replacing yet
+  const census = await buildCensus(rootPath);
 
   // 1. Monorepo detection
   const mono = await detectMonorepoInfo(rootPath);
