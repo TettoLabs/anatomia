@@ -5,9 +5,14 @@ import { PatternAnalysisSchema } from './patterns.js';
 import { ConventionAnalysisSchema } from './conventions.js';
 
 /**
- * Project types supported by Anatomia detection
+ * Project types supported by Anatomia detection.
+ *
+ * Internal — only the derived `ProjectType` union is exported. The schema
+ * itself has zero external consumers; keeping it `export` invited dead
+ * references (INFRA-014 audit). Re-export the schema the day something
+ * outside this file needs to validate a project type at runtime.
  */
-export const ProjectTypeSchema = z.enum([
+const ProjectTypeSchema = z.enum([
   'python',
   'node',
   'go',
@@ -21,10 +26,13 @@ export const ProjectTypeSchema = z.enum([
 export type ProjectType = z.infer<typeof ProjectTypeSchema>;
 
 /**
- * Confidence score for a detection
- * Range: 0.0 (no confidence) to 1.0 (certain)
+ * Confidence score for a detection (internal).
+ *
+ * Range: 0.0 (no confidence) to 1.0 (certain). Internal — consumers that
+ * need a runtime-validated confidence score get it transitively through
+ * `AnalysisResultSchema`. INFRA-014 audit found zero external consumers.
  */
-export const ConfidenceScoreSchema = z.number().min(0.0).max(1.0);
+const ConfidenceScoreSchema = z.number().min(0.0).max(1.0);
 
 /**
  * Analysis result from project detection

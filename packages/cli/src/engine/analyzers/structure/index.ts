@@ -234,9 +234,12 @@ export async function analyzeStructure(
 }
 
 // Re-export the public API so tests and engine/index.ts can continue
-// importing by name through the folder.
+// importing by name through the folder. INFRA-014 removed two dead
+// re-exports (buildAsciiTree, findConfigFiles) that had zero external
+// consumers — `analyzeStructure` above uses the direct imports at the
+// top of the file. If a consumer outside this folder needs either
+// helper again, re-add the re-export with a matching test-surface
+// consumer, not as speculative exposure.
 export { findEntryPoints } from './entry-points.js';
 export { findTestLocations } from './test-locations.js';
 export { classifyArchitecture } from './architecture.js';
-export { buildAsciiTree } from './tree-builder.js';
-export { findConfigFiles } from './config-files.js';
