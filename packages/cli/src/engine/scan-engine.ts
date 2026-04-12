@@ -465,8 +465,9 @@ export async function scanProject(
   const projectName = await getProjectName(rootPath);
   const now = new Date().toISOString();
 
-  // 0. Census — build alongside existing detection, not replacing yet
-  const census = await buildCensus(rootPath);
+  // 0. Census — build alongside existing detection, not replacing yet.
+  // Underscore prefix suppresses lint until Step 5 wires census into detectors.
+  const _census = await buildCensus(rootPath);
 
   // 1. Monorepo detection
   const mono = await detectMonorepoInfo(rootPath);

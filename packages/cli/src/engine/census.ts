@@ -51,12 +51,6 @@ const DEPLOYMENT_CONFIGS: Record<string, string> = {
   'app.yaml': 'Google Cloud',
 };
 
-/** Schema file glob patterns → ORM names. */
-const SCHEMA_PATTERNS: Array<{ glob: string; orm: string }> = [
-  { glob: 'prisma/schema.prisma', orm: 'prisma' },
-  { glob: 'drizzle', orm: 'drizzle' },
-];
-
 /** Source file extensions to count. */
 const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.py', '.go', '.rs']);
 const EXCLUDE_DIRS = new Set(['node_modules', 'dist', '.next', 'build', '.git', '__pycache__', '.turbo']);
