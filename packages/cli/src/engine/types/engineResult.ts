@@ -13,6 +13,23 @@ import type { GitInfo } from '../detectors/git.js';
 import type { DetectedDeployment, DetectedCI } from '../detectors/deployment.js';
 
 /**
+ * Closed set of stack roles an external service may fulfill. Used by
+ * `annotateServiceRoles()` to tag each detected service with the stack
+ * positions it occupies, so display code can dedupe with
+ * `stackRoles.length === 0` rather than substring-matching detector names.
+ *
+ * Adding a new role = edit this union first; TypeScript then forces every
+ * push site and consumer to acknowledge it. The five values cover every
+ * current duplication case (see serviceAnnotation.ts for the mapping).
+ */
+export type StackRole =
+  | 'database'
+  | 'auth'
+  | 'payments'
+  | 'aiSdk'
+  | 'deployment';
+
+/**
  * The unified scan result returned by `scanProject()` and consumed by every
  * display surface in the CLI (`ana scan` terminal output, `ana init` success
  * message, `CLAUDE.md`, `AGENTS.md`, and the Detected section of every
@@ -82,7 +99,10 @@ export interface EngineResult {
     // annotateServiceRoles() at scan time. Consumers filter for display with
     // `stackRoles.length === 0` instead of fragile substring matching
     // (Item 5 — replaced 4 copies of `!stackValues.some(v => v.includes(svc.name))`).
-    stackRoles: string[];
+    // SCAN-003: typed as a branded union so typos fail at compile time —
+    // the set is closed, every push site uses one of these 5 literals, and
+    // the type IS the source of truth (adding a role means editing it here).
+    stackRoles: StackRole[];
   }>;
   schemas: Record<string, {
     found: boolean;
