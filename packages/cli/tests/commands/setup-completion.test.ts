@@ -3,6 +3,7 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import * as os from 'node:os';
 import { validateSetupCompletion } from '../../src/commands/check.js';
+import { fileExists } from '../../src/commands/init/preflight.js';
 
 /**
  * Tests for setup completion validation (D12.3 criteria)
@@ -470,11 +471,3 @@ describe('setup-progress.json lifecycle', () => {
   });
 });
 
-async function fileExists(p: string): Promise<boolean> {
-  try {
-    await fs.access(p);
-    return true;
-  } catch {
-    return false;
-  }
-}

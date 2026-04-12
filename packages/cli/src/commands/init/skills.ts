@@ -209,9 +209,10 @@ function injectCodingStandards(result: EngineResult): string {
 
 function injectTestingStandards(result: EngineResult): string {
   const lines: string[] = [];
-  if (result.stack.testing) {
+  if (result.stack.testing.length > 0) {
     const testCount = result.files.test > 0 ? ` (${result.files.test} test files)` : '';
-    lines.push(`- Framework: ${result.stack.testing}${testCount}`);
+    // SCAN-050: join all detected frameworks (was single-value before).
+    lines.push(`- Framework: ${result.stack.testing.join(', ')}${testCount}`);
   }
   if (result.commands.test) {
     const testCmd = makeTestCommandNonInteractive(result.commands.test, result.stack.testing);

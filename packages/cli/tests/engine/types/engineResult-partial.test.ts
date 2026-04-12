@@ -34,7 +34,7 @@ const validShape = (): EngineResultPartial => ({
     framework: 'Next.js',
     database: 'Prisma',
     auth: null,
-    testing: 'Vitest',
+    testing: ['Vitest'],
     payments: null,
     workspace: 'pnpm monorepo',
     aiSdk: null,
@@ -62,7 +62,9 @@ describe('EngineResultPartialSchema', () => {
     const data = validShape();
     data.stack.language = null;
     data.stack.framework = null;
-    data.stack.testing = null;
+    // SCAN-050: testing is string[], not string|null. Empty array is the
+    // canonical "no framework detected" value.
+    data.stack.testing = [];
     expect(() => parseEngineResultPartial(data)).not.toThrow();
   });
 

@@ -198,26 +198,70 @@ export async function saveScanJson(
 }
 
 /**
- * Make test command non-interactive for pipeline use
+ * Make a package.json `test` script safe to run in CI / pipeline contexts.
  *
- * Vitest runs in watch mode by default — append --run to disable.
- * Jest --watch is removed for CI compatibility.
+ * Each framework that has a watch-mode default gets transformed:
+ * - Vitest: append `-- --run` if the command doesn't already opt out of
+ *   watch (either via the `run` subcommand or an explicit `--run` flag).
+ *   The detection is tokenised (not substring) so `npx vitest run`,
+ *   `pnpm exec vitest run`, and bare `vitest run` are all recognised as
+ *   already non-interactive. There's also a `tokens.includes('--run')`
+ *   fallback — this is what lets `pnpm run test -- --run` pass through
+ *   unchanged (the tokens don't contain a literal `vitest`, but the
+ *   `--run` flag is already there; appending a second `-- --run` would
+ *   be wrong).
+ * - Jest: strip `--watch` and `--watchAll`. Same semantic intent — both
+ *   put Jest in watch mode.
+ * - Mocha: strip `--watch`. Previously this case was missing entirely
+ *   and a Mocha project with `test: 'mocha --watch'` would hang in CI.
+ *
+ * Frameworks not in the list pass through unchanged (pytest, go test,
+ * Cypress `run`, Playwright `test` are all non-interactive by default).
  *
  * @param testCommand - Raw test command from package.json
- * @param testingFramework - Detected testing framework
- * @returns Non-interactive test command or null
+ * @param frameworks - Every detected testing framework from
+ *   `stack.testing`. Membership is checked by display name.
+ * @returns Non-interactive test command, or null if testCommand was null.
  */
 export function makeTestCommandNonInteractive(
   testCommand: string | null,
-  testingFramework: string | null
+  frameworks: string[]
 ): string | null {
   if (!testCommand) return null;
-  if (testingFramework === 'Vitest' && !testCommand.includes('--run')) {
-    return `${testCommand} -- --run`;
+
+  // Vitest: append --run unless already non-interactive
+  if (frameworks.includes('Vitest')) {
+    const tokens = testCommand.split(/\s+/).filter(Boolean);
+    const vitestIdx = tokens.findIndex(t => t === 'vitest' || t.endsWith('/vitest'));
+    const afterVitest = vitestIdx >= 0 ? tokens.slice(vitestIdx + 1) : [];
+    const alreadyRunning =
+      afterVitest.includes('run') ||
+      afterVitest.includes('--run') ||
+      // Handles `pnpm run test -- --run` where `vitest` isn't in the tokens
+      // but the user has already passed --run through the script wrapper.
+      // Without this, we'd append a second `-- --run`.
+      tokens.includes('--run');
+    if (!alreadyRunning) {
+      return `${testCommand} -- --run`;
+    }
   }
-  if (testingFramework === 'Jest' && testCommand.includes('--watch')) {
+
+  // Jest: strip watch flags
+  if (frameworks.includes('Jest')) {
+    if (testCommand.includes('--watchAll')) {
+      return testCommand.replace('--watchAll', '').trim();
+    }
+    if (testCommand.includes('--watch')) {
+      return testCommand.replace('--watch', '').trim();
+    }
+  }
+
+  // Mocha: strip watch flag (was missing — a Mocha project with
+  // `mocha --watch` in its test script would hang in CI).
+  if (frameworks.includes('Mocha') && testCommand.includes('--watch')) {
     return testCommand.replace('--watch', '').trim();
   }
+
   return testCommand;
 }
 

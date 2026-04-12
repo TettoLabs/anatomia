@@ -13,6 +13,23 @@ import type { GitInfo } from '../detectors/git.js';
 import type { DetectedDeployment, DetectedCI } from '../detectors/deployment.js';
 
 /**
+ * Closed set of stack roles an external service may fulfill. Used by
+ * `annotateServiceRoles()` to tag each detected service with the stack
+ * positions it occupies, so display code can dedupe with
+ * `stackRoles.length === 0` rather than substring-matching detector names.
+ *
+ * Adding a new role = edit this union first; TypeScript then forces every
+ * push site and consumer to acknowledge it. The five values cover every
+ * current duplication case (see serviceAnnotation.ts for the mapping).
+ */
+export type StackRole =
+  | 'database'
+  | 'auth'
+  | 'payments'
+  | 'aiSdk'
+  | 'deployment';
+
+/**
  * The unified scan result returned by `scanProject()` and consumed by every
  * display surface in the CLI (`ana scan` terminal output, `ana init` success
  * message, `CLAUDE.md`, `AGENTS.md`, and the Detected section of every
@@ -43,7 +60,18 @@ export interface EngineResult {
     framework: string | null;
     database: string | null;
     auth: string | null;
-    testing: string | null;
+    /**
+     * Every testing framework detected in dependencies, deduplicated by
+     * display name. Empty array means "no testing detected"; previously
+     * `string | null`, which silently dropped every non-primary framework
+     * in multi-framework projects. See SCAN-050.
+     *
+     * Consumers that want a single display name should use
+     * `testing[0] ?? null` or `testing.join(', ')` — the first entry is
+     * implicitly "primary" because TESTING_PACKAGES orders unit runners
+     * before E2E and helpers.
+     */
+    testing: string[];
     payments: string | null;
     workspace: string | null;
     aiSdk: string | null;
@@ -55,7 +83,6 @@ export interface EngineResult {
     total: number;
   };
   structure: Array<{ path: string; purpose: string }>;
-  structureOverflow: number;
   // Composed from the detector's DetectedCommands (Item 7a) — adding a field
   // to DetectedCommands now flows through automatically. The only extra field
   // scan-engine appends on top is packageManager, which is nullable because
@@ -82,7 +109,10 @@ export interface EngineResult {
     // annotateServiceRoles() at scan time. Consumers filter for display with
     // `stackRoles.length === 0` instead of fragile substring matching
     // (Item 5 — replaced 4 copies of `!stackValues.some(v => v.includes(svc.name))`).
-    stackRoles: string[];
+    // SCAN-003: typed as a branded union so typos fail at compile time —
+    // the set is closed, every push site uses one of these 5 literals, and
+    // the type IS the source of truth (adding a role means editing it here).
+    stackRoles: StackRole[];
   }>;
   schemas: Record<string, {
     found: boolean;
@@ -275,10 +305,9 @@ export function createEmptyEngineResult(): EngineResult {
   return {
     schemaVersion: '1.0',
     overview: { project: 'unknown', scannedAt: new Date().toISOString(), depth: 'surface' },
-    stack: { language: null, framework: null, database: null, auth: null, testing: null, payments: null, workspace: null, aiSdk: null },
+    stack: { language: null, framework: null, database: null, auth: null, testing: [], payments: null, workspace: null, aiSdk: null },
     files: { source: 0, test: 0, config: 0, total: 0 },
     structure: [],
-    structureOverflow: 0,
     commands: { build: null, test: null, lint: null, dev: null, packageManager: null, all: {} },
     git: { head: null, branch: null, commitCount: null, lastCommitAt: null, uncommittedChanges: false, contributorCount: null, defaultBranch: null, branches: null },
     monorepo: { isMonorepo: false, tool: null, packages: [] },

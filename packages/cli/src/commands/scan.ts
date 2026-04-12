@@ -117,7 +117,7 @@ function formatHumanReadable(
     ['AI', result.stack.aiSdk],
     ['Database', result.stack.database],
     ['Auth', result.stack.auth],
-    ['Testing', result.stack.testing],
+    ['Testing', result.stack.testing.length > 0 ? result.stack.testing.join(', ') : null],
     ['Payments', result.stack.payments],
     ['Workspace', result.stack.workspace],
   ];
@@ -280,9 +280,6 @@ function formatHumanReadable(
     for (const item of result.structure) {
       const pathStr = item.path.padEnd(18);
       lines.push(`  ${chalk.cyan(pathStr)}${chalk.gray(item.purpose)}`);
-    }
-    if (result.structureOverflow > 0) {
-      lines.push(chalk.gray(`  +${result.structureOverflow} more directories`));
     }
   }
 

@@ -1,13 +1,14 @@
 /**
- * Integration tests for 12 critical edge cases
+ * Integration tests for framework detection + performance edge cases.
  *
- * Validates graceful error handling across:
- * - File system errors (5 tests)
- * - Monorepo detection (2 tests)
- * - Framework detection (3 tests)
- * - Performance/Cross-platform (2 tests)
+ * Real file operations in temp directories for isolation.
  *
- * Uses real file operations with temp directories for isolation.
+ * History: this file previously also covered file-system errors, monorepo
+ * detection, and error-collection flows — all exercised through the
+ * DetectionCollector chain in engine/errors/. NEW-003 (S19 Lane 2) deleted
+ * that chain entirely, and those three describe blocks went with it (they
+ * were testing the collector's own sentinel output, not user-visible
+ * behaviour). The two blocks below test real detector behaviour and stay.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -15,198 +16,18 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import * as os from 'node:os';
 
-// Import detection functions
 import { readPythonDependencies } from '../../../src/engine/parsers/python.js';
-import { readNodeDependencies } from '../../../src/engine/parsers/node.js';
-import { detectMonorepo } from '../../../src/engine/detectors/monorepo.js';
 import { detectFramework } from '../../../src/engine/detectors/framework.js';
-import { DetectionCollector } from '../../../src/engine/errors/DetectionCollector.js';
-import { exists, readFile } from '../../../src/engine/utils/file.js';
 
 describe('Edge Case Integration Tests', () => {
   let tempDir: string;
-  let collector: DetectionCollector;
 
   beforeEach(async () => {
-    // Create isolated temp directory for each test
     tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'anatomia-test-'));
-    collector = new DetectionCollector();
   });
 
   afterEach(async () => {
-    // Cleanup temp directory (force + recursive)
     await fs.rm(tempDir, { recursive: true, force: true });
-  });
-
-  // ============================================================
-  // FILE SYSTEM ERRORS (5 tests)
-  // ============================================================
-
-  describe('File System Edge Cases', () => {
-    it('handles empty directory with no dependency files', async () => {
-      // Create empty directory
-      const emptyDir = path.join(tempDir, 'empty-project');
-      await fs.mkdir(emptyDir);
-
-      // Should not crash, return empty array
-      const pythonDeps = await readPythonDependencies(emptyDir, collector);
-      expect(pythonDeps).toEqual([]);
-
-      const nodeDeps = await readNodeDependencies(emptyDir);
-      expect(nodeDeps).toEqual([]);
-
-      // Check that info message was logged
-      const info = collector.getInfo();
-      expect(info.some(e => e.code === 'NO_DEPENDENCIES')).toBe(true);
-    });
-
-    it('handles permission denied on package.json', async () => {
-      // Create package.json with valid content
-      const projectDir = path.join(tempDir, 'restricted-project');
-      await fs.mkdir(projectDir);
-      const packagePath = path.join(projectDir, 'package.json');
-      await fs.writeFile(
-        packagePath,
-        JSON.stringify({ dependencies: { express: '^4.0.0' } })
-      );
-
-      // Make file unreadable (chmod 000)
-      await fs.chmod(packagePath, 0o000);
-
-      try {
-        // Should handle gracefully, not crash
-        const deps = await readNodeDependencies(projectDir);
-
-        // Should return empty array due to permission error
-        expect(deps).toEqual([]);
-      } finally {
-        // Restore permissions for cleanup
-        await fs.chmod(packagePath, 0o644);
-      }
-    });
-
-    it('handles empty file (0-byte requirements.txt)', async () => {
-      // Create 0-byte requirements.txt
-      const projectDir = path.join(tempDir, 'empty-file-project');
-      await fs.mkdir(projectDir);
-      const reqPath = path.join(projectDir, 'requirements.txt');
-      await fs.writeFile(reqPath, '');
-
-      // Should not crash, return empty array
-      const deps = await readPythonDependencies(projectDir, collector);
-      expect(deps).toEqual([]);
-
-      // File exists but has no content
-      const fileExists = await exists(reqPath);
-      expect(fileExists).toBe(true);
-
-      const content = await readFile(reqPath);
-      expect(content).toBe('');
-    });
-
-    it('handles corrupted JSON in package.json', async () => {
-      // Create package.json with invalid JSON
-      const projectDir = path.join(tempDir, 'corrupted-json-project');
-      await fs.mkdir(projectDir);
-      const packagePath = path.join(projectDir, 'package.json');
-      await fs.writeFile(packagePath, '{invalid json}');
-
-      // Should handle gracefully with error collection
-      const deps = await readNodeDependencies(projectDir);
-
-      // Should return empty array, not crash
-      expect(deps).toEqual([]);
-    });
-
-    it('handles directory read as file', async () => {
-      // Create a directory named "package.json" (edge case)
-      const projectDir = path.join(tempDir, 'dir-as-file-project');
-      await fs.mkdir(projectDir);
-      const packageDir = path.join(projectDir, 'package.json');
-      await fs.mkdir(packageDir);
-
-      // Should handle gracefully (file read will fail on directory)
-      const deps = await readNodeDependencies(projectDir);
-
-      // Should return empty array, not crash
-      expect(deps).toEqual([]);
-    });
-  });
-
-  // ============================================================
-  // MONOREPO DETECTION (2 tests)
-  // ============================================================
-
-  describe('Monorepo Edge Cases', () => {
-    it('detects monorepo with pnpm-workspace.yaml', async () => {
-      // Create pnpm monorepo structure
-      const projectDir = path.join(tempDir, 'pnpm-monorepo');
-      await fs.mkdir(projectDir);
-
-      // Create pnpm-workspace.yaml
-      const workspaceContent = `packages:
-  - 'packages/*'
-  - 'apps/*'
-`;
-      await fs.writeFile(
-        path.join(projectDir, 'pnpm-workspace.yaml'),
-        workspaceContent
-      );
-
-      // Detect monorepo
-      const result = await detectMonorepo(projectDir, collector);
-
-      expect(result.isMonorepo).toBe(true);
-      expect(result.tool).toBe('pnpm');
-      expect(result.workspacePatterns).toEqual(['packages/*', 'apps/*']);
-
-      // Check info message
-      const info = collector.getInfo();
-      expect(info.some(e => e.code === 'MONOREPO_DETECTED')).toBe(true);
-    });
-
-    it('detects monorepo without tool (fallback discovery)', async () => {
-      // Create multiple package.json files without workspace config
-      const projectDir = path.join(tempDir, 'no-tool-monorepo');
-      await fs.mkdir(projectDir);
-
-      // Root package.json (no workspaces)
-      await fs.writeFile(
-        path.join(projectDir, 'package.json'),
-        JSON.stringify({ name: 'root' })
-      );
-
-      // Create packages directory with multiple packages
-      const packagesDir = path.join(projectDir, 'packages');
-      await fs.mkdir(packagesDir);
-
-      const pkg1Dir = path.join(packagesDir, 'pkg1');
-      await fs.mkdir(pkg1Dir);
-      await fs.writeFile(
-        path.join(pkg1Dir, 'package.json'),
-        JSON.stringify({ name: 'pkg1' })
-      );
-
-      const pkg2Dir = path.join(packagesDir, 'pkg2');
-      await fs.mkdir(pkg2Dir);
-      await fs.writeFile(
-        path.join(pkg2Dir, 'package.json'),
-        JSON.stringify({ name: 'pkg2' })
-      );
-
-      // Detect monorepo
-      const result = await detectMonorepo(projectDir, collector);
-
-      expect(result.isMonorepo).toBe(true);
-      expect(result.tool).toBe('none');
-      expect(result.packages).toBeDefined();
-      expect(result.packages!.length).toBeGreaterThanOrEqual(2);
-
-      // Check suggestion to use monorepo tool
-      const info = collector.getInfo();
-      const monorepoInfo = info.find(e => e.code === 'MONOREPO_DETECTED');
-      expect(monorepoInfo?.suggestion).toContain('pnpm');
-    });
   });
 
   // ============================================================
@@ -344,7 +165,7 @@ sqlalchemy==2.0.0
       await fs.writeFile(path.join(spacedDir, 'requirements.txt'), reqContent);
 
       // Should handle spaces correctly
-      const deps = await readPythonDependencies(spacedDir, collector);
+      const deps = await readPythonDependencies(spacedDir);
 
       expect(deps).toContain('flask');
       expect(deps).toContain('sqlalchemy');
@@ -352,70 +173,6 @@ sqlalchemy==2.0.0
       // Detect framework with spaced path
       const result = await detectFramework(spacedDir, 'python');
       expect(result.framework).toBe('flask');
-    });
-  });
-
-  // ============================================================
-  // ERROR COLLECTION VALIDATION
-  // ============================================================
-
-  describe('Error Collection and Graceful Degradation', () => {
-    it('collects errors without crashing on multiple failures', async () => {
-      const projectDir = path.join(tempDir, 'error-collection-project');
-      await fs.mkdir(projectDir);
-
-      // Create corrupted pnpm-workspace.yaml
-      await fs.writeFile(
-        path.join(projectDir, 'pnpm-workspace.yaml'),
-        'invalid: yaml: content: here'
-      );
-
-      // Create corrupted package.json
-      await fs.writeFile(
-        path.join(projectDir, 'package.json'),
-        '{broken json'
-      );
-
-      // Should collect warnings, not crash
-      const result = await detectMonorepo(projectDir, collector);
-
-      // Still returns a result (graceful degradation)
-      expect(result).toBeDefined();
-      expect(result.isMonorepo).toBe(false);
-
-      // Check warnings were collected
-      const warnings = collector.getWarnings();
-      expect(warnings.length).toBeGreaterThan(0);
-
-      // Should have YAML parse warning
-      expect(warnings.some(w => w.code === 'INVALID_YAML')).toBe(true);
-    });
-
-    it('never crashes on any edge case combination', async () => {
-      const projectDir = path.join(tempDir, 'chaos-project');
-      await fs.mkdir(projectDir);
-
-      // Create multiple problematic files
-      await fs.writeFile(path.join(projectDir, 'requirements.txt'), '');
-      await fs.writeFile(path.join(projectDir, 'package.json'), 'null');
-      await fs.writeFile(path.join(projectDir, 'Pipfile'), '[invalid');
-
-      // All operations should complete without throwing
-      await expect(
-        readPythonDependencies(projectDir, collector)
-      ).resolves.toBeDefined();
-
-      await expect(
-        readNodeDependencies(projectDir)
-      ).resolves.toBeDefined();
-
-      await expect(
-        detectMonorepo(projectDir, collector)
-      ).resolves.toBeDefined();
-
-      // Collector should have captured issues
-      const allErrors = collector.getAllErrors();
-      expect(allErrors.length).toBeGreaterThan(0);
     });
   });
 });

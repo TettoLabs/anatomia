@@ -21,6 +21,8 @@ import type { EngineResult } from './types/engineResult.js';
 import type { AnalysisResult } from './types/index.js';
 import { getPatternLibrary } from './types/patterns.js';
 import { readDependencies, detectFromDeps, detectServiceDeps, detectAiSdk, aggregateMonorepoDependencies } from './detectors/dependencies.js';
+import { readPythonDependencies } from './parsers/python.js';
+import { readGoDependencies } from './parsers/go.js';
 import { detectPackageManager } from './detectors/packageManager.js';
 import { detectGitInfo } from './detectors/git.js';
 import { detectCommands } from './detectors/commands.js';
@@ -35,6 +37,52 @@ interface MonorepoInfo {
   isMonorepo: boolean;
   tool: string | null;
   packages: Array<{ name: string; path: string }>;
+}
+
+/**
+ * Detect testing frameworks for non-Node projects at surface tier.
+ *
+ * The main dependency-detection path (`detectFromDeps`) only inspects
+ * `package.json`. Python projects keep their deps in pyproject.toml /
+ * requirements.txt / Pipfile; Go projects use go.mod. Without an explicit
+ * read, pytest and Go's built-in `testing` package never surface on surface-
+ * tier scans — so SCAN-033's missing-tests blind spot fires even when tests
+ * exist and the framework is obvious from the dep file.
+ *
+ * Deep tier catches these via the pattern analyzer (inferPatterns); this
+ * helper covers the surface-tier hole without requiring tree-sitter parsing.
+ *
+ * Rust: the standard library ships `cargo test` as built-in — there's no
+ * dependency to detect. Tests are recognized by presence of test files,
+ * not by a framework in Cargo.toml. We deliberately return [] for Rust and
+ * let the file-count check decide whether the blind spot fires.
+ */
+async function detectNonNodeTesting(
+  rootPath: string,
+  projectType: string
+): Promise<string[]> {
+  try {
+    if (projectType === 'python') {
+      const deps = await readPythonDependencies(rootPath);
+      const detected: string[] = [];
+      if (deps.includes('pytest')) detected.push('pytest');
+      if (deps.includes('unittest')) detected.push('unittest');
+      return detected;
+    }
+    if (projectType === 'go') {
+      // Go's standard library `testing` package is built-in; presence of
+      // `require` lines alone doesn't tell us much. Treat any detectable
+      // Go project as having testing if go.mod was readable — matches the
+      // convention that every Go project uses `go test`.
+      const deps = await readGoDependencies(rootPath);
+      return deps.length >= 0 ? ['Go testing'] : [];
+    }
+  } catch {
+    // Parser failure — fall through silently. The blind spot still fires
+    // as informational, which is the correct behavior for genuinely
+    // unreadable dep files.
+  }
+  return [];
 }
 
 async function detectMonorepoInfo(rootPath: string): Promise<MonorepoInfo> {
@@ -198,26 +246,47 @@ async function detectSchemas(
   const schemas: EngineResult['schemas'] = {};
   const blindSpots: EngineResult['blindSpots'] = [];
 
+  // Schemas live in many places in real projects:
+  // - monolith: prisma/schema.prisma at root
+  // - monorepo with shared db: packages/db/prisma/schema.prisma
+  // - monorepo per-app: apps/api/prisma/schema.prisma
+  // 5 of 22 tested projects had Prisma in a sub-package — the old root-only
+  // globs missed them and fired a misleading "no schema" blind spot. Replace
+  // with ** globs bounded by maxDepth: 6 and ignoring build artifacts.
+  // Benchmark against Anatomia: avg 2.6ms, max 7.3ms — well under the 300ms
+  // threshold that would force the explicit-pattern fallback.
+  const SCHEMA_GLOB_OPTS = {
+    cwd: rootPath,
+    ignore: ['**/node_modules/**', '**/dist/**', '**/.git/**'],
+    maxDepth: 6,
+  };
+
   // Prisma
   const hasPrisma = allDeps['prisma'] || allDeps['@prisma/client'];
   if (hasPrisma) {
-    const schemaPath = path.join(rootPath, 'prisma', 'schema.prisma');
     try {
-      const content = await fs.readFile(schemaPath, 'utf-8');
-      const modelCount = (content.match(/^model\s+/gm) || []).length;
-      const providerMatch = content.match(/provider\s*=\s*"(\w+)"/);
-      const provider = providerMatch?.[1] || null;
-      schemas['prisma'] = { found: true, path: 'prisma/schema.prisma', modelCount, provider };
+      const matches = await glob('**/schema.prisma', SCHEMA_GLOB_OPTS);
+      if (matches.length > 0) {
+        const relativePath = matches[0] as string;
+        const content = await fs.readFile(path.join(rootPath, relativePath), 'utf-8');
+        const modelCount = (content.match(/^model\s+/gm) || []).length;
+        const providerMatch = content.match(/provider\s*=\s*"(\w+)"/);
+        const provider = providerMatch?.[1] || null;
+        schemas['prisma'] = { found: true, path: relativePath, modelCount, provider };
+      } else {
+        schemas['prisma'] = { found: false, path: null, modelCount: null };
+        blindSpots.push({ area: 'Database', issue: 'Prisma dependency found but no schema.prisma', resolution: 'Create prisma/schema.prisma (or packages/<pkg>/prisma/schema.prisma in a monorepo)' });
+      }
     } catch {
       schemas['prisma'] = { found: false, path: null, modelCount: null };
-      blindSpots.push({ area: 'Database', issue: 'Prisma dependency found but no schema.prisma', resolution: 'Create prisma/schema.prisma' });
+      blindSpots.push({ area: 'Database', issue: 'Prisma dependency found but no schema.prisma', resolution: 'Create prisma/schema.prisma (or packages/<pkg>/prisma/schema.prisma in a monorepo)' });
     }
   }
 
   // Drizzle
   if (allDeps['drizzle-orm']) {
     try {
-      const files = await glob('drizzle/**/*.ts', { cwd: rootPath });
+      const files = await glob('**/drizzle/**/*.ts', SCHEMA_GLOB_OPTS);
       schemas['drizzle'] = { found: files.length > 0, path: files.length > 0 ? (files[0] ?? null) : null, modelCount: null };
     } catch {
       schemas['drizzle'] = { found: false, path: null, modelCount: null };
@@ -227,12 +296,17 @@ async function detectSchemas(
   // Supabase migrations — count unique tables, not files
   if (allDeps['@supabase/supabase-js']) {
     try {
-      const migrationFiles = await glob('supabase/migrations/*.sql', { cwd: rootPath }).catch(() => [] as string[]);
-      const schemaFiles = await glob('schema/**/*.sql', { cwd: rootPath }).catch(() => [] as string[]);
+      const migrationFiles = await glob('**/supabase/migrations/*.sql', SCHEMA_GLOB_OPTS).catch(() => [] as string[]);
+      const schemaFiles = await glob('**/schema/**/*.sql', SCHEMA_GLOB_OPTS).catch(() => [] as string[]);
       const files = [...migrationFiles, ...schemaFiles];
       if (files.length > 0) {
         const modelCount = await countUniqueTables(rootPath, files);
-        schemas['supabase'] = { found: true, path: migrationFiles.length > 0 ? 'supabase/migrations/' : 'schema/', modelCount };
+        // Record the directory that actually matched. In monorepo sub-packages
+        // this surfaces as e.g. `apps/api/supabase/migrations/` instead of the
+        // legacy hard-coded `supabase/migrations/` root.
+        const firstPath = migrationFiles[0] ?? schemaFiles[0] ?? null;
+        const schemaDir = firstPath ? `${path.dirname(firstPath)}/` : null;
+        schemas['supabase'] = { found: true, path: schemaDir, modelCount };
       } else {
         schemas['supabase'] = { found: false, path: null, modelCount: null };
       }
@@ -288,10 +362,15 @@ async function detectSecrets(rootPath: string): Promise<EngineResult['secrets']>
 
 function extractStructure(
   analysis: AnalysisResult | null
-): { items: Array<{ path: string; purpose: string }>; overflow: number } {
-  if (!analysis?.structure?.directories) return { items: [], overflow: 0 };
+): Array<{ path: string; purpose: string }> {
+  if (!analysis?.structure?.directories) return [];
   const directories = analysis.structure.directories;
-  const entries = Object.entries(directories)
+  // Return every depth-1 directory with a non-"Unknown" purpose. Those two
+  // filters ARE the quality gate — nothing noisy survives them, so there's
+  // nothing an arbitrary cap would usefully truncate. Empirically (across
+  // the S18 test dossier + Anatomia dogfood) the post-filter count tops out
+  // in single digits, which is why this is safe to return unbounded.
+  return Object.entries(directories)
     .filter(([dirPath, purpose]) => {
       const depth = dirPath.split('/').filter(Boolean).length;
       return depth === 1 && purpose && purpose !== 'Unknown';
@@ -301,9 +380,6 @@ function extractStructure(
       purpose,
     }))
     .sort((a, b) => a.path.localeCompare(b.path));
-  const maxItems = 10;
-  const overflow = Math.max(0, entries.length - maxItems);
-  return { items: entries.slice(0, maxItems), overflow };
 }
 
 // mapToPatternDetail + mapPatterns deleted (Item 6) — same rationale as Item 3
@@ -467,9 +543,27 @@ export async function scanProject(
     if (!stack.auth && authLib) {
       stack.auth = getPatternDisplayName(authLib);
     }
+    // Fall back to the pattern analyzer only if dependency detection
+    // turned up nothing — this is how pytest / go-test surface on non-Node
+    // projects via the DEEP tier, where TESTING_PACKAGES doesn't apply.
     const testLib = getPatternLibrary(analysis.patterns?.testing);
-    if (!stack.testing && testLib) {
-      stack.testing = getPatternDisplayName(testLib);
+    if (stack.testing.length === 0 && testLib) {
+      stack.testing = [getPatternDisplayName(testLib)];
+    }
+  }
+
+  // SCAN-023: surface-tier non-Node testing enrichment. The dependency-
+  // detection path (detectFromDeps) only sees `package.json` — Python/Go/Rust
+  // projects have their own dep files that never reach allDeps, so pytest
+  // in pyproject.toml or testify in go.mod flow nowhere at surface tier.
+  // Read the project-type's own dep file here and surface any recognized
+  // testing framework so the missing-tests blind spot (SCAN-033) doesn't
+  // fire on modern Python projects. Deep tier handles this via patterns;
+  // surface tier needs an explicit read.
+  if (stack.testing.length === 0 && analysis?.projectType) {
+    const nonNodeTesting = await detectNonNodeTesting(rootPath, analysis.projectType);
+    if (nonNodeTesting.length > 0) {
+      stack.testing = nonNodeTesting;
     }
   }
 
@@ -548,13 +642,13 @@ export async function scanProject(
   // distinguish "no testing at all" (actionable) from "tests exist but
   // framework unrecognized" (informational — common for Go's built-in
   // `go test` and lesser-known frameworks).
-  if (stack.testing === null && files.test === 0) {
+  if (stack.testing.length === 0 && files.test === 0) {
     blindSpots.push({
       area: 'Testing',
       issue: 'No test framework or test files detected',
       resolution: 'Add a test framework (vitest, jest, pytest) and write tests, or confirm tests live elsewhere.',
     });
-  } else if (stack.testing === null && files.test > 0) {
+  } else if (stack.testing.length === 0 && files.test > 0) {
     blindSpots.push({
       area: 'Testing',
       issue: `${files.test} test files found but test framework not identified in dependencies`,
@@ -567,8 +661,7 @@ export async function scanProject(
     overview: { project: projectName, scannedAt: now, depth: options.depth },
     stack,
     files,
-    structure: structure.items,
-    structureOverflow: structure.overflow,
+    structure,
     commands: { ...commands, packageManager },
     git,
     monorepo: mono,

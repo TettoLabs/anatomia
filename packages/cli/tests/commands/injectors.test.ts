@@ -110,7 +110,7 @@ describe('getStackSummary', () => {
       framework: 'Next.js',
       database: 'PostgreSQL',
       auth: 'Clerk',
-      testing: 'Vitest',
+      testing: ['Vitest'],
       payments: 'Stripe',
       workspace: 'pnpm monorepo',
       aiSdk: 'Vercel AI',
@@ -189,10 +189,29 @@ describe('matchGotchas', () => {
     // Included because Vitest is ambient in this repo and the default-
     // watch-mode gotcha is the one most likely to bite a reinit flow.
     const result = createEmptyEngineResult();
-    result.stack.testing = 'Vitest';
+    result.stack.testing = ['Vitest'];
     const matches = matchGotchas(result);
     const testing = matches.get('testing-standards');
     expect(testing).toBeDefined();
+    expect(testing?.some(g => g.includes('watch mode'))).toBe(true);
+  });
+
+  // SCAN-050: matchGotchas was extended with an array-aware branch because
+  // stack.testing is now `string[]`. Without the branch, strict `===`
+  // equality fails on `['Vitest'] === 'Vitest'` and the existing Vitest
+  // gotcha silently stops firing on every Vitest project (not just
+  // multi-framework ones — ALL Vitest projects). This test exercises the
+  // multi-framework path specifically: Jest + Vitest together. A pure
+  // single-value implementation would have dropped Vitest on the floor
+  // (it was either "first value wins" or the strict-equality failure).
+  it('matches array-valued stack.testing on multi-framework projects (SCAN-050)', () => {
+    const result = createEmptyEngineResult();
+    result.stack.testing = ['Jest', 'Vitest'];
+    const matches = matchGotchas(result);
+    const testing = matches.get('testing-standards');
+    expect(testing).toBeDefined();
+    // Vitest-watch gotcha should fire because 'Vitest' is in the array
+    // even though it's not the first entry.
     expect(testing?.some(g => g.includes('watch mode'))).toBe(true);
   });
 
@@ -256,5 +275,39 @@ describe('matchGotchas', () => {
     const matches = matchGotchas(result);
     const apiPatterns = matches.get('api-patterns');
     expect(apiPatterns?.some(g => g.includes('Inngest')) ?? false).toBe(false);
+  });
+
+  // S19/IDEA-010: Playwright gotcha fires on both pure-Playwright projects
+  // and multi-framework projects (Jest + Playwright, Vitest + Playwright).
+  // The gotcha matcher uses the SCAN-050 array-aware equality branch;
+  // without it, `['Vitest','Playwright'].includes('Playwright')` works but
+  // `['Playwright'] === 'Playwright'` is false — proof the matcher update
+  // is load-bearing for this trigger.
+  it('fires Playwright gotcha on a pure-Playwright project (IDEA-010)', () => {
+    const result = createEmptyEngineResult();
+    result.stack.testing = ['Playwright'];
+    const matches = matchGotchas(result);
+    const testing = matches.get('testing-standards');
+    expect(testing).toBeDefined();
+    expect(testing?.some(g => /auto-waiting|getByRole/.test(g))).toBe(true);
+  });
+
+  it('fires Playwright gotcha on a Jest + Playwright project (IDEA-010)', () => {
+    const result = createEmptyEngineResult();
+    result.stack.testing = ['Jest', 'Playwright'];
+    const matches = matchGotchas(result);
+    const testing = matches.get('testing-standards');
+    expect(testing).toBeDefined();
+    // Both the Jest/Vitest-style gotcha logic AND the Playwright gotcha
+    // should coexist on multi-framework projects.
+    expect(testing?.some(g => /auto-waiting|getByRole/.test(g))).toBe(true);
+  });
+
+  it('does NOT fire Playwright gotcha on a Jest-only project (IDEA-010 negative)', () => {
+    const result = createEmptyEngineResult();
+    result.stack.testing = ['Jest'];
+    const matches = matchGotchas(result);
+    const testing = matches.get('testing-standards');
+    expect(testing?.some(g => /auto-waiting|getByRole/.test(g)) ?? false).toBe(false);
   });
 });

@@ -9,7 +9,7 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
-import { fileExists } from '../utils/validators.js';
+import { pathExists } from '../utils/validators.js';
 import { createCheckCommand } from './check.js';
 import { createIndexCommand } from './symbol-index.js';
 import { validateSetupCompletion } from './check.js';
@@ -56,7 +56,7 @@ export function registerSetupCommand(program: Command): void {
     const anaJsonPath = path.join(anaPath, 'ana.json');
 
     // Check .ana/ exists
-    if (!(await fileExists(anaPath))) {
+    if (!(await pathExists(anaPath))) {
       console.error(chalk.red('Error: .ana/ directory not found'));
       console.error(
         chalk.gray('Run `ana init` first to create .ana/ structure.')
@@ -65,7 +65,7 @@ export function registerSetupCommand(program: Command): void {
     }
 
     // Check ana.json exists
-    if (!(await fileExists(anaJsonPath))) {
+    if (!(await pathExists(anaJsonPath))) {
       console.error(chalk.red('Error: ana.json not found'));
       console.error(chalk.gray('Run `ana init` first.'));
       process.exit(1);

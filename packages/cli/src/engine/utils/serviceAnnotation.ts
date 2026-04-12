@@ -21,7 +21,7 @@
  * no service has the same name as "TypeScript", "Next.js", "Vitest", or
  * "pnpm monorepo", so there is nothing to dedupe.
  */
-import type { EngineResult } from '../types/engineResult.js';
+import type { EngineResult, StackRole } from '../types/engineResult.js';
 
 type ExternalService = EngineResult['externalServices'][number];
 
@@ -31,7 +31,7 @@ export function annotateServiceRoles(
   deploymentPlatform: string | null
 ): ExternalService[] {
   return services.map(svc => {
-    const roles: string[] = [];
+    const roles: StackRole[] = [];
     if (svc.name === stack.database) roles.push('database');
     // Auth field may be suffixed with " Auth" (e.g., "Supabase Auth" for the
     // "Supabase" service). Match both forms so Supabase-as-backend and

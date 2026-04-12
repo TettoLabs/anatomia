@@ -55,11 +55,29 @@ export const CORE_SKILLS = [
 ] as const;
 
 /**
+ * CLI frameworks that have no API surface — api-patterns should not fire
+ * for these. All 4 values are passthrough (no display-name transform),
+ * so they match `stack.framework` exactly. Adding a new CLI framework is
+ * one line here.
+ *
+ * Failure mode is safe by design: forgetting a CLI framework means it
+ * gets api-patterns (same as today — not a regression). A category map
+ * was considered and rejected for the opposite failure mode: forgetting
+ * an API framework would lose api-patterns silently.
+ */
+const NON_API_FRAMEWORKS = new Set<string>([
+  'typer',      // Python CLI
+  'click',      // Python CLI
+  'clap-cli',   // Rust CLI
+  'cobra-cli',  // Go CLI
+]);
+
+/**
  * Conditional skills — scaffolded only when scan detects the trigger (D6.1)
  */
 export const CONDITIONAL_SKILL_TRIGGERS: Record<string, (result: EngineResult) => boolean> = {
   'ai-patterns': (r) => !!r?.stack?.aiSdk,
-  'api-patterns': (r) => !!r?.stack?.framework,
+  'api-patterns': (r) => !!r?.stack?.framework && !NON_API_FRAMEWORKS.has(r.stack.framework),
   'data-access': (r) => !!r?.stack?.database,
 };
 
@@ -96,12 +114,18 @@ export function computeSkillManifest(engineResult: EngineResult): string[] {
  * @returns Array of display-ready stack strings (e.g., ["TypeScript", "Next.js", "Supabase"])
  */
 export function getStackSummary(result: EngineResult): string[] {
+  // stack.testing is `string[]` (SCAN-050). Join detected frameworks with
+  // a comma so multi-framework projects surface correctly in the single-
+  // line stack summary; empty array means "no testing detected" and is
+  // filtered out alongside the other null values.
+  const testingDisplay =
+    result.stack.testing.length > 0 ? result.stack.testing.join(', ') : null;
   return [
     result.stack.language,
     result.stack.framework,
     result.stack.database,
     result.stack.auth,
-    result.stack.testing,
+    testingDisplay,
     result.stack.aiSdk,
     result.stack.payments,
   ].filter(Boolean) as string[];

@@ -15,6 +15,7 @@ import { promisify } from 'node:util';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import * as os from 'node:os';
+import { fileExists } from '../../src/commands/init/preflight.js';
 
 const execFileAsync = promisify(execFile);
 
@@ -295,12 +296,4 @@ async function dirExists(dirPath: string): Promise<boolean> {
   }
 }
 
-async function fileExists(filePath: string): Promise<boolean> {
-  try {
-    await fs.access(filePath);
-    return true;
-  } catch {
-    return false;
-  }
-}
 

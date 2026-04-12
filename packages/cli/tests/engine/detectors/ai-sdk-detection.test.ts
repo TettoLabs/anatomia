@@ -89,4 +89,25 @@ describe('computeSkillManifest with aiSdk', () => {
     const skills = computeSkillManifest(result as any);
     expect(skills).toContain('api-patterns');
   });
+
+  // SETUP-028: CLI frameworks have zero API surface — api-patterns is noise.
+  // Four CLI framework values are passthrough (no display-name transform) so
+  // they match `stack.framework` exactly.
+  it.each(['typer', 'click', 'clap-cli', 'cobra-cli'])(
+    'does NOT include api-patterns when stack.framework is CLI framework %s',
+    (cliFramework) => {
+      const result = { ...createEmptyEngineResult(), stack: { ...createEmptyEngineResult().stack, framework: cliFramework } };
+      const skills = computeSkillManifest(result as any);
+      expect(skills).not.toContain('api-patterns');
+    },
+  );
+
+  it('includes api-patterns when stack.framework is FastAPI', () => {
+    // FastAPI is a Python web framework — NOT in NON_API_FRAMEWORKS. Sibling
+    // to the CLI framework exclusion above: proves the Set check is tight
+    // (only the 4 CLI values are excluded, everything else still fires).
+    const result = { ...createEmptyEngineResult(), stack: { ...createEmptyEngineResult().stack, framework: 'FastAPI' } };
+    const skills = computeSkillManifest(result as any);
+    expect(skills).toContain('api-patterns');
+  });
 });
