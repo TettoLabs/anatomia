@@ -4,8 +4,6 @@
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { analyzeStructure } from '../../../src/engine/analyzers/structure/index.js';
-// analyze() deleted in Lane 0 Step 7
-const analyze = (() => { throw new Error('analyze() deleted'); }) as any;
 import { mkdir, writeFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -80,8 +78,7 @@ describe('analyzeStructure integration', () => {
   });
 });
 
-// Lane 0 Step 7: analyze() deleted. Migrate to scanProject().
-describe.skip('analyze() integration', () => {
+describe('scanProject() includes structure in output', () => {
   const testDir = '/tmp/test-analyze-integration';
 
   beforeEach(async () => {
@@ -92,21 +89,15 @@ describe.skip('analyze() integration', () => {
     await rm(testDir, { recursive: true, force: true });
   });
 
-  it('includes structure field in AnalysisResult', async () => {
-    await writeFile(join(testDir, 'main.py'), '');
+  it('structure field populated for projects with directories', async () => {
+    await writeFile(join(testDir, 'package.json'), '{"name":"test"}');
+    await mkdir(join(testDir, 'src'), { recursive: true });
+    await writeFile(join(testDir, 'src', 'index.ts'), 'export const x = 1;');
 
-    const result = await analyze(testDir);
+    const { scanProject } = await import('../../../src/engine/index.js');
+    const result = await scanProject(testDir, { depth: 'surface' });
 
-    expect(result.projectType).toBeDefined();
-    expect(result.confidence).toBeDefined();
+    expect(result.stack).toBeDefined();
     expect(result.structure).toBeDefined();
-    expect(result.structure?.entryPoints).toBeDefined();
-    expect(result.structure?.confidence).toBeDefined();
-  });
-
-  it('skipStructure option works', async () => {
-    const result = await analyze(testDir, { skipStructure: true });
-
-    expect(result.structure).toBeUndefined();
   });
 });
