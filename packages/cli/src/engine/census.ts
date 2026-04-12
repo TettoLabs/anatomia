@@ -274,9 +274,10 @@ export async function buildCensus(rootPath: string): Promise<ProjectCensus> {
     // Lane 0+ target: non-Node monorepo support (Python workspaces, Go modules)
   }
 
-  // @manypkg returns tool.type 'root' when it can't determine the package manager
-  // (e.g., no lockfile). But if packages[] is non-empty, it's still a monorepo.
-  const isSingleRepo = !result || (result.tool.type === 'root' && result.packages.length === 0);
+  // @manypkg returns tool.type 'root' when it can't determine the package manager.
+  // packages[] always includes the root package itself, so check for non-root packages.
+  const nonRootPackages = result?.packages.filter(p => p.relativeDir !== '.') ?? [];
+  const isSingleRepo = !result || (result.tool.type === 'root' && nonRootPackages.length === 0);
 
   // Project name from root package.json or directory name
   const projectName = result?.rootPackage?.packageJson?.name ?? path.basename(normalizedRoot);
