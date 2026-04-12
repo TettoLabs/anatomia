@@ -19,7 +19,7 @@ import { existsSync } from 'node:fs';
 import { glob } from 'glob';
 import type { EngineResult } from './types/engineResult.js';
 import { getPatternLibrary } from './types/patterns.js';
-import { readDependencies, detectFromDeps, detectServiceDeps, detectAiSdk, aggregateMonorepoDependencies } from './detectors/dependencies.js';
+import { detectFromDeps, detectServiceDeps, detectAiSdk } from './detectors/dependencies.js';
 import { readPythonDependencies } from './parsers/python.js';
 import { readGoDependencies } from './parsers/go.js';
 import { detectPackageManager } from './detectors/packageManager.js';
@@ -88,70 +88,11 @@ async function detectNonNodeTesting(
   return [];
 }
 
-async function detectMonorepoInfo(rootPath: string): Promise<MonorepoInfo> {
-  // Check pnpm-workspace.yaml
-  try {
-    const content = await fs.readFile(path.join(rootPath, 'pnpm-workspace.yaml'), 'utf-8');
-    const patterns: string[] = [];
-    const lines = content.split('\n');
-    let inPackages = false;
-    for (const line of lines) {
-      if (line.trim() === 'packages:') { inPackages = true; continue; }
-      if (inPackages && line.trim().startsWith('-')) {
-        patterns.push(line.trim().slice(1).trim().replace(/['"]/g, ''));
-      } else if (inPackages && line.trim() && !line.trim().startsWith('#')) {
-        inPackages = false;
-      }
-    }
-    const packages = await findWorkspacePackages(rootPath, patterns);
-    return { isMonorepo: true, tool: 'pnpm', packages };
-  } catch { /* not pnpm */ }
-
-  // Check package.json workspaces
-  try {
-    const content = await fs.readFile(path.join(rootPath, 'package.json'), 'utf-8');
-    const pkg = JSON.parse(content);
-    if (pkg.workspaces) {
-      const patterns = Array.isArray(pkg.workspaces) ? pkg.workspaces : pkg.workspaces.packages || [];
-      const packages = await findWorkspacePackages(rootPath, patterns);
-      return { isMonorepo: true, tool: 'npm/yarn', packages };
-    }
-  } catch { /* not npm/yarn workspaces */ }
-
-  // Check lerna.json
-  try {
-    await fs.access(path.join(rootPath, 'lerna.json'));
-    return { isMonorepo: true, tool: 'Lerna', packages: [] };
-  } catch { /* not lerna */ }
-
-  // Check nx.json
-  try {
-    await fs.access(path.join(rootPath, 'nx.json'));
-    return { isMonorepo: true, tool: 'Nx', packages: [] };
-  } catch { /* not nx */ }
-
-  return { isMonorepo: false, tool: null, packages: [] };
-}
-
-async function findWorkspacePackages(
-  rootPath: string,
-  patterns: string[]
-): Promise<Array<{ name: string; path: string }>> {
-  const packages: Array<{ name: string; path: string }> = [];
-  for (const pattern of patterns) {
-    try {
-      const matches = await glob(pattern, { cwd: rootPath, absolute: false });
-      for (const match of matches) {
-        try {
-          const content = await fs.readFile(path.join(rootPath, match, 'package.json'), 'utf-8');
-          const pkg = JSON.parse(content);
-          if (pkg.name) packages.push({ name: pkg.name, path: match });
-        } catch { /* skip */ }
-      }
-    } catch { /* skip */ }
-  }
-  return packages;
-}
+// detectMonorepoInfo and findWorkspacePackages DELETED — S20 Disease D.
+// Census (via @manypkg/get-packages) is now the single source for monorepo
+// detection, workspace packages, and aggregated dependencies. The hand-rolled
+// YAML/JSON parsing was redundant with census and handled fewer workspace tool
+// types (@manypkg supports pnpm, yarn, npm, lerna, bolt, bun, rush).
 
 // --- External services detection ---
 
@@ -475,19 +416,20 @@ export async function scanProject(
   // 0. Census — shared project model. Detectors receive census data instead of rootPath.
   const census = await buildCensus(rootPath);
 
-  // 1. Monorepo detection
-  const mono = await detectMonorepoInfo(rootPath);
+  // 1. Monorepo info from census (single source — Disease D fix)
+  const mono: MonorepoInfo = {
+    isMonorepo: census.layout === 'monorepo',
+    tool: census.monorepoTool,
+    packages: census.sourceRoots
+      .filter(r => r.relativePath !== '.')
+      .map(r => ({ name: r.packageName ?? r.relativePath, path: r.relativePath })),
+  };
 
   // 2. Package manager
   const packageManager = await detectPackageManager(rootPath);
 
-  // 3. Dependency detection (aggregate if monorepo)
-  let allDeps: Record<string, string>;
-  if (mono.isMonorepo && mono.packages.length > 0) {
-    allDeps = await aggregateMonorepoDependencies(rootPath, mono.packages.map(p => p.path));
-  } else {
-    allDeps = await readDependencies(path.join(rootPath, 'package.json'));
-  }
+  // 3. Dependencies from census (single source — Disease D fix)
+  const allDeps = census.allDeps;
   const depResult = detectFromDeps(allDeps);
 
   // 4. Direct detection phases (replaces analyze() — Lane 0 Step 7).
@@ -575,7 +517,11 @@ export async function scanProject(
     auth: depResult.auth,
     testing: depResult.testing,
     payments: depResult.payments,
-    workspace: mono.isMonorepo ? `${mono.tool} monorepo` : null,
+    workspace: mono.isMonorepo
+      ? (existsSync(path.join(rootPath, 'turbo.json'))
+        ? `Turborepo (${mono.tool})`
+        : `${mono.tool} monorepo`)
+      : null,
     aiSdk: detectAiSdk(allDeps),
   };
 
