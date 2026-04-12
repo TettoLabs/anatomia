@@ -83,7 +83,7 @@ export const PAYMENT_PACKAGES: Record<string, string> = {
   'stripe': 'Stripe', '@stripe/stripe-js': 'Stripe',
   '@lemonsqueezy/lemonsqueezy.js': 'LemonSqueezy',
   '@polar-sh/sdk': 'Polar',
-  'paddle-sdk': 'Paddle',
+  'paddle-sdk': 'Paddle', '@paddle/paddle-js': 'Paddle',
 };
 
 /**
@@ -111,16 +111,22 @@ export const AI_PACKAGES: Record<string, string> = {
   '@ai-sdk/amazon-bedrock': 'Vercel AI (Bedrock)',
   '@ai-sdk/azure': 'Vercel AI (Azure)',
   '@ai-sdk/mistral': 'Vercel AI (Mistral)',
+  '@ai-sdk/cohere': 'Vercel AI (Cohere)',
+  '@ai-sdk/togetherai': 'Vercel AI (Together)',
+  '@ai-sdk/fireworks': 'Vercel AI (Fireworks)',
+  '@openrouter/ai-sdk-provider': 'Vercel AI (OpenRouter)',
   // Direct provider SDKs
   '@mistralai/mistralai': 'Mistral',
   'groq-sdk': 'Groq',
-  '@cohere-ai/cohere-v2': 'Cohere',
+  'cohere-ai': 'Cohere', '@cohere-ai/cohere-v2': 'Cohere',
+  'together-ai': 'Together AI',
   'ollama': 'Ollama',
   'replicate': 'Replicate',
   '@azure/openai': 'Azure OpenAI',
   // Frameworks
   'langchain': 'LangChain', '@langchain/core': 'LangChain',
   'llamaindex': 'LlamaIndex',
+  'mastra': 'Mastra',
 };
 
 /**
@@ -168,6 +174,7 @@ export const JOBS_PACKAGES: Record<string, string> = {
   '@upstash/redis': 'Upstash Redis',
   'redis': 'Redis', 'ioredis': 'Redis',
   '@temporalio/client': 'Temporal',
+  '@hatchet-dev/typescript-sdk': 'Hatchet',
 };
 
 /**
