@@ -218,7 +218,7 @@ function formatHumanReadable(
       lines.push(chalk.bold('  Services'));
       lines.push(chalk.gray('  ' + BOX.horizontal.repeat(8)));
     }
-    lines.push(`  ${chalk.gray('CI'.padEnd(12))} ${result.deployment.ci} ${chalk.gray(`(${result.deployment.ciConfigFile})`)}`);
+    lines.push(`  ${chalk.gray('CI'.padEnd(12))} ${result.deployment.ci}`);
   }
 
   // Commands (only if any detected)

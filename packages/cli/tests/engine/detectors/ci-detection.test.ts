@@ -14,7 +14,6 @@ describe('CI detection', () => {
   it('detects GitHub Actions on Anatomia repo', () => {
     const result = detectCI(REPO_ROOT);
     expect(result.ci).toBe('GitHub Actions');
-    expect(result.ciConfigFile).toMatch(/^\.github\/workflows\/.+\.yml$/);
   });
 
   it('detects GitLab CI from .gitlab-ci.yml', () => {
@@ -23,7 +22,6 @@ describe('CI detection', () => {
       fs.writeFileSync(path.join(tmpDir, '.gitlab-ci.yml'), 'stages:\n  - build\n');
       const result = detectCI(tmpDir);
       expect(result.ci).toBe('GitLab CI');
-      expect(result.ciConfigFile).toBe('.gitlab-ci.yml');
     } finally {
       fs.rmSync(tmpDir, { recursive: true });
     }
@@ -35,7 +33,6 @@ describe('CI detection', () => {
       fs.writeFileSync(path.join(tmpDir, 'Jenkinsfile'), 'pipeline {}');
       const result = detectCI(tmpDir);
       expect(result.ci).toBe('Jenkins');
-      expect(result.ciConfigFile).toBe('Jenkinsfile');
     } finally {
       fs.rmSync(tmpDir, { recursive: true });
     }
@@ -48,7 +45,6 @@ describe('CI detection', () => {
       fs.writeFileSync(path.join(tmpDir, '.circleci', 'config.yml'), 'version: 2.1\n');
       const result = detectCI(tmpDir);
       expect(result.ci).toBe('CircleCI');
-      expect(result.ciConfigFile).toBe('.circleci/config.yml');
     } finally {
       fs.rmSync(tmpDir, { recursive: true });
     }
@@ -59,7 +55,6 @@ describe('CI detection', () => {
     try {
       const result = detectCI(tmpDir);
       expect(result.ci).toBeNull();
-      expect(result.ciConfigFile).toBeNull();
     } finally {
       fs.rmSync(tmpDir, { recursive: true });
     }
@@ -70,7 +65,6 @@ describe('CI detection', () => {
     try {
       const result = detectCI(tmpDir);
       expect(result).toHaveProperty('ci');
-      expect(result).toHaveProperty('ciConfigFile');
     } finally {
       fs.rmSync(tmpDir, { recursive: true });
     }

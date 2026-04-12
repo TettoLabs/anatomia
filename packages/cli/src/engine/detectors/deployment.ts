@@ -37,7 +37,6 @@ export interface DetectedDeployment {
  */
 export interface DetectedCI {
   ci: string | null;
-  ciConfigFile: string | null;
 }
 
 /**
@@ -68,35 +67,35 @@ export function detectCI(rootPath: string): DetectedCI {
     try {
       const files = readdirSync(workflowsDir).filter(f => f.endsWith('.yml') || f.endsWith('.yaml'));
       if (files.length > 0) {
-        return { ci: 'GitHub Actions', ciConfigFile: `.github/workflows/${files[0]}` };
+        return { ci: 'GitHub Actions' };
       }
     } catch { /* permission error or similar */ }
   }
 
   // GitLab CI
   if (existsSync(join(rootPath, '.gitlab-ci.yml'))) {
-    return { ci: 'GitLab CI', ciConfigFile: '.gitlab-ci.yml' };
+    return { ci: 'GitLab CI' };
   }
 
   // Jenkins
   if (existsSync(join(rootPath, 'Jenkinsfile'))) {
-    return { ci: 'Jenkins', ciConfigFile: 'Jenkinsfile' };
+    return { ci: 'Jenkins' };
   }
 
   // CircleCI
   if (existsSync(join(rootPath, '.circleci', 'config.yml'))) {
-    return { ci: 'CircleCI', ciConfigFile: '.circleci/config.yml' };
+    return { ci: 'CircleCI' };
   }
 
   // Bitbucket Pipelines
   if (existsSync(join(rootPath, 'bitbucket-pipelines.yml'))) {
-    return { ci: 'Bitbucket Pipelines', ciConfigFile: 'bitbucket-pipelines.yml' };
+    return { ci: 'Bitbucket Pipelines' };
   }
 
   // Travis CI
   if (existsSync(join(rootPath, '.travis.yml'))) {
-    return { ci: 'Travis CI', ciConfigFile: '.travis.yml' };
+    return { ci: 'Travis CI' };
   }
 
-  return { ci: null, ciConfigFile: null };
+  return { ci: null };
 }
