@@ -75,7 +75,6 @@ packages/cli/src/
       confidence.ts, directory.ts, file.ts, importScanner.ts
 
     cache/astCache.ts               — ASTCache (disk + memory cache for parsed trees)
-    errors/                         — DetectionCollector, DetectionError
     sampling/                       — File sampling logic for tree-sitter
 
   types/                            — Cross-command types (Item 13)

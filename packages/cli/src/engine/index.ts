@@ -15,14 +15,13 @@ const VERSION = '0.2.0';
 /**
  * Analysis options
  *
- * STEP_1.1: skipImportScan, skipMonorepo
+ * STEP_1.1: skipImportScan
  * STEP_1.2: skipStructure
  * STEP_1.3: skipParsing, maxFiles
  * STEP_2.1: skipPatterns
  */
 interface AnalyzeOptions {
   skipImportScan?: boolean;
-  skipMonorepo?: boolean;
   skipStructure?: boolean;
   skipParsing?: boolean;
   skipPatterns?: boolean;
@@ -46,17 +45,18 @@ interface AnalyzeOptions {
  * the project-type / framework / structure / parsed / patterns / conventions
  * phases, and because 7 test files exercise it directly.
  *
- * NOTE: this function deliberately uses `await import(...)` for every engine
- * module below instead of top-of-file ESM imports. The reason is tree-sitter:
- * `parsers/treeSitter.js` (and everything that transitively imports it) loads
- * native WASM at module-evaluation time, which crashes the CLI if it runs on
- * the `ana init --help` / version-only codepaths. Dynamic-importing pushes
- * the WASM load until `analyze()` is actually called. That shape matters for
+ * NOTE: this function deliberately uses `await import(...)` for the
+ * tree-sitter-dependent phases (parsing, patterns, conventions) instead of
+ * top-of-file ESM imports. The reason is tree-sitter: `parsers/treeSitter.js`
+ * (and everything that transitively imports it) loads native WASM at
+ * module-evaluation time, which crashes the CLI if it runs on the
+ * `ana init --help` / version-only codepaths. Dynamic-importing pushes the
+ * WASM load until `analyze()` is actually called. That shape matters for
  * rename-safety: the module specifiers below are STRING LITERALS and are
  * therefore invisible to `grep`, `madge`, static refactor tooling, and most
- * IDE "find references" features. If you rename a file here, grep by path
- * literal (`'./detectors/monorepo.js'` etc.) to catch every dynamic site.
- * Sites: lines 47-49 plus phases 5-7 below.
+ * IDE "find references" features. If you rename a file under parsers,
+ * analyzers/patterns, or analyzers/conventions, grep by path literal
+ * (`'./parsers/treeSitter.js'` etc.) to catch every dynamic site.
  *
  * @param rootPath - Absolute path to the project root.
  * @param options - Analysis options.
@@ -86,34 +86,18 @@ export async function analyze(
   options: AnalyzeOptions = {}
 ): Promise<import('./types/index.js').AnalysisResult> {
   const { createEmptyAnalysisResult } = await import('./types/index.js');
-  const { DetectionCollector } = await import('./errors/DetectionCollector.js');
-  const { detectMonorepo } = await import('./detectors/monorepo.js');
-
-  const collector = new DetectionCollector();
 
   try {
-    // Phase 1: Monorepo detection. The result is unused in this path —
-    // scanProject() runs its own monorepo detection via detectMonorepoInfo
-    // which is the one that populates EngineResult.monorepo. This call
-    // exists only to let detectMonorepo push warnings into the collector
-    // (which is currently unused; tracked for S19+ as NEW-003). Kept as
-    // an underscore-prefixed var to preserve the side effect without
-    // tripping the unused-locals lint rule.
-    const _monorepoResult = options.skipMonorepo
-      ? { isMonorepo: false, tool: null }
-      : await detectMonorepo(rootPath, collector);
-    void _monorepoResult;
-
-    // Phase 2: Project type detection
+    // Phase 1: Project type detection
     const projectTypeResult = await detectProjectType(rootPath);
 
-    // Phase 3: Framework detection
+    // Phase 2: Framework detection
     const frameworkResult = await detectFramework(
       rootPath,
       projectTypeResult.type
     );
 
-    // Phase 4: Structure analysis (STEP_1.2 - optional)
+    // Phase 3: Structure analysis (STEP_1.2 - optional)
     const structure = options.skipStructure
       ? undefined
       : await analyzeStructure(rootPath, projectTypeResult.type, frameworkResult.framework);
@@ -135,7 +119,7 @@ export async function analyze(
       structure,
     };
 
-    // Phase 5: Tree-sitter parsing (STEP_1.3, optional)
+    // Phase 4: Tree-sitter parsing (STEP_1.3, optional)
     let parsed: import('./types/parsed.js').ParsedAnalysis | undefined;
     if (!options.skipParsing && structure) {
       try {
@@ -151,7 +135,7 @@ export async function analyze(
       parsed,
     };
 
-    // Phase 6: Pattern inference (STEP_2.1, optional)
+    // Phase 5: Pattern inference (STEP_2.1, optional)
     let patterns: import('./types/patterns.js').PatternAnalysis | undefined;
     if (!options.skipPatterns && parsed) {
       try {
@@ -167,7 +151,7 @@ export async function analyze(
       patterns,
     };
 
-    // Phase 7: Convention detection (STEP_2.2, optional)
+    // Phase 6: Convention detection (STEP_2.2, optional)
     let conventions: import('./types/conventions.js').ConventionAnalysis | undefined;
     if (!options.skipConventions && parsed) {
       try {

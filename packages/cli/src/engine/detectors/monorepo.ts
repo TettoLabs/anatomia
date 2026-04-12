@@ -11,8 +11,6 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import { exists, readFile } from '../utils/file.js';
-import { DetectionEngineError, ERROR_CODES } from '../errors/index.js';
-import type { DetectionCollector } from '../errors/DetectionCollector.js';
 
 export interface MonorepoResult {
   isMonorepo: boolean;
@@ -32,12 +30,8 @@ export interface MonorepoResult {
  * 5. package.json workspaces (npm/yarn)
  * 6. Fallback: recursive package.json scan
  * @param rootPath
- * @param collector
  */
-export async function detectMonorepo(
-  rootPath: string,
-  collector: DetectionCollector
-): Promise<MonorepoResult> {
+export async function detectMonorepo(rootPath: string): Promise<MonorepoResult> {
   // 1. Check pnpm-workspace.yaml
   const pnpmPath = path.join(rootPath, 'pnpm-workspace.yaml');
   if (await exists(pnpmPath)) {
@@ -47,35 +41,13 @@ export async function detectMonorepo(
 
       const patterns = config.packages || [];
 
-      collector.addInfo(
-        new DetectionEngineError(
-          ERROR_CODES.MONOREPO_DETECTED,
-          `pnpm monorepo detected (${patterns.length} workspace patterns)`,
-          'info',
-          { file: pnpmPath, phase: 'monorepo-detection' }
-        )
-      );
-
       return {
         isMonorepo: true,
         tool: 'pnpm',
         workspacePatterns: patterns,
       };
-    } catch (error) {
-      collector.addWarning(
-        new DetectionEngineError(
-          ERROR_CODES.INVALID_YAML,
-          'Failed to parse pnpm-workspace.yaml',
-          'warning',
-          {
-            file: pnpmPath,
-            suggestion: 'Check YAML syntax with yamllint',
-            phase: 'monorepo-detection',
-            cause: error as Error,
-          }
-        )
-      );
-      // Continue to next detector
+    } catch {
+      // Malformed YAML — fall through to next detector
     }
   }
 
@@ -88,35 +60,14 @@ export async function detectMonorepo(
 
       // Turbo infers packages from pnpm/npm workspaces
       if (config.tasks || config.pipeline) {
-        collector.addInfo(
-          new DetectionEngineError(
-            ERROR_CODES.MONOREPO_DETECTED,
-            'Turborepo monorepo detected (infers packages from workspace config)',
-            'info',
-            { file: turboPath, phase: 'monorepo-detection' }
-          )
-        );
-
         return {
           isMonorepo: true,
           tool: 'turbo',
           // Turbo doesn't list packages explicitly
         };
       }
-    } catch (error) {
-      collector.addWarning(
-        new DetectionEngineError(
-          ERROR_CODES.INVALID_JSON,
-          'Failed to parse turbo.json',
-          'warning',
-          {
-            file: turboPath,
-            suggestion: 'Validate JSON with jsonlint',
-            phase: 'monorepo-detection',
-            cause: error as Error,
-          }
-        )
-      );
+    } catch {
+      // Malformed JSON — fall through to next detector
     }
   }
 
@@ -129,34 +80,13 @@ export async function detectMonorepo(
 
       // Nx infers projects automatically
       if (config.targetDefaults || config.generators) {
-        collector.addInfo(
-          new DetectionEngineError(
-            ERROR_CODES.MONOREPO_DETECTED,
-            'Nx monorepo detected (infers projects automatically)',
-            'info',
-            { file: nxPath, phase: 'monorepo-detection' }
-          )
-        );
-
         return {
           isMonorepo: true,
           tool: 'nx',
         };
       }
-    } catch (error) {
-      collector.addWarning(
-        new DetectionEngineError(
-          ERROR_CODES.INVALID_JSON,
-          'Failed to parse nx.json',
-          'warning',
-          {
-            file: nxPath,
-            suggestion: 'Validate JSON with jsonlint',
-            phase: 'monorepo-detection',
-            cause: error as Error,
-          }
-        )
-      );
+    } catch {
+      // Malformed JSON — fall through to next detector
     }
   }
 
@@ -169,34 +99,13 @@ export async function detectMonorepo(
 
       const patterns = config.packages || ['packages/*'];
 
-      collector.addInfo(
-        new DetectionEngineError(
-          ERROR_CODES.MONOREPO_DETECTED,
-          `Lerna monorepo detected (${patterns.length} workspace patterns)`,
-          'info',
-          { file: lernaPath, phase: 'monorepo-detection' }
-        )
-      );
-
       return {
         isMonorepo: true,
         tool: 'lerna',
         workspacePatterns: patterns,
       };
-    } catch (error) {
-      collector.addWarning(
-        new DetectionEngineError(
-          ERROR_CODES.INVALID_JSON,
-          'Failed to parse lerna.json',
-          'warning',
-          {
-            file: lernaPath,
-            suggestion: 'Validate JSON with jsonlint',
-            phase: 'monorepo-detection',
-            cause: error as Error,
-          }
-        )
-      );
+    } catch {
+      // Malformed JSON — fall through to next detector
     }
   }
 
@@ -212,42 +121,20 @@ export async function detectMonorepo(
           ? pkg.workspaces
           : pkg.workspaces.packages || [];
 
-        collector.addInfo(
-          new DetectionEngineError(
-            ERROR_CODES.MONOREPO_DETECTED,
-            `npm/yarn workspaces detected (${patterns.length} patterns)`,
-            'info',
-            { file: packagePath, phase: 'monorepo-detection' }
-          )
-        );
-
         return {
           isMonorepo: true,
           tool: 'npm-workspaces',
           workspacePatterns: patterns,
         };
       }
-    } catch (_error) {
-      // Already handled by main detection, don't duplicate error
+    } catch {
+      // Already handled by main detection, don't duplicate
     }
   }
 
   // 6. Fallback: Recursive package.json discovery
-  const discovered = await discoverPackages(rootPath, collector);
+  const discovered = await discoverPackages(rootPath);
   if (discovered.length > 1) {
-    collector.addInfo(
-      new DetectionEngineError(
-        ERROR_CODES.MONOREPO_DETECTED,
-        `Multiple packages detected without tool (${discovered.length} packages)`,
-        'info',
-        {
-          suggestion:
-            'Consider using pnpm, Nx, or Turborepo for monorepo management',
-          phase: 'monorepo-detection',
-        }
-      )
-    );
-
     return {
       isMonorepo: true,
       tool: 'none',
@@ -264,14 +151,12 @@ export async function detectMonorepo(
 /**
  * Discover packages via recursive scan (fallback)
  * @param rootPath
- * @param collector
  * @param depth
  * @param maxDepth
  * @param visited
  */
 async function discoverPackages(
   rootPath: string,
-  collector: DetectionCollector,
   depth: number = 0,
   maxDepth: number = 4,
   visited: Set<string> = new Set()
@@ -304,7 +189,6 @@ async function discoverPackages(
         // Recurse into subdirectories
         const subPackages = await discoverPackages(
           entryPath,
-          collector,
           depth + 1,
           maxDepth,
           visited
@@ -312,20 +196,8 @@ async function discoverPackages(
         packages.push(...subPackages);
       }
     }
-  } catch (error) {
-    collector.addWarning(
-      new DetectionEngineError(
-        ERROR_CODES.PERMISSION_DENIED,
-        `Cannot read directory: ${rootPath}`,
-        'warning',
-        {
-          file: rootPath,
-          suggestion: 'Check directory permissions',
-          phase: 'package-discovery',
-          cause: error as Error,
-        }
-      )
-    );
+  } catch {
+    // Permission denied or similar — return what we have so far
   }
 
   return packages;
