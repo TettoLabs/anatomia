@@ -96,17 +96,12 @@ function collapseServiceVariants(names: string[]): string[] {
  * @returns Number of findings (blind spots + null pattern slots)
  */
 function countFindings(result: EngineResult): number {
-  let count = result.blindSpots.length;
+  // Count actionable findings (critical + warn) plus blind spots
+  const actionableFindings = result.findings.filter(
+    f => f.severity === 'critical' || f.severity === 'warn'
+  ).length;
 
-  // Count null pattern slots when deep scan was attempted
-  if (result.overview.depth === 'deep' && result.patterns) {
-    const categories = ['errorHandling', 'validation', 'database', 'auth', 'testing'] as const;
-    for (const k of categories) {
-      if (!result.patterns[k]) count++;
-    }
-  }
-
-  return count;
+  return actionableFindings + result.blindSpots.length;
 }
 
 /**
@@ -209,6 +204,37 @@ function formatHumanReadable(
       lines.push(chalk.gray(`  (package.json/go.mod/Cargo.toml/pyproject.toml found at ${ancestorRoot})`));
     } else {
       lines.push(chalk.gray('  No code detected'));
+    }
+  }
+
+  // Findings (after Stack, before Services)
+  if (result.findings.length > 0) {
+    const hasCritical = result.findings.some(f => f.severity === 'critical');
+    const hasWarn = result.findings.some(f => f.severity === 'warn');
+
+    // When critical/warn findings exist, suppress passes — don't dilute urgency.
+    const toShow = (hasCritical || hasWarn)
+      ? result.findings.filter(f => f.severity !== 'pass')
+      : result.findings;
+
+    if (toShow.length > 0) {
+      lines.push('');
+      lines.push(chalk.bold('  Findings'));
+      lines.push(chalk.gray('  ' + BOX.horizontal.repeat(8)));
+
+      for (const f of toShow) {
+        const icon = f.severity === 'critical' ? chalk.red('🔴')
+          : f.severity === 'warn' ? chalk.yellow('⚠ ')
+          : f.severity === 'info' ? chalk.blue('ℹ ')
+          : chalk.green('✓ ');
+        const text = f.severity === 'critical'
+          ? chalk.red(f.title)
+          : f.title;
+        lines.push(`  ${icon} ${text}`);
+        if (f.detail) {
+          lines.push(`     ${chalk.gray(f.detail)}`);
+        }
+      }
     }
   }
 

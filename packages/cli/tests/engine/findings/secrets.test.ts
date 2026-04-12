@@ -1,0 +1,127 @@
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { checkHardcodedSecrets } from '../../../src/engine/findings/rules/secrets.js';
+import type { FindingContext } from '../../../src/engine/findings/index.js';
+import type { ProjectCensus } from '../../../src/engine/types/census.js';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import * as os from 'node:os';
+
+function makeContext(rootPath: string): FindingContext {
+  return {
+    census: { allDeps: {}, rootDevDeps: {} } as ProjectCensus,
+    stack: { language: 'TypeScript', framework: 'Next.js', database: null, auth: null, testing: [], payments: null, workspace: null, aiSdk: null, uiSystem: null },
+    secrets: { envFileExists: false, envExampleExists: false, gitignoreCoversEnv: false },
+    rootPath,
+    sampledFiles: [],
+    parsedFiles: [],
+  };
+}
+
+describe('Hardcoded secrets rule', () => {
+  let tmpDir: string;
+
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'secrets-test-'));
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  it('detects Stripe live key', async () => {
+    fs.writeFileSync(path.join(tmpDir, 'stripe.ts'), `
+      const key = "sk_live_1234567890abcdefghijk";
+    `);
+    const findings = await checkHardcodedSecrets(makeContext(tmpDir));
+    expect(findings.some(f => f.severity === 'critical' && f.title.includes('Live secret key'))).toBe(true);
+  });
+
+  it('detects AWS access key', async () => {
+    fs.writeFileSync(path.join(tmpDir, 'aws.ts'), `
+      const accessKey = "AKIAIOSFODNN7EXAMPLE1";
+    `);
+    const findings = await checkHardcodedSecrets(makeContext(tmpDir));
+    expect(findings.some(f => f.severity === 'critical' && f.title.includes('AWS'))).toBe(true);
+  });
+
+  it('detects database URL with real credentials', async () => {
+    fs.writeFileSync(path.join(tmpDir, 'db.ts'), `
+      const url = "postgres://myuser:realP4ssw0rd@prod.db.example.com:5432/mydb";
+    `);
+    const findings = await checkHardcodedSecrets(makeContext(tmpDir));
+    expect(findings.some(f => f.severity === 'critical' && f.title.includes('Database'))).toBe(true);
+  });
+
+  it('filters database URL with placeholder password', async () => {
+    fs.writeFileSync(path.join(tmpDir, 'example.ts'), `
+      // Example: postgres://user:password@localhost:5432/db
+      const url = "postgres://user:password@localhost:5432/mydb";
+    `);
+    const findings = await checkHardcodedSecrets(makeContext(tmpDir));
+    // Should be a pass — placeholder password filtered
+    expect(findings.some(f => f.severity === 'pass')).toBe(true);
+    expect(findings.some(f => f.severity === 'critical')).toBe(false);
+  });
+
+  it('detects weak JWT signing secret', async () => {
+    fs.writeFileSync(path.join(tmpDir, 'auth.ts'), `
+      const jwtSecret = "supersecretkey";
+    `);
+    const findings = await checkHardcodedSecrets(makeContext(tmpDir));
+    expect(findings.some(f => f.severity === 'critical' && f.title.includes('Weak signing'))).toBe(true);
+  });
+
+  it('returns pass finding when no secrets found', async () => {
+    fs.writeFileSync(path.join(tmpDir, 'clean.ts'), `
+      const apiKey = process.env.API_KEY;
+      export function getData() { return fetch('/api/data'); }
+    `);
+    const findings = await checkHardcodedSecrets(makeContext(tmpDir));
+    expect(findings).toHaveLength(1);
+    expect(findings[0]!.severity).toBe('pass');
+    expect(findings[0]!.detail).toContain('Checked:');
+  });
+
+  it('excludes test files', async () => {
+    fs.mkdirSync(path.join(tmpDir, '__tests__'), { recursive: true });
+    fs.writeFileSync(path.join(tmpDir, '__tests__', 'stripe.ts'), `
+      const key = "sk_live_1234567890abcdefghijk";
+    `);
+    const findings = await checkHardcodedSecrets(makeContext(tmpDir));
+    expect(findings.some(f => f.severity === 'critical')).toBe(false);
+  });
+
+  it('excludes .test. files', async () => {
+    fs.writeFileSync(path.join(tmpDir, 'stripe.test.ts'), `
+      const key = "sk_live_1234567890abcdefghijk";
+    `);
+    const findings = await checkHardcodedSecrets(makeContext(tmpDir));
+    expect(findings.some(f => f.severity === 'critical')).toBe(false);
+  });
+
+  it('redacts secret values in detail', async () => {
+    fs.writeFileSync(path.join(tmpDir, 'key.ts'), `
+      const key = "sk_live_1234567890abcdefghijk";
+    `);
+    const findings = await checkHardcodedSecrets(makeContext(tmpDir));
+    const critical = findings.find(f => f.severity === 'critical');
+    expect(critical?.detail).toContain('****');
+    expect(critical?.detail).not.toContain('1234567890abcdefghijk');
+  });
+
+  it('detects Resend API key', async () => {
+    fs.writeFileSync(path.join(tmpDir, 'email.ts'), `
+      const key = "re_abc123def456ghi789jkl0";
+    `);
+    const findings = await checkHardcodedSecrets(makeContext(tmpDir));
+    expect(findings.some(f => f.title.includes('Resend'))).toBe(true);
+  });
+
+  it('detects SendGrid API key', async () => {
+    fs.writeFileSync(path.join(tmpDir, 'email.ts'), `
+      const key = "SG.abcdef1234567890abcdef.abcdef1234567890abcdef";
+    `);
+    const findings = await checkHardcodedSecrets(makeContext(tmpDir));
+    expect(findings.some(f => f.title.includes('SendGrid'))).toBe(true);
+  });
+});
