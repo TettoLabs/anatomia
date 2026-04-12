@@ -18,7 +18,6 @@ import * as fs from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { glob } from 'glob';
 import type { EngineResult } from './types/engineResult.js';
-import type { AnalysisResult } from './types/index.js';
 import { getPatternLibrary } from './types/patterns.js';
 import { readDependencies, detectFromDeps, detectServiceDeps, detectAiSdk, aggregateMonorepoDependencies } from './detectors/dependencies.js';
 import { readPythonDependencies } from './parsers/python.js';
@@ -27,6 +26,9 @@ import { detectPackageManager } from './detectors/packageManager.js';
 import { detectGitInfo } from './detectors/git.js';
 import { detectCommands } from './detectors/commands.js';
 import { detectDeployment, detectCI } from './detectors/deployment.js';
+import { detectProjectType } from './detectors/projectType.js';
+import { detectFramework } from './detectors/framework.js';
+import { analyzeStructure } from './analyzers/structure/index.js';
 import { annotateServiceRoles } from './utils/serviceAnnotation.js';
 import { countFiles } from '../utils/fileCounts.js';
 import { buildCensus } from './census.js';
@@ -366,11 +368,11 @@ async function detectSecrets(rootPath: string): Promise<EngineResult['secrets']>
 
 // --- Structure extraction from AnalysisResult ---
 
-function extractStructure(
-  analysis: AnalysisResult | null
+function extractStructureFromDirect(
+  structureResult: Awaited<ReturnType<typeof analyzeStructure>> | undefined
 ): Array<{ path: string; purpose: string }> {
-  if (!analysis?.structure?.directories) return [];
-  const directories = analysis.structure.directories;
+  if (!structureResult?.directories) return [];
+  const directories = structureResult.directories;
   // Return every depth-1 directory with a non-"Unknown" purpose. Those two
   // filters ARE the quality gate — nothing noisy survives them, so there's
   // nothing an arbitrary cap would usefully truncate. Empirically (across
@@ -488,34 +490,65 @@ export async function scanProject(
   }
   const depResult = detectFromDeps(allDeps);
 
-  // 4. Run existing analyze() for project type, framework, structure (and deep tier)
-  let analysis: AnalysisResult | null = null;
-  let analyzerFailure: string | null = null;
+  // 4. Direct detection phases (replaces analyze() — Lane 0 Step 7).
+  //    Project type, framework, and structure run for all tiers.
+  //    Tree-sitter parsing, patterns, conventions are deep-tier only.
+  const projectTypeResult = await detectProjectType(rootPath);
+
+  // Read language-specific deps. Census allDeps covers Node (package.json);
+  // Python/Go/Rust have their own dep files that census v1 doesn't parse.
+  let deps = Object.keys(census.allDeps);
   try {
-    // DYNAMIC IMPORT — `analyze` transitively loads WASM; dynamic-importing
-    // defers that until scanProject() is actually invoked. String literal
-    // specifier is invisible to grep/madge — rename engine/index.ts with
-    // care and search for './index.js' here if you do.
-    const { analyze } = await import('./index.js');
-    if (options.depth === 'deep') {
-      analysis = await analyze(rootPath, { skipImportScan: true, maxFiles: 50 });
-    } else {
-      // Surface: skip tree-sitter parsing, patterns, conventions
-      analysis = await analyze(rootPath, {
-        skipImportScan: true,
-        skipParsing: true,
-        skipPatterns: true,
-        skipConventions: true,
-      });
+    const pt = projectTypeResult.type;
+    if (pt === 'python') deps = await readPythonDependencies(rootPath);
+    else if (pt === 'go') deps = await readGoDependencies(rootPath);
+    else if (pt === 'rust') {
+      const { readRustDependencies } = await import('./parsers/rust.js');
+      deps = await readRustDependencies(rootPath);
     }
-  } catch (err) {
-    // S19/NEW-007: analyze()'s own outer catch handles internal errors
-    // — if we got here, the dynamic import itself failed (WASM loading
-    // crash, missing module, platform issue). Deep analysis is
-    // unavailable; dependency-based stack detection continues. Record
-    // a blind spot so the user knows the scan was partially degraded
-    // instead of silently trusting an empty patterns/conventions block.
-    analyzerFailure = err instanceof Error ? err.message : 'unknown error';
+  } catch { /* dep reading failed — continue with census deps */ }
+
+  const frameworkResult = detectFramework(deps, projectTypeResult.type, census.configs.frameworkHints);
+
+  let structure: Awaited<ReturnType<typeof analyzeStructure>> | undefined;
+  try {
+    structure = await analyzeStructure(rootPath, projectTypeResult.type, frameworkResult.framework);
+  } catch { /* structure analysis failed — continue without */ }
+
+  // Deep tier: tree-sitter parsing, patterns, conventions
+  let patterns: import('./types/patterns.js').PatternAnalysis | undefined;
+  let conventions: import('./types/conventions.js').ConventionAnalysis | undefined;
+  let analyzerFailure: string | null = null;
+
+  if (options.depth === 'deep') {
+    try {
+      // Dynamic imports — tree-sitter loads WASM at module-evaluation time.
+      const { parseProjectFiles } = await import('./parsers/treeSitter.js');
+      const intermediateResult = {
+        projectType: projectTypeResult.type,
+        framework: frameworkResult.framework,
+        confidence: { projectType: projectTypeResult.confidence, framework: frameworkResult.confidence },
+        indicators: { projectType: projectTypeResult.indicators, framework: frameworkResult.indicators },
+        detectedAt: new Date().toISOString(),
+        version: '0.2.0',
+        structure,
+      };
+
+      const parsed = structure
+        ? await parseProjectFiles(rootPath, intermediateResult as import('./types/index.js').AnalysisResult, { maxFiles: 50 })
+        : undefined;
+
+      if (parsed) {
+        const withParsed = { ...intermediateResult, parsed } as import('./types/index.js').AnalysisResult;
+        const { inferPatterns } = await import('./analyzers/patterns/index.js');
+        patterns = await inferPatterns(rootPath, withParsed);
+
+        const { detectConventions } = await import('./analyzers/conventions/index.js');
+        conventions = await detectConventions(rootPath, { ...withParsed, patterns });
+      }
+    } catch (err) {
+      analyzerFailure = err instanceof Error ? err.message : 'unknown error';
+    }
   }
 
   // 5. Build stack (dependency primary, analyzer enriches).
@@ -534,28 +567,24 @@ export async function scanProject(
     aiSdk: detectAiSdk(allDeps),
   };
 
-  // Enrich from analyzer
-  if (analysis) {
-    if (analysis.projectType && analysis.projectType !== 'unknown') {
-      stack.language = getLanguageDisplayName(analysis.projectType);
-    }
-    if (analysis.framework) {
-      stack.framework = getFrameworkDisplayName(analysis.framework);
-    }
-    // Analyzer patterns can fill gaps — use getPatternLibrary helper to
-    // handle both PatternConfidence and MultiPattern union members (Item 2.3).
-    const dbLib = getPatternLibrary(analysis.patterns?.database);
+  // Enrich from direct detection results (replaces analysis.* references)
+  if (projectTypeResult.type !== 'unknown') {
+    stack.language = getLanguageDisplayName(projectTypeResult.type);
+  }
+  if (frameworkResult.framework) {
+    stack.framework = getFrameworkDisplayName(frameworkResult.framework);
+  }
+  // Pattern-based enrichment (deep tier only)
+  if (patterns) {
+    const dbLib = getPatternLibrary(patterns.database);
     if (!stack.database && dbLib) {
       stack.database = getPatternDisplayName(dbLib);
     }
-    const authLib = getPatternLibrary(analysis.patterns?.auth);
+    const authLib = getPatternLibrary(patterns.auth);
     if (!stack.auth && authLib) {
       stack.auth = getPatternDisplayName(authLib);
     }
-    // Fall back to the pattern analyzer only if dependency detection
-    // turned up nothing — this is how pytest / go-test surface on non-Node
-    // projects via the DEEP tier, where TESTING_PACKAGES doesn't apply.
-    const testLib = getPatternLibrary(analysis.patterns?.testing);
+    const testLib = getPatternLibrary(patterns.testing);
     if (stack.testing.length === 0 && testLib) {
       stack.testing = [getPatternDisplayName(testLib)];
     }
@@ -569,8 +598,8 @@ export async function scanProject(
   // testing framework so the missing-tests blind spot (SCAN-033) doesn't
   // fire on modern Python projects. Deep tier handles this via patterns;
   // surface tier needs an explicit read.
-  if (stack.testing.length === 0 && analysis?.projectType) {
-    const nonNodeTesting = await detectNonNodeTesting(rootPath, analysis.projectType);
+  if (stack.testing.length === 0 && projectTypeResult.type !== 'unknown') {
+    const nonNodeTesting = await detectNonNodeTesting(rootPath, projectTypeResult.type);
     if (nonNodeTesting.length > 0) {
       stack.testing = nonNodeTesting;
     }
@@ -589,8 +618,8 @@ export async function scanProject(
   // 6. File counts
   const files = await countFiles(rootPath);
 
-  // 7. Structure
-  const structure = extractStructure(analysis);
+  // 7. Structure — extract from direct analyzeStructure result
+  const structureForOutput = extractStructureFromDirect(structure);
 
   // 8. Commands
   const commands = await detectCommands(rootPath, packageManager);
@@ -624,7 +653,7 @@ export async function scanProject(
   const browserFrameworks = ['Next.js', 'React', 'Vue', 'Angular', 'Svelte', 'Nuxt'];
   const storagePackages = ['@aws-sdk/client-s3', 'aws-sdk', '@google-cloud/storage', 'cloudinary'];
   const projectProfile: EngineResult['projectProfile'] = {
-    type: analysis?.framework || analysis?.projectType || null,
+    type: frameworkResult.framework || projectTypeResult.type || null,
     hasExternalAPIs: externalServices.length > 0,
     hasDatabase: stack.database !== null,
     hasBrowserUI: stack.framework !== null && browserFrameworks.includes(stack.framework),
@@ -670,7 +699,7 @@ export async function scanProject(
     overview: { project: projectName, scannedAt: now, depth: options.depth },
     stack,
     files,
-    structure,
+    structure: structureForOutput,
     commands: { ...commands, packageManager },
     git,
     monorepo: mono,
@@ -682,8 +711,8 @@ export async function scanProject(
     // detectDeployment always returns a DetectedDeployment shape now (null
     // fields for "no deployment"), so the construction is a clean spread.
     deployment: { ...deployment, ...ci },
-    patterns: (options.depth === 'deep' && analysis?.patterns) ? analysis.patterns : null,
-    conventions: (options.depth === 'deep' && analysis?.conventions) ? analysis.conventions : null,
+    patterns: patterns ?? null,
+    conventions: conventions ?? null,
     // Phase 1+ stubs
     secretFindings: null,
     envVarMap: null,

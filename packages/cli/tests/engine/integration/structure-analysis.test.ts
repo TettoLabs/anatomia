@@ -4,7 +4,8 @@
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { analyzeStructure } from '../../../src/engine/analyzers/structure/index.js';
-import { analyze } from '../../../src/engine/index.js';
+// analyze() deleted in Lane 0 Step 7
+const analyze = (() => { throw new Error('analyze() deleted'); }) as any;
 import { mkdir, writeFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -79,7 +80,8 @@ describe('analyzeStructure integration', () => {
   });
 });
 
-describe('analyze() integration', () => {
+// Lane 0 Step 7: analyze() deleted. Migrate to scanProject().
+describe.skip('analyze() integration', () => {
   const testDir = '/tmp/test-analyze-integration';
 
   beforeEach(async () => {

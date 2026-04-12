@@ -743,7 +743,8 @@ describe('countFiles utility', () => {
   });
 });
 
-describe('analyzer graceful degradation', () => {
+// Lane 0 Step 7: analyze() deleted. These tests used dynamic import of analyze().
+describe.skip('analyzer graceful degradation', () => {
   // These tests verify the analyzer preserves partial results when tree-sitter fails
   // Note: Actually triggering tree-sitter failure is difficult in tests,
   // so we test the structure by verifying the analyzer returns partial results
@@ -771,7 +772,7 @@ describe('analyzer graceful degradation', () => {
       'package.json': '{"name":"test","version":"1.0.0"}',
     });
 
-    const { analyze } = await import('../../src/engine/index.js');
+    const { analyze } = await import('../../src/engine/index.js') as any;
     const result = await analyze(tempDir, { skipPatterns: false });
     expect(result.projectType).not.toBe('unknown');
   });
@@ -784,7 +785,7 @@ describe('analyzer graceful degradation', () => {
       }),
     });
 
-    const { analyze } = await import('../../src/engine/index.js');
+    const { analyze } = await import('../../src/engine/index.js') as any;
     const result = await analyze(tempDir);
     expect(result.framework).toBe('nextjs');
   });
@@ -796,7 +797,7 @@ describe('analyzer graceful degradation', () => {
       'tests/foo.test.ts': 'test("x", () => {});',
     });
 
-    const { analyze } = await import('../../src/engine/index.js');
+    const { analyze } = await import('../../src/engine/index.js') as any;
     const result = await analyze(tempDir);
     expect(result.structure).toBeDefined();
     expect(result.structure?.directories).toBeDefined();
@@ -807,7 +808,7 @@ describe('analyzer graceful degradation', () => {
       'package.json': '{"name":"test","version":"1.0.0"}',
     });
 
-    const { analyze } = await import('../../src/engine/index.js');
+    const { analyze } = await import('../../src/engine/index.js') as any;
     const result = await analyze(tempDir);
     // Patterns may be undefined if no patterns detected
     // This is acceptable behavior
