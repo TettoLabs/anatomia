@@ -57,12 +57,15 @@ const DEPLOYMENT_CONFIGS: Record<string, string> = {
   'Dockerfile': 'Docker',
   'docker-compose.yml': 'Docker Compose',
   'docker-compose.yaml': 'Docker Compose',
+  'compose.yml': 'Docker Compose',
+  'compose.yaml': 'Docker Compose',
   'railway.toml': 'Railway',
   'fly.toml': 'Fly.io',
   'render.yaml': 'Render',
   'Procfile': 'Heroku',
   'netlify.toml': 'Netlify',
   'app.yaml': 'Google Cloud',
+  'firebase.json': 'Firebase',
 };
 
 /** Source file extensions to count. */

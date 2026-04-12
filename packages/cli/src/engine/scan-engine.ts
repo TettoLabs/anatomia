@@ -465,9 +465,8 @@ export async function scanProject(
   const projectName = await getProjectName(rootPath);
   const now = new Date().toISOString();
 
-  // 0. Census — build alongside existing detection, not replacing yet.
-  // Underscore prefix suppresses lint until Step 5 wires census into detectors.
-  const _census = await buildCensus(rootPath);
+  // 0. Census — shared project model. Detectors receive census data instead of rootPath.
+  const census = await buildCensus(rootPath);
 
   // 1. Monorepo detection
   const mono = await detectMonorepoInfo(rootPath);
@@ -604,8 +603,8 @@ export async function scanProject(
   }
   const { schemas, blindSpots } = await detectSchemas(allDeps, rootPath);
   const secrets = await detectSecrets(rootPath);
-  const deployment = detectDeployment(rootPath);
-  const ci = detectCI(rootPath);
+  const deployment = detectDeployment(census.configs.deployments);
+  const ci = detectCI(census.configs.ciWorkflows);
 
   // Annotate services with the stack roles they fulfill. Display code uses
   // `stackRoles.length === 0` to filter standalone services, replacing 4 copies
