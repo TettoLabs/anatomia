@@ -688,9 +688,5 @@ export async function scanProject(
     inconsistencies: null,
     conventionBreaks: null,
     aiReadinessScore: null,
-    // Reserved
-    recommendations: null,
-    health: null,
-    readiness: null,
   };
 }

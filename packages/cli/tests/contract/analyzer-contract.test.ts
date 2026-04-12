@@ -165,9 +165,6 @@ describe('Engine Interface Contract', () => {
         'inconsistencies',
         'conventionBreaks',
         'aiReadinessScore',
-        'recommendations',
-        'health',
-        'readiness',
       ];
 
       for (const key of expectedKeys) {

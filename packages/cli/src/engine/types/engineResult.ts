@@ -282,10 +282,6 @@ export interface EngineResult {
     };
   } | null;
 
-  // Reserved
-  recommendations: null;
-  health: null;
-  readiness: null;
 }
 
 /**
@@ -331,8 +327,5 @@ export function createEmptyEngineResult(): EngineResult {
     inconsistencies: null,
     conventionBreaks: null,
     aiReadinessScore: null,
-    recommendations: null,
-    health: null,
-    readiness: null,
   };
 }
