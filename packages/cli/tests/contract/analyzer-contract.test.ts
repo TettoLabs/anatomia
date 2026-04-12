@@ -142,7 +142,6 @@ describe('Engine Interface Contract', () => {
         'stack',
         'files',
         'structure',
-        'structureOverflow',
         'commands',
         'git',
         'monorepo',

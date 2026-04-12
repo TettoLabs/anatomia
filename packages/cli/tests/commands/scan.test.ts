@@ -325,7 +325,7 @@ describe('ana scan', () => {
       expect(stdout).toMatch(/tests\/\s+Tests/);
     });
 
-    it('shows all directories when 9 present (below cap)', async () => {
+    it('shows all directories when 9 present', async () => {
       // Use only directories recognized by the analyzer's DIRECTORY_PURPOSES map
       const dirs = ['src', 'lib', 'tests', 'docs', 'scripts', 'config', 'assets', 'public', 'utils'];
       const files: Record<string, string> = { 'package.json': '{}' };
@@ -341,24 +341,12 @@ describe('ana scan', () => {
       expect(stdout).not.toContain('more directories');
     });
 
-    it('shows all directories when exactly 10 present (at cap)', async () => {
-      // Use only directories recognized by the analyzer's DIRECTORY_PURPOSES map
-      const dirs = ['src', 'lib', 'tests', 'docs', 'scripts', 'config', 'assets', 'public', 'utils', 'tools'];
-      const files: Record<string, string> = { 'package.json': '{}' };
-      for (const dir of dirs) {
-        files[`${dir}/.gitkeep`] = '';
-      }
-      await createTestFiles(files);
-
-      const { stdout } = runScan([tempDir]);
-      const structureSection = stdout.split('Structure')[1]?.split('Run')[0] || '';
-      const directoryLines = structureSection.split('\n').filter((line) => line.includes('/'));
-      expect(directoryLines.length).toBe(10);
-      expect(stdout).not.toContain('more directories');
-    });
-
-    it('shows 10 directories plus overflow when 11 present', async () => {
-      // Use only directories recognized by the analyzer's DIRECTORY_PURPOSES map
+    it('shows all 11 meaningful directories when present (SCAN-046: no arbitrary cap)', async () => {
+      // Regression: previously the scanner sorted alphabetically and
+      // truncated at 10, so 'tools'/'components' etc. past position 10
+      // would be hidden behind a "+N more directories" line. The depth-1
+      // + non-Unknown-purpose filters already gate noise, so we show
+      // every surviving entry.
       const dirs = [
         'src',
         'lib',
@@ -370,7 +358,7 @@ describe('ana scan', () => {
         'public',
         'utils',
         'tools',
-        'components', // 11th - recognized by analyzer
+        'components',
       ];
       const files: Record<string, string> = { 'package.json': '{}' };
       for (const dir of dirs) {
@@ -381,8 +369,8 @@ describe('ana scan', () => {
       const { stdout } = runScan([tempDir]);
       const structureSection = stdout.split('Structure')[1]?.split('Run')[0] || '';
       const directoryLines = structureSection.split('\n').filter((line) => line.includes('/'));
-      expect(directoryLines.length).toBe(10);
-      expect(stdout).toContain('+1 more directories');
+      expect(directoryLines.length).toBe(11);
+      expect(stdout).not.toContain('more directories');
     });
   });
 

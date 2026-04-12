@@ -288,10 +288,15 @@ async function detectSecrets(rootPath: string): Promise<EngineResult['secrets']>
 
 function extractStructure(
   analysis: AnalysisResult | null
-): { items: Array<{ path: string; purpose: string }>; overflow: number } {
-  if (!analysis?.structure?.directories) return { items: [], overflow: 0 };
+): Array<{ path: string; purpose: string }> {
+  if (!analysis?.structure?.directories) return [];
   const directories = analysis.structure.directories;
-  const entries = Object.entries(directories)
+  // Return every depth-1 directory with a non-"Unknown" purpose. Those two
+  // filters ARE the quality gate — nothing noisy survives them, so there's
+  // nothing an arbitrary cap would usefully truncate. Empirically (across
+  // the S18 test dossier + Anatomia dogfood) the post-filter count tops out
+  // in single digits, which is why this is safe to return unbounded.
+  return Object.entries(directories)
     .filter(([dirPath, purpose]) => {
       const depth = dirPath.split('/').filter(Boolean).length;
       return depth === 1 && purpose && purpose !== 'Unknown';
@@ -301,9 +306,6 @@ function extractStructure(
       purpose,
     }))
     .sort((a, b) => a.path.localeCompare(b.path));
-  const maxItems = 10;
-  const overflow = Math.max(0, entries.length - maxItems);
-  return { items: entries.slice(0, maxItems), overflow };
 }
 
 // mapToPatternDetail + mapPatterns deleted (Item 6) — same rationale as Item 3
@@ -567,8 +569,7 @@ export async function scanProject(
     overview: { project: projectName, scannedAt: now, depth: options.depth },
     stack,
     files,
-    structure: structure.items,
-    structureOverflow: structure.overflow,
+    structure,
     commands: { ...commands, packageManager },
     git,
     monorepo: mono,

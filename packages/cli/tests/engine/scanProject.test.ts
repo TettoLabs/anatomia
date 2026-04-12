@@ -33,7 +33,7 @@ describe('scanProject()', () => {
     const result = await scanProject(tempDir, { depth: 'surface' });
 
     const expectedKeys = [
-      'overview', 'stack', 'files', 'structure', 'structureOverflow',
+      'overview', 'stack', 'files', 'structure',
       'commands', 'git', 'monorepo', 'externalServices', 'schemas',
       'secrets', 'projectProfile', 'blindSpots', 'deployment',
       'patterns', 'conventions', 'recommendations', 'health', 'readiness',

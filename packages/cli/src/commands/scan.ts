@@ -281,9 +281,6 @@ function formatHumanReadable(
       const pathStr = item.path.padEnd(18);
       lines.push(`  ${chalk.cyan(pathStr)}${chalk.gray(item.purpose)}`);
     }
-    if (result.structureOverflow > 0) {
-      lines.push(chalk.gray(`  +${result.structureOverflow} more directories`));
-    }
   }
 
   // Monorepo packages

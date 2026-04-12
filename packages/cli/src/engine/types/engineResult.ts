@@ -72,7 +72,6 @@ export interface EngineResult {
     total: number;
   };
   structure: Array<{ path: string; purpose: string }>;
-  structureOverflow: number;
   // Composed from the detector's DetectedCommands (Item 7a) — adding a field
   // to DetectedCommands now flows through automatically. The only extra field
   // scan-engine appends on top is packageManager, which is nullable because
@@ -298,7 +297,6 @@ export function createEmptyEngineResult(): EngineResult {
     stack: { language: null, framework: null, database: null, auth: null, testing: null, payments: null, workspace: null, aiSdk: null },
     files: { source: 0, test: 0, config: 0, total: 0 },
     structure: [],
-    structureOverflow: 0,
     commands: { build: null, test: null, lint: null, dev: null, packageManager: null, all: {} },
     git: { head: null, branch: null, commitCount: null, lastCommitAt: null, uncommittedChanges: false, contributorCount: null, defaultBranch: null, branches: null },
     monorepo: { isMonorepo: false, tool: null, packages: [] },
