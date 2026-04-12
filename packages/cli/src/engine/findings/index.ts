@@ -41,9 +41,11 @@ export interface FindingRule {
 // ── Rules ──────────────────────────────────────────────────────────────
 
 import { checkHardcodedSecrets } from './rules/secrets.js';
+import { checkEnvHygiene } from './rules/env.js';
 
 const FINDING_RULES: FindingRule[] = [
   { id: 'hardcoded-secrets', check: checkHardcodedSecrets },
+  { id: 'env-hygiene', check: checkEnvHygiene },
 ];
 
 // ── Generator ──────────────────────────────────────────────────────────
