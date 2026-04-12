@@ -96,17 +96,12 @@ function collapseServiceVariants(names: string[]): string[] {
  * @returns Number of findings (blind spots + null pattern slots)
  */
 function countFindings(result: EngineResult): number {
-  let count = result.blindSpots.length;
+  // Count actionable findings (critical + warn) plus blind spots
+  const actionableFindings = result.findings.filter(
+    f => f.severity === 'critical' || f.severity === 'warn'
+  ).length;
 
-  // Count null pattern slots when deep scan was attempted
-  if (result.overview.depth === 'deep' && result.patterns) {
-    const categories = ['errorHandling', 'validation', 'database', 'auth', 'testing'] as const;
-    for (const k of categories) {
-      if (!result.patterns[k]) count++;
-    }
-  }
-
-  return count;
+  return actionableFindings + result.blindSpots.length;
 }
 
 /**

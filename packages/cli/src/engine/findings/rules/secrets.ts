@@ -83,7 +83,7 @@ const SECRET_GLOB_IGNORE = [
   '**/node_modules/**', '**/dist/**', '**/build/**', '**/.next/**',
   '**/.git/**', '**/.turbo/**', '**/out/**', '**/.cache/**',
   // Test files — test keys in test files are expected
-  '**/*.test.*', '**/*.spec.*', '**/*.e2e.*',
+  '**/*.test.*', '**/*.spec.*', '**/*.e2e.*', '**/*.e2e-spec.*',
   '**/__tests__/**', '**/test/**', '**/tests/**',
   '**/playwright/**', '**/cypress/**', '**/e2e/**',
   '**/*fixture*/**', '**/*mock*/**', '**/__snapshots__/**',
