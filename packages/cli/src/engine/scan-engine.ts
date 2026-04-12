@@ -21,6 +21,8 @@ import type { EngineResult } from './types/engineResult.js';
 import type { AnalysisResult } from './types/index.js';
 import { getPatternLibrary } from './types/patterns.js';
 import { readDependencies, detectFromDeps, detectServiceDeps, detectAiSdk, aggregateMonorepoDependencies } from './detectors/dependencies.js';
+import { readPythonDependencies } from './parsers/python.js';
+import { readGoDependencies } from './parsers/go.js';
 import { detectPackageManager } from './detectors/packageManager.js';
 import { detectGitInfo } from './detectors/git.js';
 import { detectCommands } from './detectors/commands.js';
@@ -35,6 +37,52 @@ interface MonorepoInfo {
   isMonorepo: boolean;
   tool: string | null;
   packages: Array<{ name: string; path: string }>;
+}
+
+/**
+ * Detect testing frameworks for non-Node projects at surface tier.
+ *
+ * The main dependency-detection path (`detectFromDeps`) only inspects
+ * `package.json`. Python projects keep their deps in pyproject.toml /
+ * requirements.txt / Pipfile; Go projects use go.mod. Without an explicit
+ * read, pytest and Go's built-in `testing` package never surface on surface-
+ * tier scans — so SCAN-033's missing-tests blind spot fires even when tests
+ * exist and the framework is obvious from the dep file.
+ *
+ * Deep tier catches these via the pattern analyzer (inferPatterns); this
+ * helper covers the surface-tier hole without requiring tree-sitter parsing.
+ *
+ * Rust: the standard library ships `cargo test` as built-in — there's no
+ * dependency to detect. Tests are recognized by presence of test files,
+ * not by a framework in Cargo.toml. We deliberately return [] for Rust and
+ * let the file-count check decide whether the blind spot fires.
+ */
+async function detectNonNodeTesting(
+  rootPath: string,
+  projectType: string
+): Promise<string[]> {
+  try {
+    if (projectType === 'python') {
+      const deps = await readPythonDependencies(rootPath);
+      const detected: string[] = [];
+      if (deps.includes('pytest')) detected.push('pytest');
+      if (deps.includes('unittest')) detected.push('unittest');
+      return detected;
+    }
+    if (projectType === 'go') {
+      // Go's standard library `testing` package is built-in; presence of
+      // `require` lines alone doesn't tell us much. Treat any detectable
+      // Go project as having testing if go.mod was readable — matches the
+      // convention that every Go project uses `go test`.
+      const deps = await readGoDependencies(rootPath);
+      return deps.length >= 0 ? ['Go testing'] : [];
+    }
+  } catch {
+    // Parser failure — fall through silently. The blind spot still fires
+    // as informational, which is the correct behavior for genuinely
+    // unreadable dep files.
+  }
+  return [];
 }
 
 async function detectMonorepoInfo(rootPath: string): Promise<MonorepoInfo> {
@@ -497,10 +545,25 @@ export async function scanProject(
     }
     // Fall back to the pattern analyzer only if dependency detection
     // turned up nothing — this is how pytest / go-test surface on non-Node
-    // projects, where TESTING_PACKAGES doesn't apply.
+    // projects via the DEEP tier, where TESTING_PACKAGES doesn't apply.
     const testLib = getPatternLibrary(analysis.patterns?.testing);
     if (stack.testing.length === 0 && testLib) {
       stack.testing = [getPatternDisplayName(testLib)];
+    }
+  }
+
+  // SCAN-023: surface-tier non-Node testing enrichment. The dependency-
+  // detection path (detectFromDeps) only sees `package.json` — Python/Go/Rust
+  // projects have their own dep files that never reach allDeps, so pytest
+  // in pyproject.toml or testify in go.mod flow nowhere at surface tier.
+  // Read the project-type's own dep file here and surface any recognized
+  // testing framework so the missing-tests blind spot (SCAN-033) doesn't
+  // fire on modern Python projects. Deep tier handles this via patterns;
+  // surface tier needs an explicit read.
+  if (stack.testing.length === 0 && analysis?.projectType) {
+    const nonNodeTesting = await detectNonNodeTesting(rootPath, analysis.projectType);
+    if (nonNodeTesting.length > 0) {
+      stack.testing = nonNodeTesting;
     }
   }
 
