@@ -38,6 +38,7 @@ const validShape = (): EngineResultPartial => ({
     payments: null,
     workspace: 'pnpm monorepo',
     aiSdk: null,
+    uiSystem: null,
   },
   commands: {
     build: 'next build',

@@ -61,6 +61,7 @@ describe('Engine Interface Contract', () => {
           payments: null,
           workspace: null,
           aiSdk: null,
+          uiSystem: null,
         },
         patterns: {
           errorHandling: { library: 'exceptions', variant: '', confidence: 0.9, evidence: [] },

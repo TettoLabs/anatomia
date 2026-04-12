@@ -31,8 +31,7 @@ import type { ParsedFile, FunctionInfo, ClassInfo, ImportInfo, DecoratorInfo, Ex
 import { readFile, joinPath } from '../utils/file.js';
 import type { ASTCache, ASTCacheEntry } from '../cache/astCache.js';
 import { ASTCache as ASTCacheClass } from '../cache/astCache.js';
-import { sampleFiles } from '../sampling/fileSampler.js';
-import type { AnalysisResult } from '../types/index.js';
+import type { DeepTierInput } from '../types/index.js';
 // Import queryCache - NO circular dependency since queries.ts doesn't import from here
 import { queryCache } from './queries.js';
 
@@ -1014,7 +1013,7 @@ export async function parseFile(
  */
 export async function parseProjectFiles(
   projectRoot: string,
-  analysis: AnalysisResult,
+  analysis: DeepTierInput,
   options: { maxFiles?: number; preSampledFiles?: string[] } = {}
 ): Promise<ParsedAnalysis | undefined> {
   // Require structure analysis for sampling (unless pre-sampled files provided)
@@ -1030,12 +1029,11 @@ export async function parseProjectFiles(
   // Initialize cache
   const cache = new ASTCacheClass(projectRoot);
 
-  // Use pre-sampled file list (from proportional sampler) or fall back to old sampler
-  const filesToParse = options.preSampledFiles ?? await sampleFiles(projectRoot, analysis, {
-    maxFiles: options.maxFiles ?? 20,
-    minConfidence: 0.8,
-    includeTests: false,
-  });
+  // Use pre-sampled file list from proportional sampler (wired in Lane 0 Fix 1)
+  if (!options.preSampledFiles) {
+    return { files: [], totalParsed: 0, cacheHits: 0, cacheMisses: 0 };
+  }
+  const filesToParse = options.preSampledFiles;
 
   if (filesToParse.length === 0) {
     return {

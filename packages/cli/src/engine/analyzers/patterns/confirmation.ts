@@ -15,7 +15,7 @@
  * SQLAlchemy projects.
  */
 
-import type { AnalysisResult, ParsedFile } from '../../types/index.js';
+import type { DeepTierInput, ParsedFile } from '../../types/index.js';
 import type { PatternConfidence, MultiPattern } from '../../types/patterns.js';
 import { isMultiPattern } from '../../types/patterns.js';
 
@@ -36,13 +36,13 @@ import { isMultiPattern } from '../../types/patterns.js';
  *
  * @param rootPath - Project root (not used, but kept for consistency)
  * @param initialPatterns - Patterns from detectFromDependencies() (Stage 1 baseline)
- * @param analysis - AnalysisResult with parsed field from STEP_1.3
+ * @param analysis - DeepTierInput with parsed field from STEP_1.3
  * @returns Patterns with boosted confidence based on code evidence
  */
 export async function confirmPatternsWithTreeSitter(
   rootPath: string,
   initialPatterns: Partial<Record<string, PatternConfidence>>,
-  analysis: AnalysisResult
+  analysis: DeepTierInput
 ): Promise<Record<string, PatternConfidence>> {
   // Copy initial patterns (will mutate confidence and evidence)
   const confirmed = { ...initialPatterns };
@@ -78,7 +78,7 @@ export async function confirmPatternsWithTreeSitter(
 async function confirmValidationPattern(
   patterns: Partial<Record<string, PatternConfidence>>,
   parsedFiles: ParsedFile[],
-  _analysis: AnalysisResult
+  _analysis: DeepTierInput
 ): Promise<void> {
   if (!patterns['validation']) return;  // No validation pattern detected in CP0
 
@@ -242,7 +242,7 @@ async function confirmValidationPattern(
 async function confirmErrorHandlingPattern(
   patterns: Partial<Record<string, PatternConfidence>>,
   parsedFiles: ParsedFile[],
-  _analysis: AnalysisResult
+  _analysis: DeepTierInput
 ): Promise<void> {
   if (!patterns['errorHandling']) return;
 
@@ -333,7 +333,7 @@ async function confirmErrorHandlingPattern(
 async function confirmDatabasePattern(
   patterns: Partial<Record<string, PatternConfidence | MultiPattern>>,
   parsedFiles: ParsedFile[],
-  _analysis: AnalysisResult
+  _analysis: DeepTierInput
 ): Promise<void> {
   // Parameter type widened to accept the full union — previously narrowed to
   // PatternConfidence but the function assigns MultiPattern at line below via
@@ -508,7 +508,7 @@ async function confirmDatabasePattern(
 async function confirmAuthPattern(
   patterns: Partial<Record<string, PatternConfidence>>,
   parsedFiles: ParsedFile[],
-  _analysis: AnalysisResult
+  _analysis: DeepTierInput
 ): Promise<void> {
   if (!patterns['auth']) return;
 
@@ -599,7 +599,7 @@ async function confirmAuthPattern(
 async function confirmTestingPattern(
   patterns: Partial<Record<string, PatternConfidence>>,
   parsedFiles: ParsedFile[],
-  analysis: AnalysisResult
+  analysis: DeepTierInput
 ): Promise<void> {
   if (!patterns['testing']) return;
 

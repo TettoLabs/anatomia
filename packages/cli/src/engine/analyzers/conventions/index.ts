@@ -6,10 +6,9 @@
  */
 
 import { join, basename } from 'node:path';
-import type { AnalysisResult } from '../../types/index.js';
+import type { DeepTierInput } from '../../types/index.js';
 import type { ConventionAnalysis } from '../../types/conventions.js';
 import { createEmptyConventionAnalysis } from '../../types/conventions.js';
-import { sampleFiles } from '../../sampling/fileSampler.js';
 import { readFile } from '../../utils/file.js';
 import {
   analyzeNamingConvention,
@@ -51,7 +50,7 @@ import { analyzeIndentation } from './indentation.js';
  */
 export async function detectConventions(
   rootPath: string,
-  analysis: AnalysisResult,
+  analysis: DeepTierInput,
   options?: {
     preSampledFiles?: string[];
     tsconfigEntries?: import('../../types/census.js').TsconfigEntry[];
@@ -68,8 +67,8 @@ export async function detectConventions(
     const { files: parsedFiles } = analysis.parsed;
     const { projectType } = analysis;
 
-    // Use pre-sampled file list (from proportional sampler) or fall back to old sampler
-    const sampledFilePaths = options?.preSampledFiles ?? await sampleFiles(rootPath, analysis, { maxFiles: 50 });
+    // Use pre-sampled file list from proportional sampler
+    const sampledFilePaths = options?.preSampledFiles ?? [];
 
     // File naming uses sampledFilePaths (50 files) — only needs basenames, no AST
     const fileNamingNames = sampledFilePaths.map(p => basename(p).replace(/\.[^.]+$/, ''));

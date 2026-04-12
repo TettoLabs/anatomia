@@ -46,7 +46,8 @@ describe.skipIf(!wasmAvailable)('detectConventions orchestrator', () => {
       },
     };
 
-    const conventions = await detectConventions('/tmp', analysis);
+    const fileNames = analysis.parsed?.files.map(f => f.file) ?? [];
+    const conventions = await detectConventions('/tmp', analysis, { preSampledFiles: fileNames });
 
     expect(conventions).toBeDefined();
     expect(conventions.naming).toBeDefined();
@@ -61,7 +62,8 @@ describe.skipIf(!wasmAvailable)('detectConventions orchestrator', () => {
     const analysis = createEmptyAnalysisResult();
     // No parsed field
 
-    const conventions = await detectConventions('/tmp', analysis);
+    const fileNames = analysis.parsed?.files.map(f => f.file) ?? [];
+    const conventions = await detectConventions('/tmp', analysis, { preSampledFiles: fileNames });
 
     // Should return empty conventions (graceful degradation)
     expect(conventions.sampledFiles).toBe(0);
@@ -102,7 +104,8 @@ describe.skipIf(!wasmAvailable)('detectConventions orchestrator', () => {
       },
     };
 
-    const conventions = await detectConventions('/tmp', analysis);
+    const fileNames = analysis.parsed?.files.map(f => f.file) ?? [];
+    const conventions = await detectConventions('/tmp', analysis, { preSampledFiles: fileNames });
 
     expect(conventions.naming).toBeDefined();
     expect(conventions.naming?.files).toBeDefined();
@@ -144,7 +147,8 @@ describe.skipIf(!wasmAvailable)('Mixed convention handling', () => {
       },
     };
 
-    const conventions = await detectConventions('/tmp', analysis);
+    const fileNames = analysis.parsed?.files.map(f => f.file) ?? [];
+    const conventions = await detectConventions('/tmp', analysis, { preSampledFiles: fileNames });
 
     if (conventions.naming?.files) {
       expect(conventions.naming.files.majority).toBeDefined();
@@ -188,7 +192,8 @@ describe.skipIf(!wasmAvailable)('Mixed convention handling', () => {
       },
     };
 
-    const conventions = await detectConventions('/tmp', analysis);
+    const fileNames = analysis.parsed?.files.map(f => f.file) ?? [];
+    const conventions = await detectConventions('/tmp', analysis, { preSampledFiles: fileNames });
 
     expect(conventions.imports).toBeDefined();
     expect(conventions.imports?.distribution.absolute).toBeGreaterThanOrEqual(0);
@@ -233,7 +238,8 @@ describe.skipIf(!wasmAvailable)('Performance', () => {
     };
 
     const start = Date.now();
-    const conventions = await detectConventions('/tmp', analysis);
+    const fileNames = analysis.parsed?.files.map(f => f.file) ?? [];
+    const conventions = await detectConventions('/tmp', analysis, { preSampledFiles: fileNames });
     const duration = Date.now() - start;
 
     expect(duration).toBeLessThan(10000);  // 10s generous budget for mock test
