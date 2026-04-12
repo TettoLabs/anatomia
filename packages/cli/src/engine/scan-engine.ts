@@ -242,7 +242,8 @@ async function countUniqueTables(rootPath: string, sqlFiles: string[]): Promise<
 
 async function detectSchemas(
   allDeps: Record<string, string>,
-  rootPath: string
+  rootPath: string,
+  censusSchemas: import('./types/census.js').SchemaFileEntry[] = [],
 ): Promise<{ schemas: EngineResult['schemas']; blindSpots: EngineResult['blindSpots'] }> {
   const schemas: EngineResult['schemas'] = {};
   const blindSpots: EngineResult['blindSpots'] = [];
@@ -262,11 +263,15 @@ async function detectSchemas(
     maxDepth: 6,
   };
 
-  // Prisma
+  // Prisma — prefer census schema entry, fall back to glob for monorepo sub-packages
+  // that aren't registered as workspace packages (SCAN-042 regression guard).
   const hasPrisma = allDeps['prisma'] || allDeps['@prisma/client'];
   if (hasPrisma) {
     try {
-      const matches = await glob('**/schema.prisma', SCHEMA_GLOB_OPTS);
+      const censusSchemaMatch = censusSchemas.find(s => s.orm === 'prisma');
+      const matches = censusSchemaMatch
+        ? [censusSchemaMatch.path]
+        : await glob('**/schema.prisma', SCHEMA_GLOB_OPTS);
       if (matches.length > 0) {
         const relativePath = matches[0] as string;
         const content = await fs.readFile(path.join(rootPath, relativePath), 'utf-8');
@@ -601,7 +606,7 @@ export async function scanProject(
       externalServices.push({ name: svc.name, category: svc.category, source: 'dependency', configFound: false, stackRoles: [] });
     }
   }
-  const { schemas, blindSpots } = await detectSchemas(allDeps, rootPath);
+  const { schemas, blindSpots } = await detectSchemas(allDeps, rootPath, census.configs.schemas);
   const secrets = await detectSecrets(rootPath);
   const deployment = detectDeployment(census.configs.deployments);
   const ci = detectCI(census.configs.ciWorkflows);
