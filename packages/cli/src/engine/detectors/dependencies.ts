@@ -39,6 +39,10 @@ export const AUTH_PACKAGES: Record<string, string> = {
   '@supabase/auth-helpers-nextjs': 'Supabase Auth',
   'passport': 'Passport',
   'lucia': 'Lucia', '@lucia-auth/adapter-prisma': 'Lucia',
+  '@workos-inc/node': 'WorkOS', '@workos-inc/authkit-nextjs': 'WorkOS',
+  '@stytch/nextjs': 'Stytch', '@stytch/node': 'Stytch',
+  '@boxyhq/saml-jackson': 'BoxyHQ SAML',
+  '@kinde-oss/kinde-auth-nextjs': 'Kinde',
   'jsonwebtoken': 'JWT', 'bcrypt': 'bcrypt', 'bcryptjs': 'bcrypt',
 };
 
@@ -94,15 +98,29 @@ export const PAYMENT_PACKAGES: Record<string, string> = {
  * naming split.
  */
 export const AI_PACKAGES: Record<string, string> = {
+  // Core SDKs
   '@anthropic-ai/sdk': 'Anthropic',
   'openai': 'OpenAI',
   '@google/generative-ai': 'Google AI',
   'ai': 'Vercel AI',
+  // Vercel AI provider integrations
   '@ai-sdk/anthropic': 'Vercel AI (Anthropic)',
   '@ai-sdk/openai': 'Vercel AI (OpenAI)',
   '@ai-sdk/google': 'Vercel AI (Google)',
+  '@ai-sdk/google-vertex': 'Vercel AI (Google Vertex)',
+  '@ai-sdk/amazon-bedrock': 'Vercel AI (Bedrock)',
+  '@ai-sdk/azure': 'Vercel AI (Azure)',
+  '@ai-sdk/mistral': 'Vercel AI (Mistral)',
+  // Direct provider SDKs
+  '@mistralai/mistralai': 'Mistral',
+  'groq-sdk': 'Groq',
+  '@cohere-ai/cohere-v2': 'Cohere',
   'ollama': 'Ollama',
   'replicate': 'Replicate',
+  '@azure/openai': 'Azure OpenAI',
+  // Frameworks
+  'langchain': 'LangChain', '@langchain/core': 'LangChain',
+  'llamaindex': 'LlamaIndex',
 };
 
 /**
@@ -114,6 +132,9 @@ export const EMAIL_PACKAGES: Record<string, string> = {
   'postmark': 'Postmark',
   'nodemailer': 'Nodemailer',
   '@react-email/components': 'React Email',
+  'mailgun.js': 'Mailgun',
+  '@loops-so/node': 'Loops',
+  'plunk-node': 'Plunk',
 };
 
 /**
@@ -130,6 +151,10 @@ export const MONITORING_PACKAGES: Record<string, string> = {
   '@sentry/nextjs': 'Sentry', '@sentry/node': 'Sentry', '@sentry/react': 'Sentry',
   'logrocket': 'LogRocket',
   '@amplitude/analytics-browser': 'Amplitude',
+  'pino': 'Pino', 'winston': 'Winston',
+  '@axiomhq/winston': 'Axiom', '@axiomhq/pino': 'Axiom',
+  '@opentelemetry/api': 'OpenTelemetry',
+  'dd-trace': 'Datadog',
 };
 
 /**
@@ -141,6 +166,8 @@ export const JOBS_PACKAGES: Record<string, string> = {
   '@upstash/qstash': 'Upstash QStash',
   'bullmq': 'BullMQ',
   '@upstash/redis': 'Upstash Redis',
+  'redis': 'Redis', 'ioredis': 'Redis',
+  '@temporalio/client': 'Temporal',
 };
 
 /**
