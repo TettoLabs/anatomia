@@ -212,6 +212,37 @@ function formatHumanReadable(
     }
   }
 
+  // Findings (after Stack, before Services)
+  if (result.findings.length > 0) {
+    const hasCritical = result.findings.some(f => f.severity === 'critical');
+    const hasWarn = result.findings.some(f => f.severity === 'warn');
+
+    // When critical/warn findings exist, suppress passes — don't dilute urgency.
+    const toShow = (hasCritical || hasWarn)
+      ? result.findings.filter(f => f.severity !== 'pass')
+      : result.findings;
+
+    if (toShow.length > 0) {
+      lines.push('');
+      lines.push(chalk.bold('  Findings'));
+      lines.push(chalk.gray('  ' + BOX.horizontal.repeat(8)));
+
+      for (const f of toShow) {
+        const icon = f.severity === 'critical' ? chalk.red('🔴')
+          : f.severity === 'warn' ? chalk.yellow('⚠ ')
+          : f.severity === 'info' ? chalk.blue('ℹ ')
+          : chalk.green('✓ ');
+        const text = f.severity === 'critical'
+          ? chalk.red(f.title)
+          : f.title;
+        lines.push(`  ${icon} ${text}`);
+        if (f.detail) {
+          lines.push(`     ${chalk.gray(f.detail)}`);
+        }
+      }
+    }
+  }
+
   // Services + Deployment (rendered as one block).
   // Dedup is annotated at detection via annotateServiceRoles (Item 5) — if a
   // service fulfills any stack role (database, auth, payments, aiSdk, deployment)

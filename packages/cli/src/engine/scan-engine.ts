@@ -32,6 +32,7 @@ import { analyzeStructure } from './analyzers/structure/index.js';
 import { annotateServiceRoles } from './utils/serviceAnnotation.js';
 import { countFiles } from '../utils/fileCounts.js';
 import { buildCensus } from './census.js';
+import { generateFindings } from './findings/index.js';
 
 import { getLanguageDisplayName, getFrameworkDisplayName, getPatternDisplayName } from '../utils/displayNames.js';
 import { getProjectName } from '../utils/validators.js';
@@ -520,12 +521,14 @@ export async function scanProject(
   let patterns: import('./types/patterns.js').PatternAnalysis | undefined;
   let conventions: import('./types/conventions.js').ConventionAnalysis | undefined;
   let analyzerFailure: string | null = null;
+  let sampledFiles: string[] = [];  // hoisted for findings access
+  let parsed: import('./types/parsed.js').ParsedAnalysis | undefined;
 
   if (options.depth === 'deep') {
     try {
       // Sample files ONCE with proportional sampler (Disease B cure), thread to both consumers.
       const { sampleFilesProportional } = await import('./sampling/proportionalSampler.js');
-      const sampledFiles = await sampleFilesProportional(census, 500);
+      sampledFiles = await sampleFilesProportional(census, 500);
 
       // Dynamic imports — tree-sitter loads WASM at module-evaluation time.
       const { parseProjectFiles } = await import('./parsers/treeSitter.js');
@@ -536,7 +539,7 @@ export async function scanProject(
         structure,
       };
 
-      const parsed = await parseProjectFiles(
+      parsed = await parseProjectFiles(
         rootPath,
         deepInput,
         { preSampledFiles: sampledFiles },
@@ -717,6 +720,16 @@ export async function scanProject(
     });
   }
 
+  // Findings — deterministic checks surfacing what AI got wrong
+  const findings = await generateFindings({
+    census,
+    stack,
+    secrets,
+    rootPath,
+    sampledFiles,
+    parsedFiles: parsed?.files ?? [],
+  });
+
   return {
     schemaVersion: '1.0',
     overview: { project: projectName, scannedAt: now, depth: options.depth },
@@ -731,6 +744,7 @@ export async function scanProject(
     secrets,
     projectProfile,
     blindSpots,
+    findings,
     // detectDeployment always returns a DetectedDeployment shape now (null
     // fields for "no deployment"), so the construction is a clean spread.
     deployment: { ...deployment, ...ci },

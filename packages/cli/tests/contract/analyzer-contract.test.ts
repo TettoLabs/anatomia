@@ -151,6 +151,7 @@ describe('Engine Interface Contract', () => {
         'secrets',
         'projectProfile',
         'blindSpots',
+        'findings',
         'deployment',
         'patterns',
         'conventions',

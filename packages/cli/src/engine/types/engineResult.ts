@@ -140,6 +140,15 @@ export interface EngineResult {
     issue: string;
     resolution: string;
   }>;
+  // Deterministic checks surfacing what AI got wrong (S21).
+  // Always an array — empty when no rules fire, never null.
+  findings: Array<{
+    id: string;
+    severity: 'critical' | 'warn' | 'info' | 'pass';
+    title: string;
+    detail: string | null;
+    category: 'security' | 'reliability' | 'quality';
+  }>;
   // Composed from the deployment detectors (Item 7d). detectDeployment returns
   // DetectedDeployment (platform+configFile nullable), detectCI returns
   // DetectedCI (ci nullable). scan-engine merges them with
@@ -313,6 +322,7 @@ export function createEmptyEngineResult(): EngineResult {
     secrets: { envFileExists: false, envExampleExists: false, gitignoreCoversEnv: false },
     projectProfile: { type: null, hasExternalAPIs: false, hasDatabase: false, hasBrowserUI: false, hasAuthSystem: false, hasPayments: false, hasFileStorage: false },
     blindSpots: [],
+    findings: [],
     deployment: { platform: null, configFile: null, ci: null },
     patterns: null,
     conventions: null,
