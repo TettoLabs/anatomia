@@ -136,6 +136,8 @@ const EXTERNAL_SERVICE_PACKAGES: Record<string, { name: string; category: string
   '@lemonsqueezy/lemonsqueezy.js': { name: 'Lemon Squeezy', category: 'payments' },
   'openai': { name: 'OpenAI', category: 'ai' },
   '@anthropic-ai/sdk': { name: 'Anthropic', category: 'ai' },
+  '@trpc/server': { name: 'tRPC', category: 'api' },
+  '@trpc/client': { name: 'tRPC', category: 'api' },
 };
 
 const SERVICE_CONFIG_CHECKS: Record<string, string[]> = {
