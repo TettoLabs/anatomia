@@ -19,7 +19,7 @@ import { existsSync } from 'node:fs';
 import { glob } from 'glob';
 import type { EngineResult } from './types/engineResult.js';
 import { getPatternLibrary } from './types/patterns.js';
-import { detectFromDeps, detectServiceDeps, detectAiSdk } from './detectors/dependencies.js';
+import { detectFromDeps, detectServiceDeps, detectAiSdk, TESTING_PACKAGES } from './detectors/dependencies.js';
 import { readPythonDependencies } from './parsers/python.js';
 import { readGoDependencies } from './parsers/go.js';
 import { detectPackageManager } from './detectors/packageManager.js';
@@ -617,6 +617,14 @@ export async function scanProject(
     const nonNodeTesting = await detectNonNodeTesting(rootPath, projectTypeResult.type);
     if (nonNodeTesting.length > 0) {
       stack.testing = nonNodeTesting;
+    }
+  }
+
+  // Root devDeps testing enrichment: testing frameworks in root package.json
+  // (like @playwright/test) aren't in census.allDeps but should be detected.
+  for (const [pkg, name] of Object.entries(TESTING_PACKAGES)) {
+    if (census.rootDevDeps[pkg] && !stack.testing.includes(name)) {
+      stack.testing.push(name);
     }
   }
 

@@ -4,7 +4,6 @@ import {
   AnalysisResultSchema,
   ProjectType,
   createEmptyAnalysisResult,
-  validateAnalysisResult,
 } from '../../src/engine/types/index.js';
 import type { EngineResult } from '../../src/engine/types/engineResult.js';
 import type {
@@ -61,7 +60,7 @@ describe('AnalysisResult types', () => {
         version: '0.1.0-alpha',
       };
 
-      expect(() => validateAnalysisResult(result)).not.toThrow();
+      expect(() => AnalysisResultSchema.parse(result)).not.toThrow();
     });
 
     it('rejects invalid project type', () => {
@@ -74,7 +73,7 @@ describe('AnalysisResult types', () => {
         version: '0.1.0-alpha',
       };
 
-      expect(() => validateAnalysisResult(invalid)).toThrow();
+      expect(() => AnalysisResultSchema.parse(invalid)).toThrow();
     });
 
     it('rejects out-of-range confidence', () => {
@@ -87,7 +86,7 @@ describe('AnalysisResult types', () => {
         version: '0.1.0-alpha',
       };
 
-      expect(() => validateAnalysisResult(invalid)).toThrow();
+      expect(() => AnalysisResultSchema.parse(invalid)).toThrow();
     });
 
     it('accepts all valid project types', () => {
@@ -105,7 +104,7 @@ describe('AnalysisResult types', () => {
       for (const type of validTypes) {
         const result = createEmptyAnalysisResult();
         result.projectType = type;
-        expect(() => validateAnalysisResult(result)).not.toThrow();
+        expect(() => AnalysisResultSchema.parse(result)).not.toThrow();
       }
     });
   });
