@@ -75,6 +75,7 @@ export interface EngineResult {
     payments: string | null;
     workspace: string | null;
     aiSdk: string | null;
+    uiSystem: string | null;
   };
   files: {
     source: number;
@@ -301,7 +302,7 @@ export function createEmptyEngineResult(): EngineResult {
   return {
     schemaVersion: '1.0',
     overview: { project: 'unknown', scannedAt: new Date().toISOString(), depth: 'surface' },
-    stack: { language: null, framework: null, database: null, auth: null, testing: [], payments: null, workspace: null, aiSdk: null },
+    stack: { language: null, framework: null, database: null, auth: null, testing: [], payments: null, workspace: null, aiSdk: null, uiSystem: null },
     files: { source: 0, test: 0, config: 0, total: 0 },
     structure: [],
     commands: { build: null, test: null, lint: null, dev: null, packageManager: null, all: {} },

@@ -88,6 +88,28 @@ async function detectNonNodeTesting(
   return [];
 }
 
+/**
+ * Detect UI system from dependency signature.
+ *
+ * shadcn/ui: tailwindcss + class-variance-authority + tailwind-merge + any @radix-ui/*
+ * Tailwind only: tailwindcss without the shadcn signature
+ */
+function detectUiSystem(allDeps: Record<string, string>): string | null {
+  const hasTailwind = allDeps['tailwindcss'] !== undefined;
+  if (!hasTailwind) return null;
+
+  // shadcn/ui signature: cva + tw-merge + radix
+  const hasCva = allDeps['class-variance-authority'] !== undefined;
+  const hasTwMerge = allDeps['tailwind-merge'] !== undefined;
+  const hasRadix = Object.keys(allDeps).some(k => k.startsWith('@radix-ui/'));
+
+  if (hasCva && hasTwMerge && hasRadix) {
+    return 'shadcn/ui (Tailwind)';
+  }
+
+  return 'Tailwind CSS';
+}
+
 // detectMonorepoInfo and findWorkspacePackages DELETED — S20 Disease D.
 // Census (via @manypkg/get-packages) is now the single source for monorepo
 // detection, workspace packages, and aggregated dependencies. The hand-rolled
@@ -520,6 +542,7 @@ export async function scanProject(
         : `${mono.tool} monorepo`)
       : null,
     aiSdk: detectAiSdk(allDeps),
+    uiSystem: detectUiSystem(allDeps),
   };
 
   // Enrich from direct detection results (replaces analysis.* references)

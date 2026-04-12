@@ -114,6 +114,7 @@ function formatHumanReadable(
   const stackItems: Array<[string, string | null]> = [
     ['Language', result.stack.language],
     ['Framework', result.stack.framework],
+    ['UI', result.stack.uiSystem],
     ['AI', result.stack.aiSdk],
     ['Database', result.stack.database],
     ['Auth', result.stack.auth],

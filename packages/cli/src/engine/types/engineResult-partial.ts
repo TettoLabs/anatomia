@@ -11,7 +11,7 @@
  *   - `schemaVersion: '1.0'` (exact literal) — catches format drift and
  *     forward-incompat rollbacks (e.g. a future v2 scan.json being read
  *     by a v1 CLI).
- *   - `stack.*` (all 8 fields) — every display surface reads these; a
+ *   - `stack.*` (all 9 fields) — every display surface reads these; a
  *     missing field or wrong type means CLAUDE.md/AGENTS.md won't render.
  *   - `commands.*` (build/test/lint/dev/packageManager/all) — consumed by
  *     init success output, AGENTS.md Commands section, skill templates.
@@ -46,6 +46,7 @@ export const EngineResultPartialSchema = z.object({
     payments: z.string().nullable(),
     workspace: z.string().nullable(),
     aiSdk: z.string().nullable(),
+    uiSystem: z.string().nullable(),
   }),
   commands: z.object({
     build: z.string().nullable(),

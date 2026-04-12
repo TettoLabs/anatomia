@@ -114,6 +114,7 @@ describe('getStackSummary', () => {
       payments: 'Stripe',
       workspace: 'pnpm monorepo',
       aiSdk: 'Vercel AI',
+      uiSystem: 'shadcn/ui (Tailwind)',
     };
     const summary = getStackSummary(result);
     // Note: workspace is intentionally NOT in the summary list — the helper
