@@ -239,7 +239,7 @@ function formatHumanReadable(
         analytics: 'Analytics', jobs: 'Jobs', cloud: 'Cloud',
       };
       for (const [cat, names] of byCategory) {
-        const label = (categoryLabels[cat] || cat).padEnd(12);
+        const label = (categoryLabels[cat] || cat.charAt(0).toUpperCase() + cat.slice(1)).padEnd(12);
         // Collapse variants: "Vercel AI (OpenAI), Vercel AI (Google)" → "Vercel AI (2 providers)"
         const collapsed = collapseServiceVariants(names);
         lines.push(`  ${chalk.gray(label)} ${collapsed.join(', ')}`);
