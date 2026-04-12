@@ -152,16 +152,24 @@ const EXTERNAL_SERVICE_PACKAGES: Record<string, { name: string; category: string
   'ably': { name: 'Ably', category: 'realtime' },
   '@liveblocks/client': { name: 'Liveblocks', category: 'realtime' },
   'livekit-server-sdk': { name: 'LiveKit', category: 'realtime' },
+  '@partykit/client': { name: 'PartyKit', category: 'realtime' },
   // Vector databases
   '@pinecone-database/pinecone': { name: 'Pinecone', category: 'vector-db' },
   'chromadb': { name: 'ChromaDB', category: 'vector-db' },
   '@qdrant/js-client-rest': { name: 'Qdrant', category: 'vector-db' },
+  '@qdrant/qdrant-js': { name: 'Qdrant', category: 'vector-db' },
   'weaviate-ts-client': { name: 'Weaviate', category: 'vector-db' },
+  'weaviate-client': { name: 'Weaviate', category: 'vector-db' },
+  '@zilliz/milvus2-sdk-node': { name: 'Milvus', category: 'vector-db' },
   // CMS
   '@sanity/client': { name: 'Sanity', category: 'cms' },
   'next-sanity': { name: 'Sanity', category: 'cms' },
   'contentful': { name: 'Contentful', category: 'cms' },
   'payload': { name: 'Payload CMS', category: 'cms' },
+  '@keystatic/core': { name: 'Keystatic', category: 'cms' },
+  // Analytics (posthog-node for server-side)
+  'posthog-node': { name: 'PostHog', category: 'analytics' },
+  '@vercel/speed-insights': { name: 'Vercel Speed Insights', category: 'analytics' },
   // i18n
   'i18next': { name: 'i18next', category: 'i18n' },
   'next-intl': { name: 'next-intl', category: 'i18n' },
