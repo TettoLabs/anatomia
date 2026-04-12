@@ -40,8 +40,10 @@ export interface FindingRule {
 
 // ── Rules ──────────────────────────────────────────────────────────────
 
+import { checkHardcodedSecrets } from './rules/secrets.js';
+
 const FINDING_RULES: FindingRule[] = [
-  // Rules added in subsequent commits
+  { id: 'hardcoded-secrets', check: checkHardcodedSecrets },
 ];
 
 // ── Generator ──────────────────────────────────────────────────────────
