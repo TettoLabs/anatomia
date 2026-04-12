@@ -11,16 +11,13 @@
  * edit and the priority is visible at a glance.
  *
  * To add a new Node framework:
- *   1. Create `detectors/node/<framework>.ts` exporting `async detectX(rootPath, deps)`.
+ *   1. Create `detectors/node/<framework>.ts` exporting `detectX(deps, hints)`.
  *   2. Import it here.
  *   3. Insert it in this array at the correct priority position.
  *
  * Signature contract: every detector in this array MUST accept
- * `(rootPath: string, dependencies: string[])` and return `Promise<Detection>`.
- * Detectors that don't actually read `rootPath` should name the param
- * `_rootPath` (see `detectOtherNodeFrameworks`) — the registry keeps the
- * signature uniform so dispatch is a simple for-loop instead of per-detector
- * wrappers or runtime type checks.
+ * `(dependencies: string[], hints: FrameworkHintEntry[])` and return `Detection`.
+ * Lane 0 converted all detectors from async rootPath-based to sync census-based.
  */
 
 import type { Detection } from '../python/fastapi.js';

@@ -131,19 +131,15 @@ function discoverFrameworkHints(
     for (const { pattern, framework, check } of FRAMEWORK_HINTS) {
       const full = path.join(root.absolutePath, pattern);
       if (existsSync(full)) {
-        const isDir = check === 'dir';
         try {
-          // Verify the check type matches reality
-          const stat = existsSync(full) && (isDir
-            ? readdirSync(full).length > 0  // non-empty dir
-            : true);  // file exists
-          if (stat) {
-            hints.push({
-              framework,
-              sourceRootPath: root.relativePath,
-              path: path.relative(rootPath, full),
-            });
-          }
+          const isDir = check === 'dir';
+          // For directories, verify non-empty (empty dirs aren't evidence)
+          if (isDir && readdirSync(full).length === 0) continue;
+          hints.push({
+            framework,
+            sourceRootPath: root.relativePath,
+            path: path.relative(rootPath, full),
+          });
         } catch {
           // Skip inaccessible entries
         }
@@ -268,6 +264,7 @@ export async function buildCensus(rootPath: string): Promise<ProjectCensus> {
     result = await getPackages(normalizedRoot);
   } catch {
     // Non-Node project or empty directory — continue with fallback
+    // Lane 0+ target: non-Node monorepo support (Python workspaces, Go modules)
   }
 
   const isSingleRepo = !result || result.tool.type === 'root';

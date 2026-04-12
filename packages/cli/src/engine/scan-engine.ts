@@ -522,6 +522,10 @@ export async function scanProject(
 
   if (options.depth === 'deep') {
     try {
+      // Sample files ONCE with proportional sampler (Disease B cure), thread to both consumers.
+      const { sampleFilesProportional } = await import('./sampling/proportionalSampler.js');
+      const sampledFiles = await sampleFilesProportional(census, 500);
+
       // Dynamic imports — tree-sitter loads WASM at module-evaluation time.
       const { parseProjectFiles } = await import('./parsers/treeSitter.js');
       const intermediateResult = {
@@ -534,17 +538,25 @@ export async function scanProject(
         structure,
       };
 
-      const parsed = structure
-        ? await parseProjectFiles(rootPath, intermediateResult as import('./types/index.js').AnalysisResult, { maxFiles: 50 })
-        : undefined;
+      const parsed = await parseProjectFiles(
+        rootPath,
+        intermediateResult as import('./types/index.js').AnalysisResult,
+        { preSampledFiles: sampledFiles },
+      );
 
       if (parsed) {
         const withParsed = { ...intermediateResult, parsed } as import('./types/index.js').AnalysisResult;
         const { inferPatterns } = await import('./analyzers/patterns/index.js');
-        patterns = await inferPatterns(rootPath, withParsed);
+        patterns = await inferPatterns(rootPath, withParsed, {
+          deps,
+          devDeps: Object.keys(census.devDeps),
+        });
 
         const { detectConventions } = await import('./analyzers/conventions/index.js');
-        conventions = await detectConventions(rootPath, { ...withParsed, patterns });
+        conventions = await detectConventions(rootPath, { ...withParsed, patterns }, {
+          preSampledFiles: sampledFiles,
+          tsconfigEntries: census.configs.tsconfigs,
+        });
       }
     } catch (err) {
       analyzerFailure = err instanceof Error ? err.message : 'unknown error';

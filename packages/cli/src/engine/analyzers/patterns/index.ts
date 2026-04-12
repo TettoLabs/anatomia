@@ -27,9 +27,6 @@ import { createEmptyPatternAnalysis } from '../../types/patterns.js';
 import { detectFromDependencies } from './dependencies.js';
 import { confirmPatternsWithTreeSitter } from './confirmation.js';
 import { filterByConfidence } from './confidence.js';
-import { readNodeDependencies } from '../../parsers/node.js';
-import { readPythonDependencies } from '../../parsers/python.js';
-import { readGoDependencies } from '../../parsers/go.js';
 
 // ============================================================================
 // MAIN ORCHESTRATOR (CP4)
@@ -60,34 +57,17 @@ import { readGoDependencies } from '../../parsers/go.js';
  */
 export async function inferPatterns(
   rootPath: string,
-  analysis: AnalysisResult
+  analysis: AnalysisResult,
+  options?: { deps?: string[]; devDeps?: string[] },
 ): Promise<PatternAnalysis> {
   const startTime = Date.now();
 
   try {
     // Stage 1: Dependency-based detection (CP0)
-    // Read deps at call site — detectFromDependencies now receives pre-read lists.
-    // This legacy path reads from filesystem; census-based callers pass census.allDeps.
+    // Use pre-read deps from census if provided, else fall back to filesystem.
     const stage1Start = Date.now();
-    let deps: string[] = [];
-    let devDeps: string[] = [];
-    try {
-      const pt = analysis.projectType;
-      if (pt === 'python') {
-        deps = await readPythonDependencies(rootPath);
-      } else if (pt === 'node') {
-        deps = await readNodeDependencies(rootPath);
-        // devDeps read from package.json for testing pattern detection
-        try {
-          const { readFile } = await import('../../utils/file.js');
-          const { joinPath } = await import('../../utils/file.js');
-          const content = await readFile(joinPath(rootPath, 'package.json'));
-          devDeps = Object.keys(JSON.parse(content).devDependencies || {});
-        } catch { /* no package.json */ }
-      } else if (pt === 'go') {
-        deps = await readGoDependencies(rootPath);
-      }
-    } catch { /* dep parsing failed — continue with empty */ }
+    const deps = options?.deps ?? [];
+    const devDeps = options?.devDeps ?? [];
 
     const dependencyPatterns = await detectFromDependencies(
       deps,
