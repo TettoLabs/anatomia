@@ -1,24 +1,15 @@
 /**
  * Main framework detector (dispatches to language-specific registries).
  *
- * Item 17: per-language detector order used to live here as hand-rolled
- * `if (x.framework) return x` chains, duplicating the priority chain that
- * was also implicit in each detector file's companion comment. The order
- * now lives in `detectors/node/framework-registry.ts` and
- * `detectors/python/framework-registry.ts` as an array of detector
- * references. Adding or reordering a detector is a single-file edit in
- * the registry; this file just iterates.
+ * Item 17: per-language detector order lives in `detectors/node/framework-registry.ts`
+ * and `detectors/python/framework-registry.ts` as arrays of detector references.
  *
- * Go and Rust don't need registries yet: each language has a SINGLE
- * detector function that handles all frameworks internally. When either
- * language grows to multiple detector files, add a similar registry.
+ * Lane 0: detectors receive pre-read dependency lists and census framework hints
+ * instead of rootPath. The function is synchronous — no filesystem reads.
  */
 
 import type { ProjectType } from '../types/index.js';
-import { readPythonDependencies } from '../parsers/python.js';
-import { readNodeDependencies } from '../parsers/node.js';
-import { readGoDependencies } from '../parsers/go.js';
-import { readRustDependencies } from '../parsers/rust.js';
+import type { FrameworkHintEntry } from '../types/census.js';
 
 import { NODE_FRAMEWORK_DETECTORS } from './node/framework-registry.js';
 import { PYTHON_FRAMEWORK_DETECTORS } from './python/framework-registry.js';
@@ -37,23 +28,24 @@ export interface FrameworkResult {
  * Dispatches to the per-language registry (Node/Python) or the single
  * detector function (Go/Rust) based on project type.
  *
- * @param rootPath - Project root directory
+ * @param deps - Dependency package names
  * @param projectType - Detected project type
- * @returns Framework detection result with confidence
+ * @param hints - Census framework hint entries
  */
-export async function detectFramework(
-  rootPath: string,
-  projectType: ProjectType
-): Promise<FrameworkResult> {
+export function detectFramework(
+  deps: string[],
+  projectType: ProjectType,
+  hints: FrameworkHintEntry[] = []
+): FrameworkResult {
   switch (projectType) {
     case 'python':
-      return detectPythonFramework(rootPath);
+      return detectPythonFramework(deps, hints);
     case 'node':
-      return detectNodeFramework(rootPath);
+      return detectNodeFramework(deps, hints);
     case 'go':
-      return detectGoFrameworkFromProject(rootPath);
+      return detectGoFramework(deps);
     case 'rust':
-      return detectRustFrameworkFromProject(rootPath);
+      return detectRustFramework(deps);
     default:
       return { framework: null, confidence: 0.0, indicators: [] };
   }
@@ -65,42 +57,18 @@ const NOT_FOUND: FrameworkResult = {
   indicators: [],
 };
 
-/**
- * @param rootPath
- */
-async function detectPythonFramework(rootPath: string): Promise<FrameworkResult> {
-  const deps = await readPythonDependencies(rootPath);
+function detectPythonFramework(deps: string[], hints: FrameworkHintEntry[]): FrameworkResult {
   for (const detect of PYTHON_FRAMEWORK_DETECTORS) {
-    const result = await detect(rootPath, deps);
+    const result = detect(deps, hints);
     if (result.framework) return result;
   }
   return NOT_FOUND;
 }
 
-/**
- * @param rootPath
- */
-async function detectNodeFramework(rootPath: string): Promise<FrameworkResult> {
-  const deps = await readNodeDependencies(rootPath);
+function detectNodeFramework(deps: string[], hints: FrameworkHintEntry[]): FrameworkResult {
   for (const detect of NODE_FRAMEWORK_DETECTORS) {
-    const result = await detect(rootPath, deps);
+    const result = detect(deps, hints);
     if (result.framework) return result;
   }
   return NOT_FOUND;
-}
-
-/**
- * @param rootPath
- */
-async function detectGoFrameworkFromProject(rootPath: string): Promise<FrameworkResult> {
-  const deps = await readGoDependencies(rootPath);
-  return detectGoFramework(deps);
-}
-
-/**
- * @param rootPath
- */
-async function detectRustFrameworkFromProject(rootPath: string): Promise<FrameworkResult> {
-  const deps = await readRustDependencies(rootPath);
-  return detectRustFramework(deps);
 }

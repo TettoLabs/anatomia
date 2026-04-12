@@ -24,17 +24,31 @@ import type {
 
 /** Files that hint at a framework being present in a source root. */
 const FRAMEWORK_HINTS: Array<{ pattern: string; framework: string; check: 'file' | 'dir' }> = [
+  // Next.js
   { pattern: 'next.config.ts', framework: 'nextjs', check: 'file' },
   { pattern: 'next.config.js', framework: 'nextjs', check: 'file' },
   { pattern: 'next.config.mjs', framework: 'nextjs', check: 'file' },
   { pattern: 'app', framework: 'nextjs-app-dir', check: 'dir' },
   { pattern: 'pages', framework: 'nextjs', check: 'dir' },
+  // Remix
   { pattern: 'remix.config.js', framework: 'remix', check: 'file' },
   { pattern: 'remix.config.ts', framework: 'remix', check: 'file' },
+  // Astro
   { pattern: 'astro.config.mjs', framework: 'astro', check: 'file' },
   { pattern: 'astro.config.ts', framework: 'astro', check: 'file' },
+  // NestJS
   { pattern: 'src/main.ts', framework: 'nestjs', check: 'file' },
+  // Express (entry points that signal Express usage)
+  { pattern: 'server.js', framework: 'express', check: 'file' },
+  { pattern: 'src/server.js', framework: 'express', check: 'file' },
+  { pattern: 'app.js', framework: 'express', check: 'file' },
+  { pattern: 'src/app.js', framework: 'express', check: 'file' },
+  // React (standalone, not via Next.js/Remix)
+  { pattern: 'src/App.tsx', framework: 'react', check: 'file' },
+  { pattern: 'src/App.jsx', framework: 'react', check: 'file' },
+  // Python
   { pattern: 'manage.py', framework: 'django', check: 'file' },
+  { pattern: 'app.py', framework: 'flask', check: 'file' },
 ];
 
 /** Deployment config file → platform name. */

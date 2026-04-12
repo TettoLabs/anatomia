@@ -12,9 +12,9 @@ import type { Detection } from './python/fastapi.js';
  * @param dependencies - Dependency list from go.mod
  * @returns Detection result
  */
-export async function detectGoFramework(
+export function detectGoFramework(
   dependencies: string[]
-): Promise<Detection> {
+): Detection {
   // Check in priority order (most common first)
 
   if (dependencies.includes('github.com/gin-gonic/gin')) {

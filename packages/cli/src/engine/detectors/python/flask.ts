@@ -2,23 +2,19 @@
  * Flask framework detector
  */
 
-import { scanForImports } from '../../utils/importScanner.js';
 import { calculateConfidence } from '../../utils/confidence.js';
-import { exists } from '../../utils/file.js';
-import * as path from 'node:path';
 import type { Detection } from './fastapi.js';
+import type { FrameworkHintEntry } from '../../types/census.js';
 
 /**
- * Detect Flask framework
+ * Detect Flask framework.
  *
- * @param rootPath - Project root directory
- * @param dependencies - Dependency list
- * @returns Detection result
+ * Note: scanForImports (import verification) deferred to Lane 0+ analyzer scope.
  */
-export async function detectFlask(
-  rootPath: string,
-  dependencies: string[]
-): Promise<Detection> {
+export function detectFlask(
+  dependencies: string[],
+  hints: FrameworkHintEntry[]
+): Detection {
   const dependencyFound = dependencies.includes('flask');
   if (!dependencyFound) {
     return { framework: null, confidence: 0.0, indicators: [] };
@@ -26,27 +22,17 @@ export async function detectFlask(
 
   const indicators: string[] = ['flask in dependencies'];
 
-  // Scan for imports
-  const importScan = await scanForImports(rootPath, 'flask');
-  if (importScan.found) {
-    indicators.push(`flask imports found (${importScan.count} occurrences)`);
-  }
-
-  // Check for app.py (common Flask convention)
-  const hasAppPy = await exists(path.join(rootPath, 'app.py'));
+  // Check for app.py via census hints (common Flask convention)
+  const hasAppPy = hints.some(h => h.framework === 'flask');
   if (hasAppPy) {
     indicators.push('app.py found');
   }
 
   const confidence = calculateConfidence({
     dependencyFound: true,
-    importsFound: importScan.found,
+    importsFound: false,  // deferred to Lane 0+ (analyzer scope)
     configFilesFound: hasAppPy,
   });
 
-  return {
-    framework: 'flask',
-    confidence,
-    indicators,
-  };
+  return { framework: 'flask', confidence, indicators };
 }

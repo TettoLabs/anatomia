@@ -20,20 +20,15 @@
  */
 
 import type { Detection } from '../python/fastapi.js';
+import type { FrameworkHintEntry } from '../../types/census.js';
 
 /**
  * Detect Remix / React Router v7.
- *
- * @param _rootPath - Project root (unused; kept for signature uniformity
- *   with NODE_FRAMEWORK_DETECTORS — Item 17)
- * @param dependencies - Dependency list
- * @returns Detection result with framework name 'react-router' (v7) or
- *   'remix' (legacy), null if neither
  */
-export async function detectRemix(
-  _rootPath: string,
-  dependencies: string[]
-): Promise<Detection> {
+export function detectRemix(
+  dependencies: string[],
+  _hints: FrameworkHintEntry[]
+): Detection {
   // React Router v7 (the new name) — check first, this is the forward path
   if (dependencies.includes('@react-router/dev')) {
     return {

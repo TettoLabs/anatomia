@@ -8,6 +8,10 @@ export { ParserManager } from './parsers/treeSitter.js';
 import { detectProjectType } from './detectors/projectType.js';
 import { detectFramework } from './detectors/framework.js';
 import { analyzeStructure } from './analyzers/structure/index.js';
+import { readNodeDependencies } from './parsers/node.js';
+import { readPythonDependencies } from './parsers/python.js';
+import { readGoDependencies } from './parsers/go.js';
+import { readRustDependencies } from './parsers/rust.js';
 
 // Version constant
 const VERSION = '0.2.0';
@@ -91,10 +95,18 @@ export async function analyze(
     // Phase 1: Project type detection
     const projectTypeResult = await detectProjectType(rootPath);
 
-    // Phase 2: Framework detection
-    const frameworkResult = await detectFramework(
-      rootPath,
-      projectTypeResult.type
+    // Phase 2: Framework detection (read deps at call site — legacy path, Step 7 deletes this)
+    let legacyDeps: string[] = [];
+    try {
+      const pt = projectTypeResult.type;
+      if (pt === 'python') legacyDeps = await readPythonDependencies(rootPath);
+      else if (pt === 'node') legacyDeps = await readNodeDependencies(rootPath);
+      else if (pt === 'go') legacyDeps = await readGoDependencies(rootPath);
+      else if (pt === 'rust') legacyDeps = await readRustDependencies(rootPath);
+    } catch { /* dep reading failed — continue with empty */ }
+    const frameworkResult = detectFramework(
+      legacyDeps,
+      projectTypeResult.type,
     );
 
     // Phase 3: Structure analysis (STEP_1.2 - optional)

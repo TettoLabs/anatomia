@@ -24,6 +24,7 @@
  */
 
 import type { Detection } from '../python/fastapi.js';
+import type { FrameworkHintEntry } from '../../types/census.js';
 import { detectNextjs } from './nextjs.js';
 import { detectRemix } from './remix.js';
 import { detectNestjs } from './nestjs.js';
@@ -32,9 +33,9 @@ import { detectReact } from './react.js';
 import { detectOtherNodeFrameworks } from './other.js';
 
 export type NodeFrameworkDetector = (
-  rootPath: string,
-  dependencies: string[]
-) => Promise<Detection>;
+  dependencies: string[],
+  hints: FrameworkHintEntry[]
+) => Detection;
 
 /**
  * Priority-ordered list of Node framework detectors.

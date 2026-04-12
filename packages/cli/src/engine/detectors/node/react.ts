@@ -5,24 +5,17 @@
  * (Next.js includes React - disambiguation required)
  */
 
-import { exists } from '../../utils/file.js';
-import * as path from 'node:path';
 import type { Detection } from '../python/fastapi.js';
+import type { FrameworkHintEntry } from '../../types/census.js';
 
 /**
- * Detect React SPA (excludes Next.js)
- *
- * Only called if Next.js NOT detected (priority order enforced in orchestrator)
- *
- * @param rootPath - Project root directory
- * @param dependencies - Dependency list
- * @returns Detection result
+ * Detect React SPA (excludes Next.js).
+ * Only called if Next.js NOT detected (priority order enforced in orchestrator).
  */
-export async function detectReact(
-  rootPath: string,
-  dependencies: string[]
-): Promise<Detection> {
-  // Check React present AND Next.js absent
+export function detectReact(
+  dependencies: string[],
+  hints: FrameworkHintEntry[]
+): Detection {
   const hasReact = dependencies.includes('react');
   const hasNext = dependencies.includes('next');
 
@@ -31,15 +24,13 @@ export async function detectReact(
   }
 
   const indicators: string[] = ['react in dependencies'];
-  let confidence = 0.75;  // Lower base (React very common, might just be component library)
+  let confidence = 0.75;
 
-  // Verify it's actually a React app (not just using React components)
-  const hasAppFile =
-    (await exists(path.join(rootPath, 'src/App.tsx'))) ||
-    (await exists(path.join(rootPath, 'src/App.jsx')));
+  // Verify it's actually a React app via census hints
+  const hasAppFile = hints.some(h => h.framework === 'react');
 
   if (hasAppFile) {
-    confidence = 0.90;  // Definitely a React SPA
+    confidence = 0.90;
     indicators.push('App.tsx/jsx found (React SPA)');
   }
 
