@@ -8,8 +8,9 @@
  */
 
 import * as path from 'node:path';
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import { getPackages } from '@manypkg/get-packages';
+import { getTsconfig } from 'get-tsconfig';
 import type {
   ProjectCensus,
   SourceRoot,
@@ -160,11 +161,17 @@ function discoverTsconfigs(
       let paths: Record<string, string[]> | null = null;
       let baseUrl: string | null = null;
       try {
-        const raw = JSON.parse(readFileSync(tsconfigPath, 'utf-8'));
-        if (raw.compilerOptions?.paths) paths = raw.compilerOptions.paths;
-        if (raw.compilerOptions?.baseUrl) baseUrl = raw.compilerOptions.baseUrl;
+        // get-tsconfig handles JSONC (comments, trailing commas) and
+        // resolves `extends` chains — a tsconfig that inherits paths from
+        // a shared config package gets the resolved result.
+        const result = getTsconfig(root.absolutePath);
+        if (result) {
+          const opts = result.config.compilerOptions;
+          if (opts?.paths) paths = opts.paths as Record<string, string[]>;
+          if (opts?.baseUrl) baseUrl = opts.baseUrl as string;
+        }
       } catch {
-        // Malformed tsconfig — record it exists but skip paths
+        // Malformed or unresolvable tsconfig — record it exists but skip paths
       }
       entries.push({
         sourceRootPath: root.relativePath,

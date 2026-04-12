@@ -326,13 +326,11 @@ export async function parseTsconfigAlias(
     const withPaths = tsconfigEntries.find(t => t.paths !== null);
     paths = withPaths?.paths ?? null;
   } else {
-    // Fallback: read from filesystem (legacy path)
-    const tsconfigPath = joinPath(rootPath, 'tsconfig.json');
-    if (!(await exists(tsconfigPath))) return null;
+    // Fallback: read from filesystem using get-tsconfig (handles JSONC + extends)
     try {
-      const content = await readFile(tsconfigPath);
-      const config = JSON.parse(content);
-      paths = config.compilerOptions?.paths ?? null;
+      const { getTsconfig } = await import('get-tsconfig');
+      const result = getTsconfig(rootPath);
+      paths = (result?.config.compilerOptions?.paths as Record<string, string[]>) ?? null;
     } catch {
       return null;
     }
