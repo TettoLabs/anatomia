@@ -43,14 +43,30 @@ export const AUTH_PACKAGES: Record<string, string> = {
 };
 
 /**
- * Testing packages for dependency detection
+ * Testing packages for dependency detection.
+ *
+ * Order matters for display: the first framework to appear is treated as
+ * the "primary" testing framework by any consumer that wants a single name.
+ * Unit-test runners come first (Vitest, Jest, Mocha), then E2E runners
+ * (Playwright, Cypress), then helpers (Testing Library, Supertest). This
+ * matches the user's mental model of "which framework do I run `test` for"
+ * — unit runners are the entry point in nearly every multi-framework
+ * project.
+ *
+ * SCAN-050: `stack.testing` is `string[]`, so every matched framework is
+ * collected (deduplicated by display name via a Set). A project with Jest
+ * and Playwright reports both, not just "whichever alphabetised first".
  */
 export const TESTING_PACKAGES: Record<string, string> = {
+  // Unit runners first — these are the "primary framework" the display
+  // layer falls back to when it needs a single name.
   'vitest': 'Vitest',
-  'playwright': 'Playwright', '@playwright/test': 'Playwright',
   'jest': 'Jest', '@jest/globals': 'Jest',
-  'cypress': 'Cypress',
   'mocha': 'Mocha',
+  // E2E runners
+  'playwright': 'Playwright', '@playwright/test': 'Playwright',
+  'cypress': 'Cypress',
+  // Helpers / companion libraries
   '@testing-library/react': 'Testing Library',
   '@testing-library/jest-dom': 'Testing Library',
   'supertest': 'Supertest',
@@ -159,7 +175,13 @@ export function detectAiSdk(allDeps: Record<string, string>): string | null {
 export interface DependencyDetectionResult {
   database: string | null;
   auth: string | null;
-  testing: string | null;
+  /**
+   * Every testing framework detected in the dependency map, deduplicated
+   * by display name. Empty array means no testing framework detected.
+   * SCAN-050: was `string | null` (only the first match), which silently
+   * dropped every secondary framework in multi-framework projects.
+   */
+  testing: string[];
   payments: string | null;
 }
 
@@ -190,7 +212,7 @@ export function detectFromDeps(
   const result: DependencyDetectionResult = {
     database: null,
     auth: null,
-    testing: null,
+    testing: [],
     payments: null,
   };
 
@@ -200,9 +222,17 @@ export function detectFromDeps(
   for (const [pkg, name] of Object.entries(AUTH_PACKAGES)) {
     if (allDeps[pkg]) { result.auth = name; break; }
   }
+  // Testing: collect every match, dedup by display name via Set. The order
+  // of TESTING_PACKAGES decides iteration order; the Set preserves insertion
+  // order so the first matched framework ends up at index 0 (the "primary"
+  // for display consumers that want a single name).
+  const testingSeen = new Set<string>();
   for (const [pkg, name] of Object.entries(TESTING_PACKAGES)) {
-    if (allDeps[pkg]) { result.testing = name; break; }
+    if (allDeps[pkg] && !testingSeen.has(name)) {
+      testingSeen.add(name);
+    }
   }
+  result.testing = Array.from(testingSeen);
   for (const [pkg, name] of Object.entries(PAYMENT_PACKAGES)) {
     if (allDeps[pkg]) { result.payments = name; break; }
   }

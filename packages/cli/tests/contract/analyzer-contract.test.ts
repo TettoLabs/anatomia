@@ -57,7 +57,7 @@ describe('Engine Interface Contract', () => {
           framework: 'FastAPI',
           database: 'PostgreSQL',
           auth: null,
-          testing: 'pytest',
+          testing: ['pytest'],
           payments: null,
           workspace: null,
           aiSdk: null,

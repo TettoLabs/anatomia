@@ -114,12 +114,18 @@ export function computeSkillManifest(engineResult: EngineResult): string[] {
  * @returns Array of display-ready stack strings (e.g., ["TypeScript", "Next.js", "Supabase"])
  */
 export function getStackSummary(result: EngineResult): string[] {
+  // stack.testing is `string[]` (SCAN-050). Join detected frameworks with
+  // a comma so multi-framework projects surface correctly in the single-
+  // line stack summary; empty array means "no testing detected" and is
+  // filtered out alongside the other null values.
+  const testingDisplay =
+    result.stack.testing.length > 0 ? result.stack.testing.join(', ') : null;
   return [
     result.stack.language,
     result.stack.framework,
     result.stack.database,
     result.stack.auth,
-    result.stack.testing,
+    testingDisplay,
     result.stack.aiSdk,
     result.stack.payments,
   ].filter(Boolean) as string[];

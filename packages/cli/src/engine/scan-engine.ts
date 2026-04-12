@@ -495,9 +495,12 @@ export async function scanProject(
     if (!stack.auth && authLib) {
       stack.auth = getPatternDisplayName(authLib);
     }
+    // Fall back to the pattern analyzer only if dependency detection
+    // turned up nothing — this is how pytest / go-test surface on non-Node
+    // projects, where TESTING_PACKAGES doesn't apply.
     const testLib = getPatternLibrary(analysis.patterns?.testing);
-    if (!stack.testing && testLib) {
-      stack.testing = getPatternDisplayName(testLib);
+    if (stack.testing.length === 0 && testLib) {
+      stack.testing = [getPatternDisplayName(testLib)];
     }
   }
 
@@ -576,13 +579,13 @@ export async function scanProject(
   // distinguish "no testing at all" (actionable) from "tests exist but
   // framework unrecognized" (informational — common for Go's built-in
   // `go test` and lesser-known frameworks).
-  if (stack.testing === null && files.test === 0) {
+  if (stack.testing.length === 0 && files.test === 0) {
     blindSpots.push({
       area: 'Testing',
       issue: 'No test framework or test files detected',
       resolution: 'Add a test framework (vitest, jest, pytest) and write tests, or confirm tests live elsewhere.',
     });
-  } else if (stack.testing === null && files.test > 0) {
+  } else if (stack.testing.length === 0 && files.test > 0) {
     blindSpots.push({
       area: 'Testing',
       issue: `${files.test} test files found but test framework not identified in dependencies`,

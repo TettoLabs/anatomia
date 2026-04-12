@@ -117,7 +117,7 @@ function formatHumanReadable(
     ['AI', result.stack.aiSdk],
     ['Database', result.stack.database],
     ['Auth', result.stack.auth],
-    ['Testing', result.stack.testing],
+    ['Testing', result.stack.testing.length > 0 ? result.stack.testing.join(', ') : null],
     ['Payments', result.stack.payments],
     ['Workspace', result.stack.workspace],
   ];

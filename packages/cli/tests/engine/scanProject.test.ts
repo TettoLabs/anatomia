@@ -59,7 +59,7 @@ describe('scanProject()', () => {
 
     expect(result.stack.framework).toBe('Next.js');
     expect(result.stack.database).toBe('Prisma');
-    expect(result.stack.testing).toBe('Vitest');
+    expect(result.stack.testing).toEqual(['Vitest']);
   });
 
   it('detects git info when repo exists', async () => {

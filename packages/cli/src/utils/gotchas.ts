@@ -33,9 +33,14 @@ export function matchGotchas(result: EngineResult): Map<string, string[]> {
 
   for (const gotcha of GOTCHAS) {
     const allMatch = Object.entries(gotcha.triggers).every(([key, value]) => {
-      // Primary stack field match
-      const stackValue = (result.stack as Record<string, string | null>)[key];
+      // Primary stack field match. Most fields are `string | null`, but
+      // stack.testing is `string[]` (SCAN-050) — every framework detected,
+      // deduped. Without the array-aware branch, `['Vitest'] === 'Vitest'`
+      // is false and the existing vitest-watch-mode gotcha would silently
+      // stop firing on every Vitest project, not just multi-framework ones.
+      const stackValue = (result.stack as Record<string, string | string[] | null>)[key];
       if (stackValue === value) return true;
+      if (Array.isArray(stackValue) && stackValue.includes(value)) return true;
       // Service category match (S19/SETUP-042)
       if (result.externalServices.some(svc => svc.category === key && svc.name === value)) {
         return true;

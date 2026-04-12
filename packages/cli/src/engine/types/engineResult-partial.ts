@@ -39,7 +39,10 @@ export const EngineResultPartialSchema = z.object({
     framework: z.string().nullable(),
     database: z.string().nullable(),
     auth: z.string().nullable(),
-    testing: z.string().nullable(),
+    // SCAN-050: was `string | null`, now an array of every detected
+    // testing framework. Empty array = no framework detected. Consumers
+    // that want a single name use `.join(', ')` or index 0.
+    testing: z.array(z.string()),
     payments: z.string().nullable(),
     workspace: z.string().nullable(),
     aiSdk: z.string().nullable(),

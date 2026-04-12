@@ -60,7 +60,18 @@ export interface EngineResult {
     framework: string | null;
     database: string | null;
     auth: string | null;
-    testing: string | null;
+    /**
+     * Every testing framework detected in dependencies, deduplicated by
+     * display name. Empty array means "no testing detected"; previously
+     * `string | null`, which silently dropped every non-primary framework
+     * in multi-framework projects. See SCAN-050.
+     *
+     * Consumers that want a single display name should use
+     * `testing[0] ?? null` or `testing.join(', ')` — the first entry is
+     * implicitly "primary" because TESTING_PACKAGES orders unit runners
+     * before E2E and helpers.
+     */
+    testing: string[];
     payments: string | null;
     workspace: string | null;
     aiSdk: string | null;
@@ -294,7 +305,7 @@ export function createEmptyEngineResult(): EngineResult {
   return {
     schemaVersion: '1.0',
     overview: { project: 'unknown', scannedAt: new Date().toISOString(), depth: 'surface' },
-    stack: { language: null, framework: null, database: null, auth: null, testing: null, payments: null, workspace: null, aiSdk: null },
+    stack: { language: null, framework: null, database: null, auth: null, testing: [], payments: null, workspace: null, aiSdk: null },
     files: { source: 0, test: 0, config: 0, total: 0 },
     structure: [],
     commands: { build: null, test: null, lint: null, dev: null, packageManager: null, all: {} },

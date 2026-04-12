@@ -993,13 +993,29 @@ export async function checkConsistency(
         // Semantic cross-ref (S19/SETUP-026): prefer detected stack.testing
         // from scan.json over a hardcoded keyword list. Falls back to the
         // test command itself if scan.json is unavailable.
+        // SCAN-050: stack.testing is `string[]` — a match on ANY detected
+        // framework satisfies the cross-ref. We only build a mismatch if
+        // NONE of the detected frameworks appear in the Detected section.
         const testingStack = (scanJson?.['stack'] as Record<string, unknown> | undefined)?.['testing'];
-        const referenceName = typeof testingStack === 'string' && testingStack.length > 0
-          ? testingStack
-          : testCmd;
-        if (!detectedSection!.toLowerCase().includes(referenceName.toLowerCase())) {
+        const testingFrameworks: string[] = Array.isArray(testingStack)
+          ? (testingStack.filter((v): v is string => typeof v === 'string'))
+          : typeof testingStack === 'string' && testingStack.length > 0
+            ? [testingStack]
+            : [];
+        const detectedLower = detectedSection!.toLowerCase();
+        if (testingFrameworks.length > 0) {
+          const anyFrameworkMentioned = testingFrameworks.some(name =>
+            detectedLower.includes(name.toLowerCase())
+          );
+          if (!anyFrameworkMentioned) {
+            mismatches.push(
+              `testing: ana.json test command set but testing-standards Detected doesn't mention any of "${testingFrameworks.join(', ')}"`
+            );
+          }
+        } else if (!detectedLower.includes(testCmd.toLowerCase())) {
+          // No detected frameworks — fall back to matching the raw test command.
           mismatches.push(
-            `testing: ana.json test command set but testing-standards Detected doesn't mention "${referenceName}"`
+            `testing: ana.json test command set but testing-standards Detected doesn't mention "${testCmd}"`
           );
         }
       }
