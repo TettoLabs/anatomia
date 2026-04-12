@@ -10,9 +10,9 @@ import type { Detection } from './python/fastapi.js';
  * @param dependencies - Dependency list from Cargo.toml
  * @returns Detection result
  */
-export async function detectRustFramework(
+export function detectRustFramework(
   dependencies: string[]
-): Promise<Detection> {
+): Detection {
   // Axum (check for Tokio/Tower ecosystem)
   if (dependencies.includes('axum')) {
     const hasTokio = dependencies.includes('tokio');

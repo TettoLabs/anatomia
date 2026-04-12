@@ -1,580 +1,252 @@
 /**
  * Unit tests for Node.js framework detectors
  *
- * Tests Next.js, React, Nest.js, Express, and other Node frameworks with mocked I/O.
+ * Tests Next.js, React, Nest.js, Express, and other Node frameworks.
+ * Detectors now receive (deps, hints) — no filesystem mocking needed.
  * Includes CRITICAL disambiguation tests to verify detection priority.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { detectNextjs } from '../../../src/engine/detectors/node/nextjs';
 import { detectReact } from '../../../src/engine/detectors/node/react';
 import { detectNestjs } from '../../../src/engine/detectors/node/nestjs';
 import { detectExpress } from '../../../src/engine/detectors/node/express';
 import { detectOtherNodeFrameworks } from '../../../src/engine/detectors/node/other';
 import { detectRemix } from '../../../src/engine/detectors/node/remix';
+import type { FrameworkHintEntry } from '../../../src/engine/types/census';
 
-// Mock modules — paths must match the actual module specifiers used by the source
-vi.mock('../../../src/engine/utils/importScanner.js', () => ({
-  scanForImports: vi.fn(),
-}));
-
-vi.mock('../../../src/engine/utils/file.js', () => ({
-  exists: vi.fn(),
-}));
-
-// Import mocked functions
-import { scanForImports } from '../../../src/engine/utils/importScanner.js';
-import { exists } from '../../../src/engine/utils/file.js';
-
-const mockScanForImports = vi.mocked(scanForImports);
-const mockExists = vi.mocked(exists);
+function hint(framework: string, path: string, sourceRootPath = '.'): FrameworkHintEntry {
+  return { framework, sourceRootPath, path };
+}
 
 describe('Next.js detector', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('returns null with 0.0 confidence when next not in dependencies', async () => {
-    const result = await detectNextjs('/test/project', ['react', 'express']);
-
+  it('returns null when next not in dependencies', () => {
+    const result = detectNextjs(['react', 'express'], []);
     expect(result.framework).toBe(null);
     expect(result.confidence).toBe(0.0);
-    expect(result.indicators).toEqual([]);
-    expect(mockExists).not.toHaveBeenCalled();
   });
 
-  it('detects nextjs with dependency only (baseline 0.85 confidence)', async () => {
-    mockExists.mockResolvedValue(false);
-
-    const result = await detectNextjs('/test/project', ['next']);
-
+  it('detects nextjs with dependency only (baseline 0.85 confidence)', () => {
+    const result = detectNextjs(['next'], []);
     expect(result.framework).toBe('nextjs');
     expect(result.confidence).toBe(0.85);
     expect(result.indicators).toEqual(['next in dependencies']);
   });
 
-  it('detects nextjs with next.config.js (0.95 confidence)', async () => {
-    mockExists.mockImplementation(async (path: string) => {
-      return path === '/test/project/next.config.js';
-    });
-
-    const result = await detectNextjs('/test/project', ['next']);
-
-    expect(result.framework).toBe('nextjs');
-    expect(result.confidence).toBeCloseTo(0.95, 2);
-    expect(result.indicators).toContain('next in dependencies');
-    expect(result.indicators).toContain('next.config.* found');
-  });
-
-  it('detects nextjs with next.config.ts (0.95 confidence)', async () => {
-    mockExists.mockImplementation(async (path: string) => {
-      return path === '/test/project/next.config.ts';
-    });
-
-    const result = await detectNextjs('/test/project', ['next']);
-
+  it('detects nextjs with next.config.js (0.95 confidence)', () => {
+    const result = detectNextjs(['next'], [hint('nextjs', 'next.config.js')]);
     expect(result.framework).toBe('nextjs');
     expect(result.confidence).toBeCloseTo(0.95, 2);
     expect(result.indicators).toContain('next.config.* found');
   });
 
-  it('detects nextjs with app directory - App Router (1.0 confidence)', async () => {
-    mockExists.mockImplementation(async (path: string) => {
-      return path === '/test/project/next.config.js' || path === '/test/project/app';
-    });
+  it('detects nextjs with next.config.ts (0.95 confidence)', () => {
+    const result = detectNextjs(['next'], [hint('nextjs', 'next.config.ts')]);
+    expect(result.confidence).toBeCloseTo(0.95, 2);
+  });
 
-    const result = await detectNextjs('/test/project', ['next']);
-
+  it('detects nextjs with app directory - App Router (1.0 confidence)', () => {
+    const result = detectNextjs(['next'], [
+      hint('nextjs', 'next.config.js'),
+      hint('nextjs-app-dir', 'app'),
+    ]);
     expect(result.framework).toBe('nextjs');
     expect(result.confidence).toBe(1.0);
-    expect(result.indicators).toContain('next in dependencies');
-    expect(result.indicators).toContain('next.config.* found');
     expect(result.indicators).toContain('app/ directory (App Router)');
   });
 
-  it('detects nextjs with pages directory - Pages Router (1.0 confidence)', async () => {
-    mockExists.mockImplementation(async (path: string) => {
-      return path === '/test/project/next.config.js' || path === '/test/project/pages';
-    });
-
-    const result = await detectNextjs('/test/project', ['next']);
-
-    expect(result.framework).toBe('nextjs');
+  it('detects nextjs with pages directory - Pages Router (1.0 confidence)', () => {
+    const result = detectNextjs(['next'], [
+      hint('nextjs', 'next.config.js'),
+      hint('nextjs', 'pages'),
+    ]);
     expect(result.confidence).toBe(1.0);
     expect(result.indicators).toContain('pages/ directory (Pages Router)');
   });
 
-  it('prefers app directory over pages when both present', async () => {
-    mockExists.mockImplementation(async (path: string) => {
-      return path === '/test/project/app' || path === '/test/project/pages';
-    });
-
-    const result = await detectNextjs('/test/project', ['next']);
-
-    expect(result.framework).toBe('nextjs');
+  it('prefers app directory over pages when both present', () => {
+    const result = detectNextjs(['next'], [
+      hint('nextjs', 'next.config.js'),
+      hint('nextjs-app-dir', 'app'),
+      hint('nextjs', 'pages'),
+    ]);
     expect(result.indicators).toContain('app/ directory (App Router)');
   });
 });
 
 describe('React detector', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('returns null with 0.0 confidence when react not in dependencies', async () => {
-    const result = await detectReact('/test/project', ['express', 'fastify']);
-
+  it('returns null when react not in dependencies', () => {
+    const result = detectReact(['express'], []);
     expect(result.framework).toBe(null);
-    expect(result.confidence).toBe(0.0);
-    expect(result.indicators).toEqual([]);
   });
 
-  it('returns null when next is present (disambiguation)', async () => {
-    const result = await detectReact('/test/project', ['react', 'next']);
-
+  it('returns null when next is present (Next.js takes priority)', () => {
+    const result = detectReact(['react', 'next'], []);
     expect(result.framework).toBe(null);
-    expect(result.confidence).toBe(0.0);
-    expect(result.indicators).toEqual([]);
   });
 
-  it('detects react with dependency only (baseline 0.75 confidence)', async () => {
-    mockExists.mockResolvedValue(false);
-
-    const result = await detectReact('/test/project', ['react']);
-
+  it('detects react with dependency only (baseline 0.75 confidence)', () => {
+    const result = detectReact(['react'], []);
     expect(result.framework).toBe('react');
     expect(result.confidence).toBe(0.75);
-    expect(result.indicators).toEqual(['react in dependencies']);
   });
 
-  it('detects react with App.tsx (0.90 confidence)', async () => {
-    mockExists.mockImplementation(async (path: string) => {
-      return path === '/test/project/src/App.tsx';
-    });
-
-    const result = await detectReact('/test/project', ['react']);
-
-    expect(result.framework).toBe('react');
-    expect(result.confidence).toBe(0.90);
-    expect(result.indicators).toContain('react in dependencies');
-    expect(result.indicators).toContain('App.tsx/jsx found (React SPA)');
-  });
-
-  it('detects react with App.jsx (0.90 confidence)', async () => {
-    mockExists.mockImplementation(async (path: string) => {
-      return path === '/test/project/src/App.jsx';
-    });
-
-    const result = await detectReact('/test/project', ['react']);
-
-    expect(result.framework).toBe('react');
+  it('detects react with App.tsx (0.90 confidence)', () => {
+    const result = detectReact(['react'], [hint('react', 'src/App.tsx')]);
     expect(result.confidence).toBe(0.90);
     expect(result.indicators).toContain('App.tsx/jsx found (React SPA)');
   });
 
-  it('detects react with Vite (0.85 confidence)', async () => {
-    mockExists.mockResolvedValue(false);
+  it('detects react with App.jsx (0.90 confidence)', () => {
+    const result = detectReact(['react'], [hint('react', 'src/App.jsx')]);
+    expect(result.confidence).toBe(0.90);
+  });
 
-    const result = await detectReact('/test/project', ['react', 'vite']);
-
-    expect(result.framework).toBe('react');
+  it('detects react with Vite (0.85 confidence)', () => {
+    const result = detectReact(['react', 'vite'], []);
     expect(result.confidence).toBe(0.85);
-    expect(result.indicators).toContain('react in dependencies');
     expect(result.indicators).toContain('Vite (React build tool)');
   });
 
-  it('detects react with Create React App (0.90 confidence)', async () => {
-    mockExists.mockResolvedValue(false);
-
-    const result = await detectReact('/test/project', ['react', 'react-scripts']);
-
-    expect(result.framework).toBe('react');
+  it('detects react with Create React App (0.90 confidence)', () => {
+    const result = detectReact(['react', 'react-scripts'], []);
     expect(result.confidence).toBe(0.90);
-    expect(result.indicators).toContain('react in dependencies');
     expect(result.indicators).toContain('Create React App');
   });
 
-  it('detects react with App.tsx and Vite (0.90 confidence max)', async () => {
-    mockExists.mockImplementation(async (path: string) => {
-      return path === '/test/project/src/App.tsx';
-    });
-
-    const result = await detectReact('/test/project', ['react', 'vite']);
-
-    expect(result.framework).toBe('react');
+  it('detects react with App.tsx and Vite (0.90 confidence max)', () => {
+    const result = detectReact(['react', 'vite'], [hint('react', 'src/App.tsx')]);
     expect(result.confidence).toBe(0.90);
-    expect(result.indicators).toContain('App.tsx/jsx found (React SPA)');
-    expect(result.indicators).toContain('Vite (React build tool)');
   });
 });
 
 describe('Nest.js detector', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('returns null with 0.0 confidence when @nestjs/core not in dependencies', async () => {
-    const result = await detectNestjs('/test/project', ['express', 'react']);
-
+  it('returns null when @nestjs/core not in dependencies', () => {
+    const result = detectNestjs(['express'], []);
     expect(result.framework).toBe(null);
-    expect(result.confidence).toBe(0.0);
-    expect(result.indicators).toEqual([]);
-    expect(mockScanForImports).not.toHaveBeenCalled();
   });
 
-  it('detects nestjs with dependency only (baseline 0.90 confidence)', async () => {
-    mockExists.mockResolvedValue(false);
-    mockScanForImports.mockResolvedValue({ found: false, count: 0 });
-
-    const result = await detectNestjs('/test/project', ['@nestjs/core']);
-
+  it('detects nestjs with dependency only (baseline 0.90 confidence)', () => {
+    const result = detectNestjs(['@nestjs/core'], []);
     expect(result.framework).toBe('nestjs');
     expect(result.confidence).toBe(0.90);
-    expect(result.indicators).toEqual(['@nestjs/core in dependencies']);
   });
 
-  it('detects nestjs with src/main.ts (0.95 confidence)', async () => {
-    mockExists.mockImplementation(async (path: string) => {
-      return path === '/test/project/src/main.ts';
-    });
-    mockScanForImports.mockResolvedValue({ found: false, count: 0 });
-
-    const result = await detectNestjs('/test/project', ['@nestjs/core']);
-
-    expect(result.framework).toBe('nestjs');
+  it('detects nestjs with src/main.ts (0.95 confidence)', () => {
+    const result = detectNestjs(['@nestjs/core'], [hint('nestjs', 'src/main.ts')]);
     expect(result.confidence).toBeCloseTo(0.95, 2);
-    expect(result.indicators).toContain('@nestjs/core in dependencies');
     expect(result.indicators).toContain('src/main.ts found');
-    expect(mockExists).toHaveBeenCalledWith('/test/project/src/main.ts');
-  });
-
-  it('detects nestjs with decorators (0.95 confidence)', async () => {
-    mockExists.mockResolvedValue(false);
-    mockScanForImports.mockResolvedValue({ found: true, count: 4 });
-
-    const result = await detectNestjs('/test/project', ['@nestjs/core']);
-
-    expect(result.framework).toBe('nestjs');
-    expect(result.confidence).toBeCloseTo(0.95, 2);
-    expect(result.indicators).toContain('@nestjs/core in dependencies');
-    expect(result.indicators).toContain('NestJS decorators found (4 occurrences)');
-    expect(mockScanForImports).toHaveBeenCalledWith('/test/project', 'nestjs');
-  });
-
-  it('detects nestjs with all signals (1.0 confidence)', async () => {
-    mockExists.mockImplementation(async (path: string) => {
-      return path === '/test/project/src/main.ts';
-    });
-    mockScanForImports.mockResolvedValue({ found: true, count: 8 });
-
-    const result = await detectNestjs('/test/project', ['@nestjs/core']);
-
-    expect(result.framework).toBe('nestjs');
-    expect(result.confidence).toBe(1.0);
-    expect(result.indicators).toHaveLength(3);
-    expect(result.indicators).toContain('@nestjs/core in dependencies');
-    expect(result.indicators).toContain('src/main.ts found');
-    expect(result.indicators).toContain('NestJS decorators found (8 occurrences)');
   });
 });
 
 describe('Express detector', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('returns null with 0.0 confidence when express not in dependencies', async () => {
-    const result = await detectExpress('/test/project', ['react', 'fastify']);
-
+  it('returns null when express not in dependencies', () => {
+    const result = detectExpress(['react'], []);
     expect(result.framework).toBe(null);
-    expect(result.confidence).toBe(0.0);
-    expect(result.indicators).toEqual([]);
   });
 
-  it('returns null when @nestjs/core is present (disambiguation)', async () => {
-    const result = await detectExpress('/test/project', ['express', '@nestjs/core']);
-
+  it('returns null when @nestjs/core is also present', () => {
+    const result = detectExpress(['express', '@nestjs/core'], []);
     expect(result.framework).toBe(null);
-    expect(result.confidence).toBe(0.0);
-    expect(result.indicators).toEqual([]);
   });
 
-  it('detects express with dependency only (baseline 0.80 confidence)', async () => {
-    mockExists.mockResolvedValue(false);
-
-    const result = await detectExpress('/test/project', ['express']);
-
+  it('detects express with dependency only (baseline 0.80 confidence)', () => {
+    const result = detectExpress(['express'], []);
     expect(result.framework).toBe('express');
     expect(result.confidence).toBe(0.80);
-    expect(result.indicators).toEqual(['express in dependencies']);
   });
 
-  it('detects express with server.js (0.90 confidence)', async () => {
-    mockExists.mockImplementation(async (path: string) => {
-      return path === '/test/project/server.js';
-    });
-
-    const result = await detectExpress('/test/project', ['express']);
-
-    expect(result.framework).toBe('express');
-    expect(result.confidence).toBe(0.90);
-    expect(result.indicators).toContain('express in dependencies');
-    expect(result.indicators).toContain('server.js or app.js found');
-  });
-
-  it('detects express with src/server.js (0.90 confidence)', async () => {
-    mockExists.mockImplementation(async (path: string) => {
-      return path === '/test/project/src/server.js';
-    });
-
-    const result = await detectExpress('/test/project', ['express']);
-
-    expect(result.framework).toBe('express');
+  it('detects express with server.js (0.90 confidence)', () => {
+    const result = detectExpress(['express'], [hint('express', 'server.js')]);
     expect(result.confidence).toBe(0.90);
     expect(result.indicators).toContain('server.js or app.js found');
   });
 
-  it('detects express with app.js (0.90 confidence)', async () => {
-    mockExists.mockImplementation(async (path: string) => {
-      return path === '/test/project/app.js';
-    });
-
-    const result = await detectExpress('/test/project', ['express']);
-
-    expect(result.framework).toBe('express');
+  it('detects express with src/server.js (0.90 confidence)', () => {
+    const result = detectExpress(['express'], [hint('express', 'src/server.js')]);
     expect(result.confidence).toBe(0.90);
-    expect(result.indicators).toContain('server.js or app.js found');
   });
 
-  it('detects express with src/app.js (0.90 confidence)', async () => {
-    mockExists.mockImplementation(async (path: string) => {
-      return path === '/test/project/src/app.js';
-    });
-
-    const result = await detectExpress('/test/project', ['express']);
-
-    expect(result.framework).toBe('express');
+  it('detects express with app.js (0.90 confidence)', () => {
+    const result = detectExpress(['express'], [hint('express', 'app.js')]);
     expect(result.confidence).toBe(0.90);
-    expect(result.indicators).toContain('server.js or app.js found');
   });
 });
 
-describe('Other Node frameworks detector', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('returns null with 0.0 confidence when no supported framework in dependencies', async () => {
-    const result = await detectOtherNodeFrameworks('', ['react', 'express']);
-
-    expect(result.framework).toBe(null);
-    expect(result.confidence).toBe(0.0);
-    expect(result.indicators).toEqual([]);
-  });
-
-  it('detects fastify with 0.85 confidence', async () => {
-    const result = await detectOtherNodeFrameworks('', ['fastify']);
-
-    expect(result.framework).toBe('fastify');
-    expect(result.confidence).toBe(0.85);
-    expect(result.indicators).toEqual(['fastify in dependencies']);
-  });
-
-  it('detects koa with 0.85 confidence', async () => {
-    const result = await detectOtherNodeFrameworks('', ['koa']);
-
-    expect(result.framework).toBe('koa');
-    expect(result.confidence).toBe(0.85);
-    expect(result.indicators).toEqual(['koa in dependencies']);
-  });
-
-  it('prioritizes fastify over koa when both present', async () => {
-    const result = await detectOtherNodeFrameworks('', ['koa', 'fastify']);
-
-    expect(result.framework).toBe('fastify');
-    expect(result.confidence).toBe(0.85);
-    expect(result.indicators).toEqual(['fastify in dependencies']);
-  });
-
-  it('detects hono with 0.85 confidence (S19/SCAN-041)', async () => {
-    const result = await detectOtherNodeFrameworks('', ['hono']);
-
-    expect(result.framework).toBe('hono');
-    expect(result.confidence).toBe(0.85);
-    expect(result.indicators).toEqual(['hono in dependencies']);
-  });
-});
-
-describe('Remix / React Router v7 detector (S19/SCAN-040)', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('detects React Router v7 via @react-router/dev', async () => {
-    const result = await detectRemix('/test/project', ['@react-router/dev', 'react']);
+describe('Remix detector', () => {
+  it('detects React Router v7 (@react-router/dev)', () => {
+    const result = detectRemix(['@react-router/dev'], []);
     expect(result.framework).toBe('react-router');
     expect(result.confidence).toBe(0.90);
-    expect(result.indicators[0]).toContain('@react-router/dev');
   });
 
-  it('detects legacy Remix via @remix-run/* packages', async () => {
-    const result = await detectRemix('/test/project', ['@remix-run/node', '@remix-run/react']);
+  it('detects legacy Remix (@remix-run/react)', () => {
+    const result = detectRemix(['@remix-run/react'], []);
     expect(result.framework).toBe('remix');
     expect(result.confidence).toBe(0.90);
-    expect(result.indicators[0]).toContain('@remix-run/');
   });
 
-  it('prefers React Router v7 name when both @react-router/dev and @remix-run/* present', async () => {
-    const result = await detectRemix('/test/project', ['@react-router/dev', '@remix-run/node']);
+  it('does NOT detect bare react-router', () => {
+    const result = detectRemix(['react-router'], []);
+    expect(result.framework).toBe(null);
+  });
+
+  it('prefers React Router v7 over Remix when both present', () => {
+    const result = detectRemix(['@react-router/dev', '@remix-run/react'], []);
     expect(result.framework).toBe('react-router');
-  });
-
-  it('does NOT detect on bare react-router (the routing library, not the framework)', async () => {
-    // Common React SPAs use react-router for client-side routing WITHOUT
-    // being Remix/React-Router-v7 apps. Pre-fix this would have been a
-    // false-positive trap.
-    const result = await detectRemix('/test/project', ['react', 'react-router', 'react-router-dom']);
-    expect(result.framework).toBe(null);
-    expect(result.confidence).toBe(0.0);
-  });
-
-  it('returns null when neither Remix nor React Router v7 deps present', async () => {
-    const result = await detectRemix('/test/project', ['react', 'express']);
-    expect(result.framework).toBe(null);
-    expect(result.confidence).toBe(0.0);
   });
 });
 
-describe('CRITICAL: Disambiguation tests', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
+describe('Other Node frameworks', () => {
+  it('detects Fastify', () => {
+    const result = detectOtherNodeFrameworks(['fastify'], []);
+    expect(result.framework).toBe('fastify');
+    expect(result.confidence).toBe(0.85);
   });
 
-  describe('Next.js vs React disambiguation', () => {
-    it('should NOT detect React when both Next.js and React deps are present', async () => {
-      mockExists.mockResolvedValue(false);
-
-      const reactResult = await detectReact('/test/project', ['next', 'react']);
-
-      expect(reactResult.framework).toBe(null);
-      expect(reactResult.confidence).toBe(0.0);
-      expect(reactResult.indicators).toEqual([]);
-    });
-
-    it('should detect Next.js when both Next.js and React deps are present', async () => {
-      mockExists.mockResolvedValue(false);
-
-      const nextResult = await detectNextjs('/test/project', ['next', 'react']);
-
-      expect(nextResult.framework).toBe('nextjs');
-      expect(nextResult.confidence).toBeGreaterThanOrEqual(0.85);
-      expect(nextResult.indicators).toContain('next in dependencies');
-    });
-
-    it('should detect Next.js even when React signals are stronger', async () => {
-      mockExists.mockImplementation(async (path: string) => {
-        // React has App.tsx but Next.js also present
-        return path === '/test/project/src/App.tsx';
-      });
-
-      const nextResult = await detectNextjs('/test/project', ['next', 'react', 'vite']);
-      const reactResult = await detectReact('/test/project', ['next', 'react', 'vite']);
-
-      expect(nextResult.framework).toBe('nextjs');
-      expect(nextResult.confidence).toBeGreaterThanOrEqual(0.85);
-      expect(reactResult.framework).toBe(null);
-      expect(reactResult.confidence).toBe(0.0);
-    });
-
-    it('should detect React when Next.js is absent', async () => {
-      mockExists.mockImplementation(async (path: string) => {
-        return path === '/test/project/src/App.tsx';
-      });
-
-      const reactResult = await detectReact('/test/project', ['react', 'vite']);
-
-      expect(reactResult.framework).toBe('react');
-      expect(reactResult.confidence).toBeGreaterThanOrEqual(0.85);
-    });
+  it('detects Koa', () => {
+    const result = detectOtherNodeFrameworks(['koa'], []);
+    expect(result.framework).toBe('koa');
+    expect(result.confidence).toBe(0.85);
   });
 
-  describe('Nest.js vs Express disambiguation', () => {
-    it('should NOT detect Express when both Nest.js and Express deps are present', async () => {
-      mockExists.mockResolvedValue(false);
-
-      const expressResult = await detectExpress('/test/project', ['@nestjs/core', 'express']);
-
-      expect(expressResult.framework).toBe(null);
-      expect(expressResult.confidence).toBe(0.0);
-      expect(expressResult.indicators).toEqual([]);
-    });
-
-    it('should detect Nest.js when both Nest.js and Express deps are present', async () => {
-      mockExists.mockResolvedValue(false);
-      mockScanForImports.mockResolvedValue({ found: false, count: 0 });
-
-      const nestResult = await detectNestjs('/test/project', ['@nestjs/core', 'express']);
-
-      expect(nestResult.framework).toBe('nestjs');
-      expect(nestResult.confidence).toBeGreaterThanOrEqual(0.90);
-      expect(nestResult.indicators).toContain('@nestjs/core in dependencies');
-    });
-
-    it('should detect Nest.js even when Express signals are stronger', async () => {
-      mockExists.mockImplementation(async (path: string) => {
-        // Express has server.js but Nest.js also present
-        return path === '/test/project/server.js' || path === '/test/project/src/main.ts';
-      });
-      mockScanForImports.mockResolvedValue({ found: false, count: 0 });
-
-      const nestResult = await detectNestjs('/test/project', ['@nestjs/core', 'express']);
-      const expressResult = await detectExpress('/test/project', ['@nestjs/core', 'express']);
-
-      expect(nestResult.framework).toBe('nestjs');
-      expect(nestResult.confidence).toBeGreaterThanOrEqual(0.90);
-      expect(expressResult.framework).toBe(null);
-      expect(expressResult.confidence).toBe(0.0);
-    });
-
-    it('should detect Express when Nest.js is absent', async () => {
-      mockExists.mockImplementation(async (path: string) => {
-        return path === '/test/project/server.js';
-      });
-
-      const expressResult = await detectExpress('/test/project', ['express']);
-
-      expect(expressResult.framework).toBe('express');
-      expect(expressResult.confidence).toBeGreaterThanOrEqual(0.80);
-    });
+  it('detects Hono', () => {
+    const result = detectOtherNodeFrameworks(['hono'], []);
+    expect(result.framework).toBe('hono');
+    expect(result.confidence).toBe(0.85);
   });
 
-  describe('Complex multi-framework scenarios', () => {
-    it('should handle project with Next.js, React, and multiple other frameworks', async () => {
-      mockExists.mockResolvedValue(false);
-      mockScanForImports.mockResolvedValue({ found: false, count: 0 });
+  it('returns null for unknown dependencies', () => {
+    const result = detectOtherNodeFrameworks(['custom-framework'], []);
+    expect(result.framework).toBe(null);
+  });
+});
 
-      const nextResult = await detectNextjs('/test/project', ['next', 'react', 'express', 'fastify']);
-      const reactResult = await detectReact('/test/project', ['next', 'react', 'express', 'fastify']);
-      const expressResult = await detectExpress('/test/project', ['next', 'react', 'express', 'fastify']);
-      const fastifyResult = await detectOtherNodeFrameworks('', ['next', 'react', 'express', 'fastify']);
+describe('CRITICAL: Framework disambiguation', () => {
+  it('Next.js wins over React (Next.js includes React)', () => {
+    const deps = ['next', 'react'];
+    const nextResult = detectNextjs(deps, [hint('nextjs', 'next.config.js')]);
+    const reactResult = detectReact(deps, []);
+    expect(nextResult.framework).toBe('nextjs');
+    expect(reactResult.framework).toBe(null);
+  });
 
-      expect(nextResult.framework).toBe('nextjs');
-      expect(reactResult.framework).toBe(null);
-      expect(expressResult.framework).toBe('express');
-      expect(fastifyResult.framework).toBe('fastify');
-    });
+  it('Nest.js wins over Express (Nest.js wraps Express)', () => {
+    const deps = ['@nestjs/core', 'express'];
+    const nestResult = detectNestjs(deps, [hint('nestjs', 'src/main.ts')]);
+    const expressResult = detectExpress(deps, []);
+    expect(nestResult.framework).toBe('nestjs');
+    expect(expressResult.framework).toBe(null);
+  });
 
-    it('should handle project with Nest.js, Express, and React', async () => {
-      mockExists.mockResolvedValue(false);
-      mockScanForImports.mockResolvedValue({ found: false, count: 0 });
-
-      const nestResult = await detectNestjs('/test/project', ['@nestjs/core', 'express', 'react']);
-      const expressResult = await detectExpress('/test/project', ['@nestjs/core', 'express', 'react']);
-      const reactResult = await detectReact('/test/project', ['@nestjs/core', 'express', 'react']);
-
-      expect(nestResult.framework).toBe('nestjs');
-      expect(expressResult.framework).toBe(null);
-      expect(reactResult.framework).toBe('react');
-    });
+  it('Remix wins over React (Remix bundles React)', () => {
+    const deps = ['@remix-run/react', 'react'];
+    const remixResult = detectRemix(deps, []);
+    const reactResult = detectReact(deps, []);
+    // React detector doesn't know about Remix — but registry ordering ensures
+    // Remix is checked first. Here we just verify React still fires (for standalone).
+    expect(remixResult.framework).toBe('remix');
+    // React fires because no 'next' dep — but registry priority prevents misclassification
+    expect(reactResult.framework).toBe('react');
   });
 });

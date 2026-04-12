@@ -5,24 +5,17 @@
  * (Nest.js uses Express internally - disambiguation required)
  */
 
-import { exists } from '../../utils/file.js';
-import * as path from 'node:path';
 import type { Detection } from '../python/fastapi.js';
+import type { FrameworkHintEntry } from '../../types/census.js';
 
 /**
- * Detect Express framework (excludes Nest.js)
- *
- * Only called if Nest.js NOT detected (priority order enforced in orchestrator)
- *
- * @param rootPath - Project root directory
- * @param dependencies - Dependency list
- * @returns Detection result
+ * Detect Express framework (excludes Nest.js).
+ * Only called if Nest.js NOT detected (priority order enforced in orchestrator).
  */
-export async function detectExpress(
-  rootPath: string,
-  dependencies: string[]
-): Promise<Detection> {
-  // Check Express present AND Nest.js absent
+export function detectExpress(
+  dependencies: string[],
+  hints: FrameworkHintEntry[]
+): Detection {
   const hasExpress = dependencies.includes('express');
   const hasNest = dependencies.includes('@nestjs/core');
 
@@ -33,12 +26,8 @@ export async function detectExpress(
   const indicators: string[] = ['express in dependencies'];
   let confidence = 0.80;
 
-  // Check for typical Express files
-  const hasServerFile =
-    (await exists(path.join(rootPath, 'server.js'))) ||
-    (await exists(path.join(rootPath, 'src/server.js'))) ||
-    (await exists(path.join(rootPath, 'app.js'))) ||
-    (await exists(path.join(rootPath, 'src/app.js')));
+  // Check for typical Express files via census hints
+  const hasServerFile = hints.some(h => h.framework === 'express');
 
   if (hasServerFile) {
     confidence += 0.10;

@@ -1015,10 +1015,10 @@ export async function parseFile(
 export async function parseProjectFiles(
   projectRoot: string,
   analysis: AnalysisResult,
-  options: { maxFiles?: number } = {}
+  options: { maxFiles?: number; preSampledFiles?: string[] } = {}
 ): Promise<ParsedAnalysis | undefined> {
-  // Require structure analysis for sampling
-  if (!analysis.structure) {
+  // Require structure analysis for sampling (unless pre-sampled files provided)
+  if (!analysis.structure && !options.preSampledFiles) {
     return undefined;
   }
 
@@ -1030,8 +1030,8 @@ export async function parseProjectFiles(
   // Initialize cache
   const cache = new ASTCacheClass(projectRoot);
 
-  // Sample files intelligently
-  const filesToParse = await sampleFiles(projectRoot, analysis, {
+  // Use pre-sampled file list (from proportional sampler) or fall back to old sampler
+  const filesToParse = options.preSampledFiles ?? await sampleFiles(projectRoot, analysis, {
     maxFiles: options.maxFiles ?? 20,
     minConfidence: 0.8,
     includeTests: false,

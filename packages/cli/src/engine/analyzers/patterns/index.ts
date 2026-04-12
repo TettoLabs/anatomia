@@ -57,17 +57,24 @@ import { filterByConfidence } from './confidence.js';
  */
 export async function inferPatterns(
   rootPath: string,
-  analysis: AnalysisResult
+  analysis: AnalysisResult,
+  options?: { deps?: string[]; devDeps?: string[] },
 ): Promise<PatternAnalysis> {
   const startTime = Date.now();
 
   try {
     // Stage 1: Dependency-based detection (CP0)
+    // Use pre-read deps from census if provided, else fall back to filesystem.
     const stage1Start = Date.now();
+    const deps = options?.deps ?? [];
+    const devDeps = options?.devDeps ?? [];
+
     const dependencyPatterns = await detectFromDependencies(
-      rootPath,
+      deps,
+      devDeps,
       analysis.projectType,
-      analysis.framework
+      analysis.framework,
+      rootPath,
     );
     const stage1Duration = Date.now() - stage1Start;
 

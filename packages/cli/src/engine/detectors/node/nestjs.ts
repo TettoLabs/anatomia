@@ -4,24 +4,17 @@
  * CRITICAL: Check BEFORE Express (Nest.js uses Express internally)
  */
 
-import { scanForImports } from '../../utils/importScanner.js';
-import { exists } from '../../utils/file.js';
-import * as path from 'node:path';
 import type { Detection } from '../python/fastapi.js';
+import type { FrameworkHintEntry } from '../../types/census.js';
 
 /**
- * Detect Nest.js framework
- *
- * Priority: Must be checked BEFORE Express
- *
- * @param rootPath - Project root directory
- * @param dependencies - Dependency list
- * @returns Detection result
+ * Detect Nest.js framework from dependencies and census hints.
+ * Priority: Must be checked BEFORE Express.
  */
-export async function detectNestjs(
-  rootPath: string,
-  dependencies: string[]
-): Promise<Detection> {
+export function detectNestjs(
+  dependencies: string[],
+  hints: FrameworkHintEntry[]
+): Detection {
   const dependencyFound = dependencies.includes('@nestjs/core');
   if (!dependencyFound) {
     return { framework: null, confidence: 0.0, indicators: [] };
@@ -30,19 +23,15 @@ export async function detectNestjs(
   const indicators: string[] = ['@nestjs/core in dependencies'];
   let confidence = 0.90;
 
-  // Check for main.ts (Nest.js convention)
-  const hasMainTs = await exists(path.join(rootPath, 'src/main.ts'));
+  // Check for src/main.ts via census hints (NestJS convention)
+  const hasMainTs = hints.some(h => h.framework === 'nestjs');
   if (hasMainTs) {
     confidence = Math.min(1.0, confidence + 0.05);
     indicators.push('src/main.ts found');
   }
 
-  // Scan for decorators
-  const importScan = await scanForImports(rootPath, 'nestjs');
-  if (importScan.found) {
-    confidence = Math.min(1.0, confidence + 0.05);
-    indicators.push(`NestJS decorators found (${importScan.count} occurrences)`);
-  }
+  // Note: scanForImports decorator scan deferred to Lane 0+ (analyzer scope).
+  // The dep + hint check provides 0.90-0.95 confidence, sufficient for Lane 0.
 
   return {
     framework: 'nestjs',

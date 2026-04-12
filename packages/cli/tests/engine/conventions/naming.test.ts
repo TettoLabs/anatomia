@@ -74,8 +74,9 @@ describe('analyzeNamingConvention', () => {
     const result = analyzeNamingConvention(names, 'python');
 
     expect(result.majority).toBe('snake_case');
-    expect(result.confidence).toBeCloseTo(0.86, 2);
-    expect(result.mixed).toBe(false);  // ≥70%
+    // Smoothed: 0.86 * 50/(50+5) ≈ 0.782
+    expect(result.confidence).toBeCloseTo(0.782, 2);
+    expect(result.mixed).toBe(false);  // ≥70% raw majority
     expect(result.sampleSize).toBe(50);
   });
 
@@ -89,8 +90,9 @@ describe('analyzeNamingConvention', () => {
     const result = analyzeNamingConvention(names, 'python');
 
     expect(result.majority).toBe('snake_case');
-    expect(result.confidence).toBeCloseTo(0.66, 2);
-    expect(result.mixed).toBe(true);  // <70%
+    // Smoothed: 0.66 * 50/(50+5) ≈ 0.60
+    expect(result.confidence).toBeCloseTo(0.60, 2);
+    expect(result.mixed).toBe(true);  // <70% raw majority
   });
 
   it('detects threshold at 70%', () => {
@@ -102,8 +104,9 @@ describe('analyzeNamingConvention', () => {
     const result = analyzeNamingConvention(names, 'python');
 
     expect(result.majority).toBe('snake_case');
-    expect(result.confidence).toBe(0.70);
-    expect(result.mixed).toBe(false);  // Exactly 70% is NOT mixed (≥70%)
+    // Smoothed: 0.70 * 50/(50+5) ≈ 0.636
+    expect(result.confidence).toBeCloseTo(0.636, 2);
+    expect(result.mixed).toBe(false);  // Exactly 70% raw is NOT mixed (≥70%)
   });
 
   it('filters language keywords', () => {
@@ -115,7 +118,8 @@ describe('analyzeNamingConvention', () => {
     const result = analyzeNamingConvention(names, 'python');
 
     expect(result.majority).toBe('snake_case');
-    expect(result.confidence).toBe(1.0);  // 2/2 valid names
+    // Smoothed: 1.0 * 2/(2+5) ≈ 0.286
+    expect(result.confidence).toBeCloseTo(0.286, 2);
     expect(result.sampleSize).toBe(6);  // Total including keywords
   });
 });
@@ -163,14 +167,16 @@ describe('analyze*Naming integration', () => {
     const result = analyzeFunctionNaming(sampleFiles, 'python');
 
     expect(result.majority).toBe('snake_case');
-    expect(result.confidence).toBe(1.0);
+    // Smoothed: 1.0 * 2/(2+5) ≈ 0.286
+    expect(result.confidence).toBeCloseTo(0.286, 2);
   });
 
   it('analyzes class naming from parsed.files', () => {
     const result = analyzeClassNaming(sampleFiles, 'python');
 
     expect(result.majority).toBe('PascalCase');
-    expect(result.confidence).toBe(1.0);
+    // Smoothed: 1.0 * 1/(1+5) ≈ 0.167
+    expect(result.confidence).toBeCloseTo(0.167, 2);
   });
 });
 
@@ -267,5 +273,59 @@ export const API_VERSION = 'v2';
     expect(variables.sampleSize).toBeGreaterThan(0);
     expect(constants.sampleSize).toBeGreaterThanOrEqual(2);
     expect(constants.majority).toBe('SCREAMING_SNAKE_CASE');
+  });
+});
+
+describe('Disease C — classifier filters language-mandated method names', () => {
+  it('constructor entries do not pollute function naming majority', () => {
+    // Simulates trigger.dev-style input: many constructors outnumber real functions.
+    // Without the FILTERED_METHOD_NAMES filter, constructor (classified as lowercase)
+    // would become the majority style — a wrong answer caused by language-mandated names.
+    const files: ParsedFile[] = [{
+      file: 'src/app.ts',
+      language: 'typescript',
+      functions: [
+        // 25 constructor entries (language-mandated, should be filtered)
+        ...Array.from({ length: 25 }, () => ({ name: 'constructor', line: 1, async: false, decorators: [] as string[] })),
+        // 5 camelCase functions (user-chosen, should vote)
+        ...Array.from({ length: 5 }, (_, i) => ({ name: `getData${i}`, line: 1, async: false, decorators: [] as string[] })),
+      ],
+      classes: [],
+      imports: [],
+      parseTime: 0,
+      parseMethod: 'cached' as const,
+      errors: 0,
+    }];
+
+    const result = analyzeFunctionNaming(files, 'typescript');
+    expect(result.majority).toBe('camelCase');
+    expect(result.majority).not.toBe('lowercase');
+  });
+
+  it('single-word lowercase names abstain from voting', () => {
+    // Names like value, result, handler are evidence-free — they look the
+    // same in camelCase, snake_case, and lowercase
+    const names = ['value', 'result', 'handler', 'getData', 'fetchUser'];
+    const result = analyzeNamingConvention(names, 'typescript');
+    // Only getData and fetchUser should vote (both camelCase)
+    expect(result.majority).toBe('camelCase');
+  });
+
+  it('sample-size smoothing: sampleSize=1 yields confidence < 0.2', () => {
+    const result = analyzeNamingConvention(['getData'], 'typescript');
+    // Formula: 1.0 * 1 / (1 + 5) ≈ 0.167
+    expect(result.confidence).toBeLessThan(0.2);
+  });
+
+  it('sample-size smoothing: sampleSize=50 with 90% majority yields ~0.818', () => {
+    const names = [
+      ...Array.from({ length: 45 }, (_, i) => `getData${i}`),   // camelCase
+      ...Array.from({ length: 5 }, (_, i) => `get_data_${i}`),   // snake_case
+    ];
+    const result = analyzeNamingConvention(names, 'typescript');
+    expect(result.majority).toBe('camelCase');
+    // Formula: 0.9 * 50 / (50 + 5) ≈ 0.818
+    expect(result.confidence).toBeGreaterThan(0.8);
+    expect(result.confidence).toBeLessThan(0.85);
   });
 });

@@ -51,7 +51,11 @@ import { analyzeIndentation } from './indentation.js';
  */
 export async function detectConventions(
   rootPath: string,
-  analysis: AnalysisResult
+  analysis: AnalysisResult,
+  options?: {
+    preSampledFiles?: string[];
+    tsconfigEntries?: import('../../types/census.js').TsconfigEntry[];
+  },
 ): Promise<ConventionAnalysis> {
   const startTime = Date.now();
 
@@ -64,8 +68,8 @@ export async function detectConventions(
     const { files: parsedFiles } = analysis.parsed;
     const { projectType } = analysis;
 
-    // Sample 50 files (broader than patterns' 20 - conventions span codebase)
-    const sampledFilePaths = await sampleFiles(rootPath, analysis, { maxFiles: 50 });
+    // Use pre-sampled file list (from proportional sampler) or fall back to old sampler
+    const sampledFilePaths = options?.preSampledFiles ?? await sampleFiles(rootPath, analysis, { maxFiles: 50 });
 
     // File naming uses sampledFilePaths (50 files) — only needs basenames, no AST
     const fileNamingNames = sampledFilePaths.map(p => basename(p).replace(/\.[^.]+$/, ''));
@@ -88,7 +92,7 @@ export async function detectConventions(
 
     // Detect project root and tsconfig aliases for import classification
     const projectRoot = await detectProjectRoot(rootPath, projectType);
-    const tsconfigAlias = projectType === 'node' ? await parseTsconfigAlias(rootPath) : null;
+    const tsconfigAlias = projectType === 'node' ? await parseTsconfigAlias(rootPath, options?.tsconfigEntries) : null;
     const aliasPatterns = tsconfigAlias ? [`${tsconfigAlias}*`] : undefined;
 
     // Analyze import conventions (uses parsed imports)

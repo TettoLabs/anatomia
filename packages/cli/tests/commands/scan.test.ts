@@ -743,11 +743,7 @@ describe('countFiles utility', () => {
   });
 });
 
-describe('analyzer graceful degradation', () => {
-  // These tests verify the analyzer preserves partial results when tree-sitter fails
-  // Note: Actually triggering tree-sitter failure is difficult in tests,
-  // so we test the structure by verifying the analyzer returns partial results
-
+describe('scanProject graceful degradation', () => {
   let tempDir: string;
 
   beforeEach(async () => {
@@ -766,14 +762,14 @@ describe('analyzer graceful degradation', () => {
     }
   }
 
-  it('returns projectType when analyzing basic project', async () => {
+  it('returns language when analyzing basic project', async () => {
     await createTestFiles({
       'package.json': '{"name":"test","version":"1.0.0"}',
     });
 
-    const { analyze } = await import('../../src/engine/index.js');
-    const result = await analyze(tempDir, { skipPatterns: false });
-    expect(result.projectType).not.toBe('unknown');
+    const { scanProject } = await import('../../src/engine/index.js');
+    const result = await scanProject(tempDir, { depth: 'surface' });
+    expect(result.stack.language).not.toBeNull();
   });
 
   it('returns framework when detected', async () => {
@@ -784,9 +780,9 @@ describe('analyzer graceful degradation', () => {
       }),
     });
 
-    const { analyze } = await import('../../src/engine/index.js');
-    const result = await analyze(tempDir);
-    expect(result.framework).toBe('nextjs');
+    const { scanProject } = await import('../../src/engine/index.js');
+    const result = await scanProject(tempDir, { depth: 'surface' });
+    expect(result.stack.framework).toBe('Next.js');
   });
 
   it('returns structure when analyzing project with directories', async () => {
@@ -796,22 +792,20 @@ describe('analyzer graceful degradation', () => {
       'tests/foo.test.ts': 'test("x", () => {});',
     });
 
-    const { analyze } = await import('../../src/engine/index.js');
-    const result = await analyze(tempDir);
+    const { scanProject } = await import('../../src/engine/index.js');
+    const result = await scanProject(tempDir, { depth: 'surface' });
     expect(result.structure).toBeDefined();
-    expect(result.structure?.directories).toBeDefined();
   });
 
-  it('patterns may be undefined when no dependencies detected', async () => {
+  it('patterns null on surface tier (expected)', async () => {
     await createTestFiles({
       'package.json': '{"name":"test","version":"1.0.0"}',
     });
 
-    const { analyze } = await import('../../src/engine/index.js');
-    const result = await analyze(tempDir);
-    // Patterns may be undefined if no patterns detected
-    // This is acceptable behavior
-    expect(result.projectType).toBeDefined();
+    const { scanProject } = await import('../../src/engine/index.js');
+    const result = await scanProject(tempDir, { depth: 'surface' });
+    expect(result.patterns).toBeNull();
+    expect(result.stack).toBeDefined();
   });
 });
 

@@ -141,7 +141,7 @@ export interface EngineResult {
   }>;
   // Composed from the deployment detectors (Item 7d). detectDeployment returns
   // DetectedDeployment (platform+configFile nullable), detectCI returns
-  // DetectedCI (ci+ciConfigFile nullable). scan-engine merges them with
+  // DetectedCI (ci nullable). scan-engine merges them with
   // object spread — the type matches the runtime shape exactly now.
   deployment: DetectedDeployment & DetectedCI;
   // Deep tier only (null when surface). Item 6 unification: pattern detection
@@ -282,10 +282,6 @@ export interface EngineResult {
     };
   } | null;
 
-  // Reserved
-  recommendations: null;
-  health: null;
-  readiness: null;
 }
 
 /**
@@ -316,7 +312,7 @@ export function createEmptyEngineResult(): EngineResult {
     secrets: { envFileExists: false, envExampleExists: false, gitignoreCoversEnv: false },
     projectProfile: { type: null, hasExternalAPIs: false, hasDatabase: false, hasBrowserUI: false, hasAuthSystem: false, hasPayments: false, hasFileStorage: false },
     blindSpots: [],
-    deployment: { platform: null, configFile: null, ci: null, ciConfigFile: null },
+    deployment: { platform: null, configFile: null, ci: null },
     patterns: null,
     conventions: null,
     secretFindings: null,
@@ -331,8 +327,5 @@ export function createEmptyEngineResult(): EngineResult {
     inconsistencies: null,
     conventionBreaks: null,
     aiReadinessScore: null,
-    recommendations: null,
-    health: null,
-    readiness: null,
   };
 }

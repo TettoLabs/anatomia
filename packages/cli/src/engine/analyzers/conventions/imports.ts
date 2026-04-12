@@ -310,37 +310,45 @@ async function parsePyprojectName(rootPath: string): Promise<string | null> {
  * @param rootPath - Project root
  * @returns Alias prefix (e.g., '@/') or null
  */
-export async function parseTsconfigAlias(rootPath: string): Promise<string | null> {
-  const tsconfigPath = joinPath(rootPath, 'tsconfig.json');
+/**
+ * Extract tsconfig path alias from census tsconfig entries.
+ * Falls back to reading tsconfig.json from rootPath if no census entries provided.
+ */
+export async function parseTsconfigAlias(
+  rootPath: string,
+  tsconfigEntries?: import('../../types/census.js').TsconfigEntry[],
+): Promise<string | null> {
+  // Use census entries if available
+  let paths: Record<string, string[]> | null = null;
 
-  if (!(await exists(tsconfigPath))) {
-    return null;
-  }
-
-  try {
-    const content = await readFile(tsconfigPath);
-    const config = JSON.parse(content);
-
-    const paths = config.compilerOptions?.paths;
-    if (!paths) return null;
-
-    // Look for @/* path alias patterns (not @scope/* package scopes)
-    const aliasKeys = Object.keys(paths);
-    const alias = aliasKeys.find(key => {
-      if (!key.startsWith('@')) return false;
-      const scope = key.split('/')[0];
-      return scope !== undefined && scope.length <= 2; // @/ or @x = path alias, @scope = package
-    });
-
-    if (alias) {
-      // @/* → @/
-      return alias.replace('/*', '/');
+  if (tsconfigEntries && tsconfigEntries.length > 0) {
+    // Use the first tsconfig with paths (typically primary source root)
+    const withPaths = tsconfigEntries.find(t => t.paths !== null);
+    paths = withPaths?.paths ?? null;
+  } else {
+    // Fallback: read from filesystem (legacy path)
+    const tsconfigPath = joinPath(rootPath, 'tsconfig.json');
+    if (!(await exists(tsconfigPath))) return null;
+    try {
+      const content = await readFile(tsconfigPath);
+      const config = JSON.parse(content);
+      paths = config.compilerOptions?.paths ?? null;
+    } catch {
+      return null;
     }
-
-    return null;
-  } catch (_error) {
-    return null;  // Parse failed or invalid JSON
   }
+
+  if (!paths) return null;
+
+  // Look for @/* path alias patterns (not @scope/* package scopes)
+  const aliasKeys = Object.keys(paths);
+  const alias = aliasKeys.find(key => {
+    if (!key.startsWith('@')) return false;
+    const scope = key.split('/')[0];
+    return scope !== undefined && scope.length <= 2; // @/ or @x = path alias, @scope = package
+  });
+
+  return alias ? alias.replace('/*', '/') : null;
 }
 
 /**

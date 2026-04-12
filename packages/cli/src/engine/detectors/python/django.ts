@@ -7,27 +7,16 @@
  */
 
 import { calculateConfidence } from '../../utils/confidence.js';
-import { exists } from '../../utils/file.js';
-import * as path from 'node:path';
 import type { Detection } from './fastapi.js';
+import type { FrameworkHintEntry } from '../../types/census.js';
 
 /**
- * Detect Django framework (with DRF disambiguation)
- *
- * Detection logic:
- * 1. Check if 'django' in dependencies
- * 2. Disambiguate: djangorestframework → 'django-drf', else 'django'
- * 3. Check for Django-specific files (manage.py, settings.py)
- * 4. Calculate confidence
- *
- * @param rootPath - Project root directory
- * @param dependencies - Dependency list from parsers
- * @returns Detection result
+ * Detect Django framework (with DRF disambiguation).
  */
-export async function detectDjango(
-  rootPath: string,
-  dependencies: string[]
-): Promise<Detection> {
+export function detectDjango(
+  dependencies: string[],
+  hints: FrameworkHintEntry[]
+): Detection {
   const dependencyFound = dependencies.includes('django');
   if (!dependencyFound) {
     return { framework: null, confidence: 0.0, indicators: [] };
@@ -43,22 +32,17 @@ export async function detectDjango(
     indicators.push('djangorestframework detected (API framework)');
   }
 
-  // Check for Django-specific files
-  const hasManagePy = await exists(path.join(rootPath, 'manage.py'));
+  // Check for manage.py via census hints
+  const hasManagePy = hints.some(h => h.framework === 'django');
   if (hasManagePy) {
     indicators.push('manage.py found');
   }
 
-  // Calculate confidence
   const confidence = calculateConfidence({
     dependencyFound: true,
     importsFound: hasManagePy,  // manage.py is strong Django indicator
     configFilesFound: false,
   });
 
-  return {
-    framework,
-    confidence,
-    indicators,
-  };
+  return { framework, confidence, indicators };
 }

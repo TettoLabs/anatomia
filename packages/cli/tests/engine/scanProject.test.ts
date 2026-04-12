@@ -36,7 +36,7 @@ describe('scanProject()', () => {
       'overview', 'stack', 'files', 'structure',
       'commands', 'git', 'monorepo', 'externalServices', 'schemas',
       'secrets', 'projectProfile', 'blindSpots', 'deployment',
-      'patterns', 'conventions', 'recommendations', 'health', 'readiness',
+      'patterns', 'conventions',
     ];
     for (const key of expectedKeys) {
       expect(result).toHaveProperty(key);

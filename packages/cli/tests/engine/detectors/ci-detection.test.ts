@@ -1,78 +1,60 @@
 /**
- * Tests for CI detection in deployment
+ * Tests for CI and deployment detection from census entries.
  */
 
 import { describe, it, expect } from 'vitest';
-import { detectCI } from '../../../src/engine/detectors/deployment.js';
-import * as path from 'node:path';
-import * as fs from 'node:fs';
-import * as os from 'node:os';
-
-const REPO_ROOT = path.resolve(__dirname, '..', '..', '..', '..', '..');
+import { detectCI, detectDeployment } from '../../../src/engine/detectors/deployment.js';
+import type { CiWorkflowEntry, DeploymentEntry } from '../../../src/engine/types/census.js';
 
 describe('CI detection', () => {
-  it('detects GitHub Actions on Anatomia repo', () => {
-    const result = detectCI(REPO_ROOT);
+  it('detects GitHub Actions from census workflows', () => {
+    const workflows: CiWorkflowEntry[] = [
+      { system: 'GitHub Actions', workflowFiles: ['ci.yml', 'release.yml'] },
+    ];
+    const result = detectCI(workflows);
     expect(result.ci).toBe('GitHub Actions');
-    expect(result.ciConfigFile).toMatch(/^\.github\/workflows\/.+\.yml$/);
   });
 
-  it('detects GitLab CI from .gitlab-ci.yml', () => {
-    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ci-test-gitlab-'));
-    try {
-      fs.writeFileSync(path.join(tmpDir, '.gitlab-ci.yml'), 'stages:\n  - build\n');
-      const result = detectCI(tmpDir);
-      expect(result.ci).toBe('GitLab CI');
-      expect(result.ciConfigFile).toBe('.gitlab-ci.yml');
-    } finally {
-      fs.rmSync(tmpDir, { recursive: true });
-    }
+  it('detects GitLab CI from census workflows', () => {
+    const result = detectCI([{ system: 'GitLab CI', workflowFiles: ['.gitlab-ci.yml'] }]);
+    expect(result.ci).toBe('GitLab CI');
   });
 
-  it('detects Jenkins from Jenkinsfile', () => {
-    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ci-test-jenkins-'));
-    try {
-      fs.writeFileSync(path.join(tmpDir, 'Jenkinsfile'), 'pipeline {}');
-      const result = detectCI(tmpDir);
-      expect(result.ci).toBe('Jenkins');
-      expect(result.ciConfigFile).toBe('Jenkinsfile');
-    } finally {
-      fs.rmSync(tmpDir, { recursive: true });
-    }
+  it('returns null when no CI workflows in census', () => {
+    const result = detectCI([]);
+    expect(result.ci).toBeNull();
   });
 
-  it('detects CircleCI from .circleci/config.yml', () => {
-    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ci-test-circle-'));
-    try {
-      fs.mkdirSync(path.join(tmpDir, '.circleci'));
-      fs.writeFileSync(path.join(tmpDir, '.circleci', 'config.yml'), 'version: 2.1\n');
-      const result = detectCI(tmpDir);
-      expect(result.ci).toBe('CircleCI');
-      expect(result.ciConfigFile).toBe('.circleci/config.yml');
-    } finally {
-      fs.rmSync(tmpDir, { recursive: true });
-    }
+  it('returns first CI system when multiple present', () => {
+    const result = detectCI([
+      { system: 'GitHub Actions', workflowFiles: ['ci.yml'] },
+      { system: 'GitLab CI', workflowFiles: ['.gitlab-ci.yml'] },
+    ]);
+    expect(result.ci).toBe('GitHub Actions');
+  });
+});
+
+describe('Deployment detection', () => {
+  it('detects Vercel from census deployments', () => {
+    const deployments: DeploymentEntry[] = [
+      { platform: 'Vercel', sourceRootPath: '.', path: 'vercel.json' },
+    ];
+    const result = detectDeployment(deployments);
+    expect(result.platform).toBe('Vercel');
+    expect(result.configFile).toBe('vercel.json');
   });
 
-  it('returns null for both when no CI config found', () => {
-    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ci-test-none-'));
-    try {
-      const result = detectCI(tmpDir);
-      expect(result.ci).toBeNull();
-      expect(result.ciConfigFile).toBeNull();
-    } finally {
-      fs.rmSync(tmpDir, { recursive: true });
-    }
+  it('returns null when no deployments in census', () => {
+    const result = detectDeployment([]);
+    expect(result.platform).toBeNull();
+    expect(result.configFile).toBeNull();
   });
 
-  it('deployment always has all 4 fields', () => {
-    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ci-test-fields-'));
-    try {
-      const result = detectCI(tmpDir);
-      expect(result).toHaveProperty('ci');
-      expect(result).toHaveProperty('ciConfigFile');
-    } finally {
-      fs.rmSync(tmpDir, { recursive: true });
-    }
+  it('returns first deployment when multiple present', () => {
+    const result = detectDeployment([
+      { platform: 'Docker', sourceRootPath: '.', path: 'Dockerfile' },
+      { platform: 'Vercel', sourceRootPath: '.', path: 'vercel.json' },
+    ]);
+    expect(result.platform).toBe('Docker');
   });
 });

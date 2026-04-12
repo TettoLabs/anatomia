@@ -50,6 +50,15 @@ const GO_KEYWORDS = new Set([
 ]);
 
 /**
+ * Language-mandated method names that pollute naming classification.
+ * These names are dictated by the language or runtime, not chosen by
+ * the developer, so they must not vote in convention analysis.
+ */
+const FILTERED_METHOD_NAMES = new Set([
+  'constructor', 'toString', 'valueOf', 'hasOwnProperty', 'toJSON',
+]);
+
+/**
  * Classify naming style using regex patterns
  *
  * @param name - Identifier to classify (variable, function, class, or file name)
@@ -205,6 +214,13 @@ export function analyzeNamingConvention(
     }
 
     const style = classifyNamingStyle(name);
+    // Single-word lowercase names are ambiguous — they look the same in
+    // camelCase, snake_case, and lowercase. Skip to avoid diluting the
+    // majority signal with evidence-free names.
+    if (style === 'lowercase') {
+      keywordsFiltered++;
+      continue;
+    }
     counts[style]++;
   }
 
@@ -249,7 +265,7 @@ export function analyzeNamingConvention(
 
   return {
     majority: majorityStyle as NamingStyle,
-    confidence: majorityPercent,
+    confidence: majorityPercent * validTotal / (validTotal + 5),
     mixed: majorityPercent < 0.7,  // <70% = mixed conventions
     distribution: distribution as Record<NamingStyle, number>,
     sampleSize: names.length,
@@ -384,7 +400,8 @@ export function analyzeFunctionNaming(
     const inRouteHandler = isRouteHandlerFile(f.file);
     return f.functions
       .map(fn => fn.name)
-      .filter(name => !(inRouteHandler && isHttpMethodName(name)));
+      .filter(name => !(inRouteHandler && isHttpMethodName(name)))
+      .filter(name => !FILTERED_METHOD_NAMES.has(name));
   });
 
   return analyzeNamingConvention(functionNames, language);
