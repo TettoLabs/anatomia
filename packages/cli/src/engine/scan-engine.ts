@@ -470,24 +470,21 @@ export async function scanProject(
 
       // Dynamic imports — tree-sitter loads WASM at module-evaluation time.
       const { parseProjectFiles } = await import('./parsers/treeSitter.js');
-      const intermediateResult = {
+      // DeepTierInput — no type cast needed (Disease E fix)
+      const deepInput: import('./types/index.js').DeepTierInput = {
         projectType: projectTypeResult.type,
         framework: frameworkResult.framework,
-        confidence: { projectType: projectTypeResult.confidence, framework: frameworkResult.confidence },
-        indicators: { projectType: projectTypeResult.indicators, framework: frameworkResult.indicators },
-        detectedAt: new Date().toISOString(),
-        version: '0.2.0',
         structure,
       };
 
       const parsed = await parseProjectFiles(
         rootPath,
-        intermediateResult as import('./types/index.js').AnalysisResult,
+        deepInput,
         { preSampledFiles: sampledFiles },
       );
 
       if (parsed) {
-        const withParsed = { ...intermediateResult, parsed } as import('./types/index.js').AnalysisResult;
+        const withParsed: import('./types/index.js').DeepTierInput = { ...deepInput, parsed };
         const { inferPatterns } = await import('./analyzers/patterns/index.js');
         patterns = await inferPatterns(rootPath, withParsed, {
           deps,

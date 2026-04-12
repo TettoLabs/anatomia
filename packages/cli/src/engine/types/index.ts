@@ -80,6 +80,23 @@ export const AnalysisResultSchema = z.object({
 export type AnalysisResult = z.infer<typeof AnalysisResultSchema>;
 
 /**
+ * Minimal input for the deep-tier pipeline (parsing → patterns → conventions).
+ *
+ * Replaces AnalysisResult as the function parameter type for parseProjectFiles,
+ * inferPatterns, and detectConventions. Only includes the fields those functions
+ * actually read — no confidence, indicators, detectedAt, or version.
+ *
+ * S20 Disease E: eliminates the `as AnalysisResult` type casts in scan-engine.ts.
+ */
+export interface DeepTierInput {
+  projectType: ProjectType;
+  framework: string | null;
+  structure?: import('./structure.js').StructureAnalysis | undefined;
+  parsed?: import('./parsed.js').ParsedAnalysis | undefined;
+  patterns?: import('./patterns.js').PatternAnalysis | undefined;
+}
+
+/**
  * Helper to create empty AnalysisResult (for tests, placeholders)
  */
 export function createEmptyAnalysisResult(): AnalysisResult {

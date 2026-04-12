@@ -21,7 +21,7 @@
  * folder split.
  */
 
-import type { AnalysisResult } from '../../types/index.js';
+import type { DeepTierInput } from '../../types/index.js';
 import type { PatternAnalysis } from '../../types/patterns.js';
 import { createEmptyPatternAnalysis } from '../../types/patterns.js';
 import { detectFromDependencies } from './dependencies.js';
@@ -57,7 +57,7 @@ import { filterByConfidence } from './confidence.js';
  */
 export async function inferPatterns(
   rootPath: string,
-  analysis: AnalysisResult,
+  analysis: DeepTierInput,
   options?: { deps?: string[]; devDeps?: string[] },
 ): Promise<PatternAnalysis> {
   const startTime = Date.now();
