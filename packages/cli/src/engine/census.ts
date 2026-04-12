@@ -332,6 +332,12 @@ export async function buildCensus(rootPath: string): Promise<ProjectCensus> {
   }
   Object.assign(allDeps, deps, devDeps);
 
+  // Root devDeps — toolchain deps (testing, linting) that live in the root
+  // package.json but not in any workspace package. Separated from allDeps
+  // because root deps are toolchain, not stack — but testing frameworks
+  // in root devDeps (like @playwright/test) should still be detected.
+  const rootDevDeps = (result?.rootPackage?.packageJson?.devDependencies ?? {}) as Record<string, string>;
+
   // Discover configs (pass all roots for per-root discovery)
   const rootDescriptors = sourceRoots.map(r => ({
     absolutePath: r.absolutePath,
@@ -372,6 +378,7 @@ export async function buildCensus(rootPath: string): Promise<ProjectCensus> {
     allDeps,
     deps,
     devDeps,
+    rootDevDeps,
     configs: {
       frameworkHints,
       tsconfigs,

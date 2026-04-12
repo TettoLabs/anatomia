@@ -57,6 +57,40 @@ function timeAgo(date: string): string {
 }
 
 /**
+ * Collapse service variants in display. "Vercel AI (OpenAI), Vercel AI (Google)"
+ * becomes "Vercel AI (2 providers)". Standalone entries are untouched.
+ *
+ * @param names - Service names to collapse
+ * @returns Collapsed names array
+ */
+function collapseServiceVariants(names: string[]): string[] {
+  const groups = new Map<string, string[]>();
+  const standalone: string[] = [];
+
+  for (const name of names) {
+    const parenIdx = name.indexOf(' (');
+    if (parenIdx > 0) {
+      const base = name.slice(0, parenIdx);
+      const list = groups.get(base) || [];
+      list.push(name);
+      groups.set(base, list);
+    } else {
+      standalone.push(name);
+    }
+  }
+
+  const result: string[] = [...standalone];
+  for (const [base, variants] of groups) {
+    if (variants.length === 1) {
+      result.push(variants[0]!);
+    } else {
+      result.push(`${base} (${variants.length} providers)`);
+    }
+  }
+  return result;
+}
+
+/**
  * Count findings for dynamic CTA (funnel context)
  * @param result - Engine analysis result
  * @returns Number of findings (blind spots + null pattern slots)
@@ -200,11 +234,15 @@ function formatHumanReadable(
       const categoryLabels: Record<string, string> = {
         ai: 'AI', payments: 'Payments', email: 'Email', monitoring: 'Monitoring',
         backend: 'Backend', storage: 'Storage', hosting: 'Hosting',
+        config: 'Config', i18n: 'i18n', 'vector-db': 'Vector DB',
+        realtime: 'Realtime', cms: 'CMS', api: 'API', cache: 'Cache',
         analytics: 'Analytics', jobs: 'Jobs', cloud: 'Cloud',
       };
       for (const [cat, names] of byCategory) {
         const label = (categoryLabels[cat] || cat).padEnd(12);
-        lines.push(`  ${chalk.gray(label)} ${names.join(', ')}`);
+        // Collapse variants: "Vercel AI (OpenAI), Vercel AI (Google)" → "Vercel AI (2 providers)"
+        const collapsed = collapseServiceVariants(names);
+        lines.push(`  ${chalk.gray(label)} ${collapsed.join(', ')}`);
       }
     }
     if (hasDeploy) {
