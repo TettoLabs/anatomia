@@ -109,6 +109,47 @@ describe('scanProject()', () => {
     expect(result.schemas['prisma']).toBeDefined();
     expect(result.schemas['prisma']!.found).toBe(true);
     expect(result.schemas['prisma']!.modelCount).toBe(2);
+    // SCAN-042 regression: backwards-compat — monolith layout still works.
+    expect(result.schemas['prisma']!.path).toBe('prisma/schema.prisma');
+  });
+
+  // SCAN-042: monorepo sub-package ORM schema detection. 5 of 22 target-
+  // customer projects had Prisma inside a packages/<pkg>/ sub-directory;
+  // the old root-only glob missed them and fired a misleading blind spot.
+  it('detects Prisma schema in a monorepo sub-package (SCAN-042)', async () => {
+    await createFiles({
+      'package.json': JSON.stringify({
+        name: 'monorepo-root',
+        dependencies: { '@prisma/client': '5.0.0' },
+      }),
+      'packages/db/prisma/schema.prisma':
+        'model User { id Int @id }\nmodel Post { id Int @id }\nmodel Comment { id Int @id }',
+    });
+
+    const result = await scanProject(tempDir, { depth: 'surface' });
+
+    expect(result.schemas['prisma']).toBeDefined();
+    expect(result.schemas['prisma']!.found).toBe(true);
+    expect(result.schemas['prisma']!.path).toBe('packages/db/prisma/schema.prisma');
+    expect(result.schemas['prisma']!.modelCount).toBe(3);
+    // Blind spot should NOT fire because the schema was found.
+    expect(result.blindSpots.find(b => b.area === 'Database' && /Prisma/.test(b.issue))).toBeUndefined();
+  });
+
+  it('detects Drizzle schema in a monorepo sub-package (SCAN-042)', async () => {
+    await createFiles({
+      'package.json': JSON.stringify({
+        name: 'monorepo-root',
+        dependencies: { 'drizzle-orm': '0.30.0' },
+      }),
+      'apps/api/drizzle/schema.ts': 'export const users = pgTable("users", {});',
+    });
+
+    const result = await scanProject(tempDir, { depth: 'surface' });
+
+    expect(result.schemas['drizzle']).toBeDefined();
+    expect(result.schemas['drizzle']!.found).toBe(true);
+    expect(result.schemas['drizzle']!.path).toBe('apps/api/drizzle/schema.ts');
   });
 
   it('handles empty directory gracefully', async () => {

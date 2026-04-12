@@ -198,26 +198,47 @@ async function detectSchemas(
   const schemas: EngineResult['schemas'] = {};
   const blindSpots: EngineResult['blindSpots'] = [];
 
+  // Schemas live in many places in real projects:
+  // - monolith: prisma/schema.prisma at root
+  // - monorepo with shared db: packages/db/prisma/schema.prisma
+  // - monorepo per-app: apps/api/prisma/schema.prisma
+  // 5 of 22 tested projects had Prisma in a sub-package — the old root-only
+  // globs missed them and fired a misleading "no schema" blind spot. Replace
+  // with ** globs bounded by maxDepth: 6 and ignoring build artifacts.
+  // Benchmark against Anatomia: avg 2.6ms, max 7.3ms — well under the 300ms
+  // threshold that would force the explicit-pattern fallback.
+  const SCHEMA_GLOB_OPTS = {
+    cwd: rootPath,
+    ignore: ['**/node_modules/**', '**/dist/**', '**/.git/**'],
+    maxDepth: 6,
+  };
+
   // Prisma
   const hasPrisma = allDeps['prisma'] || allDeps['@prisma/client'];
   if (hasPrisma) {
-    const schemaPath = path.join(rootPath, 'prisma', 'schema.prisma');
     try {
-      const content = await fs.readFile(schemaPath, 'utf-8');
-      const modelCount = (content.match(/^model\s+/gm) || []).length;
-      const providerMatch = content.match(/provider\s*=\s*"(\w+)"/);
-      const provider = providerMatch?.[1] || null;
-      schemas['prisma'] = { found: true, path: 'prisma/schema.prisma', modelCount, provider };
+      const matches = await glob('**/schema.prisma', SCHEMA_GLOB_OPTS);
+      if (matches.length > 0) {
+        const relativePath = matches[0] as string;
+        const content = await fs.readFile(path.join(rootPath, relativePath), 'utf-8');
+        const modelCount = (content.match(/^model\s+/gm) || []).length;
+        const providerMatch = content.match(/provider\s*=\s*"(\w+)"/);
+        const provider = providerMatch?.[1] || null;
+        schemas['prisma'] = { found: true, path: relativePath, modelCount, provider };
+      } else {
+        schemas['prisma'] = { found: false, path: null, modelCount: null };
+        blindSpots.push({ area: 'Database', issue: 'Prisma dependency found but no schema.prisma', resolution: 'Create prisma/schema.prisma (or packages/<pkg>/prisma/schema.prisma in a monorepo)' });
+      }
     } catch {
       schemas['prisma'] = { found: false, path: null, modelCount: null };
-      blindSpots.push({ area: 'Database', issue: 'Prisma dependency found but no schema.prisma', resolution: 'Create prisma/schema.prisma' });
+      blindSpots.push({ area: 'Database', issue: 'Prisma dependency found but no schema.prisma', resolution: 'Create prisma/schema.prisma (or packages/<pkg>/prisma/schema.prisma in a monorepo)' });
     }
   }
 
   // Drizzle
   if (allDeps['drizzle-orm']) {
     try {
-      const files = await glob('drizzle/**/*.ts', { cwd: rootPath });
+      const files = await glob('**/drizzle/**/*.ts', SCHEMA_GLOB_OPTS);
       schemas['drizzle'] = { found: files.length > 0, path: files.length > 0 ? (files[0] ?? null) : null, modelCount: null };
     } catch {
       schemas['drizzle'] = { found: false, path: null, modelCount: null };
@@ -227,12 +248,17 @@ async function detectSchemas(
   // Supabase migrations — count unique tables, not files
   if (allDeps['@supabase/supabase-js']) {
     try {
-      const migrationFiles = await glob('supabase/migrations/*.sql', { cwd: rootPath }).catch(() => [] as string[]);
-      const schemaFiles = await glob('schema/**/*.sql', { cwd: rootPath }).catch(() => [] as string[]);
+      const migrationFiles = await glob('**/supabase/migrations/*.sql', SCHEMA_GLOB_OPTS).catch(() => [] as string[]);
+      const schemaFiles = await glob('**/schema/**/*.sql', SCHEMA_GLOB_OPTS).catch(() => [] as string[]);
       const files = [...migrationFiles, ...schemaFiles];
       if (files.length > 0) {
         const modelCount = await countUniqueTables(rootPath, files);
-        schemas['supabase'] = { found: true, path: migrationFiles.length > 0 ? 'supabase/migrations/' : 'schema/', modelCount };
+        // Record the directory that actually matched. In monorepo sub-packages
+        // this surfaces as e.g. `apps/api/supabase/migrations/` instead of the
+        // legacy hard-coded `supabase/migrations/` root.
+        const firstPath = migrationFiles[0] ?? schemaFiles[0] ?? null;
+        const schemaDir = firstPath ? `${path.dirname(firstPath)}/` : null;
+        schemas['supabase'] = { found: true, path: schemaDir, modelCount };
       } else {
         schemas['supabase'] = { found: false, path: null, modelCount: null };
       }
