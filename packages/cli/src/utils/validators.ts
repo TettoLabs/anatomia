@@ -62,14 +62,24 @@ export async function getProjectName(rootPath: string): Promise<string> {
 }
 
 /**
- * Check if file exists
+ * Check if a filesystem path exists (file OR directory).
  *
- * @param filePath - Path to file
- * @returns true if file exists, false otherwise
+ * Uses `fs.access()`, which returns true for any existing entry — regular
+ * files, directories, symlinks, etc. Use this when the caller doesn't care
+ * whether the path is a file or a directory, only whether something lives
+ * at that path.
+ *
+ * For a strict file-only check (returns false on directories), use
+ * `fileExists` from `commands/init/preflight.ts`. The two functions are
+ * intentionally kept separate: `pathExists` describes the existence test,
+ * `fileExists` describes the file-type test.
+ *
+ * @param targetPath - Path to check (file or directory)
+ * @returns true if anything exists at the path, false otherwise
  */
-export async function fileExists(filePath: string): Promise<boolean> {
+export async function pathExists(targetPath: string): Promise<boolean> {
   try {
-    await fs.access(filePath);
+    await fs.access(targetPath);
     return true;
   } catch {
     return false;

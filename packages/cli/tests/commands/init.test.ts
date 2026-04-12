@@ -3,20 +3,12 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import * as os from 'node:os';
 import { createEmptyEngineResult } from '../../src/engine/types/engineResult.js';
+import { fileExists } from '../../src/commands/init/preflight.js';
 
 async function dirExists(dirPath: string): Promise<boolean> {
   try {
     const stats = await fs.stat(dirPath);
     return stats.isDirectory();
-  } catch {
-    return false;
-  }
-}
-
-async function fileExists(filePath: string): Promise<boolean> {
-  try {
-    await fs.access(filePath);
-    return true;
   } catch {
     return false;
   }

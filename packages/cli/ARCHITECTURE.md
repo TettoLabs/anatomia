@@ -86,7 +86,7 @@ packages/cli/src/
     gotchas.ts                      — matchGotchas (compound-trigger matching against GOTCHAS)
     displayNames.ts                 — language/framework/pattern display name maps
     scaffold-generators.ts          — CLAUDE.md/AGENTS.md/context scaffolds
-    validators.ts                   — getProjectName, fileExists
+    validators.ts                   — getProjectName, pathExists
     file-writer.ts                  — atomic write helper
     fileCounts.ts                   — source/test/config file counting
     proofSummary.ts                 — generateProofSummary
