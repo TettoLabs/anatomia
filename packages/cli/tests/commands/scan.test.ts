@@ -1047,11 +1047,13 @@ describe('ana scan', () => {
         }),
         'apps/web/package.json': JSON.stringify({ name: 'web' }),
         'index.ts': 'const x = 1;',
+        // @manypkg requires a lockfile to detect workspace tool
+        'yarn.lock': '',
       });
       process.chdir(tempDir);
 
       const { stdout } = runScan();
-      expect(stdout).toMatch(/Workspace\s+npm\/yarn monorepo/);
+      expect(stdout).toMatch(/Workspace\s+yarn monorepo/);
     });
 
     it('includes packages in JSON output', async () => {
