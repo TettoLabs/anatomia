@@ -42,10 +42,14 @@ export interface FindingRule {
 
 import { checkHardcodedSecrets } from './rules/secrets.js';
 import { checkEnvHygiene } from './rules/env.js';
+import { checkApiValidation } from './rules/validation.js';
+import { checkErrorBoundaries } from './rules/errorBoundaries.js';
 
 const FINDING_RULES: FindingRule[] = [
   { id: 'hardcoded-secrets', check: checkHardcodedSecrets },
   { id: 'env-hygiene', check: checkEnvHygiene },
+  { id: 'api-validation', check: checkApiValidation },
+  { id: 'error-boundaries', check: checkErrorBoundaries },
 ];
 
 // ── Generator ──────────────────────────────────────────────────────────
