@@ -276,4 +276,38 @@ describe('matchGotchas', () => {
     const apiPatterns = matches.get('api-patterns');
     expect(apiPatterns?.some(g => g.includes('Inngest')) ?? false).toBe(false);
   });
+
+  // S19/IDEA-010: Playwright gotcha fires on both pure-Playwright projects
+  // and multi-framework projects (Jest + Playwright, Vitest + Playwright).
+  // The gotcha matcher uses the SCAN-050 array-aware equality branch;
+  // without it, `['Vitest','Playwright'].includes('Playwright')` works but
+  // `['Playwright'] === 'Playwright'` is false — proof the matcher update
+  // is load-bearing for this trigger.
+  it('fires Playwright gotcha on a pure-Playwright project (IDEA-010)', () => {
+    const result = createEmptyEngineResult();
+    result.stack.testing = ['Playwright'];
+    const matches = matchGotchas(result);
+    const testing = matches.get('testing-standards');
+    expect(testing).toBeDefined();
+    expect(testing?.some(g => /auto-waiting|getByRole/.test(g))).toBe(true);
+  });
+
+  it('fires Playwright gotcha on a Jest + Playwright project (IDEA-010)', () => {
+    const result = createEmptyEngineResult();
+    result.stack.testing = ['Jest', 'Playwright'];
+    const matches = matchGotchas(result);
+    const testing = matches.get('testing-standards');
+    expect(testing).toBeDefined();
+    // Both the Jest/Vitest-style gotcha logic AND the Playwright gotcha
+    // should coexist on multi-framework projects.
+    expect(testing?.some(g => /auto-waiting|getByRole/.test(g))).toBe(true);
+  });
+
+  it('does NOT fire Playwright gotcha on a Jest-only project (IDEA-010 negative)', () => {
+    const result = createEmptyEngineResult();
+    result.stack.testing = ['Jest'];
+    const matches = matchGotchas(result);
+    const testing = matches.get('testing-standards');
+    expect(testing?.some(g => /auto-waiting|getByRole/.test(g)) ?? false).toBe(false);
+  });
 });

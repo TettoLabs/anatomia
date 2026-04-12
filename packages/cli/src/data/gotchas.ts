@@ -55,4 +55,14 @@ export const GOTCHAS: GotchaEntry[] = [
     skill: 'api-patterns',
     text: 'Inngest functions run in a separate worker process — local development requires the `inngest-cli` dev server (`npx inngest-cli dev`). Functions are invoked by sending events (`inngest.send({ name: "user.created", data: {...} })`), not by calling the function directly. Event names use dot-notation and function signatures take `{ event, step }` — use `step.run()` for idempotent work and `step.sleep()` for delays so the durable execution engine can replay safely.',
   },
+  {
+    // S19/IDEA-010: first testing-stack gotcha that relies on the SCAN-050
+    // array-aware matcher. `{ testing: 'Playwright' }` matches against
+    // stack.testing[] so the gotcha fires on both pure-Playwright and
+    // multi-framework projects (Jest + Playwright, Vitest + Playwright).
+    id: 'playwright-auto-waiting',
+    triggers: { testing: 'Playwright' },
+    skill: 'testing-standards',
+    text: "Playwright's auto-waiting means you rarely need waitFor* patterns — `locator.click()` and `expect(locator).toBeVisible()` auto-retry until the element is ready. `page.waitForSelector()` is legacy. Prefer `page.getByRole()`, `page.getByText()`, and `page.getByLabel()` over CSS selectors — they survive DOM refactors and match accessibility intent. Tests run isolated and parallel by default; use `test.describe.serial` only when sequential execution is required.",
+  },
 ];
