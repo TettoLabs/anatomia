@@ -138,6 +138,33 @@ const EXTERNAL_SERVICE_PACKAGES: Record<string, { name: string; category: string
   '@anthropic-ai/sdk': { name: 'Anthropic', category: 'ai' },
   '@trpc/server': { name: 'tRPC', category: 'api' },
   '@trpc/client': { name: 'tRPC', category: 'api' },
+  // Vercel platform
+  '@vercel/blob': { name: 'Vercel Blob', category: 'storage' },
+  '@vercel/edge-config': { name: 'Vercel Edge Config', category: 'config' },
+  // Analytics
+  'mixpanel': { name: 'Mixpanel', category: 'analytics' },
+  '@segment/analytics-next': { name: 'Segment', category: 'analytics' },
+  'plausible-tracker': { name: 'Plausible', category: 'analytics' },
+  // Realtime
+  'socket.io': { name: 'Socket.IO', category: 'realtime' },
+  'pusher': { name: 'Pusher', category: 'realtime' },
+  '@pusher/push-notifications-web': { name: 'Pusher', category: 'realtime' },
+  'ably': { name: 'Ably', category: 'realtime' },
+  '@liveblocks/client': { name: 'Liveblocks', category: 'realtime' },
+  'livekit-server-sdk': { name: 'LiveKit', category: 'realtime' },
+  // Vector databases
+  '@pinecone-database/pinecone': { name: 'Pinecone', category: 'vector-db' },
+  'chromadb': { name: 'ChromaDB', category: 'vector-db' },
+  '@qdrant/js-client-rest': { name: 'Qdrant', category: 'vector-db' },
+  'weaviate-ts-client': { name: 'Weaviate', category: 'vector-db' },
+  // CMS
+  '@sanity/client': { name: 'Sanity', category: 'cms' },
+  'next-sanity': { name: 'Sanity', category: 'cms' },
+  'contentful': { name: 'Contentful', category: 'cms' },
+  'payload': { name: 'Payload CMS', category: 'cms' },
+  // i18n
+  'i18next': { name: 'i18next', category: 'i18n' },
+  'next-intl': { name: 'next-intl', category: 'i18n' },
 };
 
 const SERVICE_CONFIG_CHECKS: Record<string, string[]> = {
