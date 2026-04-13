@@ -204,6 +204,9 @@ function injectCodingStandards(result: EngineResult): string {
     const variant = eh && !isMultiPattern(eh) && eh.variant ? ` (${eh.variant})` : '';
     lines.push(`- Error handling: ${ehLib}${variant}`);
   }
+  if (result.stack.uiSystem) {
+    lines.push(`- UI: ${result.stack.uiSystem}`);
+  }
   return lines.join('\n');
 }
 
@@ -290,8 +293,15 @@ export function injectAiPatterns(result: EngineResult): string {
 }
 
 function injectApiPatterns(result: EngineResult): string {
-  if (result.stack.framework) return `- Framework: ${result.stack.framework}`;
-  return '';
+  const lines: string[] = [];
+  if (result.stack.framework) lines.push(`- Framework: ${result.stack.framework}`);
+  const valLib = getPatternLibrary(result.patterns?.validation);
+  if (valLib) {
+    const conf = Math.round(result.patterns!.validation!.confidence * 100);
+    lines.push(`- Validation: ${valLib} (${conf}%)`);
+  }
+  if (result.stack.auth) lines.push(`- Auth: ${result.stack.auth}`);
+  return lines.join('\n');
 }
 
 function injectDataAccess(result: EngineResult): string {
@@ -299,7 +309,8 @@ function injectDataAccess(result: EngineResult): string {
   if (result.stack.database) lines.push(`- Database: ${result.stack.database}`);
   const schemaEntries = Object.entries(result.schemas).filter(([, s]) => s.found);
   for (const [name, schema] of schemaEntries) {
-    const parts = [name];
+    const providerSuffix = schema.provider ? ` → ${schema.provider}` : '';
+    const parts = [`${name}${providerSuffix}`];
     if (schema.modelCount !== null) parts.push(`${schema.modelCount} models`);
     if (schema.path) parts.push(schema.path);
     lines.push(`- Schema: ${parts.join(', ')}`);
