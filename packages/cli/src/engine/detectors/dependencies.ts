@@ -164,6 +164,18 @@ export const MONITORING_PACKAGES: Record<string, string> = {
 };
 
 /**
+ * Cache/KV store packages. Redis, ioredis, and @upstash/redis are
+ * general-purpose infrastructure (caching, sessions, rate limiting).
+ * Previously lumped into JOBS_PACKAGES because BullMQ uses Redis,
+ * but standalone Redis clients are not job queues.
+ */
+export const CACHE_PACKAGES: Record<string, string> = {
+  'redis': 'Redis',
+  'ioredis': 'Redis',
+  '@upstash/redis': 'Upstash Redis',
+};
+
+/**
  * Background jobs/queue packages
  */
 export const JOBS_PACKAGES: Record<string, string> = {
@@ -171,8 +183,6 @@ export const JOBS_PACKAGES: Record<string, string> = {
   '@trigger.dev/sdk': 'Trigger.dev',
   '@upstash/qstash': 'Upstash QStash',
   'bullmq': 'BullMQ',
-  '@upstash/redis': 'Upstash Redis',
-  'redis': 'Redis', 'ioredis': 'Redis',
   '@temporalio/client': 'Temporal',
   '@hatchet-dev/typescript-sdk': 'Hatchet',
 };
@@ -290,6 +300,7 @@ export function detectServiceDeps(
     [EMAIL_PACKAGES, 'email'],
     [MONITORING_PACKAGES, 'monitoring'],
     [JOBS_PACKAGES, 'jobs'],
+    [CACHE_PACKAGES, 'cache'],
   ];
 
   for (const [map, category] of maps) {
