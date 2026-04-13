@@ -581,7 +581,7 @@ export function registerScanCommand(program: Command): void {
         const anaDir = path.join(rootPath, '.ana');
         try {
           await fs.writeFile(path.join(anaDir, 'scan.json'), JSON.stringify(result, null, 2), 'utf-8');
-          if (!options.quiet) {
+          if (!options.quiet && !options.json) {
             console.log(chalk.gray('Scan saved to .ana/scan.json'));
           }
 
