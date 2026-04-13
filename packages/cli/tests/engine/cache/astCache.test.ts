@@ -19,9 +19,9 @@ describe.skipIf(!wasmAvailable)('ASTCache', () => {
   });
 
   beforeEach(async () => {
-    // Create unique temp directory for each test
+    // Create unique temp directory for each test, with .ana/ so disk caching is enabled
     tempDir = join(tmpdir(), `ana-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
-    await mkdir(tempDir, { recursive: true });
+    await mkdir(join(tempDir, '.ana'), { recursive: true });
 
     // Create ASTCache instance
     cache = new ASTCache(tempDir);
@@ -315,9 +315,9 @@ describe.skipIf(!wasmAvailable)('ASTCache - invalidation scenarios', () => {
   });
 
   beforeEach(async () => {
-    // Create unique temp directory for each test
+    // Create unique temp directory for each test, with .ana/ so disk caching is enabled
     tempDir = join(tmpdir(), `ana-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
-    await mkdir(tempDir, { recursive: true });
+    await mkdir(join(tempDir, '.ana'), { recursive: true });
 
     // Create ASTCache instance
     cache = new ASTCache(tempDir);
