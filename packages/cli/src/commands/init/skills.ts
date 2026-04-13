@@ -258,7 +258,6 @@ function injectDeployment(result: EngineResult): string {
   if (result.deployment.platform) lines.push(`- Platform: ${result.deployment.platform}`);
   if (result.deployment.configFile) lines.push(`- Config: ${result.deployment.configFile}`);
   if (result.deployment.ci) lines.push(`- CI: ${result.deployment.ci}`);
-  if (result.deployment.ci) lines.push(`- CI: ${result.deployment.ci}`);
   return lines.join('\n');
 }
 
