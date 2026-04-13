@@ -352,10 +352,15 @@ async function generateAgentsMd(cwd: string, engineResult: EngineResult | null):
   if (engineResult?.conventions) {
     const convLines: string[] = [];
     const naming = engineResult.conventions.naming;
-    if (naming?.functions && naming.functions.majority !== 'unknown') {
+    // Confidence threshold: suppress low-confidence conventions from AGENTS.md.
+    // Without this, a 29% majority from 2 samples gets exported as
+    // authoritative fact to every AI coding tool that reads AGENTS.md.
+    const isReliable = (c: { confidence: number; sampleSize: number } | undefined) =>
+      !!c && c.confidence >= 0.5 && c.sampleSize >= 5;
+    if (naming?.functions && isReliable(naming.functions)) {
       convLines.push(`- Functions: ${naming.functions.majority}`);
     }
-    if (naming?.files && naming.files.majority !== 'unknown') {
+    if (naming?.files && isReliable(naming.files)) {
       convLines.push(`- Files: ${naming.files.majority}`);
     }
     const imp = engineResult.conventions.imports;
@@ -397,8 +402,9 @@ async function generateAgentsMd(cwd: string, engineResult: EngineResult | null):
   // "every character earns its place." If nothing was detected, skip
   // the section entirely rather than rendering a vacuous one.
   const constraintLines: string[] = [];
-  if (engineResult?.conventions?.naming?.functions?.majority &&
-      engineResult.conventions.naming.functions.majority !== 'unknown') {
+  if (engineResult?.conventions?.naming?.functions &&
+      engineResult.conventions.naming.functions.confidence >= 0.5 &&
+      engineResult.conventions.naming.functions.sampleSize >= 5) {
     constraintLines.push(`- ${engineResult.conventions.naming.functions.majority} for function names`);
   }
   if (engineResult?.conventions?.imports?.aliasPattern) {
