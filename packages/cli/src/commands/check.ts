@@ -17,7 +17,7 @@ import { ZodError } from 'zod';
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
 import type { SymbolEntry, SymbolIndex } from '../types/symbol-index.js';
-import { CONTEXT_FILES } from '../constants.js';
+import { CONTEXT_FILES, CORE_SKILLS } from '../constants.js';
 import { parseEngineResultPartial } from '../engine/types/engineResult-partial.js';
 import { AnaJsonSchema, type AnaJson } from './init/anaJsonSchema.js';
 
@@ -1400,7 +1400,12 @@ async function displaySetupDashboard(cwd: string): Promise<boolean> {
   // Skills
   console.log(chalk.gray('Skills:'));
   const skills = await discoverSkills(cwd);
-  if (skills.length === 0) {
+  // Warn about missing core skills — catches accidental deletion
+  const missingCore = (CORE_SKILLS as readonly string[]).filter(s => !skills.includes(s));
+  for (const name of missingCore) {
+    console.log(`  ${chalk.yellow('⚠')} ${name.padEnd(22)} missing (expected core skill)`);
+  }
+  if (skills.length === 0 && missingCore.length === 0) {
     console.log(chalk.gray('  No skills found in .claude/skills/'));
   } else {
     for (const skill of skills) {

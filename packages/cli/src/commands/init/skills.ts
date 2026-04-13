@@ -127,6 +127,18 @@ export async function scaffoldAndSeedSkills(
       await fs.mkdir(destDir, { recursive: true });
       content = await fs.readFile(sourcePath, 'utf-8');
       allowGotchaInjection = !isReinit;
+
+      // Language gate: current templates have TypeScript/Node.js-specific
+      // Rules. Non-Node projects get a placeholder instead of wrong-language
+      // advice. Only fires on Path C (fresh install of new skills), never on
+      // re-init where user may have customized Rules.
+      if (engineResult) {
+        const lang = engineResult.stack.language;
+        if (lang !== 'TypeScript' && lang !== 'Node.js') {
+          content = replaceRulesSection(content,
+            '*Rules not yet configured for this stack. Run `claude --agent ana-setup` to add conventions for your project.*\n');
+        }
+      }
     }
 
     // Shared: inject Detected across all paths (single helper, no duplication)
@@ -204,6 +216,9 @@ function injectCodingStandards(result: EngineResult): string {
     const variant = eh && !isMultiPattern(eh) && eh.variant ? ` (${eh.variant})` : '';
     lines.push(`- Error handling: ${ehLib}${variant}`);
   }
+  if (result.stack.uiSystem) {
+    lines.push(`- UI: ${result.stack.uiSystem}`);
+  }
   return lines.join('\n');
 }
 
@@ -258,7 +273,6 @@ function injectDeployment(result: EngineResult): string {
   if (result.deployment.platform) lines.push(`- Platform: ${result.deployment.platform}`);
   if (result.deployment.configFile) lines.push(`- Config: ${result.deployment.configFile}`);
   if (result.deployment.ci) lines.push(`- CI: ${result.deployment.ci}`);
-  if (result.deployment.ci) lines.push(`- CI: ${result.deployment.ci}`);
   return lines.join('\n');
 }
 
@@ -291,8 +305,15 @@ export function injectAiPatterns(result: EngineResult): string {
 }
 
 function injectApiPatterns(result: EngineResult): string {
-  if (result.stack.framework) return `- Framework: ${result.stack.framework}`;
-  return '';
+  const lines: string[] = [];
+  if (result.stack.framework) lines.push(`- Framework: ${result.stack.framework}`);
+  const valLib = getPatternLibrary(result.patterns?.validation);
+  if (valLib) {
+    const conf = Math.round(result.patterns!.validation!.confidence * 100);
+    lines.push(`- Validation: ${valLib} (${conf}%)`);
+  }
+  if (result.stack.auth) lines.push(`- Auth: ${result.stack.auth}`);
+  return lines.join('\n');
 }
 
 function injectDataAccess(result: EngineResult): string {
@@ -300,7 +321,8 @@ function injectDataAccess(result: EngineResult): string {
   if (result.stack.database) lines.push(`- Database: ${result.stack.database}`);
   const schemaEntries = Object.entries(result.schemas).filter(([, s]) => s.found);
   for (const [name, schema] of schemaEntries) {
-    const parts = [name];
+    const providerSuffix = schema.provider ? ` → ${schema.provider}` : '';
+    const parts = [`${name}${providerSuffix}`];
     if (schema.modelCount !== null) parts.push(`${schema.modelCount} models`);
     if (schema.path) parts.push(schema.path);
     lines.push(`- Schema: ${parts.join(', ')}`);
@@ -333,4 +355,30 @@ function replaceDetectedSection(fileContent: string, newDetectedContent: string)
   const body = trimmed ? trimmed + '\n' : '';
 
   return before + '## Detected\n' + body + after;
+}
+
+/**
+ * Replace ## Rules section content while preserving all other sections.
+ *
+ * Used by the language gate to clear TypeScript-specific Rules on
+ * non-Node/TS projects, replacing them with a placeholder.
+ *
+ * @param fileContent - Full file content
+ * @param newRulesContent - New content for the Rules section (lines only, no heading)
+ * @returns Updated file content
+ */
+function replaceRulesSection(fileContent: string, newRulesContent: string): string {
+  const rulesIdx = fileContent.indexOf('## Rules');
+  if (rulesIdx === -1) return fileContent;
+
+  const afterRules = fileContent.indexOf('\n## ', rulesIdx + 1);
+  const endIdx = afterRules === -1 ? fileContent.length : afterRules;
+
+  const before = fileContent.slice(0, rulesIdx);
+  const after = afterRules === -1 ? '' : fileContent.slice(endIdx);
+
+  const trimmed = newRulesContent.trim();
+  const body = trimmed ? trimmed + '\n' : '';
+
+  return before + '## Rules\n' + body + after;
 }

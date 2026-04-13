@@ -25,8 +25,8 @@ Silently read these files in order. Stay quiet during this step — the user see
 1. `.ana/ana.json` — check the `setupMode` field:
    - `"not_started"` → proceed with fresh setup
    - `"partial"` → read `.ana/state/setup-progress.json`, tell the user which phases are done, offer to resume from next incomplete phase
-   - `"complete"` or `"quick"` or `"guided"` → "Setup already completed on {setupCompletedAt}. Re-run from scratch? (Y/N)" — if N, exit; if Y, proceed
-2. `.ana/scan.json` — this is your detection foundation. Read the entire file. If this file does not exist, try `.ana/state/scan.json`. If neither exists: say "No scan data found. Run `ana init` first to scan your project." and stop.
+   - `"complete"` → "Setup already completed on {setupCompletedAt}. Re-run from scratch? (Y/N)" — if N, exit; if Y, proceed
+2. `.ana/scan.json` — this is your detection foundation. Read the entire file. If this file does not exist: say "No scan data found. Run `ana init` first to scan your project." and stop.
 3. `README.md` (if it exists) — product description source
 4. `package.json` (if it exists) — scripts, dependencies
 

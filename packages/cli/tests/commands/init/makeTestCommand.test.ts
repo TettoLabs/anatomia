@@ -38,16 +38,18 @@ describe('makeTestCommandNonInteractive', () => {
                                         'npx vitest run',            ['Vitest'],            'npx vitest run'],
     ['Jest bare — non-interactive by default',
                                         'jest',                      ['Jest'],              'jest'],
-    ['Jest --watch — strip',            'jest --watch',              ['Jest'],              'jest'],
-    ['Jest --watchAll — strip',         'jest --watchAll',           ['Jest'],              'jest'],
-    ['Mocha --watch — strip (was missing)',
-                                        'mocha --watch',             ['Mocha'],             'mocha'],
+    ['Jest --watch — disable via passthrough',
+                                        'jest --watch',              ['Jest'],              'jest --watch -- --watchAll=false'],
+    ['Jest --watchAll — disable via passthrough',
+                                        'jest --watchAll',           ['Jest'],              'jest --watchAll -- --watchAll=false'],
+    ['Mocha --watch — disable via passthrough',
+                                        'mocha --watch',             ['Mocha'],             'mocha --watch -- --watch=false'],
     ['Mocha bare — non-interactive by default',
                                         'mocha',                     ['Mocha'],             'mocha'],
     ['pytest passthrough',              'pytest',                    ['pytest'],            'pytest'],
     ['go test — no framework detected, passthrough',
                                         'go test',                   [],                    'go test'],
-    ['multi-framework Jest + Playwright — Jest transform wins',
+    ['multi-framework Jest + Playwright — no watch flags, no change',
                                         'jest',                      ['Jest', 'Playwright'], 'jest'],
     ['pnpm run test -- --run — protects Anatomia\'s own CI command',
                                         'pnpm run test -- --run',    ['Vitest'],            'pnpm run test -- --run'],
@@ -57,5 +59,21 @@ describe('makeTestCommandNonInteractive', () => {
 
   it('returns null when testCommand is null', () => {
     expect(makeTestCommandNonInteractive(null, ['Vitest'])).toBeNull();
+  });
+
+  it('Jest rawScript --watchAll — wrapper clean, raw script has flag', () => {
+    // The real-world case: npm test wrapper, jest --watchAll in package.json scripts
+    expect(makeTestCommandNonInteractive('npm test', ['Jest'], 'jest --watchAll'))
+      .toBe('npm test -- --watchAll=false');
+  });
+
+  it('Jest rawScript --watch — wrapper clean, raw script has flag', () => {
+    expect(makeTestCommandNonInteractive('npm test', ['Jest'], 'jest --watch'))
+      .toBe('npm test -- --watchAll=false');
+  });
+
+  it('Mocha rawScript --watch — wrapper clean, raw script has flag', () => {
+    expect(makeTestCommandNonInteractive('pnpm run test', ['Mocha'], 'mocha --watch'))
+      .toBe('pnpm run test -- --watch=false');
   });
 });
