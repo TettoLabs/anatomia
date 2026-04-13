@@ -210,10 +210,10 @@ export async function saveScanJson(
  *   unchanged (the tokens don't contain a literal `vitest`, but the
  *   `--run` flag is already there; appending a second `-- --run` would
  *   be wrong).
- * - Jest: strip `--watch` and `--watchAll`. Same semantic intent — both
- *   put Jest in watch mode.
- * - Mocha: strip `--watch`. Previously this case was missing entirely
- *   and a Mocha project with `test: 'mocha --watch'` would hang in CI.
+ * - Jest: check both wrapper and raw script for `--watchAll`/`--watch`,
+ *   append `-- --watchAll=false` via passthrough. The wrapper is e.g.
+ *   `npm test` but watch flags live in the raw script.
+ * - Mocha: same two-source check, appends `-- --watch=false`.
  *
  * Frameworks not in the list pass through unchanged (pytest, go test,
  * Cypress `run`, Playwright `test` are all non-interactive by default).
@@ -221,11 +221,14 @@ export async function saveScanJson(
  * @param testCommand - Raw test command from package.json
  * @param frameworks - Every detected testing framework from
  *   `stack.testing`. Membership is checked by display name.
+ * @param rawScript - The underlying script from commands.all.test
+ *   (e.g. `jest --watchAll`). Checked alongside testCommand for watch flags.
  * @returns Non-interactive test command, or null if testCommand was null.
  */
 export function makeTestCommandNonInteractive(
   testCommand: string | null,
-  frameworks: string[]
+  frameworks: string[],
+  rawScript?: string | null,
 ): string | null {
   if (!testCommand) return null;
 
@@ -246,20 +249,27 @@ export function makeTestCommandNonInteractive(
     }
   }
 
-  // Jest: strip watch flags
+  // Jest: check both wrapper and raw script for watch flags.
+  // The wrapper is e.g. `npm test` but --watchAll lives in the raw script
+  // (`jest --watchAll` in package.json). Append --watchAll=false via
+  // passthrough (same pattern as Vitest's -- --run).
   if (frameworks.includes('Jest')) {
-    if (testCommand.includes('--watchAll')) {
-      return testCommand.replace('--watchAll', '').trim();
-    }
-    if (testCommand.includes('--watch')) {
-      return testCommand.replace('--watch', '').trim();
+    const checkTarget = testCommand + ' ' + (rawScript || '');
+    if (checkTarget.includes('--watchAll') || checkTarget.includes('--watch')) {
+      if (!testCommand.includes('--watchAll=false') && !testCommand.includes('--no-watchAll')) {
+        return `${testCommand} -- --watchAll=false`;
+      }
     }
   }
 
-  // Mocha: strip watch flag (was missing — a Mocha project with
-  // `mocha --watch` in its test script would hang in CI).
-  if (frameworks.includes('Mocha') && testCommand.includes('--watch')) {
-    return testCommand.replace('--watch', '').trim();
+  // Mocha: same pattern — check both wrapper and raw script.
+  if (frameworks.includes('Mocha')) {
+    const checkTarget = testCommand + ' ' + (rawScript || '');
+    if (checkTarget.includes('--watch')) {
+      if (!testCommand.includes('--watch=false') && !testCommand.includes('--no-watch')) {
+        return `${testCommand} -- --watch=false`;
+      }
+    }
   }
 
   return testCommand;
@@ -295,7 +305,7 @@ export async function createAnaJson(
     packageManager: result.commands.packageManager,
     commands: {
       build: result.commands.build || null,
-      test: makeTestCommandNonInteractive(result.commands.test, result.stack.testing),
+      test: makeTestCommandNonInteractive(result.commands.test, result.stack.testing, result.commands.all?.['test']),
       lint: result.commands.lint || null,
       dev: result.commands.dev || null,
     },
@@ -522,7 +532,7 @@ export function displaySuccessMessage(engineResult: EngineResult | null, project
   if (engineResult) {
     const artifactBranch = engineResult.git.defaultBranch ?? engineResult.git.branch ?? 'main';
     console.log(`  ${chalk.bold('Branch:')}   ${artifactBranch}`);
-    const displayTest = makeTestCommandNonInteractive(engineResult.commands.test, engineResult.stack.testing);
+    const displayTest = makeTestCommandNonInteractive(engineResult.commands.test, engineResult.stack.testing, engineResult.commands.all?.['test']);
     if (displayTest) {
       console.log(`  ${chalk.bold('Test:')}     ${displayTest}`);
     }

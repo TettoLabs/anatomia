@@ -337,7 +337,7 @@ async function generateAgentsMd(cwd: string, engineResult: EngineResult | null):
     const cmdLines: string[] = [];
     if (cmds.build) cmdLines.push(`- Build: \`${cmds.build}\``);
     if (cmds.test) {
-      const testCmd = makeTestCommandNonInteractive(cmds.test, engineResult.stack.testing);
+      const testCmd = makeTestCommandNonInteractive(cmds.test, engineResult.stack.testing, cmds.all?.['test']);
       cmdLines.push(`- Test: \`${testCmd}\``);
     }
     if (cmds.lint) cmdLines.push(`- Lint: \`${cmds.lint}\``);
