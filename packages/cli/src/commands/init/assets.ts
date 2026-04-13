@@ -376,13 +376,18 @@ async function generateAgentsMd(cwd: string, engineResult: EngineResult | null):
     }
   }
 
-  // Services (from external service detection)
+  // Services — dedup against stack roles (same pattern as scan.ts display).
+  // Services that fulfill a stack role (database, auth, payments, aiSdk,
+  // deployment) already appear in the header line — don't repeat them.
   if (engineResult && engineResult.externalServices.length > 0) {
-    lines.push('## Services');
-    for (const svc of engineResult.externalServices) {
-      lines.push(`- ${svc.name} (${svc.category})`);
+    const standalone = engineResult.externalServices.filter(svc => svc.stackRoles.length === 0);
+    if (standalone.length > 0) {
+      lines.push('## Services');
+      for (const svc of standalone) {
+        lines.push(`- ${svc.name} (${svc.category})`);
+      }
+      lines.push('');
     }
-    lines.push('');
   }
 
   // Scan-derived constraints — real constraints only, no generic
