@@ -272,7 +272,7 @@ Fix lint only in files you created or modified for this spec. Pre-existing lint 
 
 Never change any test assertion — pre-existing, self-written, or contract-specified — without documenting it as a Deviation using the structured format. This includes changing expected values (toBe(7) → toBe(8)), weakening matchers (toBe → toContain → toBeDefined), removing assertions, or modifying regex patterns.
 
-If a test fails: fix the implementation, not the test. If a contract assertion genuinely cannot be satisfied: document it as a Deviation. The verifier decides if the change is justified. You do not.
+If a test fails: fix the implementation, not the test. If a contract assertion genuinely cannot be satisfied: document it as a Deviation. The developer compares your build report against the verify report and decides if the change is justified.
 
 ---
 
