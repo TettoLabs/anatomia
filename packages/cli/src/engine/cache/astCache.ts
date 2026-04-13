@@ -11,6 +11,7 @@
  */
 
 import { readFile, writeFile, mkdir, rm, stat } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { join, basename } from 'node:path';
 import type {
   FunctionInfo,
@@ -77,6 +78,7 @@ export interface CacheStats {
 export class ASTCache {
   private memoryCache = new Map<string, ASTCacheEntry>();
   private cacheDir: string;
+  private diskEnabled: boolean;
   private stats = { hits: 0, misses: 0 };
 
   /** Static override for cache directory (used during init to write to temp) */
@@ -102,6 +104,10 @@ export class ASTCache {
   constructor(projectRoot: string) {
     // Use override if set, otherwise default
     this.cacheDir = ASTCache.cacheOverrideDir || join(projectRoot, '.ana/state/cache');
+    // Skip disk caching when .ana/ doesn't exist (funnel scan — no init yet).
+    // Prevents standalone `ana scan` from creating .ana/state/cache/ as a side
+    // effect, which poisons the isFunnel check in scan.ts.
+    this.diskEnabled = !!ASTCache.cacheOverrideDir || existsSync(join(projectRoot, '.ana'));
   }
 
   /**
@@ -172,15 +178,16 @@ export class ASTCache {
       cachedAt: new Date().toISOString(),
     };
 
-    // Store in memory cache
+    // Store in memory cache (always — valid for this session)
     this.memoryCache.set(filePath, entry);
 
-    // Store on disk
-    const cacheKey = this.getCacheKey(filePath, stats.mtimeMs);
-    const cachePath = join(this.cacheDir, `${cacheKey}.json`);
-
-    await mkdir(this.cacheDir, { recursive: true });
-    await writeFile(cachePath, JSON.stringify(entry, null, 2));
+    // Store on disk only when .ana/ exists or override is set (init).
+    if (this.diskEnabled) {
+      const cacheKey = this.getCacheKey(filePath, stats.mtimeMs);
+      const cachePath = join(this.cacheDir, `${cacheKey}.json`);
+      await mkdir(this.cacheDir, { recursive: true });
+      await writeFile(cachePath, JSON.stringify(entry, null, 2));
+    }
   }
 
   /**
