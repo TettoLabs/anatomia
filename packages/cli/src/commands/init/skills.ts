@@ -127,6 +127,18 @@ export async function scaffoldAndSeedSkills(
       await fs.mkdir(destDir, { recursive: true });
       content = await fs.readFile(sourcePath, 'utf-8');
       allowGotchaInjection = !isReinit;
+
+      // Language gate: current templates have TypeScript/Node.js-specific
+      // Rules. Non-Node projects get a placeholder instead of wrong-language
+      // advice. Only fires on Path C (fresh install of new skills), never on
+      // re-init where user may have customized Rules.
+      if (engineResult) {
+        const lang = engineResult.stack.language;
+        if (lang !== 'TypeScript' && lang !== 'Node.js') {
+          content = replaceRulesSection(content,
+            '*Rules not yet configured for this stack. Run `claude --agent ana-setup` to add conventions for your project.*\n');
+        }
+      }
     }
 
     // Shared: inject Detected across all paths (single helper, no duplication)
@@ -343,4 +355,30 @@ function replaceDetectedSection(fileContent: string, newDetectedContent: string)
   const body = trimmed ? trimmed + '\n' : '';
 
   return before + '## Detected\n' + body + after;
+}
+
+/**
+ * Replace ## Rules section content while preserving all other sections.
+ *
+ * Used by the language gate to clear TypeScript-specific Rules on
+ * non-Node/TS projects, replacing them with a placeholder.
+ *
+ * @param fileContent - Full file content
+ * @param newRulesContent - New content for the Rules section (lines only, no heading)
+ * @returns Updated file content
+ */
+function replaceRulesSection(fileContent: string, newRulesContent: string): string {
+  const rulesIdx = fileContent.indexOf('## Rules');
+  if (rulesIdx === -1) return fileContent;
+
+  const afterRules = fileContent.indexOf('\n## ', rulesIdx + 1);
+  const endIdx = afterRules === -1 ? fileContent.length : afterRules;
+
+  const before = fileContent.slice(0, rulesIdx);
+  const after = afterRules === -1 ? '' : fileContent.slice(endIdx);
+
+  const trimmed = newRulesContent.trim();
+  const body = trimmed ? trimmed + '\n' : '';
+
+  return before + '## Rules\n' + body + after;
 }
