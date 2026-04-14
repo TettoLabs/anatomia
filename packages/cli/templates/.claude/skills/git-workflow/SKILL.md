@@ -9,11 +9,9 @@ description: "Invoke before any git operations — branching, committing, mergin
 <!-- Populated by scan during init. Do not edit manually. -->
 
 ## Rules
-
-- Create feature branches from the default branch: `feature/{description}` or `{initials}/{description}`.
-- Use conventional commits: `type: description` where type is one of feat, fix, chore, docs, test, refactor.
-- Include co-author trailer when Ana assists: `Co-authored-by: Ana <build@anatomia.dev>`.
-- Merge feature branches to the default branch. Confirm merge strategy with your team.
+- Commit each logical change separately. Don't batch unrelated changes into one commit.
+- Write commit messages that explain what changed and why: `feat: add input validation to signup` not `update files`.
+- Stage specific files for each commit. Avoid `git add .` or `git add -A` — review what you're committing.
 
 ## Gotchas
 *Not yet captured. Add as you discover them during development.*
