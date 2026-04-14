@@ -190,14 +190,19 @@ function discoverSchemas(
 ): SchemaFileEntry[] {
   const entries: SchemaFileEntry[] = [];
   for (const root of roots) {
-    // Prisma
-    const prismaPath = path.join(root.absolutePath, 'prisma', 'schema.prisma');
-    if (existsSync(prismaPath)) {
-      entries.push({
-        orm: 'prisma',
-        sourceRootPath: root.relativePath,
-        path: path.relative(rootPath, prismaPath),
-      });
+    // Prisma — check both conventional locations:
+    // - {root}/prisma/schema.prisma (monolith, most monorepos)
+    // - {root}/schema.prisma (prisma package root, e.g., cal.com's @calcom/prisma)
+    for (const candidate of ['prisma/schema.prisma', 'schema.prisma']) {
+      const prismaPath = path.join(root.absolutePath, candidate);
+      if (existsSync(prismaPath)) {
+        entries.push({
+          orm: 'prisma',
+          sourceRootPath: root.relativePath,
+          path: path.relative(rootPath, prismaPath),
+        });
+        break; // one Prisma entry per root
+      }
     }
     // Drizzle
     const drizzlePath = path.join(root.absolutePath, 'drizzle');
