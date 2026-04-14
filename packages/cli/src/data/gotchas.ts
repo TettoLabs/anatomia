@@ -68,21 +68,21 @@ export const GOTCHAS: GotchaEntry[] = [
   // S22/V-12: Anthropic SDK retry pattern
   {
     id: 'anthropic-sdk-retry',
-    triggers: { aiSdk: '@anthropic-ai/sdk' },
+    triggers: { aiSdk: 'Anthropic' },
     skill: 'ai-patterns',
     text: 'Anthropic SDK supports `maxRetries` in the client constructor. Configure it to handle transient rate limits automatically instead of building custom retry logic.',
   },
   // S22/V-13: Vercel AI SDK patterns
   {
     id: 'vercel-ai-sdk-patterns',
-    triggers: { aiSdk: 'ai' },
+    triggers: { aiSdk: 'Vercel AI' },
     skill: 'ai-patterns',
     text: "Use `generateObject()` for structured output and `streamText()` for streaming responses. Don't use `generateText()` with manual JSON parsing.",
   },
   // S22/V-14: OpenAI SDK retry + structured output
   {
     id: 'openai-sdk-retry',
-    triggers: { aiSdk: 'openai' },
+    triggers: { aiSdk: 'OpenAI' },
     skill: 'ai-patterns',
     text: "OpenAI SDK supports `maxRetries` in the client constructor. Use `response_format: { type: 'json_object' }` for structured output instead of parsing free text.",
   },
