@@ -5,6 +5,7 @@
 
 import { GOTCHAS } from '../data/gotchas.js';
 import type { EngineResult } from '../engine/types/engineResult.js';
+import { getPatternLibrary } from '../engine/types/patterns.js';
 
 /**
  * Find gotchas that match the detected stack.
@@ -45,6 +46,11 @@ export function matchGotchas(result: EngineResult): Map<string, string[]> {
       if (result.externalServices.some(svc => svc.category === key && svc.name === value)) {
         return true;
       }
+      // Deployment field match (platform, ci)
+      if (key === 'platform' && result.deployment?.platform === value) return true;
+      if (key === 'ci' && result.deployment?.ci === value) return true;
+      // Patterns field match (validation library)
+      if (key === 'validation' && getPatternLibrary(result.patterns?.validation) === value) return true;
       return false;
     });
 

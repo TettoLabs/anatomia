@@ -40,6 +40,7 @@ import type { InitState } from './types.js';
 import { dirExists, fileExists } from './preflight.js';
 import { getTemplatesDir, makeTestCommandNonInteractive } from './state.js';
 import { scaffoldAndSeedSkills } from './skills.js';
+import { getPatternLibrary } from '../../engine/types/patterns.js';
 
 /**
  * Phase 3: Create directory structure
@@ -364,14 +365,14 @@ async function generateAgentsMd(cwd: string, engineResult: EngineResult | null):
       convLines.push(`- Files: ${naming.files.majority}`);
     }
     const imp = engineResult.conventions.imports;
-    if (imp) {
+    if (imp && imp.style !== 'mixed') {
       const importStyle = (imp.style === 'absolute' && imp.aliasPattern)
         ? `path aliases (${imp.aliasPattern})`
         : imp.style;
       convLines.push(`- Imports: ${importStyle}`);
     }
     const indent = engineResult.conventions.indentation;
-    if (indent) {
+    if (indent && indent.confidence >= 0.5) {
       convLines.push(`- Indentation: ${indent.style}, ${indent.width} wide`);
     }
     if (convLines.length > 0) {
@@ -413,6 +414,27 @@ async function generateAgentsMd(cwd: string, engineResult: EngineResult | null):
   if (engineResult?.commands.build) {
     constraintLines.push(`- Run \`${engineResult.commands.build}\` before committing`);
   }
+  // Finding-derived constraints (instruction-oriented, stale-resistant)
+  const findingInstructions: Record<string, string> = {
+    'hardcoded-secret': '🔴 Use environment variables for all API keys and credentials — never hardcode secrets',
+    'api-validation': '⚠ Validate all API route input with {lib} at the boundary',
+    'env-hygiene': '⚠ Maintain a .env.example documenting all required environment variables',
+  };
+
+  if (engineResult && engineResult.findings.length > 0) {
+    for (const f of engineResult.findings) {
+      if (f.severity !== 'critical' && f.severity !== 'warn') continue;
+      const instruction = findingInstructions[f.id];
+      if (instruction) {
+        const line = instruction.replace(
+          '{lib}',
+          getPatternLibrary(engineResult.patterns?.validation) || 'a schema validator'
+        );
+        constraintLines.push(`- ${line}`);
+      }
+    }
+  }
+
   if (constraintLines.length > 0) {
     lines.push('## Constraints');
     lines.push(...constraintLines);

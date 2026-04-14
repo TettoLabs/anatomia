@@ -65,4 +65,60 @@ export const GOTCHAS: GotchaEntry[] = [
     skill: 'testing-standards',
     text: "Playwright's auto-waiting means you rarely need waitFor* patterns — `locator.click()` and `expect(locator).toBeVisible()` auto-retry until the element is ready. `page.waitForSelector()` is legacy. Prefer `page.getByRole()`, `page.getByText()`, and `page.getByLabel()` over CSS selectors — they survive DOM refactors and match accessibility intent. Tests run isolated and parallel by default; use `test.describe.serial` only when sequential execution is required.",
   },
+  // S22/V-12: Anthropic SDK retry pattern
+  {
+    id: 'anthropic-sdk-retry',
+    triggers: { aiSdk: 'Anthropic' },
+    skill: 'ai-patterns',
+    text: 'Anthropic SDK supports `maxRetries` in the client constructor. Configure it to handle transient rate limits automatically instead of building custom retry logic.',
+  },
+  // S22/V-13: Vercel AI SDK patterns
+  {
+    id: 'vercel-ai-sdk-patterns',
+    triggers: { aiSdk: 'Vercel AI' },
+    skill: 'ai-patterns',
+    text: "Use `generateObject()` for structured output and `streamText()` for streaming responses. Don't use `generateText()` with manual JSON parsing.",
+  },
+  // S22/V-14: OpenAI SDK retry + structured output
+  {
+    id: 'openai-sdk-retry',
+    triggers: { aiSdk: 'OpenAI' },
+    skill: 'ai-patterns',
+    text: "OpenAI SDK supports `maxRetries` in the client constructor. Use `response_format: { type: 'json_object' }` for structured output instead of parsing free text.",
+  },
+  // S22/V-15: Next.js Route Handler self-call anti-pattern
+  {
+    id: 'nextjs-route-handler-selfcall',
+    triggers: { framework: 'Next.js' },
+    skill: 'api-patterns',
+    text: "Don't call Route Handlers from Server Components. Call the data function directly — the Route Handler is for external clients, not internal server-side calls.",
+  },
+  // S22/V-16: Stripe webhook signature verification
+  {
+    id: 'stripe-webhook-verification',
+    triggers: { payments: 'Stripe' },
+    skill: 'api-patterns',
+    text: 'Always verify webhook signatures before processing Stripe events. Use `stripe.webhooks.constructEvent()` with the raw body — never trust the payload without verification.',
+  },
+  // S22/V-17: Zod safeParse in route handlers
+  {
+    id: 'zod-safeparse',
+    triggers: { validation: 'zod' },
+    skill: 'api-patterns',
+    text: 'Use `.safeParse()` in route handlers, not `.parse()`. `.parse()` throws on invalid input — use `.safeParse()` and return a 400 with validation error details.',
+  },
+  // S22/V-18: Prisma singleton in serverless
+  {
+    id: 'prisma-serverless-singleton',
+    triggers: { database: 'Prisma', platform: 'Vercel' },
+    skill: 'data-access',
+    text: 'Prisma in serverless (Vercel, Lambda) exhausts connection pools fast. Export a singleton from `lib/prisma.ts` with global caching: `globalThis.prisma ??= new PrismaClient()`.',
+  },
+  // S22/V-19: Vercel serverless timeout
+  {
+    id: 'vercel-serverless-timeout',
+    triggers: { platform: 'Vercel' },
+    skill: 'deployment',
+    text: 'Vercel serverless functions have execution time limits. Long-running operations (LLM calls, file processing, batch jobs) should use streaming to send the first byte quickly, or offload to background functions with `waitUntil()`.',
+  },
 ];

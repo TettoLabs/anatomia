@@ -1,6 +1,6 @@
 ---
 name: api-patterns
-description: "Invoke when implementing API routes, request handling, middleware, or error responses. Contains project-specific API conventions and patterns."
+description: "Invoke when implementing API routes, request handling, middleware, or error responses. Contains validation, error format, route architecture, and authorization patterns."
 ---
 
 # API Patterns
@@ -9,12 +9,10 @@ description: "Invoke when implementing API routes, request handling, middleware,
 <!-- Populated by scan during init. Do not edit manually. -->
 
 ## Rules
-
-- Consistent error response format across all endpoints — same shape for 400s, 404s, 500s.
-- Validate all input at the boundary — never trust client data past the route handler.
-- Use middleware for cross-cutting concerns: auth, logging, CORS, rate limiting.
-- Route handlers should be thin — extract business logic into service functions.
-- Return appropriate HTTP status codes. Not everything is 200 or 500.
+- Validate all input at the API boundary. Parse request bodies, query params, and path params with the project's validation library before any processing.
+- Return a consistent error response shape from every endpoint. Never leak stack traces, database errors, or internal paths in production responses.
+- Keep route handlers thin. Validation, then service call, then response. Business logic and data access belong in separate modules.
+- Verify the requesting user owns the requested resource. An authenticated user should not access another user's data by changing an ID in the URL.
 
 ## Gotchas
 *Not yet captured. Add as you discover them during development.*

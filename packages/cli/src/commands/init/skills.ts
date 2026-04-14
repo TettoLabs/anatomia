@@ -258,13 +258,10 @@ function injectTestingStandards(result: EngineResult): string {
 function injectGitWorkflow(result: EngineResult): string {
   const lines: string[] = [];
   if (result.git.defaultBranch) {
-    const branchCount = result.git.branches?.length ?? 0;
-    const branchSuffix = branchCount > 1 ? ` (${branchCount} branches)` : '';
-    lines.push(`- Default branch: ${result.git.defaultBranch}${branchSuffix}`);
+    lines.push(`- Default branch: ${result.git.defaultBranch}`);
   }
-  if (result.git.branch) lines.push(`- Current branch: ${result.git.branch}`);
-  if (result.git.commitCount !== null) lines.push(`- Commits: ${result.git.commitCount}`);
   if (result.git.contributorCount !== null) lines.push(`- Contributors: ${result.git.contributorCount}`);
+  lines.push('- Ana CLI: pipeline artifacts committed via `ana artifact save` with [slug] prefix. Build agent creates `feature/{slug}` branches. Co-author from ana.json.');
   return lines.join('\n');
 }
 

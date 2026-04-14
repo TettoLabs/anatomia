@@ -875,7 +875,15 @@ export async function completeWork(slug: string): Promise<void> {
   // 10. Stage and commit
   try {
     execSync('git add .ana/plans/active/ .ana/plans/completed/ .ana/proof_chain.json .ana/PROOF_CHAIN.md', { stdio: 'pipe' });
-    const commitMessage = `[${slug}] Complete — archived to plans/completed\n\nCo-authored-by: Ana <build@anatomia.dev>`;
+    // Read coAuthor from ana.json
+    const anaJsonPath = path.join(process.cwd(), '.ana', 'ana.json');
+    let coAuthor = 'Ana <build@anatomia.dev>';
+    try {
+      const anaJsonContent = fs.readFileSync(anaJsonPath, 'utf-8');
+      const config: { coAuthor?: string } = JSON.parse(anaJsonContent);
+      coAuthor = config.coAuthor || 'Ana <build@anatomia.dev>';
+    } catch { /* fallback to default */ }
+    const commitMessage = `[${slug}] Complete — archived to plans/completed\n\nCo-authored-by: ${coAuthor}`;
     execSync(`git commit -m "${commitMessage}"`, { stdio: 'pipe' });
   } catch (error) {
     console.error(chalk.red(`Error: Failed to commit. ${error instanceof Error ? error.message : 'Unknown error'}`));

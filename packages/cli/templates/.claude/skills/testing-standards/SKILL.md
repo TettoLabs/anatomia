@@ -9,12 +9,11 @@ description: "Invoke when writing tests, reviewing test quality, or setting up t
 <!-- Populated by scan during init. Do not edit manually. -->
 
 ## Rules
-
-- Co-locate test files with source: `foo.test.ts` next to `foo.ts`.
-- Use `describe`/`it` blocks, not standalone `test()` calls.
-- Prefer real I/O over mocks when feasible — mock only external services and time-dependent behavior.
-- Each test must be isolated: create its own fixtures, clean up after itself, never depend on run order.
-- Coverage minimum: 80% statements. Don't chase 100% — focus coverage on business logic and edge cases.
+- Test behavior, not implementation. Assert on what the code returns or produces — not which internal functions it calls. Tests should survive refactoring when behavior is unchanged.
+- Prefer real implementations over mocks. Mock only what you can't control: network calls, time, randomness. Every mock is a lie about how the system actually behaves.
+- Cover the error path, not just the happy path. For each feature test, write at least one test for invalid input, missing data, or service failure.
+- Assert on specific expected values from real inputs. `expect(status).toBe(200)` not `expect(status).toBeDefined()`. A test that passes regardless of whether the feature works catches nothing.
+- Never weaken a test to make it pass. If a test fails, fix the code or fix the expectation — never broaden assertions or catch exceptions to force green.
 
 ## Gotchas
 *Not yet captured. Add as you discover them during development.*
