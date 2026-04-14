@@ -266,22 +266,44 @@ async function detectSchemas(
     maxDepth: 6,
   };
 
-  // Prisma — prefer census schema entry, fall back to glob for monorepo sub-packages
-  // that aren't registered as workspace packages (SCAN-042 regression guard).
+  // Prisma — collect ALL census entries, fall back to glob. When multiple
+  // schema.prisma files exist (monorepo with example schemas), pick the one
+  // with the most models — production schemas are always larger than examples.
+  // Multi-file schemas (prismaSchemaFolder): count models across all sibling
+  // .prisma files in the same directory, not just schema.prisma.
   const hasPrisma = allDeps['prisma'] || allDeps['@prisma/client'];
   if (hasPrisma) {
     try {
-      const censusSchemaMatch = censusSchemas.find(s => s.orm === 'prisma');
-      const matches = censusSchemaMatch
-        ? [censusSchemaMatch.path]
+      const censusPrisma = censusSchemas.filter(s => s.orm === 'prisma').map(s => s.path);
+      const matches = censusPrisma.length > 0
+        ? censusPrisma
         : await glob('**/schema.prisma', SCHEMA_GLOB_OPTS);
       if (matches.length > 0) {
-        const relativePath = matches[0] as string;
-        const content = await fs.readFile(path.join(rootPath, relativePath), 'utf-8');
-        const modelCount = (content.match(/^model\s+/gm) || []).length;
-        const providerMatch = content.match(/provider\s*=\s*"(\w+)"/);
-        const provider = providerMatch?.[1] || null;
-        schemas['prisma'] = { found: true, path: relativePath, modelCount, provider };
+        // Score each candidate by model count (including sibling .prisma files)
+        let best: { path: string; modelCount: number; provider: string | null } | null = null;
+        for (const relativePath of matches) {
+          const absPath = path.join(rootPath, relativePath as string);
+          const content = await fs.readFile(absPath, 'utf-8');
+          // Count models in this file
+          let modelCount = (content.match(/^model\s+/gm) || []).length;
+          // Multi-file schema: count models in sibling .prisma files
+          const schemaDir = path.dirname(absPath);
+          try {
+            const siblings = await fs.readdir(schemaDir);
+            const prismaFiles = siblings.filter(f => f.endsWith('.prisma') && f !== path.basename(absPath));
+            for (const sibling of prismaFiles) {
+              const sibContent = await fs.readFile(path.join(schemaDir, sibling), 'utf-8');
+              modelCount += (sibContent.match(/^model\s+/gm) || []).length;
+            }
+          } catch { /* directory read failed — use single-file count */ }
+          // Extract provider from datasource block
+          const providerMatch = content.match(/datasource\s+\w+\s*\{[^}]*provider\s*=\s*"(\w+)"/s);
+          const provider = providerMatch?.[1] || null;
+          if (!best || modelCount > best.modelCount) {
+            best = { path: relativePath as string, modelCount, provider };
+          }
+        }
+        schemas['prisma'] = { found: true, path: best!.path, modelCount: best!.modelCount, provider: best!.provider };
       } else {
         schemas['prisma'] = { found: false, path: null, modelCount: null };
         blindSpots.push({ area: 'Database', issue: 'Prisma dependency found but no schema.prisma', resolution: 'Create prisma/schema.prisma (or packages/<pkg>/prisma/schema.prisma in a monorepo)' });

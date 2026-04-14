@@ -408,7 +408,8 @@ async function generateAgentsMd(cwd: string, engineResult: EngineResult | null):
       engineResult.conventions.naming.functions.sampleSize >= 5) {
     constraintLines.push(`- ${engineResult.conventions.naming.functions.majority} for function names`);
   }
-  if (engineResult?.conventions?.imports?.aliasPattern) {
+  if (engineResult?.conventions?.imports?.aliasPattern &&
+      engineResult.conventions.imports.style === 'absolute') {
     constraintLines.push(`- Use ${engineResult.conventions.imports.aliasPattern} path aliases for imports`);
   }
   if (engineResult?.commands.build) {
