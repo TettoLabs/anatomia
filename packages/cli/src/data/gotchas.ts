@@ -110,7 +110,7 @@ export const GOTCHAS: GotchaEntry[] = [
   // S22/V-18: Prisma singleton in serverless
   {
     id: 'prisma-serverless-singleton',
-    triggers: { database: 'Prisma' },
+    triggers: { database: 'Prisma', platform: 'Vercel' },
     skill: 'data-access',
     text: 'Prisma in serverless (Vercel, Lambda) exhausts connection pools fast. Export a singleton from `lib/prisma.ts` with global caching: `globalThis.prisma ??= new PrismaClient()`.',
   },
