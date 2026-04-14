@@ -27,18 +27,22 @@ describe('scaffold generators (S15 consolidated: 2 generators)', () => {
       expect(sections).toBe(6);
     });
 
-    it('includes Detected lines when stack data present', () => {
+    it('includes synthesized description when stack data present', () => {
       const richResult = {
         ...result,
         stack: { ...result.stack, language: 'TypeScript', framework: 'Next.js', database: 'PostgreSQL' },
+        projectProfile: { ...result.projectProfile, hasBrowserUI: true },
         externalServices: [{ name: 'Stripe', category: 'Payments', source: 'dependency', configFound: false, stackRoles: [] }],
         commands: { ...result.commands, build: 'pnpm build', test: 'vitest' },
       };
 
       const output = generateProjectContextScaffold(richResult);
-      expect(output).toContain('**Detected:** TypeScript · Next.js · PostgreSQL');
-      expect(output).toContain('**Detected services:** Stripe');
-      expect(output).toContain('**Detected commands:**');
+      expect(output).toContain('**Detected:** Next.js web application');
+      expect(output).toContain('database (PostgreSQL)');
+      expect(output).toContain('source files');
+      // Services and commands are in AGENTS.md now, not project-context
+      expect(output).not.toContain('**Detected services:**');
+      expect(output).not.toContain('**Detected commands:**');
     });
 
     it('omits Detected lines when data is null', () => {
@@ -54,15 +58,18 @@ describe('scaffold generators (S15 consolidated: 2 generators)', () => {
       };
 
       const output = generateProjectContextScaffold(monoResult);
+      expect(output).toContain('pnpm monorepo');
       expect(output).toContain('pnpm · 2 packages');
     });
   });
 
   describe('generateDesignPrinciplesTemplate', () => {
-    it('returns static template with no scan data', () => {
+    it('returns static template with 3 default principles', () => {
       const output = generateDesignPrinciplesTemplate();
       expect(output).toContain('# Design Principles');
-      expect(output).toContain('What does your team believe');
+      expect(output).toContain('## Name the disease, not the symptom');
+      expect(output).toContain('## Surface tradeoffs before committing');
+      expect(output).toContain('## Every change should be foundation, not scaffolding');
       expect(output).not.toContain('**Detected:**');
     });
 

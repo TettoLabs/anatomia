@@ -12,19 +12,13 @@
  */
 
 import type { EngineResult } from '../engine/types/engineResult.js';
-import { SCAFFOLD_MARKER, getStackSummary } from '../constants.js';
-
-/**
- * Placeholder line for sections the scan couldn't seed.
- * S19/CLI-010: extracted from 6 identical inline copies.
- */
-const NOT_YET_CAPTURED = '*Not yet captured. Run `claude --agent ana-setup` to fill this.*';
+import { SCAFFOLD_MARKER } from '../constants.js';
 
 /**
  * Generate project-context.md scaffold (D6.6 format)
  *
  * Produces 6 sections with scan-seeded **Detected:** lines.
- * Machine sections show detected data; human sections show HTML comment placeholders.
+ * Machine sections show detected data; human sections show section-specific placeholders.
  *
  * @param result - Engine result
  * @returns Markdown scaffold string
@@ -33,41 +27,48 @@ export function generateProjectContextScaffold(result: EngineResult): string {
   let s = `${SCAFFOLD_MARKER}\n\n`;
   s += `# Project Context\n\n`;
 
-  // Section 1: What This Project Does
-  s += `## What This Project Does\n`;
-  const stackParts = getStackSummary(result);
-  if (stackParts.length > 0) {
-    s += `**Detected:** ${stackParts.join(' · ')}\n`;
-  }
-  if (result.externalServices.length > 0) {
-    const names = result.externalServices.map(svc => svc.name).join(', ');
-    s += `**Detected services:** ${names}\n`;
-  }
-  const cmdParts: string[] = [];
-  if (result.commands.build) cmdParts.push(`build: \`${result.commands.build}\``);
-  if (result.commands.test) cmdParts.push(`test: \`${result.commands.test}\``);
-  if (result.commands.lint) cmdParts.push(`lint: \`${result.commands.lint}\``);
-  if (result.commands.dev) cmdParts.push(`dev: \`${result.commands.dev}\``);
-  if (cmdParts.length > 0) {
-    s += `**Detected commands:** ${cmdParts.join(' · ')}\n`;
-  }
-  const infoParts: string[] = [];
-  if (result.commands.packageManager &&
-      !(result.monorepo.isMonorepo && result.monorepo.tool === result.commands.packageManager)) {
-    infoParts.push(`${result.commands.packageManager}`);
-  }
-  // aiSdk removed — already shown in Stack Detected line (Item 6)
+  // Section 1: What This Project Does — synthesized description
+  s += `## What This Project Does\n\n`;
+  const descParts: string[] = [];
   if (result.monorepo.isMonorepo) {
     const tool = result.monorepo.tool || 'monorepo';
-    infoParts.push(`${tool} (${result.monorepo.packages.length} packages)`);
+    descParts.push(`${tool} monorepo`);
+  } else if (result.projectProfile?.hasBrowserUI && result.stack.framework) {
+    descParts.push(`${result.stack.framework} web application`);
+  } else if (result.stack.framework) {
+    descParts.push(`${result.stack.framework} application`);
+  } else if (result.stack.language) {
+    descParts.push(`${result.stack.language} project`);
   }
-  if (infoParts.length > 0) {
-    s += `**Detected infrastructure:** ${infoParts.join(' · ')}\n`;
+  if (result.stack.auth) descParts.push(`with authentication (${result.stack.auth})`);
+  if (result.stack.database) {
+    const schema = Object.values(result.schemas || {}).find(sc => sc?.found);
+    const provider = schema?.provider ? ` → ${schema.provider}` : '';
+    const models = schema?.modelCount ? `, ${schema.modelCount} models` : '';
+    descParts.push(`database (${result.stack.database}${provider}${models})`);
   }
-  s += `${NOT_YET_CAPTURED}\n\n`;
+  if (result.stack.aiSdk) descParts.push(`and AI integration (${result.stack.aiSdk})`);
+  const fileCountPart = `${result.files?.source || 0} source files, ${result.files?.test || 0} test files`;
+  if (descParts.length > 0) {
+    s += `**Detected:** ${descParts.join(', ')}. ${fileCountPart}.\n`;
+  } else {
+    s += `**Detected:** ${fileCountPart}.\n`;
+  }
+  // Findings summary (Change 4) — suppress entirely for clean projects
+  if (result.findings?.length > 0) {
+    const critical = result.findings.filter(f => f.severity === 'critical').length;
+    const warn = result.findings.filter(f => f.severity === 'warn').length;
+    if (critical > 0 || warn > 0) {
+      const parts: string[] = [];
+      if (critical > 0) parts.push(`${critical} critical`);
+      if (warn > 0) parts.push(`${warn} warning${warn > 1 ? 's' : ''}`);
+      s += `**Detected issues:** ${parts.join(', ')} — run \`ana scan\` for details\n`;
+    }
+  }
+  s += `\n*What does this product do? Who uses it? What problem does it solve?*\n\n`;
 
   // Section 2: Architecture
-  s += `## Architecture\n`;
+  s += `## Architecture\n\n`;
   if (result.monorepo.isMonorepo) {
     const tool = result.monorepo.tool || 'monorepo';
     s += `**Detected:** ${tool} · ${result.monorepo.packages.length} packages`;
@@ -82,33 +83,52 @@ export function generateProjectContextScaffold(result: EngineResult): string {
     const topDirs = result.structure.slice(0, 8).map(e => e.path).join(', ');
     s += `**Detected:** ${dirCount} directories mapped: ${topDirs}\n`;
   }
-  s += `${NOT_YET_CAPTURED}\n\n`;
+  // Change 3: deployment context
+  if (result.deployment?.platform || result.deployment?.ci) {
+    const deployParts = [];
+    if (result.deployment.platform) deployParts.push(result.deployment.platform);
+    if (result.deployment.ci) deployParts.push(result.deployment.ci);
+    s += `**Detected deployment:** ${deployParts.join(', ')}\n`;
+  }
+  s += `\n*How is the codebase organized and why? What are the layer boundaries?*\n\n`;
 
   // Section 3: Key Decisions
-  s += `## Key Decisions\n`;
-  s += `${NOT_YET_CAPTURED}\n\n`;
+  s += `## Key Decisions\n\n`;
+  s += `*Technology choices and patterns that look wrong but are intentional. What was tried and rejected?*\n\n`;
 
   // Section 4: Key Files (partially seeded from scan)
-  s += `## Key Files\n`;
+  s += `## Key Files\n\n`;
   const keyFiles: string[] = [];
   for (const [, schema] of Object.entries(result.schemas)) {
     if (schema.found && schema.path) keyFiles.push(`- Database schema: \`${schema.path}\``);
   }
   if (result.deployment.configFile) keyFiles.push(`- Deployment config: \`${result.deployment.configFile}\``);
+  // Change 6: CI in Key Files
+  if (result.deployment?.ci) {
+    let ciPath = '';
+    if (result.deployment.ci === 'GitHub Actions') {
+      ciPath = '.github/workflows/ci.yml';
+    } else if (result.deployment.ci === 'GitLab CI') {
+      ciPath = '.gitlab-ci.yml';
+    }
+    if (ciPath) {
+      keyFiles.push(`- CI pipeline: \`${ciPath}\``);
+    }
+  }
   if (keyFiles.length > 0) {
     s += keyFiles.join('\n') + '\n';
-    s += `*Scan detected the items above. Run \`claude --agent ana-setup\` to add: database client, auth config, AI client locations, test helpers.*\n\n`;
+    s += `\n*Add: database client location, auth config, AI wrapper, shared types, test helpers.*\n\n`;
   } else {
-    s += `${NOT_YET_CAPTURED}\n\n`;
+    s += `*Add: entry points, shared types, config files, test helpers.*\n\n`;
   }
 
   // Section 5: Active Constraints
-  s += `## Active Constraints\n`;
-  s += `${NOT_YET_CAPTURED}\n\n`;
+  s += `## Active Constraints\n\n`;
+  s += `*Current priorities. Areas under active refactoring. Features not to touch right now.*\n\n`;
 
   // Section 6: Domain Vocabulary
-  s += `## Domain Vocabulary\n`;
-  s += `${NOT_YET_CAPTURED}\n`;
+  s += `## Domain Vocabulary\n\n`;
+  s += `*Terms with project-specific meaning. E.g., "workspace" = pnpm workspace package, not Slack workspace.*\n`;
 
   return s;
 }
@@ -124,17 +144,26 @@ export function generateProjectContextScaffold(result: EngineResult): string {
 export function generateDesignPrinciplesTemplate(): string {
   return `# Design Principles
 
-<!-- What does your team believe about building software?
-     What tradeoffs do you consistently make?
-     What quality bar do you hold?
+<!-- Starting principles for AI-augmented development.
+     Edit to match your team's philosophy, or replace entirely.
+     Ana reads this to understand HOW your team thinks. -->
 
-     This file is yours. Write your philosophy here.
-     Ana reads this to understand HOW your team thinks,
-     not just WHAT your project does.
+## Name the disease, not the symptom
 
-     Examples:
-     - "Move fast and verify — ship quickly but prove it works"
-     - "User experience over developer convenience"
-     - "Every character earns its place" -->
+Before fixing something, state the root cause in one sentence. A fix that addresses the cause is one fix forever. A fix that addresses the symptom is the first of many.
+
+## Surface tradeoffs before committing
+
+The user isn't asking for a scope, a plan, or code — they're asking for an outcome. Every approach has costs; if the obvious path undermines that outcome, say so before building. Show them the paths, not just the fastest one.
+
+## Every change should be foundation, not scaffolding
+
+Foundation is code you build on top of. Scaffolding is code you tear down later. The test: would a senior engineer approve this — not just for correctness, but for craft? If the answer is "this works, but it's not how we'd do it if we had time" — you don't have time NOT to do it right.
+
+<!-- Add your team's principles below. What tradeoffs do you consistently make?
+     What quality bar do you hold? What does "good" mean here?
+
+     A principle changes decisions. "Write clean code" is a platitude.
+     "We prefer Result<T,E> over thrown errors" is a principle. -->
 `;
 }
