@@ -1,0 +1,286 @@
+{
+  "schemaVersion": "1.0",
+  "overview": {
+    "project": "anatomia-workspace",
+    "scannedAt": "2026-04-15T01:17:02.969Z",
+    "depth": "deep"
+  },
+  "stack": {
+    "language": "TypeScript",
+    "framework": null,
+    "database": null,
+    "auth": null,
+    "testing": [
+      "Vitest"
+    ],
+    "payments": null,
+    "workspace": "Turborepo (pnpm)",
+    "aiSdk": null,
+    "uiSystem": null
+  },
+  "files": {
+    "source": 120,
+    "test": 87,
+    "config": 17,
+    "total": 224
+  },
+  "structure": [
+    {
+      "path": ".github/",
+      "purpose": "GitHub config"
+    },
+    {
+      "path": "packages/",
+      "purpose": "Workspace packages"
+    },
+    {
+      "path": "tests/",
+      "purpose": "Tests"
+    }
+  ],
+  "commands": {
+    "build": "pnpm run build",
+    "test": "pnpm run test",
+    "lint": "pnpm run lint",
+    "dev": "pnpm run dev",
+    "all": {
+      "build": "turbo run build",
+      "dev": "turbo run dev",
+      "test": "turbo run test",
+      "lint": "turbo run lint",
+      "clean": "turbo run clean && rm -rf node_modules .turbo",
+      "prepare": "husky"
+    },
+    "packageManager": "pnpm"
+  },
+  "git": {
+    "head": "95f457f",
+    "branch": "main",
+    "commitCount": 590,
+    "lastCommitAt": "2026-04-14T19:16:45-06:00",
+    "uncommittedChanges": true,
+    "contributorCount": 2,
+    "defaultBranch": "main",
+    "branches": [
+      "SideSprint/setup-redesign",
+      "archive/test-ana-feature-work",
+      "effort/STEP_0_1_FOUNDATION",
+      "effort/STEP_0_2_TEMPLATES",
+      "effort/STEP_0_3_CONTENT",
+      "effort/STEP_0_4_VALIDATION",
+      "effort/STEP_1_1_DETECTION",
+      "effort/STEP_1_2_STRUCTURE",
+      "effort/STEP_1_3_TREE_SITTER",
+      "effort/STEP_1_4_ALPHA",
+      "effort/STEP_2_1_PATTERNS",
+      "effort/STEP_2_2_CONVENTIONS",
+      "effort/STEP_2_3_FRAMEWORK_REDESIGN",
+      "effort/STEP_2_5_CLI_CODE",
+      "feature/s10-engine",
+      "feature/s11-init-reset",
+      "feature/s12-prove-it",
+      "feature/s2-toolbelt-foundation",
+      "feature/s3-ana-verify",
+      "feature/s4-pipeline-calibration",
+      "feature/s5-verification-overhaul",
+      "feature/s6-verification-architecture",
+      "lane0/census-architecture",
+      "main",
+      "s13/vault-foundations",
+      "s14/scan-perfection",
+      "s15/init-perfection",
+      "s16/setup-confirm",
+      "s17/setup-enrich",
+      "s18/architectural-cleanup",
+      "s18/deep-review-fixes",
+      "s18/docs-and-hygiene",
+      "s18/dogfood-fixes",
+      "s18/final-fixes",
+      "s18/final-polish",
+      "s18/fix-clean-dogfood",
+      "s18/low-tier",
+      "s18/medium-tier",
+      "s18/scan-polish",
+      "s19/lane-1",
+      "s19/lane-1-polish",
+      "s19/lane-2",
+      "s19/scan-var-fix",
+      "s20/detection-maps",
+      "s20/detection-maps-2",
+      "s20/final-polish",
+      "s20/scan-polish",
+      "s21/findings",
+      "s22/canvas-content",
+      "s22/init-wiring",
+      "s22/scan-fixes",
+      "ux/copy-update",
+      "ux/fix-copy"
+    ]
+  },
+  "monorepo": {
+    "isMonorepo": true,
+    "tool": "pnpm",
+    "packages": [
+      {
+        "name": "anatomia-cli",
+        "path": "packages/cli"
+      },
+      {
+        "name": "demo-site",
+        "path": "website"
+      }
+    ]
+  },
+  "externalServices": [],
+  "schemas": {},
+  "secrets": {
+    "envFileExists": false,
+    "envExampleExists": false,
+    "gitignoreCoversEnv": true
+  },
+  "projectProfile": {
+    "type": "node",
+    "hasExternalAPIs": false,
+    "hasDatabase": false,
+    "hasBrowserUI": false,
+    "hasAuthSystem": false,
+    "hasPayments": false,
+    "hasFileStorage": false
+  },
+  "blindSpots": [],
+  "findings": [
+    {
+      "id": "hardcoded-secret",
+      "severity": "pass",
+      "title": "No hardcoded secrets detected",
+      "detail": "Checked: Stripe, OpenAI, Anthropic, AWS, GitHub, database URLs, Resend, SendGrid, Twilio",
+      "category": "security"
+    },
+    {
+      "id": "env-hygiene",
+      "severity": "pass",
+      "title": "No environment config detected",
+      "detail": null,
+      "category": "quality"
+    }
+  ],
+  "deployment": {
+    "platform": null,
+    "configFile": null,
+    "ci": "GitHub Actions"
+  },
+  "patterns": {
+    "errorHandling": {
+      "library": "exceptions",
+      "variant": "generic",
+      "confidence": 0.9,
+      "evidence": [
+        "node uses exception-based error handling",
+        "13 file(s) with error handling patterns"
+      ]
+    },
+    "validation": {
+      "library": "zod",
+      "confidence": 0.9500000000000001,
+      "evidence": [
+        "zod in dependencies",
+        "Zod imports found in code",
+        "Zod usage patterns detected"
+      ]
+    },
+    "testing": {
+      "library": "vitest",
+      "confidence": 0.9500000000000001,
+      "evidence": [
+        "vitest in devDependencies",
+        "Test directory detected: tests/",
+        "vitest imports found"
+      ]
+    },
+    "sampledFiles": 121,
+    "detectionTime": 0,
+    "threshold": 0.7
+  },
+  "conventions": {
+    "naming": {
+      "files": {
+        "majority": "camelCase",
+        "confidence": 0.35555555555555557,
+        "mixed": true,
+        "distribution": {
+          "camelCase": 0.4,
+          "PascalCase": 0.3,
+          "kebab-case": 0.3
+        },
+        "sampleSize": 121
+      },
+      "functions": {
+        "majority": "camelCase",
+        "confidence": 0.9478260869565217,
+        "mixed": false,
+        "distribution": {
+          "camelCase": 0.961764705882353,
+          "PascalCase": 0.03823529411764706
+        },
+        "sampleSize": 355
+      },
+      "classes": {
+        "majority": "PascalCase",
+        "confidence": 0.4444444444444444,
+        "mixed": false,
+        "distribution": {
+          "PascalCase": 1
+        },
+        "sampleSize": 4
+      },
+      "variables": {
+        "majority": "camelCase",
+        "confidence": 0.9018901890189019,
+        "mixed": false,
+        "distribution": {
+          "camelCase": 0.9059674502712477,
+          "PascalCase": 0.026220614828209764,
+          "SCREAMING_SNAKE_CASE": 0.06781193490054249
+        },
+        "sampleSize": 1906
+      },
+      "constants": {
+        "majority": "SCREAMING_SNAKE_CASE",
+        "confidence": 0.9375,
+        "mixed": false,
+        "distribution": {
+          "SCREAMING_SNAKE_CASE": 1
+        },
+        "sampleSize": 75
+      }
+    },
+    "imports": {
+      "style": "relative",
+      "confidence": 0.9700854700854701,
+      "distribution": {
+        "absolute": 0.029914529914529916,
+        "relative": 0.9700854700854701
+      },
+      "aliasPattern": "@/"
+    },
+    "indentation": {
+      "style": "spaces",
+      "width": 2,
+      "confidence": 1
+    },
+    "sampledFiles": 121,
+    "detectionTime": 167
+  },
+  "secretFindings": null,
+  "envVarMap": null,
+  "duplicates": null,
+  "circularDeps": null,
+  "orphanFiles": null,
+  "complexityHotspots": null,
+  "gitIntelligence": null,
+  "dependencyIntelligence": null,
+  "technicalDebtMarkers": null,
+  "inconsistencies": null,
+  "conventionBreaks": null,
+  "aiReadinessScore": null
+}

@@ -65,6 +65,5 @@ packages/cli/.ana/
 /VERIFICATION_REPORT.md
 /docs/
 
-# Local scan / dogfood state (don't commit working-tree scan outputs)
-**/.ana/scan.json
+# Local state per-package (not Anatomia's own .ana/)
 website/.ana/
