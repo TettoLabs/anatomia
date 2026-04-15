@@ -43,6 +43,7 @@ describe('ProjectCensus type shape', () => {
       deps: { next: '14.0.0', react: '18.2.0', express: '4.18.0' },
       devDeps: { typescript: '5.3.0', vitest: '1.0.0' },
       rootDevDeps: { '@playwright/test': '1.40.0', typescript: '5.3.0' },
+      primaryDeps: { next: '14.0.0', react: '18.2.0', typescript: '5.3.0', vitest: '1.0.0' },
       configs: {
         frameworkHints: [
           { framework: 'nextjs', sourceRootPath: 'apps/web', path: 'apps/web/next.config.ts' },
@@ -106,6 +107,7 @@ describe('ProjectCensus type shape', () => {
       deps: { next: '14.0.0' },
       devDeps: { vitest: '1.0.0' },
       rootDevDeps: { vitest: '1.0.0' },
+      primaryDeps: { next: '14.0.0', vitest: '1.0.0' },
       configs: {
         frameworkHints: [{ framework: 'nextjs', sourceRootPath: '.', path: 'next.config.ts' }],
         tsconfigs: [{ sourceRootPath: '.', path: 'tsconfig.json', paths: null, baseUrl: null }],

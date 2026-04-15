@@ -532,7 +532,14 @@ export async function scanProject(
     }
   } catch { /* dep reading failed — continue with census deps */ }
 
-  const frameworkResult = detectFramework(deps, projectTypeResult.type, census.configs.frameworkHints);
+  // ANA-SCAN-058: In monorepos, framework detection uses primary root deps
+  // only. A demo site's Next.js shouldn't define the project identity when
+  // the primary product is a CLI. Detection fields (database, auth, testing,
+  // payments, aiSdk, services) stay on allDeps — they're project-wide facts.
+  const frameworkDeps = census.layout === 'monorepo'
+    ? Object.keys(census.primaryDeps)
+    : deps;
+  const frameworkResult = detectFramework(frameworkDeps, projectTypeResult.type, census.configs.frameworkHints);
 
   let structure: Awaited<ReturnType<typeof analyzeStructure>> | undefined;
   try {
@@ -604,7 +611,11 @@ export async function scanProject(
         : `${mono.tool} monorepo`)
       : null,
     aiSdk: detectAiSdk(allDeps),
-    uiSystem: detectUiSystem(allDeps),
+    // ANA-SCAN-058: uiSystem scoped to primary in monorepos (same rationale
+    // as framework — a demo site's Tailwind shouldn't define a CLI's identity).
+    uiSystem: census.layout === 'monorepo'
+      ? detectUiSystem(census.primaryDeps)
+      : detectUiSystem(allDeps),
   };
 
   // Enrich from direct detection results (replaces analysis.* references)

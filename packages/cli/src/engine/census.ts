@@ -31,9 +31,10 @@ const FRAMEWORK_HINTS: Array<{ pattern: string; framework: string; check: 'file'
   { pattern: 'next.config.mjs', framework: 'nextjs', check: 'file' },
   { pattern: 'app', framework: 'nextjs-app-dir', check: 'dir' },
   { pattern: 'pages', framework: 'nextjs', check: 'dir' },
-  // Remix
+  // Remix / React Router v7
   { pattern: 'remix.config.js', framework: 'remix', check: 'file' },
   { pattern: 'remix.config.ts', framework: 'remix', check: 'file' },
+  { pattern: 'react-router.config.ts', framework: 'react-router', check: 'file' },
   // Astro
   { pattern: 'astro.config.mjs', framework: 'astro', check: 'file' },
   { pattern: 'astro.config.ts', framework: 'astro', check: 'file' },
@@ -85,12 +86,14 @@ function selectPrimary(
   roots: SourceRoot[],
   frameworkHints: FrameworkHintEntry[],
 ): string {
-  // Policy 1: first apps/ root with framework evidence
+  // Policy 1: largest apps/ root with framework evidence (by file count).
+  // Sort descending so the biggest app wins, not the first alphabetically.
+  // Cal.com: apps/web (1646 files) beats apps/docs (7 files).
   const hintPaths = new Set(frameworkHints.map(h => h.sourceRootPath));
-  const appsWithFramework = roots.find(
-    r => r.relativePath.startsWith('apps/') && hintPaths.has(r.relativePath),
-  );
-  if (appsWithFramework) return appsWithFramework.relativePath;
+  const appsWithFramework = roots
+    .filter(r => r.relativePath.startsWith('apps/') && hintPaths.has(r.relativePath))
+    .sort((a, b) => b.fileCount - a.fileCount);
+  if (appsWithFramework.length > 0) return appsWithFramework[0]!.relativePath;
 
   // Policy 2: root with most files
   const sorted = [...roots].sort((a, b) => b.fileCount - a.fileCount);
@@ -373,6 +376,12 @@ export async function buildCensus(rootPath: string): Promise<ProjectCensus> {
   const monorepoTool = (isSingleRepo || !result) ? null
     : (result.tool.type === 'root' ? 'npm' : result.tool.type);
 
+  // Primary root deps — for identity-scoped detection (framework, uiSystem).
+  // In monorepos, the primary package's deps define the project identity.
+  // In single-repos, primaryDeps === allDeps (no distinction needed).
+  const primaryRoot = sourceRoots.find(r => r.isPrimary)!;
+  const primaryDeps: Record<string, string> = { ...primaryRoot.deps, ...primaryRoot.devDeps };
+
   return {
     rootPath: normalizedRoot,
     projectName,
@@ -384,6 +393,7 @@ export async function buildCensus(rootPath: string): Promise<ProjectCensus> {
     deps,
     devDeps,
     rootDevDeps,
+    primaryDeps,
     configs: {
       frameworkHints,
       tsconfigs,

@@ -69,6 +69,7 @@ export interface ProjectCensus {
   deps: Record<string, string>;        // production deps only, merged across roots
   devDeps: Record<string, string>;     // dev deps only, merged across roots
   rootDevDeps: Record<string, string>; // root package.json devDeps (toolchain — testing, linting)
+  primaryDeps: Record<string, string>; // primary root's deps+devDeps (for identity-scoped detection)
 
   configs: {
     frameworkHints: FrameworkHintEntry[];
