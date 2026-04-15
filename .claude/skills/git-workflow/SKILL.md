@@ -14,6 +14,8 @@ description: "Invoke before any git operations — branching, committing, mergin
 - Commit each logical change separately. Don't batch unrelated changes into one commit.
 - Write commit messages that explain what changed and why: `feat: add input validation to signup` not `update files`.
 - Stage specific files for each commit. Avoid `git add .` or `git add -A` — review what you're committing.
+- The pre-commit hook runs typecheck and lint but NOT tests. A commit that passes the hook may still break tests. Run `pnpm test -- --run` after each commit — the hook doesn't catch test regressions.
+- For non-pipeline work (sprint work, direct commits to main), use `[s{N}] type: description` format. For pipeline work, Build's agent definition specifies `[{slug}] description`. The repo has 50+ stale branches from old sprints (effort/*, s18/*, lane0/*) — current conventions are `s{N}/` for sprints and `feature/{slug}` for pipeline.
 
 ## Gotchas
 *Not yet captured. Add as you discover them during development.*
