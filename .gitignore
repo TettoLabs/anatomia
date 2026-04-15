@@ -66,4 +66,4 @@ packages/cli/.ana/
 /docs/
 
 # Local state per-package (not Anatomia's own .ana/)
-website/.ana/
+# website/.ana/ — removed: website may get its own context as it grows
