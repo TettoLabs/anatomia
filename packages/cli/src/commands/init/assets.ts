@@ -403,17 +403,9 @@ async function generateAgentsMd(cwd: string, engineResult: EngineResult | null):
   // "every character earns its place." If nothing was detected, skip
   // the section entirely rather than rendering a vacuous one.
   const constraintLines: string[] = [];
-  if (engineResult?.conventions?.naming?.functions &&
-      engineResult.conventions.naming.functions.confidence >= 0.5 &&
-      engineResult.conventions.naming.functions.sampleSize >= 5) {
-    constraintLines.push(`- ${engineResult.conventions.naming.functions.majority} for function names`);
-  }
   if (engineResult?.conventions?.imports?.aliasPattern &&
       engineResult.conventions.imports.style === 'absolute') {
     constraintLines.push(`- Use ${engineResult.conventions.imports.aliasPattern} path aliases for imports`);
-  }
-  if (engineResult?.commands.build) {
-    constraintLines.push(`- Run \`${engineResult.commands.build}\` before committing`);
   }
   // Finding-derived constraints (instruction-oriented, stale-resistant)
   const findingInstructions: Record<string, string> = {

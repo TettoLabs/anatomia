@@ -12,7 +12,3 @@ TypeScript · Vitest
 - Functions: camelCase
 - Imports: relative
 - Indentation: spaces, 2 wide
-
-## Constraints
-- camelCase for function names
-- Run `pnpm run build` before committing
