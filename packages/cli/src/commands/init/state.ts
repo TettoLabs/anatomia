@@ -403,6 +403,31 @@ export async function preserveUserState(
       // No progress file to copy — nothing to do
     }
   }
+
+  // 4. Copy proof chain files (pipeline history — must survive re-init)
+  for (const proofFile of ['proof_chain.json', 'PROOF_CHAIN.md']) {
+    const src = path.join(existingAnaPath, proofFile);
+    const dst = path.join(tmpAnaPath, proofFile);
+    try {
+      await fs.access(src);
+      await fs.cp(src, dst);
+    } catch {
+      // No proof chain yet — nothing to copy
+    }
+  }
+
+  // 5. Copy plans/completed/ (archived pipeline artifacts — user data)
+  const completedSrc = path.join(existingAnaPath, 'plans', 'completed');
+  const completedDst = path.join(tmpAnaPath, 'plans', 'completed');
+  try {
+    const stats = await fs.stat(completedSrc);
+    if (stats.isDirectory()) {
+      await fs.rm(completedDst, { recursive: true, force: true });
+      await fs.cp(completedSrc, completedDst, { recursive: true });
+    }
+  } catch {
+    // No completed plans — keep the fresh .gitkeep
+  }
 }
 
 /**
