@@ -15,16 +15,21 @@ description: "Invoke when implementing features, writing code, or reviewing code
 - Error handling: exceptions (generic)
 
 ## Rules
-- Prefer named exports. Default exports only where the framework requires them (e.g., Next.js pages, layouts).
-- Use path aliases from tsconfig when configured. Relative imports: never deeper than two levels.
+- All imports use `.js` extensions and `node:` prefix for built-ins. `import * as fs from 'node:fs/promises'`, `import { scanProject } from './scan-engine.js'`. Omitting `.js` compiles fine but crashes at runtime — tsup emits ESM.
+- Use `import type` for type-only imports, separate from value imports. Never mix types and values in the same import statement.
+- Prefer named exports. No default exports — this is a CLI, no framework requires them.
 - Never use `any`. Use `unknown` and narrow with type guards. Define an interface for complex types — don't escape the type system.
-- Never swallow errors. Every catch must re-throw, return a typed error, or log with context. No empty catch blocks.
-- Never hardcode API keys, secrets, database URLs, or credentials. Use environment variables or a secrets manager.
-- Never disable lint rules inline. Fix the code, not the linter.
+- Use `| null` for fields that were checked and found empty. Reserve `?:` (optional) for fields that may not have been checked. EngineResult uses `| null` for all nullable stack fields — follow the same convention.
+- Prefer early returns over nested conditionals. `if (!condition) return null;` then the main logic flat — not `if (condition) { ...long block... }`.
+- Error handling has two layers. Commands surface errors to the user: `chalk.red` message + `process.exit(1)`. Engine functions catch internally and return defaults — a detector failure degrades the scan gracefully, it never crashes it.
+- Engine files (`src/engine/`) have zero CLI dependencies — no chalk, no commander, no ora. Engine takes data as input and returns results. All user-facing output belongs in `src/commands/`.
 - Explicit return types on all exported functions. Internal helpers can use inference.
+- Never disable lint rules inline. Fix the code, not the linter.
 
 ## Gotchas
-*Not yet captured. Add as you discover them during development.*
+- **Missing `.js` on imports:** Every relative import MUST end in `.js` (e.g., `import { foo } from './bar.js'`). TypeScript compiles fine without it, but the built CLI crashes at runtime with `ERR_MODULE_NOT_FOUND`. Standard TypeScript training doesn't include this — it's an ESM-specific requirement.
+- **"Fixing" empty catch blocks in engine:** 57+ catch blocks in engine are intentionally empty — they implement graceful degradation (detector fails, scan continues with partial results). Don't add `console.error` or re-throws to engine catch blocks. The error handling belongs in the command layer.
+- **Adding chalk or ora to engine files:** Engine is pure — zero CLI dependencies. A fresh agent adding error formatting or progress output to an engine file breaks the architectural boundary. Engine functions are also called from tests without a TTY. Put all chalk/ora usage in `src/commands/`.
 
 ## Examples
 *Not yet captured. Add short snippets showing the RIGHT way.*
