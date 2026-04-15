@@ -7,13 +7,9 @@ description: "Invoke when working on deployment configuration, CI/CD pipelines, 
 
 ## Detected
 - CI: GitHub Actions
-- CI config: .github/workflows/test.yml
 
 ## Rules
-
-- Environment variables via platform config or `.env` files — never hardcode secrets or config values.
-- Production deploys only from the default branch.
-- Agents never perform irreversible external actions (deploy to production, publish packages, send to real users, modify infrastructure) without explicit human approval.
+*No universal deployment rules — deployment conventions are platform-specific. Run `claude --agent ana-setup` to configure for your deployment platform.*
 
 ## Gotchas
 *Not yet captured. Add as you discover them during development.*

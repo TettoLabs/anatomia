@@ -3,25 +3,33 @@
 # Project Context
 
 ## What This Project Does
-**Detected:** TypeScript · Vitest
-**Detected commands:** build: `pnpm run build` · test: `pnpm run test` · lint: `pnpm run lint` · dev: `pnpm run dev`
-**Detected infrastructure:** pnpm (2 packages)
-*Not yet captured. Run `claude --agent ana-setup` to fill this.*
+
+**Detected:** pnpm monorepo. 120 source files, 87 test files.
+
+*What does this product do? Who uses it? What problem does it solve?*
 
 ## Architecture
+
 **Detected:** pnpm · 2 packages (anatomia-cli, demo-site)
-**Detected:** 2 directories mapped: .github/, packages/
-*Not yet captured. Run `claude --agent ana-setup` to fill this.*
+**Detected:** 3 directories mapped: .github/, packages/, tests/
+**Detected deployment:** GitHub Actions
+
+*How is the codebase organized and why? What are the layer boundaries?*
 
 ## Key Decisions
-*Not yet captured. Run `claude --agent ana-setup` to fill this.*
+
+*Technology choices and patterns that look wrong but are intentional. What was tried and rejected?*
 
 ## Key Files
-- CI pipeline: `.github/workflows/test.yml`
-*Scan detected the items above. Run `claude --agent ana-setup` to add: database client, auth config, AI client locations, test helpers.*
+
+- CI pipeline: `.github/workflows/ci.yml`
+
+*Add: database client location, auth config, AI wrapper, shared types, test helpers.*
 
 ## Active Constraints
-*Not yet captured. Run `claude --agent ana-setup` to fill this.*
+
+*Current priorities. Areas under active refactoring. Features not to touch right now.*
 
 ## Domain Vocabulary
-*Not yet captured. Run `claude --agent ana-setup` to fill this.*
+
+*Terms with project-specific meaning. E.g., "workspace" = pnpm workspace package, not Slack workspace.*

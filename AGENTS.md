@@ -10,7 +10,6 @@ TypeScript · Vitest
 
 ## Conventions
 - Functions: camelCase
-- Files: lowercase
 - Imports: relative
 - Indentation: spaces, 2 wide
 
