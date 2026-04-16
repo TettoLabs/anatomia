@@ -234,6 +234,142 @@ function parseDeviations(content: string): ProofDeviation[] {
 }
 
 /**
+ * Extract file references from callout summary text.
+ *
+ * Matches patterns like:
+ *   - filename.ts:123 (with line number)
+ *   - filename.ts:123-456 (with line range)
+ *   - filename.ts (without line number)
+ *
+ * Supports extensions: .ts, .tsx, .js, .jsx, .json, .yaml, .yml, .md
+ *
+ * @param summary - Callout summary text
+ * @returns Array of unique filenames (without line numbers)
+ */
+export function extractFileRefs(summary: string): string[] {
+  // Match filename with optional line number or range
+  // Captures: filename.ext:123 or filename.ext:123-456 or filename.ext
+  // Note: longer extensions must come before shorter prefixes (tsx before ts, json before js, yaml before yml)
+  const pattern = /\b([a-zA-Z0-9_-]+\.(?:tsx|ts|jsx|json|js|yaml|yml|md))(?::\d+(?:-\d+)?)?/g;
+  const matches = summary.matchAll(pattern);
+  const refs = new Set<string>();
+  for (const match of matches) {
+    if (match[1]) {
+      refs.add(match[1]);
+    }
+  }
+  return Array.from(refs);
+}
+
+/**
+ * Callout with feature context for Active Issues index
+ */
+interface CalloutWithFeature {
+  category: string;
+  summary: string;
+  feature: string;
+}
+
+/**
+ * Proof chain entry structure (minimal for generateActiveIssuesMarkdown)
+ */
+interface ProofChainEntryForIndex {
+  feature: string;
+  completed_at: string;
+  callouts: Array<{ category: string; summary: string }>;
+}
+
+/**
+ * Generate Active Issues markdown section from proof chain entries.
+ *
+ * Groups callouts by file reference, caps at 20 total callouts (FIFO — oldest dropped),
+ * and returns markdown with file headings. Callouts without file refs go under "General".
+ *
+ * @param entries - Proof chain entries (oldest first, as stored in JSON)
+ * @returns Markdown string starting with "# Active Issues"
+ */
+export function generateActiveIssuesMarkdown(entries: ProofChainEntryForIndex[]): string {
+  // Collect all callouts with feature context, newest entries first
+  const allCallouts: Array<CalloutWithFeature & { entryDate: string }> = [];
+
+  // Reverse to get newest first
+  const reversedEntries = [...entries].reverse();
+
+  for (const entry of reversedEntries) {
+    for (const callout of entry.callouts) {
+      allCallouts.push({
+        category: callout.category,
+        summary: callout.summary,
+        feature: entry.feature,
+        entryDate: entry.completed_at,
+      });
+    }
+  }
+
+  // Cap at 20 callouts (take from start = most recent)
+  const cappedCallouts = allCallouts.slice(0, 20);
+
+  // Empty state
+  if (cappedCallouts.length === 0) {
+    return `# Active Issues
+
+*No active issues.*
+
+---
+`;
+  }
+
+  // Group by file reference
+  const fileGroups = new Map<string, CalloutWithFeature[]>();
+
+  for (const callout of cappedCallouts) {
+    const fileRefs = extractFileRefs(callout.summary);
+
+    if (fileRefs.length === 0) {
+      // No file refs → General
+      const existing = fileGroups.get('General') || [];
+      existing.push(callout);
+      fileGroups.set('General', existing);
+    } else {
+      // Add to each referenced file's group
+      for (const fileRef of fileRefs) {
+        const existing = fileGroups.get(fileRef) || [];
+        existing.push(callout);
+        fileGroups.set(fileRef, existing);
+      }
+    }
+  }
+
+  // Build markdown
+  let md = '# Active Issues\n\n';
+
+  // Sort file headings: named files first (alphabetically), then General
+  const fileNames = Array.from(fileGroups.keys()).sort((a, b) => {
+    if (a === 'General') return 1;
+    if (b === 'General') return -1;
+    return a.localeCompare(b);
+  });
+
+  for (const fileName of fileNames) {
+    const callouts = fileGroups.get(fileName) || [];
+    md += `## ${fileName}\n\n`;
+
+    for (const callout of callouts) {
+      // Truncate summary to ~100 chars for index display
+      const truncatedSummary = callout.summary.length > 100
+        ? callout.summary.substring(0, 100)
+        : callout.summary;
+      md += `- **${callout.category}:** ${truncatedSummary} — *${callout.feature}*\n`;
+    }
+    md += '\n';
+  }
+
+  md += '---\n';
+
+  return md;
+}
+
+/**
  * Parse callouts from verify report's ## Callouts section.
  *
  * Handles two observed formats:

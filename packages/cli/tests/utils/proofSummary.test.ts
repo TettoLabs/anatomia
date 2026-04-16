@@ -2,7 +2,13 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
-import { generateProofSummary, parseCallouts, parseRejectionCycles } from '../../src/utils/proofSummary.js';
+import {
+  generateProofSummary,
+  parseCallouts,
+  parseRejectionCycles,
+  extractFileRefs,
+  generateActiveIssuesMarkdown,
+} from '../../src/utils/proofSummary.js';
 
 describe('generateProofSummary', () => {
   let tempDir: string;
@@ -452,5 +458,264 @@ Previous verification: 2026-04-15, Result: FAIL
     expect(result.cycles).toBe(1);
     expect(result.failures).toHaveLength(1);
     expect(result.failures[0]!.id).toBe('A001');
+  });
+});
+
+describe('extractFileRefs', () => {
+  // @ana A001
+  it('extracts filename:line format', () => {
+    const result = extractFileRefs('Dead logic in projectKind.ts:105 causes issues');
+    expect(result).toContain('projectKind.ts');
+  });
+
+  // @ana A002
+  it('extracts filename:line-line range format', () => {
+    const result = extractFileRefs('Check scan-engine.ts:200-250 for the issue');
+    expect(result).toContain('scan-engine.ts');
+  });
+
+  // @ana A003
+  it('extracts filename without line number', () => {
+    const result = extractFileRefs('See displayNames.ts for the mapping');
+    expect(result).toContain('displayNames.ts');
+  });
+
+  // @ana A004
+  it('returns multiple refs from one summary', () => {
+    const result = extractFileRefs('projectKind.ts:105 and scan-engine.ts:200 both affected');
+    expect(result.length).toBeGreaterThan(1);
+    expect(result).toContain('projectKind.ts');
+    expect(result).toContain('scan-engine.ts');
+  });
+
+  // @ana A005
+  it('returns empty array when no refs found', () => {
+    const result = extractFileRefs('No file references in this callout');
+    expect(result.length).toBe(0);
+  });
+
+  // @ana A006
+  it('handles various file extensions', () => {
+    const result = extractFileRefs('Check config.json and schema.yaml and readme.md');
+    expect(result).toContain('config.json');
+    expect(result).toContain('schema.yaml');
+    expect(result).toContain('readme.md');
+  });
+
+  it('deduplicates multiple mentions of same file', () => {
+    const result = extractFileRefs('projectKind.ts:105 and projectKind.ts:200');
+    expect(result).toHaveLength(1);
+    expect(result).toContain('projectKind.ts');
+  });
+
+  it('handles tsx and jsx extensions', () => {
+    const result = extractFileRefs('See Button.tsx:50 and helpers.jsx');
+    expect(result).toContain('Button.tsx');
+    expect(result).toContain('helpers.jsx');
+  });
+});
+
+describe('generateActiveIssuesMarkdown', () => {
+  // @ana A007
+  it('groups callouts by extracted file ref', () => {
+    const entries = [
+      {
+        feature: 'Project kind detection',
+        completed_at: '2026-04-16T10:00:00Z',
+        callouts: [
+          { category: 'code', summary: 'Dead logic in projectKind.ts:105' },
+        ],
+      },
+    ];
+    const output = generateActiveIssuesMarkdown(entries);
+    expect(output).toContain('## projectKind.ts');
+  });
+
+  // @ana A008
+  it('places callouts without refs under General', () => {
+    const entries = [
+      {
+        feature: 'Some feature',
+        completed_at: '2026-04-16T10:00:00Z',
+        callouts: [
+          { category: 'upstream', summary: 'Pre-check tag collision across features' },
+        ],
+      },
+    ];
+    const output = generateActiveIssuesMarkdown(entries);
+    expect(output).toContain('## General');
+  });
+
+  // @ana A009
+  it('respects 20-callout cap', () => {
+    // Create 25 callouts across entries
+    const entries = [];
+    for (let i = 0; i < 25; i++) {
+      entries.push({
+        feature: `Feature ${i}`,
+        completed_at: `2026-04-${String(i + 1).padStart(2, '0')}T10:00:00Z`,
+        callouts: [{ category: 'code', summary: `Issue ${i} in file${i}.ts` }],
+      });
+    }
+    const output = generateActiveIssuesMarkdown(entries);
+    // Count unique callout entries (lines starting with "- **")
+    const calloutLines = output.split('\n').filter(line => line.startsWith('- **'));
+    const calloutCount = calloutLines.length;
+    expect(calloutCount).toBe(20);
+  });
+
+  // @ana A010
+  it('returns empty-state message when no callouts', () => {
+    const entries = [
+      {
+        feature: 'Clean feature',
+        completed_at: '2026-04-16T10:00:00Z',
+        callouts: [],
+      },
+    ];
+    const output = generateActiveIssuesMarkdown(entries);
+    expect(output).toContain('No active issues');
+  });
+
+  // @ana A011
+  it('includes feature name in each entry', () => {
+    const entries = [
+      {
+        feature: 'Project kind detection',
+        completed_at: '2026-04-16T10:00:00Z',
+        callouts: [
+          { category: 'code', summary: 'Some issue in test.ts' },
+        ],
+      },
+    ];
+    const output = generateActiveIssuesMarkdown(entries);
+    expect(output).toContain('Project kind detection');
+  });
+
+  // @ana A012
+  it('output starts with Active Issues heading', () => {
+    const entries = [
+      {
+        feature: 'Test',
+        completed_at: '2026-04-16T10:00:00Z',
+        callouts: [{ category: 'code', summary: 'Issue in test.ts' }],
+      },
+    ];
+    const output = generateActiveIssuesMarkdown(entries);
+    expect(output).toContain('# Active Issues');
+    expect(output.indexOf('# Active Issues')).toBe(0);
+  });
+
+  // @ana A013
+  it('includes horizontal rule separator', () => {
+    const entries = [
+      {
+        feature: 'Test',
+        completed_at: '2026-04-16T10:00:00Z',
+        callouts: [{ category: 'code', summary: 'Issue in test.ts' }],
+      },
+    ];
+    const output = generateActiveIssuesMarkdown(entries);
+    expect(output).toContain('---');
+  });
+
+  // @ana A014
+  it('handles callouts referencing multiple files', () => {
+    const entries = [
+      {
+        feature: 'Cross-file issue',
+        completed_at: '2026-04-16T10:00:00Z',
+        callouts: [
+          { category: 'code', summary: 'Issue spans fileA.ts:10 and fileB.ts:20' },
+        ],
+      },
+    ];
+    const output = generateActiveIssuesMarkdown(entries);
+    // Count occurrences of the callout text (should appear under both files)
+    const occurrences = (output.match(/Issue spans fileA\.ts/g) || []).length;
+    expect(occurrences).toBeGreaterThan(1);
+  });
+
+  // @ana A015
+  it('callout entry includes category', () => {
+    const entries = [
+      {
+        feature: 'Test',
+        completed_at: '2026-04-16T10:00:00Z',
+        callouts: [{ category: 'code', summary: 'Issue in test.ts' }],
+      },
+    ];
+    const output = generateActiveIssuesMarkdown(entries);
+    expect(output).toContain('**code:**');
+  });
+
+  // @ana A016
+  it('truncates long summaries', () => {
+    const longSummary = 'x'.repeat(150) + ' in test.ts';
+    const entries = [
+      {
+        feature: 'Test',
+        completed_at: '2026-04-16T10:00:00Z',
+        callouts: [{ category: 'code', summary: longSummary }],
+      },
+    ];
+    const output = generateActiveIssuesMarkdown(entries);
+    // Find the callout line and check its summary length
+    const calloutLine = output.split('\n').find(line => line.startsWith('- **code:**'));
+    // Extract summary part: "- **code:** {summary} — *{feature}*"
+    const summaryMatch = calloutLine?.match(/\*\*code:\*\* (.+?) — \*/);
+    const summaryLength = summaryMatch?.[1]?.length || 0;
+    expect(summaryLength).toBe(100);
+  });
+
+  it('orders file headings alphabetically with General last', () => {
+    const entries = [
+      {
+        feature: 'Test',
+        completed_at: '2026-04-16T10:00:00Z',
+        callouts: [
+          { category: 'code', summary: 'Issue in zebra.ts' },
+          { category: 'code', summary: 'Issue in alpha.ts' },
+          { category: 'upstream', summary: 'General issue without file ref' },
+        ],
+      },
+    ];
+    const output = generateActiveIssuesMarkdown(entries);
+    const alphaPos = output.indexOf('## alpha.ts');
+    const zebraPos = output.indexOf('## zebra.ts');
+    const generalPos = output.indexOf('## General');
+    expect(alphaPos).toBeLessThan(zebraPos);
+    expect(zebraPos).toBeLessThan(generalPos);
+  });
+
+  it('takes most recent callouts when capping at 20', () => {
+    // Create entries: older entries have "old" in summary, newer have "new"
+    const entries = [];
+    // Add 15 old entries first (these will be at start of array = oldest)
+    for (let i = 0; i < 15; i++) {
+      entries.push({
+        feature: `Old Feature ${i}`,
+        completed_at: `2026-01-${String(i + 1).padStart(2, '0')}T10:00:00Z`,
+        callouts: [{ category: 'code', summary: `old-issue-${i} in file.ts` }],
+      });
+    }
+    // Add 10 new entries (at end of array = newest)
+    for (let i = 0; i < 10; i++) {
+      entries.push({
+        feature: `New Feature ${i}`,
+        completed_at: `2026-04-${String(i + 1).padStart(2, '0')}T10:00:00Z`,
+        callouts: [{ category: 'code', summary: `new-issue-${i} in file.ts` }],
+      });
+    }
+    const output = generateActiveIssuesMarkdown(entries);
+    // Should have all 10 new issues (indices 0-9)
+    for (let i = 0; i < 10; i++) {
+      expect(output).toContain(`new-issue-${i}`);
+    }
+    // Should have 10 old issues (most recent ones: indices 5-14)
+    // Old issues 0-4 should be dropped
+    expect(output).not.toContain('old-issue-0');
+    expect(output).not.toContain('old-issue-4');
+    expect(output).toContain('old-issue-5');
   });
 });
