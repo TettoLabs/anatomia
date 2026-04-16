@@ -1,0 +1,100 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Monorepo Primary Package AGENTS.md"
+
+assertions:
+  - id: A001
+    says: "Init creates an AGENTS.md inside the primary package directory for monorepos"
+    block: "creates AGENTS.md in primary package directory"
+    target: "file.exists"
+    matcher: "truthy"
+
+  - id: A002
+    says: "The generated file starts with the package name as its heading"
+    block: "includes package name heading"
+    target: "content"
+    matcher: "contains"
+    value: "# anatomia-cli"
+
+  - id: A003
+    says: "The file identifies itself as the primary package of the project"
+    block: "identifies as primary package"
+    target: "content"
+    matcher: "contains"
+    value: "Primary package in"
+
+  - id: A004
+    says: "The file includes a commands section when commands are available"
+    block: "includes commands section with available commands"
+    target: "content"
+    matcher: "contains"
+    value: "## Commands"
+
+  - id: A005
+    says: "The test command is included and made non-interactive"
+    block: "includes non-interactive test command"
+    target: "content"
+    matcher: "contains"
+    value: "Test:"
+
+  - id: A006
+    says: "The file points readers to the root AGENTS.md for full project context"
+    block: "includes pointer to root AGENTS.md"
+    target: "content"
+    matcher: "contains"
+    value: "AGENTS.md"
+
+  - id: A007
+    says: "The relative path to root is correct for the package nesting depth"
+    block: "relative path is correct for two-level nesting"
+    target: "content"
+    matcher: "contains"
+    value: "../../AGENTS.md"
+
+  - id: A008
+    says: "Single-level package paths produce the correct relative pointer"
+    block: "relative path is correct for single-level nesting"
+    target: "content"
+    matcher: "contains"
+    value: "../AGENTS.md"
+
+  - id: A009
+    says: "An existing AGENTS.md in the primary package is never overwritten"
+    block: "does not overwrite existing file"
+    target: "content.afterCall"
+    matcher: "equals"
+    value: "existing content"
+
+  - id: A010
+    says: "Non-monorepo projects produce no primary package AGENTS.md"
+    block: "skips non-monorepo projects"
+    target: "file.exists"
+    matcher: "equals"
+    value: false
+
+  - id: A011
+    says: "Monorepos without a detected primary package produce no extra AGENTS.md"
+    block: "skips when primaryPackage is null"
+    target: "file.exists"
+    matcher: "equals"
+    value: false
+
+  - id: A012
+    says: "The commands section is omitted when no commands are available"
+    block: "omits commands section when no commands detected"
+    target: "content"
+    matcher: "not_contains"
+    value: "## Commands"
+
+  - id: A013
+    says: "Null engine result is handled gracefully without errors"
+    block: "handles null engineResult"
+    target: "throws"
+    matcher: "equals"
+    value: false
+
+file_changes:
+  - path: "packages/cli/src/commands/init/assets.ts"
+    action: modify
+  - path: "packages/cli/tests/scaffolds/all-scaffolds.test.ts"
+    action: modify
