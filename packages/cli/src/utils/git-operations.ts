@@ -20,10 +20,11 @@ import chalk from 'chalk';
  * entry points where a missing ana.json is a configuration error the user
  * must fix before the command can do anything meaningful.
  *
+ * @param projectRoot - Project root path (defaults to cwd)
  * @returns The artifact branch name
  */
-export function readArtifactBranch(): string {
-  const anaJsonPath = path.join(process.cwd(), '.ana', 'ana.json');
+export function readArtifactBranch(projectRoot?: string): string {
+  const anaJsonPath = path.join(projectRoot ?? process.cwd(), '.ana', 'ana.json');
 
   if (!fs.existsSync(anaJsonPath)) {
     console.error(chalk.red('Error: No .ana/ana.json found. Run `ana init` first.'));
