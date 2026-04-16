@@ -25,6 +25,7 @@ import { readGoDependencies } from './parsers/go.js';
 import { detectPackageManager } from './detectors/packageManager.js';
 import { detectGitInfo } from './detectors/git.js';
 import { detectCommands } from './detectors/commands.js';
+import { detectReadme } from './detectors/readme.js';
 import { detectDeployment, detectCI } from './detectors/deployment.js';
 import { detectProjectType } from './detectors/projectType.js';
 import { detectFramework } from './detectors/framework.js';
@@ -712,6 +713,9 @@ export async function scanProject(
   // 8. Commands
   const commands = await detectCommands(rootPath, packageManager);
 
+  // 8b. README extraction
+  const readme = await detectReadme(rootPath);
+
   // 9. Git
   const git = await detectGitInfo(rootPath);
 
@@ -813,7 +817,7 @@ export async function scanProject(
     deployment: { ...deployment, ...ci },
     patterns: patterns ?? null,
     conventions: conventions ?? null,
-    readme: null,  // Populated in next commit when detector is wired
+    readme,
     // Phase 1+ stubs
     secretFindings: null,
     envVarMap: null,
