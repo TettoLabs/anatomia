@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { detectProjectKind } from '../../../src/engine/detectors/projectKind.js';
 import type { ProjectKindInput } from '../../../src/engine/detectors/projectKind.js';
+import type { SourceRoot } from '../../../src/engine/types/census.js';
 
 /** Minimal input with all signals off. */
 function makeInput(overrides: Partial<ProjectKindInput> = {}): ProjectKindInput {
@@ -226,10 +227,52 @@ describe('detectProjectKind', () => {
 
   // @ana A016
   describe('SourceRoot includes hasBin field', () => {
-    it('hasBin exists on SourceRoot type', async () => {
-      // Compile-time check via import — if hasBin doesn't exist, this won't compile
-      const { buildCensus } = await import('../../../src/engine/census.js');
-      expect(buildCensus).toBeDefined(); // import succeeds = type check passed
+    it('hasBin is a declared boolean property on SourceRoot', () => {
+      // Construct a type-safe SourceRoot — TypeScript enforces hasBin is required.
+      // If hasBin were removed from the interface, this would fail to compile.
+      const root: SourceRoot = {
+        absolutePath: '/tmp/test',
+        relativePath: '.',
+        packageName: 'test',
+        fileCount: 1,
+        isPrimary: true,
+        deps: {},
+        devDeps: {},
+        hasBin: true,
+      };
+
+      // Runtime assertion that hasBin exists and is boolean
+      expect(root).toHaveProperty('hasBin');
+      expect(typeof root.hasBin).toBe('boolean');
+      expect(root.hasBin).toBe(true);
+    });
+  });
+
+  // @ana A015
+  describe('scaffold generator uses projectKind for descriptions', () => {
+    it('includes kind label when projectKind is set', async () => {
+      const { generateProjectContextScaffold } = await import('../../../src/utils/scaffold-generators.js');
+      const { createEmptyEngineResult } = await import('../../../src/engine/types/engineResult.js');
+
+      const result = createEmptyEngineResult();
+      result.projectKind = 'cli';
+      result.stack.language = 'TypeScript';
+
+      const scaffold = generateProjectContextScaffold(result);
+      expect(scaffold).toContain('CLI tool');
+      expect(scaffold).toContain('TypeScript');
+    });
+
+    it('uses framework as prefix when available', async () => {
+      const { generateProjectContextScaffold } = await import('../../../src/utils/scaffold-generators.js');
+      const { createEmptyEngineResult } = await import('../../../src/engine/types/engineResult.js');
+
+      const result = createEmptyEngineResult();
+      result.projectKind = 'web-app';
+      result.stack.framework = 'Next.js';
+
+      const scaffold = generateProjectContextScaffold(result);
+      expect(scaffold).toContain('Next.js web application');
     });
   });
 });
