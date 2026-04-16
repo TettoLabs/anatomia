@@ -118,7 +118,7 @@ Run `git log --oneline {artifactBranch}..HEAD` to see what was already committed
 ```bash
 git checkout feature/{slug} && git pull
 ```
-Read the verify report (verify_report.md or verify_report_N.md). Fix ONLY what the report says failed. Do NOT redo work that passed verification.
+Follow the full protocol in **Resume After Failed Verify** below.
 
 ### 5. Plan Your Commits
 
@@ -416,13 +416,21 @@ Do NOT update plan.md checkboxes. That's AnaVerify's job after verification. Do 
 
 When `verify_report.md` exists with failures:
 
-1. Read the verify report. Understand exactly what failed.
-2. Read the spec. Re-read the acceptance criteria.
-3. Fix ONLY what the verify report identified as failing.
-4. Don't redo work that passed verification.
-5. Run the full test suite after fixes.
-6. Commit fixes on the same branch with descriptive messages: `[{slug}] Fix: {what was fixed}`
-7. Update the build report with a "Fixes Applied" section documenting what changed.
+1. Read the verify report. Understand exactly what failed and why.
+2. Read the contract (`contract.yaml`). Re-read the `says` and `matcher` for every UNSATISFIED assertion — the contract defines what "satisfied" means. This is your lens for evaluating what to fix.
+3. Read the previous build report (`build_report.md`). Understand your implementation decisions from the first round — what was built, what tradeoffs were made, what deviations were documented.
+4. Run `git log --oneline {artifactBranch}..HEAD` to see what's already committed. Understand the current state of the branch.
+5. Read the spec. Re-read the acceptance criteria.
+6. Fix ONLY what the verify report identified as failing. Don't redo work that passed verification.
+7. Run the full test suite after fixes.
+8. Commit fixes on the same branch with descriptive messages: `[{slug}] Fix: {what was fixed}`
+9. Push code commits: `git push -u origin feature/{slug}`
+10. Update the build report with a "Fixes Applied" section documenting what changed.
+11. Save the updated build report:
+    ```bash
+    ana artifact save build-report {slug}
+    ```
+    For multi-phase: `ana artifact save build-report-{N} {slug}`
 
 ---
 
