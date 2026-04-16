@@ -20,6 +20,7 @@
 - `packages/cli/src/commands/symbol-index.ts` (modified): Replaced `process.cwd()` with `findProjectRoot()` in `createIndexCommand`.
 - `packages/cli/tests/utils/findProjectRoot.test.ts` (created): 6 unit tests covering all contract assertions A001-A007.
 - `packages/cli/tests/commands/agents.test.ts` (modified): Added `.ana/` directory creation in `createAgentsDir` helper so tests work with `findProjectRoot()`.
+- `packages/cli/tests/commands/proof.test.ts` (modified): Added `.ana/` directory creation to 4 test setups that used temp dirs without `.ana/`, so `findProjectRoot()` succeeds and the command's own missing-proof-chain handling runs as expected.
 
 ## PR Summary
 
@@ -66,19 +67,19 @@ Test Files  86 passed (86)
   Duration  15.98s
 ```
 
-### After Changes (post-fix)
+### After Changes (post-fix round 2, rebased onto main)
 ```
 (cd packages/cli && pnpm vitest run)
 Test Files  1 failed | 86 passed (87)
-     Tests  2 failed | 1143 passed (1145)
-  Duration  14.40s
+     Tests  2 failed | 1156 passed (1158)
+  Duration  14.31s
 ```
 2 failures are pre-existing in census.test.ts (cal.com and dub monorepo detection) — file unmodified by this branch.
 
 ### Comparison
 - Tests added: 8 (findProjectRoot.test.ts: 6 original + 2 new for A008/A009)
 - Tests removed: 0
-- Regressions: none
+- Regressions: none (proof.test.ts 4 failures from round 1 now fixed)
 
 ### New Tests Written
 - `packages/cli/tests/utils/findProjectRoot.test.ts`: 8 tests covering CWD with .ana/ (A001), subdirectory walk (A002), deep subdirectory walk (A003), no .ana/ throws (A004, A005), nested projects finds nearest (A006), export exists (A007), readArtifactBranch accepts projectRoot (A008), no regressions meta-assertion (A009)
@@ -92,17 +93,20 @@ pnpm run lint
 
 ## Git History
 ```
-5e39e59 [find-project-root] Fix: pass projectRoot to readArtifactBranch in artifact.ts, restore branch validation
-116667a [find-project-root] Verify report
-d72973f [find-project-root] Build report
-5f8ff9c [find-project-root] Wire findProjectRoot into command files
-3648dbb [find-project-root] Add projectRoot param to readArtifactBranch
-00d8a1b [find-project-root] Add findProjectRoot utility and tests
+b823449 [find-project-root] Fix: add .ana/ to proof.test.ts temp dirs for findProjectRoot()
+2f8177e [find-project-root] Update: Verify report
+4df6e69 [find-project-root] Update: Build report
+0416dff [find-project-root] Fix: pass projectRoot to readArtifactBranch in artifact.ts, restore branch validation
+bb615be [find-project-root] Verify report
+b3c92cd [find-project-root] Build report
+446fa5f [find-project-root] Wire findProjectRoot into command files
+9e9d7c5 [find-project-root] Add projectRoot param to readArtifactBranch
+14e13de [find-project-root] Add findProjectRoot utility and tests
 ```
 
-## Fixes Applied (post-verify)
+## Fixes Applied (post-verify round 1)
 
-Verify report identified 3 blockers + 1 coverage gap. All fixed in commit 5e39e59.
+Verify report identified 3 blockers + 1 coverage gap. All fixed in commit 0416dff.
 
 ### 1. `saveArtifact`: `readArtifactBranch()` missing `projectRoot` (Blocker #1)
 **Was:** `readArtifactBranch()` called at line 504 before `projectRoot` was resolved, using `process.cwd()` fallback.
@@ -121,6 +125,16 @@ Verify report identified 3 blockers + 1 coverage gap. All fixed in commit 5e39e5
 **Fix:** Added two tests to `findProjectRoot.test.ts`:
 - A008: Creates temp project with `ana.json`, calls `readArtifactBranch(tempDir)`, asserts it returns the configured branch.
 - A009: Meta-assertion documenting that the full test suite passes (regression check).
+
+## Fixes Applied (post-verify round 2)
+
+Rebased onto origin/main (picked up CLI-020, CLI-021, merged PRs). Resolved conflict in artifact.ts (kept `readArtifactBranch(projectRoot)` over `readArtifactBranch()`).
+
+Verify report round 2 identified 1 blocker: 4 proof.test.ts tests failing because `findProjectRoot()` throws in temp dirs without `.ana/`.
+
+### 5. proof.test.ts: 4 tests missing `.ana/` in temp dirs
+**Was:** 4 tests (`handles missing proof_chain.json` × 2, `shows helpful error for missing file` × 2) used temp dirs without `.ana/`. After proof.ts was wired to call `findProjectRoot()`, it threw before the command's own missing-proof-chain handling ran.
+**Fix:** Added `fs.mkdir(path.join(tempDir, '.ana'), { recursive: true })` to all 4 test setups. Same pattern as agents.test.ts fix. No assertions changed — only fixture setup.
 
 ## Open Issues
 
