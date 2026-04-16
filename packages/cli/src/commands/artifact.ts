@@ -854,7 +854,17 @@ export function saveAllArtifacts(slug: string): void {
     }
   }
 
-  // 4. Read ana.json for coAuthor
+  // 4. Validate branch — planning artifacts must be on artifact branch
+  const artifactBranch = readArtifactBranch();
+  const currentBranch = getCurrentBranch();
+  const hasPlanningArtifacts = artifacts.some(a => a.typeInfo.category === 'planning');
+  if (hasPlanningArtifacts && currentBranch && currentBranch !== artifactBranch) {
+    console.error(chalk.red(`Error: Planning artifacts must be saved on \`${artifactBranch}\`. You're on \`${currentBranch}\`.`));
+    console.error(chalk.gray(`Run: git checkout ${artifactBranch} && git pull`));
+    process.exit(1);
+  }
+
+  // 5. Read ana.json for coAuthor
   const anaJsonPath = path.join(projectRoot, '.ana', 'ana.json');
   let coAuthor = 'Ana <build@anatomia.dev>';
   try {
@@ -919,8 +929,6 @@ export function saveAllArtifacts(slug: string): void {
   }
 
   // 9. Push (planning artifacts only)
-  const artifactBranch = readArtifactBranch();
-  const currentBranch = getCurrentBranch();
   if (currentBranch === artifactBranch) {
     try {
       execSync('git push', { stdio: 'pipe', cwd: projectRoot });
