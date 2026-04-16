@@ -1,0 +1,139 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Project kind detection"
+
+assertions:
+  # AC1: ProjectKind type exists on EngineResult
+  - id: A001
+    says: "The scan result includes a project kind classification"
+    block: "projectKind field exists on EngineResult"
+    target: "EngineResult.projectKind"
+    matcher: "exists"
+
+  # AC2: Scanning Anatomia produces cli
+  - id: A002
+    says: "Scanning a Node CLI project with a bin field detects it as a CLI tool"
+    block: "classifies project with bin field as cli"
+    target: "result.kind"
+    matcher: "equals"
+    value: "cli"
+
+  # AC3: Pure function — tested via unit test structure (no fs imports)
+  - id: A003
+    says: "Detection works without reading the filesystem"
+    block: "detector is a pure function"
+    target: "detector.imports"
+    matcher: "not_contains"
+    value: "node:fs"
+
+  # AC4: Factory default
+  - id: A004
+    says: "New projects default to unknown kind until classified"
+    block: "createEmptyEngineResult includes projectKind"
+    target: "emptyResult.projectKind"
+    matcher: "equals"
+    value: "unknown"
+
+  # AC6: All 6 classification outcomes
+  - id: A005
+    says: "A project with a bin field in package.json is classified as a CLI tool"
+    block: "classifies project with bin field as cli"
+    target: "result.kind"
+    matcher: "equals"
+    value: "cli"
+
+  - id: A006
+    says: "A project with CLI dependencies like commander is classified as a CLI tool"
+    block: "classifies project with CLI dependency as cli"
+    target: "result.kind"
+    matcher: "equals"
+    value: "cli"
+
+  - id: A007
+    says: "A project with a browser framework like React is classified as a web app"
+    block: "classifies project with browser framework as web-app"
+    target: "result.kind"
+    matcher: "equals"
+    value: "web-app"
+
+  - id: A008
+    says: "A project with a server framework and no browser UI is classified as an API server"
+    block: "classifies project with server framework as api-server"
+    target: "result.kind"
+    matcher: "equals"
+    value: "api-server"
+
+  - id: A009
+    says: "A project with both server and browser frameworks is classified as full-stack"
+    block: "classifies project with server and browser framework as full-stack"
+    target: "result.kind"
+    matcher: "equals"
+    value: "full-stack"
+
+  - id: A010
+    says: "A project exporting a library without CLI or framework signals is classified as a library"
+    block: "classifies project with main/exports as library"
+    target: "result.kind"
+    matcher: "equals"
+    value: "library"
+
+  - id: A011
+    says: "A project with no recognizable signals is classified as unknown"
+    block: "classifies project with no signals as unknown"
+    target: "result.kind"
+    matcher: "equals"
+    value: "unknown"
+
+  # AC7: Non-Node returns unknown
+  - id: A012
+    says: "Non-Node projects are not falsely classified"
+    block: "returns unknown for non-node project type"
+    target: "result.kind"
+    matcher: "equals"
+    value: "unknown"
+
+  # Priority rules
+  - id: A013
+    says: "The bin field takes priority over library export markers"
+    block: "bin wins over main/exports"
+    target: "result.kind"
+    matcher: "equals"
+    value: "cli"
+
+  - id: A014
+    says: "CLI dependencies take priority over library export markers"
+    block: "CLI dep wins over main/exports"
+    target: "result.kind"
+    matcher: "equals"
+    value: "cli"
+
+  # AC5: Scaffold generator uses projectKind
+  - id: A015
+    says: "Project descriptions use the kind for accurate labels like CLI tool or library"
+    block: "scaffold description uses projectKind"
+    target: "description"
+    matcher: "contains"
+    value: "CLI tool"
+
+  # Census hasBin field
+  - id: A016
+    says: "The census tracks whether each package declares CLI binaries"
+    block: "SourceRoot includes hasBin field"
+    target: "sourceRoot.hasBin"
+    matcher: "exists"
+
+file_changes:
+  - path: "packages/cli/src/engine/types/census.ts"
+    action: modify
+  - path: "packages/cli/src/engine/census.ts"
+    action: modify
+  - path: "packages/cli/src/engine/detectors/projectKind.ts"
+    action: create
+  - path: "packages/cli/src/engine/types/engineResult.ts"
+    action: modify
+  - path: "packages/cli/src/engine/scan-engine.ts"
+    action: modify
+  - path: "packages/cli/src/utils/scaffold-generators.ts"
+    action: modify
+  - path: "packages/cli/tests/engine/detectors/projectKind.test.ts"
+    action: create
