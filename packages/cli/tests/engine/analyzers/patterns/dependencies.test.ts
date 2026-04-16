@@ -177,6 +177,14 @@ describe('Dependency-based pattern detection', () => {
       expect(patterns['database']?.evidence.some(e => e.includes('async driver'))).toBe(false);
     });
 
+    it('detects vee-validate for form handling', async () => {
+      const deps = ['vue', 'vee-validate'];
+      const patterns = await detectFromDependencies(deps, [], 'node', null, testDir);
+
+      expect(patterns['formHandling']?.library).toBe('vee-validate');
+      expect(patterns['formHandling']?.confidence).toBe(0.75);
+    });
+
     it('Prisma schema from census boosts confidence', async () => {
       const deps = ['@prisma/client'];
       const schemaFiles = [{ orm: 'prisma', sourceRootPath: '.', path: 'prisma/schema.prisma' }];
@@ -185,6 +193,183 @@ describe('Dependency-based pattern detection', () => {
       expect(patterns['database']?.library).toBe('prisma');
       expect(patterns['database']?.confidence).toBe(0.95);
       expect(patterns['database']?.evidence).toContain('schema.prisma file found');
+    });
+  });
+
+  // @ana A004, A011
+  describe('Data fetching pattern detection', () => {
+    it('detects @tanstack/react-query as dataFetching', async () => {
+      const deps = ['react', '@tanstack/react-query'];
+      const patterns = await detectFromDependencies(deps, [], 'node', null, testDir);
+
+      expect(patterns['dataFetching']?.library).toBe('react-query');
+      expect(patterns['dataFetching']?.confidence).toBe(0.75);
+      expect(patterns['dataFetching']?.evidence).toContain('@tanstack/react-query in dependencies');
+    });
+
+    // @ana A005
+    it('detects swr as dataFetching', async () => {
+      const deps = ['react', 'swr'];
+      const patterns = await detectFromDependencies(deps, [], 'node', null, testDir);
+
+      expect(patterns['dataFetching']?.library).toBe('swr');
+      expect(patterns['dataFetching']?.confidence).toBe(0.75);
+      expect(patterns['dataFetching']?.evidence).toContain('swr in dependencies');
+    });
+
+    it('detects @nuxtjs/composition-api as nuxt-composables', async () => {
+      const deps = ['nuxt', '@nuxtjs/composition-api'];
+      const patterns = await detectFromDependencies(deps, [], 'node', 'nuxt', testDir);
+
+      expect(patterns['dataFetching']?.library).toBe('nuxt-composables');
+      expect(patterns['dataFetching']?.confidence).toBe(0.75);
+    });
+
+    it('detects apollo-client as dataFetching', async () => {
+      const deps = ['react', '@apollo/client'];
+      const patterns = await detectFromDependencies(deps, [], 'node', null, testDir);
+
+      expect(patterns['dataFetching']?.library).toBe('apollo');
+    });
+
+    it('does not detect dataFetching with no relevant deps', async () => {
+      const deps = ['react', 'express'];
+      const patterns = await detectFromDependencies(deps, [], 'node', null, testDir);
+
+      expect(patterns['dataFetching']).toBeUndefined();
+    });
+  });
+
+  // @ana A006
+  describe('State management pattern detection', () => {
+    it('detects zustand as stateManagement', async () => {
+      const deps = ['react', 'zustand'];
+      const patterns = await detectFromDependencies(deps, [], 'node', null, testDir);
+
+      expect(patterns['stateManagement']?.library).toBe('zustand');
+      expect(patterns['stateManagement']?.confidence).toBe(0.75);
+      expect(patterns['stateManagement']?.evidence).toContain('zustand in dependencies');
+    });
+
+    it('detects jotai as stateManagement', async () => {
+      const deps = ['react', 'jotai'];
+      const patterns = await detectFromDependencies(deps, [], 'node', null, testDir);
+
+      expect(patterns['stateManagement']?.library).toBe('jotai');
+      expect(patterns['stateManagement']?.confidence).toBe(0.75);
+    });
+
+    it('detects recoil as stateManagement', async () => {
+      const deps = ['react', 'recoil'];
+      const patterns = await detectFromDependencies(deps, [], 'node', null, testDir);
+
+      expect(patterns['stateManagement']?.library).toBe('recoil');
+    });
+
+    // @ana A007
+    it('detects pinia as stateManagement', async () => {
+      const deps = ['vue', 'pinia'];
+      const patterns = await detectFromDependencies(deps, [], 'node', null, testDir);
+
+      expect(patterns['stateManagement']?.library).toBe('pinia');
+      expect(patterns['stateManagement']?.confidence).toBe(0.75);
+      expect(patterns['stateManagement']?.evidence).toContain('pinia in dependencies');
+    });
+
+    it('detects @pinia/nuxt as stateManagement', async () => {
+      const deps = ['nuxt', '@pinia/nuxt'];
+      const patterns = await detectFromDependencies(deps, [], 'node', 'nuxt', testDir);
+
+      expect(patterns['stateManagement']?.library).toBe('pinia');
+    });
+
+    // @ana A008
+    it('detects @reduxjs/toolkit as stateManagement', async () => {
+      const deps = ['react', '@reduxjs/toolkit'];
+      const patterns = await detectFromDependencies(deps, [], 'node', null, testDir);
+
+      expect(patterns['stateManagement']?.library).toBe('redux-toolkit');
+      expect(patterns['stateManagement']?.confidence).toBe(0.75);
+      expect(patterns['stateManagement']?.evidence).toContain('@reduxjs/toolkit in dependencies');
+    });
+
+    it('detects vuex as stateManagement', async () => {
+      const deps = ['vue', 'vuex'];
+      const patterns = await detectFromDependencies(deps, [], 'node', null, testDir);
+
+      expect(patterns['stateManagement']?.library).toBe('vuex');
+    });
+
+    it('does not detect stateManagement with no relevant deps', async () => {
+      const deps = ['react', 'express'];
+      const patterns = await detectFromDependencies(deps, [], 'node', null, testDir);
+
+      expect(patterns['stateManagement']).toBeUndefined();
+    });
+  });
+
+  // @ana A009
+  describe('Form handling pattern detection', () => {
+    it('detects react-hook-form as formHandling', async () => {
+      const deps = ['react', 'react-hook-form'];
+      const patterns = await detectFromDependencies(deps, [], 'node', null, testDir);
+
+      expect(patterns['formHandling']?.library).toBe('react-hook-form');
+      expect(patterns['formHandling']?.confidence).toBe(0.75);
+      expect(patterns['formHandling']?.evidence).toContain('react-hook-form in dependencies');
+    });
+
+    // @ana A010
+    it('detects formik as formHandling', async () => {
+      const deps = ['react', 'formik'];
+      const patterns = await detectFromDependencies(deps, [], 'node', null, testDir);
+
+      expect(patterns['formHandling']?.library).toBe('formik');
+      expect(patterns['formHandling']?.confidence).toBe(0.75);
+      expect(patterns['formHandling']?.evidence).toContain('formik in dependencies');
+    });
+
+    it('detects vee-validate as formHandling', async () => {
+      const deps = ['vue', 'vee-validate'];
+      const patterns = await detectFromDependencies(deps, [], 'node', null, testDir);
+
+      expect(patterns['formHandling']?.library).toBe('vee-validate');
+      expect(patterns['formHandling']?.confidence).toBe(0.75);
+    });
+
+    it('does not detect formHandling with no relevant deps', async () => {
+      const deps = ['react', 'express'];
+      const patterns = await detectFromDependencies(deps, [], 'node', null, testDir);
+
+      expect(patterns['formHandling']).toBeUndefined();
+    });
+  });
+
+  // @ana A031, A032, A033
+  describe('Combined deep-tier detection', () => {
+    it('detects all three categories in a React project', async () => {
+      const deps = ['react', '@tanstack/react-query', 'zustand', 'react-hook-form'];
+      const patterns = await detectFromDependencies(deps, [], 'node', null, testDir);
+
+      expect(patterns['dataFetching']?.library).toBe('react-query');
+      expect(patterns['stateManagement']?.library).toBe('zustand');
+      expect(patterns['formHandling']?.library).toBe('react-hook-form');
+    });
+
+    it('detects Vue ecosystem libraries', async () => {
+      const deps = ['vue', 'pinia', 'vee-validate'];
+      const patterns = await detectFromDependencies(deps, [], 'node', null, testDir);
+
+      expect(patterns['stateManagement']?.library).toBe('pinia');
+      expect(patterns['formHandling']?.library).toBe('vee-validate');
+    });
+
+    it('returns no hook patterns when deps are empty', async () => {
+      const patterns = await detectFromDependencies([], [], 'node', null, testDir);
+
+      expect(patterns['dataFetching']).toBeUndefined();
+      expect(patterns['stateManagement']).toBeUndefined();
+      expect(patterns['formHandling']).toBeUndefined();
     });
   });
 });

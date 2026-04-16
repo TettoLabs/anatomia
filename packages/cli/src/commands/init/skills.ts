@@ -33,7 +33,33 @@ import type { InitState } from './types.js';
 import { fileExists } from './preflight.js';
 import { makeTestCommandNonInteractive } from './state.js';
 
+import type { PatternConfidence, MultiPattern } from '../../engine/types/patterns.js';
+
 type DetectedInjector = (result: EngineResult) => string;
+
+/**
+ * Extract dominance classification from pattern evidence strings.
+ *
+ * Looks for "(dominant)", "(present)", or "(incidental)" in evidence.
+ * Returns formatted suffix like " (dominant)" for display.
+ *
+ * @param pattern - Pattern to extract dominance from
+ * @returns Formatted dominance suffix or empty string
+ */
+function extractDominanceFromEvidence(
+  pattern: PatternConfidence | MultiPattern,
+): string {
+  const evidence = isMultiPattern(pattern)
+    ? pattern.primary.evidence
+    : pattern.evidence;
+
+  for (const e of evidence) {
+    if (e.includes('(dominant)')) return ' (dominant)';
+    if (e.includes('(present)')) return ' (present)';
+    if (e.includes('(incidental)')) return ' (incidental)';
+  }
+  return '';
+}
 
 /**
  * Scaffold and seed skill files using dynamic manifest (D8.2, D8.9)
@@ -215,6 +241,28 @@ function injectCodingStandards(result: EngineResult): string {
     const eh = result.patterns?.errorHandling;
     const variant = eh && !isMultiPattern(eh) && eh.variant ? ` (${eh.variant})` : '';
     lines.push(`- Error handling: ${ehLib}${variant}`);
+  }
+  // Deep-tier hook/composable patterns — display with dominance classification
+  const dfLib = getPatternLibrary(result.patterns?.dataFetching);
+  if (dfLib) {
+    const df = result.patterns?.dataFetching;
+    const variant = df && !isMultiPattern(df) && df.variant ? ` (${df.variant})` : '';
+    const dominance = df ? extractDominanceFromEvidence(df) : '';
+    lines.push(`- Data fetching: ${dfLib}${variant}${dominance}`);
+  }
+  const smLib = getPatternLibrary(result.patterns?.stateManagement);
+  if (smLib) {
+    const sm = result.patterns?.stateManagement;
+    const variant = sm && !isMultiPattern(sm) && sm.variant ? ` (${sm.variant})` : '';
+    const dominance = sm ? extractDominanceFromEvidence(sm) : '';
+    lines.push(`- State management: ${smLib}${variant}${dominance}`);
+  }
+  const fhLib = getPatternLibrary(result.patterns?.formHandling);
+  if (fhLib) {
+    const fh = result.patterns?.formHandling;
+    const variant = fh && !isMultiPattern(fh) && fh.variant ? ` (${fh.variant})` : '';
+    const dominance = fh ? extractDominanceFromEvidence(fh) : '';
+    lines.push(`- Form handling: ${fhLib}${variant}${dominance}`);
   }
   if (result.stack.uiSystem) {
     lines.push(`- UI: ${result.stack.uiSystem}`);

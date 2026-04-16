@@ -1048,4 +1048,735 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
       expect(confirmed['auth']).toBeDefined();
     });
   });
+
+  // @ana A012, A013
+  describe('Data Fetching Pattern Confirmation', () => {
+    it('boosts dataFetching confidence when useQuery imports found', async () => {
+      const analysis: AnalysisResult = {
+        projectType: 'node',
+        framework: 'nextjs',
+        confidence: { projectType: 0.95, framework: 0.95 },
+        indicators: { projectType: [], framework: [] },
+        detectedAt: new Date().toISOString(),
+        version: '0.2.0',
+        parsed: {
+          files: [
+            // 10 component files total, 4 with useQuery → dominant (40%)
+            ...Array.from({ length: 4 }, (_, i) =>
+              createMockParsedFile(
+                `components/Feature${i}.tsx`,
+                'typescript',
+                [{ module: '@tanstack/react-query', names: ['useQuery'] }]
+              )
+            ),
+            ...Array.from({ length: 6 }, (_, i) =>
+              createMockParsedFile(
+                `components/Other${i}.tsx`,
+                'typescript',
+                []
+              )
+            ),
+          ],
+          totalParsed: 10,
+          cacheHits: 0,
+          cacheMisses: 10,
+        },
+      };
+
+      const initialPatterns: Partial<Record<string, PatternConfidence>> = {
+        dataFetching: {
+          library: 'react-query',
+          confidence: 0.75,
+          evidence: ['@tanstack/react-query in dependencies'],
+        },
+      };
+
+      const confirmed = await confirmPatternsWithTreeSitter('', initialPatterns, analysis);
+
+      expect(confirmed['dataFetching']?.confidence).toBeGreaterThan(0.75);
+      expect(confirmed['dataFetching']?.evidence.some(e => e.includes('useQuery imports'))).toBe(true);
+      expect(confirmed['dataFetching']?.evidence.some(e => e.includes('dominant'))).toBe(true);
+      expect(confirmed['dataFetching']?.evidence.some(e => e.includes('component files'))).toBe(true);
+    });
+
+    it('does not boost when no imports found', async () => {
+      const analysis: AnalysisResult = {
+        projectType: 'node',
+        framework: null,
+        confidence: { projectType: 0.95, framework: 0.0 },
+        indicators: { projectType: [], framework: [] },
+        detectedAt: new Date().toISOString(),
+        version: '0.2.0',
+        parsed: {
+          files: [
+            createMockParsedFile('src/app.tsx', 'typescript', []),
+          ],
+          totalParsed: 1,
+          cacheHits: 0,
+          cacheMisses: 1,
+        },
+      };
+
+      const initialPatterns: Partial<Record<string, PatternConfidence>> = {
+        dataFetching: {
+          library: 'react-query',
+          confidence: 0.75,
+          evidence: ['@tanstack/react-query in dependencies'],
+        },
+      };
+
+      const confirmed = await confirmPatternsWithTreeSitter('', initialPatterns, analysis);
+
+      expect(confirmed['dataFetching']?.confidence).toBe(0.75);
+      expect(confirmed['dataFetching']?.evidence).toHaveLength(1);
+    });
+
+    it('boosts SWR confidence when useSWR imports found', async () => {
+      const analysis: AnalysisResult = {
+        projectType: 'node',
+        framework: null,
+        confidence: { projectType: 0.95, framework: 0.0 },
+        indicators: { projectType: [], framework: [] },
+        detectedAt: new Date().toISOString(),
+        version: '0.2.0',
+        parsed: {
+          files: [
+            createMockParsedFile(
+              'components/Profile.tsx',
+              'typescript',
+              [{ module: 'swr', names: ['useSWR'] }]
+            ),
+            createMockParsedFile('components/Other.tsx', 'typescript', []),
+            createMockParsedFile('components/More.tsx', 'typescript', []),
+          ],
+          totalParsed: 3,
+          cacheHits: 0,
+          cacheMisses: 3,
+        },
+      };
+
+      const initialPatterns: Partial<Record<string, PatternConfidence>> = {
+        dataFetching: {
+          library: 'swr',
+          confidence: 0.75,
+          evidence: ['swr in dependencies'],
+        },
+      };
+
+      const confirmed = await confirmPatternsWithTreeSitter('', initialPatterns, analysis);
+
+      expect(confirmed['dataFetching']?.confidence).toBeGreaterThan(0.75);
+      expect(confirmed['dataFetching']?.evidence.some(e => e.includes('useSWR imports'))).toBe(true);
+    });
+  });
+
+  // @ana A018, A021
+  describe('Dominance Classification', () => {
+    it('classifies dominant usage (>=30%)', async () => {
+      const analysis: AnalysisResult = {
+        projectType: 'node',
+        framework: null,
+        confidence: { projectType: 0.95, framework: 0.0 },
+        indicators: { projectType: [], framework: [] },
+        detectedAt: new Date().toISOString(),
+        version: '0.2.0',
+        parsed: {
+          files: [
+            // 4/10 = 40% → dominant
+            ...Array.from({ length: 4 }, (_, i) =>
+              createMockParsedFile(
+                `components/Feature${i}.tsx`,
+                'typescript',
+                [{ module: '@tanstack/react-query', names: ['useQuery'] }]
+              )
+            ),
+            ...Array.from({ length: 6 }, (_, i) =>
+              createMockParsedFile(
+                `components/Other${i}.tsx`,
+                'typescript',
+                []
+              )
+            ),
+          ],
+          totalParsed: 10,
+          cacheHits: 0,
+          cacheMisses: 10,
+        },
+      };
+
+      const initialPatterns: Partial<Record<string, PatternConfidence>> = {
+        dataFetching: {
+          library: 'react-query',
+          confidence: 0.75,
+          evidence: ['@tanstack/react-query in dependencies'],
+        },
+      };
+
+      const confirmed = await confirmPatternsWithTreeSitter('', initialPatterns, analysis);
+      const evidence = confirmed['dataFetching']?.evidence.join(' ') || '';
+
+      expect(evidence).toContain('dominant');
+      expect(evidence).toContain('component files');
+    });
+
+    // @ana A019
+    it('classifies present usage (10-30%)', async () => {
+      const analysis: AnalysisResult = {
+        projectType: 'node',
+        framework: null,
+        confidence: { projectType: 0.95, framework: 0.0 },
+        indicators: { projectType: [], framework: [] },
+        detectedAt: new Date().toISOString(),
+        version: '0.2.0',
+        parsed: {
+          files: [
+            // 2/10 = 20% → present
+            ...Array.from({ length: 2 }, (_, i) =>
+              createMockParsedFile(
+                `components/Feature${i}.tsx`,
+                'typescript',
+                [{ module: '@tanstack/react-query', names: ['useQuery'] }]
+              )
+            ),
+            ...Array.from({ length: 8 }, (_, i) =>
+              createMockParsedFile(
+                `components/Other${i}.tsx`,
+                'typescript',
+                []
+              )
+            ),
+          ],
+          totalParsed: 10,
+          cacheHits: 0,
+          cacheMisses: 10,
+        },
+      };
+
+      const initialPatterns: Partial<Record<string, PatternConfidence>> = {
+        dataFetching: {
+          library: 'react-query',
+          confidence: 0.75,
+          evidence: ['@tanstack/react-query in dependencies'],
+        },
+      };
+
+      const confirmed = await confirmPatternsWithTreeSitter('', initialPatterns, analysis);
+      const evidence = confirmed['dataFetching']?.evidence.join(' ') || '';
+
+      expect(evidence).toContain('present');
+    });
+
+    // @ana A020
+    it('classifies incidental usage (<10%)', async () => {
+      const analysis: AnalysisResult = {
+        projectType: 'node',
+        framework: null,
+        confidence: { projectType: 0.95, framework: 0.0 },
+        indicators: { projectType: [], framework: [] },
+        detectedAt: new Date().toISOString(),
+        version: '0.2.0',
+        parsed: {
+          files: [
+            // 1/20 = 5% → incidental
+            createMockParsedFile(
+              'components/Feature0.tsx',
+              'typescript',
+              [{ module: '@tanstack/react-query', names: ['useQuery'] }]
+            ),
+            ...Array.from({ length: 19 }, (_, i) =>
+              createMockParsedFile(
+                `components/Other${i}.tsx`,
+                'typescript',
+                []
+              )
+            ),
+          ],
+          totalParsed: 20,
+          cacheHits: 0,
+          cacheMisses: 20,
+        },
+      };
+
+      const initialPatterns: Partial<Record<string, PatternConfidence>> = {
+        dataFetching: {
+          library: 'react-query',
+          confidence: 0.75,
+          evidence: ['@tanstack/react-query in dependencies'],
+        },
+      };
+
+      const confirmed = await confirmPatternsWithTreeSitter('', initialPatterns, analysis);
+      const evidence = confirmed['dataFetching']?.evidence.join(' ') || '';
+
+      expect(evidence).toContain('incidental');
+    });
+  });
+
+  // @ana A022, A023
+  describe('MultiPattern Detection', () => {
+    it('creates MultiPattern when react-query and swr both >=10%', async () => {
+      const analysis: AnalysisResult = {
+        projectType: 'node',
+        framework: null,
+        confidence: { projectType: 0.95, framework: 0.0 },
+        indicators: { projectType: [], framework: [] },
+        detectedAt: new Date().toISOString(),
+        version: '0.2.0',
+        parsed: {
+          files: [
+            // 4 react-query files (40%)
+            ...Array.from({ length: 4 }, (_, i) =>
+              createMockParsedFile(
+                `components/RQ${i}.tsx`,
+                'typescript',
+                [{ module: '@tanstack/react-query', names: ['useQuery'] }]
+              )
+            ),
+            // 2 swr files (20%)
+            ...Array.from({ length: 2 }, (_, i) =>
+              createMockParsedFile(
+                `components/SWR${i}.tsx`,
+                'typescript',
+                [{ module: 'swr', names: ['useSWR'] }]
+              )
+            ),
+            // 4 plain component files
+            ...Array.from({ length: 4 }, (_, i) =>
+              createMockParsedFile(
+                `components/Plain${i}.tsx`,
+                'typescript',
+                []
+              )
+            ),
+          ],
+          totalParsed: 10,
+          cacheHits: 0,
+          cacheMisses: 10,
+        },
+      };
+
+      const initialPatterns: Partial<Record<string, PatternConfidence>> = {
+        dataFetching: {
+          library: 'react-query',
+          confidence: 0.75,
+          evidence: ['@tanstack/react-query in dependencies'],
+        },
+      };
+
+      const confirmed = await confirmPatternsWithTreeSitter('', initialPatterns, analysis);
+      const df = confirmed['dataFetching'];
+
+      // Should be a MultiPattern
+      expect(df).toBeDefined();
+      expect('patterns' in (df as any)).toBe(true);
+      const multi = df as any;
+      expect(multi.patterns.length).toBe(2);
+      expect(multi.primary.library).toBeDefined();
+      expect(multi.primary.library).toBe('react-query'); // more files → primary
+    });
+
+    // @ana A024
+    it('returns PatternConfidence when only one library >=10%', async () => {
+      const analysis: AnalysisResult = {
+        projectType: 'node',
+        framework: null,
+        confidence: { projectType: 0.95, framework: 0.0 },
+        indicators: { projectType: [], framework: [] },
+        detectedAt: new Date().toISOString(),
+        version: '0.2.0',
+        parsed: {
+          files: [
+            // 3 react-query files (30%)
+            ...Array.from({ length: 3 }, (_, i) =>
+              createMockParsedFile(
+                `components/Feature${i}.tsx`,
+                'typescript',
+                [{ module: '@tanstack/react-query', names: ['useQuery'] }]
+              )
+            ),
+            ...Array.from({ length: 7 }, (_, i) =>
+              createMockParsedFile(
+                `components/Other${i}.tsx`,
+                'typescript',
+                []
+              )
+            ),
+          ],
+          totalParsed: 10,
+          cacheHits: 0,
+          cacheMisses: 10,
+        },
+      };
+
+      const initialPatterns: Partial<Record<string, PatternConfidence>> = {
+        dataFetching: {
+          library: 'react-query',
+          confidence: 0.75,
+          evidence: ['@tanstack/react-query in dependencies'],
+        },
+      };
+
+      const confirmed = await confirmPatternsWithTreeSitter('', initialPatterns, analysis);
+      const df = confirmed['dataFetching'];
+
+      // Should NOT be a MultiPattern
+      expect(df).toBeDefined();
+      expect('patterns' in (df as any)).toBe(false);
+    });
+  });
+
+  // @ana A014
+  describe('State Management Pattern Confirmation', () => {
+    it('boosts stateManagement confidence when zustand imports found', async () => {
+      const analysis: AnalysisResult = {
+        projectType: 'node',
+        framework: null,
+        confidence: { projectType: 0.95, framework: 0.0 },
+        indicators: { projectType: [], framework: [] },
+        detectedAt: new Date().toISOString(),
+        version: '0.2.0',
+        parsed: {
+          files: [
+            createMockParsedFile(
+              'components/Counter.tsx',
+              'typescript',
+              [{ module: 'zustand', names: ['create'] }]
+            ),
+            ...Array.from({ length: 4 }, (_, i) =>
+              createMockParsedFile(
+                `components/Other${i}.tsx`,
+                'typescript',
+                []
+              )
+            ),
+          ],
+          totalParsed: 5,
+          cacheHits: 0,
+          cacheMisses: 5,
+        },
+      };
+
+      const initialPatterns: Partial<Record<string, PatternConfidence>> = {
+        stateManagement: {
+          library: 'zustand',
+          confidence: 0.75,
+          evidence: ['zustand in dependencies'],
+        },
+      };
+
+      const confirmed = await confirmPatternsWithTreeSitter('', initialPatterns, analysis);
+
+      expect(confirmed['stateManagement']?.confidence).toBeGreaterThan(0.75);
+      expect(confirmed['stateManagement']?.evidence.some(e => e.includes('zustand imports'))).toBe(true);
+    });
+
+    it('boosts redux-toolkit confidence when imports found', async () => {
+      const analysis: AnalysisResult = {
+        projectType: 'node',
+        framework: null,
+        confidence: { projectType: 0.95, framework: 0.0 },
+        indicators: { projectType: [], framework: [] },
+        detectedAt: new Date().toISOString(),
+        version: '0.2.0',
+        parsed: {
+          files: [
+            createMockParsedFile(
+              'components/App.tsx',
+              'typescript',
+              [{ module: 'react-redux', names: ['useSelector', 'useDispatch'] }]
+            ),
+            ...Array.from({ length: 2 }, (_, i) =>
+              createMockParsedFile(`components/O${i}.tsx`, 'typescript', [])
+            ),
+          ],
+          totalParsed: 3,
+          cacheHits: 0,
+          cacheMisses: 3,
+        },
+      };
+
+      const initialPatterns: Partial<Record<string, PatternConfidence>> = {
+        stateManagement: {
+          library: 'redux-toolkit',
+          confidence: 0.75,
+          evidence: ['@reduxjs/toolkit in dependencies'],
+        },
+      };
+
+      const confirmed = await confirmPatternsWithTreeSitter('', initialPatterns, analysis);
+
+      expect(confirmed['stateManagement']?.confidence).toBeGreaterThan(0.75);
+      expect(confirmed['stateManagement']?.evidence.some(e => e.includes('redux imports'))).toBe(true);
+    });
+
+    it('boosts pinia confidence when defineStore imports found', async () => {
+      const analysis: AnalysisResult = {
+        projectType: 'node',
+        framework: 'nuxt',
+        confidence: { projectType: 0.95, framework: 0.90 },
+        indicators: { projectType: [], framework: [] },
+        detectedAt: new Date().toISOString(),
+        version: '0.2.0',
+        parsed: {
+          files: [
+            createMockParsedFile(
+              'stores/counter.ts',
+              'typescript',
+              [{ module: 'pinia', names: ['defineStore'] }]
+            ),
+            ...Array.from({ length: 5 }, (_, i) =>
+              createMockParsedFile(`pages/page${i}.vue`, 'vue', [])
+            ),
+          ],
+          totalParsed: 6,
+          cacheHits: 0,
+          cacheMisses: 6,
+        },
+      };
+
+      const initialPatterns: Partial<Record<string, PatternConfidence>> = {
+        stateManagement: {
+          library: 'pinia',
+          confidence: 0.75,
+          evidence: ['pinia in dependencies'],
+        },
+      };
+
+      const confirmed = await confirmPatternsWithTreeSitter('', initialPatterns, analysis);
+
+      expect(confirmed['stateManagement']?.confidence).toBeGreaterThan(0.75);
+      expect(confirmed['stateManagement']?.evidence.some(e => e.includes('pinia imports'))).toBe(true);
+    });
+  });
+
+  // @ana A015
+  describe('Form Handling Pattern Confirmation', () => {
+    it('boosts formHandling confidence when useForm imports found', async () => {
+      const analysis: AnalysisResult = {
+        projectType: 'node',
+        framework: null,
+        confidence: { projectType: 0.95, framework: 0.0 },
+        indicators: { projectType: [], framework: [] },
+        detectedAt: new Date().toISOString(),
+        version: '0.2.0',
+        parsed: {
+          files: [
+            createMockParsedFile(
+              'components/ContactForm.tsx',
+              'typescript',
+              [{ module: 'react-hook-form', names: ['useForm'] }]
+            ),
+            createMockParsedFile(
+              'components/SignupForm.tsx',
+              'typescript',
+              [{ module: 'react-hook-form', names: ['useForm', 'useFormContext'] }]
+            ),
+            ...Array.from({ length: 3 }, (_, i) =>
+              createMockParsedFile(`components/Other${i}.tsx`, 'typescript', [])
+            ),
+          ],
+          totalParsed: 5,
+          cacheHits: 0,
+          cacheMisses: 5,
+        },
+      };
+
+      const initialPatterns: Partial<Record<string, PatternConfidence>> = {
+        formHandling: {
+          library: 'react-hook-form',
+          confidence: 0.75,
+          evidence: ['react-hook-form in dependencies'],
+        },
+      };
+
+      const confirmed = await confirmPatternsWithTreeSitter('', initialPatterns, analysis);
+
+      expect(confirmed['formHandling']?.confidence).toBeGreaterThan(0.75);
+      expect(confirmed['formHandling']?.evidence.some(e => e.includes('useForm imports'))).toBe(true);
+    });
+
+    it('boosts formik confidence when useFormik imports found', async () => {
+      const analysis: AnalysisResult = {
+        projectType: 'node',
+        framework: null,
+        confidence: { projectType: 0.95, framework: 0.0 },
+        indicators: { projectType: [], framework: [] },
+        detectedAt: new Date().toISOString(),
+        version: '0.2.0',
+        parsed: {
+          files: [
+            createMockParsedFile(
+              'components/Form.tsx',
+              'typescript',
+              [{ module: 'formik', names: ['useFormik', 'Formik'] }]
+            ),
+            ...Array.from({ length: 4 }, (_, i) =>
+              createMockParsedFile(`components/Other${i}.tsx`, 'typescript', [])
+            ),
+          ],
+          totalParsed: 5,
+          cacheHits: 0,
+          cacheMisses: 5,
+        },
+      };
+
+      const initialPatterns: Partial<Record<string, PatternConfidence>> = {
+        formHandling: {
+          library: 'formik',
+          confidence: 0.75,
+          evidence: ['formik in dependencies'],
+        },
+      };
+
+      const confirmed = await confirmPatternsWithTreeSitter('', initialPatterns, analysis);
+
+      expect(confirmed['formHandling']?.confidence).toBeGreaterThan(0.75);
+      expect(confirmed['formHandling']?.evidence.some(e => e.includes('formik imports'))).toBe(true);
+    });
+  });
+
+  // @ana A016
+  describe('Nuxt Auto-Import Detection', () => {
+    it('detects Nuxt useFetch via imports when framework is nuxt', async () => {
+      const analysis: AnalysisResult = {
+        projectType: 'node',
+        framework: 'nuxt',
+        confidence: { projectType: 0.95, framework: 0.90 },
+        indicators: { projectType: [], framework: [] },
+        detectedAt: new Date().toISOString(),
+        version: '0.2.0',
+        parsed: {
+          files: [
+            // Nuxt may still have explicit imports for some composables
+            createMockParsedFile(
+              'pages/index.vue',
+              'vue',
+              [{ module: '#imports', names: ['useFetch'] }]
+            ),
+            createMockParsedFile(
+              'pages/about.vue',
+              'vue',
+              [{ module: '#imports', names: ['useFetch', 'useAsyncData'] }]
+            ),
+            ...Array.from({ length: 3 }, (_, i) =>
+              createMockParsedFile(`pages/page${i}.vue`, 'vue', [])
+            ),
+          ],
+          totalParsed: 5,
+          cacheHits: 0,
+          cacheMisses: 5,
+        },
+      };
+
+      const initialPatterns: Partial<Record<string, PatternConfidence>> = {
+        dataFetching: {
+          library: 'nuxt-composables',
+          confidence: 0.75,
+          evidence: ['@nuxtjs/composition-api in dependencies'],
+        },
+      };
+
+      const confirmed = await confirmPatternsWithTreeSitter('', initialPatterns, analysis);
+
+      expect(confirmed['dataFetching']?.confidence).toBeGreaterThan(0.75);
+      expect(confirmed['dataFetching']?.evidence.some(e => e.includes('Nuxt framework detected'))).toBe(true);
+      expect(confirmed['dataFetching']?.evidence.some(e => e.includes('useFetch'))).toBe(true);
+    });
+
+    // @ana A017
+    it('does not detect useFetch regex in non-Nuxt project', async () => {
+      const analysis: AnalysisResult = {
+        projectType: 'node',
+        framework: 'nextjs',
+        confidence: { projectType: 0.95, framework: 0.95 },
+        indicators: { projectType: [], framework: [] },
+        detectedAt: new Date().toISOString(),
+        version: '0.2.0',
+        parsed: {
+          files: [
+            // A file that happens to import something called useFetch
+            createMockParsedFile(
+              'components/Fetch.tsx',
+              'typescript',
+              [{ module: './hooks', names: ['useFetch'] }]
+            ),
+          ],
+          totalParsed: 1,
+          cacheHits: 0,
+          cacheMisses: 1,
+        },
+      };
+
+      const initialPatterns: Partial<Record<string, PatternConfidence>> = {
+        dataFetching: {
+          library: 'nuxt-composables',
+          confidence: 0.75,
+          evidence: ['@nuxtjs/composition-api in dependencies'],
+        },
+      };
+
+      const confirmed = await confirmPatternsWithTreeSitter('', initialPatterns, analysis);
+
+      // nuxt-composables confirmation is gated on framework=nuxt
+      // Since framework is nextjs, no boost should happen
+      expect(confirmed['dataFetching']?.confidence).toBe(0.75);
+      expect(confirmed['dataFetching']?.evidence).toHaveLength(1);
+    });
+  });
+
+  // @ana A034
+  describe('Stage 3 dominance classification tests', () => {
+    it('evidence includes raw file counts for all classifications', async () => {
+      const analysis: AnalysisResult = {
+        projectType: 'node',
+        framework: null,
+        confidence: { projectType: 0.95, framework: 0.0 },
+        indicators: { projectType: [], framework: [] },
+        detectedAt: new Date().toISOString(),
+        version: '0.2.0',
+        parsed: {
+          files: [
+            createMockParsedFile(
+              'components/Form.tsx',
+              'typescript',
+              [{ module: 'react-hook-form', names: ['useForm'] }]
+            ),
+            createMockParsedFile(
+              'components/Store.tsx',
+              'typescript',
+              [{ module: 'zustand', names: ['create'] }]
+            ),
+            ...Array.from({ length: 3 }, (_, i) =>
+              createMockParsedFile(`components/Other${i}.tsx`, 'typescript', [])
+            ),
+          ],
+          totalParsed: 5,
+          cacheHits: 0,
+          cacheMisses: 5,
+        },
+      };
+
+      const initialPatterns: Partial<Record<string, PatternConfidence>> = {
+        formHandling: {
+          library: 'react-hook-form',
+          confidence: 0.75,
+          evidence: ['react-hook-form in dependencies'],
+        },
+        stateManagement: {
+          library: 'zustand',
+          confidence: 0.75,
+          evidence: ['zustand in dependencies'],
+        },
+      };
+
+      const confirmed = await confirmPatternsWithTreeSitter('', initialPatterns, analysis);
+
+      // Both should include component file counts
+      const fhEvidence = confirmed['formHandling']?.evidence.join(' ') || '';
+      const smEvidence = confirmed['stateManagement']?.evidence.join(' ') || '';
+
+      expect(fhEvidence).toContain('component files');
+      expect(smEvidence).toContain('component files');
+    });
+  });
 });

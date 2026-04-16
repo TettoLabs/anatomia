@@ -57,6 +57,16 @@ export async function detectFromDependencies(
   const errorHandling = detectErrorHandlingPattern(deps, projectType, framework);
   if (errorHandling) patterns['errorHandling'] = errorHandling;
 
+  // Detect deep-tier hook/composable patterns
+  const dataFetching = detectDataFetchingPattern(deps);
+  if (dataFetching) patterns['dataFetching'] = dataFetching;
+
+  const stateManagement = detectStateManagementPattern(deps);
+  if (stateManagement) patterns['stateManagement'] = stateManagement;
+
+  const formHandling = detectFormHandlingPattern(deps);
+  if (formHandling) patterns['formHandling'] = formHandling;
+
   return patterns;
 }
 
@@ -511,4 +521,157 @@ function detectErrorHandlingPattern(
   }
 
   return null;  // No error handling pattern detected
+}
+
+/**
+ * Detect data fetching pattern from dependencies
+ *
+ * Checks for: @tanstack/react-query, swr, @nuxtjs/composition-api, apollo-client
+ */
+function detectDataFetchingPattern(
+  deps: string[],
+): PatternConfidence | null {
+  if (deps.includes('@tanstack/react-query') || deps.includes('react-query')) {
+    return {
+      library: 'react-query',
+      confidence: 0.75,
+      evidence: ['@tanstack/react-query in dependencies'],
+    };
+  }
+
+  if (deps.includes('swr')) {
+    return {
+      library: 'swr',
+      confidence: 0.75,
+      evidence: ['swr in dependencies'],
+    };
+  }
+
+  if (deps.includes('@nuxtjs/composition-api')) {
+    return {
+      library: 'nuxt-composables',
+      confidence: 0.75,
+      evidence: ['@nuxtjs/composition-api in dependencies'],
+    };
+  }
+
+  if (deps.includes('@apollo/client') || deps.includes('apollo-client')) {
+    return {
+      library: 'apollo',
+      confidence: 0.75,
+      evidence: ['apollo-client in dependencies'],
+    };
+  }
+
+  if (deps.includes('@trpc/client') || deps.includes('@trpc/react-query')) {
+    return {
+      library: 'trpc',
+      confidence: 0.75,
+      evidence: ['trpc in dependencies'],
+    };
+  }
+
+  return null;
+}
+
+/**
+ * Detect state management pattern from dependencies
+ *
+ * Checks for: zustand, jotai, recoil, pinia, @pinia/nuxt, @reduxjs/toolkit, vuex, mobx
+ */
+function detectStateManagementPattern(
+  deps: string[],
+): PatternConfidence | null {
+  if (deps.includes('zustand')) {
+    return {
+      library: 'zustand',
+      confidence: 0.75,
+      evidence: ['zustand in dependencies'],
+    };
+  }
+
+  if (deps.includes('jotai')) {
+    return {
+      library: 'jotai',
+      confidence: 0.75,
+      evidence: ['jotai in dependencies'],
+    };
+  }
+
+  if (deps.includes('recoil')) {
+    return {
+      library: 'recoil',
+      confidence: 0.75,
+      evidence: ['recoil in dependencies'],
+    };
+  }
+
+  if (deps.includes('pinia') || deps.includes('@pinia/nuxt')) {
+    return {
+      library: 'pinia',
+      confidence: 0.75,
+      evidence: ['pinia in dependencies'],
+    };
+  }
+
+  if (deps.includes('@reduxjs/toolkit')) {
+    return {
+      library: 'redux-toolkit',
+      confidence: 0.75,
+      evidence: ['@reduxjs/toolkit in dependencies'],
+    };
+  }
+
+  if (deps.includes('vuex')) {
+    return {
+      library: 'vuex',
+      confidence: 0.75,
+      evidence: ['vuex in dependencies'],
+    };
+  }
+
+  if (deps.includes('mobx') || deps.includes('mobx-react') || deps.includes('mobx-react-lite')) {
+    return {
+      library: 'mobx',
+      confidence: 0.75,
+      evidence: ['mobx in dependencies'],
+    };
+  }
+
+  return null;
+}
+
+/**
+ * Detect form handling pattern from dependencies
+ *
+ * Checks for: react-hook-form, formik, vee-validate
+ */
+function detectFormHandlingPattern(
+  deps: string[],
+): PatternConfidence | null {
+  if (deps.includes('react-hook-form')) {
+    return {
+      library: 'react-hook-form',
+      confidence: 0.75,
+      evidence: ['react-hook-form in dependencies'],
+    };
+  }
+
+  if (deps.includes('formik')) {
+    return {
+      library: 'formik',
+      confidence: 0.75,
+      evidence: ['formik in dependencies'],
+    };
+  }
+
+  if (deps.includes('vee-validate')) {
+    return {
+      library: 'vee-validate',
+      confidence: 0.75,
+      evidence: ['vee-validate in dependencies'],
+    };
+  }
+
+  return null;
 }
