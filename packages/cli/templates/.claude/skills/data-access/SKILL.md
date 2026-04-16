@@ -13,6 +13,7 @@ description: "Invoke when working with database queries, schema changes, migrati
 - Wrap multi-step mutations in a transaction. If any step can fail, partial writes corrupt data — all steps succeed or all roll back.
 - Use eager loading or joins for related data. Never query the database inside a loop — each iteration is a separate round trip.
 - Select only the fields you need. Avoid fetching entire records when the consumer needs a few columns.
+- Always scope data queries to the authorized context. Filter by the authenticated user, organization, or tenant — don't rely solely on API-layer checks to prevent unauthorized access. A missing `where` clause is an IDOR vulnerability.
 
 ## Gotchas
 *Not yet captured. Add as you discover them during development.*
