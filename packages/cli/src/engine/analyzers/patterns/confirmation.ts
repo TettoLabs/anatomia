@@ -20,6 +20,22 @@ import type { PatternConfidence, MultiPattern } from '../../types/patterns.js';
 import { isMultiPattern } from '../../types/patterns.js';
 
 // ============================================================================
+// DOMINANCE THRESHOLDS
+// ============================================================================
+
+/** >=30% of component files = dominant */
+const DOMINANCE_THRESHOLD_DOMINANT = 0.30;
+
+/** >=10% of component files = present */
+const DOMINANCE_THRESHOLD_PRESENT = 0.10;
+
+/** File extensions considered "component files" for dominance calculation */
+const COMPONENT_EXTENSIONS = ['.tsx', '.jsx', '.vue'];
+
+/** Directory names that indicate component files */
+const COMPONENT_DIRECTORIES = ['components', 'pages', 'app'];
+
+// ============================================================================
 // STAGE 3: TREE-SITTER CONFIRMATION (CP1)
 // ============================================================================
 
@@ -57,6 +73,11 @@ export async function confirmPatternsWithTreeSitter(
   await confirmDatabasePattern(confirmed, parsedFiles, analysis);
   await confirmAuthPattern(confirmed, parsedFiles, analysis);
   await confirmTestingPattern(confirmed, parsedFiles, analysis);
+
+  // Deep-tier hook/composable confirmations
+  await confirmDataFetchingPattern(confirmed, parsedFiles, analysis);
+  await confirmStateManagementPattern(confirmed, parsedFiles, analysis);
+  await confirmFormHandlingPattern(confirmed, parsedFiles, analysis);
 
   return confirmed as Record<string, PatternConfidence>;
 }
@@ -761,4 +782,392 @@ export async function detectMultipleDatabasePatterns(
     primary,
     confidence: primary.confidence,  // Use primary pattern's confidence
   };
+}
+
+// ============================================================================
+// DEEP-TIER HOOK/COMPOSABLE CONFIRMATION
+// ============================================================================
+
+/**
+ * Check if a file is a "component file" for dominance calculation.
+ *
+ * Component files: .tsx, .jsx, .vue extensions OR files in components/, pages/, app/ directories.
+ * Excludes test files and utility files.
+ */
+function isComponentFile(filePath: string): boolean {
+  // Exclude test files
+  if (filePath.includes('.test.') || filePath.includes('.spec.') || filePath.includes('__tests__')) {
+    return false;
+  }
+
+  // Check extension
+  if (COMPONENT_EXTENSIONS.some(ext => filePath.endsWith(ext))) {
+    return true;
+  }
+
+  // Check directory
+  const parts = filePath.split('/');
+  return parts.some(part => COMPONENT_DIRECTORIES.includes(part));
+}
+
+/**
+ * Classify dominance based on file count fraction.
+ *
+ * @param hookFileCount - Files importing the hook
+ * @param totalComponentFiles - Total component files in project
+ * @returns Classification string and fraction
+ */
+function classifyDominance(
+  hookFileCount: number,
+  totalComponentFiles: number,
+): { classification: string; fraction: number } {
+  if (totalComponentFiles === 0) {
+    return { classification: 'present', fraction: 0 };
+  }
+
+  const fraction = hookFileCount / totalComponentFiles;
+
+  if (fraction >= DOMINANCE_THRESHOLD_DOMINANT) {
+    return { classification: 'dominant', fraction };
+  }
+  if (fraction >= DOMINANCE_THRESHOLD_PRESENT) {
+    return { classification: 'present', fraction };
+  }
+  return { classification: 'incidental', fraction };
+}
+
+/**
+ * Count files importing specific hook names from a given module.
+ *
+ * @param parsedFiles - All parsed files
+ * @param modulePattern - Module name substring to match
+ * @param hookNames - Hook function names to look for in imports
+ * @returns Number of files with matching imports
+ */
+function countHookImportFiles(
+  parsedFiles: ParsedFile[],
+  modulePattern: string,
+  hookNames: string[],
+): number {
+  return parsedFiles.filter(f =>
+    f.imports.some(imp =>
+      imp.module.includes(modulePattern) &&
+      imp.names.some(n => hookNames.includes(n))
+    )
+  ).length;
+}
+
+/**
+ * Detect Nuxt auto-imported composable usage via regex.
+ *
+ * Nuxt auto-imports: useFetch, useAsyncData, useState, useRoute, useRouter, useRuntimeConfig.
+ * ParsedFile.functions captures definitions, not calls — so we scan raw file content
+ * with regex instead. Framework-gated to nuxt/nuxt3 only.
+ *
+ * @param parsedFiles - Parsed files (used for file paths, not function detection)
+ * @param framework - Detected framework
+ * @returns Map of composable name → file count
+ */
+function countNuxtComposableUsage(
+  parsedFiles: ParsedFile[],
+  framework: string | null,
+): Map<string, number> {
+  const counts = new Map<string, number>();
+
+  if (framework !== 'nuxt' && framework !== 'nuxt3') {
+    return counts;
+  }
+
+  const nuxtComposables = ['useFetch', 'useAsyncData', 'useState', 'useRoute', 'useRouter', 'useRuntimeConfig'];
+
+  for (const composable of nuxtComposables) {
+    // Count files that import this composable (Nuxt may still have explicit imports)
+    const fileCount = parsedFiles.filter(f =>
+      f.imports.some(imp => imp.names.includes(composable))
+    ).length;
+    if (fileCount > 0) {
+      counts.set(composable, fileCount);
+    }
+  }
+
+  return counts;
+}
+
+/**
+ * Confirm data fetching pattern via tree-sitter and Nuxt regex
+ *
+ * Handles: react-query (useQuery, useMutation), swr (useSWR),
+ * apollo (useQuery, useMutation), trpc, nuxt-composables
+ */
+async function confirmDataFetchingPattern(
+  patterns: Partial<Record<string, PatternConfidence | MultiPattern>>,
+  parsedFiles: ParsedFile[],
+  analysis: DeepTierInput,
+): Promise<void> {
+  const dfPattern = patterns['dataFetching'];
+  if (!dfPattern) return;
+  if (isMultiPattern(dfPattern)) return;
+
+  const library = dfPattern.library;
+  const componentFiles = parsedFiles.filter(f => isComponentFile(f.file));
+  const totalComponentFiles = componentFiles.length;
+
+  // react-query confirmation
+  if (library === 'react-query') {
+    const hookNames = ['useQuery', 'useMutation', 'useInfiniteQuery', 'useQueryClient'];
+    const hookFileCount = countHookImportFiles(parsedFiles, '@tanstack/react-query', hookNames);
+
+    // Also check legacy 'react-query' module (exact match to avoid double-counting @tanstack/react-query)
+    const legacyCount = parsedFiles.filter(f =>
+      f.imports.some(imp =>
+        imp.module === 'react-query' &&
+        imp.names.some(n => hookNames.includes(n))
+      )
+    ).length;
+    const totalHookFiles = hookFileCount + legacyCount;
+
+    if (totalHookFiles > 0) {
+      const { classification } = classifyDominance(totalHookFiles, totalComponentFiles);
+      dfPattern.confidence = Math.min(1.0, dfPattern.confidence + 0.15);
+      dfPattern.evidence.push(
+        `useQuery imports in ${totalHookFiles}/${totalComponentFiles} component files (${classification})`
+      );
+
+      // Check for useMutation too
+      const mutationFiles = countHookImportFiles(parsedFiles, '@tanstack/react-query', ['useMutation']);
+      if (mutationFiles > 0) {
+        dfPattern.confidence = Math.min(1.0, dfPattern.confidence + 0.05);
+        dfPattern.evidence.push(`useMutation imports in ${mutationFiles} files`);
+      }
+    }
+
+    // Check for competing SWR library → MultiPattern
+    const swrFiles = countHookImportFiles(parsedFiles, 'swr', ['useSWR']);
+    if (swrFiles > 0 && totalComponentFiles > 0) {
+      const rqDominance = classifyDominance(totalHookFiles, totalComponentFiles);
+      const swrDominance = classifyDominance(swrFiles, totalComponentFiles);
+
+      if (rqDominance.fraction >= DOMINANCE_THRESHOLD_PRESENT && swrDominance.fraction >= DOMINANCE_THRESHOLD_PRESENT) {
+        const rqPattern: PatternConfidence = {
+          library: 'react-query',
+          confidence: dfPattern.confidence,
+          evidence: dfPattern.evidence,
+          primary: totalHookFiles >= swrFiles,
+        };
+        const swrPattern: PatternConfidence = {
+          library: 'swr',
+          confidence: 0.75 + 0.15,
+          evidence: [
+            'swr in dependencies',
+            `useSWR imports in ${swrFiles}/${totalComponentFiles} component files (${swrDominance.classification})`,
+          ],
+          primary: swrFiles > totalHookFiles,
+        };
+        const primary = totalHookFiles >= swrFiles ? rqPattern : swrPattern;
+        patterns['dataFetching'] = {
+          patterns: [rqPattern, swrPattern],
+          primary,
+          confidence: primary.confidence,
+        };
+        return;
+      }
+    }
+  }
+
+  // SWR confirmation
+  else if (library === 'swr') {
+    const hookFileCount = countHookImportFiles(parsedFiles, 'swr', ['useSWR', 'useSWRMutation', 'useSWRInfinite']);
+
+    if (hookFileCount > 0) {
+      const { classification } = classifyDominance(hookFileCount, totalComponentFiles);
+      dfPattern.confidence = Math.min(1.0, dfPattern.confidence + 0.15);
+      dfPattern.evidence.push(
+        `useSWR imports in ${hookFileCount}/${totalComponentFiles} component files (${classification})`
+      );
+    }
+  }
+
+  // Nuxt composables confirmation
+  else if (library === 'nuxt-composables') {
+    const nuxtUsage = countNuxtComposableUsage(parsedFiles, analysis.framework);
+    const useFetchCount = nuxtUsage.get('useFetch') || 0;
+    const useAsyncDataCount = nuxtUsage.get('useAsyncData') || 0;
+    const totalDataFetching = useFetchCount + useAsyncDataCount;
+
+    if (totalDataFetching > 0) {
+      const { classification } = classifyDominance(totalDataFetching, totalComponentFiles);
+      dfPattern.confidence = Math.min(1.0, dfPattern.confidence + 0.15);
+      dfPattern.evidence.push('Nuxt framework detected');
+      if (useFetchCount > 0) {
+        dfPattern.evidence.push(
+          `useFetch calls in ${useFetchCount}/${totalComponentFiles} component files (${classification})`
+        );
+      }
+      if (useAsyncDataCount > 0) {
+        dfPattern.evidence.push(`useAsyncData calls in ${useAsyncDataCount} files`);
+      }
+    }
+  }
+
+  // Apollo confirmation
+  else if (library === 'apollo') {
+    const hookFileCount = countHookImportFiles(parsedFiles, '@apollo/client', ['useQuery', 'useMutation', 'useLazyQuery']);
+
+    if (hookFileCount > 0) {
+      const { classification } = classifyDominance(hookFileCount, totalComponentFiles);
+      dfPattern.confidence = Math.min(1.0, dfPattern.confidence + 0.15);
+      dfPattern.evidence.push(
+        `useQuery imports in ${hookFileCount}/${totalComponentFiles} component files (${classification})`
+      );
+    }
+  }
+}
+
+/**
+ * Confirm state management pattern via hook imports
+ */
+async function confirmStateManagementPattern(
+  patterns: Partial<Record<string, PatternConfidence | MultiPattern>>,
+  parsedFiles: ParsedFile[],
+  _analysis: DeepTierInput,
+): Promise<void> {
+  const smPattern = patterns['stateManagement'];
+  if (!smPattern) return;
+  if (isMultiPattern(smPattern)) return;
+
+  const library = smPattern.library;
+  const componentFiles = parsedFiles.filter(f => isComponentFile(f.file));
+  const totalComponentFiles = componentFiles.length;
+
+  if (library === 'zustand') {
+    const hookFileCount = countHookImportFiles(parsedFiles, 'zustand', ['create', 'useStore']);
+    // Also count files importing from user-created stores (zustand pattern: import useXxxStore from './stores/xxx')
+    const storeImportFiles = parsedFiles.filter(f =>
+      f.imports.some(imp => imp.module.includes('zustand'))
+    ).length;
+    const totalFiles = Math.max(hookFileCount, storeImportFiles);
+
+    if (totalFiles > 0) {
+      const { classification } = classifyDominance(totalFiles, totalComponentFiles);
+      smPattern.confidence = Math.min(1.0, smPattern.confidence + 0.15);
+      smPattern.evidence.push(
+        `zustand imports in ${totalFiles}/${totalComponentFiles} component files (${classification})`
+      );
+    }
+  }
+
+  else if (library === 'jotai') {
+    const hookFileCount = countHookImportFiles(parsedFiles, 'jotai', ['useAtom', 'useAtomValue', 'useSetAtom', 'atom']);
+
+    if (hookFileCount > 0) {
+      const { classification } = classifyDominance(hookFileCount, totalComponentFiles);
+      smPattern.confidence = Math.min(1.0, smPattern.confidence + 0.15);
+      smPattern.evidence.push(
+        `jotai imports in ${hookFileCount}/${totalComponentFiles} component files (${classification})`
+      );
+    }
+  }
+
+  else if (library === 'recoil') {
+    const hookFileCount = countHookImportFiles(parsedFiles, 'recoil', ['useRecoilState', 'useRecoilValue', 'atom', 'selector']);
+
+    if (hookFileCount > 0) {
+      const { classification } = classifyDominance(hookFileCount, totalComponentFiles);
+      smPattern.confidence = Math.min(1.0, smPattern.confidence + 0.15);
+      smPattern.evidence.push(
+        `recoil imports in ${hookFileCount}/${totalComponentFiles} component files (${classification})`
+      );
+    }
+  }
+
+  else if (library === 'pinia') {
+    const hookFileCount = countHookImportFiles(parsedFiles, 'pinia', ['defineStore', 'storeToRefs']);
+
+    if (hookFileCount > 0) {
+      const { classification } = classifyDominance(hookFileCount, totalComponentFiles);
+      smPattern.confidence = Math.min(1.0, smPattern.confidence + 0.15);
+      smPattern.evidence.push(
+        `pinia imports in ${hookFileCount}/${totalComponentFiles} component files (${classification})`
+      );
+    }
+  }
+
+  else if (library === 'redux-toolkit') {
+    const hookFileCount = countHookImportFiles(parsedFiles, '@reduxjs/toolkit', ['createSlice', 'configureStore']);
+    const reactReduxFiles = countHookImportFiles(parsedFiles, 'react-redux', ['useSelector', 'useDispatch']);
+    const totalFiles = Math.max(hookFileCount, reactReduxFiles);
+
+    if (totalFiles > 0) {
+      const { classification } = classifyDominance(totalFiles, totalComponentFiles);
+      smPattern.confidence = Math.min(1.0, smPattern.confidence + 0.15);
+      smPattern.evidence.push(
+        `redux imports in ${totalFiles}/${totalComponentFiles} component files (${classification})`
+      );
+    }
+  }
+
+  else if (library === 'vuex') {
+    const hookFileCount = countHookImportFiles(parsedFiles, 'vuex', ['useStore', 'mapState', 'mapGetters', 'createStore']);
+
+    if (hookFileCount > 0) {
+      const { classification } = classifyDominance(hookFileCount, totalComponentFiles);
+      smPattern.confidence = Math.min(1.0, smPattern.confidence + 0.15);
+      smPattern.evidence.push(
+        `vuex imports in ${hookFileCount}/${totalComponentFiles} component files (${classification})`
+      );
+    }
+  }
+}
+
+/**
+ * Confirm form handling pattern via hook imports
+ */
+async function confirmFormHandlingPattern(
+  patterns: Partial<Record<string, PatternConfidence | MultiPattern>>,
+  parsedFiles: ParsedFile[],
+  _analysis: DeepTierInput,
+): Promise<void> {
+  const fhPattern = patterns['formHandling'];
+  if (!fhPattern) return;
+  if (isMultiPattern(fhPattern)) return;
+
+  const library = fhPattern.library;
+  const componentFiles = parsedFiles.filter(f => isComponentFile(f.file));
+  const totalComponentFiles = componentFiles.length;
+
+  if (library === 'react-hook-form') {
+    const hookFileCount = countHookImportFiles(parsedFiles, 'react-hook-form', ['useForm', 'useFormContext', 'useController', 'useFieldArray']);
+
+    if (hookFileCount > 0) {
+      const { classification } = classifyDominance(hookFileCount, totalComponentFiles);
+      fhPattern.confidence = Math.min(1.0, fhPattern.confidence + 0.15);
+      fhPattern.evidence.push(
+        `useForm imports in ${hookFileCount}/${totalComponentFiles} component files (${classification})`
+      );
+    }
+  }
+
+  else if (library === 'formik') {
+    const hookFileCount = countHookImportFiles(parsedFiles, 'formik', ['useFormik', 'Formik', 'Form', 'Field']);
+
+    if (hookFileCount > 0) {
+      const { classification } = classifyDominance(hookFileCount, totalComponentFiles);
+      fhPattern.confidence = Math.min(1.0, fhPattern.confidence + 0.15);
+      fhPattern.evidence.push(
+        `formik imports in ${hookFileCount}/${totalComponentFiles} component files (${classification})`
+      );
+    }
+  }
+
+  else if (library === 'vee-validate') {
+    const hookFileCount = countHookImportFiles(parsedFiles, 'vee-validate', ['useForm', 'useField', 'defineRule']);
+
+    if (hookFileCount > 0) {
+      const { classification } = classifyDominance(hookFileCount, totalComponentFiles);
+      fhPattern.confidence = Math.min(1.0, fhPattern.confidence + 0.15);
+      fhPattern.evidence.push(
+        `vee-validate imports in ${hookFileCount}/${totalComponentFiles} component files (${classification})`
+      );
+    }
+  }
 }
