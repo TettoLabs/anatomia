@@ -844,34 +844,33 @@ export async function completeWork(slug: string): Promise<void> {
   }
 
   // 6. Verify feature branch was merged (optional - branch might be deleted)
-  //    Handles both regular merge (--is-ancestor) and squash merge (diff check).
-  //    Squash merge creates a new commit — the feature branch commits aren't
-  //    ancestors of HEAD, but the content is identical.
+  //    Prune stale remote refs — squash merge + --delete-branch removes
+  //    the remote branch on GitHub but local refs persist until pruned.
+  try {
+    execSync('git fetch --prune origin', { stdio: 'pipe' });
+  } catch { /* offline — continue with local state */ }
+
   const featureBranchExists = getFeatureBranch(slug);
   if (featureBranchExists) {
-    let merged = false;
-    try {
-      execSync(`git merge-base --is-ancestor feature/${slug} HEAD`, { stdio: 'pipe' });
-      merged = true;
-    } catch {
-      // --is-ancestor failed — might be squash merge. Check if the feature
-      // branch's changes are already on main by comparing tree content.
+    // Check if remote branch still exists after prune
+    const hasRemote = (() => {
       try {
-        const diff = execSync(
-          `git diff feature/${slug}..HEAD -- .ana/plans/active/${slug}/`,
-          { encoding: 'utf-8', stdio: 'pipe' }
-        ).trim();
-        // Empty diff = main has the same content as the feature branch for this slug
-        merged = diff.length === 0;
+        const output = execSync(`git branch -r --list "origin/feature/${slug}"`, { encoding: 'utf-8', stdio: 'pipe' }).trim();
+        return output.length > 0;
+      } catch { return false; }
+    })();
+
+    if (hasRemote) {
+      // Remote still exists — verify with is-ancestor (regular merge)
+      try {
+        execSync(`git merge-base --is-ancestor feature/${slug} HEAD`, { stdio: 'pipe' });
       } catch {
-        // diff failed — can't determine merge status
+        console.error(chalk.red(`Error: \`feature/${slug}\` has not been merged into \`${artifactBranch}\`.`));
+        console.error(chalk.gray('Merge the PR first, then run this command again.'));
+        process.exit(1);
       }
     }
-    if (!merged) {
-      console.error(chalk.red(`Error: \`feature/${slug}\` has not been merged into \`${artifactBranch}\`.`));
-      console.error(chalk.gray('Merge the PR first, then run this command again.'));
-      process.exit(1);
-    }
+    // else: remote deleted after prune = PR was merged (squash or regular)
   }
 
   // 7. Read plan.md to determine phases
