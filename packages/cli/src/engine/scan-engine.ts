@@ -813,6 +813,7 @@ export async function scanProject(
     deployment: { ...deployment, ...ci },
     patterns: patterns ?? null,
     conventions: conventions ?? null,
+    readme: null,  // Populated in next commit when detector is wired
     // Phase 1+ stubs
     secretFindings: null,
     envVarMap: null,
