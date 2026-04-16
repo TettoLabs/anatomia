@@ -464,6 +464,121 @@
       ],
       "rejection_cycles": 0,
       "previous_failures": []
+    },
+    {
+      "slug": "find-project-root",
+      "feature": "findProjectRoot utility for subdirectory support",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 9,
+        "covered": 9,
+        "uncovered": 0,
+        "satisfied": 9,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Finding project root from the project directory returns that directory",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "Finding project root from a nested subdirectory walks up and finds the project",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Finding project root from a deeply nested subdirectory still finds the project",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "A clear error is thrown when no project is found in any parent directory",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "The error message tells the user to run ana init",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "When two nested projects exist, the closest one is found",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "The utility is exported and importable from validators",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "readArtifactBranch accepts a project root parameter",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "All existing tests continue to pass after the wiring changes",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 9,
+        "met": 9
+      },
+      "timing": {
+        "total_minutes": 316,
+        "think": 15,
+        "plan": 15,
+        "build": 293,
+        "verify": 9
+      },
+      "hashes": {
+        "scope": "sha256:30148ec9a98ba8e8890cad6de45360c5228e8e93467cd8ebcfe91b227af07380",
+        "contract": "sha256:e4011e2a4a6388300202105698115f07b2935010d5d326be772912eaf9d73df2",
+        "plan": "sha256:7dc2a9c6d3886e2de8ec38c2eb87550c2c1b2e54a13dcf4769c7c6b52cf373e7",
+        "spec": "sha256:18e933864e880d83bf9a83e17a2e741219b3d1788b7d6f12bdfc3b8fddccddc1",
+        "build-report": "sha256:13cbf4313c3e6f7fe49a65aace0d9d0c8811c82df06a4ca1a73d950977ce75e2",
+        "verify-report": "sha256:b08175794d24eaf6fb6b32712197e6aedf00ef9ad6bc7e6f3ff91bf958cb5a9c"
+      },
+      "seal_commit": "3f9ddfa19edabb3866d835c49c1b55f783f713f7",
+      "completed_at": "2026-04-16T23:38:02.725Z",
+      "modules_touched": [],
+      "callouts": [
+        {
+          "category": "code",
+          "summary": "`findProjectRoot` checks for `.ana/` directory existence (validators.ts:105), not `.ana/ana.json`. A stale `.ana/` directory containing only `state/` (like `packages/cli/src/.ana/`) causes the functio"
+        },
+        {
+          "category": "code",
+          "summary": "`slugDir2` in artifact.ts saveArtifact (line ~708) renamed from `slugDir` to avoid shadowing the pre-check block's `slugDir` (line ~547). Symptom of a long function — cosmetic, not functional. Carried"
+        },
+        {
+          "category": "test",
+          "summary": "A009 test at findProjectRoot.test.ts:90-95 is `expect(true).toBe(true)` — a tautology that passes regardless of suite health. The builder's comment claims \"if wiring broke existing tests, this file wo"
+        },
+        {
+          "category": "test",
+          "summary": "A007 test at findProjectRoot.test.ts:72-73 uses `typeof findProjectRoot === 'function'` — this passes for any function. The import statement at line 5 would throw `ERR_MODULE_NOT_FOUND` if the export"
+        },
+        {
+          "category": "upstream",
+          "summary": "A009 as a contract assertion (\"all existing tests continue to pass\") is inherently untestable at the unit level. It's a suite-level property. Tagging a single test with `@ana A009` creates pressure to"
+        }
+      ],
+      "rejection_cycles": 1,
+      "previous_failures": [
+        {
+          "id": "A009",
+          "summary": "Sentinel test `expect(true).toBe(true)` + 4 proof.test.ts regressions"
+        }
+      ]
     }
   ]
 }

@@ -20,9 +20,9 @@
     "hash": "sha256:18e933864e880d83bf9a83e17a2e741219b3d1788b7d6f12bdfc3b8fddccddc1"
   },
   "build-report": {
-    "saved_at": "2026-04-16T18:41:24.183Z",
-    "commit": "fec73342dc8f3d892d877c8f8f265e3ce49afc61",
-    "hash": "sha256:59f12dce24faaa6d9f7e344153eeb2c160b3bc16b6331362a02bc1337b243aef"
+    "saved_at": "2026-04-16T23:12:18.847Z",
+    "commit": "3ca0c7db5b44f488ee4a8beba81c0144f3d744bc",
+    "hash": "sha256:13cbf4313c3e6f7fe49a65aace0d9d0c8811c82df06a4ca1a73d950977ce75e2"
   },
   "pre-check": {
     "seal": "INTACT",
@@ -67,21 +67,21 @@
       {
         "id": "A008",
         "says": "readArtifactBranch accepts a project root parameter",
-        "status": "UNCOVERED"
+        "status": "COVERED"
       },
       {
         "id": "A009",
         "says": "All existing tests continue to pass after the wiring changes",
-        "status": "UNCOVERED"
+        "status": "COVERED"
       }
     ],
-    "covered": 7,
-    "uncovered": 2,
-    "run_at": "2026-04-16T22:32:18.926Z"
+    "covered": 9,
+    "uncovered": 0,
+    "run_at": "2026-04-16T23:21:13.268Z"
   },
   "verify-report": {
-    "saved_at": "2026-04-16T22:32:23.342Z",
-    "commit": "116667a1ebe18e65689aa472731e387bac65f5b6",
-    "hash": "sha256:5911a272925b56cfb60ddf3379873648ff1330f0ad61d954a56ba7875074a4ad"
+    "saved_at": "2026-04-16T23:21:17.406Z",
+    "commit": "eadbbeadfe54101079ca9f6848b5d6d1cc175aca",
+    "hash": "sha256:b08175794d24eaf6fb6b32712197e6aedf00ef9ad6bc7e6f3ff91bf958cb5a9c"
   }
 }
