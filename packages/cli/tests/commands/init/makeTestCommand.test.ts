@@ -178,6 +178,28 @@ describe('createAnaJson monorepo test command scoping', () => {
     }
   });
 
+  it('does not generate test command when root has no test script', async () => {
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ana-json-'));
+    try {
+      const result = createEmptyEngineResult();
+      result.commands = { build: null, test: null, lint: null, dev: null, packageManager: 'pnpm', all: {} };
+      result.stack.testing = ['Vitest'];
+      result.monorepo = {
+        isMonorepo: true,
+        tool: 'pnpm',
+        packages: [{ name: '@myapp/web', path: 'apps/web' }],
+        primaryPackage: { name: '@myapp/web', path: 'apps/web' },
+      };
+
+      await createAnaJson(tmpDir, result);
+      const config = await readAnaJson(tmpDir);
+      const cmds = config['commands'] as Record<string, string | null>;
+      expect(cmds['test']).toBeNull();
+    } finally {
+      await fs.rm(tmpDir, { recursive: true, force: true });
+    }
+  });
+
   it('does not scope single-repo projects', async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ana-json-'));
     try {

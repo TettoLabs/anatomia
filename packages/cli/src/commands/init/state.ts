@@ -300,7 +300,7 @@ export async function createAnaJson(
   // Compute test command — scope to primary package in monorepos so agents
   // don't get interleaved turbo output that hangs when piped through grep/tail.
   let testCmd = makeTestCommandNonInteractive(result.commands.test, result.stack.testing, result.commands.all?.['test']);
-  if (result.monorepo.isMonorepo && result.monorepo.primaryPackage) {
+  if (testCmd && result.monorepo.isMonorepo && result.monorepo.primaryPackage) {
     const pkg = result.monorepo.primaryPackage;
     const pm = result.commands.packageManager || 'pnpm';
     if (pm === 'pnpm' && pkg.name) {
@@ -520,8 +520,9 @@ export async function atomicRename(tmpAnaPath: string, anaPath: string): Promise
  * @param engineResult - Engine result (null if skipped)
  * @param projectName - Project name
  * @param scanTime - Scan duration in seconds
+ * @param anaConfig - Written ana.json config (for scoped test command display)
  */
-export function displaySuccessMessage(engineResult: EngineResult | null, projectName: string, scanTime: string): void {
+export function displaySuccessMessage(engineResult: EngineResult | null, projectName: string, scanTime: string, anaConfig?: Record<string, unknown>): void {
   console.log('');
 
   if (engineResult) {
@@ -586,7 +587,11 @@ export function displaySuccessMessage(engineResult: EngineResult | null, project
   if (engineResult) {
     const artifactBranch = engineResult.git.defaultBranch ?? engineResult.git.branch ?? 'main';
     console.log(`  ${chalk.bold('Branch:')}   ${artifactBranch}`);
-    const displayTest = makeTestCommandNonInteractive(engineResult.commands.test, engineResult.stack.testing, engineResult.commands.all?.['test']);
+    // Show the test command from ana.json (scoped for monorepos) if available,
+    // otherwise fall back to the raw engine result command.
+    const configCmds = anaConfig?.['commands'] as Record<string, string | null> | undefined;
+    const displayTest = configCmds?.['test']
+      ?? makeTestCommandNonInteractive(engineResult.commands.test, engineResult.stack.testing, engineResult.commands.all?.['test']);
     if (displayTest) {
       console.log(`  ${chalk.bold('Test:')}     ${displayTest}`);
     }
