@@ -32,3 +32,8 @@ Callouts:
 - test: A007 test at findProjectRoot.test.ts:72-73 uses `typeof findProjectRoot === 'function'` — this passes for any function. The import statement at line 5 would throw `ERR_MODULE_NOT_FOUND` if the export
 - upstream: A009 as a contract assertion ("all existing tests continue to pass") is inherently untestable at the unit level. It's a suite-level property. Tagging a single test with `@ana A009` creates pressure to
 
+## Add deep-tier hook/composable detection to patterns analyzer (2026-04-16)
+Result: PASS | 35/35 satisfied | 12/12 ACs | 1 deviation
+Pipeline: 0m (Think 7m, Plan 7m, Build 32m, Verify undefinedm)
+Deviations: A016 — Detection via parsed imports (e.g., `#imports` module) rather than raw file content regex
+

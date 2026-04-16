@@ -579,6 +579,223 @@
           "summary": "Sentinel test `expect(true).toBe(true)` + 4 proof.test.ts regressions"
         }
       ]
+    },
+    {
+      "slug": "add-hook-detection",
+      "feature": "Add deep-tier hook/composable detection to patterns analyzer",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 35,
+        "covered": 0,
+        "uncovered": 35,
+        "satisfied": 35,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "PatternAnalysis schema accepts dataFetching field",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "PatternAnalysis schema accepts stateManagement field",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "PatternAnalysis schema accepts formHandling field",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "React Query dependency triggers data fetching detection",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "SWR dependency triggers data fetching detection",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "Zustand dependency triggers state management detection",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "Pinia dependency triggers state management detection",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "Redux Toolkit dependency triggers state management detection",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "React Hook Form dependency triggers form handling detection",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "Formik dependency triggers form handling detection",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "Stage 1 detection uses 0.75 baseline confidence",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "Tree-sitter confirmation boosts confidence when imports found",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "Evidence includes hook import counts",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "Confirmation works for state management hooks",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "Confirmation works for form handling hooks",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "Nuxt useFetch calls detected without imports",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A017",
+          "says": "Nuxt detection is gated on framework",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A018",
+          "says": "Files with 30%+ hook usage classified as dominant",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A019",
+          "says": "Files with 10-30% hook usage classified as present",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A020",
+          "says": "Files with <10% hook usage classified as incidental",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A021",
+          "says": "Evidence includes raw file counts",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A022",
+          "says": "MultiPattern used when two libraries both cross present threshold",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A023",
+          "says": "MultiPattern identifies primary library",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A024",
+          "says": "Single library returns plain PatternConfidence",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A025",
+          "says": "Data fetching appears in coding-standards Detected section",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A026",
+          "says": "State management appears in coding-standards Detected section",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A027",
+          "says": "Form handling appears in coding-standards Detected section",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A028",
+          "says": "Dominance classification shown in display",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A029",
+          "says": "Empty pattern analysis still valid after schema update",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A030",
+          "says": "All existing pattern tests still pass",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A031",
+          "says": "New tests cover dataFetching Stage 1",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A032",
+          "says": "New tests cover stateManagement Stage 1",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A033",
+          "says": "New tests cover formHandling Stage 1",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A034",
+          "says": "New tests cover Stage 3 confirmation with dominance",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A035",
+          "says": "Census type unchanged",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 12,
+        "met": 12
+      },
+      "timing": {
+        "total_minutes": 0,
+        "think": 7,
+        "plan": 7,
+        "build": 32
+      },
+      "hashes": {
+        "scope": "sha256:de77e0a97b049d34e1d1e2ad7f388fba1387391e4e29df06ea2ab19d38292da7",
+        "contract": "sha256:9f0529af05d05da4e312fc85a1d6a32f8d918cf2b2cbc445a8fc372bf7ef3a77",
+        "plan": "sha256:8e3665da41364c0be2f29ab543246783fbbc50cbe2a07e265936ff8bf82ee714",
+        "spec": "sha256:1908108cca3da4ce7a2e69dfeef6265b7f9190d169031b8587e132f157d73ab9",
+        "build-report": "sha256:134be779809218841eb85f4ffdf9c1226c3e592803c63f402e285472cf4232da"
+      },
+      "seal_commit": null,
+      "completed_at": "2026-04-16T23:57:17.961Z",
+      "modules_touched": [],
+      "callouts": [],
+      "rejection_cycles": 0,
+      "previous_failures": []
     }
   ]
 }
