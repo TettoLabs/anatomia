@@ -500,20 +500,23 @@ export function saveArtifact(type: string, slug: string): void {
     process.exit(1);
   }
 
-  // 2. Read artifactBranch from ana.json
-  const artifactBranch = readArtifactBranch();
+  // 2. Resolve project root early — needed for readArtifactBranch and throughout
+  const projectRoot = findProjectRoot();
 
-  // 3. Get current branch
+  // 3. Read artifactBranch from ana.json
+  const artifactBranch = readArtifactBranch(projectRoot);
+
+  // 4. Get current branch
   const currentBranch = getCurrentBranch();
   if (!currentBranch) {
     console.error(chalk.red('Error: Not a git repository. `ana artifact save` requires git.'));
     process.exit(1);
   }
 
-  // 4. Validate branch
+  // 5. Validate branch
   validateBranch(typeInfo, currentBranch, artifactBranch, slug);
 
-  // 5. Resolve file path
+  // 6. Resolve file path
   const filePath = path.join('.ana', 'plans', 'active', slug, typeInfo.fileName);
 
   // 6. Verify file exists
@@ -541,12 +544,11 @@ export function saveArtifact(type: string, slug: string): void {
     }
 
     // Auto pre-check for contract mode
-    const artProjectRoot = findProjectRoot();
-    const slugDir = path.join(artProjectRoot, '.ana', 'plans', 'active', slug);
+    const slugDir = path.join(projectRoot, '.ana', 'plans', 'active', slug);
     const contractPath = path.join(slugDir, 'contract.yaml');
 
     if (fs.existsSync(contractPath)) {
-      const preCheckResult = runContractPreCheck(slug, artProjectRoot);
+      const preCheckResult = runContractPreCheck(slug, projectRoot);
 
       // TAMPERED blocks save
       if (preCheckResult.seal === 'TAMPERED') {
@@ -628,8 +630,7 @@ export function saveArtifact(type: string, slug: string): void {
     }
   }
 
-  // 6b. Check if file is tracked (before staging, for create vs update message)
-  const projectRoot = findProjectRoot();
+  // 7b. Check if file is tracked (before staging, for create vs update message)
   const isTracked = spawnSync('git', ['ls-files', '--error-unmatch', filePath], {
     cwd: projectRoot,
     stdio: 'pipe'
@@ -857,7 +858,7 @@ export function saveAllArtifacts(slug: string): void {
   }
 
   // 4. Validate branch — planning artifacts must be on artifact branch
-  const artifactBranch = readArtifactBranch();
+  const artifactBranch = readArtifactBranch(projectRoot);
   const currentBranch = getCurrentBranch();
   const hasPlanningArtifacts = artifacts.some(a => a.typeInfo.category === 'planning');
   if (hasPlanningArtifacts && currentBranch && currentBranch !== artifactBranch) {
