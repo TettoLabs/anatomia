@@ -254,6 +254,88 @@
       },
       "seal_commit": "c86a2a27307a5096cae61e49fd6c28f6bcce9d66",
       "completed_at": "2026-04-16T01:24:02.438Z"
+    },
+    {
+      "slug": "fix-skill-template-gaps",
+      "feature": "Fix skill template gaps — data-access security, coding-standards error rule",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 8,
+        "covered": 0,
+        "uncovered": 8,
+        "satisfied": 8,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "The data-access template includes guidance on scoping queries to authorized users",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "The data-access template names IDOR as the consequence of missing authorization scoping",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "The data-access template still has all four original rules unchanged",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "The coding-standards error rule bans empty catch blocks",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "The coding-standards error rule permits intentional graceful degradation",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "The coding-standards error rule requires degradation to be logged and observable",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "The coding-standards template still has exactly six rules",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "No existing rules were modified except the error-handling rule in coding-standards",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 0,
+        "met": 0
+      },
+      "timing": {
+        "total_minutes": 0,
+        "think": 25,
+        "plan": 25,
+        "build": 58
+      },
+      "hashes": {
+        "scope": "sha256:b12c0eb2a2ac59a2bbf1e1f3cb399753926d9b5eadbd259689d0e004da9f4c9a",
+        "contract": "sha256:3b30e6f15173f1bb4fb60886c633d5de3a088b884228c540c063920604f1d473",
+        "plan": "sha256:63fcc6bbc4167deae56f29d2ad8a588f62d52982f8706994c29648cdbb75e13c",
+        "spec": "sha256:835c5794871a141f1faa63b2fc98b3b76131c316dcbaa812c538a7cfd4872213",
+        "build-report": "sha256:659994144d5b1319a3fe097ea6f5e7c72c642a8201754890d9d3023a83c440d9"
+      },
+      "seal_commit": null,
+      "completed_at": "2026-04-16T22:36:55.334Z",
+      "modules_touched": [],
+      "callouts": [],
+      "rejection_cycles": 0,
+      "previous_failures": []
     }
   ]
 }

@@ -1,0 +1,27 @@
+{
+  "scope": {
+    "saved_at": "2026-04-16T16:10:31.692Z",
+    "commit": "4576735e620a31bb63f2826bc5ea9b78ddc36604",
+    "hash": "sha256:6a9535826961ebf33065a7f7e2c96257918f7e2cfb0d07ae00d90dc1555516b3"
+  },
+  "contract": {
+    "saved_at": "2026-04-16T16:26:47.006Z",
+    "commit": "cdae18763a6aa42be17d222297f941a7fddae052",
+    "hash": "sha256:342c507cb362785df1122ee4fbda206412945520177ea7feab14291b11fe1744"
+  },
+  "plan": {
+    "saved_at": "2026-04-16T16:26:47.014Z",
+    "commit": "cdae18763a6aa42be17d222297f941a7fddae052",
+    "hash": "sha256:2e96efa5b351d8b4d78d8654e179ba775a5c40918c53004903ef8c9ebca68917"
+  },
+  "spec": {
+    "saved_at": "2026-04-16T16:26:47.021Z",
+    "commit": "cdae18763a6aa42be17d222297f941a7fddae052",
+    "hash": "sha256:cb110287dabed90c90493248c2c512906aa88ba5e27572e1d1fc21497efe1880"
+  },
+  "build-report": {
+    "saved_at": "2026-04-16T17:15:27.204Z",
+    "commit": "43bb5cb60f4c02b3adbda898a796570b1a75a4e1",
+    "hash": "sha256:0d15c9c5f330b16227e5fa1ab7bd555ddec5ec7c3982040ca77ff07f8be7f9e9"
+  }
+}

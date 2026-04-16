@@ -1,0 +1,87 @@
+{
+  "scope": {
+    "saved_at": "2026-04-16T18:04:59.294Z",
+    "commit": "92e36c6804eecd79b1f53500f65c0cb9fcac9b68",
+    "hash": "sha256:30148ec9a98ba8e8890cad6de45360c5228e8e93467cd8ebcfe91b227af07380"
+  },
+  "contract": {
+    "saved_at": "2026-04-16T18:19:30.901Z",
+    "commit": "3f9ddfa19edabb3866d835c49c1b55f783f713f7",
+    "hash": "sha256:e4011e2a4a6388300202105698115f07b2935010d5d326be772912eaf9d73df2"
+  },
+  "plan": {
+    "saved_at": "2026-04-16T18:19:30.907Z",
+    "commit": "3f9ddfa19edabb3866d835c49c1b55f783f713f7",
+    "hash": "sha256:7dc2a9c6d3886e2de8ec38c2eb87550c2c1b2e54a13dcf4769c7c6b52cf373e7"
+  },
+  "spec": {
+    "saved_at": "2026-04-16T18:19:30.912Z",
+    "commit": "3f9ddfa19edabb3866d835c49c1b55f783f713f7",
+    "hash": "sha256:18e933864e880d83bf9a83e17a2e741219b3d1788b7d6f12bdfc3b8fddccddc1"
+  },
+  "build-report": {
+    "saved_at": "2026-04-16T18:41:24.183Z",
+    "commit": "fec73342dc8f3d892d877c8f8f265e3ce49afc61",
+    "hash": "sha256:59f12dce24faaa6d9f7e344153eeb2c160b3bc16b6331362a02bc1337b243aef"
+  },
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_commit": "3f9ddfa19edabb3866d835c49c1b55f783f713f7",
+    "seal_hash": "sha256:e4011e2a4a6388300202105698115f07b2935010d5d326be772912eaf9d73df2",
+    "assertions": [
+      {
+        "id": "A001",
+        "says": "Finding project root from the project directory returns that directory",
+        "status": "COVERED"
+      },
+      {
+        "id": "A002",
+        "says": "Finding project root from a nested subdirectory walks up and finds the project",
+        "status": "COVERED"
+      },
+      {
+        "id": "A003",
+        "says": "Finding project root from a deeply nested subdirectory still finds the project",
+        "status": "COVERED"
+      },
+      {
+        "id": "A004",
+        "says": "A clear error is thrown when no project is found in any parent directory",
+        "status": "COVERED"
+      },
+      {
+        "id": "A005",
+        "says": "The error message tells the user to run ana init",
+        "status": "COVERED"
+      },
+      {
+        "id": "A006",
+        "says": "When two nested projects exist, the closest one is found",
+        "status": "COVERED"
+      },
+      {
+        "id": "A007",
+        "says": "The utility is exported and importable from validators",
+        "status": "COVERED"
+      },
+      {
+        "id": "A008",
+        "says": "readArtifactBranch accepts a project root parameter",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A009",
+        "says": "All existing tests continue to pass after the wiring changes",
+        "status": "UNCOVERED"
+      }
+    ],
+    "covered": 7,
+    "uncovered": 2,
+    "run_at": "2026-04-16T22:32:18.926Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-04-16T22:32:23.342Z",
+    "commit": "116667a1ebe18e65689aa472731e387bac65f5b6",
+    "hash": "sha256:5911a272925b56cfb60ddf3379873648ff1330f0ad61d954a56ba7875074a4ad"
+  }
+}
