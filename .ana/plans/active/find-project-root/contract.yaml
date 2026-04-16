@@ -1,0 +1,92 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "findProjectRoot utility for subdirectory support"
+
+assertions:
+  - id: A001
+    says: "Finding project root from the project directory returns that directory"
+    block: "returns CWD when .ana/ exists in CWD"
+    target: "result"
+    matcher: "equals"
+    value: "tempDir"
+
+  - id: A002
+    says: "Finding project root from a nested subdirectory walks up and finds the project"
+    block: "walks up to find .ana/ from a subdirectory"
+    target: "result"
+    matcher: "equals"
+    value: "tempDir"
+
+  - id: A003
+    says: "Finding project root from a deeply nested subdirectory still finds the project"
+    block: "walks up multiple levels to find .ana/"
+    target: "result"
+    matcher: "equals"
+    value: "tempDir"
+
+  - id: A004
+    says: "A clear error is thrown when no project is found in any parent directory"
+    block: "throws when no .ana/ exists in the tree"
+    target: "error.message"
+    matcher: "contains"
+    value: "No .ana/ found in"
+
+  - id: A005
+    says: "The error message tells the user to run ana init"
+    block: "throws when no .ana/ exists in the tree"
+    target: "error.message"
+    matcher: "contains"
+    value: "Run ana init from your project root"
+
+  - id: A006
+    says: "When two nested projects exist, the closest one is found"
+    block: "finds nearest .ana/ when nested projects exist"
+    target: "result"
+    matcher: "equals"
+    value: "innerProjectDir"
+
+  - id: A007
+    says: "The utility is exported and importable from validators"
+    block: "is exported from validators module"
+    target: "findProjectRoot"
+    matcher: "exists"
+
+  - id: A008
+    says: "readArtifactBranch accepts a project root parameter"
+    block: "readArtifactBranch accepts projectRoot parameter"
+    target: "function.parameters"
+    matcher: "contains"
+    value: "projectRoot"
+
+  - id: A009
+    says: "All existing tests continue to pass after the wiring changes"
+    block: "no regressions in existing test suite"
+    target: "testSuite.passed"
+    matcher: "equals"
+    value: true
+
+file_changes:
+  - path: "packages/cli/src/utils/validators.ts"
+    action: modify
+  - path: "packages/cli/src/utils/git-operations.ts"
+    action: modify
+  - path: "packages/cli/src/commands/artifact.ts"
+    action: modify
+  - path: "packages/cli/src/commands/work.ts"
+    action: modify
+  - path: "packages/cli/src/commands/verify.ts"
+    action: modify
+  - path: "packages/cli/src/commands/pr.ts"
+    action: modify
+  - path: "packages/cli/src/commands/check.ts"
+    action: modify
+  - path: "packages/cli/src/commands/setup.ts"
+    action: modify
+  - path: "packages/cli/src/commands/proof.ts"
+    action: modify
+  - path: "packages/cli/src/commands/agents.ts"
+    action: modify
+  - path: "packages/cli/src/commands/symbol-index.ts"
+    action: modify
+  - path: "packages/cli/tests/utils/findProjectRoot.test.ts"
+    action: create
