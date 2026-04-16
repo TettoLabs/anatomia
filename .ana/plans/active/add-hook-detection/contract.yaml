@@ -1,0 +1,268 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Add deep-tier hook/composable detection to patterns analyzer"
+
+assertions:
+  # AC1: PatternAnalysis type has three new optional fields
+  - id: A001
+    says: "PatternAnalysis schema accepts dataFetching field"
+    block: "PatternAnalysis schema validation"
+    target: "schema.dataFetching"
+    matcher: "exists"
+
+  - id: A002
+    says: "PatternAnalysis schema accepts stateManagement field"
+    block: "PatternAnalysis schema validation"
+    target: "schema.stateManagement"
+    matcher: "exists"
+
+  - id: A003
+    says: "PatternAnalysis schema accepts formHandling field"
+    block: "PatternAnalysis schema validation"
+    target: "schema.formHandling"
+    matcher: "exists"
+
+  # AC2: Stage 1 detects from dependencies
+  - id: A004
+    says: "React Query dependency triggers data fetching detection"
+    block: "detects @tanstack/react-query as dataFetching"
+    target: "patterns.dataFetching.library"
+    matcher: "equals"
+    value: "react-query"
+
+  - id: A005
+    says: "SWR dependency triggers data fetching detection"
+    block: "detects swr as dataFetching"
+    target: "patterns.dataFetching.library"
+    matcher: "equals"
+    value: "swr"
+
+  - id: A006
+    says: "Zustand dependency triggers state management detection"
+    block: "detects zustand as stateManagement"
+    target: "patterns.stateManagement.library"
+    matcher: "equals"
+    value: "zustand"
+
+  - id: A007
+    says: "Pinia dependency triggers state management detection"
+    block: "detects pinia as stateManagement"
+    target: "patterns.stateManagement.library"
+    matcher: "equals"
+    value: "pinia"
+
+  - id: A008
+    says: "Redux Toolkit dependency triggers state management detection"
+    block: "detects @reduxjs/toolkit as stateManagement"
+    target: "patterns.stateManagement.library"
+    matcher: "equals"
+    value: "redux-toolkit"
+
+  - id: A009
+    says: "React Hook Form dependency triggers form handling detection"
+    block: "detects react-hook-form as formHandling"
+    target: "patterns.formHandling.library"
+    matcher: "equals"
+    value: "react-hook-form"
+
+  - id: A010
+    says: "Formik dependency triggers form handling detection"
+    block: "detects formik as formHandling"
+    target: "patterns.formHandling.library"
+    matcher: "equals"
+    value: "formik"
+
+  - id: A011
+    says: "Stage 1 detection uses 0.75 baseline confidence"
+    block: "detects @tanstack/react-query as dataFetching"
+    target: "patterns.dataFetching.confidence"
+    matcher: "equals"
+    value: 0.75
+
+  # AC3: Stage 3 confirms via tree-sitter
+  - id: A012
+    says: "Tree-sitter confirmation boosts confidence when imports found"
+    block: "boosts dataFetching confidence when useQuery imports found"
+    target: "confirmed.dataFetching.confidence"
+    matcher: "greater"
+    value: 0.75
+
+  - id: A013
+    says: "Evidence includes hook import counts"
+    block: "boosts dataFetching confidence when useQuery imports found"
+    target: "confirmed.dataFetching.evidence"
+    matcher: "contains"
+    value: "useQuery imports"
+
+  - id: A014
+    says: "Confirmation works for state management hooks"
+    block: "boosts stateManagement confidence when zustand imports found"
+    target: "confirmed.stateManagement.confidence"
+    matcher: "greater"
+    value: 0.75
+
+  - id: A015
+    says: "Confirmation works for form handling hooks"
+    block: "boosts formHandling confidence when useForm imports found"
+    target: "confirmed.formHandling.confidence"
+    matcher: "greater"
+    value: 0.75
+
+  # AC4: Nuxt auto-import path
+  - id: A016
+    says: "Nuxt useFetch calls detected without imports"
+    block: "detects Nuxt useFetch via regex when framework is nuxt"
+    target: "patterns.dataFetching.library"
+    matcher: "equals"
+    value: "nuxt-composables"
+
+  - id: A017
+    says: "Nuxt detection is gated on framework"
+    block: "does not detect useFetch regex in non-Nuxt project"
+    target: "patterns.dataFetching"
+    matcher: "not_equals"
+    value: "nuxt-composables"
+
+  # AC5: Dominance thresholds
+  - id: A018
+    says: "Files with 30%+ hook usage classified as dominant"
+    block: "classifies dominant usage (>=30%)"
+    target: "evidence"
+    matcher: "contains"
+    value: "dominant"
+
+  - id: A019
+    says: "Files with 10-30% hook usage classified as present"
+    block: "classifies present usage (10-30%)"
+    target: "evidence"
+    matcher: "contains"
+    value: "present"
+
+  - id: A020
+    says: "Files with <10% hook usage classified as incidental"
+    block: "classifies incidental usage (<10%)"
+    target: "evidence"
+    matcher: "contains"
+    value: "incidental"
+
+  - id: A021
+    says: "Evidence includes raw file counts"
+    block: "classifies dominant usage (>=30%)"
+    target: "evidence"
+    matcher: "contains"
+    value: "component files"
+
+  # MultiPattern for competing libraries
+  - id: A022
+    says: "MultiPattern used when two libraries both cross present threshold"
+    block: "creates MultiPattern when react-query and swr both >=10%"
+    target: "multiPattern.patterns.length"
+    matcher: "equals"
+    value: 2
+
+  - id: A023
+    says: "MultiPattern identifies primary library"
+    block: "creates MultiPattern when react-query and swr both >=10%"
+    target: "multiPattern.primary.library"
+    matcher: "exists"
+
+  - id: A024
+    says: "Single library returns plain PatternConfidence"
+    block: "returns PatternConfidence when only one library >=10%"
+    target: "result.patterns"
+    matcher: "not_contains"
+    value: "patterns"
+
+  # AC6: Results surface in coding-standards skill
+  - id: A025
+    says: "Data fetching appears in coding-standards Detected section"
+    block: "injectCodingStandards includes dataFetching"
+    target: "detectedSection"
+    matcher: "contains"
+    value: "Data fetching:"
+
+  - id: A026
+    says: "State management appears in coding-standards Detected section"
+    block: "injectCodingStandards includes stateManagement"
+    target: "detectedSection"
+    matcher: "contains"
+    value: "State management:"
+
+  - id: A027
+    says: "Form handling appears in coding-standards Detected section"
+    block: "injectCodingStandards includes formHandling"
+    target: "detectedSection"
+    matcher: "contains"
+    value: "Form handling:"
+
+  - id: A028
+    says: "Dominance classification shown in display"
+    block: "injectCodingStandards includes dataFetching"
+    target: "detectedSection"
+    matcher: "contains"
+    value: "(dominant)"
+
+  # AC7: createEmptyPatternAnalysis unchanged
+  - id: A029
+    says: "Empty pattern analysis still valid after schema update"
+    block: "createEmptyPatternAnalysis returns valid PatternAnalysis"
+    target: "emptyAnalysis"
+    matcher: "exists"
+
+  # AC8: Existing tests pass, new tests cover categories
+  - id: A030
+    says: "All existing pattern tests still pass"
+    block: "existing tests unchanged"
+    target: "existingTestsPass"
+    matcher: "truthy"
+
+  - id: A031
+    says: "New tests cover dataFetching Stage 1"
+    block: "Stage 1 dataFetching tests"
+    target: "testCount"
+    matcher: "greater"
+    value: 0
+
+  - id: A032
+    says: "New tests cover stateManagement Stage 1"
+    block: "Stage 1 stateManagement tests"
+    target: "testCount"
+    matcher: "greater"
+    value: 0
+
+  - id: A033
+    says: "New tests cover formHandling Stage 1"
+    block: "Stage 1 formHandling tests"
+    target: "testCount"
+    matcher: "greater"
+    value: 0
+
+  - id: A034
+    says: "New tests cover Stage 3 confirmation with dominance"
+    block: "Stage 3 dominance classification tests"
+    target: "testCount"
+    matcher: "greater"
+    value: 0
+
+  # AC9: No changes to census
+  - id: A035
+    says: "Census type unchanged"
+    block: "census type stability"
+    target: "censusTypeUnchanged"
+    matcher: "truthy"
+
+file_changes:
+  - path: "packages/cli/src/engine/types/patterns.ts"
+    action: modify
+  - path: "packages/cli/src/engine/analyzers/patterns/dependencies.ts"
+    action: modify
+  - path: "packages/cli/src/engine/analyzers/patterns/confirmation.ts"
+    action: modify
+  - path: "packages/cli/src/engine/analyzers/patterns/index.ts"
+    action: modify
+  - path: "packages/cli/src/commands/init/skills.ts"
+    action: modify
+  - path: "packages/cli/tests/engine/analyzers/patterns/dependencies.test.ts"
+    action: modify
+  - path: "packages/cli/tests/engine/analyzers/patterns/confirmation.test.ts"
+    action: modify
