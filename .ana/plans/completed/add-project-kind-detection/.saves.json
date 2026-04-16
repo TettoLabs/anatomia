@@ -1,0 +1,122 @@
+{
+  "scope": {
+    "saved_at": "2026-04-15T23:49:46.277Z",
+    "commit": "c20b5464a6e88d6f07a2964c16744bbff1c32f73",
+    "hash": "sha256:514909d4b78dede18e4c6408f4793d197f35dd86634ad51648952ae1976eb3cc"
+  },
+  "contract": {
+    "saved_at": "2026-04-16T00:01:27.876Z",
+    "commit": "c86a2a27307a5096cae61e49fd6c28f6bcce9d66",
+    "hash": "sha256:e24cd4dbe8775591683cfd9a06c6093d74dcbcf6544e56bc0875fc15b5592753"
+  },
+  "plan": {
+    "saved_at": "2026-04-16T00:01:27.882Z",
+    "commit": "c86a2a27307a5096cae61e49fd6c28f6bcce9d66",
+    "hash": "sha256:d3e0c7d9ecb56d6dea92853cfd3944fd0dda5b9c7a0d1de1c40dbdd07d9cb81d"
+  },
+  "spec": {
+    "saved_at": "2026-04-16T00:01:27.887Z",
+    "commit": "c86a2a27307a5096cae61e49fd6c28f6bcce9d66",
+    "hash": "sha256:fac256a54df8807ad98fa4b7587916ed486f6d78399ad582d0b33716f35f3374"
+  },
+  "build-report": {
+    "saved_at": "2026-04-16T00:58:03.851Z",
+    "commit": "90f2d744cf0f84601bb628a1a96b77ce9ce68024",
+    "hash": "sha256:0e6bdff5da82bcceb285960fe7de8398a5b2f9d92fa4a1405d6fe40307847ee4"
+  },
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_commit": "c86a2a27307a5096cae61e49fd6c28f6bcce9d66",
+    "seal_hash": "sha256:e24cd4dbe8775591683cfd9a06c6093d74dcbcf6544e56bc0875fc15b5592753",
+    "assertions": [
+      {
+        "id": "A001",
+        "says": "The scan result includes a project kind classification",
+        "status": "COVERED"
+      },
+      {
+        "id": "A002",
+        "says": "Scanning a Node CLI project with a bin field detects it as a CLI tool",
+        "status": "COVERED"
+      },
+      {
+        "id": "A003",
+        "says": "Detection works without reading the filesystem",
+        "status": "COVERED"
+      },
+      {
+        "id": "A004",
+        "says": "New projects default to unknown kind until classified",
+        "status": "COVERED"
+      },
+      {
+        "id": "A005",
+        "says": "A project with a bin field in package.json is classified as a CLI tool",
+        "status": "COVERED"
+      },
+      {
+        "id": "A006",
+        "says": "A project with CLI dependencies like commander is classified as a CLI tool",
+        "status": "COVERED"
+      },
+      {
+        "id": "A007",
+        "says": "A project with a browser framework like React is classified as a web app",
+        "status": "COVERED"
+      },
+      {
+        "id": "A008",
+        "says": "A project with a server framework and no browser UI is classified as an API server",
+        "status": "COVERED"
+      },
+      {
+        "id": "A009",
+        "says": "A project with both server and browser frameworks is classified as full-stack",
+        "status": "COVERED"
+      },
+      {
+        "id": "A010",
+        "says": "A project exporting a library without CLI or framework signals is classified as a library",
+        "status": "COVERED"
+      },
+      {
+        "id": "A011",
+        "says": "A project with no recognizable signals is classified as unknown",
+        "status": "COVERED"
+      },
+      {
+        "id": "A012",
+        "says": "Non-Node projects are not falsely classified",
+        "status": "COVERED"
+      },
+      {
+        "id": "A013",
+        "says": "The bin field takes priority over library export markers",
+        "status": "COVERED"
+      },
+      {
+        "id": "A014",
+        "says": "CLI dependencies take priority over library export markers",
+        "status": "COVERED"
+      },
+      {
+        "id": "A015",
+        "says": "Project descriptions use the kind for accurate labels like CLI tool or library",
+        "status": "COVERED"
+      },
+      {
+        "id": "A016",
+        "says": "The census tracks whether each package declares CLI binaries",
+        "status": "COVERED"
+      }
+    ],
+    "covered": 16,
+    "uncovered": 0,
+    "run_at": "2026-04-16T01:19:24.828Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-04-16T01:19:28.889Z",
+    "commit": "33e2e244cfe252e8c4760adb9a4905c4cb1c9b5c",
+    "hash": "sha256:063a80e9be00b41bbd645344e4ac2bcc0447685f26bdad533d1b182e46622bdc"
+  }
+}
