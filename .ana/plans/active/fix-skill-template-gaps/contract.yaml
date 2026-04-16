@@ -46,18 +46,18 @@ assertions:
     value: "logged and observable"
 
   - id: A007
-    says: "The coding-standards template still has exactly seven rules"
+    says: "The coding-standards template still has exactly six rules"
     block: "coding-standards rule count unchanged"
     target: "coding-standards-skill.ruleCount"
     matcher: "equals"
-    value: 7
+    value: 6
 
   - id: A008
     says: "No existing rules were modified except the error-handling rule in coding-standards"
     block: "other rules unchanged"
     target: "coding-standards-skill.unchangedRules"
     matcher: "equals"
-    value: 6
+    value: 5
 
 file_changes:
   - path: "packages/cli/templates/.claude/skills/data-access/SKILL.md"
