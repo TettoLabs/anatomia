@@ -28,6 +28,7 @@ import { detectCommands } from './detectors/commands.js';
 import { detectDeployment, detectCI } from './detectors/deployment.js';
 import { detectProjectType } from './detectors/projectType.js';
 import { detectFramework } from './detectors/framework.js';
+import { detectProjectKind } from './detectors/projectKind.js';
 import { analyzeStructure } from './analyzers/structure/index.js';
 import { annotateServiceRoles } from './utils/serviceAnnotation.js';
 import { countFiles } from '../utils/fileCounts.js';
@@ -541,6 +542,29 @@ export async function scanProject(
     : deps;
   const frameworkResult = detectFramework(frameworkDeps, projectTypeResult.type, census.configs.frameworkHints);
 
+  // Project kind detection — uses primary source root signals + framework result.
+  // Read main/module/exports from primary root's package.json (census doesn't
+  // expose raw packageJson — these fields only matter for projectKind).
+  const primaryRoot = census.sourceRoots.find(r => r.isPrimary);
+  let hasMain = false;
+  let hasExports = false;
+  if (primaryRoot) {
+    try {
+      const pkgPath = path.join(primaryRoot.absolutePath, 'package.json');
+      const pkgRaw = JSON.parse(await fs.readFile(pkgPath, 'utf-8')) as Record<string, unknown>;
+      hasMain = !!pkgRaw['main'] || !!pkgRaw['module'];
+      hasExports = !!pkgRaw['exports'];
+    } catch { /* no package.json or unreadable — defaults stay false */ }
+  }
+  const projectKindResult = detectProjectKind({
+    hasBin: primaryRoot?.hasBin ?? false,
+    hasMain,
+    hasExports,
+    frameworkName: frameworkResult.framework ? getFrameworkDisplayName(frameworkResult.framework) : null,
+    projectType: projectTypeResult.type,
+    deps: Object.keys(census.primaryDeps),
+  });
+
   let structure: Awaited<ReturnType<typeof analyzeStructure>> | undefined;
   try {
     structure = await analyzeStructure(rootPath, projectTypeResult.type, frameworkResult.framework);
@@ -765,6 +789,7 @@ export async function scanProject(
 
   return {
     schemaVersion: '1.0',
+    projectKind: projectKindResult.kind,
     overview: { project: projectName, scannedAt: now, depth: options.depth },
     stack,
     files,

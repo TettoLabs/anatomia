@@ -18,6 +18,7 @@ import type { PatternAnalysis } from './patterns.js';
 import type { DetectedCommands } from '../detectors/commands.js';
 import type { GitInfo } from '../detectors/git.js';
 import type { DetectedDeployment, DetectedCI } from '../detectors/deployment.js';
+import type { ProjectKind } from '../detectors/projectKind.js';
 
 /**
  * Closed set of stack roles an external service may fulfill. Used by
@@ -57,6 +58,7 @@ export type StackRole =
  */
 export interface EngineResult {
   schemaVersion: string;
+  projectKind: ProjectKind;
   overview: {
     project: string;
     scannedAt: string;
@@ -317,6 +319,7 @@ export interface EngineResult {
 export function createEmptyEngineResult(): EngineResult {
   return {
     schemaVersion: '1.0',
+    projectKind: 'unknown',
     overview: { project: 'unknown', scannedAt: new Date().toISOString(), depth: 'surface' },
     stack: { language: null, framework: null, database: null, auth: null, testing: [], payments: null, workspace: null, aiSdk: null, uiSystem: null },
     files: { source: 0, test: 0, config: 0, total: 0 },
