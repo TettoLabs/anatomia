@@ -23,7 +23,7 @@ import { describe, it, expect } from 'vitest';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import * as os from 'node:os';
-import { makeTestCommandNonInteractive, createAnaJson } from '../../../src/commands/init/state.js';
+import { makeTestCommandNonInteractive, buildDirectTestCommand, createAnaJson } from '../../../src/commands/init/state.js';
 import { createEmptyEngineResult } from '../../../src/engine/types/engineResult.js';
 
 describe('makeTestCommandNonInteractive', () => {
@@ -82,6 +82,40 @@ describe('makeTestCommandNonInteractive', () => {
   });
 });
 
+describe('buildDirectTestCommand', () => {
+  it('returns pnpm vitest run for Vitest', () => {
+    expect(buildDirectTestCommand(['Vitest'], 'pnpm')).toBe('pnpm vitest run');
+  });
+
+  it('returns yarn vitest run for Vitest + yarn', () => {
+    expect(buildDirectTestCommand(['Vitest'], 'yarn')).toBe('yarn vitest run');
+  });
+
+  it('returns jest --watchAll=false for Jest', () => {
+    expect(buildDirectTestCommand(['Jest'], 'pnpm')).toBe('pnpm jest --watchAll=false');
+  });
+
+  it('returns mocha --exit for Mocha', () => {
+    expect(buildDirectTestCommand(['Mocha'], 'npm')).toBe('npm mocha --exit');
+  });
+
+  it('returns pytest for pytest (no pm prefix)', () => {
+    expect(buildDirectTestCommand(['pytest'], 'pip')).toBe('pytest');
+  });
+
+  it('returns null for unknown framework', () => {
+    expect(buildDirectTestCommand(['Playwright'], 'pnpm')).toBeNull();
+  });
+
+  it('prefers Vitest over Jest when both present', () => {
+    expect(buildDirectTestCommand(['Jest', 'Vitest'], 'pnpm')).toBe('pnpm vitest run');
+  });
+
+  it('picks Jest when paired with Playwright (E2E tool)', () => {
+    expect(buildDirectTestCommand(['Jest', 'Playwright'], 'pnpm')).toBe('pnpm jest --watchAll=false');
+  });
+});
+
 describe('createAnaJson monorepo test command scoping', () => {
   let tmpDir: string;
 
@@ -90,18 +124,7 @@ describe('createAnaJson monorepo test command scoping', () => {
     return JSON.parse(content);
   }
 
-  /** Create a fake project root with a primary package's package.json */
-  async function makeProjectRoot(pkgPath: string, testScript: string | null): Promise<string> {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), 'project-'));
-    const pkgDir = path.join(root, pkgPath);
-    await fs.mkdir(pkgDir, { recursive: true });
-    const scripts = testScript ? { test: testScript } : {};
-    await fs.writeFile(path.join(pkgDir, 'package.json'), JSON.stringify({ scripts }), 'utf-8');
-    return root;
-  }
-
-  it('scopes pnpm monorepo with Vitest using cd + run test', async () => {
-    const projectRoot = await makeProjectRoot('apps/web', 'vitest');
+  it('scopes pnpm monorepo with Vitest using direct invocation', async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ana-json-'));
     try {
       const result = createEmptyEngineResult();
@@ -113,78 +136,51 @@ describe('createAnaJson monorepo test command scoping', () => {
         primaryPackage: { name: '@myapp/web', path: 'apps/web' },
       };
 
-      await createAnaJson(tmpDir, result, projectRoot);
+      await createAnaJson(tmpDir, result);
       const cmds = (await readAnaJson(tmpDir))['commands'] as Record<string, string | null>;
-      expect(cmds['test']).toBe('cd apps/web && pnpm run test -- --run');
+      expect(cmds['test']).toBe('cd apps/web && pnpm vitest run');
     } finally {
       await fs.rm(tmpDir, { recursive: true, force: true });
-      await fs.rm(projectRoot, { recursive: true, force: true });
     }
   });
 
-  it('scopes yarn monorepo with Vitest using cd + run test', async () => {
-    const projectRoot = await makeProjectRoot('apps/web', 'vitest');
+  it('scopes yarn monorepo with Jest using direct invocation', async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ana-json-'));
     try {
       const result = createEmptyEngineResult();
       result.commands = { build: null, test: 'yarn run test', lint: null, dev: null, packageManager: 'yarn', all: { test: 'turbo run test' } };
-      result.stack.testing = ['Vitest'];
+      result.stack.testing = ['Jest'];
       result.monorepo = {
         isMonorepo: true, tool: 'yarn',
         packages: [{ name: '@myapp/web', path: 'apps/web' }],
         primaryPackage: { name: '@myapp/web', path: 'apps/web' },
       };
 
-      await createAnaJson(tmpDir, result, projectRoot);
+      await createAnaJson(tmpDir, result);
       const cmds = (await readAnaJson(tmpDir))['commands'] as Record<string, string | null>;
-      expect(cmds['test']).toBe('cd apps/web && yarn run test -- --run');
+      expect(cmds['test']).toBe('cd apps/web && yarn jest --watchAll=false');
     } finally {
       await fs.rm(tmpDir, { recursive: true, force: true });
-      await fs.rm(projectRoot, { recursive: true, force: true });
     }
   });
 
-  it('scopes npm monorepo with Jest --watchAll using cd + correct flags', async () => {
-    const projectRoot = await makeProjectRoot('apps/web', 'jest --watchAll');
+  it('falls back to root command with cd when framework unknown', async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ana-json-'));
     try {
       const result = createEmptyEngineResult();
-      result.commands = { build: null, test: 'npm test', lint: null, dev: null, packageManager: 'npm', all: { test: 'nx test' } };
-      result.stack.testing = ['Jest'];
-      result.monorepo = {
-        isMonorepo: true, tool: 'npm',
-        packages: [{ name: '@myapp/web', path: 'apps/web' }],
-        primaryPackage: { name: '@myapp/web', path: 'apps/web' },
-      };
-
-      await createAnaJson(tmpDir, result, projectRoot);
-      const cmds = (await readAnaJson(tmpDir))['commands'] as Record<string, string | null>;
-      expect(cmds['test']).toBe('cd apps/web && npm test -- --watchAll=false');
-    } finally {
-      await fs.rm(tmpDir, { recursive: true, force: true });
-      await fs.rm(projectRoot, { recursive: true, force: true });
-    }
-  });
-
-  it('falls back to root command with cd when primary has no test script', async () => {
-    const projectRoot = await makeProjectRoot('apps/web', null);
-    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ana-json-'));
-    try {
-      const result = createEmptyEngineResult();
-      result.commands = { build: null, test: 'pnpm run test', lint: null, dev: null, packageManager: 'pnpm', all: { test: 'vitest' } };
-      result.stack.testing = ['Vitest'];
+      result.commands = { build: null, test: 'pnpm run test', lint: null, dev: null, packageManager: 'pnpm', all: { test: 'custom-runner' } };
+      result.stack.testing = ['Playwright'];
       result.monorepo = {
         isMonorepo: true, tool: 'pnpm',
         packages: [{ name: '@myapp/web', path: 'apps/web' }],
         primaryPackage: { name: '@myapp/web', path: 'apps/web' },
       };
 
-      await createAnaJson(tmpDir, result, projectRoot);
+      await createAnaJson(tmpDir, result);
       const cmds = (await readAnaJson(tmpDir))['commands'] as Record<string, string | null>;
-      expect(cmds['test']).toBe('cd apps/web && pnpm run test -- --run');
+      expect(cmds['test']).toBe('cd apps/web && pnpm run test');
     } finally {
       await fs.rm(tmpDir, { recursive: true, force: true });
-      await fs.rm(projectRoot, { recursive: true, force: true });
     }
   });
 

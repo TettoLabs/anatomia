@@ -198,6 +198,39 @@ export async function saveScanJson(
 }
 
 /**
+ * Build a direct test runner command for monorepo primary packages.
+ *
+ * Bypasses the package.json script layer entirely — uses `{pm} exec {runner} {flags}`
+ * or `{pm} {runner} {flags}` to invoke the test runner directly. This avoids
+ * passthrough composition issues (pnpm run test -- --run doesn't reach vitest).
+ *
+ * @param frameworks - Detected testing frameworks from stack.testing
+ * @param packageManager - Package manager (pnpm, yarn, npm)
+ * @returns Direct invocation command, or null if framework is unknown
+ */
+export function buildDirectTestCommand(
+  frameworks: string[],
+  packageManager: string,
+): string | null {
+  // Priority: Vitest > Jest > Mocha > pytest. stack.testing may contain
+  // multiple frameworks (e.g. Jest + Playwright). Unit runner wins over E2E.
+  if (frameworks.includes('Vitest')) {
+    return `${packageManager} vitest run`;
+  }
+  if (frameworks.includes('Jest')) {
+    return `${packageManager} jest --watchAll=false`;
+  }
+  if (frameworks.includes('Mocha')) {
+    return `${packageManager} mocha --exit`;
+  }
+  // pytest, go test, Playwright, Cypress — non-interactive by default
+  if (frameworks.includes('pytest')) {
+    return 'pytest';
+  }
+  return null;
+}
+
+/**
  * Make a package.json `test` script safe to run in CI / pipeline contexts.
  *
  * Each framework that has a watch-mode default gets transformed:
@@ -286,13 +319,11 @@ export function makeTestCommandNonInteractive(
  *
  * @param tmpAnaPath - Temp .ana/ path
  * @param engineResult - Engine result or null
- * @param projectRoot - Project root for reading primary package.json (defaults to cwd)
  * @returns The ana.json config object that was written
  */
 export async function createAnaJson(
   tmpAnaPath: string,
   engineResult: EngineResult | null,
-  projectRoot?: string,
 ): Promise<Record<string, unknown>> {
   const spinner = ora('Creating ana.json...').start();
 
@@ -301,32 +332,22 @@ export async function createAnaJson(
 
   // Compute test command — scope to primary package in monorepos so agents
   // don't get interleaved turbo output that hangs when piped through grep/tail.
-  // Reads the primary package's own test script for correct framework-aware
-  // wrapping (root script may be turbo/nx, not the actual test runner).
+  //
+  // Uses direct runner invocation (pnpm exec vitest run) instead of script
+  // passthrough (pnpm run test -- --run) because passthrough composition
+  // breaks with pnpm + vitest — the -- --run flag doesn't reach vitest
+  // through the script layer.
   let testCmd = makeTestCommandNonInteractive(result.commands.test, result.stack.testing, result.commands.all?.['test']);
   if (testCmd && result.monorepo.isMonorepo && result.monorepo.primaryPackage) {
     const pkg = result.monorepo.primaryPackage;
     const pm = result.commands.packageManager || 'pnpm';
-    const root = projectRoot || process.cwd();
 
-    // Read primary package's test script for framework-aware wrapping
-    let primaryRawScript: string | null = null;
-    try {
-      const pkgJsonPath = path.join(root, pkg.path, 'package.json');
-      const pkgJson = JSON.parse(await fs.readFile(pkgJsonPath, 'utf-8')) as Record<string, unknown>;
-      const scripts = pkgJson['scripts'] as Record<string, string> | undefined;
-      primaryRawScript = scripts?.['test'] ?? null;
-    } catch { /* primary package.json unreadable — fall back to root wrapping */ }
-
-    if (primaryRawScript) {
-      // cd into primary package, run its local test script with correct flags
-      const baseCmd = pm === 'npm' ? 'npm test' : `${pm} run test`;
-      const wrappedCmd = makeTestCommandNonInteractive(baseCmd, result.stack.testing, primaryRawScript);
-      if (wrappedCmd) {
-        testCmd = `cd ${pkg.path} && ${wrappedCmd}`;
-      }
+    // Map detected testing framework to direct runner invocation
+    const directCmd = buildDirectTestCommand(result.stack.testing, pm);
+    if (directCmd) {
+      testCmd = `cd ${pkg.path} && ${directCmd}`;
     } else {
-      // No primary test script — prepend cd to the root-derived command
+      // Unknown framework — cd with root-derived command as fallback
       testCmd = `cd ${pkg.path} && ${testCmd}`;
     }
   }

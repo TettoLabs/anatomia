@@ -97,7 +97,7 @@ export function registerInitCommand(program: Command): void {
       await createDirectoryStructure(tmpAnaPath);
       await generateScaffolds(tmpAnaPath, engineResult);
       await saveScanJson(tmpAnaPath, engineResult);
-      const newAnaConfig = await createAnaJson(tmpAnaPath, engineResult, cwd);
+      const newAnaConfig = await createAnaJson(tmpAnaPath, engineResult);
       await buildSymbolIndexSafe(cwd, tmpAnaPath);
 
       // S19/NEW-001: preserve user state from the still-existing .ana/
