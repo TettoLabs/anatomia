@@ -30,4 +30,9 @@ export interface ProofChainEntry {
   hashes: Record<string, string>;
   seal_commit: string | null;
   completed_at: string;
+  // S23 pipeline hardening — intelligence capture
+  modules_touched: string[];
+  callouts: Array<{ category: string; summary: string }>;
+  rejection_cycles: number;
+  previous_failures: Array<{ id: string; summary: string }>;
 }

@@ -54,7 +54,7 @@ describe('scaffold generators (S15 consolidated: 2 generators)', () => {
     it('includes monorepo info when detected', () => {
       const monoResult = {
         ...result,
-        monorepo: { isMonorepo: true, tool: 'pnpm', packages: [{ name: 'api', path: 'packages/api' }, { name: 'web', path: 'packages/web' }] },
+        monorepo: { isMonorepo: true, tool: 'pnpm', packages: [{ name: 'api', path: 'packages/api' }, { name: 'web', path: 'packages/web' }], primaryPackage: { name: 'api', path: 'packages/api' } },
       };
 
       const output = generateProjectContextScaffold(monoResult);

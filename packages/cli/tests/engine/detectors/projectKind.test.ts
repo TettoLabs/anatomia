@@ -55,59 +55,71 @@ describe('detectProjectKind', () => {
 
   // @ana A007
   describe('classifies project with browser framework as web-app', () => {
-    it('returns web-app for Next.js', () => {
-      const result = detectProjectKind(makeInput({ frameworkName: 'Next.js', deps: ['next', 'react'] }));
+    it('returns web-app for nextjs', () => {
+      const result = detectProjectKind(makeInput({ frameworkName: 'nextjs', deps: ['next', 'react'] }));
       expect(result.kind).toBe('web-app');
     });
 
-    it('returns web-app for React', () => {
-      const result = detectProjectKind(makeInput({ frameworkName: 'React', deps: ['react'] }));
+    it('returns web-app for react', () => {
+      const result = detectProjectKind(makeInput({ frameworkName: 'react', deps: ['react'] }));
       expect(result.kind).toBe('web-app');
     });
 
-    it('returns web-app for Vue', () => {
-      const result = detectProjectKind(makeInput({ frameworkName: 'Vue', deps: ['vue'] }));
+    it('returns web-app for vue', () => {
+      const result = detectProjectKind(makeInput({ frameworkName: 'vue', deps: ['vue'] }));
       expect(result.kind).toBe('web-app');
     });
 
-    it('returns web-app for Svelte', () => {
-      const result = detectProjectKind(makeInput({ frameworkName: 'Svelte', deps: ['svelte'] }));
+    it('returns web-app for svelte', () => {
+      const result = detectProjectKind(makeInput({ frameworkName: 'svelte', deps: ['svelte'] }));
       expect(result.kind).toBe('web-app');
     });
   });
 
   // @ana A008
   describe('classifies project with server framework as api-server', () => {
-    it('returns api-server for Express without browser deps', () => {
-      const result = detectProjectKind(makeInput({ frameworkName: 'Express', deps: ['express'] }));
+    it('returns api-server for express without browser deps', () => {
+      const result = detectProjectKind(makeInput({ frameworkName: 'express', deps: ['express'] }));
       expect(result.kind).toBe('api-server');
     });
 
-    it('returns api-server for Fastify without browser deps', () => {
-      const result = detectProjectKind(makeInput({ frameworkName: 'Fastify', deps: ['fastify'] }));
+    it('returns api-server for fastify without browser deps', () => {
+      const result = detectProjectKind(makeInput({ frameworkName: 'fastify', deps: ['fastify'] }));
       expect(result.kind).toBe('api-server');
     });
 
-    it('returns api-server for Hono without browser deps', () => {
-      const result = detectProjectKind(makeInput({ frameworkName: 'Hono', deps: ['hono'] }));
+    it('returns api-server for hono without browser deps', () => {
+      const result = detectProjectKind(makeInput({ frameworkName: 'hono', deps: ['hono'] }));
       expect(result.kind).toBe('api-server');
+    });
+
+    it('returns api-server for koa without browser deps (was broken: display name mismatch)', () => {
+      const result = detectProjectKind(makeInput({ frameworkName: 'koa', deps: ['koa'] }));
+      expect(result.kind).toBe('api-server');
+    });
+  });
+
+  describe('classifies react-router as web-app (was broken: missing from set)', () => {
+    it('returns web-app for react-router', () => {
+      const result = detectProjectKind(makeInput({ frameworkName: 'react-router', deps: ['react-router', 'react'] }));
+      expect(result.kind).toBe('web-app');
     });
   });
 
   // @ana A009
   describe('classifies project with server and browser framework as full-stack', () => {
-    it('returns full-stack for Express + React', () => {
-      const result = detectProjectKind(makeInput({ frameworkName: 'Express', deps: ['express', 'react'] }));
+    it('returns full-stack for express + react', () => {
+      const result = detectProjectKind(makeInput({ frameworkName: 'express', deps: ['express', 'react'] }));
       expect(result.kind).toBe('full-stack');
     });
 
-    it('returns full-stack for Fastify + Vue', () => {
-      const result = detectProjectKind(makeInput({ frameworkName: 'Fastify', deps: ['fastify', 'vue'] }));
+    it('returns full-stack for fastify + vue', () => {
+      const result = detectProjectKind(makeInput({ frameworkName: 'fastify', deps: ['fastify', 'vue'] }));
       expect(result.kind).toBe('full-stack');
     });
 
-    it('returns full-stack for NestJS + next', () => {
-      const result = detectProjectKind(makeInput({ frameworkName: 'NestJS', deps: ['@nestjs/core', 'next'] }));
+    it('returns full-stack for nestjs + next', () => {
+      const result = detectProjectKind(makeInput({ frameworkName: 'nestjs', deps: ['@nestjs/core', 'next'] }));
       expect(result.kind).toBe('full-stack');
     });
   });

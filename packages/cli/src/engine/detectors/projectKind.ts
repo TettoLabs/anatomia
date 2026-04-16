@@ -39,28 +39,29 @@ const CLI_DEPS = new Set([
   'citty',
 ]);
 
-/** Browser UI frameworks — presence implies a web-app (not an API server). */
+/** Browser UI frameworks — internal keys as returned by framework detectors. */
 const BROWSER_FRAMEWORKS = new Set([
-  'Next.js',
-  'Remix',
-  'React',
-  'Vue',
-  'Angular',
-  'Svelte',
-  'Nuxt',
-  'Astro',
-  'SvelteKit',
-  'Solid',
+  'nextjs',
+  'remix',
+  'react-router',
+  'react',
+  'vue',
+  'angular',
+  'svelte',
+  'nuxt',
+  'astro',
+  'sveltekit',
+  'solid',
 ]);
 
-/** Server frameworks — presence implies API server (unless browser UI also present). */
+/** Server frameworks — internal keys as returned by framework detectors. */
 const SERVER_FRAMEWORKS = new Set([
-  'Express',
-  'Fastify',
-  'Koa',
-  'Hono',
-  'NestJS',
-  'Adonis',
+  'express',
+  'fastify',
+  'koa',
+  'hono',
+  'nestjs',
+  'adonis',
 ]);
 
 /**
@@ -101,9 +102,12 @@ export function detectProjectKind(input: ProjectKindInput): ProjectKindResult {
     }
 
     if (isServer) {
-      // Check if browser UI deps also present → full-stack
+      // Check if browser UI deps also present → full-stack.
+      // BROWSER_FRAMEWORKS uses internal keys (react, vue, svelte, etc.) which
+      // match most package names directly. The inline array covers package names
+      // that differ from internal keys (next→nextjs, @angular/core→angular, etc.).
       const hasBrowserDep = input.deps.some(d => BROWSER_FRAMEWORKS.has(d) || [
-        'react', 'vue', 'svelte', 'next', 'nuxt', '@angular/core', 'solid-js', 'astro',
+        'next', '@angular/core', 'solid-js',
       ].includes(d));
       return { kind: hasBrowserDep ? 'full-stack' : 'api-server' };
     }

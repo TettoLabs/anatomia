@@ -42,6 +42,7 @@ interface MonorepoInfo {
   isMonorepo: boolean;
   tool: string | null;
   packages: Array<{ name: string; path: string }>;
+  primaryPackage: { name: string; path: string } | null;
 }
 
 /**
@@ -500,12 +501,16 @@ export async function scanProject(
   const census = await buildCensus(rootPath);
 
   // 1. Monorepo info from census (single source — Disease D fix)
+  const primaryRoot = census.sourceRoots.find(r => r.isPrimary);
   const mono: MonorepoInfo = {
     isMonorepo: census.layout === 'monorepo',
     tool: census.monorepoTool,
     packages: census.sourceRoots
       .filter(r => r.relativePath !== '.')
       .map(r => ({ name: r.packageName ?? r.relativePath, path: r.relativePath })),
+    primaryPackage: primaryRoot && primaryRoot.relativePath !== '.'
+      ? { name: primaryRoot.packageName ?? primaryRoot.relativePath, path: primaryRoot.relativePath }
+      : null,
   };
 
   // 2. Package manager
@@ -545,7 +550,7 @@ export async function scanProject(
   // Project kind detection — uses primary source root signals + framework result.
   // Read main/module/exports from primary root's package.json (census doesn't
   // expose raw packageJson — these fields only matter for projectKind).
-  const primaryRoot = census.sourceRoots.find(r => r.isPrimary);
+  // primaryRoot was resolved above (line ~504) for monorepo info.
   let hasMain = false;
   let hasExports = false;
   if (primaryRoot) {
@@ -560,7 +565,7 @@ export async function scanProject(
     hasBin: primaryRoot?.hasBin ?? false,
     hasMain,
     hasExports,
-    frameworkName: frameworkResult.framework ? getFrameworkDisplayName(frameworkResult.framework) : null,
+    frameworkName: frameworkResult.framework ?? null,
     projectType: projectTypeResult.type,
     deps: Object.keys(census.primaryDeps),
   });

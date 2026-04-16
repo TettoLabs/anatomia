@@ -66,6 +66,10 @@ export interface ProofSummary {
   hashes: Record<string, string>;
   seal_commit: string | null;
   completed_at: string;
+  // S23 pipeline hardening — intelligence capture
+  callouts: Array<{ category: string; summary: string }>;
+  rejection_cycles: number;
+  previous_failures: Array<{ id: string; summary: string }>;
 }
 
 /**
@@ -230,6 +234,101 @@ function parseDeviations(content: string): ProofDeviation[] {
 }
 
 /**
+ * Parse callouts from verify report's ## Callouts section.
+ *
+ * Handles two observed formats:
+ *   - `- **Code — Title:** description`
+ *   - `1. **Code — Title:** description`
+ *
+ * Extracts category (lowercased) and summary (title + description, capped at 200 chars).
+ * Returns empty array if section is missing or parsing yields no results.
+ *
+ * @param content - Verify report content
+ * @returns Array of { category, summary }
+ */
+export function parseCallouts(content: string): Array<{ category: string; summary: string }> {
+  const results: Array<{ category: string; summary: string }> = [];
+
+  // Find ## Callouts section — everything until the next ## heading or end of file
+  const calloutsMatch = content.match(/## Callouts\n([\s\S]*?)(?=\n## |$)/);
+  if (!calloutsMatch || !calloutsMatch[1]) return results;
+
+  const section = calloutsMatch[1];
+
+  // Match callout entries: starts with - or digit., has **Category — Title:** or **Category:**
+  // Captures everything until the next entry or double-newline
+  const lines = section.split('\n');
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i]!;
+    // Match: - **Code — Title:** ... or 1. **Code — Title:** ...
+    const entryMatch = line.match(/^(?:-|\d+\.)\s+\*\*(\w+)(?:\s*[—–-]\s*|\s*:\s*)([^*]*)\*\*:?\s*(.*)/);
+    if (entryMatch) {
+      const category = (entryMatch[1] || 'code').toLowerCase();
+      const title = (entryMatch[2] || '').trim();
+      // Collect continuation lines (indented or non-entry lines that follow)
+      let desc = (entryMatch[3] || '').trim();
+      i++;
+      while (i < lines.length) {
+        const nextLine = lines[i]!;
+        // Stop at next entry, blank line, or next section
+        if (nextLine.match(/^(?:-|\d+\.)\s+\*\*/) || nextLine.trim() === '' || nextLine.startsWith('## ')) break;
+        desc += ' ' + nextLine.trim();
+        i++;
+      }
+      const summary = (title ? `${title}: ${desc}` : desc).substring(0, 200).trim();
+      if (summary) {
+        results.push({ category, summary });
+      }
+    } else {
+      i++;
+    }
+  }
+
+  return results;
+}
+
+/**
+ * Parse rejection cycle data from verify report's Previous Findings Resolution section.
+ *
+ * Looks for the machine-parseable table defined by Item 4 (S23 pipeline hardening):
+ *   ### Previously UNSATISFIED Assertions
+ *   | ID | Previous Issue | Current Status | Resolution |
+ *
+ * Returns cycle count and list of previously-failed assertions.
+ *
+ * @param content - Verify report content
+ * @returns { cycles, failures }
+ */
+export function parseRejectionCycles(content: string): {
+  cycles: number;
+  failures: Array<{ id: string; summary: string }>;
+} {
+  // Find the "Previous Findings Resolution" section
+  const section = content.match(/## Previous Findings Resolution([\s\S]*?)(?=\n## [^#]|$)/);
+  if (!section || !section[1]) return { cycles: 0, failures: [] };
+
+  // Find the "Previously UNSATISFIED Assertions" table
+  const assertionTable = section[1].match(/### Previously UNSATISFIED Assertions\n([\s\S]*?)(?=\n### |$)/);
+  if (!assertionTable || !assertionTable[1]) return { cycles: 0, failures: [] };
+
+  const failures: Array<{ id: string; summary: string }> = [];
+  const rowPattern = /\|\s*(A\d+)\s*\|\s*([^|]+)\s*\|/g;
+  let match;
+  while ((match = rowPattern.exec(assertionTable[1])) !== null) {
+    const id = match[1];
+    const summary = match[2];
+    if (id && summary) {
+      // Skip header row (contains "ID" or "Previous Issue")
+      if (id === 'ID' || summary.trim() === 'Previous Issue') continue;
+      failures.push({ id, summary: summary.trim() });
+    }
+  }
+
+  return { cycles: failures.length > 0 ? 1 : 0, failures };
+}
+
+/**
  * Compute timing from save timestamps
  *
  * @param saves - Saves data from .saves.json
@@ -313,6 +412,9 @@ export function generateProofSummary(slugDir: string): ProofSummary {
     hashes: {},
     seal_commit: null,
     completed_at: new Date().toISOString(),
+    callouts: [],
+    rejection_cycles: 0,
+    previous_failures: [],
   };
 
   // Source 1: .saves.json
@@ -410,6 +512,12 @@ export function generateProofSummary(slugDir: string): ProofSummary {
       summary.contract.satisfied = summary.assertions.filter(a => a.verifyStatus === 'SATISFIED').length;
       summary.contract.unsatisfied = summary.assertions.filter(a => a.verifyStatus === 'UNSATISFIED').length;
       summary.contract.deviated = summary.assertions.filter(a => a.verifyStatus === 'DEVIATED').length;
+
+      // Parse callouts and rejection cycles (S23 pipeline hardening)
+      summary.callouts = parseCallouts(verifyContent);
+      const rejectionData = parseRejectionCycles(verifyContent);
+      summary.rejection_cycles = rejectionData.cycles;
+      summary.previous_failures = rejectionData.failures;
     } catch {
       // Continue with defaults
     }

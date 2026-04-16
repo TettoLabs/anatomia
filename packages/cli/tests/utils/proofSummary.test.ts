@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
-import { generateProofSummary } from '../../src/utils/proofSummary.js';
+import { generateProofSummary, parseCallouts, parseRejectionCycles } from '../../src/utils/proofSummary.js';
 
 describe('generateProofSummary', () => {
   let tempDir: string;
@@ -286,5 +286,171 @@ file_changes:
     expect(summary.feature).toBe('test-feature');
     expect(summary.assertions).toHaveLength(0);
     expect(summary.result).toBe('UNKNOWN');
+  });
+});
+
+describe('parseCallouts', () => {
+  it('parses bulleted callouts with em-dash format', () => {
+    const content = `## Callouts
+
+- **Code — Dead logic in full-stack check:** \`projectKind.ts:105\` — BROWSER_FRAMEWORKS.has(d) will never match because dep names are lowercase.
+
+- **Test — A003 purity test is comment-fragile:** projectKind.test.ts:187 reads source and asserts not.toContain. A comment mentioning node:fs breaks it.
+
+- **Upstream — Pre-check tag collision:** @ana A015 tag in proof.test.ts matched a different feature's contract.
+
+## Deployer Handoff
+`;
+    const callouts = parseCallouts(content);
+    expect(callouts).toHaveLength(3);
+    expect(callouts[0]!.category).toBe('code');
+    expect(callouts[0]!.summary).toContain('Dead logic in full-stack check');
+    expect(callouts[1]!.category).toBe('test');
+    expect(callouts[1]!.summary).toContain('A003 purity test');
+    expect(callouts[2]!.category).toBe('upstream');
+    expect(callouts[2]!.summary).toContain('Pre-check tag collision');
+  });
+
+  it('parses numbered callouts', () => {
+    const content = `## Callouts
+
+1. **Code — Unused export:** ProjectKindResult exported but never imported.
+
+2. **Test — Missing priority test:** No test for bin-over-framework priority.
+`;
+    const callouts = parseCallouts(content);
+    expect(callouts).toHaveLength(2);
+    expect(callouts[0]!.category).toBe('code');
+    expect(callouts[1]!.category).toBe('test');
+  });
+
+  it('parses callouts with colon-only format (no em-dash)', () => {
+    const content = `## Callouts
+
+- **Code:** slug truncation at 24 chars misaligns table columns for long slugs.
+
+- **Test:** duplicate @ana tag IDs across list and detail test sections.
+`;
+    const callouts = parseCallouts(content);
+    expect(callouts).toHaveLength(2);
+    expect(callouts[0]!.category).toBe('code');
+    expect(callouts[0]!.summary).toContain('slug truncation');
+    expect(callouts[1]!.category).toBe('test');
+  });
+
+  it('returns empty array when no Callouts section', () => {
+    const content = `## Independent Findings
+Some findings here.
+
+## AC Walkthrough
+Some ACs here.
+`;
+    expect(parseCallouts(content)).toHaveLength(0);
+  });
+
+  it('returns empty array when Callouts section has no parseable entries', () => {
+    const content = `## Callouts
+
+Just some plain text with no structured callouts.
+`;
+    expect(parseCallouts(content)).toHaveLength(0);
+  });
+
+  it('caps summary at 200 characters', () => {
+    const longDesc = 'x'.repeat(250);
+    const content = `## Callouts
+
+- **Code — Long one:** ${longDesc}
+`;
+    const callouts = parseCallouts(content);
+    expect(callouts).toHaveLength(1);
+    expect(callouts[0]!.summary.length).toBeLessThanOrEqual(200);
+  });
+
+  it('handles multi-line callout descriptions', () => {
+    const content = `## Callouts
+
+- **Code — Multi-line issue:** First line of description
+  continues on second line with more detail
+  and a third line too.
+
+- **Test — Next entry:** Should be separate.
+`;
+    const callouts = parseCallouts(content);
+    expect(callouts).toHaveLength(2);
+    expect(callouts[0]!.summary).toContain('continues on second line');
+    expect(callouts[1]!.summary).toContain('Next entry');
+  });
+});
+
+describe('parseRejectionCycles', () => {
+  it('parses Previous Findings Resolution table', () => {
+    const content = `## Independent Findings
+Some findings.
+
+## Previous Findings Resolution
+
+Previous verification: 2026-04-15, Result: FAIL
+
+### Previously UNSATISFIED Assertions
+| ID | Previous Issue | Current Status | Resolution |
+|----|----------------|----------------|------------|
+| A015 | Test was a sentinel, not real test | ✅ SATISFIED | Builder added real scaffold test |
+| A016 | Used toBeDefined instead of type check | ✅ SATISFIED | Builder replaced with type-safe assertions |
+
+### Previous Callouts
+| Callout | Status | Notes |
+|---------|--------|-------|
+| Dead logic in full-stack check | Still present | Not a FAIL item |
+
+## AC Walkthrough
+`;
+    const result = parseRejectionCycles(content);
+    expect(result.cycles).toBe(1);
+    expect(result.failures).toHaveLength(2);
+    expect(result.failures[0]!.id).toBe('A015');
+    expect(result.failures[0]!.summary).toContain('sentinel');
+    expect(result.failures[1]!.id).toBe('A016');
+  });
+
+  it('returns zero cycles when no Previous Findings Resolution section', () => {
+    const content = `## Independent Findings
+Some findings.
+
+## AC Walkthrough
+Some ACs.
+`;
+    const result = parseRejectionCycles(content);
+    expect(result.cycles).toBe(0);
+    expect(result.failures).toHaveLength(0);
+  });
+
+  it('returns zero cycles when section exists but no assertion table', () => {
+    const content = `## Previous Findings Resolution
+
+Previous verification: 2026-04-15, Result: FAIL
+
+### Previous Callouts
+| Callout | Status | Notes |
+|---------|--------|-------|
+| Some callout | Fixed | Done |
+`;
+    const result = parseRejectionCycles(content);
+    expect(result.cycles).toBe(0);
+    expect(result.failures).toHaveLength(0);
+  });
+
+  it('skips header row in assertion table', () => {
+    const content = `## Previous Findings Resolution
+
+### Previously UNSATISFIED Assertions
+| ID | Previous Issue | Current Status | Resolution |
+|----|----------------|----------------|------------|
+| A001 | Missing validation | ✅ SATISFIED | Added input checks |
+`;
+    const result = parseRejectionCycles(content);
+    expect(result.cycles).toBe(1);
+    expect(result.failures).toHaveLength(1);
+    expect(result.failures[0]!.id).toBe('A001');
   });
 });

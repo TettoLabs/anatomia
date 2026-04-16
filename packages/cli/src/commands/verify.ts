@@ -37,6 +37,7 @@ interface ContractPreCheckResult {
     covered: number;
     uncovered: number;
   };
+  outOfScope: Array<{ id: string; file: string }>;
 }
 
 /**
@@ -81,6 +82,7 @@ export function runContractPreCheck(slug: string, projectRoot: string = process.
       seal: 'UNVERIFIABLE',
       assertions: [],
       summary: { total: 0, covered: 0, uncovered: 0 },
+      outOfScope: [],
     };
   }
 
@@ -105,6 +107,7 @@ export function runContractPreCheck(slug: string, projectRoot: string = process.
       seal: 'UNVERIFIABLE',
       assertions: [],
       summary: { total: 0, covered: 0, uncovered: 0 },
+      outOfScope: [],
     };
   }
 
@@ -137,6 +140,7 @@ export function runContractPreCheck(slug: string, projectRoot: string = process.
       sealHash,
       assertions: [],
       summary: { total: 0, covered: 0, uncovered: 0 },
+      outOfScope: [],
     };
   }
 
@@ -147,16 +151,38 @@ export function runContractPreCheck(slug: string, projectRoot: string = process.
       sealHash,
       assertions: [],
       summary: { total: 0, covered: 0, uncovered: 0 },
+      outOfScope: [],
     };
   }
 
-  // Find test files
-  const testPatterns = ['**/*.test.*', '**/*.spec.*', '**/test_*.*', '**/*_test.*'];
-  const testFiles = glob.sync(testPatterns, {
-    cwd: projectRoot,
-    ignore: ['**/node_modules/**', '**/.ana/**'],
-    absolute: true,
-  });
+  // Scope tag search to files Build changed (git diff from seal commit to HEAD).
+  // Prevents false COVERED from @ana tags in other features' test files.
+  // Falls back to global search if git diff is unavailable.
+  let testFiles: string[] = [];
+  let scopedSearch = false;
+  try {
+    const diffOutput = execSync(
+      `git diff --name-only ${sealCommit}..HEAD`,
+      { encoding: 'utf-8', cwd: projectRoot, stdio: ['pipe', 'pipe', 'pipe'] }
+    ).trim();
+    if (diffOutput) {
+      testFiles = diffOutput.split('\n')
+        .filter(Boolean)
+        .map(f => path.join(projectRoot, f))
+        .filter(f => fs.existsSync(f));
+      scopedSearch = testFiles.length > 0;
+    }
+  } catch {
+    // git diff failed — fall through to global search
+  }
+  if (!scopedSearch) {
+    const testPatterns = ['**/*.test.*', '**/*.spec.*', '**/test_*.*', '**/*_test.*'];
+    testFiles = glob.sync(testPatterns, {
+      cwd: projectRoot,
+      ignore: ['**/node_modules/**', '**/.ana/**'],
+      absolute: true,
+    });
+  }
 
   // Check tag coverage for each assertion
   const assertions: ContractPreCheckResult['assertions'] = [];
@@ -186,6 +212,35 @@ export function runContractPreCheck(slug: string, projectRoot: string = process.
     });
   }
 
+  // If scoped search found UNCOVERED assertions, check if tags exist globally
+  // (outside the feature branch diff). This catches the case where Build tagged
+  // a test file it didn't modify — visible diagnostic, not silent failure.
+  const outOfScope: Array<{ id: string; file: string }> = [];
+  if (scopedSearch) {
+    const uncoveredAssertions = assertions.filter(a => a.status === 'UNCOVERED');
+    if (uncoveredAssertions.length > 0) {
+      const globalTestPatterns = ['**/*.test.*', '**/*.spec.*', '**/test_*.*', '**/*_test.*'];
+      const allTestFiles = glob.sync(globalTestPatterns, {
+        cwd: projectRoot,
+        ignore: ['**/node_modules/**', '**/.ana/**'],
+        absolute: true,
+      });
+      const outsideScope = allTestFiles.filter(f => !testFiles.includes(f));
+      for (const assertion of uncoveredAssertions) {
+        const pattern = new RegExp(`@ana\\s+[\\w,\\s]*\\b${assertion.id}\\b`);
+        for (const testFile of outsideScope) {
+          try {
+            const content = fs.readFileSync(testFile, 'utf-8');
+            if (pattern.test(content)) {
+              outOfScope.push({ id: assertion.id, file: path.relative(projectRoot, testFile) });
+              break;
+            }
+          } catch { /* skip */ }
+        }
+      }
+    }
+  }
+
   const covered = assertions.filter(a => a.status === 'COVERED').length;
   const uncovered = assertions.filter(a => a.status === 'UNCOVERED').length;
 
@@ -199,6 +254,7 @@ export function runContractPreCheck(slug: string, projectRoot: string = process.
       covered,
       uncovered,
     },
+    outOfScope,
   };
 }
 
@@ -234,6 +290,13 @@ function printContractResults(result: ContractPreCheckResult, slugDir: string): 
 
   console.log();
   console.log(`  ${result.summary.total} total · ${result.summary.covered} covered · ${result.summary.uncovered} uncovered`);
+
+  if (result.outOfScope.length > 0) {
+    console.log();
+    for (const oos of result.outOfScope) {
+      console.log(chalk.yellow(`  ⚠ ${oos.id} tag found in ${oos.file} (outside feature branch changes)`));
+    }
+  }
 }
 
 /**

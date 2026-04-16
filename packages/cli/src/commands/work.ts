@@ -668,6 +668,34 @@ interface ProofChain {
  * @param slug - Work item slug
  * @param proof - Proof summary data
  */
+/**
+ * Extract source files touched by a feature branch.
+ *
+ * Diffs the seal commit (contract save) against the feature branch HEAD,
+ * NOT against main HEAD — otherwise files from other merged features
+ * would pollute the list.
+ *
+ * @param slug - Work item slug (for branch name)
+ * @param sealCommit - Commit hash from contract save
+ * @returns Array of relative file paths (source files only)
+ */
+function getModulesTouched(slug: string, sealCommit: string | null): string[] {
+  if (!sealCommit) return [];
+  try {
+    // Diff against the feature branch, not HEAD
+    const branchRef = `feature/${slug}`;
+    const output = execSync(
+      `git diff --name-only ${sealCommit}..${branchRef} -- '*.ts' '*.tsx' '*.js' '*.jsx' '*.py' '*.go' '*.rs'`,
+      { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }
+    ).trim();
+    if (!output) return [];
+    return output.split('\n').filter(Boolean);
+  } catch {
+    // Branch may not exist or commit unreachable — return empty
+    return [];
+  }
+}
+
 async function writeProofChain(slug: string, proof: ProofSummary): Promise<void> {
   const anaDir = path.join(process.cwd(), '.ana');
 
@@ -688,6 +716,9 @@ async function writeProofChain(slug: string, proof: ProofSummary): Promise<void>
       chain = { entries: [] };
     }
   }
+
+  // Extract modules touched from git diff (seal commit → feature branch)
+  const modulesTouched = getModulesTouched(slug, proof.seal_commit);
 
   const entry: ProofChainEntry = {
     slug,
@@ -712,6 +743,10 @@ async function writeProofChain(slug: string, proof: ProofSummary): Promise<void>
     hashes: proof.hashes,
     seal_commit: proof.seal_commit,
     completed_at: new Date().toISOString(),
+    modules_touched: modulesTouched,
+    callouts: proof.callouts,
+    rejection_cycles: proof.rejection_cycles,
+    previous_failures: proof.previous_failures,
   };
 
   chain.entries.push(entry);
@@ -727,9 +762,28 @@ async function writeProofChain(slug: string, proof: ProofSummary): Promise<void>
     ? ` (Think ${proof.timing.think}m, Plan ${proof.timing.plan}m, Build ${proof.timing.build}m, Verify ${proof.timing.verify}m)`
     : '';
 
+  // Modules line — show up to 10, then "+N more"
+  const modulesLine = modulesTouched.length > 0
+    ? `\nModules: ${modulesTouched.slice(0, 10).join(', ')}${modulesTouched.length > 10 ? ` (+${modulesTouched.length - 10} more)` : ''}`
+    : '';
+
+  // Rejection cycle line — only on re-verified features
+  const rejectionLine = proof.rejection_cycles > 0
+    ? `\nRejection cycles: ${proof.rejection_cycles} (${proof.previous_failures.map(f => `${f.id} ${f.summary}`).join(', ')})`
+    : '';
+
+  // Callout digest — top 5 in markdown, all in JSON. Priority: code > test > upstream
+  const categoryOrder: Record<string, number> = { code: 0, test: 1, upstream: 2 };
+  const sortedCallouts = [...proof.callouts].sort((a, b) =>
+    (categoryOrder[a.category] ?? 3) - (categoryOrder[b.category] ?? 3)
+  );
+  const calloutLines = sortedCallouts.length > 0
+    ? '\nCallouts:\n' + sortedCallouts.slice(0, 5).map(c => `- ${c.category}: ${c.summary}`).join('\n')
+    : '';
+
   const mdEntry = `## ${proof.feature} (${new Date().toISOString().split('T')[0]})
 Result: ${proof.result} | ${proof.contract.satisfied}/${proof.contract.total} satisfied | ${proof.acceptance_criteria.met}/${proof.acceptance_criteria.total} ACs | ${proof.deviations.length} deviation${proof.deviations.length !== 1 ? 's' : ''}
-Pipeline: ${proof.timing.total_minutes}m${timingDetails}${deviationSummary}
+Pipeline: ${proof.timing.total_minutes}m${timingDetails}${deviationSummary}${modulesLine}${rejectionLine}${calloutLines}
 
 `;
 
