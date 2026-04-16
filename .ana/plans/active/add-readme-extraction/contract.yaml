@@ -1,0 +1,220 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Add README extraction to scan"
+
+assertions:
+  # AC1: Scan populates result.readme
+  - id: A001
+    says: "Scanning a project with a README extracts content into the readme field"
+    block: "extracts README content into result.readme"
+    target: "result.readme"
+    matcher: "exists"
+
+  - id: A002
+    says: "The readme field contains a description when a matching heading is found"
+    block: "extracts description from README heading"
+    target: "result.readme.description"
+    matcher: "exists"
+
+  - id: A003
+    says: "The source field indicates whether content came from headings or fallback"
+    block: "tracks extraction source"
+    target: "result.readme.source"
+    matcher: "equals"
+    value: "heading"
+
+  # AC2: JSON output includes readme field
+  - id: A004
+    says: "The scan JSON output includes the readme field"
+    block: "includes readme in JSON output"
+    target: "jsonOutput.readme"
+    matcher: "exists"
+
+  # AC3: Scaffold uses README for What This Project Does
+  - id: A005
+    says: "Project context scaffold includes README description in What This Project Does section"
+    block: "scaffold includes README description"
+    target: "scaffold"
+    matcher: "contains"
+    value: "readme description content"
+
+  # AC4: Architecture/setup sections flow to scaffold
+  - id: A006
+    says: "Architecture content from README appears in the Architecture section"
+    block: "scaffold includes README architecture"
+    target: "scaffold"
+    matcher: "contains"
+    value: "readme architecture content"
+
+  - id: A007
+    says: "Setup content from README appears in the Architecture section"
+    block: "scaffold includes README setup"
+    target: "scaffold"
+    matcher: "contains"
+    value: "readme setup content"
+
+  # AC5: Character caps enforced
+  - id: A008
+    says: "Individual sections are capped at 1500 characters"
+    block: "enforces per-section character cap"
+    target: "result.readme.description.length"
+    matcher: "equals"
+    value: 1500
+
+  - id: A009
+    says: "Total README extraction is capped at 5000 characters"
+    block: "enforces total character cap"
+    target: "totalLength"
+    matcher: "equals"
+    value: 5000
+
+  # AC6: README variants detected
+  - id: A010
+    says: "README.md is detected (exact case)"
+    block: "detects README.md"
+    target: "result.readme"
+    matcher: "exists"
+
+  - id: A011
+    says: "readme.md is detected (lowercase)"
+    block: "detects readme.md lowercase"
+    target: "result.readme"
+    matcher: "exists"
+
+  - id: A012
+    says: "Readme.md is detected (mixed case)"
+    block: "detects Readme.md mixed case"
+    target: "result.readme"
+    matcher: "exists"
+
+  - id: A013
+    says: "README without extension is detected"
+    block: "detects README without extension"
+    target: "result.readme"
+    matcher: "exists"
+
+  # AC7: Monorepo reads root README only
+  - id: A014
+    says: "Monorepo projects read the root README, not package READMEs"
+    block: "reads root README in monorepo"
+    target: "result.readme.description"
+    matcher: "contains"
+    value: "root readme content"
+
+  # AC8: No README produces null
+  - id: A015
+    says: "Projects without a README produce readme: null"
+    block: "returns null when no README exists"
+    target: "result.readme"
+    matcher: "equals"
+    value: null
+
+  - id: A016
+    says: "Missing README does not cause scan errors"
+    block: "handles missing README gracefully"
+    target: "scanCompleted"
+    matcher: "equals"
+    value: true
+
+  # AC9: Content cleaning
+  - id: A017
+    says: "Badge markdown patterns are stripped from extracted content"
+    block: "strips badges from content"
+    target: "result.readme.description"
+    matcher: "not_contains"
+    value: "![badge]"
+
+  - id: A018
+    says: "Image markdown patterns are stripped from extracted content"
+    block: "strips images from content"
+    target: "result.readme.description"
+    matcher: "not_contains"
+    value: "![image]"
+
+  - id: A019
+    says: "HTML tags are stripped from extracted content"
+    block: "strips HTML tags from content"
+    target: "result.readme.description"
+    matcher: "not_contains"
+    value: "<div>"
+
+  # Heading extraction
+  - id: A020
+    says: "Installation heading maps to setup category"
+    block: "maps Installation to setup"
+    target: "result.readme.setup"
+    matcher: "exists"
+
+  - id: A021
+    says: "Getting Started heading maps to setup category"
+    block: "maps Getting Started to setup"
+    target: "result.readme.setup"
+    matcher: "exists"
+
+  - id: A022
+    says: "About heading maps to description category"
+    block: "maps About to description"
+    target: "result.readme.description"
+    matcher: "exists"
+
+  - id: A023
+    says: "Architecture heading maps to architecture category"
+    block: "maps Architecture to architecture"
+    target: "result.readme.architecture"
+    matcher: "exists"
+
+  # Fallback behavior
+  - id: A024
+    says: "README with no matching headings uses first paragraph as description"
+    block: "falls back to first paragraph"
+    target: "result.readme.source"
+    matcher: "equals"
+    value: "fallback"
+
+  - id: A025
+    says: "Fallback extraction populates the description field"
+    block: "fallback populates description"
+    target: "result.readme.description"
+    matcher: "exists"
+
+  # Edge cases
+  - id: A026
+    says: "README with only badges after stripping returns null"
+    block: "returns null for badge-only README"
+    target: "result.readme"
+    matcher: "equals"
+    value: null
+
+  - id: A027
+    says: "Heading matching is case-insensitive"
+    block: "matches headings case-insensitively"
+    target: "result.readme.setup"
+    matcher: "exists"
+
+  # Type system
+  - id: A028
+    says: "EngineResult includes the readme field in its type definition"
+    block: "readme field exists on EngineResult type"
+    target: "result"
+    matcher: "exists"
+
+  - id: A029
+    says: "createEmptyEngineResult includes readme field with null default"
+    block: "factory includes readme field"
+    target: "emptyResult.readme"
+    matcher: "equals"
+    value: null
+
+file_changes:
+  - path: "packages/cli/src/engine/detectors/readme.ts"
+    action: create
+  - path: "packages/cli/src/engine/types/engineResult.ts"
+    action: modify
+  - path: "packages/cli/src/engine/scan-engine.ts"
+    action: modify
+  - path: "packages/cli/src/utils/scaffold-generators.ts"
+    action: modify
+  - path: "packages/cli/tests/engine/detectors/readme.test.ts"
+    action: create
+  - path: "packages/cli/tests/scaffolds/all-scaffolds.test.ts"
+    action: modify
