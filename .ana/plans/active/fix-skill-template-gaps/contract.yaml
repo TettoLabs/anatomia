@@ -1,0 +1,66 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Fix skill template gaps — data-access security, coding-standards error rule"
+
+assertions:
+  - id: A001
+    says: "The data-access template includes guidance on scoping queries to authorized users"
+    block: "data-access IDOR rule exists"
+    target: "data-access-skill.rules"
+    matcher: "contains"
+    value: "scope data queries to the authorized context"
+
+  - id: A002
+    says: "The data-access template names IDOR as the consequence of missing authorization scoping"
+    block: "data-access IDOR rule mentions IDOR"
+    target: "data-access-skill.rules"
+    matcher: "contains"
+    value: "IDOR vulnerability"
+
+  - id: A003
+    says: "The data-access template still has all four original rules unchanged"
+    block: "data-access original rules preserved"
+    target: "data-access-skill.ruleCount"
+    matcher: "equals"
+    value: 5
+
+  - id: A004
+    says: "The coding-standards error rule bans empty catch blocks"
+    block: "coding-standards error rule bans empty catches"
+    target: "coding-standards-skill.errorRule"
+    matcher: "contains"
+    value: "Empty catch blocks are never acceptable"
+
+  - id: A005
+    says: "The coding-standards error rule permits intentional graceful degradation"
+    block: "coding-standards error rule permits degradation"
+    target: "coding-standards-skill.errorRule"
+    matcher: "contains"
+    value: "Intentional graceful degradation"
+
+  - id: A006
+    says: "The coding-standards error rule requires degradation to be logged and observable"
+    block: "coding-standards error rule requires observability"
+    target: "coding-standards-skill.errorRule"
+    matcher: "contains"
+    value: "logged and observable"
+
+  - id: A007
+    says: "The coding-standards template still has exactly seven rules"
+    block: "coding-standards rule count unchanged"
+    target: "coding-standards-skill.ruleCount"
+    matcher: "equals"
+    value: 7
+
+  - id: A008
+    says: "No existing rules were modified except the error-handling rule in coding-standards"
+    block: "other rules unchanged"
+    target: "coding-standards-skill.unchangedRules"
+    matcher: "equals"
+    value: 6
+
+file_changes:
+  - path: "packages/cli/templates/.claude/skills/data-access/SKILL.md"
+    action: modify
+  - path: "packages/cli/templates/.claude/skills/coding-standards/SKILL.md"
+    action: modify
