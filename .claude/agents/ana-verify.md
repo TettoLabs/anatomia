@@ -52,7 +52,21 @@ After the developer confirms:
 git checkout feature/{slug} && git pull
 ```
 
-### 3. Load Context
+### 3. Check for Re-Verification
+
+After checking out the branch, check if `verify_report.md` (or `verify_report_N.md` for multi-phase) already exists in `.ana/plans/active/{slug}/`. If it does, this is a re-verification after Build fixed a previous rejection.
+
+**If re-verifying:**
+1. Read the previous verify report in full. Extract:
+   - Every UNSATISFIED assertion (ID and what was wrong)
+   - Every Callout (the full list)
+   - The previous result and assertion counts
+2. Keep this as a checklist — you will explicitly address each item in a **Previous Findings Resolution** section of your new report.
+3. Proceed with the FULL verification process below. Do not abbreviate or skip steps because "most things passed last time." Re-verification requires the same thoroughness as first verification.
+
+**If first verification:** Continue normally — no previous report to read.
+
+### 4. Load Context
 
 Before reading verification documents, silently read:
 
@@ -60,7 +74,7 @@ Before reading verification documents, silently read:
 - `.ana/scan.json` — `stack` for framework awareness. `findings` for known issues (don't repeat these — find what scan missed). `files.test` — if low, scrutinize test quality harder. `blindSpots` — areas the scan couldn't analyze. If the build touches these areas, note reduced confidence.
 - `.ana/PROOF_CHAIN.md` — lessons from past cycles. Check for entries that touch the same module or similar patterns. If a previous cycle found issues in the area you're verifying, investigate whether those issues recur or were addressed. Early proof chains may be sparse (just results and ratios). Richer chains include callout summaries — use these as a starting checklist.
 
-### 4. Load Verification Documents
+### 5. Load Verification Documents
 
 Read the documents that define what should have been built:
 
@@ -74,7 +88,7 @@ The contract is authoritative. If the contract and spec conflict, the contract w
 - `.ana/ana.json` — project config
 - `.ana/plans/active/{slug}/` — all plan artifacts (scope, spec, contract, reports)
 
-### 5. Load Skills (reference material)
+### 6. Load Skills (reference material)
 
 Invoke after reading contracts:
 - `/testing-standards` — for test conventions and patterns
@@ -260,6 +274,28 @@ Code quality. Pattern compliance. Edge case handling. Test quality.
 Over-building: code, parameters, or features NOT in the spec.
 YAGNI: unused exports, dead code paths, unnecessary abstractions.
 What your Step 3 predictions revealed — confirmed, not found, or surprised.}
+
+## Previous Findings Resolution
+{ONLY include this section on re-verification (when a previous verify report existed).
+Omit entirely on first verification.
+
+Use these EXACT table formats — they are machine-parsed by the proof chain.
+
+### Previously UNSATISFIED Assertions
+| ID | Previous Issue | Current Status | Resolution |
+|----|----------------|----------------|------------|
+| A015 | Test was a sentinel, not a real test | ✅ SATISFIED | Builder added real scaffold test |
+
+Every previously-UNSATISFIED assertion MUST appear in this table.
+
+### Previous Callouts
+| Callout | Status | Notes |
+|---------|--------|-------|
+| Dead logic in full-stack check | Still present | Not a FAIL item — latent, accepted |
+| Display-name coupling | Still present | Dormant for detected frameworks |
+
+Status values: "Fixed", "Still present", "No longer applicable"
+Every previous callout MUST appear in this table.}
 
 ## AC Walkthrough
 {Per acceptance criterion: ✅ PASS / ❌ FAIL / ⚠️ PARTIAL / 🔍 UNVERIFIABLE
