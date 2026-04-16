@@ -397,4 +397,143 @@ file_changes:
       expect(output.stdout).toContain('Test passes');
     });
   });
+
+  describe('scoped tag search (S23 pipeline hardening)', () => {
+    it('scopes search to files changed after seal commit', async () => {
+      const contract = `version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Test Feature"
+assertions:
+  - id: A001
+    says: "Feature assertion"
+    block: "test"
+    target: "result"
+    matcher: "truthy"
+file_changes:
+  - path: src/feature.ts
+    action: create`;
+
+      // Create project with contract
+      execSync('git init', { cwd: tempDir, stdio: 'ignore' });
+      execSync('git config user.email "test@test.com"', { cwd: tempDir, stdio: 'ignore' });
+      execSync('git config user.name "Test"', { cwd: tempDir, stdio: 'ignore' });
+
+      const anaDir = path.join(tempDir, '.ana');
+      const planDir = path.join(anaDir, 'plans', 'active', 'test-slug');
+      await fs.mkdir(planDir, { recursive: true });
+      await fs.writeFile(path.join(planDir, 'contract.yaml'), contract, 'utf-8');
+
+      // Write a "previous feature" test with A001 tag (collision source)
+      const oldTestDir = path.join(tempDir, 'tests');
+      await fs.mkdir(oldTestDir, { recursive: true });
+      await fs.writeFile(path.join(oldTestDir, 'old-feature.test.ts'), '// @ana A001\nold test', 'utf-8');
+
+      execSync('git add -A && git commit -m "seal: contract + old test"', { cwd: tempDir, stdio: 'ignore' });
+
+      // Save seal commit
+      const sealCommit = execSync('git rev-parse HEAD', { cwd: tempDir, encoding: 'utf-8' }).trim();
+      await fs.writeFile(path.join(planDir, '.saves.json'), JSON.stringify({
+        contract: { saved_at: new Date().toISOString(), commit: sealCommit, hash: 'sha256:abc' }
+      }), 'utf-8');
+
+      // Simulate Build: create a new test file (WITHOUT A001 tag) and commit
+      await fs.writeFile(path.join(oldTestDir, 'new-feature.test.ts'), '// no tags here\nnew test', 'utf-8');
+      execSync('git add -A && git commit -m "build: new test file"', { cwd: tempDir, stdio: 'ignore' });
+
+      const result = runContractPreCheck('test-slug', tempDir);
+
+      // A001 should be UNCOVERED because the scoped search only looks at
+      // files changed after seal (new-feature.test.ts), not old-feature.test.ts
+      expect(result.assertions.find(a => a.id === 'A001')?.status).toBe('UNCOVERED');
+
+      // out-of-scope warning should flag where the tag actually lives
+      expect(result.outOfScope).toHaveLength(1);
+      expect(result.outOfScope[0]!.id).toBe('A001');
+      expect(result.outOfScope[0]!.file).toContain('old-feature.test.ts');
+    });
+
+    it('finds tags in files changed after seal commit', async () => {
+      const contract = `version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Test Feature"
+assertions:
+  - id: A001
+    says: "Feature assertion"
+    block: "test"
+    target: "result"
+    matcher: "truthy"
+file_changes:
+  - path: src/feature.ts
+    action: create`;
+
+      execSync('git init', { cwd: tempDir, stdio: 'ignore' });
+      execSync('git config user.email "test@test.com"', { cwd: tempDir, stdio: 'ignore' });
+      execSync('git config user.name "Test"', { cwd: tempDir, stdio: 'ignore' });
+
+      const anaDir = path.join(tempDir, '.ana');
+      const planDir = path.join(anaDir, 'plans', 'active', 'test-slug');
+      await fs.mkdir(planDir, { recursive: true });
+      await fs.writeFile(path.join(planDir, 'contract.yaml'), contract, 'utf-8');
+
+      execSync('git add -A && git commit -m "seal"', { cwd: tempDir, stdio: 'ignore' });
+
+      const sealCommit = execSync('git rev-parse HEAD', { cwd: tempDir, encoding: 'utf-8' }).trim();
+      await fs.writeFile(path.join(planDir, '.saves.json'), JSON.stringify({
+        contract: { saved_at: new Date().toISOString(), commit: sealCommit, hash: 'sha256:abc' }
+      }), 'utf-8');
+
+      // Build creates test file with tag and commits
+      const testDir = path.join(tempDir, 'tests');
+      await fs.mkdir(testDir, { recursive: true });
+      await fs.writeFile(path.join(testDir, 'feature.test.ts'), '// @ana A001\ntest()', 'utf-8');
+      execSync('git add -A && git commit -m "build: tests"', { cwd: tempDir, stdio: 'ignore' });
+
+      const result = runContractPreCheck('test-slug', tempDir);
+
+      expect(result.assertions.find(a => a.id === 'A001')?.status).toBe('COVERED');
+      expect(result.outOfScope).toHaveLength(0);
+    });
+
+    it('falls back to global search when no commits after seal', async () => {
+      const contract = `version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Test Feature"
+assertions:
+  - id: A001
+    says: "Test assertion"
+    block: "test"
+    target: "result"
+    matcher: "truthy"
+file_changes:
+  - path: src/test.ts
+    action: create`;
+
+      // Create project — test file exists at seal time (no post-seal changes)
+      execSync('git init', { cwd: tempDir, stdio: 'ignore' });
+      execSync('git config user.email "test@test.com"', { cwd: tempDir, stdio: 'ignore' });
+      execSync('git config user.name "Test"', { cwd: tempDir, stdio: 'ignore' });
+
+      const anaDir = path.join(tempDir, '.ana');
+      const planDir = path.join(anaDir, 'plans', 'active', 'test-slug');
+      await fs.mkdir(planDir, { recursive: true });
+      await fs.writeFile(path.join(planDir, 'contract.yaml'), contract, 'utf-8');
+
+      const testDir = path.join(tempDir, 'tests');
+      await fs.mkdir(testDir, { recursive: true });
+      await fs.writeFile(path.join(testDir, 'test.test.ts'), '// @ana A001\ntest()', 'utf-8');
+
+      execSync('git add -A && git commit -m "init"', { cwd: tempDir, stdio: 'ignore' });
+
+      const sealCommit = execSync('git rev-parse HEAD', { cwd: tempDir, encoding: 'utf-8' }).trim();
+      await fs.writeFile(path.join(planDir, '.saves.json'), JSON.stringify({
+        contract: { saved_at: new Date().toISOString(), commit: sealCommit, hash: 'sha256:abc' }
+      }), 'utf-8');
+
+      // No commits after seal — git diff is empty, falls back to global
+      const result = runContractPreCheck('test-slug', tempDir);
+
+      // Global fallback should still find the tag
+      expect(result.assertions.find(a => a.id === 'A001')?.status).toBe('COVERED');
+    });
+  });
 });
