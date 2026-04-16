@@ -14,6 +14,7 @@ function makeRoot(relativePath: string, fileCount: number, isPrimary = false): S
     isPrimary,
     deps: {},
     devDeps: {},
+    hasBin: false,
   };
 }
 

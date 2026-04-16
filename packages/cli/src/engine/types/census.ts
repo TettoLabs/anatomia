@@ -19,6 +19,7 @@ export interface SourceRoot {
   isPrimary: boolean;
   deps: Record<string, string>;        // this root's own deps (not merged)
   devDeps: Record<string, string>;     // this root's own devDeps
+  hasBin: boolean;                     // true when package.json declares a bin field
 }
 
 export interface FrameworkHintEntry {

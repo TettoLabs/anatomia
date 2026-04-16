@@ -302,6 +302,7 @@ export async function buildCensus(rootPath: string): Promise<ProjectCensus> {
       isPrimary: true,
       deps: {},
       devDeps: {},
+      hasBin: false,
     }];
   } else if (isSingleRepo) {
     const pkg = result.rootPackage!;
@@ -313,6 +314,7 @@ export async function buildCensus(rootPath: string): Promise<ProjectCensus> {
       isPrimary: true,
       deps: (pkg.packageJson.dependencies ?? {}) as Record<string, string>,
       devDeps: (pkg.packageJson.devDependencies ?? {}) as Record<string, string>,
+      hasBin: !!((pkg.packageJson as unknown as Record<string, unknown>)['bin']),
     }];
   } else {
     sourceRoots = result.packages.map(pkg => {
@@ -326,6 +328,7 @@ export async function buildCensus(rootPath: string): Promise<ProjectCensus> {
         isPrimary: false, // set below after primary selection
         deps: (pkg.packageJson.dependencies ?? {}) as Record<string, string>,
         devDeps: (pkg.packageJson.devDependencies ?? {}) as Record<string, string>,
+        hasBin: !!((pkg.packageJson as unknown as Record<string, unknown>)['bin']),
       };
     });
   }
