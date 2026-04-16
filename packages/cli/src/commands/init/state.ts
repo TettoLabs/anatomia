@@ -286,11 +286,13 @@ export function makeTestCommandNonInteractive(
  *
  * @param tmpAnaPath - Temp .ana/ path
  * @param engineResult - Engine result or null
+ * @param projectRoot - Project root for reading primary package.json (defaults to cwd)
  * @returns The ana.json config object that was written
  */
 export async function createAnaJson(
   tmpAnaPath: string,
-  engineResult: EngineResult | null
+  engineResult: EngineResult | null,
+  projectRoot?: string,
 ): Promise<Record<string, unknown>> {
   const spinner = ora('Creating ana.json...').start();
 
@@ -299,29 +301,32 @@ export async function createAnaJson(
 
   // Compute test command — scope to primary package in monorepos so agents
   // don't get interleaved turbo output that hangs when piped through grep/tail.
+  // Reads the primary package's own test script for correct framework-aware
+  // wrapping (root script may be turbo/nx, not the actual test runner).
   let testCmd = makeTestCommandNonInteractive(result.commands.test, result.stack.testing, result.commands.all?.['test']);
   if (testCmd && result.monorepo.isMonorepo && result.monorepo.primaryPackage) {
     const pkg = result.monorepo.primaryPackage;
     const pm = result.commands.packageManager || 'pnpm';
-    if (pm === 'pnpm' && pkg.name) {
-      testCmd = makeTestCommandNonInteractive(
-        `pnpm --filter ${pkg.name} run test`,
-        result.stack.testing,
-        null,
-      );
-    } else if (pm === 'yarn' && pkg.name) {
-      testCmd = makeTestCommandNonInteractive(
-        `yarn workspace ${pkg.name} test`,
-        result.stack.testing,
-        null,
-      );
-    } else if (pm === 'npm' && pkg.name) {
-      testCmd = makeTestCommandNonInteractive(
-        `npm -w ${pkg.name} test`,
-        result.stack.testing,
-        null,
-      );
-    } else if (testCmd) {
+    const root = projectRoot || process.cwd();
+
+    // Read primary package's test script for framework-aware wrapping
+    let primaryRawScript: string | null = null;
+    try {
+      const pkgJsonPath = path.join(root, pkg.path, 'package.json');
+      const pkgJson = JSON.parse(await fs.readFile(pkgJsonPath, 'utf-8')) as Record<string, unknown>;
+      const scripts = pkgJson['scripts'] as Record<string, string> | undefined;
+      primaryRawScript = scripts?.['test'] ?? null;
+    } catch { /* primary package.json unreadable — fall back to root wrapping */ }
+
+    if (primaryRawScript) {
+      // cd into primary package, run its local test script with correct flags
+      const baseCmd = pm === 'npm' ? 'npm test' : `${pm} run test`;
+      const wrappedCmd = makeTestCommandNonInteractive(baseCmd, result.stack.testing, primaryRawScript);
+      if (wrappedCmd) {
+        testCmd = `cd ${pkg.path} && ${wrappedCmd}`;
+      }
+    } else {
+      // No primary test script — prepend cd to the root-derived command
       testCmd = `cd ${pkg.path} && ${testCmd}`;
     }
   }
