@@ -868,9 +868,21 @@ export async function completeWork(slug: string): Promise<void> {
 
     if (hasRemote) {
       // Remote still exists — verify with is-ancestor (regular merge)
+      let merged = false;
       try {
         execSync(`git merge-base --is-ancestor feature/${slug} HEAD`, { stdio: 'pipe' });
+        merged = true;
       } catch {
+        // is-ancestor failed — might be squash merge. Check via gh CLI.
+        try {
+          const prState = execSync(
+            `gh pr view feature/${slug} --json state -q .state`,
+            { encoding: 'utf-8', stdio: 'pipe' }
+          ).trim();
+          merged = prState === 'MERGED';
+        } catch { /* gh not available or no PR — fall through to error */ }
+      }
+      if (!merged) {
         console.error(chalk.red(`Error: \`feature/${slug}\` has not been merged into \`${artifactBranch}\`.`));
         console.error(chalk.gray('Merge the PR first, then run this command again.'));
         process.exit(1);
