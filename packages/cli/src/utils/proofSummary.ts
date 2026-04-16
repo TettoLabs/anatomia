@@ -276,7 +276,7 @@ interface CalloutWithFeature {
 interface ProofChainEntryForIndex {
   feature: string;
   completed_at: string;
-  callouts: Array<{ category: string; summary: string }>;
+  callouts?: Array<{ category: string; summary: string }>;
 }
 
 /**
@@ -296,7 +296,9 @@ export function generateActiveIssuesMarkdown(entries: ProofChainEntryForIndex[])
   const reversedEntries = [...entries].reverse();
 
   for (const entry of reversedEntries) {
-    for (const callout of entry.callouts) {
+    // Handle entries without callouts (older entries may not have this field)
+    const callouts = entry.callouts || [];
+    for (const callout of callouts) {
       allCallouts.push({
         category: callout.category,
         summary: callout.summary,
