@@ -194,6 +194,11 @@ export const PatternAnalysisSchema = z.object({
   auth: z.union([PatternConfidenceSchema, MultiPatternSchema]).optional(),
   testing: z.union([PatternConfidenceSchema, MultiPatternSchema]).optional(),
 
+  // Deep-tier hook/composable categories (all optional)
+  dataFetching: z.union([PatternConfidenceSchema, MultiPatternSchema]).optional(),
+  stateManagement: z.union([PatternConfidenceSchema, MultiPatternSchema]).optional(),
+  formHandling: z.union([PatternConfidenceSchema, MultiPatternSchema]).optional(),
+
   // Metadata
   sampledFiles: z.number(),               // How many files sampled (0 in CP0, 20 in CP1+)
   detectionTime: z.number(),              // Milliseconds for inference

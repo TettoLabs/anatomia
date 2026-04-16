@@ -123,6 +123,11 @@ export async function inferPatterns(
       auth: filteredPatterns['auth'] as PatternAnalysis['auth'],
       testing: filteredPatterns['testing'] as PatternAnalysis['testing'],
 
+      // Deep-tier hook/composable categories
+      dataFetching: filteredPatterns['dataFetching'] as PatternAnalysis['dataFetching'],
+      stateManagement: filteredPatterns['stateManagement'] as PatternAnalysis['stateManagement'],
+      formHandling: filteredPatterns['formHandling'] as PatternAnalysis['formHandling'],
+
       // Metadata
       sampledFiles,
       detectionTime,
