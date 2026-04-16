@@ -1,0 +1,127 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Proof chain active issues index"
+
+assertions:
+  # extractFileRefs tests
+  - id: A001
+    says: "File references with line numbers are extracted from callout text"
+    block: "extracts filename:line format"
+    target: "result"
+    matcher: "contains"
+    value: "projectKind.ts"
+
+  - id: A002
+    says: "File references with line ranges are extracted"
+    block: "extracts filename:line-line range format"
+    target: "result"
+    matcher: "contains"
+    value: "scan-engine.ts"
+
+  - id: A003
+    says: "Filenames without line numbers are extracted"
+    block: "extracts filename without line number"
+    target: "result"
+    matcher: "contains"
+    value: "displayNames.ts"
+
+  - id: A004
+    says: "Multiple file references in one callout are all extracted"
+    block: "returns multiple refs from one summary"
+    target: "result.length"
+    matcher: "greater"
+    value: 1
+
+  - id: A005
+    says: "Callouts without file references return an empty array"
+    block: "returns empty array when no refs found"
+    target: "result.length"
+    matcher: "equals"
+    value: 0
+
+  - id: A006
+    says: "Various file extensions are recognized"
+    block: "handles various file extensions"
+    target: "result"
+    matcher: "contains"
+    value: "config.json"
+
+  # generateActiveIssuesMarkdown tests
+  - id: A007
+    says: "Callouts are grouped under file headings"
+    block: "groups callouts by extracted file ref"
+    target: "output"
+    matcher: "contains"
+    value: "## projectKind.ts"
+
+  - id: A008
+    says: "Callouts without file refs appear under General"
+    block: "places callouts without refs under General"
+    target: "output"
+    matcher: "contains"
+    value: "## General"
+
+  - id: A009
+    says: "Only the 20 most recent callouts appear in the index"
+    block: "respects 20-callout cap"
+    target: "calloutCount"
+    matcher: "equals"
+    value: 20
+
+  - id: A010
+    says: "Empty callout list shows a clean empty state"
+    block: "returns empty-state message when no callouts"
+    target: "output"
+    matcher: "contains"
+    value: "No active issues"
+
+  - id: A011
+    says: "Each callout entry includes the source feature name"
+    block: "includes feature name in each entry"
+    target: "output"
+    matcher: "contains"
+    value: "Project kind detection"
+
+  - id: A012
+    says: "The Active Issues section starts with H1 heading"
+    block: "output starts with Active Issues heading"
+    target: "output"
+    matcher: "contains"
+    value: "# Active Issues"
+
+  - id: A013
+    says: "A horizontal rule separates the index from history"
+    block: "includes horizontal rule separator"
+    target: "output"
+    matcher: "contains"
+    value: "---"
+
+  - id: A014
+    says: "Callouts mentioning multiple files appear under each file"
+    block: "handles callouts referencing multiple files"
+    target: "occurrences"
+    matcher: "greater"
+    value: 1
+
+  # Entry format tests
+  - id: A015
+    says: "Each callout shows the category in bold"
+    block: "callout entry includes category"
+    target: "output"
+    matcher: "contains"
+    value: "**code:**"
+
+  - id: A016
+    says: "Callout summaries are truncated for readability"
+    block: "truncates long summaries"
+    target: "summaryLength"
+    matcher: "equals"
+    value: 100
+
+file_changes:
+  - path: "packages/cli/src/utils/proofSummary.ts"
+    action: modify
+  - path: "packages/cli/src/commands/work.ts"
+    action: modify
+  - path: "packages/cli/tests/utils/proofSummary.test.ts"
+    action: modify
