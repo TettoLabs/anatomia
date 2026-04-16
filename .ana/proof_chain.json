@@ -336,6 +336,134 @@
       "callouts": [],
       "rejection_cycles": 0,
       "previous_failures": []
+    },
+    {
+      "slug": "monorepo-primary-agents-md",
+      "feature": "Monorepo Primary Package AGENTS.md",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 13,
+        "covered": 0,
+        "uncovered": 13,
+        "satisfied": 13,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Init creates an AGENTS.md inside the primary package directory for monorepos",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "The generated file starts with the package name as its heading",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "The file identifies itself as the primary package of the project",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "The file includes a commands section when commands are available",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "The test command is included and made non-interactive",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "The file points readers to the root AGENTS.md for full project context",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "The relative path to root is correct for the package nesting depth",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "Single-level package paths produce the correct relative pointer",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "An existing AGENTS.md in the primary package is never overwritten",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "Non-monorepo projects produce no primary package AGENTS.md",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "Monorepos without a detected primary package produce no extra AGENTS.md",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "The commands section is omitted when no commands are available",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "Null engine result is handled gracefully without errors",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 6,
+        "met": 6
+      },
+      "timing": {
+        "total_minutes": 0,
+        "think": 16,
+        "plan": 16,
+        "build": 49
+      },
+      "hashes": {
+        "scope": "sha256:6a9535826961ebf33065a7f7e2c96257918f7e2cfb0d07ae00d90dc1555516b3",
+        "contract": "sha256:342c507cb362785df1122ee4fbda206412945520177ea7feab14291b11fe1744",
+        "plan": "sha256:2e96efa5b351d8b4d78d8654e179ba775a5c40918c53004903ef8c9ebca68917",
+        "spec": "sha256:cb110287dabed90c90493248c2c512906aa88ba5e27572e1d1fc21497efe1880",
+        "build-report": "sha256:0d15c9c5f330b16227e5fa1ab7bd555ddec5ec7c3982040ca77ff07f8be7f9e9"
+      },
+      "seal_commit": null,
+      "completed_at": "2026-04-16T22:37:12.315Z",
+      "modules_touched": [],
+      "callouts": [
+        {
+          "category": "code",
+          "summary": "Latent edge case with degenerate package paths: — assets.ts:575 `pkg.path.split('/').filter(Boolean).length` would produce incorrect relative paths for `\".\"` (depth 1 → `../AGENTS.md`) or `\"\"` (depth"
+        },
+        {
+          "category": "code",
+          "summary": "Windows path separators in pkg.path: — assets.ts:575 splits on `/` only. If `pkg.path` somehow contained backslashes (e.g., from a Windows monorepo tool), the depth calculation would be wrong. Again u"
+        },
+        {
+          "category": "test",
+          "summary": "No integration test for call-site wiring: — The tests verify `generatePrimaryPackageAgentsMd` directly but don't test that `createClaudeConfiguration` actually calls it. The call sites at assets.ts:19"
+        },
+        {
+          "category": "test",
+          "summary": "A006 assertion is weak for its contract: — The contract says the file \"points readers to the root AGENTS.md.\" The test checks `toContain('AGENTS.md')` and `toContain('Full Project Context')` separatel"
+        },
+        {
+          "category": "upstream",
+          "summary": "Contract A006 value is overly broad: — The contract assertion `matcher: contains, value: \"AGENTS.md\"` is too permissive. Every assertion in this test suite mentions AGENTS.md in some form. The value s"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": []
     }
   ]
 }
