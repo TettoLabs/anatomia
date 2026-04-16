@@ -190,6 +190,7 @@ export async function createClaudeConfiguration(cwd: string, engineResult: Engin
     // Copy CLAUDE.md to project root
     await copyClaudeMd(cwd, templatesDir, engineResult);
     await generateAgentsMd(cwd, engineResult);  // Cross-tool AI standard
+    await generatePrimaryPackageAgentsMd(cwd, engineResult);  // Primary package AGENTS.md for monorepos
 
     spinner.succeed('Created .claude/ configuration');
     return;
@@ -238,6 +239,7 @@ export async function createClaudeConfiguration(cwd: string, engineResult: Engin
   // Copy CLAUDE.md + AGENTS.md to project root (merge-not-overwrite)
   await copyClaudeMd(cwd, templatesDir, engineResult);
   await generateAgentsMd(cwd, engineResult);
+  await generatePrimaryPackageAgentsMd(cwd, engineResult);  // Primary package AGENTS.md for monorepos
 
   spinner.succeed('Created .claude/ configuration (merged)');
 }
@@ -508,4 +510,77 @@ function hookEntryMatches(a: HookEntry, b: HookEntry): boolean {
   const bCommands = (b.hooks || []).map((h) => h.command);
 
   return bCommands.some((cmd) => aCommands.includes(cmd));
+}
+
+/**
+ * Generate AGENTS.md for the primary package in a monorepo.
+ *
+ * Creates a minimal AGENTS.md inside the primary package directory with:
+ * - Package name heading
+ * - "Primary package in {project-name}" identifier
+ * - Package-scoped commands (when available)
+ * - Pointer to root AGENTS.md for full project context
+ *
+ * Does not overwrite existing files. Skips non-monorepos and projects
+ * without a detected primary package.
+ *
+ * @param cwd - Project root directory
+ * @param engineResult - Engine result for monorepo/command data
+ * @returns The generated content string, or null if skipped
+ */
+export async function generatePrimaryPackageAgentsMd(
+  cwd: string,
+  engineResult: EngineResult | null
+): Promise<string | null> {
+  // Skip if no engine result or not a monorepo
+  if (!engineResult) return null;
+  if (!engineResult.monorepo.isMonorepo) return null;
+  if (!engineResult.monorepo.primaryPackage) return null;
+
+  const pkg = engineResult.monorepo.primaryPackage;
+  const destPath = path.join(cwd, pkg.path, 'AGENTS.md');
+
+  // Don't overwrite existing file
+  if (await fileExists(destPath)) return null;
+
+  const projectName = await getProjectName(cwd);
+  const lines: string[] = [];
+
+  // Package heading
+  lines.push(`# ${pkg.name}`);
+  lines.push('');
+
+  // Identity line
+  lines.push(`Primary package in ${projectName}.`);
+  lines.push('');
+
+  // Commands section (if any commands exist)
+  const cmds = engineResult.commands;
+  const cmdLines: string[] = [];
+  if (cmds.build) cmdLines.push(`- Build: \`${cmds.build}\``);
+  if (cmds.test) {
+    const testCmd = makeTestCommandNonInteractive(cmds.test, engineResult.stack.testing, cmds.all?.['test']);
+    cmdLines.push(`- Test: \`${testCmd}\``);
+  }
+  if (cmds.lint) cmdLines.push(`- Lint: \`${cmds.lint}\``);
+
+  if (cmdLines.length > 0) {
+    lines.push('## Commands');
+    lines.push(...cmdLines);
+    lines.push('');
+  }
+
+  // Relative path back to root AGENTS.md
+  // pkg.path is like "packages/cli" or "cli" — count segments for depth
+  const depth = pkg.path.split('/').filter(Boolean).length;
+  const relativePath = '../'.repeat(depth) + 'AGENTS.md';
+
+  lines.push('## Full Project Context');
+  lines.push(`See [AGENTS.md](${relativePath}) at the project root for conventions, services, and constraints.`);
+  lines.push('');
+
+  const content = lines.join('\n');
+  await fs.writeFile(destPath, content, 'utf-8');
+
+  return content;
 }
