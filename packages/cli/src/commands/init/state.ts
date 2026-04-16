@@ -345,10 +345,10 @@ export async function createAnaJson(
     // Map detected testing framework to direct runner invocation
     const directCmd = buildDirectTestCommand(result.stack.testing, pm);
     if (directCmd) {
-      testCmd = `cd ${pkg.path} && ${directCmd}`;
+      testCmd = `(cd ${pkg.path} && ${directCmd})`;
     } else {
       // Unknown framework — cd with root-derived command as fallback
-      testCmd = `cd ${pkg.path} && ${testCmd}`;
+      testCmd = `(cd ${pkg.path} && ${testCmd})`;
     }
   }
 

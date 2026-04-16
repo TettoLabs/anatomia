@@ -6,7 +6,7 @@
   "packageManager": "pnpm",
   "commands": {
     "build": "pnpm run build",
-    "test": "cd packages/cli && pnpm vitest run",
+    "test": "(cd packages/cli && pnpm vitest run)",
     "lint": "pnpm run lint",
     "dev": "pnpm run dev"
   },
