@@ -1,9 +1,13 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
+import * as os from 'node:os';
 import {
   generateProjectContextScaffold,
   generateDesignPrinciplesTemplate,
 } from '../../src/utils/scaffold-generators.js';
 import { createEmptyEngineResult } from '../../src/engine/types/engineResult.js';
+import { generatePrimaryPackageAgentsMd } from '../../src/commands/init/assets.js';
 
 describe('scaffold generators (S15 consolidated: 2 generators)', () => {
   const result = createEmptyEngineResult();
@@ -79,5 +83,276 @@ describe('scaffold generators (S15 consolidated: 2 generators)', () => {
       expect(output).toContain('<!--');
       expect(output).toContain('-->');
     });
+  });
+});
+
+describe('generatePrimaryPackageAgentsMd', () => {
+  let tmpDir: string;
+
+  beforeEach(async () => {
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ana-test-'));
+    // Create package.json for project name detection
+    await fs.writeFile(path.join(tmpDir, 'package.json'), JSON.stringify({ name: 'test-workspace' }), 'utf-8');
+  });
+
+  afterEach(async () => {
+    await fs.rm(tmpDir, { recursive: true, force: true });
+  });
+
+  // @ana A001
+  it('creates AGENTS.md in primary package directory', async () => {
+    const base = createEmptyEngineResult();
+    const result = {
+      ...base,
+      monorepo: {
+        isMonorepo: true,
+        tool: 'pnpm',
+        packages: [{ name: 'anatomia-cli', path: 'packages/cli' }],
+        primaryPackage: { name: 'anatomia-cli', path: 'packages/cli' },
+      },
+      commands: { ...base.commands, build: 'pnpm run build', test: 'vitest', lint: 'pnpm run lint' },
+    };
+
+    // Create the package directory
+    await fs.mkdir(path.join(tmpDir, 'packages/cli'), { recursive: true });
+
+    const content = await generatePrimaryPackageAgentsMd(tmpDir, result);
+
+    expect(content).not.toBeNull();
+    const filePath = path.join(tmpDir, 'packages/cli', 'AGENTS.md');
+    const exists = await fs.access(filePath).then(() => true).catch(() => false);
+    expect(exists).toBe(true);
+  });
+
+  // @ana A002
+  it('includes package name heading', async () => {
+    const result = {
+      ...createEmptyEngineResult(),
+      monorepo: {
+        isMonorepo: true,
+        tool: 'pnpm',
+        packages: [{ name: 'anatomia-cli', path: 'packages/cli' }],
+        primaryPackage: { name: 'anatomia-cli', path: 'packages/cli' },
+      },
+    };
+
+    await fs.mkdir(path.join(tmpDir, 'packages/cli'), { recursive: true });
+
+    const content = await generatePrimaryPackageAgentsMd(tmpDir, result);
+
+    expect(content).toContain('# anatomia-cli');
+  });
+
+  // @ana A003
+  it('identifies as primary package', async () => {
+    const result = {
+      ...createEmptyEngineResult(),
+      monorepo: {
+        isMonorepo: true,
+        tool: 'pnpm',
+        packages: [{ name: 'anatomia-cli', path: 'packages/cli' }],
+        primaryPackage: { name: 'anatomia-cli', path: 'packages/cli' },
+      },
+    };
+
+    await fs.mkdir(path.join(tmpDir, 'packages/cli'), { recursive: true });
+
+    const content = await generatePrimaryPackageAgentsMd(tmpDir, result);
+
+    expect(content).toContain('Primary package in');
+  });
+
+  // @ana A004
+  it('includes commands section with available commands', async () => {
+    const base = createEmptyEngineResult();
+    const result = {
+      ...base,
+      monorepo: {
+        isMonorepo: true,
+        tool: 'pnpm',
+        packages: [{ name: 'anatomia-cli', path: 'packages/cli' }],
+        primaryPackage: { name: 'anatomia-cli', path: 'packages/cli' },
+      },
+      commands: { ...base.commands, build: 'pnpm run build', test: 'vitest', lint: 'pnpm run lint' },
+    };
+
+    await fs.mkdir(path.join(tmpDir, 'packages/cli'), { recursive: true });
+
+    const content = await generatePrimaryPackageAgentsMd(tmpDir, result);
+
+    expect(content).toContain('## Commands');
+    expect(content).toContain('Build:');
+    expect(content).toContain('Lint:');
+  });
+
+  // @ana A005
+  it('includes non-interactive test command', async () => {
+    const base = createEmptyEngineResult();
+    const result = {
+      ...base,
+      monorepo: {
+        isMonorepo: true,
+        tool: 'pnpm',
+        packages: [{ name: 'anatomia-cli', path: 'packages/cli' }],
+        primaryPackage: { name: 'anatomia-cli', path: 'packages/cli' },
+      },
+      stack: { ...base.stack, testing: ['Vitest'] },
+      commands: { ...base.commands, test: 'vitest' },
+    };
+
+    await fs.mkdir(path.join(tmpDir, 'packages/cli'), { recursive: true });
+
+    const content = await generatePrimaryPackageAgentsMd(tmpDir, result);
+
+    expect(content).toContain('Test:');
+    // Vitest should have --run added for non-interactive
+    expect(content).toContain('--run');
+  });
+
+  // @ana A006
+  it('includes pointer to root AGENTS.md', async () => {
+    const result = {
+      ...createEmptyEngineResult(),
+      monorepo: {
+        isMonorepo: true,
+        tool: 'pnpm',
+        packages: [{ name: 'anatomia-cli', path: 'packages/cli' }],
+        primaryPackage: { name: 'anatomia-cli', path: 'packages/cli' },
+      },
+    };
+
+    await fs.mkdir(path.join(tmpDir, 'packages/cli'), { recursive: true });
+
+    const content = await generatePrimaryPackageAgentsMd(tmpDir, result);
+
+    expect(content).toContain('AGENTS.md');
+    expect(content).toContain('Full Project Context');
+  });
+
+  // @ana A007
+  it('relative path is correct for two-level nesting', async () => {
+    const result = {
+      ...createEmptyEngineResult(),
+      monorepo: {
+        isMonorepo: true,
+        tool: 'pnpm',
+        packages: [{ name: 'anatomia-cli', path: 'packages/cli' }],
+        primaryPackage: { name: 'anatomia-cli', path: 'packages/cli' },
+      },
+    };
+
+    await fs.mkdir(path.join(tmpDir, 'packages/cli'), { recursive: true });
+
+    const content = await generatePrimaryPackageAgentsMd(tmpDir, result);
+
+    expect(content).toContain('../../AGENTS.md');
+  });
+
+  // @ana A008
+  it('relative path is correct for single-level nesting', async () => {
+    const result = {
+      ...createEmptyEngineResult(),
+      monorepo: {
+        isMonorepo: true,
+        tool: 'pnpm',
+        packages: [{ name: 'cli-pkg', path: 'cli' }],
+        primaryPackage: { name: 'cli-pkg', path: 'cli' },
+      },
+    };
+
+    await fs.mkdir(path.join(tmpDir, 'cli'), { recursive: true });
+
+    const content = await generatePrimaryPackageAgentsMd(tmpDir, result);
+
+    expect(content).toContain('../AGENTS.md');
+  });
+
+  // @ana A009
+  it('does not overwrite existing file', async () => {
+    const base = createEmptyEngineResult();
+    const result = {
+      ...base,
+      monorepo: {
+        isMonorepo: true,
+        tool: 'pnpm',
+        packages: [{ name: 'anatomia-cli', path: 'packages/cli' }],
+        primaryPackage: { name: 'anatomia-cli', path: 'packages/cli' },
+      },
+      commands: { ...base.commands, build: 'pnpm run build', test: 'vitest' },
+    };
+
+    await fs.mkdir(path.join(tmpDir, 'packages/cli'), { recursive: true });
+    const existingPath = path.join(tmpDir, 'packages/cli', 'AGENTS.md');
+    await fs.writeFile(existingPath, 'existing content', 'utf-8');
+
+    const content = await generatePrimaryPackageAgentsMd(tmpDir, result);
+
+    expect(content).toBeNull();
+    const fileContent = await fs.readFile(existingPath, 'utf-8');
+    expect(fileContent).toBe('existing content');
+  });
+
+  // @ana A010
+  it('skips non-monorepo projects', async () => {
+    const base = createEmptyEngineResult();
+    const result = {
+      ...base,
+      monorepo: {
+        isMonorepo: false,
+        tool: null,
+        packages: [],
+        primaryPackage: null,
+      },
+      commands: { ...base.commands, build: 'pnpm run build', test: 'vitest' },
+    };
+
+    const content = await generatePrimaryPackageAgentsMd(tmpDir, result);
+
+    expect(content).toBeNull();
+  });
+
+  // @ana A011
+  it('skips when primaryPackage is null', async () => {
+    const base = createEmptyEngineResult();
+    const result = {
+      ...base,
+      monorepo: {
+        isMonorepo: true,
+        tool: 'pnpm',
+        packages: [{ name: 'pkg-a', path: 'packages/a' }, { name: 'pkg-b', path: 'packages/b' }],
+        primaryPackage: null,
+      },
+      commands: { ...base.commands, build: 'pnpm run build', test: 'vitest' },
+    };
+
+    const content = await generatePrimaryPackageAgentsMd(tmpDir, result);
+
+    expect(content).toBeNull();
+  });
+
+  // @ana A012
+  it('omits commands section when no commands detected', async () => {
+    const result = {
+      ...createEmptyEngineResult(),
+      monorepo: {
+        isMonorepo: true,
+        tool: 'pnpm',
+        packages: [{ name: 'anatomia-cli', path: 'packages/cli' }],
+        primaryPackage: { name: 'anatomia-cli', path: 'packages/cli' },
+      },
+    };
+
+    await fs.mkdir(path.join(tmpDir, 'packages/cli'), { recursive: true });
+
+    const content = await generatePrimaryPackageAgentsMd(tmpDir, result);
+
+    expect(content).not.toContain('## Commands');
+  });
+
+  // @ana A013
+  it('handles null engineResult', async () => {
+    const content = await generatePrimaryPackageAgentsMd(tmpDir, null);
+
+    expect(content).toBeNull();
   });
 });
