@@ -9,7 +9,7 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
-import { pathExists } from '../utils/validators.js';
+import { pathExists, findProjectRoot } from '../utils/validators.js';
 import { createCheckCommand } from './check.js';
 import { createIndexCommand } from './symbol-index.js';
 import { validateSetupCompletion } from './check.js';
@@ -51,7 +51,7 @@ export function registerSetupCommand(program: Command): void {
     .description('Validate context files and finalize setup')
     .option('--force', 'Force complete regardless of validation')
     .action(async (options: SetupCompleteOptions) => {
-    const cwd = process.cwd();
+    const cwd = findProjectRoot();
     const anaPath = path.join(cwd, '.ana');
     const anaJsonPath = path.join(anaPath, 'ana.json');
 

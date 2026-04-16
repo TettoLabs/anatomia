@@ -16,6 +16,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { readArtifactBranch, getCurrentBranch } from '../utils/git-operations.js';
 import { generateProofSummary, type ProofSummary } from '../utils/proofSummary.js';
+import { findProjectRoot } from '../utils/validators.js';
 
 /**
  * Extract PR Summary section from build report
@@ -147,10 +148,10 @@ function renderProofMarkdown(proof: ProofSummary): string {
  * @param slug - Work item slug
  */
 export function createPr(slug: string): void {
-  const projectRoot = process.cwd();
+  const projectRoot = findProjectRoot();
 
   // 1. Read artifactBranch from ana.json
-  const artifactBranch = readArtifactBranch();
+  const artifactBranch = readArtifactBranch(projectRoot);
 
   // 2. Get current branch and derive slug if needed
   const currentBranch = getCurrentBranch();

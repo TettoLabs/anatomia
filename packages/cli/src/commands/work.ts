@@ -18,6 +18,7 @@ import * as fsPromises from 'node:fs/promises';
 import * as path from 'node:path';
 import { readArtifactBranch, getCurrentBranch } from '../utils/git-operations.js';
 import { generateProofSummary, type ProofSummary } from '../utils/proofSummary.js';
+import { findProjectRoot } from '../utils/validators.js';
 import type { ProofChainEntry } from '../types/proof.js';
 
 /**
@@ -186,14 +187,15 @@ function getVerifyResult(content: string): 'PASS' | 'FAIL' | 'unknown' {
  *
  * @param artifactBranch - Artifact branch name
  * @param onArtifactBranch - Whether currently on artifact branch
+ * @param projectRoot - Project root path
  * @returns Array of slug names
  */
-function discoverSlugs(artifactBranch: string, onArtifactBranch: boolean): string[] {
+function discoverSlugs(artifactBranch: string, onArtifactBranch: boolean, projectRoot: string): string[] {
   const plansPath = '.ana/plans/active';
 
   if (onArtifactBranch) {
     // Use filesystem
-    const fullPath = path.join(process.cwd(), plansPath);
+    const fullPath = path.join(projectRoot, plansPath);
     if (!fs.existsSync(fullPath)) {
       return [];
     }
@@ -228,12 +230,14 @@ function discoverSlugs(artifactBranch: string, onArtifactBranch: boolean): strin
  * @param slug - Work item slug
  * @param artifactBranch - Artifact branch name
  * @param onArtifactBranch - Whether currently on artifact branch
+ * @param projectRoot - Project root path
  * @returns Complete artifact state
  */
 function gatherArtifactState(
   slug: string,
   artifactBranch: string,
-  onArtifactBranch: boolean
+  onArtifactBranch: boolean,
+  projectRoot: string
 ): ArtifactState {
   const basePath = `.ana/plans/active/${slug}`;
   const branch = onArtifactBranch ? artifactBranch : `origin/${artifactBranch}`;
@@ -242,7 +246,7 @@ function gatherArtifactState(
   const checkFile = (filename: string): ArtifactInfo => {
     const filePath = `${basePath}/${filename}`;
     if (onArtifactBranch) {
-      const fullPath = path.join(process.cwd(), filePath);
+      const fullPath = path.join(projectRoot, filePath);
       const exists = fs.existsSync(fullPath);
       const info: ArtifactInfo = { exists };
       if (exists) info.location = artifactBranch;
@@ -261,8 +265,8 @@ function gatherArtifactState(
   // Read plan.md to get spec filenames
   let specs: SpecInfo[] = [];
   const planContent = onArtifactBranch
-    ? (fs.existsSync(path.join(process.cwd(), `${basePath}/plan.md`))
-        ? fs.readFileSync(path.join(process.cwd(), `${basePath}/plan.md`), 'utf-8')
+    ? (fs.existsSync(path.join(projectRoot, `${basePath}/plan.md`))
+        ? fs.readFileSync(path.join(projectRoot, `${basePath}/plan.md`), 'utf-8')
         : null)
     : readFileOnBranch(branch, `${basePath}/plan.md`);
 
@@ -579,7 +583,8 @@ function printHumanReadable(output: StatusOutput): void {
  * @param options.json - Output JSON format instead of human-readable
  */
 export function getWorkStatus(options: { json?: boolean }): void {
-  const artifactBranch = readArtifactBranch();
+  const projectRoot = findProjectRoot();
+  const artifactBranch = readArtifactBranch(projectRoot);
   const currentBranch = getCurrentBranch();
 
   if (!currentBranch) {
@@ -598,7 +603,7 @@ export function getWorkStatus(options: { json?: boolean }): void {
   }
 
   // Discover slugs
-  const slugs = discoverSlugs(artifactBranch, onArtifactBranch);
+  const slugs = discoverSlugs(artifactBranch, onArtifactBranch, projectRoot);
 
   if (slugs.length === 0) {
     if (options.json) {
@@ -617,7 +622,7 @@ export function getWorkStatus(options: { json?: boolean }): void {
   // Gather state for each slug
   const items: WorkItem[] = [];
   for (const slug of slugs) {
-    const artifacts = gatherArtifactState(slug, artifactBranch, onArtifactBranch);
+    const artifacts = gatherArtifactState(slug, artifactBranch, onArtifactBranch, projectRoot);
 
     // Skip empty directories (no scope = not real work)
     if (!artifacts.scope.exists) {
@@ -696,8 +701,8 @@ function getModulesTouched(slug: string, sealCommit: string | null): string[] {
   }
 }
 
-async function writeProofChain(slug: string, proof: ProofSummary): Promise<void> {
-  const anaDir = path.join(process.cwd(), '.ana');
+async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: string): Promise<void> {
+  const anaDir = path.join(projectRoot, '.ana');
 
   // Ensure .ana directory exists
   await fsPromises.mkdir(anaDir, { recursive: true });
@@ -797,7 +802,8 @@ Pipeline: ${proof.timing.total_minutes}m${timingDetails}${deviationSummary}${mod
  */
 export async function completeWork(slug: string): Promise<void> {
   // 1. Read artifactBranch from ana.json
-  const artifactBranch = readArtifactBranch();
+  const projectRoot = findProjectRoot();
+  const artifactBranch = readArtifactBranch(projectRoot);
 
   // 2. Get current branch
   const currentBranch = getCurrentBranch();
@@ -830,8 +836,8 @@ export async function completeWork(slug: string): Promise<void> {
   }
 
   // 5. Verify slug directory exists
-  const activePath = path.join(process.cwd(), '.ana', 'plans', 'active', slug);
-  const completedPath = path.join(process.cwd(), '.ana', 'plans', 'completed', slug);
+  const activePath = path.join(projectRoot, '.ana', 'plans', 'active', slug);
+  const completedPath = path.join(projectRoot, '.ana', 'plans', 'completed', slug);
 
   if (!fs.existsSync(activePath)) {
     // Check if already completed
@@ -935,20 +941,20 @@ export async function completeWork(slug: string): Promise<void> {
   }
 
   // 9. Move the directory
-  const completedDir = path.join(process.cwd(), '.ana', 'plans', 'completed');
+  const completedDir = path.join(projectRoot, '.ana', 'plans', 'completed');
   await fsPromises.mkdir(completedDir, { recursive: true });
   await fsPromises.cp(activePath, completedPath, { recursive: true });
   await fsPromises.rm(activePath, { recursive: true, force: true });
 
   // 9a. Generate proof summary and write proof chain
   const proof = generateProofSummary(completedPath);
-  await writeProofChain(slug, proof);
+  await writeProofChain(slug, proof, projectRoot);
 
   // 10. Stage and commit
   try {
     execSync('git add .ana/plans/active/ .ana/plans/completed/ .ana/proof_chain.json .ana/PROOF_CHAIN.md', { stdio: 'pipe' });
     // Read coAuthor from ana.json
-    const anaJsonPath = path.join(process.cwd(), '.ana', 'ana.json');
+    const anaJsonPath = path.join(projectRoot, '.ana', 'ana.json');
     let coAuthor = 'Ana <build@anatomia.dev>';
     try {
       const anaJsonContent = fs.readFileSync(anaJsonPath, 'utf-8');
