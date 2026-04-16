@@ -201,8 +201,8 @@ Strategic direction. WHAT and WHY, never HOW. A non-technical stakeholder should
 The Approach is a compass, not a recipe. "Extract shared validation and build on top" — not "create a validateInput function that takes a string and returns Result[]." Strategy names patterns and modules. Implementation names functions and types — that's Plan's job.
 
 ## Acceptance Criteria
-- [ ] AC1: {verifiable criterion}
-- [ ] AC2: {verifiable criterion}
+- AC1: {verifiable criterion}
+- AC2: {verifiable criterion}
 
 Prefix with AC{N}. The save validator enforces this format.
 
