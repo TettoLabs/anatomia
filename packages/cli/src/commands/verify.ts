@@ -19,6 +19,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as yaml from 'yaml';
 import { glob } from 'glob';
+import { findProjectRoot } from '../utils/validators.js';
 
 /**
  * Contract pre-check result (S8+)
@@ -71,7 +72,7 @@ interface ContractSchema {
  * @param projectRoot - Project root path (defaults to cwd)
  * @returns Structured pre-check result
  */
-export function runContractPreCheck(slug: string, projectRoot: string = process.cwd()): ContractPreCheckResult {
+export function runContractPreCheck(slug: string, projectRoot: string = findProjectRoot()): ContractPreCheckResult {
   const slugDir = path.join(projectRoot, '.ana', 'plans', 'active', slug);
   const savesPath = path.join(slugDir, '.saves.json');
   const contractPath = path.join(slugDir, 'contract.yaml');
@@ -306,14 +307,15 @@ function printContractResults(result: ContractPreCheckResult, slugDir: string): 
  */
 export function runPreCheck(slug: string): void {
   // Read ana.json
-  const anaJsonPath = path.join(process.cwd(), '.ana', 'ana.json');
+  const verifyRoot = findProjectRoot();
+  const anaJsonPath = path.join(verifyRoot, '.ana', 'ana.json');
   if (!fs.existsSync(anaJsonPath)) {
     console.error(chalk.red('Error: No .ana/ana.json found. Run `ana init` first.'));
     process.exit(1);
   }
 
   // Verify plan directory exists
-  const planDir = path.join(process.cwd(), '.ana/plans/active', slug);
+  const planDir = path.join(verifyRoot, '.ana/plans/active', slug);
   if (!fs.existsSync(planDir)) {
     console.error(chalk.red(`Error: No active work found for '${slug}'.`));
     console.error(chalk.gray('Run `ana work status` to see active work items.'));

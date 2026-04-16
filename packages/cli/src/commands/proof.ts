@@ -22,6 +22,7 @@ import chalk from 'chalk';
 import * as path from 'node:path';
 import * as fs from 'node:fs';
 import type { ProofChainEntry } from '../types/proof.js';
+import { findProjectRoot } from '../utils/validators.js';
 
 /**
  * Proof chain JSON structure
@@ -222,7 +223,8 @@ export function registerProofCommand(program: Command): void {
     .argument('[slug]', 'Work item slug to display proof for')
     .option('--json', 'Output JSON format for programmatic consumption')
     .action(async (slug: string | undefined, options: { json?: boolean }) => {
-    const proofChainPath = path.join(process.cwd(), '.ana', 'proof_chain.json');
+    const proofRoot = findProjectRoot();
+    const proofChainPath = path.join(proofRoot, '.ana', 'proof_chain.json');
 
     // List view: no slug provided
     if (!slug) {

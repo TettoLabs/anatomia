@@ -13,6 +13,7 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { findProjectRoot } from '../utils/validators.js';
 
 /**
  * Agent information parsed from frontmatter
@@ -56,7 +57,7 @@ function parseFrontmatter(content: string): AgentInfo | null {
  * List all deployed agents
  */
 export function listAgents(): void {
-  const agentsDir = path.join(process.cwd(), '.claude/agents');
+  const agentsDir = path.join(findProjectRoot(), '.claude/agents');
 
   // Check if directory exists
   if (!fs.existsSync(agentsDir)) {

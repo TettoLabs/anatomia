@@ -20,6 +20,7 @@ import type { SymbolEntry, SymbolIndex } from '../types/symbol-index.js';
 import { CONTEXT_FILES, CORE_SKILLS } from '../constants.js';
 import { parseEngineResultPartial } from '../engine/types/engineResult-partial.js';
 import { AnaJsonSchema, type AnaJson } from './init/anaJsonSchema.js';
+import { findProjectRoot } from '../utils/validators.js';
 
 /**
  * The 6 canonical sections of project-context.md.
@@ -1444,7 +1445,7 @@ export function createCheckCommand(): Command {
     .argument('[filename]', 'Specific file to check (e.g., project-context.md)')
     .option('--json', 'Output results as JSON')
     .action(async (filename: string | undefined, options: { json?: boolean }) => {
-      const cwd = process.cwd();
+      const cwd = findProjectRoot();
       const contextPath = path.join(cwd, '.ana', 'context');
 
       // Dashboard mode: no filename, no --json → ✓/○/✗ display

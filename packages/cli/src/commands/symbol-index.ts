@@ -17,6 +17,7 @@ import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
 import { glob } from 'glob';
 import type { Tree, Node as TSNode } from 'web-tree-sitter';
+import { findProjectRoot } from '../utils/validators.js';
 import type { SymbolEntry, SymbolIndex } from '../types/symbol-index.js';
 
 // SymbolEntry + SymbolIndex moved to src/types/symbol-index.ts (Item 13).
@@ -431,7 +432,7 @@ export function createIndexCommand(): Command {
   return new Command('index')
     .description('Build symbol index for citation verification')
     .action(async () => {
-      const cwd = process.cwd();
+      const cwd = findProjectRoot();
       const anaPath = path.join(cwd, '.ana');
       const statePath = path.join(anaPath, 'state');
 

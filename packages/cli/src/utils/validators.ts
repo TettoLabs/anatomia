@@ -8,6 +8,7 @@
 
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
+import * as fsSync from 'node:fs';
 
 /**
  * Get project name from package.json, pyproject.toml, go.mod, or directory name
@@ -83,5 +84,34 @@ export async function pathExists(targetPath: string): Promise<boolean> {
     return true;
   } catch {
     return false;
+  }
+}
+
+/**
+ * Find the project root by walking up from startDir looking for `.ana/`.
+ *
+ * Synchronous because it's called at command entry points that need the
+ * result before proceeding. Uses `fs.existsSync` to check each level.
+ * Stops at the filesystem root if no `.ana/` is found anywhere.
+ *
+ * @param startDir - Directory to start searching from (defaults to cwd)
+ * @returns Absolute path to the directory containing `.ana/`
+ * @throws Error if no `.ana/` is found in the tree
+ */
+export function findProjectRoot(startDir: string = process.cwd()): string {
+  let current = path.resolve(startDir);
+
+  while (true) {
+    if (fsSync.existsSync(path.join(current, '.ana'))) {
+      return current;
+    }
+
+    const parent = path.dirname(current);
+    if (parent === current) {
+      throw new Error(
+        `No .ana/ found in ${startDir} or any parent directory. Run ana init from your project root.`
+      );
+    }
+    current = parent;
   }
 }

@@ -20,6 +20,7 @@ import * as path from 'node:path';
 import { createHash } from 'node:crypto';
 import * as yaml from 'yaml';
 import { runContractPreCheck } from './verify.js';
+import { findProjectRoot } from '../utils/validators.js';
 // readArtifactBranch + getCurrentBranch moved to utils/git-operations.ts (Item 13).
 // artifact.ts still uses them internally; pr.ts and work.ts now import directly
 // from utils/ instead of cross-command-importing from here.
@@ -499,20 +500,23 @@ export function saveArtifact(type: string, slug: string): void {
     process.exit(1);
   }
 
-  // 2. Read artifactBranch from ana.json
-  const artifactBranch = readArtifactBranch();
+  // 2. Resolve project root early — needed for readArtifactBranch and throughout
+  const projectRoot = findProjectRoot();
 
-  // 3. Get current branch
+  // 3. Read artifactBranch from ana.json
+  const artifactBranch = readArtifactBranch(projectRoot);
+
+  // 4. Get current branch
   const currentBranch = getCurrentBranch();
   if (!currentBranch) {
     console.error(chalk.red('Error: Not a git repository. `ana artifact save` requires git.'));
     process.exit(1);
   }
 
-  // 4. Validate branch
+  // 5. Validate branch
   validateBranch(typeInfo, currentBranch, artifactBranch, slug);
 
-  // 5. Resolve file path
+  // 6. Resolve file path
   const filePath = path.join('.ana', 'plans', 'active', slug, typeInfo.fileName);
 
   // 6. Verify file exists
@@ -540,11 +544,11 @@ export function saveArtifact(type: string, slug: string): void {
     }
 
     // Auto pre-check for contract mode
-    const slugDir = path.join(process.cwd(), '.ana', 'plans', 'active', slug);
+    const slugDir = path.join(projectRoot, '.ana', 'plans', 'active', slug);
     const contractPath = path.join(slugDir, 'contract.yaml');
 
     if (fs.existsSync(contractPath)) {
-      const preCheckResult = runContractPreCheck(slug);
+      const preCheckResult = runContractPreCheck(slug, projectRoot);
 
       // TAMPERED blocks save
       if (preCheckResult.seal === 'TAMPERED') {
@@ -626,8 +630,7 @@ export function saveArtifact(type: string, slug: string): void {
     }
   }
 
-  // 6b. Check if file is tracked (before staging, for create vs update message)
-  const projectRoot = process.cwd();
+  // 7b. Check if file is tracked (before staging, for create vs update message)
   const isTracked = spawnSync('git', ['ls-files', '--error-unmatch', filePath], {
     cwd: projectRoot,
     stdio: 'pipe'
@@ -680,7 +683,7 @@ export function saveArtifact(type: string, slug: string): void {
 
   // 9. Commit
   // Read coAuthor from ana.json
-  const anaJsonPath = path.join(process.cwd(), '.ana', 'ana.json');
+  const anaJsonPath = path.join(projectRoot, '.ana', 'ana.json');
   let coAuthor = 'Ana <build@anatomia.dev>';
   try {
     const anaJsonContent = fs.readFileSync(anaJsonPath, 'utf-8');
@@ -700,9 +703,9 @@ export function saveArtifact(type: string, slug: string): void {
   }
 
   // 9a. Write .saves.json metadata after successful commit
-  const slugDir = path.join(process.cwd(), '.ana', 'plans', 'active', slug);
+  const slugDir2 = path.join(projectRoot, '.ana', 'plans', 'active', slug);
   const artifactContent = fs.readFileSync(filePath, 'utf-8');
-  writeSaveMetadata(slugDir, typeInfo.baseType, artifactContent);
+  writeSaveMetadata(slugDir2, typeInfo.baseType, artifactContent);
 
   // 10. Push (artifact branch only)
   if (typeInfo.category === 'planning') {
@@ -739,7 +742,7 @@ export function saveArtifact(type: string, slug: string): void {
  * @param slug - Work item slug
  */
 export function saveAllArtifacts(slug: string): void {
-  const projectRoot = process.cwd();
+  const projectRoot = findProjectRoot();
   const planDir = path.join(projectRoot, '.ana/plans/active', slug);
 
   // 1. Verify plan directory exists
@@ -855,7 +858,7 @@ export function saveAllArtifacts(slug: string): void {
   }
 
   // 4. Validate branch — planning artifacts must be on artifact branch
-  const artifactBranch = readArtifactBranch();
+  const artifactBranch = readArtifactBranch(projectRoot);
   const currentBranch = getCurrentBranch();
   const hasPlanningArtifacts = artifacts.some(a => a.typeInfo.category === 'planning');
   if (hasPlanningArtifacts && currentBranch && currentBranch !== artifactBranch) {
