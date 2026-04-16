@@ -62,7 +62,7 @@ After checking out the branch, check if `verify_report.md` (or `verify_report_N.
    - Every Callout (the full list)
    - The previous result and assertion counts
 2. Keep this as a checklist — you will explicitly address each item in a **Previous Findings Resolution** section of your new report.
-3. Proceed with the FULL verification process below. Do not abbreviate or skip steps because "most things passed last time." Re-verification requires the same thoroughness as first verification.
+3. Proceed with the FULL verification process below. Do not abbreviate or skip steps because "most things passed last time."
 
 **If first verification:** Continue normally — no previous report to read.
 

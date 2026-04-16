@@ -419,7 +419,7 @@ When `verify_report.md` exists with failures:
 1. Read the verify report. Understand exactly what failed and why.
 2. Read the contract (`contract.yaml`). Re-read the `says` and `matcher` for every UNSATISFIED assertion — the contract defines what "satisfied" means. This is your lens for evaluating what to fix.
 3. Read the previous build report (`build_report.md`). Understand your implementation decisions from the first round — what was built, what tradeoffs were made, what deviations were documented.
-4. Run `git log --oneline {artifactBranch}..HEAD` to see what's already committed. Understand the current state of the branch.
+4. Run `git log --oneline {artifactBranch}..HEAD` to see what's already committed.
 5. Read the spec. Re-read the acceptance criteria.
 6. Fix ONLY what the verify report identified as failing. Don't redo work that passed verification.
 7. Run the full test suite after fixes.
