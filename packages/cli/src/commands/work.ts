@@ -844,11 +844,30 @@ export async function completeWork(slug: string): Promise<void> {
   }
 
   // 6. Verify feature branch was merged (optional - branch might be deleted)
+  //    Handles both regular merge (--is-ancestor) and squash merge (diff check).
+  //    Squash merge creates a new commit — the feature branch commits aren't
+  //    ancestors of HEAD, but the content is identical.
   const featureBranchExists = getFeatureBranch(slug);
   if (featureBranchExists) {
+    let merged = false;
     try {
       execSync(`git merge-base --is-ancestor feature/${slug} HEAD`, { stdio: 'pipe' });
+      merged = true;
     } catch {
+      // --is-ancestor failed — might be squash merge. Check if the feature
+      // branch's changes are already on main by comparing tree content.
+      try {
+        const diff = execSync(
+          `git diff feature/${slug}..HEAD -- .ana/plans/active/${slug}/`,
+          { encoding: 'utf-8', stdio: 'pipe' }
+        ).trim();
+        // Empty diff = main has the same content as the feature branch for this slug
+        merged = diff.length === 0;
+      } catch {
+        // diff failed — can't determine merge status
+      }
+    }
+    if (!merged) {
       console.error(chalk.red(`Error: \`feature/${slug}\` has not been merged into \`${artifactBranch}\`.`));
       console.error(chalk.gray('Merge the PR first, then run this command again.'));
       process.exit(1);
