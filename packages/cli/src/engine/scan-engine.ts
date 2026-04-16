@@ -565,7 +565,7 @@ export async function scanProject(
     hasBin: primaryRoot?.hasBin ?? false,
     hasMain,
     hasExports,
-    frameworkName: frameworkResult.framework ? getFrameworkDisplayName(frameworkResult.framework) : null,
+    frameworkName: frameworkResult.framework ?? null,
     projectType: projectTypeResult.type,
     deps: Object.keys(census.primaryDeps),
   });
