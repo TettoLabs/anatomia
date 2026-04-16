@@ -65,6 +65,72 @@ describe('scaffold generators (S15 consolidated: 2 generators)', () => {
       expect(output).toContain('pnpm monorepo');
       expect(output).toContain('pnpm · 2 packages');
     });
+
+    // @ana A005
+    describe('scaffold includes README description', () => {
+      it('includes README description in What This Project Does', () => {
+        const readmeResult = {
+          ...result,
+          readme: {
+            description: 'readme description content',
+            architecture: null,
+            setup: null,
+            source: 'heading' as const,
+          },
+        };
+        const output = generateProjectContextScaffold(readmeResult);
+        expect(output).toContain('readme description content');
+        // Should appear in the What This Project Does section
+        const whatSection = output.split('## Architecture')[0]!;
+        expect(whatSection).toContain('readme description content');
+      });
+    });
+
+    // @ana A006
+    describe('scaffold includes README architecture', () => {
+      it('includes README architecture in Architecture section', () => {
+        const readmeResult = {
+          ...result,
+          readme: {
+            description: null,
+            architecture: 'readme architecture content',
+            setup: null,
+            source: 'heading' as const,
+          },
+        };
+        const output = generateProjectContextScaffold(readmeResult);
+        expect(output).toContain('readme architecture content');
+        // Should appear in the Architecture section
+        const archSection = output.split('## Architecture')[1]!.split('## Key Decisions')[0]!;
+        expect(archSection).toContain('readme architecture content');
+      });
+    });
+
+    // @ana A007
+    describe('scaffold includes README setup', () => {
+      it('includes README setup content in Architecture section', () => {
+        const readmeResult = {
+          ...result,
+          readme: {
+            description: null,
+            architecture: null,
+            setup: 'readme setup content',
+            source: 'heading' as const,
+          },
+        };
+        const output = generateProjectContextScaffold(readmeResult);
+        expect(output).toContain('readme setup content');
+        const archSection = output.split('## Architecture')[1]!.split('## Key Decisions')[0]!;
+        expect(archSection).toContain('readme setup content');
+      });
+    });
+
+    it('scaffold without readme has no readme content', () => {
+      const output = generateProjectContextScaffold(result);
+      // result.readme is null — should not error
+      expect(output).toContain('## What This Project Does');
+      expect(output).toContain('## Architecture');
+    });
   });
 
   describe('generateDesignPrinciplesTemplate', () => {
