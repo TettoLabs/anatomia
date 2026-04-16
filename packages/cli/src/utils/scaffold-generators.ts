@@ -33,6 +33,18 @@ export function generateProjectContextScaffold(result: EngineResult): string {
   if (result.monorepo.isMonorepo) {
     const tool = result.monorepo.tool || 'monorepo';
     descParts.push(`${tool} monorepo`);
+  } else if (result.projectKind && result.projectKind !== 'unknown') {
+    // Kind-to-label mapping: use projectKind for accurate descriptions
+    const kindLabels: Record<string, string> = {
+      'cli': 'CLI tool',
+      'library': 'library',
+      'web-app': 'web application',
+      'api-server': 'API server',
+      'full-stack': 'full-stack application',
+    };
+    const label = kindLabels[result.projectKind] ?? 'project';
+    const prefix = result.stack.framework ?? result.stack.language;
+    descParts.push(prefix ? `${prefix} ${label}` : label);
   } else if (result.projectProfile?.hasBrowserUI && result.stack.framework) {
     descParts.push(`${result.stack.framework} web application`);
   } else if (result.stack.framework) {
