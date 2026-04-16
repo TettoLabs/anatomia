@@ -108,6 +108,7 @@ export interface EngineResult {
     isMonorepo: boolean;
     tool: string | null;
     packages: Array<{ name: string; path: string }>;
+    primaryPackage: { name: string; path: string } | null;
   };
   externalServices: Array<{
     name: string;
@@ -326,7 +327,7 @@ export function createEmptyEngineResult(): EngineResult {
     structure: [],
     commands: { build: null, test: null, lint: null, dev: null, packageManager: null, all: {} },
     git: { head: null, branch: null, commitCount: null, lastCommitAt: null, uncommittedChanges: false, contributorCount: null, defaultBranch: null, branches: null },
-    monorepo: { isMonorepo: false, tool: null, packages: [] },
+    monorepo: { isMonorepo: false, tool: null, packages: [], primaryPackage: null },
     externalServices: [],
     schemas: {},
     secrets: { envFileExists: false, envExampleExists: false, gitignoreCoversEnv: false },
