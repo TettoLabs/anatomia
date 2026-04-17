@@ -17,7 +17,7 @@ import * as fs from 'node:fs';
 import * as fsPromises from 'node:fs/promises';
 import * as path from 'node:path';
 import { readArtifactBranch, getCurrentBranch } from '../utils/git-operations.js';
-import { generateProofSummary, type ProofSummary } from '../utils/proofSummary.js';
+import { generateProofSummary, generateActiveIssuesMarkdown, type ProofSummary } from '../utils/proofSummary.js';
 import { findProjectRoot } from '../utils/validators.js';
 import type { ProofChainEntry } from '../types/proof.js';
 
@@ -757,42 +757,69 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
   chain.entries.push(entry);
   await fsPromises.writeFile(chainPath, JSON.stringify(chain, null, 2));
 
-  // 2. Append to PROOF_CHAIN.md
+  // 2. Regenerate PROOF_CHAIN.md entirely from proof_chain.json
   const chainMdPath = path.join(anaDir, 'PROOF_CHAIN.md');
-  const deviationSummary = proof.deviations.length > 0
-    ? `\nDeviations: ${proof.deviations.map(d => `${d.contract_id} — ${d.instead || d.reason || 'undocumented'}`).join('; ')}`
-    : '';
 
-  const timingDetails = proof.timing.think != null
-    ? ` (Think ${proof.timing.think}m, Plan ${proof.timing.plan}m, Build ${proof.timing.build}m, Verify ${proof.timing.verify}m)`
-    : '';
+  // Generate Active Issues section from all entries
+  const activeIssuesMd = generateActiveIssuesMarkdown(chain.entries);
 
-  // Modules line — show up to 10, then "+N more"
-  const modulesLine = modulesTouched.length > 0
-    ? `\nModules: ${modulesTouched.slice(0, 10).join(', ')}${modulesTouched.length > 10 ? ` (+${modulesTouched.length - 10} more)` : ''}`
-    : '';
+  // Generate chronological history (newest first)
+  const reversedEntries = [...chain.entries].reverse();
+  const historyEntries: string[] = [];
 
-  // Rejection cycle line — only on re-verified features
-  const rejectionLine = proof.rejection_cycles > 0
-    ? `\nRejection cycles: ${proof.rejection_cycles} (${proof.previous_failures.map(f => `${f.id} ${f.summary}`).join(', ')})`
-    : '';
+  for (const historyEntry of reversedEntries) {
+    const entryDate = historyEntry.completed_at.split('T')[0];
 
-  // Callout digest — top 5 in markdown, all in JSON. Priority: code > test > upstream
-  const categoryOrder: Record<string, number> = { code: 0, test: 1, upstream: 2 };
-  const sortedCallouts = [...proof.callouts].sort((a, b) =>
-    (categoryOrder[a.category] ?? 3) - (categoryOrder[b.category] ?? 3)
-  );
-  const calloutLines = sortedCallouts.length > 0
-    ? '\nCallouts:\n' + sortedCallouts.slice(0, 5).map(c => `- ${c.category}: ${c.summary}`).join('\n')
-    : '';
+    // Handle optional fields for older entries
+    const assertions = historyEntry.assertions || [];
+    const contract = historyEntry.contract || { satisfied: 0, total: 0 };
+    const acceptanceCriteria = historyEntry.acceptance_criteria || { met: 0, total: 0 };
+    const timing = historyEntry.timing || { total_minutes: 0 };
+    const modulesTouched = historyEntry.modules_touched || [];
+    const rejectionCycles = historyEntry.rejection_cycles || 0;
+    const previousFailures = historyEntry.previous_failures || [];
+    const callouts = historyEntry.callouts || [];
 
-  const mdEntry = `## ${proof.feature} (${new Date().toISOString().split('T')[0]})
-Result: ${proof.result} | ${proof.contract.satisfied}/${proof.contract.total} satisfied | ${proof.acceptance_criteria.met}/${proof.acceptance_criteria.total} ACs | ${proof.deviations.length} deviation${proof.deviations.length !== 1 ? 's' : ''}
-Pipeline: ${proof.timing.total_minutes}m${timingDetails}${deviationSummary}${modulesLine}${rejectionLine}${calloutLines}
+    const deviationCount = assertions.filter(a => a.status === 'DEVIATED').length;
+    const deviationSummary = deviationCount > 0
+      ? `\nDeviations: ${assertions
+          .filter(a => a.status === 'DEVIATED' && a.deviation)
+          .map(a => `${a.id} — ${a.deviation}`)
+          .join('; ')}`
+      : '';
 
+    const timingDetails = timing.think != null
+      ? ` (Think ${timing.think}m, Plan ${timing.plan}m, Build ${timing.build}m, Verify ${timing.verify}m)`
+      : '';
+
+    const modulesLine = modulesTouched.length > 0
+      ? `\nModules: ${modulesTouched.slice(0, 10).join(', ')}${modulesTouched.length > 10 ? ` (+${modulesTouched.length - 10} more)` : ''}`
+      : '';
+
+    const rejectionLine = rejectionCycles > 0
+      ? `\nRejection cycles: ${rejectionCycles} (${previousFailures.map(f => `${f.id} ${f.summary}`).join(', ')})`
+      : '';
+
+    // Callout digest — top 5 in markdown. Priority: code > test > upstream
+    const categoryOrder: Record<string, number> = { code: 0, test: 1, upstream: 2 };
+    const sortedCallouts = [...callouts].sort((a, b) =>
+      (categoryOrder[a.category] ?? 3) - (categoryOrder[b.category] ?? 3)
+    );
+    const calloutLines = sortedCallouts.length > 0
+      ? '\nCallouts:\n' + sortedCallouts.slice(0, 5).map(c => `- ${c.category}: ${c.summary}`).join('\n')
+      : '';
+
+    const mdEntryText = `## ${historyEntry.feature} (${entryDate})
+Result: ${historyEntry.result} | ${contract.satisfied}/${contract.total} satisfied | ${acceptanceCriteria.met}/${acceptanceCriteria.total} ACs | ${deviationCount} deviation${deviationCount !== 1 ? 's' : ''}
+Pipeline: ${timing.total_minutes}m${timingDetails}${deviationSummary}${modulesLine}${rejectionLine}${calloutLines}
 `;
 
-  await fsPromises.appendFile(chainMdPath, mdEntry);
+    historyEntries.push(mdEntryText);
+  }
+
+  // Combine Active Issues + history
+  const fullMd = activeIssuesMd + '\n' + historyEntries.join('\n');
+  await fsPromises.writeFile(chainMdPath, fullMd);
 }
 
 /**
