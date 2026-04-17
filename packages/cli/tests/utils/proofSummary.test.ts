@@ -807,4 +807,55 @@ describe('generateActiveIssuesMarkdown', () => {
     expect(output).not.toContain('old-issue-4');
     expect(output).toContain('old-issue-5');
   });
+
+  it('heading shows count when under cap', () => {
+    const entries = [{
+      feature: 'Test',
+      completed_at: '2026-04-17T00:00:00Z',
+      callouts: [
+        { category: 'code', summary: 'issue one in foo.ts' },
+        { category: 'test', summary: 'issue two in bar.ts' },
+        { category: 'code', summary: 'issue three in baz.ts' },
+      ],
+    }];
+    const md = generateActiveIssuesMarkdown(entries);
+    expect(md).toMatch(/# Active Issues \(\d+\)/);
+    expect(md).not.toContain('shown of');
+  });
+
+  it('heading shows cap info when over 20 callouts', () => {
+    const callouts = Array.from({ length: 25 }, (_, i) => ({
+      category: 'code',
+      summary: `issue number ${i + 1} in unique-file-${i}.ts`,
+    }));
+    const entries = [{
+      feature: 'Big Feature',
+      completed_at: '2026-04-17T00:00:00Z',
+      callouts,
+    }];
+    const md = generateActiveIssuesMarkdown(entries);
+    expect(md).toContain('20 shown of');
+    expect(md).toContain('total)');
+  });
+
+  it('heading has no count for zero callouts', () => {
+    const md = generateActiveIssuesMarkdown([]);
+    expect(md).toContain('# Active Issues');
+    expect(md).not.toMatch(/# Active Issues \(/);
+  });
+
+  it('heading shows exact count at cap boundary', () => {
+    const callouts = Array.from({ length: 20 }, (_, i) => ({
+      category: 'code',
+      summary: `issue ${i + 1} in file-${i}.ts`,
+    }));
+    const entries = [{
+      feature: 'Feature',
+      completed_at: '2026-04-17T00:00:00Z',
+      callouts,
+    }];
+    const md = generateActiveIssuesMarkdown(entries);
+    expect(md).toMatch(/# Active Issues \(20\)/);
+    expect(md).not.toContain('shown of');
+  });
 });

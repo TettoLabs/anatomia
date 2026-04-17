@@ -308,12 +308,24 @@ export function generateActiveIssuesMarkdown(entries: ProofChainEntryForIndex[])
     }
   }
 
-  // Cap at 20 callouts (take from start = most recent)
-  const cappedCallouts = allCallouts.slice(0, 20);
+  // Cap at MAX_ACTIVE_ISSUES (take from start = most recent)
+  const MAX_ACTIVE_ISSUES = 20;
+  const totalCount = allCallouts.length;
+  const cappedCallouts = allCallouts.slice(0, MAX_ACTIVE_ISSUES);
+
+  // Heading with count
+  let heading: string;
+  if (totalCount === 0) {
+    heading = '# Active Issues';
+  } else if (totalCount <= MAX_ACTIVE_ISSUES) {
+    heading = `# Active Issues (${totalCount})`;
+  } else {
+    heading = `# Active Issues (${MAX_ACTIVE_ISSUES} shown of ${totalCount} total)`;
+  }
 
   // Empty state
   if (cappedCallouts.length === 0) {
-    return `# Active Issues
+    return `${heading}
 
 *No active issues.*
 
@@ -343,7 +355,7 @@ export function generateActiveIssuesMarkdown(entries: ProofChainEntryForIndex[])
   }
 
   // Build markdown
-  let md = '# Active Issues\n\n';
+  let md = heading + '\n\n';
 
   // Sort file headings: named files first (alphabetically), then General
   const fileNames = Array.from(fileGroups.keys()).sort((a, b) => {
