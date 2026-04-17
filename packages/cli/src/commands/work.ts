@@ -672,35 +672,8 @@ interface ProofChain {
  *
  * @param slug - Work item slug
  * @param proof - Proof summary data
+ * @param projectRoot - Project root directory
  */
-/**
- * Extract source files touched by a feature branch.
- *
- * Diffs the seal commit (contract save) against the feature branch HEAD,
- * NOT against main HEAD — otherwise files from other merged features
- * would pollute the list.
- *
- * @param slug - Work item slug (for branch name)
- * @param sealCommit - Commit hash from contract save
- * @returns Array of relative file paths (source files only)
- */
-function getModulesTouched(slug: string, sealCommit: string | null): string[] {
-  if (!sealCommit) return [];
-  try {
-    // Diff against the feature branch, not HEAD
-    const branchRef = `feature/${slug}`;
-    const output = execSync(
-      `git diff --name-only ${sealCommit}..${branchRef} -- '*.ts' '*.tsx' '*.js' '*.jsx' '*.py' '*.go' '*.rs'`,
-      { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }
-    ).trim();
-    if (!output) return [];
-    return output.split('\n').filter(Boolean);
-  } catch {
-    // Branch may not exist or commit unreachable — return empty
-    return [];
-  }
-}
-
 async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: string): Promise<void> {
   const anaDir = path.join(projectRoot, '.ana');
 
@@ -722,8 +695,18 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
     }
   }
 
-  // Extract modules touched from git diff (seal commit → feature branch)
-  const modulesTouched = getModulesTouched(slug, proof.seal_commit);
+  // Read modules_touched from .saves.json (captured at build-report save time
+  // when the feature branch definitely exists and all code is committed).
+  let modulesTouched: string[] = [];
+  try {
+    const slugSaves = path.join(anaDir, 'plans', 'completed', slug, '.saves.json');
+    if (fs.existsSync(slugSaves)) {
+      const savesContent = JSON.parse(fs.readFileSync(slugSaves, 'utf-8'));
+      if (Array.isArray(savesContent['modules_touched'])) {
+        modulesTouched = savesContent['modules_touched'];
+      }
+    }
+  } catch { /* fall back to empty */ }
 
   const entry: ProofChainEntry = {
     slug,

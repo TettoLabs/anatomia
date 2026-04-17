@@ -707,6 +707,32 @@ export function saveArtifact(type: string, slug: string): void {
   const artifactContent = fs.readFileSync(filePath, 'utf-8');
   writeSaveMetadata(slugDir2, typeInfo.baseType, artifactContent);
 
+  // 9b. Capture modules_touched at build-report time (when the feature branch
+  // definitely exists and all code is committed). Stored in .saves.json for
+  // proof chain to read at work-complete time.
+  if (typeInfo.baseType === 'build-report') {
+    try {
+      const artBranch = readArtifactBranch(projectRoot);
+      const mergeBase = execSync(
+        `git merge-base ${artBranch} HEAD`,
+        { encoding: 'utf-8', cwd: projectRoot, stdio: ['pipe', 'pipe', 'pipe'] }
+      ).trim();
+      const diffOutput = execSync(
+        `git diff ${mergeBase} --name-only -- . ':!.ana'`,
+        { encoding: 'utf-8', cwd: projectRoot, stdio: ['pipe', 'pipe', 'pipe'] }
+      ).trim();
+      const modulesList = diffOutput ? diffOutput.split('\n').filter(Boolean) : [];
+
+      const savesPath2 = path.join(slugDir2, '.saves.json');
+      let savesData: Record<string, unknown> = {};
+      if (fs.existsSync(savesPath2)) {
+        try { savesData = JSON.parse(fs.readFileSync(savesPath2, 'utf-8')); } catch { /* */ }
+      }
+      savesData['modules_touched'] = modulesList;
+      fs.writeFileSync(savesPath2, JSON.stringify(savesData, null, 2));
+    } catch { /* merge-base or diff failed — modules_touched stays empty */ }
+  }
+
   // 10. Push (artifact branch only)
   if (typeInfo.category === 'planning') {
     try {
