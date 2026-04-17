@@ -389,6 +389,21 @@ function determineStage(slug: string, artifacts: ArtifactState, featureBranch: s
       if (result === 'PASS') {
         return 'ready-to-merge';
       } else if (result === 'FAIL') {
+        // Check if build report was updated AFTER verify report (fixes applied)
+        try {
+          const basePath = `.ana/plans/active/${slug}`;
+          const buildTime = execSync(
+            `git log --format='%ct' -1 ${featureBranch} -- ${basePath}/build_report.md`,
+            { encoding: 'utf-8', stdio: 'pipe' }
+          ).trim();
+          const verifyTime = execSync(
+            `git log --format='%ct' -1 ${featureBranch} -- ${basePath}/verify_report.md`,
+            { encoding: 'utf-8', stdio: 'pipe' }
+          ).trim();
+          if (buildTime && verifyTime && parseInt(buildTime) > parseInt(verifyTime)) {
+            return 'ready-for-re-verify';
+          }
+        } catch { /* fall through to needs-fixes */ }
         return 'needs-fixes';
       } else {
         return 'verify-status-unknown';
@@ -430,6 +445,23 @@ function determineStage(slug: string, artifacts: ArtifactState, featureBranch: s
       if (phaseVerifyReport) {
         const result = phaseVerifyReport.result;
         if (result === 'FAIL') {
+          // Check if build report was updated after verify (fixes applied)
+          try {
+            const basePath = `.ana/plans/active/${slug}`;
+            const expectedBuild = phaseBuildReport.file;
+            const expectedVerify = phaseVerifyReport.file;
+            const bTime = execSync(
+              `git log --format='%ct' -1 ${featureBranch} -- ${basePath}/${expectedBuild}`,
+              { encoding: 'utf-8', stdio: 'pipe' }
+            ).trim();
+            const vTime = execSync(
+              `git log --format='%ct' -1 ${featureBranch} -- ${basePath}/${expectedVerify}`,
+              { encoding: 'utf-8', stdio: 'pipe' }
+            ).trim();
+            if (bTime && vTime && parseInt(bTime) > parseInt(vTime)) {
+              return `phase-${phaseNum}-ready-for-re-verify`;
+            }
+          } catch { /* fall through */ }
           return `phase-${phaseNum}-needs-fixes`;
         } else if (result === 'PASS') {
           // This phase passed, continue to next phase
@@ -468,6 +500,10 @@ function getNextAction(stage: string, slug: string): string {
   }
 
   if (stage === 'ready-for-verify') {
+    return `git checkout feature/${slug} && claude --agent ana-verify`;
+  }
+
+  if (stage === 'ready-for-re-verify') {
     return `git checkout feature/${slug} && claude --agent ana-verify`;
   }
 
