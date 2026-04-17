@@ -66,6 +66,23 @@ describe('detectReadme', () => {
     });
   });
 
+  // @ana A004
+  describe('includes readme in JSON output', () => {
+    it('scan result readme field is serializable to JSON', async () => {
+      await fs.writeFile(path.join(tmpDir, 'README.md'), [
+        '# Title',
+        '## About',
+        'Project description for JSON output.',
+      ].join('\n'));
+      const result = await detectReadme(tmpDir);
+      expect(result).not.toBeNull();
+      const json = JSON.parse(JSON.stringify({ readme: result }));
+      expect(json.readme).toBeDefined();
+      expect(json.readme.description).toBe('Project description for JSON output.');
+      expect(json.readme.source).toBe('heading');
+    });
+  });
+
   // @ana A008
   describe('enforces per-section character cap', () => {
     it('truncates a section at 1500 characters', async () => {
@@ -83,8 +100,8 @@ describe('detectReadme', () => {
 
   // @ana A009
   describe('enforces total character cap', () => {
-    it('caps total extraction at 5000 characters', async () => {
-      const content1800 = 'word '.repeat(360).trim(); // ~1800 chars
+    it('caps total extraction at 4000 characters', async () => {
+      const content1800 = 'word '.repeat(360).trim(); // ~1800 chars each, 3 sections = ~5400 raw
       await fs.writeFile(path.join(tmpDir, 'README.md'), [
         '# Title',
         '## About',
@@ -100,7 +117,11 @@ describe('detectReadme', () => {
         (result!.description?.length ?? 0) +
         (result!.architecture?.length ?? 0) +
         (result!.setup?.length ?? 0);
-      expect(total).toBeLessThanOrEqual(5000);
+      // Per-section cap is 1500, 3 sections = 4500 max before total cap.
+      // Total cap is 4000, so applyTotalCap must truncate.
+      expect(total).toBeLessThanOrEqual(4000);
+      // Verify the cap actually triggered — total should be close to 4000
+      expect(total).toBeGreaterThan(3900);
     });
   });
 

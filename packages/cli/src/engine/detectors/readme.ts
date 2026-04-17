@@ -13,7 +13,7 @@ import type { ReadmeResult } from '../types/engineResult.js';
 /** Per-section character cap. */
 const SECTION_CAP = 1500;
 /** Total extraction character cap. */
-const TOTAL_CAP = 5000;
+const TOTAL_CAP = 4000;
 
 /**
  * Heading → category lookup. Case-insensitive — keys are lowercase.
