@@ -796,6 +796,153 @@
       "callouts": [],
       "rejection_cycles": 0,
       "previous_failures": []
+    },
+    {
+      "slug": "proof-chain-active-issues",
+      "feature": "Proof chain active issues index",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 16,
+        "covered": 0,
+        "uncovered": 16,
+        "satisfied": 16,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "File references with line numbers are extracted from callout text",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "File references with line ranges are extracted",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Filenames without line numbers are extracted",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "Multiple file references in one callout are all extracted",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "Callouts without file references return an empty array",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "Various file extensions are recognized",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "Callouts are grouped under file headings",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "Callouts without file refs appear under General",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "Only the 20 most recent callouts appear in the index",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "Empty callout list shows a clean empty state",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "Each callout entry includes the source feature name",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "The Active Issues section starts with H1 heading",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "A horizontal rule separates the index from history",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "Callouts mentioning multiple files appear under each file",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "Each callout shows the category in bold",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "Callout summaries are truncated for readability",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 11,
+        "met": 10
+      },
+      "timing": {
+        "total_minutes": 0,
+        "think": 8,
+        "plan": 8,
+        "build": 45
+      },
+      "hashes": {
+        "scope": "sha256:6b683abb0243810d9ba9354e733c18f5b28a38fc5420dc56d9fa2549806bd15e",
+        "contract": "sha256:d6596f99bfa98f7bad8a9eea9c32a8fb9a214a29bd9282c655899c43a2bde10a",
+        "plan": "sha256:52dc312de73367f0ea72bcb05d2c610a3c6d7182b23a1a18f8b7b15a50a337f1",
+        "spec": "sha256:86dfda47c216e9c8db00cee52589b512186df3886ffab9ec725bdcb736f2f3de",
+        "build-report": "sha256:05aecb38510687cf536a588d1005e36288e6c0c14c51fe8ddf32e2657145a047"
+      },
+      "seal_commit": null,
+      "completed_at": "2026-04-17T00:27:28.906Z",
+      "modules_touched": [],
+      "callouts": [
+        {
+          "category": "code",
+          "summary": "Hard truncation at 100 characters without ellipsis: — proofSummary.ts:361 uses `substring(0, 100)` which can cut mid-word. Adding `+ '…'` when truncated would improve readability. Minor — the active i"
+        },
+        {
+          "category": "code",
+          "summary": "File path segments lost in extractFileRefs: — proofSummary.ts:253 regex uses `\\b` word boundary which won't match after `/`. Callouts mentioning `src/utils/index.ts` will group under `index.ts`, poten"
+        },
+        {
+          "category": "code",
+          "summary": "ProofChain interface duplicated in three locations: — work.ts:661, proof.ts:29, and now proofSummary.ts has `ProofChainEntryForIndex`. The gotcha explicitly warned about this. The builder chose a narr"
+        },
+        {
+          "category": "test",
+          "summary": "A009 cap test doesn't verify WHICH callouts were dropped: — proofSummary.test.ts:550-564 creates 25 identical-structure callouts and asserts count is 20, but doesn't verify the 5 dropped are the oldes"
+        },
+        {
+          "category": "test",
+          "summary": "A012 heading position test is fragile: — proofSummary.test.ts:606 asserts `output.indexOf('# Active Issues') === 0`. If the function ever adds a leading newline or BOM, this breaks. The contract says"
+        },
+        {
+          "category": "upstream",
+          "summary": "Contract seal was UNVERIFIABLE: — no `seal_commit` was saved for this contract. This means we can't mechanically verify the contract wasn't modified after planning. Not a blocker for this cycle, but t"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": []
     }
   ]
 }
