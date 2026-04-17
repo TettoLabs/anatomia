@@ -413,6 +413,69 @@ Just some plain text with no structured callouts.
     expect(callouts[0]!.summary).toContain('continues on second line');
     expect(callouts[1]!.summary).toContain('Next entry');
   });
+
+  it('parses category-header format with sub-bullets (add-hook-detection style)', () => {
+    const content = `## Callouts
+
+**Code:**
+- **Component file heuristic may over-count:** confirmation.ts:797 includes any .tsx file.
+
+- **Nuxt detection deviates from spec:** Uses import matching instead of regex.
+
+**Test:**
+- **No @ana tags for 8 assertions:** A001-A003 have no tags.
+
+**Upstream:**
+- **Spec suggested regex but import matching is better:** Positive deviation.
+
+## Deployer Handoff
+`;
+    const callouts = parseCallouts(content);
+    expect(callouts.length).toBeGreaterThanOrEqual(4);
+
+    const codeCallouts = callouts.filter(c => c.category === 'code');
+    expect(codeCallouts.length).toBeGreaterThanOrEqual(2);
+    expect(codeCallouts[0]!.summary).toContain('Component file heuristic');
+
+    const testCallouts = callouts.filter(c => c.category === 'test');
+    expect(testCallouts.length).toBeGreaterThanOrEqual(1);
+
+    const upstreamCallouts = callouts.filter(c => c.category === 'upstream');
+    expect(upstreamCallouts.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('parses standalone paragraph format (fix-skill-template-gaps style)', () => {
+    const content = `## Callouts
+
+**Upstream:** Contract assertions A007 and A008 were sealed with incorrect values. The planner miscounted.
+
+**Code:** The error-handling rule is now longer than the others. Appropriate given the nuance.
+
+**Test:** No test coverage for template content. Visual inspection only.
+
+## Deployer Handoff
+`;
+    const callouts = parseCallouts(content);
+    expect(callouts).toHaveLength(3);
+    expect(callouts[0]!.category).toBe('upstream');
+    expect(callouts[0]!.summary).toContain('A007');
+    expect(callouts[1]!.category).toBe('code');
+    expect(callouts[2]!.category).toBe('test');
+  });
+
+  it('accepts non-standard categories like Security or Performance', () => {
+    const content = `## Callouts
+
+- **Security — SQL injection in query builder:** db/queries.ts:42 — user input concatenated into SQL string.
+- **Performance — N+1 query in user list:** api/users.ts:15 — fetches roles individually per user.
+
+## Deployer Handoff
+`;
+    const callouts = parseCallouts(content);
+    expect(callouts).toHaveLength(2);
+    expect(callouts[0]!.category).toBe('security');
+    expect(callouts[1]!.category).toBe('performance');
+  });
 });
 
 describe('parseRejectionCycles', () => {

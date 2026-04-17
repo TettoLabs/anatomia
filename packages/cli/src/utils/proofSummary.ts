@@ -374,12 +374,13 @@ export function generateActiveIssuesMarkdown(entries: ProofChainEntryForIndex[])
 /**
  * Parse callouts from verify report's ## Callouts section.
  *
- * Handles two observed formats:
- *   - `- **Code — Title:** description`
- *   - `1. **Code — Title:** description`
- *
- * Extracts category (lowercased) and summary (title + description, capped at 200 chars).
- * Returns empty array if section is missing or parsing yields no results.
+ * Format-agnostic: finds bold category keywords (Code, Test, Upstream, Security,
+ * Performance, etc.) and captures summaries. Handles all observed formats:
+ *   - `- **Code — Title:** description` (bulleted with em-dash)
+ *   - `- **Code:** description` (bulleted with colon)
+ *   - `**Code:** description` (standalone paragraph)
+ *   - `**Code:**\n- **Title:** desc` (category header + sub-bullets)
+ *   - `1. **Title:** desc` (numbered, no category — defaults to "code")
  *
  * @param content - Verify report content
  * @returns Array of { category, summary }
@@ -387,42 +388,62 @@ export function generateActiveIssuesMarkdown(entries: ProofChainEntryForIndex[])
 export function parseCallouts(content: string): Array<{ category: string; summary: string }> {
   const results: Array<{ category: string; summary: string }> = [];
 
-  // Find ## Callouts section — everything until the next ## heading or end of file
+  // Find ## Callouts section
   const calloutsMatch = content.match(/## Callouts\n([\s\S]*?)(?=\n## |$)/);
   if (!calloutsMatch || !calloutsMatch[1]) return results;
 
   const section = calloutsMatch[1];
-
-  // Match callout entries: starts with - or digit., has **Category — Title:** or **Category:**
-  // Captures everything until the next entry or double-newline
   const lines = section.split('\n');
-  let i = 0;
-  while (i < lines.length) {
-    const line = lines[i]!;
-    // Match: - **Code — Title:** ... or 1. **Code — Title:** ...
-    const entryMatch = line.match(/^(?:-|\d+\.)\s+\*\*(\w+)(?:\s*[—–-]\s*|\s*:\s*)([^*]*)\*\*:?\s*(.*)/);
-    if (entryMatch) {
-      const category = (entryMatch[1] || 'code').toLowerCase();
-      const title = (entryMatch[2] || '').trim();
-      // Collect continuation lines (indented or non-entry lines that follow)
-      let desc = (entryMatch[3] || '').trim();
-      i++;
-      while (i < lines.length) {
-        const nextLine = lines[i]!;
-        // Stop at next entry, blank line, or next section
-        if (nextLine.match(/^(?:-|\d+\.)\s+\*\*/) || nextLine.trim() === '' || nextLine.startsWith('## ')) break;
-        desc += ' ' + nextLine.trim();
-        i++;
+
+  let currentCategory: string | null = null;
+  let currentSummary: string[] = [];
+
+  const flushCallout = () => {
+    if (currentCategory && currentSummary.length > 0) {
+      const summary = currentSummary.join(' ').trim().substring(0, 200).trim();
+      if (summary) results.push({ category: currentCategory, summary });
+    }
+    currentSummary = [];
+  };
+
+  for (const line of lines) {
+    // Look for a bold category keyword: **Word — or **Word:** or **Word**:
+    const categoryMatch = line.match(/\*\*(\w+)\s*(?:[—–:-]|:\*\*|\*\*\s*[—–:-])/i);
+
+    if (categoryMatch && categoryMatch[1]) {
+      flushCallout();
+      currentCategory = categoryMatch[1].toLowerCase();
+
+      // Extract summary: everything after the category keyword.
+      // For "- **Code — Title:** desc" → "Title: desc"
+      // For "**Code:** desc" → "desc"
+      // For "**Code:**" → "" (category-only header, sub-bullets provide content)
+      const afterCategory = line.replace(
+        /^[-*\d.]*\s*\*\*\w+\s*[—–:-]?\s*/,  // strip prefix + **Category + separator
+        ''
+      );
+      const rest = afterCategory
+        .replace(/\*\*/g, '')           // strip remaining bold markers
+        .replace(/^\s*:?\s*/, '')       // strip leading colon
+        .trim();
+      currentSummary = rest ? [rest] : [];
+    } else if (currentCategory && line.trim()) {
+      const trimmed = line.replace(/^\s*[-*]\s*/, '').trim();
+      if (trimmed.match(/^\*\*[^*]+\*\*/)) {
+        // Sub-bullet with bold text — new callout under same category
+        flushCallout();
+        const cleaned = trimmed.replace(/\*\*/g, '').replace(/^\s*[-:]\s*/, '').trim();
+        currentSummary = cleaned ? [cleaned] : [];
+      } else if (trimmed) {
+        currentSummary.push(trimmed);
       }
-      const summary = (title ? `${title}: ${desc}` : desc).substring(0, 200).trim();
-      if (summary) {
-        results.push({ category, summary });
-      }
-    } else {
-      i++;
+    } else if (!line.trim() && currentCategory && currentSummary.length > 0) {
+      // Empty line — flush current callout, keep category for next sub-bullet
+      flushCallout();
     }
   }
 
+  flushCallout();
   return results;
 }
 
