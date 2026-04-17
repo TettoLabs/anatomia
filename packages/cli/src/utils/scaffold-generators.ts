@@ -77,6 +77,10 @@ export function generateProjectContextScaffold(result: EngineResult): string {
       s += `**Detected issues:** ${parts.join(', ')} — run \`ana scan\` for details\n`;
     }
   }
+  // README description — inline after Detected line
+  if (result.readme?.description) {
+    s += `\n${result.readme.description}\n`;
+  }
   s += `\n*What does this product do? Who uses it? What problem does it solve?*\n\n`;
 
   // Section 2: Architecture
@@ -101,6 +105,13 @@ export function generateProjectContextScaffold(result: EngineResult): string {
     if (result.deployment.platform) deployParts.push(result.deployment.platform);
     if (result.deployment.ci) deployParts.push(result.deployment.ci);
     s += `**Detected deployment:** ${deployParts.join(', ')}\n`;
+  }
+  // README architecture/setup — inline after Detected lines
+  if (result.readme?.architecture) {
+    s += `\n${result.readme.architecture}\n`;
+  }
+  if (result.readme?.setup) {
+    s += `\n${result.readme.setup}\n`;
   }
   s += `\n*How is the codebase organized and why? What are the layer boundaries?*\n\n`;
 

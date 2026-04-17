@@ -38,6 +38,17 @@ export type StackRole =
   | 'deployment';
 
 /**
+ * Extracted README content, categorized by heading type.
+ * Populated by detectReadme() — see detectors/readme.ts.
+ */
+export interface ReadmeResult {
+  description: string | null;
+  architecture: string | null;
+  setup: string | null;
+  source: 'heading' | 'fallback';
+}
+
+/**
  * The unified scan result returned by `scanProject()` and consumed by every
  * display surface in the CLI (`ana scan` terminal output, `ana init` success
  * message, `CLAUDE.md`, `AGENTS.md`, and the Detected section of every
@@ -174,6 +185,10 @@ export interface EngineResult {
   // previously had a duplicate ConventionDetail-based inline type and a
   // mapConventions wash in scan-engine that dropped fields when they were added.)
   conventions: ConventionAnalysis | null;
+
+  // README extraction — populated by detectReadme() in scan-engine.
+  // null when no README found or content is empty after stripping.
+  readme: ReadmeResult | null;
 
   // Phase 1: Secret Intelligence
   secretFindings: Array<{
@@ -337,6 +352,7 @@ export function createEmptyEngineResult(): EngineResult {
     deployment: { platform: null, configFile: null, ci: null },
     patterns: null,
     conventions: null,
+    readme: null,
     secretFindings: null,
     envVarMap: null,
     duplicates: null,
