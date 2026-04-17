@@ -4,7 +4,6 @@
 
 - **code:** Latent edge case with degenerate package paths: — assets.ts:575 `pkg.path.split('/').filter(Boolean) — *Monorepo Primary Package AGENTS.md*
 - **test:** A006 assertion is weak for its contract: — The contract says the file "points readers to the root AG — *Monorepo Primary Package AGENTS.md*
-- **upstream:** Contract A006 value is overly broad: — The contract assertion `matcher: contains, value: "AGENTS.md" — *Monorepo Primary Package AGENTS.md*
 
 ## ana.json
 
@@ -34,8 +33,14 @@
 - **code:** File path segments lost in extractFileRefs: — proofSummary.ts:253 regex uses `\b` word boundary whic — *Proof chain active issues index*
 - **code:** ProofChain interface duplicated in three locations: — work.ts:661, proof.ts:29, and now proofSummary — *Proof chain active issues index*
 
+## readme.ts
+
+- **code:** `truncate` word-boundary behavior for CJK: — readme.ts:65-69. When text has no spaces before `cap`,  — *Add README extraction to scan*
+
 ## test.ts
 
+- **test:** A014 monorepo test verifies intent not mechanism: — readme.test.ts:157-171. `detectReadme(tmpDir)` h — *Add README extraction to scan*
+- **test:** A004 tests serialization, not e2e scan: — readme.test.ts:69-84. The test verifies the ReadmeResult s — *Add README extraction to scan*
 - **test:** A009 cap test doesn't verify WHICH callouts were dropped: — proofSummary.test.ts:550-564 creates 25  — *Proof chain active issues index*
 - **test:** A012 heading position test is fragile: — proofSummary.test.ts:606 asserts `output.indexOf('# Active  — *Proof chain active issues index*
 - **test:** A009 test at findProjectRoot.test.ts:90-95 is `expect(true).toBe(true)` — a tautology that passes re — *findProjectRoot utility for subdirectory support*
@@ -51,10 +56,23 @@
 
 ## General
 
+- **code:** A009 contract deviation: — Contract specifies `value: 5000` for total cap. Implementation now uses 4 — *Add README extraction to scan*
+- **upstream:** Contract A009 value should be updated: — The contract still says `value: 5000` but the implementatio — *Add README extraction to scan*
 - **upstream:** Contract seal was UNVERIFIABLE: — no `seal_commit` was saved for this contract. This means we can't  — *Proof chain active issues index*
 - **upstream:** A009 as a contract assertion ("all existing tests continue to pass") is inherently untestable at the — *findProjectRoot utility for subdirectory support*
 
 ---
+
+## Add README extraction to scan (2026-04-17)
+Result: PASS | 29/29 satisfied | 12/12 ACs | 0 deviations
+Pipeline: 0m (Think 6m, Plan 6m, Build 29m, Verify undefinedm)
+Rejection cycles: 1 (A004 UNCOVERED — no `@ana A004` tag in any test file, A009 Sentinel test — total cap never triggered, matcher mismatch)
+Callouts:
+- code: `truncate` word-boundary behavior for CJK: — readme.ts:65-69. When text has no spaces before `cap`, falls back to hard-cut at `cap` characters. Correct for Latin text; may split mid-character for CJK
+- code: A009 contract deviation: — Contract specifies `value: 5000` for total cap. Implementation now uses 4000 to make the cap reachable. The original 5000 was unreachable dead code (3 × 1500 = 4500 < 5000).
+- test: A014 monorepo test verifies intent not mechanism: — readme.test.ts:157-171. `detectReadme(tmpDir)` has no monorepo concept — it reads from the path it's given. The test proves scan-engine's decision t
+- test: A004 tests serialization, not e2e scan: — readme.test.ts:69-84. The test verifies the ReadmeResult serializes correctly to JSON, not that `ana scan --json` produces the field in CLI output. An e2e tes
+- upstream: Contract A009 value should be updated: — The contract still says `value: 5000` but the implementation is 4000. If the contract is re-sealed in the future, update the value.
 
 ## Proof chain active issues index (2026-04-17)
 Result: PASS | 16/16 satisfied | 10/11 ACs | 0 deviations

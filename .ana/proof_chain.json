@@ -943,6 +943,223 @@
       ],
       "rejection_cycles": 0,
       "previous_failures": []
+    },
+    {
+      "slug": "add-readme-extraction",
+      "feature": "Add README extraction to scan",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 29,
+        "covered": 0,
+        "uncovered": 29,
+        "satisfied": 29,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Scanning a project with a README extracts content into the readme field",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "The readme field contains a description when a matching heading is found",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "The source field indicates whether content came from headings or fallback",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "The scan JSON output includes the readme field",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "Project context scaffold includes README description in What This Project Does section",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "Architecture content from README appears in the Architecture section",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "Setup content from README appears in the Architecture section",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "Individual sections are capped at 1500 characters",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "Total README extraction is capped at 5000 characters",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "README.md is detected (exact case)",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "readme.md is detected (lowercase)",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "Readme.md is detected (mixed case)",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "README without extension is detected",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "Monorepo projects read the root README, not package READMEs",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "Projects without a README produce readme: null",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "Missing README does not cause scan errors",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A017",
+          "says": "Badge markdown patterns are stripped from extracted content",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A018",
+          "says": "Image markdown patterns are stripped from extracted content",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A019",
+          "says": "HTML tags are stripped from extracted content",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A020",
+          "says": "Installation heading maps to setup category",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A021",
+          "says": "Getting Started heading maps to setup category",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A022",
+          "says": "About heading maps to description category",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A023",
+          "says": "Architecture heading maps to architecture category",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A024",
+          "says": "README with no matching headings uses first paragraph as description",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A025",
+          "says": "Fallback extraction populates the description field",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A026",
+          "says": "README with only badges after stripping returns null",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A027",
+          "says": "Heading matching is case-insensitive",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A028",
+          "says": "EngineResult includes the readme field in its type definition",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A029",
+          "says": "createEmptyEngineResult includes readme field with null default",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 12,
+        "met": 12
+      },
+      "timing": {
+        "total_minutes": 0,
+        "think": 6,
+        "plan": 6,
+        "build": 29
+      },
+      "hashes": {
+        "scope": "sha256:13d8f317b70b9584289629119aaa514833cb4e846354491f317eccff197f24bd",
+        "contract": "sha256:b167e801cbfa7a734e852677e14bd5d70b273363db97639bba233eff7b8ddf45",
+        "plan": "sha256:9430a870ca853887450f6db5af0054e9f78d483c5b4f249bf7dd55d73f91d0c0",
+        "spec": "sha256:bec6fcb88edd2f791680353f6609b89287614901eef789bd577f0733134b5f88",
+        "build-report": "sha256:e4d073ffec56439d61a1e7d38db2b324311d802dc4e6d8d66415f4ceaecb2869"
+      },
+      "seal_commit": null,
+      "completed_at": "2026-04-17T00:38:39.444Z",
+      "modules_touched": [],
+      "callouts": [
+        {
+          "category": "code",
+          "summary": "`truncate` word-boundary behavior for CJK: — readme.ts:65-69. When text has no spaces before `cap`, falls back to hard-cut at `cap` characters. Correct for Latin text; may split mid-character for CJK"
+        },
+        {
+          "category": "code",
+          "summary": "A009 contract deviation: — Contract specifies `value: 5000` for total cap. Implementation now uses 4000 to make the cap reachable. The original 5000 was unreachable dead code (3 × 1500 = 4500 < 5000)."
+        },
+        {
+          "category": "test",
+          "summary": "A014 monorepo test verifies intent not mechanism: — readme.test.ts:157-171. `detectReadme(tmpDir)` has no monorepo concept — it reads from the path it's given. The test proves scan-engine's decision t"
+        },
+        {
+          "category": "test",
+          "summary": "A004 tests serialization, not e2e scan: — readme.test.ts:69-84. The test verifies the ReadmeResult serializes correctly to JSON, not that `ana scan --json` produces the field in CLI output. An e2e tes"
+        },
+        {
+          "category": "upstream",
+          "summary": "Contract A009 value should be updated: — The contract still says `value: 5000` but the implementation is 4000. If the contract is re-sealed in the future, update the value."
+        }
+      ],
+      "rejection_cycles": 1,
+      "previous_failures": [
+        {
+          "id": "A004",
+          "summary": "UNCOVERED — no `@ana A004` tag in any test file"
+        },
+        {
+          "id": "A009",
+          "summary": "Sentinel test — total cap never triggered, matcher mismatch"
+        }
+      ]
     }
   ]
 }
