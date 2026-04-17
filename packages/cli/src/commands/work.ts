@@ -788,7 +788,7 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
           .join('; ')}`
       : '';
 
-    const timingDetails = timing.think != null
+    const timingDetails = (timing.think != null && timing.verify != null)
       ? ` (Think ${timing.think}m, Plan ${timing.plan}m, Build ${timing.build}m, Verify ${timing.verify}m)`
       : '';
 
