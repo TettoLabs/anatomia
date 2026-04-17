@@ -575,10 +575,15 @@ export function generateProofSummary(slugDir: string): ProofSummary {
       // Extract timing
       summary.timing = computeTiming(saves);
 
+      // Primary source for seal_commit: contract.commit (always populated).
+      // Pre-check.seal_commit is the same value but only present when
+      // Verify used single-file save (not save-all).
+      const contractSave = saves['contract'] as SaveEntry | undefined;
+      summary.seal_commit = contractSave?.commit ?? null;
+
       // Extract pre-check data
       const preCheck = saves['pre-check'] as PreCheckData | undefined;
       if (preCheck) {
-        summary.seal_commit = preCheck.seal_commit || null;
 
         // Build assertions from pre-check
         if (preCheck.assertions && Array.isArray(preCheck.assertions)) {

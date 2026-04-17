@@ -285,6 +285,32 @@ file_changes:
     expect(summary.timing.verify).toBe(30); // build to verify
   });
 
+  it('reads seal_commit from contract.commit when pre-check is absent', () => {
+    const saves = {
+      scope: { saved_at: '2026-04-01T10:00:00Z', commit: 'aaa111', hash: 'sha256:scope' },
+      contract: { saved_at: '2026-04-01T10:30:00Z', commit: 'bbb222', hash: 'sha256:contract' },
+      'build-report': { saved_at: '2026-04-01T11:00:00Z', commit: 'ccc333', hash: 'sha256:build' },
+    };
+    fs.writeFileSync(path.join(slugDir, '.saves.json'), JSON.stringify(saves));
+    fs.writeFileSync(path.join(slugDir, 'contract.yaml'), 'feature: "Test"\nassertions: []');
+
+    const summary = generateProofSummary(slugDir);
+    expect(summary.seal_commit).toBe('bbb222');
+  });
+
+  it('reads seal_commit from contract.commit even when pre-check also exists', () => {
+    const saves = {
+      scope: { saved_at: '2026-04-01T10:00:00Z', commit: 'aaa111', hash: 'sha256:scope' },
+      contract: { saved_at: '2026-04-01T10:30:00Z', commit: 'same123', hash: 'sha256:contract' },
+      'pre-check': { seal_commit: 'same123', assertions: [], covered: 0, uncovered: 0 },
+    };
+    fs.writeFileSync(path.join(slugDir, '.saves.json'), JSON.stringify(saves));
+    fs.writeFileSync(path.join(slugDir, 'contract.yaml'), 'feature: "Test"\nassertions: []');
+
+    const summary = generateProofSummary(slugDir);
+    expect(summary.seal_commit).toBe('same123');
+  });
+
   it('returns slug as feature name when contract missing', async () => {
     // Empty directory
     const summary = generateProofSummary(slugDir);
