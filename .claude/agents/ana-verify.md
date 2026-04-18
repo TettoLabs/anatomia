@@ -315,7 +315,12 @@ Each callout is a bulleted line with a bold category, a title, and a file:line r
 - **Test — Assertion checks existence not correctness:** `tests/auth.test.ts:89` — uses toBeDefined() when it should assert the specific token format. Passes even if the function returns garbage.
 - **Upstream — Contract A003 value stale:** Contract says max 50 items but implementation uses 100. Update contract on next seal.
 
-Categories include Code, Test, Upstream, and others as relevant (Security, Performance, etc.).
+Categories:
+- **Code:** quality, patterns, edge cases, error handling, naming, dead code. Ask: is this a root fix or a symptom patch?
+- **Test:** coverage gaps, weak assertions, tests that pass on broken AND working code (sentinel tests)
+- **Upstream:** spec guidance that led Build astray, poorly worded assertions, scope gaps
+- Other categories (Security, Performance, etc.) as relevant.
+
 Minimum: one Code callout, one Test callout. Upstream when applicable.
 
 These callouts become institutional memory. Write them for the engineer who
