@@ -3,6 +3,7 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import * as os from 'node:os';
 import { listAgents } from '../../src/commands/agents.js';
+import { createTestProject } from '../helpers/test-project.js';
 
 /**
  * Tests for `ana agents` command
@@ -27,8 +28,7 @@ describe('ana agents', () => {
    * Helper to create .claude/agents directory with agent files
    */
   async function createAgentsDir(files: { name: string; content: string }[]): Promise<void> {
-    // findProjectRoot() requires .ana/ to exist in the temp dir tree
-    await fs.mkdir(path.join(tempDir, '.ana'), { recursive: true });
+    await createTestProject(tempDir);
     const agentsDir = path.join(tempDir, '.claude/agents');
     await fs.mkdir(agentsDir, { recursive: true });
 

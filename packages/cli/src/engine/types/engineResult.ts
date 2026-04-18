@@ -5,11 +5,12 @@
  * and by init.ts for context generation. D2-compliant schema with typed
  * patterns, conventions, deployment, and Phase 1+ null stubs.
  *
- * CROSS-CUTTING: Adding a field requires changes in 4+ locations:
+ * CROSS-CUTTING: Adding a field requires changes in 5+ locations:
  *   1. Type definition below
  *   2. Default value in createEmptyEngineResult() (bottom of this file)
  *   3. Population in scan-engine.ts
  *   4. Consumers in assets.ts, skills.ts, or scaffold-generators.ts
+ *   5. Field completeness check in tests/contract/analyzer-contract.test.ts
  * Missing #2 causes runtime errors in tests that use createEmptyEngineResult().
  */
 

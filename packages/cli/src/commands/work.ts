@@ -637,6 +637,17 @@ export function getWorkStatus(options: { json?: boolean }): void {
   if (currentBranch) {
     try {
       execSync(`git fetch origin ${artifactBranch} --quiet`, { stdio: 'pipe' });
+
+      // Warn if local artifact branch is behind remote
+      const behind = execSync(
+        `git rev-list ${artifactBranch}..origin/${artifactBranch} --count`,
+        { encoding: 'utf-8', stdio: 'pipe' }
+      ).trim();
+      if (parseInt(behind) > 0) {
+        console.log(chalk.yellow(
+          `ℹ ${artifactBranch} is ${behind} commit${behind === '1' ? '' : 's'} behind remote.`
+        ));
+      }
     } catch {
       // Silently continue with local state
     }
