@@ -348,12 +348,12 @@ export function generateActiveIssuesMarkdown(entries: ProofChainEntryForIndex[])
       existing.push(callout);
       fileGroups.set('General', existing);
     } else {
-      // Add to each referenced file's group
-      for (const fileRef of fileRefs) {
-        const existing = fileGroups.get(fileRef) || [];
-        existing.push(callout);
-        fileGroups.set(fileRef, existing);
-      }
+      // Assign to first file only (dedup). Cross-references are preserved
+      // in the summary text — the other files are still mentioned.
+      const primaryFile = fileRefs[0]!;
+      const existing = fileGroups.get(primaryFile) || [];
+      existing.push(callout);
+      fileGroups.set(primaryFile, existing);
     }
   }
 

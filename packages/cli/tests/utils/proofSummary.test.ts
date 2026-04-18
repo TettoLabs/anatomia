@@ -732,7 +732,7 @@ describe('generateActiveIssuesMarkdown', () => {
   });
 
   // @ana A014
-  it('handles callouts referencing multiple files', () => {
+  it('deduplicates callouts referencing multiple files — assigns to first file only', () => {
     const entries = [
       {
         feature: 'Cross-file issue',
@@ -743,9 +743,13 @@ describe('generateActiveIssuesMarkdown', () => {
       },
     ];
     const output = generateActiveIssuesMarkdown(entries);
-    // Count occurrences of the callout text (should appear under both files)
+    // Callout appears once under the first file (fileA.ts), not duplicated under fileB.ts
     const occurrences = (output.match(/Issue spans fileA\.ts/g) || []).length;
-    expect(occurrences).toBeGreaterThan(1);
+    expect(occurrences).toBe(1);
+    // The heading for fileA.ts exists
+    expect(output).toContain('## fileA.ts');
+    // fileB.ts is mentioned in the summary text (cross-reference) but not as a separate heading
+    // unless other callouts specifically reference it
   });
 
   // @ana A015
