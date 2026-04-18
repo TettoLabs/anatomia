@@ -247,14 +247,17 @@ function parseDeviations(content: string): ProofDeviation[] {
  * @returns Array of unique filenames (without line numbers)
  */
 export function extractFileRefs(summary: string): string[] {
-  // Match filename with optional line number or range
-  // Captures: filename.ext:123 or filename.ext:123-456 or filename.ext
+  // Match file path with optional line number or range.
+  // Captures full path as written: src/utils/proofSummary.ts:361 → src/utils/proofSummary.ts
+  // Also handles bare filenames: proofSummary.ts:361 → proofSummary.ts
   // Note: longer extensions must come before shorter prefixes (tsx before ts, json before js, yaml before yml)
-  const pattern = /\b([a-zA-Z0-9_-]+\.(?:tsx|ts|jsx|json|js|yaml|yml|md))(?::\d+(?:-\d+)?)?/g;
+  const pattern = /((?:[\w./-]+\/)?[a-zA-Z0-9_-]+\.(?:tsx|ts|jsx|json|js|yaml|yml|md))(?::\d+(?:-\d+)?)?/g;
   const matches = summary.matchAll(pattern);
   const refs = new Set<string>();
   for (const match of matches) {
     if (match[1]) {
+      // Skip URL-like paths (from links in callout text)
+      if (match[1].startsWith('//') || match[1].includes('://')) continue;
       refs.add(match[1]);
     }
   }
@@ -345,12 +348,12 @@ export function generateActiveIssuesMarkdown(entries: ProofChainEntryForIndex[])
       existing.push(callout);
       fileGroups.set('General', existing);
     } else {
-      // Add to each referenced file's group
-      for (const fileRef of fileRefs) {
-        const existing = fileGroups.get(fileRef) || [];
-        existing.push(callout);
-        fileGroups.set(fileRef, existing);
-      }
+      // Assign to first file only (dedup). Cross-references are preserved
+      // in the summary text — the other files are still mentioned.
+      const primaryFile = fileRefs[0]!;
+      const existing = fileGroups.get(primaryFile) || [];
+      existing.push(callout);
+      fileGroups.set(primaryFile, existing);
     }
   }
 
@@ -369,10 +372,13 @@ export function generateActiveIssuesMarkdown(entries: ProofChainEntryForIndex[])
     md += `## ${fileName}\n\n`;
 
     for (const callout of callouts) {
-      // Truncate summary to ~100 chars for index display
-      const truncatedSummary = callout.summary.length > 100
-        ? callout.summary.substring(0, 100)
-        : callout.summary;
+      // Truncate summary to ~100 chars for index display (JSON keeps full text)
+      let truncatedSummary = callout.summary;
+      if (truncatedSummary.length > 100) {
+        const lastSpace = truncatedSummary.lastIndexOf(' ', 100);
+        const cutPoint = lastSpace > 0 ? lastSpace : 100;
+        truncatedSummary = truncatedSummary.substring(0, cutPoint) + '...';
+      }
       md += `- **${callout.category}:** ${truncatedSummary} — *${callout.feature}*\n`;
     }
     md += '\n';

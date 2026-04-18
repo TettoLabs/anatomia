@@ -528,6 +528,10 @@ function getNextAction(stage: string, slug: string): string {
     return `git checkout feature/${slug} && claude --agent ana-verify`;
   }
 
+  if (stage.includes('build-in-progress')) {
+    return `git checkout feature/${slug} && claude --agent ana-build`;
+  }
+
   if (stage.includes('needs-fixes')) {
     return `git checkout feature/${slug} && claude --agent ana-build`;
   }
