@@ -389,6 +389,21 @@ function determineStage(slug: string, artifacts: ArtifactState, featureBranch: s
       if (result === 'PASS') {
         return 'ready-to-merge';
       } else if (result === 'FAIL') {
+        // Check if build report was updated AFTER verify report (fixes applied)
+        try {
+          const basePath = `.ana/plans/active/${slug}`;
+          const buildTime = execSync(
+            `git log --format='%ct' -1 ${featureBranch} -- ${basePath}/build_report.md`,
+            { encoding: 'utf-8', stdio: 'pipe' }
+          ).trim();
+          const verifyTime = execSync(
+            `git log --format='%ct' -1 ${featureBranch} -- ${basePath}/verify_report.md`,
+            { encoding: 'utf-8', stdio: 'pipe' }
+          ).trim();
+          if (buildTime && verifyTime && parseInt(buildTime) > parseInt(verifyTime)) {
+            return 'ready-for-re-verify';
+          }
+        } catch { /* fall through to needs-fixes */ }
         return 'needs-fixes';
       } else {
         return 'verify-status-unknown';
@@ -430,6 +445,23 @@ function determineStage(slug: string, artifacts: ArtifactState, featureBranch: s
       if (phaseVerifyReport) {
         const result = phaseVerifyReport.result;
         if (result === 'FAIL') {
+          // Check if build report was updated after verify (fixes applied)
+          try {
+            const basePath = `.ana/plans/active/${slug}`;
+            const expectedBuild = phaseBuildReport.file;
+            const expectedVerify = phaseVerifyReport.file;
+            const bTime = execSync(
+              `git log --format='%ct' -1 ${featureBranch} -- ${basePath}/${expectedBuild}`,
+              { encoding: 'utf-8', stdio: 'pipe' }
+            ).trim();
+            const vTime = execSync(
+              `git log --format='%ct' -1 ${featureBranch} -- ${basePath}/${expectedVerify}`,
+              { encoding: 'utf-8', stdio: 'pipe' }
+            ).trim();
+            if (bTime && vTime && parseInt(bTime) > parseInt(vTime)) {
+              return `phase-${phaseNum}-ready-for-re-verify`;
+            }
+          } catch { /* fall through */ }
           return `phase-${phaseNum}-needs-fixes`;
         } else if (result === 'PASS') {
           // This phase passed, continue to next phase
@@ -471,6 +503,10 @@ function getNextAction(stage: string, slug: string): string {
     return `git checkout feature/${slug} && claude --agent ana-verify`;
   }
 
+  if (stage === 'ready-for-re-verify') {
+    return `git checkout feature/${slug} && claude --agent ana-verify`;
+  }
+
   if (stage === 'needs-fixes') {
     return `git checkout feature/${slug} && claude --agent ana-build`;
   }
@@ -482,6 +518,10 @@ function getNextAction(stage: string, slug: string): string {
   // Multi-phase stages
   if (stage.includes('ready-for-build')) {
     return `git checkout feature/${slug} && claude --agent ana-build`;
+  }
+
+  if (stage.includes('ready-for-re-verify')) {
+    return `git checkout feature/${slug} && claude --agent ana-verify`;
   }
 
   if (stage.includes('ready-for-verify')) {
@@ -672,35 +712,8 @@ interface ProofChain {
  *
  * @param slug - Work item slug
  * @param proof - Proof summary data
+ * @param projectRoot - Project root directory
  */
-/**
- * Extract source files touched by a feature branch.
- *
- * Diffs the seal commit (contract save) against the feature branch HEAD,
- * NOT against main HEAD — otherwise files from other merged features
- * would pollute the list.
- *
- * @param slug - Work item slug (for branch name)
- * @param sealCommit - Commit hash from contract save
- * @returns Array of relative file paths (source files only)
- */
-function getModulesTouched(slug: string, sealCommit: string | null): string[] {
-  if (!sealCommit) return [];
-  try {
-    // Diff against the feature branch, not HEAD
-    const branchRef = `feature/${slug}`;
-    const output = execSync(
-      `git diff --name-only ${sealCommit}..${branchRef} -- '*.ts' '*.tsx' '*.js' '*.jsx' '*.py' '*.go' '*.rs'`,
-      { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }
-    ).trim();
-    if (!output) return [];
-    return output.split('\n').filter(Boolean);
-  } catch {
-    // Branch may not exist or commit unreachable — return empty
-    return [];
-  }
-}
-
 async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: string): Promise<void> {
   const anaDir = path.join(projectRoot, '.ana');
 
@@ -722,8 +735,18 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
     }
   }
 
-  // Extract modules touched from git diff (seal commit → feature branch)
-  const modulesTouched = getModulesTouched(slug, proof.seal_commit);
+  // Read modules_touched from .saves.json (captured at build-report save time
+  // when the feature branch definitely exists and all code is committed).
+  let modulesTouched: string[] = [];
+  try {
+    const slugSaves = path.join(anaDir, 'plans', 'completed', slug, '.saves.json');
+    if (fs.existsSync(slugSaves)) {
+      const savesContent = JSON.parse(fs.readFileSync(slugSaves, 'utf-8'));
+      if (Array.isArray(savesContent['modules_touched'])) {
+        modulesTouched = savesContent['modules_touched'];
+      }
+    }
+  } catch { /* fall back to empty */ }
 
   const entry: ProofChainEntry = {
     slug,
@@ -788,7 +811,7 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
           .join('; ')}`
       : '';
 
-    const timingDetails = timing.think != null
+    const timingDetails = (timing.think != null && timing.verify != null)
       ? ` (Think ${timing.think}m, Plan ${timing.plan}m, Build ${timing.build}m, Verify ${timing.verify}m)`
       : '';
 

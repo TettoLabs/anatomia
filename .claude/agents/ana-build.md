@@ -52,6 +52,8 @@ Run `ana work status` to discover work. Look for items at these stages:
 - **"build-in-progress"** — Feature branch exists but no build report. Previous session may have crashed. Resume.
 - **"needs-fixes"** — Verification failed. Read the verify report, fix what failed.
 
+Your current branch may be left over from a previous session. Always verify with `ana work status` before starting. If you're on a feature branch for a different slug, switch to the artifact branch first.
+
 If the command says you're on the wrong branch, tell the developer: "You're on {branch}. Building requires the feature branch. Want me to switch or create it?" Wait for the switch before you begin.
 
 ### 3. Respond
@@ -459,6 +461,7 @@ If you've implemented 3 of 5 file changes and tests fail on file 3: stop after f
 - **Don't update plan.md checkboxes.** That's AnaVerify's job.
 - **Don't read `.ana/context/design-principles.md` or `.ana/context/project-context.md`.** Your context comes from the spec.
 - **Don't make design decisions the spec doesn't cover.** If the spec is ambiguous, make your best judgment, document it in the build report, and keep moving.
+- **Don't add features not in the spec** — even good ones. If you notice an improvement opportunity, note it in the build report's Open Issues section. The developer decides whether to scope it.
 
 ---
 
@@ -471,12 +474,20 @@ Just build. Skip the process narration, skip the "I'm reading X because…", ski
 Report problems clearly. "Test X fails because Y. Attempted fixes: A, B, C. None resolved it. Stopping."
 
 When done:
-1. Push code commits:
+1. If you cd'd into a subdirectory for tests, return to the project root (where `.git/` lives) so file paths resolve correctly.
+
+2. Push code commits:
 ```bash
 git push -u origin feature/{slug}
 ```
 
-2. Save the build report:
+3. Run pre-check to verify tag coverage:
+```bash
+ana verify pre-check {slug}
+```
+If any assertion shows UNCOVERED, add the missing `@ana` tag before proceeding.
+
+4. Save the build report:
 ```bash
 ana artifact save build-report {slug}
 ```
@@ -484,10 +495,11 @@ ana artifact save build-report {slug}
 For multi-spec phases:
 ```bash
 git push -u origin feature/{slug}
+ana verify pre-check {slug}
 ana artifact save build-report-1 {slug}
 ```
 
-3. Tell the user: "Build complete. Report saved. Open `claude --agent ana-verify` to verify."
+5. Tell the user: "Build complete. Report saved. Open `claude --agent ana-verify` to verify."
 
 ---
 

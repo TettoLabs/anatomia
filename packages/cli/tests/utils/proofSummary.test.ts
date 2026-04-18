@@ -285,6 +285,32 @@ file_changes:
     expect(summary.timing.verify).toBe(30); // build to verify
   });
 
+  it('reads seal_commit from contract.commit when pre-check is absent', () => {
+    const saves = {
+      scope: { saved_at: '2026-04-01T10:00:00Z', commit: 'aaa111', hash: 'sha256:scope' },
+      contract: { saved_at: '2026-04-01T10:30:00Z', commit: 'bbb222', hash: 'sha256:contract' },
+      'build-report': { saved_at: '2026-04-01T11:00:00Z', commit: 'ccc333', hash: 'sha256:build' },
+    };
+    fs.writeFileSync(path.join(slugDir, '.saves.json'), JSON.stringify(saves));
+    fs.writeFileSync(path.join(slugDir, 'contract.yaml'), 'feature: "Test"\nassertions: []');
+
+    const summary = generateProofSummary(slugDir);
+    expect(summary.seal_commit).toBe('bbb222');
+  });
+
+  it('reads seal_commit from contract.commit even when pre-check also exists', () => {
+    const saves = {
+      scope: { saved_at: '2026-04-01T10:00:00Z', commit: 'aaa111', hash: 'sha256:scope' },
+      contract: { saved_at: '2026-04-01T10:30:00Z', commit: 'same123', hash: 'sha256:contract' },
+      'pre-check': { seal_commit: 'same123', assertions: [], covered: 0, uncovered: 0 },
+    };
+    fs.writeFileSync(path.join(slugDir, '.saves.json'), JSON.stringify(saves));
+    fs.writeFileSync(path.join(slugDir, 'contract.yaml'), 'feature: "Test"\nassertions: []');
+
+    const summary = generateProofSummary(slugDir);
+    expect(summary.seal_commit).toBe('same123');
+  });
+
   it('returns slug as feature name when contract missing', async () => {
     // Empty directory
     const summary = generateProofSummary(slugDir);
@@ -386,6 +412,69 @@ Just some plain text with no structured callouts.
     expect(callouts).toHaveLength(2);
     expect(callouts[0]!.summary).toContain('continues on second line');
     expect(callouts[1]!.summary).toContain('Next entry');
+  });
+
+  it('parses category-header format with sub-bullets (add-hook-detection style)', () => {
+    const content = `## Callouts
+
+**Code:**
+- **Component file heuristic may over-count:** confirmation.ts:797 includes any .tsx file.
+
+- **Nuxt detection deviates from spec:** Uses import matching instead of regex.
+
+**Test:**
+- **No @ana tags for 8 assertions:** A001-A003 have no tags.
+
+**Upstream:**
+- **Spec suggested regex but import matching is better:** Positive deviation.
+
+## Deployer Handoff
+`;
+    const callouts = parseCallouts(content);
+    expect(callouts.length).toBeGreaterThanOrEqual(4);
+
+    const codeCallouts = callouts.filter(c => c.category === 'code');
+    expect(codeCallouts.length).toBeGreaterThanOrEqual(2);
+    expect(codeCallouts[0]!.summary).toContain('Component file heuristic');
+
+    const testCallouts = callouts.filter(c => c.category === 'test');
+    expect(testCallouts.length).toBeGreaterThanOrEqual(1);
+
+    const upstreamCallouts = callouts.filter(c => c.category === 'upstream');
+    expect(upstreamCallouts.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('parses standalone paragraph format (fix-skill-template-gaps style)', () => {
+    const content = `## Callouts
+
+**Upstream:** Contract assertions A007 and A008 were sealed with incorrect values. The planner miscounted.
+
+**Code:** The error-handling rule is now longer than the others. Appropriate given the nuance.
+
+**Test:** No test coverage for template content. Visual inspection only.
+
+## Deployer Handoff
+`;
+    const callouts = parseCallouts(content);
+    expect(callouts).toHaveLength(3);
+    expect(callouts[0]!.category).toBe('upstream');
+    expect(callouts[0]!.summary).toContain('A007');
+    expect(callouts[1]!.category).toBe('code');
+    expect(callouts[2]!.category).toBe('test');
+  });
+
+  it('accepts non-standard categories like Security or Performance', () => {
+    const content = `## Callouts
+
+- **Security — SQL injection in query builder:** db/queries.ts:42 — user input concatenated into SQL string.
+- **Performance — N+1 query in user list:** api/users.ts:15 — fetches roles individually per user.
+
+## Deployer Handoff
+`;
+    const callouts = parseCallouts(content);
+    expect(callouts).toHaveLength(2);
+    expect(callouts[0]!.category).toBe('security');
+    expect(callouts[1]!.category).toBe('performance');
   });
 });
 
@@ -717,5 +806,56 @@ describe('generateActiveIssuesMarkdown', () => {
     expect(output).not.toContain('old-issue-0');
     expect(output).not.toContain('old-issue-4');
     expect(output).toContain('old-issue-5');
+  });
+
+  it('heading shows count when under cap', () => {
+    const entries = [{
+      feature: 'Test',
+      completed_at: '2026-04-17T00:00:00Z',
+      callouts: [
+        { category: 'code', summary: 'issue one in foo.ts' },
+        { category: 'test', summary: 'issue two in bar.ts' },
+        { category: 'code', summary: 'issue three in baz.ts' },
+      ],
+    }];
+    const md = generateActiveIssuesMarkdown(entries);
+    expect(md).toMatch(/# Active Issues \(\d+\)/);
+    expect(md).not.toContain('shown of');
+  });
+
+  it('heading shows cap info when over 20 callouts', () => {
+    const callouts = Array.from({ length: 25 }, (_, i) => ({
+      category: 'code',
+      summary: `issue number ${i + 1} in unique-file-${i}.ts`,
+    }));
+    const entries = [{
+      feature: 'Big Feature',
+      completed_at: '2026-04-17T00:00:00Z',
+      callouts,
+    }];
+    const md = generateActiveIssuesMarkdown(entries);
+    expect(md).toContain('20 shown of');
+    expect(md).toContain('total)');
+  });
+
+  it('heading has no count for zero callouts', () => {
+    const md = generateActiveIssuesMarkdown([]);
+    expect(md).toContain('# Active Issues');
+    expect(md).not.toMatch(/# Active Issues \(/);
+  });
+
+  it('heading shows exact count at cap boundary', () => {
+    const callouts = Array.from({ length: 20 }, (_, i) => ({
+      category: 'code',
+      summary: `issue ${i + 1} in file-${i}.ts`,
+    }));
+    const entries = [{
+      feature: 'Feature',
+      completed_at: '2026-04-17T00:00:00Z',
+      callouts,
+    }];
+    const md = generateActiveIssuesMarkdown(entries);
+    expect(md).toMatch(/# Active Issues \(20\)/);
+    expect(md).not.toContain('shown of');
   });
 });

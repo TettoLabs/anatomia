@@ -42,7 +42,7 @@ describe('buildCensus', () => {
   });
 
   const calComPath = '/tmp/ana-research/cal.com';
-  const calComExists = existsSync(calComPath);
+  const calComExists = existsSync(path.join(calComPath, 'package.json'));
 
   it.skipIf(!calComExists)('validates against cal.com (target-customer monorepo)', async () => {
     const census = await buildCensus(calComPath);
@@ -64,7 +64,7 @@ describe('buildCensus', () => {
   });
 
   const dubPath = '/tmp/ana-research/dub';
-  const dubExists = existsSync(dubPath);
+  const dubExists = existsSync(path.join(dubPath, 'package.json'));
 
   it.skipIf(!dubExists)('validates against dub (target-customer monorepo)', async () => {
     const census = await buildCensus(dubPath);
