@@ -8,6 +8,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
+import { createTestProject } from '../helpers/test-project.js';
 import * as os from 'node:os';
 import { execSync } from 'node:child_process';
 
@@ -51,10 +52,9 @@ describe('ana proof', () => {
    * Helper to create proof chain file
    */
   async function createProofChain(entries: unknown[]): Promise<void> {
-    const anaDir = path.join(tempDir, '.ana');
-    await fs.mkdir(anaDir, { recursive: true });
+    await createTestProject(tempDir);
     await fs.writeFile(
-      path.join(anaDir, 'proof_chain.json'),
+      path.join(tempDir, '.ana', 'proof_chain.json'),
       JSON.stringify({ entries }, null, 2)
     );
   }
@@ -214,8 +214,8 @@ describe('ana proof', () => {
   // @ana A008, A009
   describe('handles missing proof_chain.json', () => {
     it('outputs "No proofs yet." when file is missing', async () => {
-      // Create .ana/ so findProjectRoot() succeeds, but no proof_chain.json
-      await fs.mkdir(path.join(tempDir, '.ana'), { recursive: true });
+      // createTestProject gives findProjectRoot() a valid .ana/ — no proof_chain.json
+      await createTestProject(tempDir);
       process.chdir(tempDir);
 
       const { stdout, exitCode } = runProof([]);
@@ -256,8 +256,8 @@ describe('ana proof', () => {
   // @ana A014
   describe('JSON handles missing proof_chain.json', () => {
     it('returns empty entries array when file missing', async () => {
-      // Create .ana/ so findProjectRoot() succeeds, but no proof_chain.json
-      await fs.mkdir(path.join(tempDir, '.ana'), { recursive: true });
+      // createTestProject gives findProjectRoot() a valid .ana/ — no proof_chain.json
+      await createTestProject(tempDir);
       process.chdir(tempDir);
 
       const { stdout, exitCode } = runProof(['--json']);
@@ -515,8 +515,8 @@ describe('ana proof', () => {
   // @ana A019, A020
   describe('shows helpful error for missing file', () => {
     it('returns error when proof_chain.json missing', async () => {
-      // Create .ana/ so findProjectRoot() succeeds, but no proof_chain.json
-      await fs.mkdir(path.join(tempDir, '.ana'), { recursive: true });
+      // createTestProject gives findProjectRoot() a valid .ana/ — no proof_chain.json
+      await createTestProject(tempDir);
       process.chdir(tempDir);
 
       const { stderr, exitCode } = runProof(['any-slug']);
@@ -525,8 +525,8 @@ describe('ana proof', () => {
     });
 
     it('suggests using work complete', async () => {
-      // Create .ana/ so findProjectRoot() succeeds, but no proof_chain.json
-      await fs.mkdir(path.join(tempDir, '.ana'), { recursive: true });
+      // createTestProject gives findProjectRoot() a valid .ana/ — no proof_chain.json
+      await createTestProject(tempDir);
       process.chdir(tempDir);
 
       const { stdout, stderr } = runProof(['any-slug']);
