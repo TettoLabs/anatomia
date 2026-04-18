@@ -520,6 +520,10 @@ function getNextAction(stage: string, slug: string): string {
     return `git checkout feature/${slug} && claude --agent ana-build`;
   }
 
+  if (stage.includes('ready-for-re-verify')) {
+    return `git checkout feature/${slug} && claude --agent ana-verify`;
+  }
+
   if (stage.includes('ready-for-verify')) {
     return `git checkout feature/${slug} && claude --agent ana-verify`;
   }
