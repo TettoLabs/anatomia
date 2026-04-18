@@ -739,7 +739,7 @@ describe('generateActiveIssuesMarkdown', () => {
   });
 
   // @ana A016
-  it('truncates long summaries', () => {
+  it('truncates long summaries with ellipsis', () => {
     const longSummary = 'x'.repeat(150) + ' in test.ts';
     const entries = [
       {
@@ -749,12 +749,11 @@ describe('generateActiveIssuesMarkdown', () => {
       },
     ];
     const output = generateActiveIssuesMarkdown(entries);
-    // Find the callout line and check its summary length
     const calloutLine = output.split('\n').find(line => line.startsWith('- **code:**'));
-    // Extract summary part: "- **code:** {summary} — *{feature}*"
+    expect(calloutLine).toContain('...');
+    // No spaces in the x-repeat, so falls back to hard cut at 100 + ...
     const summaryMatch = calloutLine?.match(/\*\*code:\*\* (.+?) — \*/);
-    const summaryLength = summaryMatch?.[1]?.length || 0;
-    expect(summaryLength).toBe(100);
+    expect(summaryMatch?.[1]?.endsWith('...')).toBe(true);
   });
 
   it('orders file headings alphabetically with General last', () => {
@@ -857,5 +856,36 @@ describe('generateActiveIssuesMarkdown', () => {
     const md = generateActiveIssuesMarkdown(entries);
     expect(md).toMatch(/# Active Issues \(20\)/);
     expect(md).not.toContain('shown of');
+  });
+
+  it('truncates at word boundary with ellipsis', () => {
+    const longSummary = 'This is a long callout summary that exceeds one hundred characters and should be truncated cleanly at a word boundary somewhere around here';
+    const entries = [{
+      feature: 'Test',
+      completed_at: '2026-04-17T00:00:00Z',
+      callouts: [{ category: 'code', summary: longSummary }],
+    }];
+    const md = generateActiveIssuesMarkdown(entries);
+    expect(md).toContain('...');
+    // The summary in the markdown should NOT contain the full text
+    expect(md).not.toContain('somewhere around here');
+    // Should cut at a space — the text before ... should end with a complete word
+    const calloutLine = md.split('\n').find(l => l.includes('...'))!;
+    const beforeEllipsis = calloutLine.split('...')[0]!;
+    expect(beforeEllipsis.endsWith(' ') || /\w$/.test(beforeEllipsis)).toBe(true);
+  });
+
+  it('falls back to hard cut when no spaces before 100 chars', () => {
+    const noSpaceSummary = 'packages/cli/src/engine/analyzers/patterns/confirmation.ts:847-produces-incorrect-results-when-the-input-contains-special-characters';
+    const entries = [{
+      feature: 'Test',
+      completed_at: '2026-04-17T00:00:00Z',
+      callouts: [{ category: 'code', summary: noSpaceSummary }],
+    }];
+    const md = generateActiveIssuesMarkdown(entries);
+    expect(md).toContain('...');
+    // Should not be empty — falls back to 100 chars
+    const calloutLine = md.split('\n').find(l => l.includes('...'))!;
+    expect(calloutLine.length).toBeGreaterThan(10);
   });
 });

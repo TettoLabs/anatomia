@@ -369,10 +369,13 @@ export function generateActiveIssuesMarkdown(entries: ProofChainEntryForIndex[])
     md += `## ${fileName}\n\n`;
 
     for (const callout of callouts) {
-      // Truncate summary to ~100 chars for index display
-      const truncatedSummary = callout.summary.length > 100
-        ? callout.summary.substring(0, 100)
-        : callout.summary;
+      // Truncate summary to ~100 chars for index display (JSON keeps full text)
+      let truncatedSummary = callout.summary;
+      if (truncatedSummary.length > 100) {
+        const lastSpace = truncatedSummary.lastIndexOf(' ', 100);
+        const cutPoint = lastSpace > 0 ? lastSpace : 100;
+        truncatedSummary = truncatedSummary.substring(0, cutPoint) + '...';
+      }
       md += `- **${callout.category}:** ${truncatedSummary} — *${callout.feature}*\n`;
     }
     md += '\n';
