@@ -247,14 +247,17 @@ function parseDeviations(content: string): ProofDeviation[] {
  * @returns Array of unique filenames (without line numbers)
  */
 export function extractFileRefs(summary: string): string[] {
-  // Match filename with optional line number or range
-  // Captures: filename.ext:123 or filename.ext:123-456 or filename.ext
+  // Match file path with optional line number or range.
+  // Captures full path as written: src/utils/proofSummary.ts:361 → src/utils/proofSummary.ts
+  // Also handles bare filenames: proofSummary.ts:361 → proofSummary.ts
   // Note: longer extensions must come before shorter prefixes (tsx before ts, json before js, yaml before yml)
-  const pattern = /\b([a-zA-Z0-9_-]+\.(?:tsx|ts|jsx|json|js|yaml|yml|md))(?::\d+(?:-\d+)?)?/g;
+  const pattern = /((?:[\w./-]+\/)?[a-zA-Z0-9_-]+\.(?:tsx|ts|jsx|json|js|yaml|yml|md))(?::\d+(?:-\d+)?)?/g;
   const matches = summary.matchAll(pattern);
   const refs = new Set<string>();
   for (const match of matches) {
     if (match[1]) {
+      // Skip URL-like paths (from links in callout text)
+      if (match[1].startsWith('//') || match[1].includes('://')) continue;
       refs.add(match[1]);
     }
   }

@@ -602,6 +602,29 @@ describe('extractFileRefs', () => {
     expect(result).toContain('Button.tsx');
     expect(result).toContain('helpers.jsx');
   });
+
+  it('preserves directory path when present', () => {
+    const result = extractFileRefs('src/utils/proofSummary.ts:361 uses substring');
+    expect(result).toContain('src/utils/proofSummary.ts');
+    expect(result).not.toContain('proofSummary.ts');
+  });
+
+  it('distinguishes same filename in different directories', () => {
+    const result = extractFileRefs('src/a/index.ts and src/b/index.ts both export');
+    expect(result).toHaveLength(2);
+    expect(result).toContain('src/a/index.ts');
+    expect(result).toContain('src/b/index.ts');
+  });
+
+  it('skips URL-like paths', () => {
+    const result = extractFileRefs('See https://docs.example.com/api/handler.ts for docs');
+    expect(result).toHaveLength(0);
+  });
+
+  it('handles deep paths', () => {
+    const result = extractFileRefs('packages/cli/src/engine/analyzers/patterns/confirmation.ts:847');
+    expect(result).toContain('packages/cli/src/engine/analyzers/patterns/confirmation.ts');
+  });
 });
 
 describe('generateActiveIssuesMarkdown', () => {
