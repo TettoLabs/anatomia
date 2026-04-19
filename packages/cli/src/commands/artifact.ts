@@ -656,9 +656,8 @@ export function saveArtifact(type: string, slug: string): void {
     }
   }
 
-  // 8. Stage the file(s)
+  // 8. Stage the artifact file(s)
   try {
-    // Always stage the artifact file
     execSync(`git add ${filePath}`, { stdio: 'pipe' });
 
     // Special case: verify-report also stages plan.md if it exists
@@ -679,6 +678,18 @@ export function saveArtifact(type: string, slug: string): void {
     // status 0 means no differences — nothing to commit
     console.log(chalk.yellow('No changes to save — artifact is already up to date.'));
     process.exit(0);
+  }
+
+  // 8b. Write .saves.json and stage it alongside the artifact.
+  // Done AFTER the no-changes check so unchanged artifacts don't trigger
+  // a commit just from .saves.json metadata. The commit hash in .saves.json
+  // will be the previous commit's — post-commit update fixes the on-disk version.
+  const slugDir2 = path.join(projectRoot, '.ana', 'plans', 'active', slug);
+  const artifactContent = fs.readFileSync(filePath, 'utf-8');
+  writeSaveMetadata(slugDir2, typeInfo.baseType, artifactContent);
+  const savesPath = path.join(slugDir2, '.saves.json');
+  if (fs.existsSync(savesPath)) {
+    try { execSync(`git add ${savesPath}`, { stdio: 'pipe' }); } catch { /* */ }
   }
 
   // 9. Commit
@@ -702,9 +713,9 @@ export function saveArtifact(type: string, slug: string): void {
     process.exit(1);
   }
 
-  // 9a. Write .saves.json metadata after successful commit
-  const slugDir2 = path.join(projectRoot, '.ana', 'plans', 'active', slug);
-  const artifactContent = fs.readFileSync(filePath, 'utf-8');
+  // 9a. Update .saves.json on disk with the real commit hash (the pre-commit
+  // version had the previous commit's hash). This fixes the on-disk version
+  // for local reads without recommitting.
   writeSaveMetadata(slugDir2, typeInfo.baseType, artifactContent);
 
   // 9b. Capture modules_touched at build-report time (when the feature branch
@@ -939,6 +950,18 @@ export function saveAllArtifacts(slug: string): void {
     process.exit(0);
   }
 
+  // 7b. Write .saves.json and stage it alongside artifacts.
+  for (const artifact of artifacts) {
+    const content = fs.readFileSync(artifact.path, 'utf-8');
+    writeSaveMetadata(planDir, artifact.typeInfo.baseType, content);
+  }
+  const savesPathAll = path.join(planDir, '.saves.json');
+  if (fs.existsSync(savesPathAll)) {
+    try {
+      execSync(`git add ${path.relative(projectRoot, savesPathAll)}`, { stdio: 'pipe', cwd: projectRoot });
+    } catch { /* */ }
+  }
+
   // 8. Commit
   const typeNames = artifacts.map(a => a.typeInfo.displayName).join(', ');
   const action = allTracked ? 'Update' : 'Save';
@@ -951,10 +974,11 @@ export function saveAllArtifacts(slug: string): void {
     process.exit(1);
   }
 
-  // 8a. Write .saves.json metadata for each artifact after successful commit
+  // 8a. Update .saves.json on disk with real commit hash (pre-commit version
+  // had the previous commit's hash). Fixes on-disk version for local reads.
   for (const artifact of artifacts) {
-    const artifactContent = fs.readFileSync(artifact.path, 'utf-8');
-    writeSaveMetadata(planDir, artifact.typeInfo.baseType, artifactContent);
+    const content = fs.readFileSync(artifact.path, 'utf-8');
+    writeSaveMetadata(planDir, artifact.typeInfo.baseType, content);
   }
 
   // 9. Push (planning artifacts only)
