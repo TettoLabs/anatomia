@@ -27,7 +27,8 @@ import * as path from 'node:path';
 import type { EngineResult } from '../../engine/types/engineResult.js';
 import { createEmptyEngineResult } from '../../engine/types/engineResult.js';
 import { getPatternLibrary, isMultiPattern } from '../../engine/types/patterns.js';
-import { matchGotchas } from '../../utils/gotchas.js';
+import { matchGotchas, matchTriggers } from '../../utils/gotchas.js';
+import { RULES } from '../../data/rules-library.js';
 import { TEST_DIRECTORY_NAMES, computeSkillManifest } from '../../constants.js';
 import type { InitState } from './types.js';
 import { fileExists } from './preflight.js';
@@ -169,6 +170,22 @@ export async function scaffoldAndSeedSkills(
 
     // Shared: inject Detected across all paths (single helper, no duplication)
     content = injectDetectedIfAvailable(content, skillName, engineResult);
+
+    // Inject library rules into ## Detected under ### Library Rules
+    if (engineResult) {
+      const matchedRules = RULES.filter(r =>
+        r.skill === skillName && matchTriggers(r.triggers, engineResult)
+      );
+      if (matchedRules.length > 0) {
+        const ruleLines = matchedRules.map(r => `- ${r.rule}`).join('\n');
+        const librarySection = `\n### Library Rules\n${ruleLines}\n`;
+        // Insert before the next ## heading (end of Detected section)
+        const nextHeading = content.indexOf('\n## ', content.indexOf('## Detected') + 1);
+        if (nextHeading > 0) {
+          content = content.slice(0, nextHeading) + librarySection + content.slice(nextHeading);
+        }
+      }
+    }
 
     // Shared: pre-populate gotchas on fresh install new-skill path only
     if (allowGotchaInjection && engineResult) {
