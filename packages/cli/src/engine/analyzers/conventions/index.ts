@@ -19,6 +19,7 @@ import {
 } from './naming.js';
 import { analyzeImportConvention, detectProjectRoot, parseTsconfigAlias } from './imports.js';
 import { analyzeIndentation } from './indentation.js';
+import { analyzeCodePatterns } from './codePatterns.js';
 
 /**
  * Detect conventions from project code
@@ -109,6 +110,16 @@ export async function detectConventions(
     );
     const indentation = await analyzeIndentation(indentContents, rootPath);
 
+    // Code pattern signals — read sampled file contents for grep-based detection
+    const patternSamplePaths = sampledFilePaths.slice(0, 30);
+    const patternContents = await Promise.all(
+      patternSamplePaths.map(async (p) => {
+        const content = await readFile(join(rootPath, p));
+        return { path: p, content };
+      })
+    );
+    const codePatterns = analyzeCodePatterns(patternContents);
+
     // Combine into ConventionAnalysis
     const detectionTime = Date.now() - startTime;
 
@@ -116,6 +127,7 @@ export async function detectConventions(
       naming,
       imports,
       indentation,
+      codePatterns,
       sampledFiles: sampledFilePaths.length,
       detectionTime,
     };

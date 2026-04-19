@@ -182,11 +182,47 @@ export type IndentationConvention = z.infer<typeof IndentationConventionSchema>;
  * }
  * ```
  */
+/**
+ * Code pattern signals — grep-based characterization for contradiction detection.
+ * These signals tell the setup agent whether template rules match the project's
+ * actual patterns. Not style conventions — quality/architecture patterns.
+ */
+export const CodePatternsSchema = z.object({
+  jsExtensionImports: z.object({
+    count: z.number(),
+    total: z.number(),
+    ratio: z.number(),
+  }).optional(),
+  nodePrefix: z.object({
+    count: z.number(),
+    total: z.number(),
+    ratio: z.number(),
+  }).optional(),
+  emptyCatches: z.object({
+    empty: z.number(),
+    commented: z.number(),
+    total: z.number(),
+  }).optional(),
+  defaultExports: z.object({
+    count: z.number(),
+    totalFiles: z.number(),
+  }).optional(),
+  nullStyle: z.object({
+    nullCount: z.number(),
+    optionalCount: z.number(),
+    preference: z.enum(['null', 'undefined', 'mixed']),
+  }).optional(),
+});
+
+export type CodePatterns = z.infer<typeof CodePatternsSchema>;
+
 export const ConventionAnalysisSchema = z.object({
   // 3 convention categories (all optional - may not detect all)
   naming: NamingConventionSchema.optional(),
   imports: ImportConventionSchema.optional(),
   indentation: IndentationConventionSchema.optional(),
+  // Code pattern signals (optional — only populated in deep tier)
+  codePatterns: CodePatternsSchema.optional(),
 
   // Metadata
   sampledFiles: z.number(),
