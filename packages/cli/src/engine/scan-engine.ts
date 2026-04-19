@@ -29,7 +29,7 @@ import { detectReadme } from './detectors/readme.js';
 import { detectDeployment, detectCI } from './detectors/deployment.js';
 import { detectProjectType } from './detectors/projectType.js';
 import { detectFramework } from './detectors/framework.js';
-import { detectProjectKind } from './detectors/projectKind.js';
+import { detectApplicationShape } from './detectors/applicationShape.js';
 import { analyzeStructure } from './analyzers/structure/index.js';
 import { annotateServiceRoles } from './utils/serviceAnnotation.js';
 import { countFiles } from '../utils/fileCounts.js';
@@ -550,7 +550,7 @@ export async function scanProject(
 
   // Project kind detection — uses primary source root signals + framework result.
   // Read main/module/exports from primary root's package.json (census doesn't
-  // expose raw packageJson — these fields only matter for projectKind).
+  // expose raw packageJson — these fields only matter for applicationShape).
   // primaryRoot was resolved above (line ~504) for monorepo info.
   let hasMain = false;
   let hasExports = false;
@@ -562,7 +562,7 @@ export async function scanProject(
       hasExports = !!pkgRaw['exports'];
     } catch { /* no package.json or unreadable — defaults stay false */ }
   }
-  const projectKindResult = detectProjectKind({
+  const shapeResult = detectApplicationShape({
     hasBin: primaryRoot?.hasBin ?? false,
     hasMain,
     hasExports,
@@ -798,7 +798,7 @@ export async function scanProject(
 
   return {
     schemaVersion: '1.0',
-    projectKind: projectKindResult.kind,
+    applicationShape: shapeResult.shape,
     overview: { project: projectName, scannedAt: now, depth: options.depth },
     stack,
     files,
