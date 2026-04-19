@@ -59,7 +59,7 @@ export const RULES: RuleCandidate[] = [
 
   // Verified: Prisma client is generated code. Schema changes require regeneration.
   {
-    id: 'prisma-generate',
+    id: 'prisma-generate-rule',
     triggers: { database: 'Prisma' },
     skill: 'data-access',
     rule: 'Run `prisma generate` after any `schema.prisma` change. The Prisma client is generated code — schema changes require regeneration before the new types are available.',
@@ -73,7 +73,7 @@ export const RULES: RuleCandidate[] = [
 
   // Verified: Prisma 6-7 serverless connection pooling best practice.
   {
-    id: 'prisma-serverless-singleton',
+    id: 'prisma-serverless-singleton-rule',
     triggers: { database: 'Prisma', platform: 'Vercel' },
     skill: 'data-access',
     rule: 'Use a singleton Prisma client with `globalThis` caching for serverless. Each function invocation that creates a new client opens a fresh connection pool — exhausts database connections under load.',
@@ -143,7 +143,7 @@ export const RULES: RuleCandidate[] = [
 
   // Verified: Stripe webhook signature verification is required for security.
   {
-    id: 'stripe-webhook-verification',
+    id: 'stripe-webhook-verification-rule',
     triggers: { payments: 'Stripe' },
     skill: 'api-patterns',
     rule: 'Verify Stripe webhook signatures using `stripe.webhooks.constructEvent()` with the raw body and signing secret. Never trust webhook payloads without signature verification — they can be forged.',

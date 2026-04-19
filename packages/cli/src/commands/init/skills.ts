@@ -29,6 +29,7 @@ import { createEmptyEngineResult } from '../../engine/types/engineResult.js';
 import { getPatternLibrary, isMultiPattern } from '../../engine/types/patterns.js';
 import { matchGotchas, matchTriggers } from '../../utils/gotchas.js';
 import { RULES } from '../../data/rules-library.js';
+import { COMMON_ISSUES } from '../../data/troubleshooting-library.js';
 import { TEST_DIRECTORY_NAMES, computeSkillManifest } from '../../constants.js';
 import type { InitState } from './types.js';
 import { fileExists } from './preflight.js';
@@ -183,6 +184,24 @@ export async function scaffoldAndSeedSkills(
         const nextHeading = content.indexOf('\n## ', content.indexOf('## Detected') + 1);
         if (nextHeading > 0) {
           content = content.slice(0, nextHeading) + librarySection + content.slice(nextHeading);
+        }
+      }
+    }
+
+    // Inject common issues into ## Detected under ### Common Issues
+    if (engineResult && skillName === 'troubleshooting') {
+      const matchedIssues = COMMON_ISSUES.filter(e =>
+        matchTriggers(e.triggers, engineResult)
+      );
+      if (matchedIssues.length > 0) {
+        const issueLines = matchedIssues.map(e => {
+          const prevention = e.prevention ? ` Prevention: ${e.prevention}` : '';
+          return `- **${e.symptom}** — ${e.fix}${prevention}`;
+        }).join('\n');
+        const issuesSection = `\n### Common Issues\n${issueLines}\n`;
+        const nextHeading = content.indexOf('\n## ', content.indexOf('## Detected') + 1);
+        if (nextHeading > 0) {
+          content = content.slice(0, nextHeading) + issuesSection + content.slice(nextHeading);
         }
       }
     }
