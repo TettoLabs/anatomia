@@ -6,7 +6,13 @@ description: "Invoke when writing tests, reviewing test quality, or setting up t
 # Testing Standards
 
 ## Detected
-<!-- Populated by scan during init. Do not edit manually. -->
+- Framework: Vitest (94 test files)
+- Test command: pnpm run test -- --run
+- Testing patterns: vitest
+- Test location: dedicated test directory
+
+### Library Rules
+- Always pass `--run` flag when invoking Vitest in CI or non-interactive contexts. Vitest defaults to watch mode, which hangs pipelines waiting for input.
 
 ## Rules
 - Test behavior, not implementation. Assert on what the code returns or produces — not which internal functions it calls. Tests should survive refactoring when behavior is unchanged.

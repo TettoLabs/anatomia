@@ -6,13 +6,17 @@ description: "Invoke when implementing features, writing code, or reviewing code
 # Coding Standards
 
 ## Detected
-- Language: TypeScript (120 source files)
-- Functions: camelCase (95%, 355 sampled)
+- Language: TypeScript (125 source files)
+- Functions: camelCase (95%, 393 sampled)
 - Classes: PascalCase (44%)
-- Files: camelCase (36%, 121 sampled)
+- Files: camelCase (36%, 127 sampled)
 - Imports: relative (97%)
 - Indentation: spaces, 2 wide
 - Error handling: exceptions (generic)
+
+### Library Rules
+- All local imports use `.js` extensions (`import { foo } from "./bar.js"`). TypeScript compiles without them but ESM resolution crashes at runtime.
+- Use `import type` for type-only imports, separate from value imports. Prevents runtime imports of pure types.
 
 ## Rules
 - All imports use `.js` extensions and `node:` prefix for built-ins. `import * as fs from 'node:fs/promises'`, `import { scanProject } from './scan-engine.js'`. Omitting `.js` compiles fine but crashes at runtime — tsup emits ESM.

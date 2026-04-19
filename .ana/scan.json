@@ -1,8 +1,9 @@
 {
   "schemaVersion": "1.0",
+  "applicationShape": "cli",
   "overview": {
     "project": "anatomia-workspace",
-    "scannedAt": "2026-04-15T01:17:02.969Z",
+    "scannedAt": "2026-04-19T22:24:28.005Z",
     "depth": "deep"
   },
   "stack": {
@@ -18,11 +19,31 @@
     "aiSdk": null,
     "uiSystem": null
   },
+  "versions": {
+    "@manypkg/get-packages": "^3.1.0",
+    "chalk": "^5.3.0",
+    "commander": "^12.0.0",
+    "get-tsconfig": "^4.13.7",
+    "glob": "^10.3.0",
+    "ora": "^8.0.0",
+    "web-tree-sitter": "0.25.10",
+    "yaml": "^2.8.3",
+    "zod": "^4.3.6",
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.57.1",
+    "@typescript-eslint/parser": "^8.57.1",
+    "eslint": "^10.1.0",
+    "eslint-plugin-jsdoc": "^62.8.0",
+    "tsup": "^8.0.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.0.0"
+  },
   "files": {
-    "source": 120,
-    "test": 87,
+    "source": 125,
+    "test": 94,
     "config": 17,
-    "total": 224
+    "total": 236
   },
   "structure": [
     {
@@ -54,10 +75,10 @@
     "packageManager": "pnpm"
   },
   "git": {
-    "head": "95f457f",
-    "branch": "main",
-    "commitCount": 590,
-    "lastCommitAt": "2026-04-14T19:16:45-06:00",
+    "head": "fe315f0",
+    "branch": "s24-p1-foundation",
+    "commitCount": 693,
+    "lastCommitAt": "2026-04-19T15:23:30-07:00",
     "uncommittedChanges": true,
     "contributorCount": 2,
     "defaultBranch": "main",
@@ -76,6 +97,8 @@
       "effort/STEP_2_2_CONVENTIONS",
       "effort/STEP_2_3_FRAMEWORK_REDESIGN",
       "effort/STEP_2_5_CLI_CODE",
+      "feature/fix-skill-template-gaps",
+      "feature/monorepo-primary-agents-md",
       "feature/s10-engine",
       "feature/s11-init-reset",
       "feature/s12-prove-it",
@@ -113,9 +136,51 @@
       "s22/canvas-content",
       "s22/init-wiring",
       "s22/scan-fixes",
+      "s23-final-polish",
+      "s23-infra-polish",
+      "s23-pipeline-hardening",
+      "s23-proof-quality",
+      "s23/mona-lisa",
+      "s24-p1-foundation",
       "ux/copy-update",
       "ux/fix-copy"
-    ]
+    ],
+    "commitFormat": {
+      "conventional": false,
+      "confidence": 0,
+      "sampleSize": 50
+    },
+    "branchPatterns": {
+      "prefixes": {
+        "SideSprint/": 1,
+        "archive/": 1,
+        "effort/": 12,
+        "feature/": 8,
+        "s13/": 1,
+        "s14/": 1,
+        "s15/": 1,
+        "s16/": 1,
+        "s17/": 1,
+        "ux/": 2
+      },
+      "primary": "effort/"
+    },
+    "hooks": {
+      "preCommit": {
+        "exists": true,
+        "runsTests": true,
+        "runsLint": true,
+        "runsTypecheck": true
+      }
+    },
+    "mergeStrategy": {
+      "strategy": "merge",
+      "confidence": 1
+    },
+    "coAuthor": {
+      "detected": true,
+      "pattern": "Ana <build@anatomia.dev>"
+    }
   },
   "monorepo": {
     "isMonorepo": true,
@@ -129,7 +194,11 @@
         "name": "demo-site",
         "path": "website"
       }
-    ]
+    ],
+    "primaryPackage": {
+      "name": "anatomia-cli",
+      "path": "packages/cli"
+    }
   },
   "externalServices": [],
   "schemas": {},
@@ -197,32 +266,32 @@
         "vitest imports found"
       ]
     },
-    "sampledFiles": 121,
-    "detectionTime": 0,
+    "sampledFiles": 127,
+    "detectionTime": 1,
     "threshold": 0.7
   },
   "conventions": {
     "naming": {
       "files": {
         "majority": "camelCase",
-        "confidence": 0.35555555555555557,
+        "confidence": 0.36,
         "mixed": true,
         "distribution": {
           "camelCase": 0.4,
-          "PascalCase": 0.3,
-          "kebab-case": 0.3
+          "PascalCase": 0.26666666666666666,
+          "kebab-case": 0.3333333333333333
         },
-        "sampleSize": 121
+        "sampleSize": 127
       },
       "functions": {
         "majority": "camelCase",
-        "confidence": 0.9478260869565217,
+        "confidence": 0.9528795811518325,
         "mixed": false,
         "distribution": {
-          "camelCase": 0.961764705882353,
-          "PascalCase": 0.03823529411764706
+          "camelCase": 0.9655172413793104,
+          "PascalCase": 0.034482758620689655
         },
-        "sampleSize": 355
+        "sampleSize": 393
       },
       "classes": {
         "majority": "PascalCase",
@@ -235,31 +304,31 @@
       },
       "variables": {
         "majority": "camelCase",
-        "confidence": 0.9018901890189019,
+        "confidence": 0.9010736196319018,
         "mixed": false,
         "distribution": {
-          "camelCase": 0.9059674502712477,
-          "PascalCase": 0.026220614828209764,
-          "SCREAMING_SNAKE_CASE": 0.06781193490054249
+          "camelCase": 0.9045419553502695,
+          "PascalCase": 0.023094688221709007,
+          "SCREAMING_SNAKE_CASE": 0.07236335642802155
         },
-        "sampleSize": 1906
+        "sampleSize": 2215
       },
       "constants": {
         "majority": "SCREAMING_SNAKE_CASE",
-        "confidence": 0.9375,
+        "confidence": 0.9494949494949495,
         "mixed": false,
         "distribution": {
           "SCREAMING_SNAKE_CASE": 1
         },
-        "sampleSize": 75
+        "sampleSize": 94
       }
     },
     "imports": {
       "style": "relative",
-      "confidence": 0.9700854700854701,
+      "confidence": 0.9721115537848606,
       "distribution": {
-        "absolute": 0.029914529914529916,
-        "relative": 0.9700854700854701
+        "absolute": 0.027888446215139442,
+        "relative": 0.9721115537848606
       },
       "aliasPattern": "@/"
     },
@@ -268,8 +337,40 @@
       "width": 2,
       "confidence": 1
     },
-    "sampledFiles": 121,
-    "detectionTime": 167
+    "codePatterns": {
+      "jsExtensionImports": {
+        "count": 74,
+        "total": 76,
+        "ratio": 0.9736842105263158
+      },
+      "nodePrefix": {
+        "count": 41,
+        "total": 41,
+        "ratio": 1
+      },
+      "emptyCatches": {
+        "empty": 0,
+        "commented": 49,
+        "total": 111
+      },
+      "defaultExports": {
+        "count": 3,
+        "totalFiles": 30
+      },
+      "nullStyle": {
+        "nullCount": 53,
+        "optionalCount": 77,
+        "preference": "mixed"
+      }
+    },
+    "sampledFiles": 127,
+    "detectionTime": 168
+  },
+  "readme": {
+    "description": "Verified AI development. Ship with proof.",
+    "architecture": null,
+    "setup": null,
+    "source": "fallback"
   },
   "secretFindings": null,
   "envVarMap": null,
