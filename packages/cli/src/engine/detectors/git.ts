@@ -16,6 +16,32 @@ export interface GitInfo {
   contributorCount: number | null;
   defaultBranch: string | null;
   branches: string[] | null;
+  // S24 — workflow pattern detection
+  commitFormat: {
+    conventional: boolean;
+    confidence: number;
+    sampleSize: number;
+  } | null;
+  branchPatterns: {
+    prefixes: Record<string, number>;
+    primary: string | null;
+  } | null;
+  hooks: {
+    preCommit: {
+      exists: boolean;
+      runsTests: boolean;
+      runsLint: boolean;
+      runsTypecheck: boolean;
+    };
+  } | null;
+  mergeStrategy: {
+    strategy: 'merge' | 'squash' | 'rebase' | 'mixed';
+    confidence: number;
+  } | null;
+  coAuthor: {
+    detected: boolean;
+    pattern: string | null;
+  } | null;
 }
 
 function gitExec(cmd: string, cwd: string): string | null {
@@ -84,6 +110,142 @@ function detectBranches(cwd: string): string[] | null {
   return [...seen].sort();
 }
 
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+/**
+ * Detect commit format from recent commit messages.
+ */
+function detectCommitFormat(cwd: string): GitInfo['commitFormat'] {
+  const output = gitExec('git log --format=%s -50', cwd);
+  if (!output) return null;
+
+  const messages = output.split('\n').filter(Boolean);
+  if (messages.length === 0) return null;
+
+  // Conventional commits: feat:, fix:, chore:, docs:, refactor:, test:, ci:, style:, perf:, build:
+  const conventionalPattern = /^(feat|fix|chore|docs|refactor|test|ci|style|perf|build)(\(.+\))?(!)?:/;
+  const matchCount = messages.filter(m => conventionalPattern.test(m)).length;
+  const confidence = matchCount / messages.length;
+
+  return {
+    conventional: confidence > 0.5,
+    confidence: Math.round(confidence * 100) / 100,
+    sampleSize: messages.length,
+  };
+}
+
+/**
+ * Detect branch naming patterns from remote branches.
+ */
+function detectBranchPatterns(cwd: string): GitInfo['branchPatterns'] {
+  const output = gitExec('git branch -r', cwd);
+  if (!output) return { prefixes: {}, primary: null };
+
+  const prefixes: Record<string, number> = {};
+  for (const line of output.split('\n')) {
+    const name = line.trim().replace(/^origin\//, '');
+    if (!name || name.includes(' -> ') || name === 'HEAD') continue;
+    // Extract prefix: feature/foo → feature/, fix/bar → fix/
+    const slashIdx = name.indexOf('/');
+    if (slashIdx > 0) {
+      const prefix = name.slice(0, slashIdx + 1);
+      prefixes[prefix] = (prefixes[prefix] || 0) + 1;
+    }
+  }
+
+  // Primary = most frequent prefix
+  let primary: string | null = null;
+  let maxCount = 0;
+  for (const [prefix, count] of Object.entries(prefixes)) {
+    if (count > maxCount) {
+      primary = prefix;
+      maxCount = count;
+    }
+  }
+
+  return { prefixes, primary };
+}
+
+/**
+ * Detect pre-commit hook existence and what it runs.
+ */
+function detectHooks(cwd: string): GitInfo['hooks'] {
+  // Check Husky first (most common), then bare git hooks
+  const huskyPath = join(cwd, '.husky', 'pre-commit');
+  const gitHookPath = join(cwd, '.git', 'hooks', 'pre-commit');
+
+  let hookContent: string | null = null;
+  if (existsSync(huskyPath)) {
+    try { hookContent = readFileSync(huskyPath, 'utf-8'); } catch { /* */ }
+  } else if (existsSync(gitHookPath)) {
+    try { hookContent = readFileSync(gitHookPath, 'utf-8'); } catch { /* */ }
+  }
+
+  if (!hookContent) {
+    return { preCommit: { exists: false, runsTests: false, runsLint: false, runsTypecheck: false } };
+  }
+
+  const lower = hookContent.toLowerCase();
+  return {
+    preCommit: {
+      exists: true,
+      runsTests: /\btest\b|\bvitest\b|\bjest\b|\bmocha\b|\bpytest\b/.test(lower),
+      runsLint: /\blint\b|\beslint\b|\bbiome\b|\bprettier\b/.test(lower),
+      runsTypecheck: /\btypecheck\b|\btsc\b/.test(lower),
+    },
+  };
+}
+
+/**
+ * Detect merge strategy from commit history.
+ */
+function detectMergeStrategy(cwd: string, defaultBranch: string | null): GitInfo['mergeStrategy'] {
+  if (!defaultBranch) return null;
+  const output = gitExec(`git log --merges --oneline -20 ${defaultBranch}`, cwd);
+  if (output === null) return null;
+
+  const mergeCount = output ? output.split('\n').filter(Boolean).length : 0;
+
+  let strategy: 'merge' | 'squash' | 'rebase' | 'mixed';
+  let confidence: number;
+
+  if (mergeCount >= 15) {
+    strategy = 'merge';
+    confidence = Math.min(1, mergeCount / 20);
+  } else if (mergeCount === 0) {
+    strategy = 'squash'; // or rebase — can't distinguish without more analysis
+    confidence = 0.7;
+  } else {
+    strategy = 'mixed';
+    confidence = 0.5;
+  }
+
+  return { strategy, confidence: Math.round(confidence * 100) / 100 };
+}
+
+/**
+ * Detect co-author trailer usage.
+ */
+function detectCoAuthor(cwd: string): GitInfo['coAuthor'] {
+  const output = gitExec('git log --format=%b -20', cwd);
+  if (!output) return { detected: false, pattern: null };
+
+  const trailers = output.match(/Co-authored-by:\s*(.+)/g);
+  if (!trailers || trailers.length === 0) return { detected: false, pattern: null };
+
+  // Extract the most common co-author
+  const counts: Record<string, number> = {};
+  for (const t of trailers) {
+    counts[t] = (counts[t] || 0) + 1;
+  }
+  const primary = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+  return {
+    detected: true,
+    pattern: primary ? primary[0].replace('Co-authored-by: ', '') : null,
+  };
+}
+
 /**
  * Detect git repository information.
  * Returns nulls for all fields if not a git repo or git is unavailable.
@@ -104,6 +266,11 @@ export async function detectGitInfo(cwd: string): Promise<GitInfo> {
         contributorCount: null,
         defaultBranch: null,
         branches: null,
+        commitFormat: null,
+        branchPatterns: null,
+        hooks: null,
+        mergeStrategy: null,
+        coAuthor: null,
       };
     }
     // Git repo with no commits — use symbolic-ref to get branch name
@@ -115,8 +282,13 @@ export async function detectGitInfo(cwd: string): Promise<GitInfo> {
       lastCommitAt: null,
       uncommittedChanges: false,
       contributorCount: null,
-      defaultBranch: branch, // In a fresh repo, current branch is the default
+      defaultBranch: branch,
       branches: branch ? [branch] : [],
+      commitFormat: null,
+      branchPatterns: null,
+      hooks: detectHooks(cwd),
+      mergeStrategy: null,
+      coAuthor: null,
     };
   }
 
@@ -147,5 +319,10 @@ export async function detectGitInfo(cwd: string): Promise<GitInfo> {
     contributorCount,
     defaultBranch,
     branches,
+    commitFormat: detectCommitFormat(cwd),
+    branchPatterns: detectBranchPatterns(cwd),
+    hooks: detectHooks(cwd),
+    mergeStrategy: detectMergeStrategy(cwd, defaultBranch),
+    coAuthor: detectCoAuthor(cwd),
   };
 }
