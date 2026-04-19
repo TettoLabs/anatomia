@@ -18,13 +18,13 @@ description: "Invoke when implementing features, writing code, or reviewing code
 - All imports use `.js` extensions and `node:` prefix for built-ins. `import * as fs from 'node:fs/promises'`, `import { scanProject } from './scan-engine.js'`. Omitting `.js` compiles fine but crashes at runtime — tsup emits ESM.
 - Use `import type` for type-only imports, separate from value imports. Never mix types and values in the same import statement.
 - Prefer named exports. No default exports — this is a CLI, no framework requires them.
-- Never use `any`. Use `unknown` and narrow with type guards. Define an interface for complex types — don't escape the type system.
+- Avoid `any` — use `unknown` and narrow with type guards. `any` is acceptable only for untyped third-party boundaries. Define an interface for complex types — don't escape the type system.
 - Use `| null` for fields that were checked and found empty. Reserve `?:` (optional) for fields that may not have been checked. EngineResult uses `| null` for all nullable stack fields — follow the same convention.
 - Prefer early returns over nested conditionals. `if (!condition) return null;` then the main logic flat — not `if (condition) { ...long block... }`.
 - Error handling has two layers. Commands surface errors to the user: `chalk.red` message + `process.exit(1)`. Engine functions catch internally and return defaults — a detector failure degrades the scan gracefully, it never crashes it.
 - Engine files (`src/engine/`) have zero CLI dependencies — no chalk, no commander, no ora. Engine takes data as input and returns results. All user-facing output belongs in `src/commands/`.
 - Explicit return types on all exported functions. Internal helpers can use inference.
-- Never disable lint rules inline. Fix the code, not the linter.
+- Avoid disabling lint rules inline. When necessary, add a comment explaining why the disable is required.
 
 ## Gotchas
 - **Missing `.js` on imports:** Every relative import MUST end in `.js` (e.g., `import { foo } from './bar.js'`). TypeScript compiles fine without it, but the built CLI crashes at runtime with `ERR_MODULE_NOT_FOUND`. Standard TypeScript training doesn't include this — it's an ESM-specific requirement.
