@@ -704,6 +704,16 @@ export async function scanProject(
     }
   }
 
+  // 5b. Version detection — store declared version strings for deps.
+  // allDeps values ARE version strings (e.g., "^7.2.0"). Uses primary package for monorepos.
+  const versionSourceDeps = census.layout === 'monorepo' ? census.primaryDeps : allDeps;
+  const versions: Record<string, string> = {};
+  for (const [dep, version] of Object.entries(versionSourceDeps)) {
+    if (version && typeof version === 'string') {
+      versions[dep] = version;
+    }
+  }
+
   // 6. File counts
   const files = await countFiles(rootPath);
 
@@ -801,6 +811,7 @@ export async function scanProject(
     applicationShape: shapeResult.shape,
     overview: { project: projectName, scannedAt: now, depth: options.depth },
     stack,
+    versions,
     files,
     structure: structureForOutput,
     commands: { ...commands, packageManager },

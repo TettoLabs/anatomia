@@ -98,6 +98,8 @@ export interface EngineResult {
     aiSdk: string | null;
     uiSystem: string | null;
   };
+  /** Declared version strings for all deps. Keys are package names, values from package.json (e.g., "^7.2.0"). */
+  versions: Record<string, string>;
   files: {
     source: number;
     test: number;
@@ -339,6 +341,7 @@ export function createEmptyEngineResult(): EngineResult {
     applicationShape: 'unknown',
     overview: { project: 'unknown', scannedAt: new Date().toISOString(), depth: 'surface' },
     stack: { language: null, framework: null, database: null, auth: null, testing: [], payments: null, workspace: null, aiSdk: null, uiSystem: null },
+    versions: {},
     files: { source: 0, test: 0, config: 0, total: 0 },
     structure: [],
     commands: { build: null, test: null, lint: null, dev: null, packageManager: null, all: {} },
