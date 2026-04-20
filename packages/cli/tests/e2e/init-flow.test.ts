@@ -90,7 +90,7 @@ describe('ana init E2E', () => {
 
     const anaJsonContent = await fs.readFile(path.join(anaPath, 'ana.json'), 'utf-8');
     const meta = JSON.parse(anaJsonContent);
-    expect(meta.setupMode).toBeDefined();
+    expect(meta.lastScanAt).toBeDefined();
     expect(meta.name).toBeDefined();
 
     // Count assertion removed (S19/INFRA-011 — each expected file is

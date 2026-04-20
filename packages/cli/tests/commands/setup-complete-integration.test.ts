@@ -77,7 +77,7 @@ describe('ana setup complete integration', () => {
         language: 'TypeScript',
         artifactBranch: 'main',
         commands: { test: 'vitest' },
-        setupMode: 'not_started',
+        lastScanAt: null,
       }, null, 2)
     );
   });
@@ -89,7 +89,7 @@ describe('ana setup complete integration', () => {
   it('returns complete with fully populated project', async () => {
     const result = await validateSetupCompletion(tmpDir);
 
-    expect(result.setupMode).toBe('complete');
+    expect(result.setupPhase).toBe('complete');
     expect(result.stats.contextSections.populated).toBe(6);
     expect(result.stats.principlesCaptured).toBe(true);
     expect(result.stats.skillsCalibrated).toBeGreaterThanOrEqual(1);
@@ -117,7 +117,7 @@ describe('ana setup complete integration', () => {
 
     const result = await validateSetupCompletion(tmpDir);
 
-    expect(result.setupMode).toBe('partial');
+    expect(result.setupPhase).toBe('context-complete');
     expect(result.warnings).toContainEqual(expect.stringContaining('What This Project Does'));
   });
 
@@ -130,7 +130,7 @@ describe('ana setup complete integration', () => {
 
     const result = await validateSetupCompletion(tmpDir);
 
-    expect(result.setupMode).toBe('complete');
+    expect(result.setupPhase).toBe('complete');
     expect(result.stats.principlesCaptured).toBe(false);
   });
 
@@ -143,7 +143,7 @@ describe('ana setup complete integration', () => {
 
     const result = await validateSetupCompletion(tmpDir);
 
-    expect(result.setupMode).toBe('complete');
+    expect(result.setupPhase).toBe('complete');
     expect(result.warnings).toContainEqual(expect.stringContaining('missing sections'));
   });
 });

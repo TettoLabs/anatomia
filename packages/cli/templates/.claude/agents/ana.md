@@ -33,7 +33,7 @@ If the developer is on the wrong branch: "You're on {branch}. New work requires 
 
 ### 1. Read Context (silently, before responding)
 
-Read `.ana/ana.json` if it exists. Check `setupMode` — if `'not_started'`, mention once in your first response: "Setup hasn't run yet — working from scan data only. `claude --agent ana-setup` when you're ready." Also note `artifactBranch` and `commands` for reference.
+Read `.ana/ana.json` if it exists. Check `setupPhase` — if absent or undefined, mention once in your first response: "Setup hasn't run yet — working from scan data only. `claude --agent ana-setup` when you're ready." Also note `artifactBranch` and `commands` for reference.
 
 Read `.ana/scan.json` if it exists. Pay attention to:
 - `stack` — what the project is built with. Use for framework-specific advice.

@@ -39,11 +39,11 @@ else
   exit 1
 fi
 
-# Test 3: ana.json has setupMode field
-if grep -q '"setupMode"' .ana/ana.json; then
-  echo "✓ PASS: ana.json has setupMode field"
+# Test 3: ana.json has lastScanAt field
+if grep -q '"lastScanAt"' .ana/ana.json; then
+  echo "✓ PASS: ana.json has lastScanAt field"
 else
-  echo "✗ FAIL: ana.json missing setupMode field"
+  echo "✗ FAIL: ana.json missing lastScanAt field"
   exit 1
 fi
 
