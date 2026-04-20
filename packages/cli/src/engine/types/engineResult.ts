@@ -350,7 +350,7 @@ export function createEmptyEngineResult(): EngineResult {
     files: { source: 0, test: 0, config: 0, total: 0 },
     structure: [],
     commands: { build: null, test: null, lint: null, dev: null, packageManager: null, all: {} },
-    git: { head: null, branch: null, commitCount: null, lastCommitAt: null, uncommittedChanges: false, contributorCount: null, defaultBranch: null, branches: null, commitFormat: null, branchPatterns: null, hooks: null, mergeStrategy: null, coAuthor: null },
+    git: { head: null, branch: null, commitCount: null, lastCommitAt: null, uncommittedChanges: false, contributorCount: null, defaultBranch: null, branches: null, commitFormat: null, branchPatterns: null, hooks: null, mergeStrategy: null, coAuthor: null, recentActivity: null },
     monorepo: { isMonorepo: false, tool: null, packages: [], primaryPackage: null },
     externalServices: [],
     schemas: {},
