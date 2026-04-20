@@ -11,10 +11,10 @@ description: "Invoke when implementing features, writing code, or reviewing code
 ## Rules
 - Prefer named exports. Default exports only where the framework requires them (e.g., Next.js pages, layouts).
 - Use path aliases from tsconfig when configured. Relative imports: never deeper than two levels.
-- Never use `any`. Use `unknown` and narrow with type guards. Define an interface for complex types — don't escape the type system.
+- Avoid `any` — use `unknown` and narrow with type guards. `any` is acceptable only for untyped third-party boundaries. Define an interface for complex types — don't escape the type system.
 - Every catch block must do something deliberate: re-throw, return a typed error, or log with context. Empty catch blocks are never acceptable. Intentional graceful degradation — catching a failure and continuing with a fallback — is fine when the degradation is logged and observable.
 - Never hardcode API keys, secrets, database URLs, or credentials. Use environment variables or a secrets manager.
-- Never disable lint rules inline. Fix the code, not the linter.
+- Avoid disabling lint rules inline. When necessary, add a comment explaining why the disable is required.
 - Explicit return types on all exported functions. Internal helpers can use inference.
 
 ## Gotchas

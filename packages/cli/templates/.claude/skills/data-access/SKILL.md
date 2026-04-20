@@ -9,9 +9,9 @@ description: "Invoke when working with database queries, schema changes, migrati
 <!-- Populated by scan during init. Do not edit manually. -->
 
 ## Rules
-- Import the database client from a single shared module. Never instantiate a new client in route handlers or service functions — each instance opens its own connection pool.
+- Import the database client from a single shared module. Avoid instantiating new clients in route handlers or service functions — each instance opens its own connection pool.
 - Wrap multi-step mutations in a transaction. If any step can fail, partial writes corrupt data — all steps succeed or all roll back.
-- Use eager loading or joins for related data. Never query the database inside a loop — each iteration is a separate round trip.
+- Avoid querying the database inside loops — use eager loading or joins for related data. Each loop iteration is a separate round trip.
 - Select only the fields you need. Avoid fetching entire records when the consumer needs a few columns.
 - Always scope data queries to the authorized context. Filter by the authenticated user, organization, or tenant — don't rely solely on API-layer checks to prevent unauthorized access. A missing `where` clause is an IDOR vulnerability.
 

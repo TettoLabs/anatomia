@@ -139,9 +139,10 @@ describe('Engine Interface Contract', () => {
 
       const expectedKeys = [
         'schemaVersion',
-        'projectKind',
+        'applicationShape',
         'overview',
         'stack',
+        'versions',
         'files',
         'structure',
         'commands',

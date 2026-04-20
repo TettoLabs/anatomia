@@ -7,6 +7,14 @@ description: "Invoke when debugging failures, diagnosing unexpected behavior, or
 
 ## Detected
 
+### Common Issues
+- **TypeScript reports "possibly null" or "possibly undefined" after a type guard, but only in async functions — the guard works in sync code** — Type narrowing does not persist across `await` boundaries because the variable could be reassigned between suspension points. Re-narrow after each `await`: `if (!x) throw` before the `await`, then `if (!x) throw` again after.
+- **Object literal type is widened to `string` instead of the literal value, or array type is `string[]` instead of a tuple** — Add `as const` to the declaration: `const x = { type: "success" } as const` gives `{ readonly type: "success" }` instead of `{ type: string }`. For arrays: `const arr = ["a", "b"] as const` gives `readonly ["a", "b"]` instead of `string[]`.
+- **"ERR_REQUIRE_ESM" when importing an ESM-only package, or "SyntaxError: Cannot use import statement in a module"** — ESM-only packages (like `chalk` v5+, `execa` v6+, `node-fetch` v3+) cannot be `require()`'d. Either: (1) switch your project to ESM (`"type": "module"` in package.json), (2) use dynamic `import()` for the ESM package, or (3) pin an older CJS-compatible version.
+- **Process crashes with "UnhandledPromiseRejection" — an async function throws but nothing catches it** — Ensure every Promise chain has a `.catch()` or is inside a `try/catch` in an `async` function. For fire-and-forget promises, add `.catch(err => logger.error(err))`. Check for missing `await` on async calls — without it, the rejection is unhandled. Prevention: Add `process.on("unhandledRejection", handler)` as a safety net, but fix the root cause — unhandled rejections indicate a code bug.
+- **Tests hang indefinitely in CI or when run from scripts — process never exits** — Vitest defaults to watch mode in interactive terminals. Pass `--run` flag to run tests once and exit: `vitest run` instead of `vitest`. In CI, Vitest auto-detects non-interactive environments, but scripts piping output may still trigger watch mode. Prevention: Always use `vitest run` in CI scripts and non-interactive contexts.
+- **Tests pass individually but fail when run together — mock from one test bleeds into another** — Call `vi.restoreAllMocks()` in `afterEach` or set `mockReset: true` / `restoreAllMocks: true` in `vitest.config.ts`. Module mocks (`vi.mock()`) persist across tests in the same file — use `vi.unmock()` or restructure to avoid shared module-level mocks.
+
 ## Rules
 
 **Pre-commit hook rejects commit.** The hook runs `tsc --noEmit` (source + tests) and `eslint`. It does NOT run tests. The most common cause is a type error. Run `cd packages/cli && pnpm typecheck` to see the specific error. Don't use `--no-verify` to skip the hook — the build (tsup/SWC) strips types without checking, so the hook is the only enforcement.

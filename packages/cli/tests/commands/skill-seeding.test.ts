@@ -139,17 +139,46 @@ describe('skill seeding', () => {
     expect(afterReinit).toContain('CUSTOM GOTCHA: do not mock the database in integration tests');
     expect(afterReinit).toContain('CUSTOM GOTCHA: tests that touch /tmp must clean up in afterEach');
 
-    // The "default watch mode" gotcha text MUST NOT have been re-injected
-    // alongside the custom content (that would double the gotchas section).
-    // The user replaced the whole section — so any occurrence of "watch mode"
-    // would only come from re-injection, which is the failure mode.
-    expect(afterReinit).not.toContain('watch mode');
+    // The vitest-watch-mode GOTCHA text must NOT appear in ## Gotchas
+    // (the user replaced that section). Library rules in ## Detected may
+    // mention "watch mode" — that's correct (Detected refreshes on re-init).
+    // Check for the specific gotcha phrasing, not just "watch mode".
+    const gotchasSection = afterReinit.slice(
+      afterReinit.indexOf('## Gotchas'),
+      afterReinit.indexOf('\n## ', afterReinit.indexOf('## Gotchas') + 1)
+    );
+    expect(gotchasSection).not.toContain('Vitest defaults to watch mode');
 
     // ## Detected MUST still be refreshed (machine-owned section).
     expect(afterReinit).toContain('## Detected');
     const detectedCount = (afterReinit.match(/## Detected/g) || []).length;
     expect(detectedCount).toBe(1);
   }, 30000);
+
+  it('injects ### Library Rules into coding-standards Detected section', async () => {
+    await execFileAsync('node', [cliPath, 'init', '--force'], { cwd: tempDir });
+
+    const content = await fs.readFile(
+      path.join(tempDir, '.claude', 'skills', 'coding-standards', 'SKILL.md'),
+      'utf-8'
+    );
+    // TypeScript project → ESM .js extension rule should be injected
+    expect(content).toContain('### Library Rules');
+    expect(content).toContain('.js');
+  });
+
+  it('injects ### Common Issues into troubleshooting Detected section', async () => {
+    await execFileAsync('node', [cliPath, 'init', '--force'], { cwd: tempDir });
+
+    const content = await fs.readFile(
+      path.join(tempDir, '.claude', 'skills', 'troubleshooting', 'SKILL.md'),
+      'utf-8'
+    );
+    // Next.js + Vitest + Prisma project → should have common issues
+    expect(content).toContain('### Common Issues');
+    // Vitest watch mode hang issue
+    expect(content).toContain('hang');
+  });
 
   it('re-init preserves ## Rules but replaces ## Detected (D6.13 boundary)', async () => {
     // First init — creates skill files with scan data
