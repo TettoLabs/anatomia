@@ -101,12 +101,9 @@ describe('ana init', () => {
         },
         coAuthor: 'Ana <build@anatomia.dev>',
         artifactBranch: engineResult.git?.defaultBranch ?? engineResult.git?.branch ?? 'main',
-        setupMode: 'not_started',
-        setupCompletedAt: null,
         lastScanAt: engineResult.overview.scannedAt,
       };
 
-      expect(meta.setupMode).toBe('not_started');
       expect(meta.name).toBe('unknown');
       // S19/SCAN-032: createEmptyEngineResult defaults packageManager to
       // null because a project with no detected lockfile has no package
@@ -116,7 +113,8 @@ describe('ana init', () => {
       expect(meta.framework).toBeNull();
       expect(meta.anaVersion).toBeDefined();
       expect(meta.lastScanAt).toBeDefined();
-      expect(meta.setupCompletedAt).toBeNull();
+      // setupPhase is NOT set by createAnaJson — only by the setup agent
+      expect(meta).not.toHaveProperty('setupPhase');
     });
 
     it('has all required fields for D1 schema', () => {
@@ -134,15 +132,11 @@ describe('ana init', () => {
         },
         coAuthor: 'Ana <build@anatomia.dev>',
         artifactBranch: 'main',
-        setupMode: 'not_started',
-        setupCompletedAt: null,
         lastScanAt: new Date().toISOString(),
       };
 
       const keys = Object.keys(meta);
       expect(keys).toContain('anaVersion');
-      expect(keys).toContain('setupMode');
-      expect(keys).toContain('setupCompletedAt');
       expect(keys).toContain('lastScanAt');
       expect(keys).toContain('name');
       expect(keys).toContain('framework');
@@ -150,6 +144,8 @@ describe('ana init', () => {
       expect(keys).not.toContain('scanStaleDays');
       expect(keys).not.toContain('setupStatus');
       expect(keys).not.toContain('analyzerVersion');
+      expect(keys).not.toContain('setupMode');
+      expect(keys).not.toContain('setupCompletedAt');
     });
   });
 

@@ -716,8 +716,8 @@ async function readScanJson(cwd: string): Promise<Record<string, unknown> | null
  * S19/NEW-008: uses AnaJsonSchema (same schema the init re-init merge
  * consumes) so the dashboard, the completion validator, and the init
  * pipeline all see the same validated shape. Per-field `.catch()`
- * handles drift from pre-S18 installs gracefully — setupMode: "guided"
- * becomes 'not_started', scanStaleDays gets stripped, etc.
+ * handles drift from pre-S18 installs gracefully — invalid fields
+ * get stripped via .catch(), scanStaleDays gets stripped, etc.
  *
  * @param cwd - Project root directory
  * @returns Validated ana.json or null if not found / unreadable
@@ -1098,7 +1098,7 @@ function extractSection(content: string, sectionName: string): string | null {
 // --- Setup Completion Validation (D12.3) ---
 
 export interface SetupValidationResult {
-  setupMode: 'partial' | 'complete';
+  setupPhase: 'context-complete' | 'complete';
   warnings: string[];
   stats: {
     skillsCalibrated: number;
@@ -1253,7 +1253,7 @@ function fileHasRealContent(content: string): boolean {
  * Used by both `ana setup complete` CLI and referenced by orchestrator Step 17.
  *
  * @param cwd - Project root directory
- * @returns Validation result with setupMode determination
+ * @returns Validation result with setupPhase determination
  */
 export async function validateSetupCompletion(cwd: string): Promise<SetupValidationResult> {
   const warnings: string[] = [];
@@ -1320,13 +1320,13 @@ export async function validateSetupCompletion(cwd: string): Promise<SetupValidat
     }
   }
 
-  // --- Determine setupMode ---
+  // --- Determine setupPhase ---
   // Phase 2 at least partially done = critical section has content
   // Phase 3 skip = still complete
-  const setupMode: 'partial' | 'complete' = criticalSectionPopulated ? 'complete' : 'partial';
+  const setupPhase: 'context-complete' | 'complete' = criticalSectionPopulated ? 'complete' : 'context-complete';
 
   return {
-    setupMode,
+    setupPhase,
     warnings,
     stats: {
       skillsCalibrated,
@@ -1347,19 +1347,17 @@ async function displaySetupDashboard(cwd: string): Promise<boolean> {
   // --- Setup Status ---
   // S19/SETUP-008: ana.json is the source of truth for setup completion.
   // setup-progress.json is a transient coordination file used only when
-  // setup is actively partial. Once setupMode === 'complete', the progress
+  // setup is actively partial. Once setupPhase === 'complete', the progress
   // file is deleted by `ana setup complete` and phase granularity is
   // meaningless post-completion — show a single "setup complete" line.
   console.log(chalk.bold('\nSetup Status'));
   console.log('────────────');
 
   const anaJsonForStatus = await readAnaJson(cwd);
-  const setupMode = anaJsonForStatus?.setupMode ?? 'not_started';
-  const completedAt = anaJsonForStatus?.setupCompletedAt;
+  const currentPhase = anaJsonForStatus?.setupPhase;
 
-  if (setupMode === 'complete' && completedAt) {
-    const date = new Date(completedAt).toLocaleDateString();
-    console.log(`  ${chalk.green('✓')} Setup complete (${date})`);
+  if (currentPhase === 'complete') {
+    console.log(`  ${chalk.green('✓')} Setup complete`);
   } else {
     // Partial / not started — consult progress file for per-phase detail
     const progress = await readSetupProgress(cwd);

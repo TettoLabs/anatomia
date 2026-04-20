@@ -77,7 +77,7 @@ export function registerSetupCommand(program: Command): void {
     const result = await validateSetupCompletion(cwd);
 
     // --force overrides to "complete"
-    const finalMode = options.force ? 'complete' : result.setupMode;
+    const finalPhase = options.force ? 'complete' : result.setupPhase;
 
     // Display warnings
     if (result.warnings.length > 0) {
@@ -96,13 +96,12 @@ export function registerSetupCommand(program: Command): void {
       config = {};
     }
 
-    config['setupMode'] = finalMode;
-    config['setupCompletedAt'] = new Date().toISOString();
+    config['setupPhase'] = finalPhase;
     await fs.writeFile(anaJsonPath, JSON.stringify(config, null, 2), 'utf-8');
 
     // Handle setup-progress.json lifecycle
     const progressPath = path.join(anaPath, 'state', 'setup-progress.json');
-    if (finalMode === 'complete') {
+    if (finalPhase === 'complete') {
       // Delete on complete
       try {
         await fs.unlink(progressPath);
@@ -114,7 +113,7 @@ export function registerSetupCommand(program: Command): void {
 
     // Display summary
     const { stats } = result;
-    if (finalMode === 'complete') {
+    if (finalPhase === 'complete') {
       console.log(chalk.green('✓ Setup complete\n'));
       console.log(`  Skills:     ${stats.skillsCalibrated} calibrated`);
       console.log(`  Context:    ${stats.contextSections.populated}/${stats.contextSections.total} sections`);

@@ -10,11 +10,6 @@
  *      like scanStaleDays from surviving forever in user installs).
  *   4. Missing fields → .default() supplies a sensible initial value so
  *      the re-init merge never has to backfill from newJson.
- *
- * These tests protect against the real-world drift observed on the
- * dogfood .ana/: setupMode: "guided" (pre-S18 string) and scanStaleDays: 7
- * (pre-S18 field) both persisted forever because the pre-S19 merge
- * preserved everything verbatim.
  */
 
 import { describe, it, expect } from 'vitest';
@@ -32,14 +27,13 @@ describe('AnaJsonSchema', () => {
         commands: { build: 'pnpm run build', test: 'pnpm test' },
         coAuthor: 'Ana <build@anatomia.dev>',
         artifactBranch: 'main',
-        setupMode: 'complete',
-        setupCompletedAt: '2026-04-06T01:04:09.194Z',
+        setupPhase: 'complete',
         lastScanAt: '2026-04-07T17:58:30.491Z',
       };
       const parsed = AnaJsonSchema.parse(input);
       expect(parsed.anaVersion).toBe('0.2.0');
       expect(parsed.name).toBe('my-project');
-      expect(parsed.setupMode).toBe('complete');
+      expect(parsed.setupPhase).toBe('complete');
       expect(parsed.lastScanAt).toBe('2026-04-07T17:58:30.491Z');
     });
 
@@ -50,7 +44,6 @@ describe('AnaJsonSchema', () => {
         language: null,
         framework: null,
         packageManager: null,
-        setupCompletedAt: null,
         lastScanAt: null,
       });
       expect(parsed.language).toBeNull();
@@ -59,7 +52,7 @@ describe('AnaJsonSchema', () => {
     });
   });
 
-  describe('drift from pre-S18 dogfood installs', () => {
+  describe('drift from pre-S18 installs', () => {
     it('strips scanStaleDays fossil without touching other fields', () => {
       const input = {
         anaVersion: '0.1.0',
@@ -70,21 +63,19 @@ describe('AnaJsonSchema', () => {
         commands: { build: 'pnpm run build' },
         coAuthor: 'Ana <build@anatomia.dev>',
         artifactBranch: 'main',
-        setupMode: 'complete',
-        scanStaleDays: 7, // <-- pre-S18 fossil, removed from createAnaJson in S18/D8.1
-        setupCompletedAt: '2026-04-06T01:04:09.194Z',
+        setupPhase: 'complete',
+        scanStaleDays: 7,
         lastScanAt: '2026-04-07T17:58:30.491Z',
       };
       const parsed = AnaJsonSchema.parse(input);
       expect('scanStaleDays' in parsed).toBe(false);
-      // Everything else survives
       expect(parsed.name).toBe('anatomia');
       expect(parsed.coAuthor).toBe('Ana <build@anatomia.dev>');
       expect(parsed.artifactBranch).toBe('main');
-      expect(parsed.setupMode).toBe('complete');
+      expect(parsed.setupPhase).toBe('complete');
     });
 
-    it('catches invalid setupMode "guided" and defaults to not_started', () => {
+    it('catches invalid setupPhase "guided" and defaults to undefined', () => {
       const input = {
         anaVersion: '0.1.0',
         name: 'anatomia',
@@ -92,45 +83,24 @@ describe('AnaJsonSchema', () => {
         packageManager: 'pnpm',
         coAuthor: 'Ana <build@anatomia.dev>',
         artifactBranch: 'main',
-        setupMode: 'guided', // <-- pre-S18 string, not in current enum
-        setupCompletedAt: '2026-04-06T01:04:09.194Z',
+        setupPhase: 'guided',
         lastScanAt: '2026-04-07T17:58:30.491Z',
       };
       const parsed = AnaJsonSchema.parse(input);
-      expect(parsed.setupMode).toBe('not_started');
-      // Other user fields must survive the single-field catch
+      expect(parsed.setupPhase).toBeUndefined();
       expect(parsed.coAuthor).toBe('Ana <build@anatomia.dev>');
       expect(parsed.artifactBranch).toBe('main');
-      expect(parsed.setupCompletedAt).toBe('2026-04-06T01:04:09.194Z');
     });
 
-    it('handles both drifts at once (guided + scanStaleDays)', () => {
-      // This is the exact shape of the live anatomia dogfood ana.json at
-      // the start of S19. The drift survived two sprints of re-inits
-      // because the old merge was spread-everything-preserve-nothing.
+    it('strips old setupMode field', () => {
       const input = {
         name: 'anatomia',
-        framework: null,
-        language: 'TypeScript',
-        packageManager: 'pnpm',
-        commands: {
-          build: 'pnpm run build',
-          test: 'pnpm run test',
-          lint: 'pnpm run lint',
-          dev: 'pnpm run dev',
-        },
-        coAuthor: 'Ana <build@anatomia.dev>',
-        artifactBranch: 'main',
-        setupMode: 'guided',
-        scanStaleDays: 7,
+        setupMode: 'complete',
         setupCompletedAt: '2026-04-06T01:04:09.194Z',
-        lastScanAt: '2026-04-07T17:58:30.491Z',
       };
       const parsed = AnaJsonSchema.parse(input);
-      expect('scanStaleDays' in parsed).toBe(false);
-      expect(parsed.setupMode).toBe('not_started');
-      expect(parsed.name).toBe('anatomia');
-      expect(parsed.coAuthor).toBe('Ana <build@anatomia.dev>');
+      expect('setupMode' in parsed).toBe(false);
+      expect('setupCompletedAt' in parsed).toBe(false);
     });
   });
 
@@ -145,9 +115,9 @@ describe('AnaJsonSchema', () => {
       expect(parsed.name).toBe('unknown');
     });
 
-    it('defaults setupMode to not_started when missing', () => {
+    it('setupPhase is undefined when missing', () => {
       const parsed = AnaJsonSchema.parse({});
-      expect(parsed.setupMode).toBe('not_started');
+      expect(parsed.setupPhase).toBeUndefined();
     });
 
     it('defaults nullable fields to null when missing', () => {
@@ -155,7 +125,6 @@ describe('AnaJsonSchema', () => {
       expect(parsed.language).toBeNull();
       expect(parsed.framework).toBeNull();
       expect(parsed.packageManager).toBeNull();
-      expect(parsed.setupCompletedAt).toBeNull();
       expect(parsed.lastScanAt).toBeNull();
     });
   });
@@ -165,14 +134,36 @@ describe('AnaJsonSchema', () => {
       const parsed = AnaJsonSchema.parse({
         anaVersion: '0.2.0',
         name: 'my-project',
-        language: 42, // <-- wrong type, catches to null
+        language: 42, // wrong type, catches to null
         framework: 'Next.js',
-        setupMode: 'complete',
+        setupPhase: 'complete',
       });
-      expect(parsed.language).toBeNull(); // caught
-      expect(parsed.framework).toBe('Next.js'); // survives
-      expect(parsed.anaVersion).toBe('0.2.0'); // survives
-      expect(parsed.setupMode).toBe('complete'); // survives
+      expect(parsed.language).toBeNull();
+      expect(parsed.framework).toBe('Next.js');
+      expect(parsed.anaVersion).toBe('0.2.0');
+      expect(parsed.setupPhase).toBe('complete');
+    });
+  });
+
+  describe('setupPhase enum values', () => {
+    it('accepts context-complete', () => {
+      const parsed = AnaJsonSchema.parse({ setupPhase: 'context-complete' });
+      expect(parsed.setupPhase).toBe('context-complete');
+    });
+
+    it('accepts complete', () => {
+      const parsed = AnaJsonSchema.parse({ setupPhase: 'complete' });
+      expect(parsed.setupPhase).toBe('complete');
+    });
+
+    it('accepts not-started', () => {
+      const parsed = AnaJsonSchema.parse({ setupPhase: 'not-started' });
+      expect(parsed.setupPhase).toBe('not-started');
+    });
+
+    it('catches invalid value and defaults to undefined', () => {
+      const parsed = AnaJsonSchema.parse({ setupPhase: 'invalid' });
+      expect(parsed.setupPhase).toBeUndefined();
     });
   });
 });

@@ -38,7 +38,7 @@
 - context/design-principles.md — `generateDesignPrinciplesTemplate()`
 
 ### Generated Metadata (2)
-- ana.json — `createAnaJson()` with setupMode, anaVersion, etc.
+- ana.json — `createAnaJson()` with setupPhase, anaVersion, etc.
 - scan.json — `JSON.stringify(engineResult, null, 2)`
 
 ### Skill Detected Sections

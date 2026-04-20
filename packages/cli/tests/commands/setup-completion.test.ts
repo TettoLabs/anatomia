@@ -93,8 +93,7 @@ async function createProjectStructure(
     language: 'TypeScript',
     artifactBranch: 'main',
     commands: { test: 'vitest' },
-    setupMode: 'not_started',
-    setupCompletedAt: null,
+    lastScanAt: null,
   };
   await fs.writeFile(path.join(anaPath, 'ana.json'), JSON.stringify(anaJson, null, 2));
 
@@ -137,7 +136,7 @@ describe('validateSetupCompletion', () => {
     await createProjectStructure(tmpDir, { projectContext: pc });
 
     const result = await validateSetupCompletion(tmpDir);
-    expect(result.setupMode).toBe('complete');
+    expect(result.setupPhase).toBe('complete');
     expect(result.stats.contextSections.populated).toBeGreaterThanOrEqual(1);
   });
 
@@ -145,7 +144,7 @@ describe('validateSetupCompletion', () => {
     await createProjectStructure(tmpDir);
 
     const result = await validateSetupCompletion(tmpDir);
-    expect(result.setupMode).toBe('partial');
+    expect(result.setupPhase).toBe('context-complete');
     expect(result.warnings).toContainEqual(
       expect.stringContaining('What This Project Does')
     );
@@ -162,7 +161,7 @@ describe('validateSetupCompletion', () => {
     });
 
     const result = await validateSetupCompletion(tmpDir);
-    expect(result.setupMode).toBe('complete');
+    expect(result.setupPhase).toBe('complete');
     expect(result.stats.principlesCaptured).toBe(false);
   });
 
@@ -184,7 +183,7 @@ describe('validateSetupCompletion', () => {
     await createProjectStructure(tmpDir, { projectContext: pc });
 
     const result = await validateSetupCompletion(tmpDir);
-    expect(result.setupMode).toBe('partial');
+    expect(result.setupPhase).toBe('context-complete');
   });
 
   it('treats design-principles with only heading and HTML comments as empty', async () => {
@@ -242,7 +241,7 @@ Some rules.
     });
 
     const result = await validateSetupCompletion(tmpDir);
-    expect(result.setupMode).toBe('complete');
+    expect(result.setupPhase).toBe('complete');
     expect(result.warnings).toContainEqual(
       expect.stringContaining('missing sections')
     );
@@ -272,7 +271,7 @@ Don't touch the scan engine.
     await createProjectStructure(tmpDir, { projectContext: pc });
 
     const result = await validateSetupCompletion(tmpDir);
-    expect(result.setupMode).toBe('complete');
+    expect(result.setupPhase).toBe('complete');
     expect(result.stats.contextSections.populated).toBe(3);
     expect(result.stats.contextSections.total).toBe(6);
   });
@@ -289,7 +288,7 @@ describe('ana setup complete CLI', () => {
     await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
-  it('writes setupMode to ana.json based on validation', async () => {
+  it('writes setupPhase to ana.json based on validation', async () => {
     const pc = PROJECT_CONTEXT_TEMPLATE.replace(
       '<!-- Populated by setup. Describes your product, target users, and purpose. -->',
       'A real product description.'
@@ -297,18 +296,16 @@ describe('ana setup complete CLI', () => {
     await createProjectStructure(tmpDir, { projectContext: pc });
 
     const result = await validateSetupCompletion(tmpDir);
-    expect(result.setupMode).toBe('complete');
+    expect(result.setupPhase).toBe('complete');
 
     // Simulate CLI write
     const anaJsonPath = path.join(tmpDir, '.ana', 'ana.json');
     const config = JSON.parse(await fs.readFile(anaJsonPath, 'utf-8'));
-    config.setupMode = result.setupMode;
-    config.setupCompletedAt = new Date().toISOString();
+    config.setupPhase = result.setupPhase;
     await fs.writeFile(anaJsonPath, JSON.stringify(config, null, 2));
 
     const updated = JSON.parse(await fs.readFile(anaJsonPath, 'utf-8'));
-    expect(updated.setupMode).toBe('complete');
-    expect(updated.setupCompletedAt).toBeTruthy();
+    expect(updated.setupPhase).toBe('complete');
   });
 
   it('deletes setup-progress.json when complete', async () => {
@@ -331,7 +328,7 @@ describe('ana setup complete CLI', () => {
     expect(await fileExists(progressPath)).toBe(true);
 
     const result = await validateSetupCompletion(tmpDir);
-    expect(result.setupMode).toBe('complete');
+    expect(result.setupPhase).toBe('complete');
 
     // Simulate CLI cleanup
     await fs.unlink(progressPath);
@@ -353,7 +350,7 @@ describe('ana setup complete CLI', () => {
     expect(await fileExists(progressPath)).toBe(true);
 
     const result = await validateSetupCompletion(tmpDir);
-    expect(result.setupMode).toBe('partial');
+    expect(result.setupPhase).toBe('context-complete');
 
     // Partial: don't delete
     expect(await fileExists(progressPath)).toBe(true);
@@ -364,7 +361,7 @@ describe('ana setup complete CLI', () => {
     await createProjectStructure(tmpDir);
 
     const result = await validateSetupCompletion(tmpDir);
-    expect(result.setupMode).toBe('partial');
+    expect(result.setupPhase).toBe('context-complete');
 
     // --force overrides
     const finalMode = 'complete'; // force flag
