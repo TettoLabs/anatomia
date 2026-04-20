@@ -155,6 +155,31 @@ describe('skill seeding', () => {
     expect(detectedCount).toBe(1);
   }, 30000);
 
+  it('injects ### Library Rules into coding-standards Detected section', async () => {
+    await execFileAsync('node', [cliPath, 'init', '--force'], { cwd: tempDir });
+
+    const content = await fs.readFile(
+      path.join(tempDir, '.claude', 'skills', 'coding-standards', 'SKILL.md'),
+      'utf-8'
+    );
+    // TypeScript project → ESM .js extension rule should be injected
+    expect(content).toContain('### Library Rules');
+    expect(content).toContain('.js');
+  });
+
+  it('injects ### Common Issues into troubleshooting Detected section', async () => {
+    await execFileAsync('node', [cliPath, 'init', '--force'], { cwd: tempDir });
+
+    const content = await fs.readFile(
+      path.join(tempDir, '.claude', 'skills', 'troubleshooting', 'SKILL.md'),
+      'utf-8'
+    );
+    // Next.js + Vitest + Prisma project → should have common issues
+    expect(content).toContain('### Common Issues');
+    // Vitest watch mode hang issue
+    expect(content).toContain('hang');
+  });
+
   it('re-init preserves ## Rules but replaces ## Detected (D6.13 boundary)', async () => {
     // First init — creates skill files with scan data
     await execFileAsync('node', [cliPath, 'init', '--force'], { cwd: tempDir });

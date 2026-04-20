@@ -150,4 +150,61 @@ describe('analyzeCodePatterns', () => {
       expect(result.nullStyle?.preference).toBe('mixed');
     });
   });
+
+  describe('edge cases', () => {
+    it('handles empty file list without crashing', () => {
+      const result = analyzeCodePatterns([]);
+      expect(result.jsExtensionImports).toBeUndefined();
+      expect(result.nodePrefix).toBeUndefined();
+      expect(result.emptyCatches).toEqual({ empty: 0, commented: 0, total: 0 });
+      expect(result.defaultExports).toEqual({ count: 0, totalFiles: 0 });
+      expect(result.nullStyle).toEqual({ nullCount: 0, optionalCount: 0, preference: 'mixed' });
+    });
+
+    it('handles file with no imports (division-by-zero safe)', () => {
+      const files = makeFiles([
+        { path: 'src/a.ts', content: 'const x = 1;\nconst y = 2;' },
+      ]);
+      const result = analyzeCodePatterns(files);
+      // No local imports → undefined (not NaN)
+      expect(result.jsExtensionImports).toBeUndefined();
+      expect(result.nodePrefix).toBeUndefined();
+    });
+
+    it('handles file with only package imports (no local)', () => {
+      const files = makeFiles([
+        { path: 'src/a.ts', content: "import chalk from 'chalk';\nimport express from 'express';" },
+      ]);
+      const result = analyzeCodePatterns(files);
+      expect(result.jsExtensionImports).toBeUndefined();
+    });
+
+    it('handles catch with multiline body correctly', () => {
+      const files = makeFiles([
+        { path: 'src/a.ts', content: 'try { x() } catch (e) {\n  // this is intentional\n  // really\n}' },
+      ]);
+      const result = analyzeCodePatterns(files);
+      // Multiline comment-only body should be counted as commented
+      expect(result.emptyCatches?.commented).toBe(1);
+      expect(result.emptyCatches?.empty).toBe(0);
+    });
+
+    it('counts .ts and .tsx extensions as having extension', () => {
+      const files = makeFiles([
+        { path: 'src/a.ts', content: "import { Comp } from './Button.tsx';\nimport { fn } from './utils.ts';" },
+      ]);
+      const result = analyzeCodePatterns(files);
+      expect(result.jsExtensionImports?.count).toBe(2);
+      expect(result.jsExtensionImports?.ratio).toBe(1);
+    });
+
+    it('detects require() calls with local paths', () => {
+      const files = makeFiles([
+        { path: 'src/a.ts', content: "const foo = require('./bar.js');\nconst baz = require('./qux');" },
+      ]);
+      const result = analyzeCodePatterns(files);
+      expect(result.jsExtensionImports?.count).toBe(1);
+      expect(result.jsExtensionImports?.total).toBe(2);
+    });
+  });
 });
