@@ -6,7 +6,7 @@
  * Used by the setup agent during orientation to discover what docs exist.
  */
 
-import { existsSync, statSync, readdirSync } from 'node:fs';
+import { existsSync, statSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { join, relative, extname } from 'node:path';
 import { glob } from 'glob';
