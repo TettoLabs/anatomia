@@ -42,6 +42,13 @@ export interface GitInfo {
     detected: boolean;
     pattern: string | null;
   } | null;
+  // S24 P2 — project activity signals
+  recentActivity: {
+    windowDays: number;
+    highChurnFiles: Array<{ path: string; commits: number }>;
+    activeContributors: number;
+    weeklyCommits: number[];
+  } | null;
 }
 
 function gitExec(cmd: string, cwd: string): string | null {
@@ -246,6 +253,69 @@ function detectCoAuthor(cwd: string): GitInfo['coAuthor'] {
   };
 }
 
+/** Source file extensions for high-churn filtering. */
+const SOURCE_EXTENSIONS = new Set([
+  '.ts', '.tsx', '.js', '.jsx', '.py', '.go', '.rs', '.java', '.rb', '.swift', '.kt',
+]);
+
+/**
+ * Detect recent project activity signals.
+ * Returns null for shallow clones. Returns empty data for zero-activity repos.
+ */
+function detectRecentActivity(cwd: string): GitInfo['recentActivity'] {
+  // Check for shallow clone
+  const isShallow = gitExec('git rev-parse --is-shallow-repository', cwd);
+  if (isShallow === 'true') return null;
+
+  // Adaptive window: narrow to 14 days if >300 commits in 30 days
+  const countStr = gitExec('git rev-list --count --since="30 days ago" HEAD', cwd);
+  const count30d = countStr ? parseInt(countStr, 10) : 0;
+  const windowDays = count30d > 300 ? 14 : 30;
+
+  // High-churn files
+  const churnOutput = gitExec(`git log --since="${windowDays} days ago" --name-only --format=""`, cwd);
+  const fileCounts = new Map<string, number>();
+  if (churnOutput) {
+    for (const line of churnOutput.split('\n')) {
+      const file = line.trim();
+      if (!file) continue;
+      // Filter to source extensions + src/ markdown
+      const ext = file.substring(file.lastIndexOf('.'));
+      const isSourceExt = SOURCE_EXTENSIONS.has(ext);
+      const isSrcMarkdown = ext === '.md' && (file.startsWith('src/') || file.includes('/src/'));
+      if (!isSourceExt && !isSrcMarkdown) continue;
+      fileCounts.set(file, (fileCounts.get(file) || 0) + 1);
+    }
+  }
+  const highChurnFiles = [...fileCounts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([path, commits]) => ({ path, commits }));
+
+  // Active contributors
+  const contribOutput = gitExec(`git shortlog -sn --since="${windowDays} days ago" HEAD`, cwd);
+  const activeContributors = contribOutput
+    ? contribOutput.split('\n').filter(l => l.trim().length > 0).length
+    : 0;
+
+  // Weekly commit tempo (4 weeks, newest first)
+  const tempoOutput = gitExec('git log --format="%ct" --since="28 days ago"', cwd);
+  const weeklyCommits = [0, 0, 0, 0];
+  if (tempoOutput) {
+    const now = Date.now() / 1000;
+    const weekSeconds = 7 * 24 * 3600;
+    for (const line of tempoOutput.split('\n')) {
+      const ts = parseInt(line.trim(), 10);
+      if (isNaN(ts)) continue;
+      const age = now - ts;
+      const bucket = Math.min(Math.floor(age / weekSeconds), 3) as 0 | 1 | 2 | 3;
+      weeklyCommits[bucket] = (weeklyCommits[bucket] ?? 0) + 1;
+    }
+  }
+
+  return { windowDays, highChurnFiles, activeContributors, weeklyCommits };
+}
+
 /**
  * Detect git repository information.
  * Returns nulls for all fields if not a git repo or git is unavailable.
@@ -271,6 +341,7 @@ export async function detectGitInfo(cwd: string): Promise<GitInfo> {
         hooks: null,
         mergeStrategy: null,
         coAuthor: null,
+        recentActivity: null,
       };
     }
     // Git repo with no commits — use symbolic-ref to get branch name
@@ -289,6 +360,7 @@ export async function detectGitInfo(cwd: string): Promise<GitInfo> {
       hooks: detectHooks(cwd),
       mergeStrategy: null,
       coAuthor: null,
+      recentActivity: null,
     };
   }
 
@@ -324,5 +396,6 @@ export async function detectGitInfo(cwd: string): Promise<GitInfo> {
     hooks: detectHooks(cwd),
     mergeStrategy: detectMergeStrategy(cwd, defaultBranch),
     coAuthor: detectCoAuthor(cwd),
+    recentActivity: detectRecentActivity(cwd),
   };
 }

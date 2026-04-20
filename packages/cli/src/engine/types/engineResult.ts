@@ -20,6 +20,7 @@ import type { DetectedCommands } from '../detectors/commands.js';
 import type { GitInfo } from '../detectors/git.js';
 import type { DetectedDeployment, DetectedCI } from '../detectors/deployment.js';
 import type { ApplicationShape } from '../detectors/applicationShape.js';
+import type { DocumentationResult } from '../detectors/documentation.js';
 
 /**
  * Closed set of stack roles an external service may fulfill. Used by
@@ -193,6 +194,10 @@ export interface EngineResult {
   // null when no README found or content is empty after stripping.
   readme: ReadmeResult | null;
 
+  // Documentation inventory — paths and metadata for all discovered docs.
+  // Populated by detectDocumentation() in scan-engine.
+  documentation: DocumentationResult;
+
   // Phase 1: Secret Intelligence
   secretFindings: Array<{
     type: string;
@@ -345,7 +350,7 @@ export function createEmptyEngineResult(): EngineResult {
     files: { source: 0, test: 0, config: 0, total: 0 },
     structure: [],
     commands: { build: null, test: null, lint: null, dev: null, packageManager: null, all: {} },
-    git: { head: null, branch: null, commitCount: null, lastCommitAt: null, uncommittedChanges: false, contributorCount: null, defaultBranch: null, branches: null, commitFormat: null, branchPatterns: null, hooks: null, mergeStrategy: null, coAuthor: null },
+    git: { head: null, branch: null, commitCount: null, lastCommitAt: null, uncommittedChanges: false, contributorCount: null, defaultBranch: null, branches: null, commitFormat: null, branchPatterns: null, hooks: null, mergeStrategy: null, coAuthor: null, recentActivity: null },
     monorepo: { isMonorepo: false, tool: null, packages: [], primaryPackage: null },
     externalServices: [],
     schemas: {},
@@ -357,6 +362,7 @@ export function createEmptyEngineResult(): EngineResult {
     patterns: null,
     conventions: null,
     readme: null,
+    documentation: { files: [], docsDirectory: null, landingPage: null },
     secretFindings: null,
     envVarMap: null,
     duplicates: null,

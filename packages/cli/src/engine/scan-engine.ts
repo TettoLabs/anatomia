@@ -26,6 +26,7 @@ import { detectPackageManager } from './detectors/packageManager.js';
 import { detectGitInfo } from './detectors/git.js';
 import { detectCommands } from './detectors/commands.js';
 import { detectReadme } from './detectors/readme.js';
+import { detectDocumentation } from './detectors/documentation.js';
 import { detectDeployment, detectCI } from './detectors/deployment.js';
 import { detectProjectType } from './detectors/projectType.js';
 import { detectFramework } from './detectors/framework.js';
@@ -726,6 +727,9 @@ export async function scanProject(
   // 8b. README extraction
   const readme = await detectReadme(rootPath);
 
+  // 8c. Documentation inventory
+  const documentation = detectDocumentation(rootPath, census.sourceRoots, stack.framework, allDeps);
+
   // 9. Git
   const git = await detectGitInfo(rootPath);
 
@@ -829,6 +833,7 @@ export async function scanProject(
     patterns: patterns ?? null,
     conventions: conventions ?? null,
     readme,
+    documentation,
     // Phase 1+ stubs
     secretFindings: null,
     envVarMap: null,
