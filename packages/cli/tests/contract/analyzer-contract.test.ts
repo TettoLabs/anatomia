@@ -158,6 +158,7 @@ describe('Engine Interface Contract', () => {
         'patterns',
         'conventions',
         'readme',
+        'documentation',
         'secretFindings',
         'envVarMap',
         'duplicates',
