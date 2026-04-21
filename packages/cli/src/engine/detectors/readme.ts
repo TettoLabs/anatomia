@@ -203,6 +203,27 @@ export async function detectReadme(rootPath: string): Promise<ReadmeResult | nul
     }
   }
 
+  // If headings matched but description is still null, extract from
+  // pre-section content (between the # title and the first ## content heading).
+  // Most READMEs have their product description here, not under a heading.
+  if (matched && result.description === null) {
+    const firstContentHeadingIdx = cleaned.search(/^#{2}\s+/m);
+    if (firstContentHeadingIdx > 0) {
+      const preSection = cleaned.substring(0, firstContentHeadingIdx);
+      const candidates = preSection.split('\n')
+        .map(l => l.trim())
+        .filter(l => l.length > 20)           // Skip short lines (project name, taglines < 20 chars)
+        .filter(l => !l.startsWith('>'))       // Skip blockquotes/alerts
+        .filter(l => !l.startsWith('#'))       // Skip markdown headings
+        .filter(l => !l.startsWith('['))       // Skip link-only lines
+        .filter(l => !/^\[.*\]\(.*\)$/.test(l)); // Skip standalone markdown links
+      if (candidates.length > 0) {
+        result.description = truncate(candidates.join(' '), SECTION_CAP);
+        result.source = 'pre-section';
+      }
+    }
+  }
+
   // Fallback: no headings matched → use first paragraph as description
   if (!matched) {
     const firstPara = extractFirstParagraph(cleaned);
