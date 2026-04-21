@@ -129,8 +129,13 @@ export function detectApplicationShape(input: ApplicationShapeInput): Applicatio
   }
 
   // 1. MCP server (most specific — dedicated protocol server)
+  // BUT: if a browser framework is also present, this is a web app with an
+  // MCP feature, not a dedicated MCP server. Let it fall through to web-app.
   if (input.deps.some(d => MCP_DEPS.has(d))) {
-    return { shape: 'mcp-server' };
+    const hasBrowserFramework = input.frameworkName !== null && BROWSER_FRAMEWORKS.has(input.frameworkName);
+    if (!hasBrowserFramework) {
+      return { shape: 'mcp-server' };
+    }
   }
 
   // 2. AI agent (agent FRAMEWORK, not just AI SDK)
