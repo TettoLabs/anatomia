@@ -58,9 +58,12 @@ No user interaction. Read and form a mental model.
 
 **2. Documentation files** from the inventory (prioritized):
 - Root `README.md` — always read if it exists
-- `ARCHITECTURE.md` — read if it exists (high value)
-- `CONTRIBUTING.md` — read if it exists (reveals team process)
-- Stop after 3 documentation files unless understanding still feels thin.
+- `ARCHITECTURE.md` — read if it exists (high value for architecture understanding)
+- `CONTRIBUTING.md` — read if it exists (reveals team process and values)
+- If any package-level README has `sizeBytes > 5000`, consider reading it — large internal READMEs often contain architectural documentation more valuable than small root-level files.
+- Stop after 3-4 documentation files unless understanding still feels thin.
+
+**Note on `readme.source`:** If scan.json shows `readme.source: "fallback"`, the extracted description may be a tagline, joke, or badge text rather than a real product description. Rely on your own full README reading for the loaded guess instead.
 
 **3. Landing page** if `documentation.landingPage` is not null — read it, look for product description.
 
@@ -136,7 +139,7 @@ The loaded guess proves you investigated. The "what couldn't they solve" clause 
 Targeted reads to fill machine-derivable sections. 3-5 files maximum.
 
 **What to read and why:**
-- **High-churn files** (from `git.recentActivity.highChurnFiles`) — read the top 1-2. These are "Where to Make Changes" candidates.
+- **High-churn files** (from `git.recentActivity.highChurnFiles`) — read the top 1-2. These are "Where to Make Changes" candidates. If `git.recentActivity` is null (shallow clone or new repo), derive "Where to Make Changes" from directory structure, entry points, and import analysis instead.
 - **Entry point + core abstraction** — Architecture understanding. What's the main flow?
 - **Code comments containing "why," "because," "intentional," "workaround"** — Key Decisions candidates. Search for these keywords in source files.
 - **Patterns that seem unusual** — anti-intuitive decision candidates. Use the checklist:
@@ -173,9 +176,9 @@ I noticed [2-3] things during investigation that seem intentional:
 
 ## Step 6: Draft and Write project-context.md
 
-You have: scan data, documentation reads, product identity (already written), investigation results, anti-intuitive confirmations.
+You have: scan data, documentation reads, product identity (already written in Step 3), investigation results, anti-intuitive confirmations.
 
-Draft the remaining sections. Present the full draft, highlighting sections that need human input:
+Draft the REMAINING sections (everything except "What This Product Does" which was already written in Step 3). Present the full draft, highlighting sections that need human input. Include the already-written product identity section in your presentation for context, but don't re-ask about it:
 
 ```
 Here's my draft of your project context. Sections marked ⚠ are where
@@ -227,6 +230,7 @@ If a section already has non-placeholder content (from a previous run or manual 
 - Preserve all `**Detected:**` lines — these are machine-owned
 - Replace placeholder text (italic `*...*` hints, `<!-- ... -->` comments) with real content
 - Keep the human's words when they provide them. Don't paraphrase.
+- Preserve scan-detected entries already in Key Files (schema path, deployment config, CI pipeline). Add to them, don't replace.
 - Write the full file back after all sections are filled
 
 ---
