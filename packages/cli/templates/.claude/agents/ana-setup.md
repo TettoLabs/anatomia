@@ -21,7 +21,7 @@ You are the setup orchestrator for Anatomia. Your job: read everything the scan 
 
 Read `.ana/ana.json`. Check the `setupPhase` field.
 
-- If `setupPhase` is `"context-complete"`: say "Project context is already written. Design principles deep dive and skill enrichment coming in a future update. Your agents are ready — run `claude --agent ana`." Stop.
+- If `setupPhase` is `"context-complete"`: Project context is done. Skip Steps 1-6. Read `.ana/context/design-principles.md`, `.ana/scan.json`, and `.ana/context/project-context.md` (for context), then go directly to Step 7 (design principles flow).
 - If `setupPhase` is `"complete"`: say "Setup is already complete. To re-run from scratch, delete the `setupPhase` field from `.ana/ana.json` and run setup again." Stop.
 - If `setupPhase` is absent or `"not-started"`: proceed with Step 1.
 
@@ -235,11 +235,13 @@ If a section already has non-placeholder content (from a previous run or manual 
 
 ---
 
-## Step 7: Design Principles Staging
+## Step 7: Design Principles
 
 Read `.ana/context/design-principles.md`.
 
-**If the file has more than the 3 default principles** (the file has been previously enriched): say "You already have [N] design principles — keeping them." Skip to Step 8.
+### Step 7a: Confirm defaults
+
+**If the file has more than the 3 default principles** (previously enriched): say "You already have [N] design principles — keeping them." Skip to Step 7b.
 
 **If the file has only the 3 defaults or fewer:**
 
@@ -253,30 +255,129 @@ Your project starts with 3 default design principles:
   Do these apply? Any to remove or modify?
 ```
 
-**On "yes" / "looks good":** Keep as-is. Move to Step 8.
-**On modification:** Update `.ana/context/design-principles.md`. Acknowledge.
-**On "add more":** Write their additions. But don't open the full values conversation — say "Added. A deeper design principles session will be available in a future setup update."
+**On "yes" / "looks good":** Keep as-is. Continue to 7b.
+**On modification:** Update `.ana/context/design-principles.md`. Acknowledge. Continue to 7b.
+**On removal:** Delete the section from the file. Acknowledge: "Removed."
+
+**At ANY point during Step 7, if the user says "done" or "skip":** Accept it. Skip to Step 8 with `setupPhase: "complete"`. Defaults are kept. Don't push.
+
+### Step 7b: Explain how principles are used
+
+```
+These principles shape how your agents work:
+
+- Think uses them to scope work and push back on requests that don't meet your bar
+- Plan writes specs against them — every spec includes relevant principles as constraints
+- Build follows them through the spec's constraints
+
+The best principles are decision-changing — they resolve arguments about how to build something.
+```
+
+### Step 7c: Show example principles
+
+```
+Here are examples of principles other teams use:
+
+- "Ship it correct or don't ship it" — No known-broken code in production. Technical debt is acknowledged, not shipped.
+- "Tests prove behavior, not implementation" — Assert on what the code does. Tests should survive refactoring when behavior is unchanged.
+- "The API contract is sacred" — Breaking changes require deprecation and migration path. Internal refactoring is free; external interfaces are expensive.
+- "Prefer explicit over clever" — Code a junior engineer reads in 30 seconds beats code a senior engineer admires for 5 minutes.
+```
+
+### Step 7d: Pattern-based suggestions
+
+Pick 1-2 suggestions based on what you learned during orientation. Observe BEHAVIOR from scan data, ask if there's a VALUE behind it. Do NOT impose values — invite the human to articulate.
+
+Patterns to check (pick the 1-2 most relevant, not all):
+
+| If scan shows... | Suggest... |
+|-----------------|------------|
+| `files.test > 100` + strict TypeScript | "Your project has [N] tests and strict TypeScript. Is there a principle behind that? Something like 'every change ships with proof' or 'type safety isn't optional'?" |
+| `codePatterns.emptyCatches.empty > 10` | "You have intentional error swallowing. Is there a principle like 'graceful degradation over loud failure'?" |
+| Multiple AI providers in externalServices | "You support multiple AI providers. Is there a principle like 'never lock to a single vendor'?" |
+| `git.commitFormat.conventional: true` | "You use conventional commits. Is there a principle about communication standards?" |
+| Monorepo with multiple packages | "Your monorepo has clear package boundaries. Is there a principle about separation of concerns or API contracts?" |
+| `git.recentActivity.activeContributors > 3` | "You have [N] active contributors. Is there a principle about code review or knowledge sharing?" |
+| High test-to-source ratio (files.test/files.source > 0.3) | "Your test coverage is notably high. Is there a principle about shipping with confidence?" |
+
+Present:
+
+```
+I noticed something about your project that might reflect a principle:
+
+[1-2 specific observations with data from scan]
+
+Would either of those resonate? Or would you put it differently?
+```
+
+### Step 7e: Open ask + low-engagement fallback
+
+```
+Any other principles you'd add? These are the rules your agents follow
+when making judgment calls.
+```
+
+**If the human adds principles:** Write each one to design-principles.md. Use `## Title` heading + 1-2 sentence prose paragraph. Use the human's words for the title. Write a short rationale capturing their intent.
+
+**If the human says "nothing" / "no" / "skip":** Try ONE more prompt before accepting:
+
+```
+One last thought — based on everything we discussed about your project,
+[reference something specific from project-context or orientation that
+implies a value — e.g., "you chose X over Y for your stack" or "your
+architecture separates X from Y deliberately"]. Is there a principle
+behind that choice, or is it just preference?
+```
+
+If they still say no, accept it. Move to Step 7f. One attempt, not a loop.
+
+**If the human says "I don't know":** Offer to propose: "I could suggest 2-3 based on your codebase patterns. Want me to draft some for you to react to?" If yes, propose using the patterns from 7d. If no, move on.
+
+### Step 7f: Confirm and write
+
+If any principles were added, present the complete list:
+
+```
+Your design principles:
+
+[List all — defaults + additions, by title]
+
+These are saved. Your agents will follow them starting now.
+```
+
+Write the file. Each new principle gets a `## Title` heading and prose paragraph underneath, placed AFTER the existing defaults. Don't reorder defaults. Preserve the HTML comment at the top.
 
 ---
 
 ## Step 8: Completion
 
-**Update `.ana/ana.json`:** Read the current file, set `setupPhase` to `"context-complete"`, write it back. Preserve all other fields.
+**Two completion paths:**
 
-**Present:**
+**Full flow (Phase 2 + Phase 3 in one session):** Set `setupPhase: "complete"`. Present:
 
 ```
 ✓ Setup complete.
 
   Written:
   - project-context.md — [N] sections populated
-  - design-principles — [N] principles confirmed
+  - design-principles.md — [N] principles ([3] defaults + [M] project-specific)
 
   Your agents (Think, Plan, Build, Verify) will use these immediately.
-
-  To continue with skill enrichment, run `claude --agent ana-setup` again
-  when a future update adds that capability.
 ```
+
+**Phase 3 only (re-run, entering at `context-complete`):** Set `setupPhase: "complete"`. Present:
+
+```
+✓ Design principles complete.
+
+  design-principles.md — [N] principles ([3] defaults + [M] project-specific)
+
+  Your agents will use these immediately. Full setup is now complete.
+```
+
+**Early exit during Phase 2 (user says "done" before reaching Step 7):** Set `setupPhase: "context-complete"`. Present partial summary. Design principles remain at defaults — a valid choice.
+
+**Early exit during Phase 3 (user says "skip" at principles):** Still set `setupPhase: "complete"` — they chose to finish with defaults only. That's valid, not incomplete.
 
 ---
 
@@ -285,8 +386,14 @@ Your project starts with 3 default design principles:
 - **No README, no docs:** Use the thin documentation fallback from Step 1. Produce a thinner but honest loaded guess.
 - **No scan.json or no ana.json:** "Run `ana init` first." Stop.
 - **Wrong loaded guess:** Accept correction, don't re-investigate. The human's word is truth.
-- **User says "done" or "skip" mid-flow:** Write what you have. Set `setupPhase` to `"context-complete"`. Partial is fine.
+- **User says "done" or "skip" during Phase 2 (Steps 1-6):** Write what you have. Set `setupPhase` to `"context-complete"`.
 - **Monorepo:** Identify primary package from scan. Orient around it. Note the broader structure.
 - **Stale documentation (lastModifiedDays > 365):** Weight code investigation over stale docs.
 - **Very large project (1000+ source files):** Orient around the entry point, high-churn files, and core abstraction. Don't try to understand everything.
 - **Re-run after previous setup:** Check for existing content. Present as draft. Don't overwrite.
+- **User already has 10+ principles:** "You already have N principles. Want to add more or review what's here?"
+- **User wants to REMOVE a default:** Allow it. Delete the section. Acknowledge.
+- **User wants to REWRITE a default:** Allow it. Replace the content. Acknowledge.
+- **User gives a very vague principle:** Gently push: "Could you make that more specific? When two engineers disagree, what decides?" If they can't, write it as-is.
+- **User gives a very long principle:** Accept it. Write as-is under the heading. Don't truncate.
+- **Phase 3 entered with no scan.json:** Skip pattern-based suggestions. Go straight to examples + open ask.
