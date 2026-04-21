@@ -47,7 +47,7 @@ export interface ReadmeResult {
   description: string | null;
   architecture: string | null;
   setup: string | null;
-  source: 'heading' | 'fallback';
+  source: 'heading' | 'pre-section' | 'fallback';
 }
 
 /**

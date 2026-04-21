@@ -25,10 +25,12 @@ describe('scaffold generators (S15 consolidated: 2 generators)', () => {
       expect(output).toContain('## Domain Vocabulary');
     });
 
-    it('has 6 sections', () => {
+    it('has 8 sections', () => {
       const output = generateProjectContextScaffold(result);
       const sections = (output.match(/^## /gm) || []).length;
-      expect(sections).toBe(6);
+      expect(sections).toBe(8);
+      expect(output).toContain('## Where to Make Changes');
+      expect(output).toContain('## What Looks Wrong But Is Intentional');
     });
 
     it('includes synthesized description when stack data present', () => {
@@ -107,21 +109,20 @@ describe('scaffold generators (S15 consolidated: 2 generators)', () => {
     });
 
     // @ana A007
-    describe('scaffold includes README setup', () => {
-      it('includes README setup content in Architecture section', () => {
+    describe('scaffold excludes README setup from Architecture', () => {
+      it('does NOT include README setup instructions in Architecture section', () => {
         const readmeResult = {
           ...result,
           readme: {
             description: null,
             architecture: null,
-            setup: 'readme setup content',
+            setup: 'npm install && npm run dev',
             source: 'heading' as const,
           },
         };
         const output = generateProjectContextScaffold(readmeResult);
-        expect(output).toContain('readme setup content');
-        const archSection = output.split('## Architecture')[1]!.split('## Key Decisions')[0]!;
-        expect(archSection).toContain('readme setup content');
+        // Setup instructions don't belong in project-context Architecture
+        expect(output).not.toContain('npm install && npm run dev');
       });
     });
 

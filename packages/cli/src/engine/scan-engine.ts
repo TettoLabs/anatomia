@@ -756,7 +756,7 @@ export async function scanProject(
   );
 
   // 11. Project profile
-  const browserFrameworks = ['Next.js', 'React', 'Vue', 'Angular', 'Svelte', 'Nuxt'];
+  const browserFrameworks = ['Next.js', 'React', 'Vue', 'Angular', 'Svelte', 'Nuxt', 'Remix', 'SvelteKit', 'Astro', 'Solid'];
   const storagePackages = ['@aws-sdk/client-s3', 'aws-sdk', '@google-cloud/storage', 'cloudinary'];
   const projectProfile: EngineResult['projectProfile'] = {
     type: frameworkResult.framework || projectTypeResult.type || null,

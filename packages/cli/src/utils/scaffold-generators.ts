@@ -109,14 +109,15 @@ export function generateProjectContextScaffold(result: EngineResult): string {
     if (result.deployment.ci) deployParts.push(result.deployment.ci);
     s += `**Detected deployment:** ${deployParts.join(', ')}\n`;
   }
-  // README architecture/setup — inline after Detected lines
+  // README architecture only (setup instructions don't belong in project-context)
   if (result.readme?.architecture) {
     s += `\n${result.readme.architecture}\n`;
   }
-  if (result.readme?.setup) {
-    s += `\n${result.readme.setup}\n`;
-  }
   s += `\n*How is the codebase organized and why? What are the layer boundaries?*\n\n`;
+
+  // Section: Where to Make Changes
+  s += `## Where to Make Changes\n\n`;
+  s += `*Common tasks and where to find the relevant code. What files are entry points for what kind of work?*\n\n`;
 
   // Section 3: Key Decisions
   s += `## Key Decisions\n\n`;
@@ -148,7 +149,11 @@ export function generateProjectContextScaffold(result: EngineResult): string {
     s += `*Add: entry points, shared types, config files, test helpers.*\n\n`;
   }
 
-  // Section 5: Active Constraints
+  // Section: What Looks Wrong But Is Intentional
+  s += `## What Looks Wrong But Is Intentional\n\n`;
+  s += `*Patterns that seem wrong for this stack but are deliberate. Anti-intuitive decisions with rationale.*\n\n`;
+
+  // Section: Active Constraints
   s += `## Active Constraints\n\n`;
   s += `*Current priorities. Areas under active refactoring. Features not to touch right now.*\n\n`;
 

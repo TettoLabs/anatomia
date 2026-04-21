@@ -61,10 +61,19 @@ describe('detectApplicationShape', () => {
   });
 
   describe('priority: most specific shape wins', () => {
-    it('mcp-server wins over web-app', () => {
+    it('mcp-server yields to web-app when browser framework present', () => {
+      // A Next.js app with @modelcontextprotocol/sdk is a web-app with an MCP feature
       const result = detectApplicationShape(makeInput({
         deps: ['@modelcontextprotocol/sdk', 'next', 'react'],
         frameworkName: 'nextjs',
+      }));
+      expect(result.shape).toBe('web-app');
+    });
+
+    it('mcp-server still wins when no browser framework (pure MCP server)', () => {
+      const result = detectApplicationShape(makeInput({
+        deps: ['@modelcontextprotocol/sdk', 'express'],
+        frameworkName: 'express',
       }));
       expect(result.shape).toBe('mcp-server');
     });
