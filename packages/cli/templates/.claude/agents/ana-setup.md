@@ -421,9 +421,70 @@ Which approach?
 
 **Option 3 (skip):** "Keeping skill defaults. You can enrich them any time by running setup again." Proceed to Step 8.
 
-**Option 1 (draft all):** "Draft-all enrichment is coming in the next update. Keeping defaults for now. You can enrich them any time by running setup again." Proceed to Step 8.
+**Option 2 (guided):** "Guided enrichment is coming in the next update. Would you like to draft all instead, or skip?" Offer option 1 or 3.
 
-**Option 2 (guided):** "Guided enrichment is coming in the next update. Keeping defaults for now. You can enrich them any time by running setup again." Proceed to Step 8.
+**Option 1 (draft all):** Execute the enrichment flow below.
+
+### Option 1: Draft All — Enrichment Flow
+
+Say "Enriching your skill files..." and work through each skill silently.
+
+**For each wave 1 skill (testing-standards, git-workflow, coding-standards):**
+1. Read the skill file at `.claude/skills/{name}/SKILL.md` — the `<!-- ENRICHMENT GUIDE -->` comment contains per-skill instructions for what to read, what to look for, and what to write.
+2. Follow the enrichment guide — read the specified files, check the specified scan fields.
+3. Draft additions/modifications to the `## Rules` section.
+4. Track what was added/modified/removed for the summary.
+
+**For non-wave-1 skills (deployment, troubleshooting, conditional skills):**
+- Do NOT enrich. Note as "kept defaults" in the summary.
+
+**After all skills are processed, present the summary:**
+
+```
+✓ Skills enriched. Here's what I found:
+
+  ✓ testing-standards    +[N] rules added
+    [One-line summary of each addition]
+
+  ✓ git-workflow         +[N] rules added
+    [One-line summary of each addition]
+
+  ✓ coding-standards     +[N] rules adjusted/added
+    [One-line summary of each change]
+    [If contradiction adjusted: "⚠ Adjusted [rule] to match your 
+    codebase pattern — review this change."]
+
+  ○ deployment           kept defaults ([reason])
+  ○ troubleshooting      kept defaults — common issues from library 
+                         already included. Grows from real debugging.
+  [If conditional skills scaffolded:
+  ○ [skill-name]         kept defaults (enrichment coming soon)]
+
+  Review any file in detail: "show me coding-standards"
+  Accept all: "looks good"
+```
+
+### Review interaction
+
+**"looks good":** Write all enriched skill files. Move to Step 8.
+
+**"show me [skill]":** Present the FULL skill file with additions clearly marked. The user reads, corrects, confirms. Then: "Any other files to review, or accept the rest?"
+
+**"change [specific rule]":** Modify the specific rule. Confirm the change. Ask if anything else needs changing.
+
+**"redo [skill]":** Re-read files, re-draft that skill's enrichment. Present again.
+
+**"reject [skill]":** Keep that skill at defaults. Note it.
+
+### Writing enriched files
+
+After the user accepts:
+- Write each enriched skill file using Claude Code's file writing tools
+- Preserve `## Detected` — machine-owned, do not modify
+- Preserve the `<!-- ENRICHMENT GUIDE -->` HTML comments — template infrastructure
+- Add/modify rules in `## Rules` section only
+- Leave `## Gotchas` and `## Examples` unchanged
+- Preserve existing library rules in `## Detected` (under `### Library Rules`)
 
 ---
 
@@ -433,13 +494,29 @@ Which approach?
 
 **Present:**
 
+If skills were enriched (option 1):
 ```
 ✓ Setup complete.
 
   Written:
   - project-context.md — [N] sections populated
   - design-principles.md — [N] principles ([3] defaults + [M] project-specific)
-  - skills — [N] files with defaults and library rules (not yet enriched)
+  - skills — [N] files enriched with project-specific patterns
+
+  Your agents will use these immediately.
+  Start working: claude --agent ana
+
+  To add more detail later, run claude --agent ana-setup again.
+```
+
+If skills were skipped (option 3) or kept at defaults:
+```
+✓ Setup complete.
+
+  Written:
+  - project-context.md — [N] sections populated
+  - design-principles.md — [N] principles ([3] defaults + [M] project-specific)
+  - skills — [N] files with defaults and library rules
 
   Your agents will use these immediately.
   Start working: claude --agent ana
