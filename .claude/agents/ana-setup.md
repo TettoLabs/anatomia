@@ -380,7 +380,54 @@ Write updates to `.ana/context/design-principles.md`. Preserve the HTML comment 
 
 ---
 
-## Step 7: Completion
+## Step 7: Skill Enrichment Gate
+
+After design principles are written, read the `.claude/skills/` directory to discover which skill files were scaffolded.
+
+If no skill files exist, skip this step and go to Step 8.
+
+**Present:**
+
+```
+Your project context and design principles are set. Now let's look 
+at your skill files.
+
+Skills are the specific rules your agents follow for coding standards, 
+testing patterns, git workflow, and other areas. Init scaffolded 
+[N] skill files with defaults and library-matched rules from your scan:
+
+  [list each skill directory found in .claude/skills/, e.g.:]
+  1. coding-standards
+  2. testing-standards
+  3. git-workflow
+  4. deployment
+  5. troubleshooting
+
+I can enrich these with project-specific patterns from your codebase.
+
+  [1] Draft all — I'll read your code, enrich every skill file, 
+      and present the results for review.
+
+  [2] Guided — walk through each file one at a time so you can 
+      shape each one.
+
+  [3] Skip — keep the defaults for now. You can enrich later 
+      by running claude --agent ana-setup again.
+
+Which approach?
+```
+
+**On response:**
+
+**Option 3 (skip):** "Keeping skill defaults. You can enrich them any time by running setup again." Proceed to Step 8.
+
+**Option 1 (draft all):** "Draft-all enrichment is coming in the next update. Keeping defaults for now. You can enrich them any time by running setup again." Proceed to Step 8.
+
+**Option 2 (guided):** "Guided enrichment is coming in the next update. Keeping defaults for now. You can enrich them any time by running setup again." Proceed to Step 8.
+
+---
+
+## Step 8: Completion
 
 **Update `.ana/ana.json`:** Read the current file, set `setupPhase` to `"complete"`, write it back. Preserve all other fields.
 
@@ -392,11 +439,12 @@ Write updates to `.ana/context/design-principles.md`. Preserve the HTML comment 
   Written:
   - project-context.md — [N] sections populated
   - design-principles.md — [N] principles ([3] defaults + [M] project-specific)
+  - skills — [N] files with defaults and library rules (not yet enriched)
 
   Your agents will use these immediately.
   Start working: claude --agent ana
 
-  To add more detail later, run claude --agent ana-setup again.
+  To enrich skills or add more detail, run claude --agent ana-setup again.
 ```
 
 ---
