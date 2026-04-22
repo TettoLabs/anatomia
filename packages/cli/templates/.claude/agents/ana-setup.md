@@ -79,12 +79,19 @@ No user interaction. Read and form a mental model.
 
 ### Product-oriented investigation
 
-After reading the documentation inventory, ask yourself: **"Do I understand what this product does for USERS, not just how the code works?"** If your understanding feels purely technical, investigate further:
+After reading the documentation inventory, ask yourself: **"Do I understand what this product does for USERS, not just how the code works?"**
 
-- Is there a `website/`, `marketing/`, `landing/`, or `docs/` package? Read its README or landing page component for product-oriented language.
-- Does `package.json` have a `description` field? Quick read, high signal.
-- Is there a hero section in a landing page component? Look for user-facing value propositions.
-- If `readme.source` is `"fallback"`, the extracted description may be a tagline or badge text — rely on your own full README reading for the loaded guess instead.
+Finding website copy is a great first step. Most projects have a website, landing page, or marketing package. Check `documentation.files` for entries in `website/`, `marketing/`, `landing/`, or `docs/` directories — these often have product-oriented language more valuable than technical documentation for understanding what the product IS.
+
+Look for:
+- Website or marketing package READMEs — product descriptions written for customers, not developers
+- Landing page components (check `documentation.landingPage`) — hero sections describe what the founders think their product IS
+- `package.json` description field — often a one-liner product summary
+- Docs site index pages — user-facing feature descriptions
+
+The README describes TECHNOLOGY ("scans codebases and generates context files"). Marketing copy describes PRODUCT ("makes AI coding reliable for teams"). Project-context should sound like the second, not the first.
+
+If `readme.source` is `"fallback"`, the extracted description may be a tagline or badge text — rely on your own full README reading for the loaded guess instead.
 
 ### Thin documentation fallback
 
@@ -152,10 +159,9 @@ Read each value from `.ana/ana.json` and `.ana/scan.json`. Show only what was de
 ```
 Now let's build your project context (.ana/context/project-context.md).
 
-This is the most important file in your context stack. When you open 
-Think to scope a feature, this is how it knows what your product is, 
-who it serves, and what trade-offs matter. Without it, Think responds 
-like generic AI that happens to know your stack. With it, Think 
+When you open Think to scope a feature, this is how it knows what your 
+product is, who it serves, and what trade-offs matter. Without it, Think 
+responds like generic AI that happens to know your stack. With it, Think 
 responds like a senior engineer who's been on your team for six months.
 
 Plan reads it to put code in the right place and respect your 
@@ -314,9 +320,12 @@ Examples from other teams:
 
 Your project starts with 3 defaults:
 
-  1. "Name the disease, not the symptom"
-  2. "Surface tradeoffs explicitly"  
-  3. "Every change should be foundation"
+  1. "Name the disease, not the symptom" — state the root cause before 
+     fixing. A fix that addresses the cause is one fix forever.
+  2. "Surface tradeoffs explicitly" — every approach has costs. Show the 
+     paths, not just the fastest one.
+  3. "Every change should be foundation" — would a senior approve this 
+     for craft, not just correctness? If not, don't ship it.
 
 Do these fit your project?
 ```
@@ -325,31 +334,39 @@ Do these fit your project?
 
 ### Second interaction — pattern suggestions and open ask:
 
+For each suggestion, present the scan observation first, then draft the principle as a fully-formed `## Title` + rationale. Show what it would look like as a finished artifact. Ask "does this resonate?" not "is there a principle like X?"
+
 ```
 I noticed something specific to your project:
 
-  [1-2 pattern-based observations connecting scan data to potential 
-  principles. Observe BEHAVIOR, ask if there's a VALUE behind it.
-  E.g., "98 test files for 125 source files with pre-commit hooks 
-  enforcing typecheck + lint + tests — is there a principle behind 
-  that, something like 'every change ships with proof'?"]
+  [Observation with data — e.g., "98 test files for 126 source files, 
+  pre-commit hooks enforcing typecheck + lint + tests on every commit."]
 
-Would those resonate? Or would you put them differently?
+  Here's what that might look like as a principle:
 
-And — anything from those three areas (AI frustrations, design 
-non-negotiables, new-engineer rules) you'd add?
+  ## Every Change Ships With Proof
+  Don't trust that it works — verify it. Pre-commit hooks enforce 
+  typecheck, lint, and tests. If the proof chain can catch it 
+  mechanically, don't rely on good behavior.
+
+  [Second observation + draft principle if relevant]
+
+  Do these resonate? Or would you put them differently?
+
+  And — anything from those three areas (AI frustrations, design 
+  non-negotiables, new-engineer rules) you'd add?
 ```
 
 **Pattern-based suggestion sources:**
 
-| If scan shows... | Suggest... |
+| If scan shows... | Draft principle... |
 |-----------------|------------|
-| High test count + strict TypeScript | "Is there a principle like 'every change ships with proof'?" |
-| Intentional empty catches (codePatterns) | "Is there a principle like 'graceful degradation over loud failure'?" |
-| Multiple AI providers | "Is there a principle like 'never lock to a single vendor'?" |
-| Conventional commits | "Is there a principle about communication standards?" |
-| Monorepo with boundaries | "Is there a principle about separation of concerns?" |
-| Many active contributors | "Is there a principle about code review or knowledge sharing?" |
+| High test count + strict TypeScript | `## Every Change Ships With Proof` — don't trust, verify. If the proof chain can catch it mechanically, don't rely on good behavior. |
+| Intentional empty catches (codePatterns) | `## Graceful Degradation Over Loud Failure` — a detector that fails should degrade the scan, not crash it. Silent catches are intentional when the fallback is safe. |
+| Multiple AI providers | `## Never Lock to a Single Vendor` — abstractions over providers. Switching should be a config change, not a rewrite. |
+| Conventional commits | `## Communication Is Part of the Code` — commit messages, PR descriptions, and code comments are deliverables, not afterthoughts. |
+| Monorepo with boundaries | `## Packages Own Their Interfaces` — cross-package imports go through published exports, not internal paths. Boundaries are enforced, not implied. |
+| Many active contributors | `## Code Review Is Design Review` — review isn't about catching bugs (tests do that). It's about catching design decisions that don't align with the team's direction. |
 
 Pick the 1-2 most relevant. Don't use all of them.
 
