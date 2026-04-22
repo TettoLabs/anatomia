@@ -3,6 +3,35 @@ name: testing-standards
 description: "Invoke when writing tests, reviewing test quality, or setting up test infrastructure. Contains project-specific testing framework conventions, fixture patterns, and coverage expectations."
 ---
 
+<!-- ENRICHMENT GUIDE:
+  Purpose: Build and Verify read this to know how to write and run tests.
+  
+  Read: Up to 3 test files — ideally one e2e test, one unit test, and 
+  one that uses a factory/fixture function. Different test types reveal 
+  different mechanism patterns. Find candidates from 
+  git.recentActivity.highChurnFiles ending in .test.ts or .test.js. 
+  If no high-churn test files, read from the tests/ or __tests__/ 
+  directory. Also read vitest.config or jest.config if it exists.
+  
+  Look for:
+  - Temp directory patterns (os.tmpdir, mkdtemp, cleanup in afterEach)
+  - Factory/fixture functions (createEmpty*, buildMock*, make*)
+  - E2e vs unit split (separate directories? different configs?)
+  - Assertion style (expect chains, custom matchers, snapshot usage)
+  - Setup/teardown patterns (beforeAll, beforeEach, afterEach patterns)
+  - Test isolation (each test creates own state vs shared state)
+  
+  Write to: ## Rules — add MECHANISM rules for patterns found.
+  Template rules are PHILOSOPHY (universal, correct for all projects).
+  Enrichment rules are MECHANISM (project-specific, from code reading).
+  Keep the philosophy rules. Add mechanism rules alongside them.
+  Each rule should change how Build writes tests. The decision test:
+  "Would Build write a different test without this rule?"
+  
+  Skip if: files.test === 0 (no test infrastructure to codify)
+  Expect: 2-4 rules added.
+-->
+
 # Testing Standards
 
 ## Detected
