@@ -220,6 +220,13 @@ export async function scaffoldAndSeedSkills(
     }
 
     await fs.writeFile(destPath, content, 'utf-8');
+
+    // Copy ENRICHMENT.md if it exists in the template (setup agent reads these)
+    const enrichmentSource = path.join(templatesDir, '.claude/skills', skillName, 'ENRICHMENT.md');
+    const enrichmentDest = path.join(destDir, 'ENRICHMENT.md');
+    if (await fileExists(enrichmentSource)) {
+      await fs.copyFile(enrichmentSource, enrichmentDest);
+    }
   }
 }
 
