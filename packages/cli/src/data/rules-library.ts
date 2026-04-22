@@ -168,4 +168,94 @@ export const RULES: RuleCandidate[] = [
     grade: 'GOOD',
     tailorable: false,
   },
+
+  // --- api-patterns: conditional skill rules ---
+
+  // Verified: Server Components should fetch data directly, not call their own Route Handlers.
+  {
+    id: 'nextjs-route-handler-boundary',
+    triggers: { framework: 'Next.js' },
+    skill: 'api-patterns',
+    rule: 'Server Components fetch data directly from service functions or the database. Route Handlers are for EXTERNAL clients (webhooks, mobile apps, third-party integrations). Never call your own Route Handlers from Server Components — that adds an unnecessary network hop.',
+    decisionTest: {
+      without: 'Build creates a Route Handler and calls it from a Server Component via fetch',
+      with: 'Build calls the service function directly in the Server Component',
+    },
+    grade: 'SUPER_GOOD',
+    tailorable: false,
+  },
+
+  // --- data-access: conditional skill rules ---
+
+  // Verified: IDOR is the #1 database security vulnerability LLMs produce.
+  {
+    id: 'scope-queries-to-user',
+    triggers: { database: 'Prisma' },
+    skill: 'data-access',
+    rule: 'Scope every user-specific query to the authenticated user. Include `userId` (or equivalent ownership field) in every WHERE clause for user-specific data. A query without ownership scoping is an IDOR vulnerability — any authenticated user can access any other user\'s data by changing an ID in the URL.',
+    decisionTest: {
+      without: 'Build writes `prisma.document.findUnique({ where: { id: params.id } })` — any user reads any document',
+      with: 'Build writes `prisma.document.findUnique({ where: { id: params.id, userId: session.user.id } })` — only owner reads',
+    },
+    grade: 'SUPER_GOOD',
+    tailorable: true,
+  },
+
+  // Verified: $queryRaw is the Prisma escape hatch for SQL injection.
+  {
+    id: 'prisma-no-raw-interpolation',
+    triggers: { database: 'Prisma' },
+    skill: 'data-access',
+    rule: 'Never interpolate user input into `$queryRaw` or `$executeRaw`. Use parameterized queries: `prisma.$queryRaw\\`SELECT * FROM users WHERE id = ${userId}\\`` (tagged template — safe) not `prisma.$queryRawUnsafe("SELECT * FROM users WHERE id = " + userId)` (string concat — SQL injection).',
+    decisionTest: {
+      without: 'Build concatenates user input into $queryRawUnsafe — SQL injection',
+      with: 'Build uses tagged template literal with $queryRaw — parameterized and safe',
+    },
+    grade: 'SUPER_GOOD',
+    tailorable: false,
+  },
+
+  // Verified: unbounded list queries cause memory exhaustion and slow responses.
+  {
+    id: 'paginate-list-queries',
+    triggers: { database: 'Prisma' },
+    skill: 'data-access',
+    rule: 'Paginate all list queries. Never return unbounded results from `findMany()`. Use `take` + `skip` or cursor-based pagination. An unbounded query on a table with 100K rows returns all 100K rows into memory.',
+    decisionTest: {
+      without: 'Build writes `prisma.post.findMany()` — returns all posts, memory exhaustion',
+      with: 'Build writes `prisma.post.findMany({ take: 20, skip: page * 20 })` — bounded',
+    },
+    grade: 'GOOD',
+    tailorable: false,
+  },
+
+  // --- ai-patterns: conditional skill rules ---
+
+  // Verified: LLM output is non-deterministic and must be validated before use.
+  {
+    id: 'validate-llm-output',
+    triggers: { aiSdk: 'Anthropic' },
+    skill: 'ai-patterns',
+    rule: 'Validate all LLM output with a schema before using it in business logic. Use `generateObject()` or `response_format: { type: "json_object" }` for structured data extraction. Never regex-parse free-text LLM responses — the format changes between runs.',
+    decisionTest: {
+      without: 'Build regex-parses LLM text output — breaks when format varies',
+      with: 'Build uses generateObject with Zod schema — typed, validated output',
+    },
+    grade: 'SUPER_GOOD',
+    tailorable: false,
+  },
+
+  // Verified: serverless function timeouts kill long LLM responses.
+  {
+    id: 'stream-in-serverless',
+    triggers: { aiSdk: 'Anthropic', platform: 'Vercel' },
+    skill: 'ai-patterns',
+    rule: 'Stream user-facing LLM responses in serverless environments. A non-streaming Claude response can take 30-60 seconds — beyond Vercel\'s function timeout. Use `streamText()` or the streaming API to send chunks as they arrive.',
+    decisionTest: {
+      without: 'Build uses `generateText()` in a Vercel function — times out after 10s on Hobby',
+      with: 'Build uses `streamText()` — first chunk arrives in <1s, streams until complete',
+    },
+    grade: 'SUPER_GOOD',
+    tailorable: false,
+  },
 ];
