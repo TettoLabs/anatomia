@@ -380,68 +380,109 @@ Write updates to `.ana/context/design-principles.md`. Preserve the HTML comment 
 
 ---
 
-## Step 7: Skill Enrichment Gate
+## Step 7: Skill Enrichment
 
-After design principles are written, read the `.claude/skills/` directory to discover which skill files were scaffolded.
+After design principles are written, read the `.claude/skills/` directory to discover which skill files were scaffolded. If no skill files exist, skip to Step 8.
 
-If no skill files exist, skip this step and go to Step 8.
+### 7a: Silent investigation (all skills at once)
 
-**Present:**
+No user interaction. For each skill, read its `ENRICHMENT.md` file at `.claude/skills/{name}/ENRICHMENT.md`. This file contains per-skill investigation instructions — what to read, what to look for, what to write. Follow each guide's instructions. Build up signal for ALL skills in one pass.
+
+This is a single investigation phase covering all skills:
+- Read CI workflow files for deployment
+- Read test files for testing-standards
+- Check scan data for git-workflow
+- Read error-handling files for coding-standards
+- Cross-reference investigation findings for troubleshooting
+
+Don't count files — read what each enrichment guide tells you to read. A complex project needs more reads. A simple project needs fewer. Calibrate to the project.
+
+After investigation, you should have draft enrichments ready for all skills before saying a word.
+
+### 7b: Skill gate framing
 
 ```
-Your project context and design principles are set. Now let's look 
-at your skill files.
+Your project context and design principles are set. Now let's 
+configure your skill files.
 
 Skills are the specific rules your agents follow for coding standards, 
-testing patterns, git workflow, and other areas. Init scaffolded 
-[N] skill files with defaults and library-matched rules from your scan:
+testing patterns, git workflow, deployment, and troubleshooting. Init 
+scaffolded [N] skill files with defaults and library-matched rules 
+from your scan:
 
-  [list each skill directory found in .claude/skills/, e.g.:]
-  1. coding-standards
-  2. testing-standards
-  3. git-workflow
-  4. deployment
-  5. troubleshooting
+  [list each skill found]
 
-I can enrich these with project-specific patterns from your codebase.
+I've investigated your codebase for all of them. A couple of quick 
+questions first, then I'll draft the rest automatically.
+```
 
-  [1] Draft all — I'll read your code, enrich every skill file, 
-      and present the results for review.
+### 7c: Deployment question (Turn 1)
 
-  [2] Guided — walk through each file one at a time so you can 
-      shape each one.
+Present what you found from CI investigation, then ask:
 
-  [3] Skip — keep the defaults for now. You can enrich later 
-      by running claude --agent ana-setup again.
+```
+Deployment — I found [what CI investigation revealed: CI system, 
+matrix, pipeline steps, triggers].
+
+[If deployment.platform detected: "Deployed to [platform]."]
+[If CLI/library: "No deployment platform — this is a CLI/library."]
+
+How does code reach production — push to main goes live, or do you 
+have staging/preview environments?
+[If CLI: "Is there a release process, or do you publish manually?"]
+```
+
+**On response:** Write deployment skill immediately. Combine the deterministic CI findings with the human's deployment strategy answer. Preserve `## Detected`. Write to `## Rules`.
+
+### 7d: Troubleshooting question (Turn 2)
+
+If you found diagnostic patterns during investigation (TROUBLESHOOTING.md, TODO/FIXME comments, patterns that would confuse a new engineer):
+
+```
+Troubleshooting — I noticed these patterns that could trip someone up:
+
+  [1-3 findings from investigation, framed as symptom → explanation]
+
+Anything else that regularly trips people up on this project?
+```
+
+**On response:** Write troubleshooting skill immediately. Combine investigation findings with the human's additions. Format as: "**[symptom]** — [explanation]. Fix: [action]." Don't duplicate entries already in `## Detected` (Common Issues).
+
+**If nothing found during investigation:** Skip the question. Say: "Troubleshooting grows from real debugging — keeping the library defaults for now. This skill gets richer as you use the pipeline." Move to 7e.
+
+### 7e: Automation menu (Turn 3)
+
+```
+I've configured deployment and troubleshooting. For the remaining 
+skills (coding-standards, testing-standards, git-workflow), I've 
+already investigated your codebase and drafted enrichments.
+
+  [1] Show me what you found — I'll present the enrichments for 
+      review, then write them.
+
+  [2] Walk through each — go file by file so you can shape each one.
+
+  [3] Skip — keep the defaults for now.
 
 Which approach?
 ```
 
-**On response:**
+**Option 3 (skip):** "Keeping defaults for the remaining skills. You can enrich them any time." Proceed to Step 8.
 
-**Option 3 (skip):** "Keeping skill defaults. You can enrich them any time by running setup again." Proceed to Step 8.
+**Option 2 (guided):** "Guided enrichment is coming in the next update. Want me to show you what I found instead, or skip?" Offer option 1 or 3.
 
-**Option 2 (guided):** "Guided enrichment is coming in the next update. Would you like to draft all instead, or skip?" Offer option 1 or 3.
+**Option 1 (show and write):** Present the enrichment summary and review flow below.
 
-**Option 1 (draft all):** Execute the enrichment flow below.
+### Option 1: Enrichment Summary + Review
 
-### Option 1: Draft All — Enrichment Flow
-
-Say "Enriching your skill files..." and work through each skill silently.
-
-**For each wave 1 skill (testing-standards, git-workflow, coding-standards):**
-1. Read the skill file at `.claude/skills/{name}/SKILL.md` — the `<!-- ENRICHMENT GUIDE -->` comment contains per-skill instructions for what to read, what to look for, and what to write.
-2. Follow the enrichment guide — read the specified files, check the specified scan fields.
-3. Draft additions/modifications to the `## Rules` section.
-4. Track what was added/modified/removed for the summary.
-
-**For non-wave-1 skills (deployment, troubleshooting, conditional skills):**
-- Do NOT enrich. Note as "kept defaults" in the summary.
-
-**After all skills are processed, present the summary:**
+Present what was drafted during the silent investigation:
 
 ```
-✓ Skills enriched. Here's what I found:
+Here's what I found for the remaining skills:
+
+  ✓ coding-standards     +[N] rules adjusted/added
+    [One-line summary of each change]
+    [If contradiction: "⚠ Adjusted [rule] — review this change."]
 
   ✓ testing-standards    +[N] rules added
     [One-line summary of each addition]
@@ -449,18 +490,10 @@ Say "Enriching your skill files..." and work through each skill silently.
   ✓ git-workflow         +[N] rules added
     [One-line summary of each addition]
 
-  ✓ coding-standards     +[N] rules adjusted/added
-    [One-line summary of each change]
-    [If contradiction adjusted: "⚠ Adjusted [rule] to match your 
-    codebase pattern — review this change."]
-
-  ○ deployment           kept defaults ([reason])
-  ○ troubleshooting      kept defaults — common issues from library 
-                         already included. Grows from real debugging.
   [If conditional skills scaffolded:
   ○ [skill-name]         kept defaults (enrichment coming soon)]
 
-  Review any file in detail: "show me coding-standards"
+  Review any file: "show me coding-standards"
   Accept all: "looks good"
 ```
 
@@ -470,21 +503,21 @@ Say "Enriching your skill files..." and work through each skill silently.
 
 **"show me [skill]":** Present the FULL skill file with additions clearly marked. The user reads, corrects, confirms. Then: "Any other files to review, or accept the rest?"
 
-**"change [specific rule]":** Modify the specific rule. Confirm the change. Ask if anything else needs changing.
+**"change [specific rule]":** Modify the specific rule. Confirm. Ask if anything else.
 
-**"redo [skill]":** Re-read files, re-draft that skill's enrichment. Present again.
+**"redo [skill]":** Re-read files, re-draft that skill. Present again.
 
-**"reject [skill]":** Keep that skill at defaults. Note it.
+**"reject [skill]":** Keep at defaults.
 
 ### Writing enriched files
 
 After the user accepts:
 - Write each enriched skill file using Claude Code's file writing tools
 - Preserve `## Detected` — machine-owned, do not modify
-- Preserve the `<!-- ENRICHMENT GUIDE -->` HTML comments — template infrastructure
 - Add/modify rules in `## Rules` section only
 - Leave `## Gotchas` and `## Examples` unchanged
 - Preserve existing library rules in `## Detected` (under `### Library Rules`)
+- Do NOT modify `ENRICHMENT.md` files — they stay for future re-runs
 
 ---
 
