@@ -25,6 +25,8 @@ Don't stop at what the scan provides. But don't read forever either. For each se
 
 The most valuable context is PRODUCT language, not technology language. "Scans codebases and generates context files" is technology. "Makes AI coding reliable for teams that need quality guarantees" is product. Project-context should sound like the second.
 
+Rules and context should describe DURABLE patterns, not current state. "We use conventional commits" is durable — it's a convention. "Release process is planned but not implemented" is temporal — it's true today, stale next month. Temporal information belongs in Active Constraints (which the user updates), not in skill rules or project-context sections that persist indefinitely. When writing rules, ask: "Will this still be true in a month?" If not, it's a constraint, not a rule.
+
 ---
 
 ## Step 0: Check Setup State
@@ -134,8 +136,8 @@ how Ana's pipeline integrates with your codebase:
 
   Artifact branch       [artifactBranch]
     Where pipeline planning artifacts (scope, spec, contract) are 
-    committed. Usually your pre-production branch if one exists,
-    otherwise main.
+    committed. Tell the user: "This is usually your pre-production 
+    branch if one exists, otherwise main."
 
   [If monorepo:
   Primary package       [monorepo.primaryPackage.name]
@@ -208,7 +210,7 @@ No user interaction. Read whatever files give you real signal for each section o
 
 **Architecture** needs structural understanding — how layers connect, what depends on what, where the boundaries are. Look at directory structure, entry points, import patterns, and any architecture documentation you haven't read yet.
 
-**Where to Make Changes** needs to know where active development happens and what each area is responsible for. Look at high-churn files from `git.recentActivity.highChurnFiles`, entry points, and module responsibilities. Frame as task-to-location: "To add a new X, go here."
+**Where to Make Changes** needs to know where active development happens and what each area is responsible for. Look at high-churn files from `git.recentActivity.highChurnFiles`, entry points, and module responsibilities. Frame as task-to-location: "To add a new X, go here." Also look for the distinction between TEMPLATE files and GENERATOR code — many projects have both (templates copied as-is vs generators that produce content programmatically). When both exist, documenting which mechanism owns each output is the #1 orientation insight for new contributors.
 
 **Key Decisions** needs the WHY behind choices that aren't obvious from the code alone. Look at code comments containing "why," "because," "intentional," "workaround," "tradeoff." Architecture docs often explain these. This section is thin without human input — that's okay.
 
@@ -327,7 +329,7 @@ Your project starts with 3 defaults:
   3. "Every change should be foundation" — would a senior approve this 
      for craft, not just correctness? If not, don't ship it.
 
-Do these fit your project?
+Want to modify any of these, or keep them as-is?
 ```
 
 **If the file has more than the 3 default principles** (previously enriched): say "You already have [N] design principles — keeping them. Want to add more or review what's here?" If no, skip to Step 7.
@@ -539,6 +541,10 @@ If skills were enriched (option 1):
   Your agents will use these immediately.
   Start working: claude --agent ana
 
+  Your context grows over time — proof chain entries from pipeline runs, 
+  debugging sessions added to troubleshooting, and re-running setup all 
+  make your context richer.
+
   To add more detail later, run claude --agent ana-setup again.
 ```
 
@@ -553,6 +559,10 @@ If skills were skipped (option 3) or kept at defaults:
 
   Your agents will use these immediately.
   Start working: claude --agent ana
+
+  Your context grows over time — proof chain entries from pipeline runs, 
+  debugging sessions added to troubleshooting, and re-running setup all 
+  make your context richer.
 
   To enrich skills or add more detail, run claude --agent ana-setup again.
 ```
