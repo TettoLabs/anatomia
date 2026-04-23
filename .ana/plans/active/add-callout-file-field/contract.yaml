@@ -1,0 +1,106 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Add file field to proof chain callouts"
+
+assertions:
+  - id: A001
+    says: "Parsing a callout that mentions a file stores that file reference"
+    block: "parseCallouts returns file field with first file ref"
+    target: "callout.file"
+    matcher: "equals"
+    value: "projectKind.ts"
+
+  - id: A002
+    says: "Parsing a callout without any file reference stores null"
+    block: "parseCallouts returns null file when no file ref in summary"
+    target: "callout.file"
+    matcher: "equals"
+    value: null
+
+  - id: A003
+    says: "When a callout mentions multiple files, only the first is stored"
+    block: "parseCallouts takes first file ref when multiple present"
+    target: "callout.file"
+    matcher: "equals"
+    value: "fileA.ts"
+
+  - id: A004
+    says: "The callout type includes a file field"
+    block: "ProofChainEntry callouts type includes file"
+    target: "ProofChainEntry.callouts[0].file"
+    matcher: "exists"
+
+  - id: A005
+    says: "Active Issues groups callouts by stored file field, not by re-parsing"
+    block: "groups callouts by extracted file ref"
+    target: "output"
+    matcher: "contains"
+    value: "## projectKind.ts"
+
+  - id: A006
+    says: "Callouts without a file reference appear under General"
+    block: "places callouts without refs under General"
+    target: "output"
+    matcher: "contains"
+    value: "## General"
+
+  - id: A007
+    says: "The renderer does not call extractFileRefs to determine grouping"
+    block: "generateActiveIssuesMarkdown uses callout.file not extractFileRefs"
+    target: "sourceCode"
+    matcher: "not_contains"
+    value: "extractFileRefs(callout"
+
+  - id: A008
+    says: "The file extraction function remains available for other uses"
+    block: "extractFileRefs remains exported"
+    target: "export"
+    matcher: "exists"
+
+  - id: A009
+    says: "Every existing callout in the proof chain has a file field after migration"
+    block: "proof_chain.json backfill complete"
+    target: "callouts[*].file"
+    matcher: "exists"
+
+  - id: A010
+    says: "All existing parseCallouts tests still pass with updated assertions"
+    block: "existing parseCallouts tests pass"
+    target: "testSuite.parseCallouts"
+    matcher: "truthy"
+
+  - id: A011
+    says: "All existing generateActiveIssuesMarkdown tests still pass"
+    block: "existing generateActiveIssuesMarkdown tests pass"
+    target: "testSuite.generateActiveIssuesMarkdown"
+    matcher: "truthy"
+
+  - id: A012
+    says: "The extractFileRefs tests are completely unchanged"
+    block: "extractFileRefs tests unchanged"
+    target: "testSuite.extractFileRefs"
+    matcher: "truthy"
+
+  - id: A013
+    says: "The 20-callout cap still works correctly with the new file field"
+    block: "respects 20-callout cap"
+    target: "calloutCount"
+    matcher: "equals"
+    value: 20
+
+  - id: A014
+    says: "File headings are still sorted alphabetically with General last"
+    block: "orders file headings alphabetically with General last"
+    target: "generalPosition"
+    matcher: "equals"
+    value: "last"
+
+file_changes:
+  - path: "packages/cli/src/types/proof.ts"
+    action: modify
+  - path: "packages/cli/src/utils/proofSummary.ts"
+    action: modify
+  - path: "packages/cli/tests/utils/proofSummary.test.ts"
+    action: modify
+  - path: ".ana/proof_chain.json"
+    action: modify
