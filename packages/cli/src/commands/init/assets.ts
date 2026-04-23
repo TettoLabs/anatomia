@@ -350,6 +350,22 @@ async function generateAgentsMd(cwd: string, engineResult: EngineResult | null):
       lines.push(...cmdLines);
       lines.push('');
     }
+
+    // Deployment context — the critical safety warning for deployed projects
+    if (engineResult.deployment?.platform) {
+      lines.push('## Deployment');
+      lines.push(`- Platform: ${engineResult.deployment.platform}`);
+      if (engineResult.deployment.platform === 'Vercel') {
+        lines.push('- Push to main deploys to production. PRs get preview deployments.');
+        lines.push('- Serverless function limits apply — long-running tasks need streaming or background processing.');
+      } else if (engineResult.deployment.platform === 'Docker' || engineResult.deployment.platform === 'Docker Compose') {
+        lines.push('- Deployed via Docker containers.');
+      }
+      if (engineResult.deployment.ci) {
+        lines.push(`- CI: ${engineResult.deployment.ci}`);
+      }
+      lines.push('');
+    }
   }
 
   if (engineResult?.conventions) {
