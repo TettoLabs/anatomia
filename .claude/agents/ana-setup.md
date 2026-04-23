@@ -49,7 +49,7 @@ No user interaction. Read and form a mental model.
 
 ### Required reads (in this order):
 
-**1. `.ana/scan.json`** — your detection foundation. Note these fields explicitly:
+**1. `.ana/scan.json`** — your detection foundation. Before using scan data, check freshness. Read `lastScanAt` from `.ana/ana.json` and compare against the most recent commit: `git log -1 --format="%aI"`. If the scan is more than 1 day older than the most recent commit, tell the user: "Your scan data is from [date] but the codebase has been updated since. Consider running `ana scan` first to refresh before we continue." Let the user decide whether to continue with stale data or refresh first. Note these fields explicitly:
 - `applicationShape` — what kind of project (cli, web-app, api-server, mcp-server, etc.)
 - `stack.language`, `stack.framework`, `stack.database`, `stack.auth`, `stack.testing`, `stack.aiSdk`, `stack.payments`
 - `files.source`, `files.test` — project size
@@ -409,6 +409,8 @@ Don't count files — read what each enrichment guide tells you to read. A compl
 After investigation, you should have draft enrichments ready for all skills before saying a word.
 
 ### 7b: Skill gate framing
+
+Before starting the skill interaction, set expectations based on project size. Tell the user: "I'm reading your codebase across [N] skills. For a project this size, this usually takes a minute or two." This prevents silence during investigation from feeling broken — the user knows something is happening.
 
 ```
 Your project context and design principles are set. Now let's 
