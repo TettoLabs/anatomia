@@ -452,12 +452,34 @@ Anything else that regularly trips people up on this project?
 
 **If nothing found during investigation:** Skip the question. Say: "Troubleshooting grows from real debugging — keeping the library defaults for now. This skill gets richer as you use the pipeline." Move to 7e.
 
-### 7e: Automation menu (Turn 3)
+### 7e: AI Patterns question (conditional — only if ai-patterns scaffolded)
+
+If ai-patterns was NOT scaffolded (no `stack.aiSdk` detected), skip this step entirely. Go to 7f.
+
+If ai-patterns IS scaffolded, the agent already investigated the AI integration file during 7a. Present findings loaded:
 
 ```
-I've configured deployment and troubleshooting. For the remaining 
-skills (coding-standards, testing-standards, git-workflow), I've 
-already investigated your codebase and drafted enrichments.
+I found your AI integration using [SDK name from stack.aiSdk]. 
+[Observations — streaming detected/not, structured output usage, 
+centralized client vs scattered, retry configuration seen/not.]
+
+One thing I couldn't determine from code: how do you manage prompts? 
+Centralized in a directory, inline in handlers, or something else?
+```
+
+**On response:** Write ai-patterns skill immediately. Combine code observations + library rules + human's prompt management answer.
+
+**If AI SDK detected but no integration code found:** Say "AI SDK detected in dependencies but no integration code found yet. Keeping library defaults — enrich when you start building AI features." Move to 7f.
+
+### 7f: Automation menu
+
+List whatever skills remain after the question turns. The list is dynamic — it includes core skills (coding-standards, testing-standards, git-workflow) plus any conditional skills NOT already handled by questions (api-patterns, data-access).
+
+```
+I've configured [list skills handled in 7c-7e]. For the remaining 
+skills ([list remaining — typically coding-standards, testing-standards, 
+git-workflow, plus api-patterns and/or data-access if scaffolded]), 
+I've already investigated your codebase and drafted enrichments.
 
   [1] Show me what you found — I'll present the enrichments for 
       review, then write them.
@@ -477,7 +499,7 @@ Which approach?
 
 ### Option 1: Enrichment Summary + Review
 
-Present what was drafted during the silent investigation:
+Present what was drafted during the silent investigation. Include ALL remaining skills — core AND conditional:
 
 ```
 Here's what I found for the remaining skills:
@@ -492,8 +514,13 @@ Here's what I found for the remaining skills:
   ✓ git-workflow         +[N] rules added
     [One-line summary of each addition]
 
-  [If conditional skills scaffolded:
-  ○ [skill-name]         kept defaults (enrichment coming soon)]
+  [If api-patterns scaffolded and in remaining list:]
+  ✓ api-patterns         +[N] rules added
+    [One-line summary — framework-specific patterns found]
+
+  [If data-access scaffolded and in remaining list:]
+  ✓ data-access          +[N] rules added
+    [One-line summary — ORM-specific patterns found]
 
   Review any file: "show me coding-standards"
   Accept all: "looks good"
