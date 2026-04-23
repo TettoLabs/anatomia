@@ -490,23 +490,19 @@ skills ([list remaining — typically coding-standards, testing-standards,
 git-workflow, plus api-patterns and/or data-access if scaffolded]), 
 I've already investigated your codebase and drafted enrichments.
 
-  [1] Show me what you found — I'll present the enrichments for 
-      review, then write them.
+  [1] Draft all — I'll enrich every skill and present results for 
+      review. Say "show me [skill]" for detailed rationale on any file.
 
-  [2] Walk through each — go file by file so you can shape each one.
-
-  [3] Skip — keep the defaults for now.
+  [2] Skip — keep the defaults for now.
 
 Which approach?
 ```
 
-**Option 3 (skip):** "Keeping defaults for the remaining skills. You can enrich them any time." Proceed to Step 8.
+**Option 2 (skip):** "Keeping defaults for the remaining skills. You can enrich them any time." Proceed to Step 8.
 
-**Option 2 (guided):** "Guided enrichment is coming in the next update. Want me to show you what I found instead, or skip?" Offer option 1 or 3.
+**Option 1 (draft all):** Present the enrichment summary and review flow below.
 
-**Option 1 (show and write):** Present the enrichment summary and review flow below.
-
-### Option 1: Enrichment Summary + Review
+### Enrichment Summary + Review
 
 Present what was drafted during the silent investigation. Include ALL remaining skills — core AND conditional:
 
@@ -539,7 +535,27 @@ Here's what I found for the remaining skills:
 
 **"looks good":** Write all enriched skill files. Move to Step 8.
 
-**"show me [skill]":** Present the FULL skill file with additions clearly marked. The user reads, corrects, confirms. Then: "Any other files to review, or accept the rest?"
+**"show me [skill]":** Present three things:
+
+1. **One-line framing** — who reads this file and when:
+   - coding-standards: "Plan reads this for spec constraints. Build follows it during implementation."
+   - testing-standards: "Plan uses this for testing strategy. Build follows these patterns when writing tests."
+   - git-workflow: "Build reads this for commit format and branch naming."
+   - deployment: "Build and Verify reference this for deployment-aware decisions."
+   - troubleshooting: "Think reads this when scoping work near known problem areas."
+   - api-patterns: "Plan and Build read this when the task involves API routes."
+   - data-access: "Plan and Build read this when the task involves database operations."
+   - ai-patterns: "Plan and Build read this when the task involves AI features."
+
+2. **Full file with markers** (← KEPT / ← NEW / ← ADJUSTED / ← REMOVED)
+
+3. **Per-rule rationale for NEW/ADJUSTED/REMOVED rules only:**
+   - "Added [rule] because: [evidence from investigation]. Without this rule, Build would [what goes wrong]."
+   - "Adjusted [rule] because: [contradiction found]. The original said [X] but your codebase does [Y]."
+   - "Removed [rule] because: [scan shows 0% usage]. Keeping it would push Build toward a pattern your project doesn't follow."
+   - KEPT rules get no rationale — they're template defaults that passed validation.
+
+Then: "Any other files to review, or accept the rest?"
 
 **"change [specific rule]":** Modify the specific rule. Confirm. Ask if anything else.
 
