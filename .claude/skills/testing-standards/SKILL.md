@@ -22,6 +22,8 @@ description: "Invoke when writing tests, reviewing test quality, or setting up t
 - Never weaken a test to make it pass. If a test fails, fix the code or fix the expectation — never broaden assertions or catch exceptions to force green.
 - When overriding EngineResult fields in tests, spread at each nesting level: `{ ...base, commands: { ...base.commands, test: 'vitest' } }`. Never reconstruct the full object manually — the factory provides all required defaults and the type has 40+ fields.
 
+- Scan integration tests run against the compiled `dist/index.js`, not source. The pre-commit hook runs `pnpm run build` to keep the artifact fresh. If running tests manually outside the hook, run `pnpm run build` first — stale dist will give false passes on terminal output tests.
+
 ## Gotchas
 *Not yet captured. Add as you discover them during development.*
 

@@ -11,6 +11,7 @@
 set -e
 
 cd packages/cli
+pnpm run build
 pnpm typecheck
 pnpm typecheck:tests
 pnpm lint
