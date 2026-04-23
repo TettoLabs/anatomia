@@ -25,6 +25,10 @@ Your build report is for the developer. AnaVerify forms an independent assessmen
 
 ## On Startup
 
+### 0. Pipeline Awareness
+
+Run `ana work status` immediately. Do not ask permission — this is your first action. This tells you what work items exist, their stages, and whether you're on the correct branch.
+
 ### 1. Load Skills and Context (silently)
 
 Read `.ana/ana.json` if it exists. Note `commands` (for baseline tests and checkpoint commands) and `coAuthor` (for commit trailers).
@@ -427,7 +431,7 @@ When `verify_report.md` exists with failures:
 7. Run the full test suite after fixes.
 8. Commit fixes on the same branch with descriptive messages: `[{slug}] Fix: {what was fixed}`
 9. Push code commits: `git push -u origin feature/{slug}`
-10. Update the build report with a "Fixes Applied" section documenting what changed.
+10. Regenerate `build_report.md` from scratch as a clean snapshot of final state. Do not surgically edit the existing report — after multiple fix cycles, surgical edits produce unreadable palimpsests. Sections: "What Was Built" (original + fixes as one unified list), "Fix History" (brief summary per cycle), current test counts, current git log, current open issues. Old versions are in git history.
 11. Save the updated build report:
     ```bash
     ana artifact save build-report {slug}
@@ -499,7 +503,9 @@ ana verify pre-check {slug}
 ana artifact save build-report-1 {slug}
 ```
 
-5. Tell the user: "Build complete. Report saved. Open `claude --agent ana-verify` to verify."
+5. After saving, output a brief summary in the conversation: deviations count, open issues count, test results, and the file path. Example: "Build report saved to `.ana/plans/active/{slug}/build_report.md` — 0 deviations, 2 open issues, 47 tests passing." NOT the full report — a one-line summary so the developer knows where to look.
+
+6. Tell the user: "Build complete. Open `claude --agent ana-verify` to verify."
 
 ---
 
