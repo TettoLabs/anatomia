@@ -67,7 +67,7 @@ export interface ProofSummary {
   seal_commit: string | null;
   completed_at: string;
   // S23 pipeline hardening — intelligence capture
-  callouts: Array<{ category: string; summary: string }>;
+  callouts: Array<{ category: string; summary: string; file: string | null }>;
   rejection_cycles: number;
   previous_failures: Array<{ id: string; summary: string }>;
 }
@@ -270,6 +270,7 @@ export function extractFileRefs(summary: string): string[] {
 interface CalloutWithFeature {
   category: string;
   summary: string;
+  file: string | null;
   feature: string;
 }
 
@@ -279,7 +280,7 @@ interface CalloutWithFeature {
 interface ProofChainEntryForIndex {
   feature: string;
   completed_at: string;
-  callouts?: Array<{ category: string; summary: string }>;
+  callouts?: Array<{ category: string; summary: string; file: string | null }>;
 }
 
 /**
@@ -305,6 +306,7 @@ export function generateActiveIssuesMarkdown(entries: ProofChainEntryForIndex[])
       allCallouts.push({
         category: callout.category,
         summary: callout.summary,
+        file: callout.file,
         feature: entry.feature,
         entryDate: entry.completed_at,
       });
@@ -340,21 +342,10 @@ export function generateActiveIssuesMarkdown(entries: ProofChainEntryForIndex[])
   const fileGroups = new Map<string, CalloutWithFeature[]>();
 
   for (const callout of cappedCallouts) {
-    const fileRefs = extractFileRefs(callout.summary);
-
-    if (fileRefs.length === 0) {
-      // No file refs → General
-      const existing = fileGroups.get('General') || [];
-      existing.push(callout);
-      fileGroups.set('General', existing);
-    } else {
-      // Assign to first file only (dedup). Cross-references are preserved
-      // in the summary text — the other files are still mentioned.
-      const primaryFile = fileRefs[0]!;
-      const existing = fileGroups.get(primaryFile) || [];
-      existing.push(callout);
-      fileGroups.set(primaryFile, existing);
-    }
+    const key = callout.file ?? 'General';
+    const existing = fileGroups.get(key) || [];
+    existing.push(callout);
+    fileGroups.set(key, existing);
   }
 
   // Build markdown
@@ -403,8 +394,8 @@ export function generateActiveIssuesMarkdown(entries: ProofChainEntryForIndex[])
  * @param content - Verify report content
  * @returns Array of { category, summary }
  */
-export function parseCallouts(content: string): Array<{ category: string; summary: string }> {
-  const results: Array<{ category: string; summary: string }> = [];
+export function parseCallouts(content: string): Array<{ category: string; summary: string; file: string | null }> {
+  const results: Array<{ category: string; summary: string; file: string | null }> = [];
 
   // Find ## Callouts section
   const calloutsMatch = content.match(/## Callouts\n([\s\S]*?)(?=\n## |$)/);
@@ -419,7 +410,10 @@ export function parseCallouts(content: string): Array<{ category: string; summar
   const flushCallout = () => {
     if (currentCategory && currentSummary.length > 0) {
       const summary = currentSummary.join(' ').trim().substring(0, 200).trim();
-      if (summary) results.push({ category: currentCategory, summary });
+      if (summary) {
+        const fileRefs = extractFileRefs(summary);
+        results.push({ category: currentCategory, summary, file: fileRefs[0] ?? null });
+      }
     }
     currentSummary = [];
   };
