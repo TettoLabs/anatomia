@@ -76,9 +76,7 @@ describe('ana scan', () => {
 
       const { stdout, exitCode } = runScan();
       expect(exitCode).toBe(0);
-      expect(stdout).toMatch(/Source\s+2/);
-      expect(stdout).toMatch(/Config\s+1/);
-      expect(stdout).toMatch(/Total\s+3/);
+      expect(stdout).toMatch(/Language\s+Node\.js/);
     });
 
     it('scans specified path when path argument provided', async () => {
@@ -91,7 +89,7 @@ describe('ana scan', () => {
 
       const { stdout, exitCode } = runScan([tempDir]);
       expect(exitCode).toBe(0);
-      expect(stdout).toMatch(/Source\s+3/);
+      expect(stdout).toMatch(/Language\s+Node\.js/);
     });
 
     it('shows helpful error for nonexistent path', async () => {
@@ -109,7 +107,6 @@ describe('ana scan', () => {
 
       const { stdout, exitCode } = runScan([tempDir]);
       expect(stdout).toMatch(/Language\s+Node\.js/);
-      expect(stdout).toMatch(/Config\s+1/);
       expect(exitCode).toBe(0);
     });
   });
@@ -256,43 +253,11 @@ describe('ana scan', () => {
   });
 
   describe('file counts (AC8)', () => {
-    it('shows source file count', async () => {
+    // File counts are in JSON output (scan.json), not terminal output (P1 redesign removed them).
+    // Terminal output shows file counts in the header summary line for rich projects.
+    it('includes file counts in JSON output', async () => {
       await createTestFiles({
         'package.json': '{}',
-        'index.ts': 'export const a = 1;',
-        'utils.ts': 'export const b = 2;',
-        'helper.ts': 'export const c = 3;',
-      });
-
-      const { stdout } = runScan([tempDir]);
-      expect(stdout).toMatch(/Source\s+3/);
-    });
-
-    it('shows test file count', async () => {
-      await createTestFiles({
-        'package.json': '{}',
-        'foo.test.ts': 'test("a", () => {});',
-        'bar.test.ts': 'test("b", () => {});',
-      });
-
-      const { stdout } = runScan([tempDir]);
-      expect(stdout).toMatch(/Tests\s+2/);
-    });
-
-    it('shows config file count', async () => {
-      await createTestFiles({
-        'package.json': '{}',
-        'tsconfig.json': '{}',
-      });
-
-      const { stdout } = runScan([tempDir]);
-      expect(stdout).toMatch(/Config\s+2/);
-    });
-
-    it('shows total file count', async () => {
-      await createTestFiles({
-        'package.json': '{}',
-        'tsconfig.json': '{}',
         'index.ts': 'export const a = 1;',
         'utils.ts': 'export const b = 2;',
         'helper.ts': 'export const c = 3;',
@@ -300,9 +265,12 @@ describe('ana scan', () => {
         'bar.test.ts': 'test("b", () => {});',
       });
 
-      const { stdout } = runScan([tempDir]);
-      // 3 source + 2 test + 2 config = 7 total
-      expect(stdout).toMatch(/Total\s+7/);
+      const { stdout } = runScan([tempDir, '--json']);
+      const json = JSON.parse(stdout);
+      expect(json.files.source).toBe(3);
+      expect(json.files.test).toBe(2);
+      expect(json.files.config).toBe(1);
+      expect(json.files.total).toBe(6);
     });
 
     it('formats large numbers with commas', () => {
@@ -313,64 +281,19 @@ describe('ana scan', () => {
   });
 
   describe('structure map (AC9, AC10)', () => {
-    it('shows directories with purposes', async () => {
+    // P1 redesign: Structure section removed from terminal output. Structure
+    // data is still in JSON output and scan.json for setup agent consumption.
+    it('includes structure in JSON output', async () => {
       await createTestFiles({
         'package.json': '{}',
         'src/index.ts': 'export const x = 1;',
         'tests/foo.test.ts': 'test("foo", () => {});',
       });
 
-      const { stdout } = runScan([tempDir]);
-      expect(stdout).toMatch(/src\/\s+Source code/);
-      expect(stdout).toMatch(/tests\/\s+Tests/);
-    });
-
-    it('shows all directories when 9 present', async () => {
-      // Use only directories recognized by the analyzer's DIRECTORY_PURPOSES map
-      const dirs = ['src', 'lib', 'tests', 'docs', 'scripts', 'config', 'assets', 'public', 'utils'];
-      const files: Record<string, string> = { 'package.json': '{}' };
-      for (const dir of dirs) {
-        files[`${dir}/.gitkeep`] = '';
-      }
-      await createTestFiles(files);
-
-      const { stdout } = runScan([tempDir]);
-      const structureSection = stdout.split('Structure')[1]?.split('Run')[0] || '';
-      const directoryLines = structureSection.split('\n').filter((line) => line.includes('/'));
-      expect(directoryLines.length).toBe(9);
-      expect(stdout).not.toContain('more directories');
-    });
-
-    it('shows all 11 meaningful directories when present (SCAN-046: no arbitrary cap)', async () => {
-      // Regression: previously the scanner sorted alphabetically and
-      // truncated at 10, so 'tools'/'components' etc. past position 10
-      // would be hidden behind a "+N more directories" line. The depth-1
-      // + non-Unknown-purpose filters already gate noise, so we show
-      // every surviving entry.
-      const dirs = [
-        'src',
-        'lib',
-        'tests',
-        'docs',
-        'scripts',
-        'config',
-        'assets',
-        'public',
-        'utils',
-        'tools',
-        'components',
-      ];
-      const files: Record<string, string> = { 'package.json': '{}' };
-      for (const dir of dirs) {
-        files[`${dir}/.gitkeep`] = '';
-      }
-      await createTestFiles(files);
-
-      const { stdout } = runScan([tempDir]);
-      const structureSection = stdout.split('Structure')[1]?.split('Run')[0] || '';
-      const directoryLines = structureSection.split('\n').filter((line) => line.includes('/'));
-      expect(directoryLines.length).toBe(11);
-      expect(stdout).not.toContain('more directories');
+      const { stdout } = runScan([tempDir, '--json']);
+      const json = JSON.parse(stdout);
+      expect(json.structure.length).toBeGreaterThan(0);
+      expect(json.structure.some((s: { path: string }) => s.path === 'src/')).toBe(true);
     });
   });
 
@@ -500,11 +423,6 @@ describe('ana scan', () => {
 
       const { stdout, exitCode } = runScan([tempDir]);
       expect(stdout).toMatch(/No code detected/);
-      expect(stdout).toMatch(/Source\s+0/);
-      expect(stdout).toMatch(/Tests\s+0/);
-      expect(stdout).toMatch(/Config\s+0/);
-      expect(stdout).toMatch(/Total\s+0/);
-      expect(stdout).toMatch(/\(empty\)/);
       expect(exitCode).toBe(0);
     });
 
@@ -516,7 +434,6 @@ describe('ana scan', () => {
 
       const { stdout, exitCode } = runScan([tempDir]);
       expect(stdout).toMatch(/No code detected/);
-      expect(stdout).toMatch(/Source\s+0/);
       expect(exitCode).toBe(0);
     });
 
@@ -536,9 +453,8 @@ describe('ana scan', () => {
       await fs.chmod(path.join(tempDir, 'secret.ts'), 0o000);
 
       const { stdout, exitCode } = runScan([tempDir]);
-      // Glob counts files without reading them, so both are counted
       // The important thing is that the scan completes without crashing
-      expect(stdout).toMatch(/Source\s+2/);
+      expect(stdout).toMatch(/Language\s+Node\.js/);
       expect(exitCode).toBe(0);
 
       // Restore permissions for cleanup
@@ -989,8 +905,8 @@ describe('ana scan', () => {
 
       const { stdout, exitCode } = runScan();
       expect(exitCode).toBe(0);
-      // Should not crash - language detection may or may not succeed without package.json
-      expect(stdout).toContain('ana scan');
+      // Should not crash - produces output with the box header
+      expect(stdout).toContain('┌');
     });
 
     it('includes payments in JSON output', async () => {
@@ -1022,9 +938,8 @@ describe('ana scan', () => {
 
       const { stdout } = runScan();
       expect(stdout).toMatch(/Workspace\s+pnpm monorepo/);
-      expect(stdout).toMatch(/Packages/);
-      expect(stdout).toMatch(/packages\/cli/);
-      expect(stdout).toMatch(/packages\/web/);
+      // P1 redesign: Packages section removed, package info in Workspace line
+      expect(stdout).toMatch(/Workspace/);
     });
 
     it('shows no workspace info for non-monorepo', async () => {
