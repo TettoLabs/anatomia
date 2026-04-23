@@ -5,8 +5,13 @@
     "hash": "sha256:1848605c8a99b237174deda2053f8aa833755b6c8fa212a19599d7f7c3f742d1"
   },
   "contract": {
-    "saved_at": "2026-04-23T23:31:58.906Z",
-    "commit": "ccf9efd72e98ef742521e63ea0699c44c35653e0",
+    "saved_at": "2026-04-23T23:32:05.433Z",
+    "commit": "b57982989133a5deae97d53ba575573d849756c7",
     "hash": "sha256:70f1805eeba99653a6e7d1c50d5f1e2e44c23062f78bb7fcd58b346bfe55e85c"
+  },
+  "build-report": {
+    "saved_at": "2026-04-23T23:49:08.720Z",
+    "commit": "f88aeecf55788696a64e77a5b0ae8ae3446d4d70",
+    "hash": "sha256:b1e3de41d2e714f568d08e4104766510a291c401fe4d2ccd1f4cb61ec5e3d1cd"
   }
 }
