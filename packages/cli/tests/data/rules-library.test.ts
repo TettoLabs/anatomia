@@ -76,7 +76,7 @@ describe('rules library', () => {
 
       const both = createEmptyEngineResult();
       both.stack.database = 'Prisma';
-      both.deployment = { platform: 'Vercel', configFile: null, ci: null };
+      both.deployment = { platform: 'Vercel', configFile: null, ci: null, ciWorkflowFiles: [] };
       expect(matchTriggers({ database: 'Prisma', platform: 'Vercel' }, both)).toBe(true);
     });
 
