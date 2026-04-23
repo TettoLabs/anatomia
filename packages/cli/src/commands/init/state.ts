@@ -337,6 +337,26 @@ export async function createAnaJson(
   // passthrough (pnpm run test -- --run) because passthrough composition
   // breaks with pnpm + vitest — the -- --run flag doesn't reach vitest
   // through the script layer.
+  /**
+   * Detect the best artifact branch. Prefers a pre-production branch
+   * (staging, develop, dev, qa) over the default branch (main/master).
+   * Planning artifacts belong on the pre-prod branch where work is
+   * staged before production, not on the branch that deploys to prod.
+   *
+   * @param res - Engine scan result containing git branch data
+   * @returns The best artifact branch name
+   */
+  function detectArtifactBranch(res: EngineResult): string {
+    const preProdCandidates = ['staging', 'develop', 'dev', 'qa', 'preprod', 'pre-prod'];
+    const branches = res.git.branches ?? [];
+    for (const candidate of preProdCandidates) {
+      if (branches.includes(candidate)) {
+        return candidate;
+      }
+    }
+    return res.git.defaultBranch ?? res.git.branch ?? 'main';
+  }
+
   let testCmd = makeTestCommandNonInteractive(result.commands.test, result.stack.testing, result.commands.all?.['test']);
   if (testCmd && result.monorepo.isMonorepo && result.monorepo.primaryPackage) {
     const pkg = result.monorepo.primaryPackage;
@@ -365,7 +385,7 @@ export async function createAnaJson(
       dev: result.commands.dev || null,
     },
     coAuthor: 'Ana <build@anatomia.dev>',
-    artifactBranch: result.git.defaultBranch ?? result.git.branch ?? 'main',
+    artifactBranch: detectArtifactBranch(result),
     lastScanAt: result.overview.scannedAt,
   };
 
