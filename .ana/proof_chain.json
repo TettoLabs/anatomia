@@ -443,23 +443,28 @@
       "callouts": [
         {
           "category": "code",
-          "summary": "Latent edge case with degenerate package paths: — assets.ts:575 `pkg.path.split('/').filter(Boolean).length` would produce incorrect relative paths for `\".\"` (depth 1 → `../AGENTS.md`) or `\"\"` (depth"
+          "summary": "Latent edge case with degenerate package paths: — assets.ts:575 `pkg.path.split('/').filter(Boolean).length` would produce incorrect relative paths for `\".\"` (depth 1 → `../AGENTS.md`) or `\"\"` (depth",
+          "file": "assets.ts"
         },
         {
           "category": "code",
-          "summary": "Windows path separators in pkg.path: — assets.ts:575 splits on `/` only. If `pkg.path` somehow contained backslashes (e.g., from a Windows monorepo tool), the depth calculation would be wrong. Again u"
+          "summary": "Windows path separators in pkg.path: — assets.ts:575 splits on `/` only. If `pkg.path` somehow contained backslashes (e.g., from a Windows monorepo tool), the depth calculation would be wrong. Again u",
+          "file": "assets.ts"
         },
         {
           "category": "test",
-          "summary": "No integration test for call-site wiring: — The tests verify `generatePrimaryPackageAgentsMd` directly but don't test that `createClaudeConfiguration` actually calls it. The call sites at assets.ts:19"
+          "summary": "No integration test for call-site wiring: — The tests verify `generatePrimaryPackageAgentsMd` directly but don't test that `createClaudeConfiguration` actually calls it. The call sites at assets.ts:19",
+          "file": "assets.ts"
         },
         {
           "category": "test",
-          "summary": "A006 assertion is weak for its contract: — The contract says the file \"points readers to the root AGENTS.md.\" The test checks `toContain('AGENTS.md')` and `toContain('Full Project Context')` separatel"
+          "summary": "A006 assertion is weak for its contract: — The contract says the file \"points readers to the root AGENTS.md.\" The test checks `toContain('AGENTS.md')` and `toContain('Full Project Context')` separatel",
+          "file": "AGENTS.md"
         },
         {
           "category": "upstream",
-          "summary": "Contract A006 value is overly broad: — The contract assertion `matcher: contains, value: \"AGENTS.md\"` is too permissive. Every assertion in this test suite mentions AGENTS.md in some form. The value s"
+          "summary": "Contract A006 value is overly broad: — The contract assertion `matcher: contains, value: \"AGENTS.md\"` is too permissive. Every assertion in this test suite mentions AGENTS.md in some form. The value s",
+          "file": "AGENTS.md"
         }
       ],
       "rejection_cycles": 0,
@@ -553,23 +558,28 @@
       "callouts": [
         {
           "category": "code",
-          "summary": "`findProjectRoot` checks for `.ana/` directory existence (validators.ts:105), not `.ana/ana.json`. A stale `.ana/` directory containing only `state/` (like `packages/cli/src/.ana/`) causes the functio"
+          "summary": "`findProjectRoot` checks for `.ana/` directory existence (validators.ts:105), not `.ana/ana.json`. A stale `.ana/` directory containing only `state/` (like `packages/cli/src/.ana/`) causes the functio",
+          "file": "validators.ts"
         },
         {
           "category": "code",
-          "summary": "`slugDir2` in artifact.ts saveArtifact (line ~708) renamed from `slugDir` to avoid shadowing the pre-check block's `slugDir` (line ~547). Symptom of a long function — cosmetic, not functional. Carried"
+          "summary": "`slugDir2` in artifact.ts saveArtifact (line ~708) renamed from `slugDir` to avoid shadowing the pre-check block's `slugDir` (line ~547). Symptom of a long function — cosmetic, not functional. Carried",
+          "file": "artifact.ts"
         },
         {
           "category": "test",
-          "summary": "A009 test at findProjectRoot.test.ts:90-95 is `expect(true).toBe(true)` — a tautology that passes regardless of suite health. The builder's comment claims \"if wiring broke existing tests, this file wo"
+          "summary": "A009 test at findProjectRoot.test.ts:90-95 is `expect(true).toBe(true)` — a tautology that passes regardless of suite health. The builder's comment claims \"if wiring broke existing tests, this file wo",
+          "file": "test.ts"
         },
         {
           "category": "test",
-          "summary": "A007 test at findProjectRoot.test.ts:72-73 uses `typeof findProjectRoot === 'function'` — this passes for any function. The import statement at line 5 would throw `ERR_MODULE_NOT_FOUND` if the export"
+          "summary": "A007 test at findProjectRoot.test.ts:72-73 uses `typeof findProjectRoot === 'function'` — this passes for any function. The import statement at line 5 would throw `ERR_MODULE_NOT_FOUND` if the export",
+          "file": "test.ts"
         },
         {
           "category": "upstream",
-          "summary": "A009 as a contract assertion (\"all existing tests continue to pass\") is inherently untestable at the unit level. It's a suite-level property. Tagging a single test with `@ana A009` creates pressure to"
+          "summary": "A009 as a contract assertion (\"all existing tests continue to pass\") is inherently untestable at the unit level. It's a suite-level property. Tagging a single test with `@ana A009` creates pressure to",
+          "file": null
         }
       ],
       "rejection_cycles": 1,
@@ -918,27 +928,33 @@
       "callouts": [
         {
           "category": "code",
-          "summary": "Hard truncation at 100 characters without ellipsis: — proofSummary.ts:361 uses `substring(0, 100)` which can cut mid-word. Adding `+ '…'` when truncated would improve readability. Minor — the active i"
+          "summary": "Hard truncation at 100 characters without ellipsis: — proofSummary.ts:361 uses `substring(0, 100)` which can cut mid-word. Adding `+ '…'` when truncated would improve readability. Minor — the active i",
+          "file": "proofSummary.ts"
         },
         {
           "category": "code",
-          "summary": "File path segments lost in extractFileRefs: — proofSummary.ts:253 regex uses `\\b` word boundary which won't match after `/`. Callouts mentioning `src/utils/index.ts` will group under `index.ts`, poten"
+          "summary": "File path segments lost in extractFileRefs: — proofSummary.ts:253 regex uses `\\b` word boundary which won't match after `/`. Callouts mentioning `src/utils/index.ts` will group under `index.ts`, poten",
+          "file": "proofSummary.ts"
         },
         {
           "category": "code",
-          "summary": "ProofChain interface duplicated in three locations: — work.ts:661, proof.ts:29, and now proofSummary.ts has `ProofChainEntryForIndex`. The gotcha explicitly warned about this. The builder chose a narr"
+          "summary": "ProofChain interface duplicated in three locations: — work.ts:661, proof.ts:29, and now proofSummary.ts has `ProofChainEntryForIndex`. The gotcha explicitly warned about this. The builder chose a narr",
+          "file": "work.ts"
         },
         {
           "category": "test",
-          "summary": "A009 cap test doesn't verify WHICH callouts were dropped: — proofSummary.test.ts:550-564 creates 25 identical-structure callouts and asserts count is 20, but doesn't verify the 5 dropped are the oldes"
+          "summary": "A009 cap test doesn't verify WHICH callouts were dropped: — proofSummary.test.ts:550-564 creates 25 identical-structure callouts and asserts count is 20, but doesn't verify the 5 dropped are the oldes",
+          "file": "test.ts"
         },
         {
           "category": "test",
-          "summary": "A012 heading position test is fragile: — proofSummary.test.ts:606 asserts `output.indexOf('# Active Issues') === 0`. If the function ever adds a leading newline or BOM, this breaks. The contract says"
+          "summary": "A012 heading position test is fragile: — proofSummary.test.ts:606 asserts `output.indexOf('# Active Issues') === 0`. If the function ever adds a leading newline or BOM, this breaks. The contract says",
+          "file": "test.ts"
         },
         {
           "category": "upstream",
-          "summary": "Contract seal was UNVERIFIABLE: — no `seal_commit` was saved for this contract. This means we can't mechanically verify the contract wasn't modified after planning. Not a blocker for this cycle, but t"
+          "summary": "Contract seal was UNVERIFIABLE: — no `seal_commit` was saved for this contract. This means we can't mechanically verify the contract wasn't modified after planning. Not a blocker for this cycle, but t",
+          "file": null
         }
       ],
       "rejection_cycles": 0,
@@ -1130,23 +1146,28 @@
       "callouts": [
         {
           "category": "code",
-          "summary": "`truncate` word-boundary behavior for CJK: — readme.ts:65-69. When text has no spaces before `cap`, falls back to hard-cut at `cap` characters. Correct for Latin text; may split mid-character for CJK"
+          "summary": "`truncate` word-boundary behavior for CJK: — readme.ts:65-69. When text has no spaces before `cap`, falls back to hard-cut at `cap` characters. Correct for Latin text; may split mid-character for CJK",
+          "file": "readme.ts"
         },
         {
           "category": "code",
-          "summary": "A009 contract deviation: — Contract specifies `value: 5000` for total cap. Implementation now uses 4000 to make the cap reachable. The original 5000 was unreachable dead code (3 × 1500 = 4500 < 5000)."
+          "summary": "A009 contract deviation: — Contract specifies `value: 5000` for total cap. Implementation now uses 4000 to make the cap reachable. The original 5000 was unreachable dead code (3 × 1500 = 4500 < 5000).",
+          "file": null
         },
         {
           "category": "test",
-          "summary": "A014 monorepo test verifies intent not mechanism: — readme.test.ts:157-171. `detectReadme(tmpDir)` has no monorepo concept — it reads from the path it's given. The test proves scan-engine's decision t"
+          "summary": "A014 monorepo test verifies intent not mechanism: — readme.test.ts:157-171. `detectReadme(tmpDir)` has no monorepo concept — it reads from the path it's given. The test proves scan-engine's decision t",
+          "file": "test.ts"
         },
         {
           "category": "test",
-          "summary": "A004 tests serialization, not e2e scan: — readme.test.ts:69-84. The test verifies the ReadmeResult serializes correctly to JSON, not that `ana scan --json` produces the field in CLI output. An e2e tes"
+          "summary": "A004 tests serialization, not e2e scan: — readme.test.ts:69-84. The test verifies the ReadmeResult serializes correctly to JSON, not that `ana scan --json` produces the field in CLI output. An e2e tes",
+          "file": "test.ts"
         },
         {
           "category": "upstream",
-          "summary": "Contract A009 value should be updated: — The contract still says `value: 5000` but the implementation is 4000. If the contract is re-sealed in the future, update the value."
+          "summary": "Contract A009 value should be updated: — The contract still says `value: 5000` but the implementation is 4000. If the contract is re-sealed in the future, update the value.",
+          "file": null
         }
       ],
       "rejection_cycles": 1,
