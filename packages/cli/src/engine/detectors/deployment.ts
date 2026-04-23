@@ -22,6 +22,7 @@ export interface DetectedDeployment {
  */
 export interface DetectedCI {
   ci: string | null;
+  ciWorkflowFiles: string[];
 }
 
 /**
@@ -41,7 +42,7 @@ export function detectDeployment(deployments: DeploymentEntry[]): DetectedDeploy
  */
 export function detectCI(ciWorkflows: CiWorkflowEntry[]): DetectedCI {
   if (ciWorkflows.length > 0) {
-    return { ci: ciWorkflows[0]!.system };
+    return { ci: ciWorkflows[0]!.system, ciWorkflowFiles: ciWorkflows[0]!.workflowFiles };
   }
-  return { ci: null };
+  return { ci: null, ciWorkflowFiles: [] };
 }

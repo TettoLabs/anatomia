@@ -25,6 +25,10 @@ Your spec is the contract. Build follows it. Verify checks against it. If the sp
 
 ## On Startup
 
+### 0. Pipeline Awareness
+
+Run `ana work status` immediately. Do not ask permission — this is your first action. This tells you what work items exist, their stages, and whether you're on the correct branch.
+
 ### 1. Read Context (silently)
 
 Read `.ana/ana.json` if it exists. Note `commands` (you'll need these for the Build Brief's checkpoint commands and baseline) and `artifactBranch`.

@@ -358,7 +358,7 @@ export function createEmptyEngineResult(): EngineResult {
     projectProfile: { type: null, hasExternalAPIs: false, hasDatabase: false, hasBrowserUI: false, hasAuthSystem: false, hasPayments: false, hasFileStorage: false },
     blindSpots: [],
     findings: [],
-    deployment: { platform: null, configFile: null, ci: null },
+    deployment: { platform: null, configFile: null, ci: null, ciWorkflowFiles: [] },
     patterns: null,
     conventions: null,
     readme: null,

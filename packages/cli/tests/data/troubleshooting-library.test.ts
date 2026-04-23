@@ -78,7 +78,7 @@ describe('troubleshooting library', () => {
       // With both Prisma + Vercel, compound entries SHOULD match
       const both = createEmptyEngineResult();
       both.stack.database = 'Prisma';
-      both.deployment = { platform: 'Vercel', configFile: null, ci: null };
+      both.deployment = { platform: 'Vercel', configFile: null, ci: null, ciWorkflowFiles: [] };
       for (const entry of compoundEntries) {
         expect(matchTriggers(entry.triggers, both), `${entry.id} should match Prisma+Vercel`).toBe(true);
       }

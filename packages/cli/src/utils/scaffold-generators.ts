@@ -130,17 +130,15 @@ export function generateProjectContextScaffold(result: EngineResult): string {
     if (schema.found && schema.path) keyFiles.push(`- Database schema: \`${schema.path}\``);
   }
   if (result.deployment.configFile) keyFiles.push(`- Deployment config: \`${result.deployment.configFile}\``);
-  // Change 6: CI in Key Files
-  if (result.deployment?.ci) {
-    let ciPath = '';
-    if (result.deployment.ci === 'GitHub Actions') {
-      ciPath = '.github/workflows/ci.yml';
-    } else if (result.deployment.ci === 'GitLab CI') {
-      ciPath = '.gitlab-ci.yml';
-    }
-    if (ciPath) {
-      keyFiles.push(`- CI pipeline: \`${ciPath}\``);
-    }
+  // CI in Key Files — use actual workflow filenames from census, not hardcoded names
+  if (result.deployment?.ci && result.deployment.ciWorkflowFiles?.length > 0) {
+    const files = result.deployment.ciWorkflowFiles;
+    const displayed = files.slice(0, 3);
+    const paths = displayed.map(f => `.github/workflows/${f}`).join('`, `');
+    const overflow = files.length > 3 ? ` + ${files.length - 3} more` : '';
+    keyFiles.push(`- CI pipeline: \`${paths}\`${overflow}`);
+  } else if (result.deployment?.ci === 'GitLab CI') {
+    keyFiles.push(`- CI pipeline: \`.gitlab-ci.yml\``);
   }
   if (keyFiles.length > 0) {
     s += keyFiles.join('\n') + '\n';
