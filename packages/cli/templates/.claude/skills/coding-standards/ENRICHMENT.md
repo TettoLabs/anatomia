@@ -37,6 +37,10 @@ Each rule should change how Build writes code. The decision test: "Would Build w
 
 Skip if: `stack.language` is null (no language detected).
 
+## Mixed conventions
+
+If the scan shows mixed patterns with no strong majority (e.g., 50% ESM and 50% CJS imports, or multiple auth patterns), note BOTH patterns and explain when each applies rather than picking one as the convention. Mixed conventions often reflect intentional separation — different patterns for different concerns.
+
 ## Expected output
 
 2-3 rules modified/added, 0-1 rules removed. The generic template rules are mostly correct — adjust the ones that contradict scan data, remove the ones that recommend unused patterns, add rules for strong patterns (>80% ratio in scan).
