@@ -136,6 +136,84 @@ describe('scanProject()', () => {
     expect(result.blindSpots.find(b => b.area === 'Database' && /Prisma/.test(b.issue))).toBeUndefined();
   });
 
+  // @ana A001, A002, A003
+  it('picks best candidate when dual Prisma schema files exist', async () => {
+    await createFiles({
+      'package.json': JSON.stringify({
+        name: 'test',
+        dependencies: { '@prisma/client': '5.0.0' },
+      }),
+      // Root-level has 1 model, prisma/ has 3 — scorer should pick prisma/
+      'schema.prisma': 'model Legacy { id Int @id }',
+      'prisma/schema.prisma': 'model User { id Int @id }\nmodel Post { id Int @id }\nmodel Comment { id Int @id }',
+    });
+
+    const result = await scanProject(tempDir, { depth: 'surface' });
+
+    expect(result.schemas['prisma']).toBeDefined();
+    expect(result.schemas['prisma']!.found).toBe(true);
+    expect(result.schemas['prisma']!.modelCount).toBe(3);
+    expect(result.schemas['prisma']!.path).toContain('schema.prisma');
+  });
+
+  // @ana A004, A005, A006, A007
+  it('detects directory-only multi-file Prisma schema', async () => {
+    await createFiles({
+      'package.json': JSON.stringify({
+        name: 'test',
+        dependencies: { '@prisma/client': '5.0.0' },
+      }),
+      // No schema.prisma anchor — models and datasource split across files
+      'prisma/models.prisma': 'model User { id Int @id }\nmodel Post { id Int @id }',
+      'prisma/base.prisma': 'datasource db {\n  provider = "postgresql"\n  url = env("DATABASE_URL")\n}\n\nmodel Config { id Int @id }',
+    });
+
+    const result = await scanProject(tempDir, { depth: 'surface' });
+
+    expect(result.schemas['prisma']).toBeDefined();
+    expect(result.schemas['prisma']!.found).toBe(true);
+    expect(result.schemas['prisma']!.modelCount).toBe(3);
+    expect(result.schemas['prisma']!.provider).toBe('postgresql');
+    // No blind spot should fire — schema was found
+    expect(result.blindSpots.find(b => b.area === 'Database' && /Prisma/.test(b.issue))).toBeUndefined();
+  });
+
+  // @ana A008, A009
+  it('extracts provider from non-anchor Prisma file', async () => {
+    await createFiles({
+      'package.json': JSON.stringify({
+        name: 'test',
+        dependencies: { '@prisma/client': '5.0.0' },
+      }),
+      // Anchor has models but no datasource; sibling has the datasource
+      'prisma/schema.prisma': 'model User { id Int @id }\nmodel Post { id Int @id }',
+      'prisma/base.prisma': 'datasource db {\n  provider = "postgresql"\n  url = env("DATABASE_URL")\n}',
+    });
+
+    const result = await scanProject(tempDir, { depth: 'surface' });
+
+    expect(result.schemas['prisma']).toBeDefined();
+    expect(result.schemas['prisma']!.provider).toBe('postgresql');
+    expect(result.schemas['prisma']!.modelCount).toBeGreaterThan(0);
+  });
+
+  // @ana A010, A011
+  it('ignores prisma directory with only SQL files', async () => {
+    await createFiles({
+      'package.json': JSON.stringify({
+        name: 'test',
+        dependencies: { '@prisma/client': '5.0.0' },
+      }),
+      // prisma/ exists but only has SQL migration files — no .prisma files
+      'prisma/migrations/001_init.sql': 'CREATE TABLE users (id INT);',
+    });
+
+    const result = await scanProject(tempDir, { depth: 'surface' });
+
+    expect(result.schemas['prisma']).toBeDefined();
+    expect(result.schemas['prisma']!.found).toBe(false);
+  });
+
   it('detects Drizzle schema in a monorepo sub-package (SCAN-042)', async () => {
     await createFiles({
       'package.json': JSON.stringify({
