@@ -196,6 +196,8 @@ function discoverSchemas(
     // Prisma — check both conventional locations:
     // - {root}/prisma/schema.prisma (monolith, most monorepos)
     // - {root}/schema.prisma (prisma package root, e.g., cal.com's @calcom/prisma)
+    // Report ALL candidates found — scan-engine's scorer picks the best one.
+    let foundPrismaFile = false;
     for (const candidate of ['prisma/schema.prisma', 'schema.prisma']) {
       const prismaPath = path.join(root.absolutePath, candidate);
       if (existsSync(prismaPath)) {
@@ -204,7 +206,28 @@ function discoverSchemas(
           sourceRootPath: root.relativePath,
           path: path.relative(rootPath, prismaPath),
         });
-        break; // one Prisma entry per root
+        foundPrismaFile = true;
+      }
+    }
+    // Directory-only fallback: if no file candidate was found, check whether
+    // prisma/ exists and contains .prisma files (multi-file schema without
+    // a traditional schema.prisma anchor).
+    if (!foundPrismaFile) {
+      const prismaDir = path.join(root.absolutePath, 'prisma');
+      if (existsSync(prismaDir)) {
+        try {
+          const dirFiles = readdirSync(prismaDir);
+          const hasPrismaFiles = dirFiles.some(f => f.endsWith('.prisma'));
+          if (hasPrismaFiles) {
+            entries.push({
+              orm: 'prisma',
+              sourceRootPath: root.relativePath,
+              path: path.relative(rootPath, prismaDir) + '/',
+            });
+          }
+        } catch {
+          // Permission error — skip
+        }
       }
     }
     // Drizzle
