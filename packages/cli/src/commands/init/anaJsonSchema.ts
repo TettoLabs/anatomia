@@ -38,6 +38,7 @@ export const AnaJsonSchema = z
     commands: z.record(z.string(), z.unknown()).optional().catch(undefined),
     coAuthor: z.string().nullable().optional().catch(undefined),
     artifactBranch: z.string().optional().catch(undefined),
+    branchPrefix: z.string().optional().default('feature/').catch('feature/'),
     setupPhase: z
       .enum(['not-started', 'context-complete', 'complete'])
       .optional()
