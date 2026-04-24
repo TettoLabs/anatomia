@@ -20,8 +20,139 @@
     "hash": "sha256:84011701c7cf9cbd59453c0c73936d85d922a1e9c5bf167e8b405f506d45d419"
   },
   "build-report": {
-    "saved_at": "2026-04-24T20:12:50.572Z",
-    "commit": "ad4a72899191f718d34462bd799f05eb46d98ac7",
+    "saved_at": "2026-04-24T20:12:57.879Z",
+    "commit": "185ddc92ff0ba0466913e9b0fdc7734a01c517e6",
     "hash": "sha256:6205517cc1ff193a655e4118767a422dc4a1a2440d90697a0b46d6af994276d4"
+  },
+  "modules_touched": [
+    "packages/cli/src/commands/init/anaJsonSchema.ts",
+    "packages/cli/src/commands/init/state.ts",
+    "packages/cli/src/utils/git-operations.ts",
+    "packages/cli/tests/utils/git-operations.test.ts"
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_commit": "0ba7752a2e48b9a22a9fcc0247c4b285895842db",
+    "seal_hash": "sha256:a8c31f91bfa46cea2e615f91d9ccf4decc6c813d6cf564f788a94deda3e9748b",
+    "assertions": [
+      {
+        "id": "A001",
+        "says": "Fresh installs include a branch prefix setting in the config file",
+        "status": "COVERED"
+      },
+      {
+        "id": "A002",
+        "says": "Re-initializing preserves a user-modified branch prefix",
+        "status": "COVERED"
+      },
+      {
+        "id": "A003",
+        "says": "The config reader returns the configured prefix when present",
+        "status": "COVERED"
+      },
+      {
+        "id": "A004",
+        "says": "Older installs without a prefix setting get the default automatically",
+        "status": "COVERED"
+      },
+      {
+        "id": "A005",
+        "says": "A missing config file does not crash the prefix reader",
+        "status": "COVERED"
+      },
+      {
+        "id": "A006",
+        "says": "Teams using bare branch names can set an empty prefix",
+        "status": "COVERED"
+      },
+      {
+        "id": "A007",
+        "says": "The schema recovers gracefully from a corrupted prefix value",
+        "status": "COVERED"
+      },
+      {
+        "id": "A008",
+        "says": "Pipeline status commands show the configured prefix in branch instructions",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A009",
+        "says": "Pipeline status commands do not show the old hardcoded prefix",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A010",
+        "says": "Branch detection finds branches under the configured prefix",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A011",
+        "says": "The status JSON output uses the new workBranch field name",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A012",
+        "says": "The old featureBranch field name is removed from status output",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A013",
+        "says": "Completing a work item cleans up the branch under the configured prefix",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A014",
+        "says": "Artifact save error messages show the configured prefix in checkout hint",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A015",
+        "says": "PR creation warns when branch does not match the configured prefix",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A016",
+        "says": "Build agent template references the configurable prefix placeholder",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A017",
+        "says": "Build agent template no longer hardcodes the feature prefix",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A018",
+        "says": "Plan agent template references the configurable prefix placeholder",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A019",
+        "says": "Verify agent template references the configurable prefix placeholder",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A020",
+        "says": "The git-workflow skill shows the configurable prefix instead of hardcoded feature/",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A021",
+        "says": "An empty prefix produces branch names with just the slug",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A022",
+        "says": "An empty prefix does not produce a leading slash in branch names",
+        "status": "UNCOVERED"
+      }
+    ],
+    "covered": 7,
+    "uncovered": 15,
+    "run_at": "2026-04-24T20:25:12.593Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-04-24T20:25:12.620Z",
+    "commit": "185ddc92ff0ba0466913e9b0fdc7734a01c517e6",
+    "hash": "sha256:7d1f9b2b09e70ec562160afdd513d0ef4c703af8a03fe79930d2b527ad6e5fe9"
   }
 }
