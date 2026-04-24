@@ -12,7 +12,6 @@
   },
   "coAuthor": "Ana <build@anatomia.dev>",
   "artifactBranch": "main",
-  "setupMode": "not_started",
-  "setupCompletedAt": null,
+  "setupPhase": "complete",
   "lastScanAt": "2026-04-19T22:24:28.005Z"
 }
