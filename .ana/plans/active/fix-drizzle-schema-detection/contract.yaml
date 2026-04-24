@@ -1,0 +1,162 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Fix Drizzle schema detection"
+
+assertions:
+  # AC1: Census reads drizzle config and extracts schema path
+  - id: A001
+    says: "Drizzle config file discovery finds the schema path from the config"
+    block: "census reads drizzle.config.ts and extracts schema field"
+    target: "schemas.drizzle.path"
+    matcher: "contains"
+    value: "src/db/schema"
+
+  - id: A002
+    says: "Config-driven discovery works with defineConfig wrapper syntax"
+    block: "census handles defineConfig wrapper"
+    target: "schemas.drizzle.found"
+    matcher: "equals"
+    value: true
+
+  - id: A003
+    says: "Config discovery works across config file extensions"
+    block: "census reads drizzle.config.js"
+    target: "schemas.drizzle.found"
+    matcher: "equals"
+    value: true
+
+  # AC2: Census extracts dialect from config
+  - id: A004
+    says: "The database dialect from config becomes the detected provider"
+    block: "dialect from config is used as provider fallback"
+    target: "schemas.drizzle.provider"
+    matcher: "equals"
+    value: "postgresql"
+
+  # AC3: Glob fallback when no config file
+  - id: A005
+    says: "Schema files are found by glob when no config file exists"
+    block: "glob fallback finds schema files without config"
+    target: "schemas.drizzle.found"
+    matcher: "equals"
+    value: true
+
+  - id: A006
+    says: "Glob fallback locates the correct schema file path"
+    block: "glob fallback finds schema files without config"
+    target: "schemas.drizzle.path"
+    matcher: "exists"
+
+  # AC4: Model counting
+  - id: A007
+    says: "Table definitions in schema files are counted as models"
+    block: "counts pgTable calls as models"
+    target: "schemas.drizzle.modelCount"
+    matcher: "equals"
+    value: 3
+
+  - id: A008
+    says: "A schema file with no table definitions reports zero models"
+    block: "schema with no tables reports modelCount 0"
+    target: "schemas.drizzle.modelCount"
+    matcher: "equals"
+    value: 0
+
+  - id: A009
+    says: "MySQL table definitions are counted alongside PostgreSQL ones"
+    block: "counts mysqlTable calls"
+    target: "schemas.drizzle.modelCount"
+    matcher: "greater"
+    value: 0
+
+  # AC5: Provider detection
+  - id: A010
+    says: "PostgreSQL provider is detected from pgTable usage"
+    block: "detects postgresql provider from pgTable"
+    target: "schemas.drizzle.provider"
+    matcher: "equals"
+    value: "postgresql"
+
+  - id: A011
+    says: "MySQL provider is detected from mysqlTable usage"
+    block: "detects mysql provider from mysqlTable"
+    target: "schemas.drizzle.provider"
+    matcher: "equals"
+    value: "mysql"
+
+  - id: A012
+    says: "SQLite provider is detected from sqliteTable usage"
+    block: "detects sqlite provider from sqliteTable"
+    target: "schemas.drizzle.provider"
+    matcher: "equals"
+    value: "sqlite"
+
+  - id: A013
+    says: "Config dialect is used as provider when table helpers don't indicate one"
+    block: "dialect from config is used as provider fallback"
+    target: "schemas.drizzle.provider"
+    matcher: "equals"
+    value: "postgresql"
+
+  # AC6: Blind spot
+  - id: A014
+    says: "A warning is emitted when Drizzle is installed but no schema is found"
+    block: "emits blind spot when drizzle-orm in deps but no schema"
+    target: "blindSpots"
+    matcher: "contains"
+    value: "drizzle-orm"
+
+  - id: A015
+    says: "No blind spot is emitted when Drizzle schema is successfully detected"
+    block: "no blind spot when schema found"
+    target: "blindSpots.length"
+    matcher: "equals"
+    value: 0
+
+  # AC7: Consumer priority — highest model count wins
+  - id: A016
+    says: "When multiple ORMs have schemas, the one with the most models is selected"
+    block: "cross-ORM priority selects highest modelCount"
+    target: "enrichedProvider"
+    matcher: "exists"
+
+  - id: A017
+    says: "When all schemas have unknown model counts, the first found is used"
+    block: "falls back to first-found when all modelCount are null"
+    target: "selectedSchema.found"
+    matcher: "equals"
+    value: true
+
+  # AC10: Existing test backward compatibility
+  - id: A018
+    says: "Existing monorepo Drizzle detection still works after the rewrite"
+    block: "detects Drizzle schema in a monorepo sub-package"
+    target: "schemas.drizzle.found"
+    matcher: "equals"
+    value: true
+
+  - id: A019
+    says: "Existing monorepo detection now reports model count"
+    block: "detects Drizzle schema in a monorepo sub-package"
+    target: "schemas.drizzle.modelCount"
+    matcher: "equals"
+    value: 1
+
+  - id: A020
+    says: "Existing monorepo detection now reports provider"
+    block: "detects Drizzle schema in a monorepo sub-package"
+    target: "schemas.drizzle.provider"
+    matcher: "equals"
+    value: "postgresql"
+
+file_changes:
+  - path: "packages/cli/src/engine/census.ts"
+    action: modify
+  - path: "packages/cli/src/engine/scan-engine.ts"
+    action: modify
+  - path: "packages/cli/src/commands/scan.ts"
+    action: modify
+  - path: "packages/cli/src/utils/scaffold-generators.ts"
+    action: modify
+  - path: "packages/cli/tests/engine/scanProject.test.ts"
+    action: modify
