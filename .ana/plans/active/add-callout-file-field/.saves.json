@@ -10,8 +10,99 @@
     "hash": "sha256:70f1805eeba99653a6e7d1c50d5f1e2e44c23062f78bb7fcd58b346bfe55e85c"
   },
   "build-report": {
-    "saved_at": "2026-04-23T23:49:08.720Z",
-    "commit": "f88aeecf55788696a64e77a5b0ae8ae3446d4d70",
+    "saved_at": "2026-04-23T23:49:15.577Z",
+    "commit": "bcf4b66ab197f1dc5d11d25890fd0eb9bea17a87",
     "hash": "sha256:b1e3de41d2e714f568d08e4104766510a291c401fe4d2ccd1f4cb61ec5e3d1cd"
+  },
+  "modules_touched": [
+    ".claude/agents/ana.md",
+    "packages/cli/src/types/proof.ts",
+    "packages/cli/src/utils/proofSummary.ts",
+    "packages/cli/tests/utils/proofSummary.test.ts"
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_commit": "b57982989133a5deae97d53ba575573d849756c7",
+    "seal_hash": "sha256:70f1805eeba99653a6e7d1c50d5f1e2e44c23062f78bb7fcd58b346bfe55e85c",
+    "assertions": [
+      {
+        "id": "A001",
+        "says": "Parsing a callout that mentions a file stores that file reference",
+        "status": "COVERED"
+      },
+      {
+        "id": "A002",
+        "says": "Parsing a callout without any file reference stores null",
+        "status": "COVERED"
+      },
+      {
+        "id": "A003",
+        "says": "When a callout mentions multiple files, only the first is stored",
+        "status": "COVERED"
+      },
+      {
+        "id": "A004",
+        "says": "The callout type includes a file field",
+        "status": "COVERED"
+      },
+      {
+        "id": "A005",
+        "says": "Active Issues groups callouts by stored file field, not by re-parsing",
+        "status": "COVERED"
+      },
+      {
+        "id": "A006",
+        "says": "Callouts without a file reference appear under General",
+        "status": "COVERED"
+      },
+      {
+        "id": "A007",
+        "says": "The renderer does not call extractFileRefs to determine grouping",
+        "status": "COVERED"
+      },
+      {
+        "id": "A008",
+        "says": "The file extraction function remains available for other uses",
+        "status": "COVERED"
+      },
+      {
+        "id": "A009",
+        "says": "Every existing callout in the proof chain has a file field after migration",
+        "status": "COVERED"
+      },
+      {
+        "id": "A010",
+        "says": "All existing parseCallouts tests still pass with updated assertions",
+        "status": "COVERED"
+      },
+      {
+        "id": "A011",
+        "says": "All existing generateActiveIssuesMarkdown tests still pass",
+        "status": "COVERED"
+      },
+      {
+        "id": "A012",
+        "says": "The extractFileRefs tests are completely unchanged",
+        "status": "COVERED"
+      },
+      {
+        "id": "A013",
+        "says": "The 20-callout cap still works correctly with the new file field",
+        "status": "COVERED"
+      },
+      {
+        "id": "A014",
+        "says": "File headings are still sorted alphabetically with General last",
+        "status": "COVERED"
+      }
+    ],
+    "covered": 14,
+    "uncovered": 0,
+    "run_at": "2026-04-24T00:04:18.644Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-04-24T00:04:18.672Z",
+    "commit": "7a0609afc80ed8ded0c1da65927eb023a51c7029",
+    "hash": "sha256:7b456425b13e61d7e829c50438c21a424985b3ce7f84cdada82da35bc98f2e94"
   }
 }
