@@ -1889,6 +1889,175 @@
           "file": "./src/db/schema.ts"
         }
       ]
+    },
+    {
+      "slug": "configurable-branch-prefix",
+      "feature": "Configurable branch prefix",
+      "result": "UNKNOWN",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 22,
+        "covered": 22,
+        "uncovered": 0,
+        "satisfied": 0,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Fresh installs include a branch prefix setting in the config file",
+          "status": "COVERED"
+        },
+        {
+          "id": "A002",
+          "says": "Re-initializing preserves a user-modified branch prefix",
+          "status": "COVERED"
+        },
+        {
+          "id": "A003",
+          "says": "The config reader returns the configured prefix when present",
+          "status": "COVERED"
+        },
+        {
+          "id": "A004",
+          "says": "Older installs without a prefix setting get the default automatically",
+          "status": "COVERED"
+        },
+        {
+          "id": "A005",
+          "says": "A missing config file does not crash the prefix reader",
+          "status": "COVERED"
+        },
+        {
+          "id": "A006",
+          "says": "Teams using bare branch names can set an empty prefix",
+          "status": "COVERED"
+        },
+        {
+          "id": "A007",
+          "says": "The schema recovers gracefully from a corrupted prefix value",
+          "status": "COVERED"
+        },
+        {
+          "id": "A008",
+          "says": "Pipeline status commands show the configured prefix in branch instructions",
+          "status": "COVERED"
+        },
+        {
+          "id": "A009",
+          "says": "Pipeline status commands do not show the old hardcoded prefix",
+          "status": "COVERED"
+        },
+        {
+          "id": "A010",
+          "says": "Branch detection finds branches under the configured prefix",
+          "status": "COVERED"
+        },
+        {
+          "id": "A011",
+          "says": "The status JSON output uses the new workBranch field name",
+          "status": "COVERED"
+        },
+        {
+          "id": "A012",
+          "says": "The old featureBranch field name is removed from status output",
+          "status": "COVERED"
+        },
+        {
+          "id": "A013",
+          "says": "Completing a work item cleans up the branch under the configured prefix",
+          "status": "COVERED"
+        },
+        {
+          "id": "A014",
+          "says": "Artifact save error messages show the configured prefix in checkout hint",
+          "status": "COVERED"
+        },
+        {
+          "id": "A015",
+          "says": "PR creation warns when branch does not match the configured prefix",
+          "status": "COVERED"
+        },
+        {
+          "id": "A016",
+          "says": "Build agent template references the configurable prefix placeholder",
+          "status": "COVERED"
+        },
+        {
+          "id": "A017",
+          "says": "Build agent template no longer hardcodes the feature prefix",
+          "status": "COVERED"
+        },
+        {
+          "id": "A018",
+          "says": "Plan agent template references the configurable prefix placeholder",
+          "status": "COVERED"
+        },
+        {
+          "id": "A019",
+          "says": "Verify agent template references the configurable prefix placeholder",
+          "status": "COVERED"
+        },
+        {
+          "id": "A020",
+          "says": "The git-workflow skill shows the configurable prefix instead of hardcoded feature/",
+          "status": "COVERED"
+        },
+        {
+          "id": "A021",
+          "says": "An empty prefix produces branch names with just the slug",
+          "status": "COVERED"
+        },
+        {
+          "id": "A022",
+          "says": "An empty prefix does not produce a leading slash in branch names",
+          "status": "COVERED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 0,
+        "met": 0
+      },
+      "timing": {
+        "total_minutes": 51,
+        "think": 11,
+        "plan": 11,
+        "build": 34,
+        "verify": 5
+      },
+      "hashes": {
+        "scope": "sha256:c7e8a5d4ce2150c04c3967e68f40ae59da1fe983ed8192c3e6eb9ab86a7751fa",
+        "contract": "sha256:a8c31f91bfa46cea2e615f91d9ccf4decc6c813d6cf564f788a94deda3e9748b",
+        "plan": "sha256:2a6bbe0bac81b27b1a5de6ec949aeea804a460a55986870da0f374b3f48df3ef",
+        "spec": "sha256:84011701c7cf9cbd59453c0c73936d85d922a1e9c5bf167e8b405f506d45d419",
+        "build-report": "sha256:dce786d2ad7379c44b5cc282e4dab6f4ddf5de8069637e9039e3622b23a5056a",
+        "verify-report": "sha256:736f143ab0630e1e7bae3aec36749a4119af3a5926ddf0d6a10a252b3ad2a660"
+      },
+      "seal_commit": "0ba7752a2e48b9a22a9fcc0247c4b285895842db",
+      "completed_at": "2026-04-24T23:06:10.851Z",
+      "modules_touched": [
+        "packages/cli/src/commands/artifact.ts",
+        "packages/cli/src/commands/init/anaJsonSchema.ts",
+        "packages/cli/src/commands/init/skills.ts",
+        "packages/cli/src/commands/init/state.ts",
+        "packages/cli/src/commands/pr.ts",
+        "packages/cli/src/commands/work.ts",
+        "packages/cli/src/utils/git-operations.ts",
+        "packages/cli/templates/.claude/agents/ana-build.md",
+        "packages/cli/templates/.claude/agents/ana-plan.md",
+        "packages/cli/templates/.claude/agents/ana-verify.md",
+        "packages/cli/tests/commands/artifact.test.ts",
+        "packages/cli/tests/commands/pr.test.ts",
+        "packages/cli/tests/commands/work.test.ts",
+        "packages/cli/tests/utils/git-operations.test.ts"
+      ],
+      "callouts": [],
+      "rejection_cycles": 0,
+      "previous_failures": []
     }
   ]
 }

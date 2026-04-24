@@ -52,6 +52,11 @@
 
 ---
 
+## Configurable branch prefix (2026-04-24)
+Result: UNKNOWN | 0/22 satisfied | 0/0 ACs | 0 deviations
+Pipeline: 51m (Think 11m, Plan 11m, Build 34m, Verify 5m)
+Modules: packages/cli/src/commands/artifact.ts, packages/cli/src/commands/init/anaJsonSchema.ts, packages/cli/src/commands/init/skills.ts, packages/cli/src/commands/init/state.ts, packages/cli/src/commands/pr.ts, packages/cli/src/commands/work.ts, packages/cli/src/utils/git-operations.ts, packages/cli/templates/.claude/agents/ana-build.md, packages/cli/templates/.claude/agents/ana-plan.md, packages/cli/templates/.claude/agents/ana-verify.md (+4 more)
+
 ## Fix Drizzle schema detection (2026-04-24)
 Result: PASS | 20/20 satisfied | 10/10 ACs | 0 deviations
 Pipeline: 73m (Think 5m, Plan 5m, Build 7m, Verify 61m)
