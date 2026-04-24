@@ -1,0 +1,102 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Fix Prisma schema detection bugs"
+
+assertions:
+  - id: A001
+    says: "When two schema files exist in the same project, the scanner picks the one with more data models"
+    block: "picks best candidate when dual Prisma schema files exist"
+    target: "schemas.prisma.modelCount"
+    matcher: "equals"
+    value: 3
+
+  - id: A002
+    says: "The scanner identifies the correct file path when multiple schema candidates compete"
+    block: "picks best candidate when dual Prisma schema files exist"
+    target: "schemas.prisma.path"
+    matcher: "contains"
+    value: "schema.prisma"
+
+  - id: A003
+    says: "Dual schema candidates are both considered — the weaker one doesn't block the stronger"
+    block: "picks best candidate when dual Prisma schema files exist"
+    target: "schemas.prisma.found"
+    matcher: "equals"
+    value: true
+
+  - id: A004
+    says: "A multi-file Prisma schema without a traditional anchor file is still detected"
+    block: "detects directory-only multi-file Prisma schema"
+    target: "schemas.prisma.found"
+    matcher: "equals"
+    value: true
+
+  - id: A005
+    says: "Model counting works across multiple schema files in a directory"
+    block: "detects directory-only multi-file Prisma schema"
+    target: "schemas.prisma.modelCount"
+    matcher: "equals"
+    value: 3
+
+  - id: A006
+    says: "The database provider is detected even in a multi-file schema layout"
+    block: "detects directory-only multi-file Prisma schema"
+    target: "schemas.prisma.provider"
+    matcher: "equals"
+    value: "postgresql"
+
+  - id: A007
+    says: "No false alarm fires when a multi-file schema is successfully detected"
+    block: "detects directory-only multi-file Prisma schema"
+    target: "blindSpots"
+    matcher: "not_contains"
+    value: "Prisma"
+
+  - id: A008
+    says: "The database provider is found even when it lives in a supporting file, not the main schema"
+    block: "extracts provider from non-anchor Prisma file"
+    target: "schemas.prisma.provider"
+    matcher: "equals"
+    value: "postgresql"
+
+  - id: A009
+    says: "Model count is accurate when provider lives in a separate file from the models"
+    block: "extracts provider from non-anchor Prisma file"
+    target: "schemas.prisma.modelCount"
+    matcher: "greater"
+    value: 0
+
+  - id: A010
+    says: "A Prisma directory containing only SQL migration files does not trigger false schema detection"
+    block: "ignores prisma directory with only SQL files"
+    target: "schemas.prisma"
+    matcher: "exists"
+
+  - id: A011
+    says: "Migration-only Prisma directories correctly report that no schema was found"
+    block: "ignores prisma directory with only SQL files"
+    target: "schemas.prisma.found"
+    matcher: "equals"
+    value: false
+
+  - id: A012
+    says: "Existing monolith Prisma detection continues to work after the fix"
+    block: "detects external services and schemas"
+    target: "schemas.prisma.modelCount"
+    matcher: "equals"
+    value: 2
+
+  - id: A013
+    says: "Existing monorepo sub-package Prisma detection continues to work after the fix"
+    block: "detects Prisma schema in a monorepo sub-package (SCAN-042)"
+    target: "schemas.prisma.path"
+    matcher: "equals"
+    value: "packages/db/prisma/schema.prisma"
+
+file_changes:
+  - path: "packages/cli/src/engine/census.ts"
+    action: modify
+  - path: "packages/cli/src/engine/scan-engine.ts"
+    action: modify
+  - path: "packages/cli/tests/engine/scanProject.test.ts"
+    action: modify
