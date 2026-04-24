@@ -1319,6 +1319,145 @@
       ],
       "rejection_cycles": 0,
       "previous_failures": []
+    },
+    {
+      "slug": "fix-prisma-schema-detection",
+      "feature": "Fix Prisma schema detection bugs",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 13,
+        "covered": 13,
+        "uncovered": 0,
+        "satisfied": 13,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "When two schema files exist in the same project, the scanner picks the one with more data models",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "The scanner identifies the correct file path when multiple schema candidates compete",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Dual schema candidates are both considered — the weaker one doesn't block the stronger",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "A multi-file Prisma schema without a traditional anchor file is still detected",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "Model counting works across multiple schema files in a directory",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "The database provider is detected even in a multi-file schema layout",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "No false alarm fires when a multi-file schema is successfully detected",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "The database provider is found even when it lives in a supporting file, not the main schema",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "Model count is accurate when provider lives in a separate file from the models",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "A Prisma directory containing only SQL migration files does not trigger false schema detection",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "Migration-only Prisma directories correctly report that no schema was found",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "Existing monolith Prisma detection continues to work after the fix",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "Existing monorepo sub-package Prisma detection continues to work after the fix",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 7,
+        "met": 7
+      },
+      "timing": {
+        "total_minutes": 28,
+        "think": 9,
+        "plan": 9,
+        "build": 14,
+        "verify": 5
+      },
+      "hashes": {
+        "scope": "sha256:2ef27097fdc2cd72eb44b64d5772ac06e142eb6c8f31f3d5f0a74143a52127db",
+        "contract": "sha256:a57a2d44cb2d1785edeb33c692f1031d4ed733de44c4420e20a20007727f4fa1",
+        "plan": "sha256:6f4b7eb636d2569604f2049bf48915f4f936f3e2a6ae91218a0970caa963e131",
+        "spec": "sha256:792be65bc3b49f5d06f005b7244277adf5d5aa186de974739949b60e54c8b652",
+        "build-report": "sha256:a43dffe54a3363c2e7b9783eaf28c7dcf43378ebee886f8240566ae8a82d41fd",
+        "verify-report": "sha256:fe777fda9bb27d81864b74e3f53a2a3059852d441dbc1b4baaff11ab223d78c4"
+      },
+      "seal_commit": "15acf4b05a1a8fb56e3981d2fb04fd1009e49ed9",
+      "completed_at": "2026-04-24T04:32:53.640Z",
+      "modules_touched": [
+        "packages/cli/src/engine/census.ts",
+        "packages/cli/src/engine/scan-engine.ts",
+        "packages/cli/tests/engine/scanProject.test.ts"
+      ],
+      "callouts": [
+        {
+          "category": "code",
+          "summary": "First-provider-wins with no conflict detection: `scan-engine.ts:313` and `scan-engine.ts:337` — both directory and sibling handlers use `if (!provider)` to take the first datasource block found. If a",
+          "file": "scan-engine.ts"
+        },
+        {
+          "category": "code",
+          "summary": "Census directory check is non-recursive: `census.ts:219` — `readdirSync(prismaDir)` only checks top-level entries. The second fallback glob `/prisma/*.prisma` in `scan-engine.ts:289` is also one level",
+          "file": "census.ts"
+        },
+        {
+          "category": "test",
+          "summary": "SQL-only edge case tests indirect path: `scanProject.test.ts:210` — The test creates `prisma/migrations/001_init.sql`. Census's `readdirSync('prisma/')` sees `['migrations']` — a directory name, not a",
+          "file": "scanProject.test.ts"
+        },
+        {
+          "category": "test",
+          "summary": "A009 uses weak matcher when specific value is known: `scanProject.test.ts:199` — `toBeGreaterThan(0)` when the test fixture has exactly 2 models. The contract specifies `greater: 0`, so the test match",
+          "file": "scanProject.test.ts"
+        },
+        {
+          "category": "upstream",
+          "summary": "A002 uses `contains` matcher, allows ambiguous match: Contract A002 says `target: schemas.prisma.path, matcher: contains, value: \"schema.prisma\"`. Both candidates (`prisma/schema.prisma` and `schema.p",
+          "file": null
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": []
     }
   ]
 }

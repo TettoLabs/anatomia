@@ -1,8 +1,19 @@
-# Active Issues (20 shown of 25 total)
+# Active Issues (20 shown of 30 total)
 
-## artifact.ts
+## census.ts
 
-- **code:** `slugDir2` in artifact.ts saveArtifact (line ~708) renamed from `slugDir` to avoid shadowing the... — *findProjectRoot utility for subdirectory support*
+- **code:** Census directory check is non-recursive: `census.ts:219` — `readdirSync(prismaDir)` only checks... — *Fix Prisma schema detection bugs*
+
+## findProjectRoot.test.ts
+
+- **upstream:** Known extractFileRefs limitation propagated to stored data: The existing regex limitation where... — *Add file field to proof chain callouts*
+
+## proofSummary.test.ts
+
+- **code:** `@ana A012` tag misplaced: `proofSummary.test.ts:324` — Tag `@ana A012` ("extractFileRefs tests... — *Add file field to proof chain callouts*
+- **test:** A009 backfill verification is indirect: `proofSummary.test.ts:748-763` — The `@ana A009` tag is on... — *Add file field to proof chain callouts*
+- **test:** A009 cap test doesn't verify WHICH callouts were dropped: — proofSummary.test.ts:550-564 creates 25... — *Proof chain active issues index*
+- **test:** A012 heading position test is fragile: — proofSummary.test.ts:606 asserts `output.indexOf('# Active... — *Proof chain active issues index*
 
 ## proofSummary.ts
 
@@ -10,25 +21,23 @@
 - **code:** Hard truncation at 100 characters without ellipsis: — proofSummary.ts:361 uses `substring(0, 100)`... — *Proof chain active issues index*
 - **code:** File path segments lost in extractFileRefs: — proofSummary.ts:253 regex uses `\b` word boundary... — *Proof chain active issues index*
 
+## readme.test.ts
+
+- **test:** A014 monorepo test verifies intent not mechanism: — readme.test.ts:157-171. `detectReadme(tmpDir)`... — *Add README extraction to scan*
+- **test:** A004 tests serialization, not e2e scan: — readme.test.ts:69-84. The test verifies the ReadmeResult... — *Add README extraction to scan*
+
 ## readme.ts
 
 - **code:** `truncate` word-boundary behavior for CJK: — readme.ts:65-69. When text has no spaces before `cap`,... — *Add README extraction to scan*
 
-## test.ts
+## scan-engine.ts
 
-- **code:** `@ana A012` tag misplaced: `proofSummary.test.ts:324` — Tag `@ana A012` ("extractFileRefs tests... — *Add file field to proof chain callouts*
-- **test:** A009 backfill verification is indirect: `proofSummary.test.ts:748-763` — The `@ana A009` tag is on... — *Add file field to proof chain callouts*
-- **upstream:** Known extractFileRefs limitation propagated to stored data: The existing regex limitation where... — *Add file field to proof chain callouts*
-- **test:** A014 monorepo test verifies intent not mechanism: — readme.test.ts:157-171. `detectReadme(tmpDir)`... — *Add README extraction to scan*
-- **test:** A004 tests serialization, not e2e scan: — readme.test.ts:69-84. The test verifies the ReadmeResult... — *Add README extraction to scan*
-- **test:** A009 cap test doesn't verify WHICH callouts were dropped: — proofSummary.test.ts:550-564 creates 25... — *Proof chain active issues index*
-- **test:** A012 heading position test is fragile: — proofSummary.test.ts:606 asserts `output.indexOf('# Active... — *Proof chain active issues index*
-- **test:** A009 test at findProjectRoot.test.ts:90-95 is `expect(true).toBe(true)` — a tautology that passes... — *findProjectRoot utility for subdirectory support*
-- **test:** A007 test at findProjectRoot.test.ts:72-73 uses `typeof findProjectRoot === 'function'` — this... — *findProjectRoot utility for subdirectory support*
+- **code:** First-provider-wins with no conflict detection: `scan-engine.ts:313` and `scan-engine.ts:337` — both... — *Fix Prisma schema detection bugs*
 
-## validators.ts
+## scanProject.test.ts
 
-- **code:** `findProjectRoot` checks for `.ana/` directory existence (validators.ts:105), not `.ana/ana.json`. A... — *findProjectRoot utility for subdirectory support*
+- **test:** SQL-only edge case tests indirect path: `scanProject.test.ts:210` — The test creates... — *Fix Prisma schema detection bugs*
+- **test:** A009 uses weak matcher when specific value is known: `scanProject.test.ts:199` —... — *Fix Prisma schema detection bugs*
 
 ## work.ts
 
@@ -36,12 +45,23 @@
 
 ## General
 
+- **upstream:** A002 uses `contains` matcher, allows ambiguous match: Contract A002 says `target:... — *Fix Prisma schema detection bugs*
 - **code:** A009 contract deviation: — Contract specifies `value: 5000` for total cap. Implementation now uses... — *Add README extraction to scan*
 - **upstream:** Contract A009 value should be updated: — The contract still says `value: 5000` but the... — *Add README extraction to scan*
 - **upstream:** Contract seal was UNVERIFIABLE: — no `seal_commit` was saved for this contract. This means we can't... — *Proof chain active issues index*
-- **upstream:** A009 as a contract assertion ("all existing tests continue to pass") is inherently untestable at the... — *findProjectRoot utility for subdirectory support*
 
 ---
+
+## Fix Prisma schema detection bugs (2026-04-24)
+Result: PASS | 13/13 satisfied | 7/7 ACs | 0 deviations
+Pipeline: 28m (Think 9m, Plan 9m, Build 14m, Verify 5m)
+Modules: packages/cli/src/engine/census.ts, packages/cli/src/engine/scan-engine.ts, packages/cli/tests/engine/scanProject.test.ts
+Callouts:
+- code: First-provider-wins with no conflict detection: `scan-engine.ts:313` and `scan-engine.ts:337` — both directory and sibling handlers use `if (!provider)` to take the first datasource block found. If a
+- code: Census directory check is non-recursive: `census.ts:219` — `readdirSync(prismaDir)` only checks top-level entries. The second fallback glob `/prisma/*.prisma` in `scan-engine.ts:289` is also one level
+- test: SQL-only edge case tests indirect path: `scanProject.test.ts:210` — The test creates `prisma/migrations/001_init.sql`. Census's `readdirSync('prisma/')` sees `['migrations']` — a directory name, not a
+- test: A009 uses weak matcher when specific value is known: `scanProject.test.ts:199` — `toBeGreaterThan(0)` when the test fixture has exactly 2 models. The contract specifies `greater: 0`, so the test match
+- upstream: A002 uses `contains` matcher, allows ambiguous match: Contract A002 says `target: schemas.prisma.path, matcher: contains, value: "schema.prisma"`. Both candidates (`prisma/schema.prisma` and `schema.p
 
 ## Add file field to proof chain callouts (2026-04-24)
 Result: PASS | 14/14 satisfied | 8/8 ACs | 0 deviations
