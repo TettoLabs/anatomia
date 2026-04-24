@@ -93,6 +93,7 @@ describe('scanProject()', () => {
     expect(typeof result.commands.packageManager).toBe('string');
   });
 
+  // @ana A012
   it('detects external services and schemas', async () => {
     await createFiles({
       'package.json': JSON.stringify({
@@ -113,6 +114,7 @@ describe('scanProject()', () => {
     expect(result.schemas['prisma']!.path).toBe('prisma/schema.prisma');
   });
 
+  // @ana A013
   // SCAN-042: monorepo sub-package ORM schema detection. 5 of 22 target-
   // customer projects had Prisma inside a packages/<pkg>/ sub-directory;
   // the old root-only glob missed them and fired a misleading blind spot.
