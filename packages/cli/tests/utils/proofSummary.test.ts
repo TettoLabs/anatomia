@@ -8,6 +8,7 @@ import {
   parseRejectionCycles,
   extractFileRefs,
   generateActiveIssuesMarkdown,
+  parseBuildOpenIssues,
 } from '../../src/utils/proofSummary.js';
 
 describe('generateProofSummary', () => {
@@ -396,15 +397,46 @@ Just some plain text with no structured callouts.
     expect(parseCallouts(content)).toHaveLength(0);
   });
 
-  it('caps summary at 200 characters', () => {
-    const longDesc = 'x'.repeat(250);
+  it('caps summary at 1000 characters', () => {
+    const longDesc = 'x'.repeat(1100);
     const content = `## Callouts
 
 - **Code — Long one:** ${longDesc}
 `;
     const callouts = parseCallouts(content);
     expect(callouts).toHaveLength(1);
-    expect(callouts[0]!.summary.length).toBeLessThanOrEqual(200);
+    expect(callouts[0]!.summary.length).toBeLessThanOrEqual(1000);
+  });
+
+  it('extracts code anchor from backtick-quoted construct', () => {
+    const content = `## Callouts
+
+- **Code — Non-recursive check:** \`readdirSync(prismaDir)\` only checks top-level entries in the directory.
+`;
+    const callouts = parseCallouts(content);
+    expect(callouts).toHaveLength(1);
+    expect(callouts[0]!.anchor).toBe('readdirSync(prismaDir)');
+  });
+
+  it('returns null anchor when no suitable backtick content', () => {
+    const content = `## Callouts
+
+- **Upstream — Spec deviation:** The spec suggested a different approach but implementation is better.
+`;
+    const callouts = parseCallouts(content);
+    expect(callouts).toHaveLength(1);
+    expect(callouts[0]!.anchor).toBeNull();
+  });
+
+  it('skips file:line references as anchors', () => {
+    const content = `## Callouts
+
+- **Code — Issue at location:** \`census.ts:219\` has a problem. The real code is \`readdirSync(prismaDir)\`.
+`;
+    const callouts = parseCallouts(content);
+    expect(callouts).toHaveLength(1);
+    // Should skip census.ts:219 (file:line ref) and use readdirSync(prismaDir)
+    expect(callouts[0]!.anchor).toBe('readdirSync(prismaDir)');
   });
 
   it('handles multi-line callout descriptions', () => {
@@ -715,7 +747,7 @@ describe('generateActiveIssuesMarkdown', () => {
         feature: 'Test',
         completed_at: '2026-04-16T10:00:00Z',
         callouts: [
-          { category: 'code', summary: 'Issue mentions test.ts:42 in text', file: null },
+          { id: 'test-C1', category: 'code', summary: 'Issue mentions test.ts:42 in text', file: null, anchor: null },
         ],
       },
     ];
@@ -732,7 +764,7 @@ describe('generateActiveIssuesMarkdown', () => {
         feature: 'Test',
         completed_at: '2026-04-16T10:00:00Z',
         callouts: [
-          { category: 'code', summary: 'Issue in test.ts', file: 'test.ts' },
+          { id: 'test-C2', category: 'code', summary: 'Issue in test.ts', file: 'test.ts', anchor: null },
         ],
       },
     ];
@@ -748,7 +780,7 @@ describe('generateActiveIssuesMarkdown', () => {
         feature: 'Project kind detection',
         completed_at: '2026-04-16T10:00:00Z',
         callouts: [
-          { category: 'code', summary: 'Dead logic in projectKind.ts:105', file: 'projectKind.ts' },
+          { id: 'test-C3', category: 'code', summary: 'Dead logic in projectKind.ts:105', file: 'projectKind.ts', anchor: null },
         ],
       },
     ];
@@ -763,7 +795,7 @@ describe('generateActiveIssuesMarkdown', () => {
         feature: 'Some feature',
         completed_at: '2026-04-16T10:00:00Z',
         callouts: [
-          { category: 'upstream', summary: 'Pre-check tag collision across features', file: null },
+          { id: 'test-C4', category: 'upstream', summary: 'Pre-check tag collision across features', file: null, anchor: null },
         ],
       },
     ];
@@ -779,7 +811,7 @@ describe('generateActiveIssuesMarkdown', () => {
       entries.push({
         feature: `Feature ${i}`,
         completed_at: `2026-04-${String(i + 1).padStart(2, '0')}T10:00:00Z`,
-        callouts: [{ category: 'code', summary: `Issue ${i} in file${i}.ts`, file: `file${i}.ts` }],
+        callouts: [{ id: `test-C${i}`, category: 'code', summary: `Issue ${i} in file${i}.ts`, file: `file${i}.ts`, anchor: null }],
       });
     }
     const output = generateActiveIssuesMarkdown(entries);
@@ -809,7 +841,7 @@ describe('generateActiveIssuesMarkdown', () => {
         feature: 'Project kind detection',
         completed_at: '2026-04-16T10:00:00Z',
         callouts: [
-          { category: 'code', summary: 'Some issue in test.ts', file: 'test.ts' },
+          { id: 'test-C6', category: 'code', summary: 'Some issue in test.ts', file: 'test.ts', anchor: null },
         ],
       },
     ];
@@ -823,7 +855,7 @@ describe('generateActiveIssuesMarkdown', () => {
       {
         feature: 'Test',
         completed_at: '2026-04-16T10:00:00Z',
-        callouts: [{ category: 'code', summary: 'Issue in test.ts', file: 'test.ts' }],
+        callouts: [{ id: 'test-C7', category: 'code', summary: 'Issue in test.ts', file: 'test.ts', anchor: null }],
       },
     ];
     const output = generateActiveIssuesMarkdown(entries);
@@ -837,7 +869,7 @@ describe('generateActiveIssuesMarkdown', () => {
       {
         feature: 'Test',
         completed_at: '2026-04-16T10:00:00Z',
-        callouts: [{ category: 'code', summary: 'Issue in test.ts', file: 'test.ts' }],
+        callouts: [{ id: 'test-C8', category: 'code', summary: 'Issue in test.ts', file: 'test.ts', anchor: null }],
       },
     ];
     const output = generateActiveIssuesMarkdown(entries);
@@ -851,7 +883,7 @@ describe('generateActiveIssuesMarkdown', () => {
         feature: 'Cross-file issue',
         completed_at: '2026-04-16T10:00:00Z',
         callouts: [
-          { category: 'code', summary: 'Issue spans fileA.ts:10 and fileB.ts:20', file: 'fileA.ts' },
+          { id: 'test-C9', category: 'code', summary: 'Issue spans fileA.ts:10 and fileB.ts:20', file: 'fileA.ts', anchor: null },
         ],
       },
     ];
@@ -871,7 +903,7 @@ describe('generateActiveIssuesMarkdown', () => {
       {
         feature: 'Test',
         completed_at: '2026-04-16T10:00:00Z',
-        callouts: [{ category: 'code', summary: 'Issue in test.ts', file: 'test.ts' }],
+        callouts: [{ id: 'test-C10', category: 'code', summary: 'Issue in test.ts', file: 'test.ts', anchor: null }],
       },
     ];
     const output = generateActiveIssuesMarkdown(entries);
@@ -880,18 +912,18 @@ describe('generateActiveIssuesMarkdown', () => {
 
   // @ana A016
   it('truncates long summaries with ellipsis', () => {
-    const longSummary = 'x'.repeat(150) + ' in test.ts';
+    const longSummary = 'x'.repeat(300) + ' in test.ts';
     const entries = [
       {
         feature: 'Test',
         completed_at: '2026-04-16T10:00:00Z',
-        callouts: [{ category: 'code', summary: longSummary, file: 'test.ts' }],
+        callouts: [{ id: 'test-C11', category: 'code', summary: longSummary, file: 'test.ts', anchor: null }],
       },
     ];
     const output = generateActiveIssuesMarkdown(entries);
     const calloutLine = output.split('\n').find(line => line.startsWith('- **code:**'));
     expect(calloutLine).toContain('...');
-    // No spaces in the x-repeat, so falls back to hard cut at 100 + ...
+    // No spaces in the x-repeat, so falls back to hard cut at 250 + ...
     const summaryMatch = calloutLine?.match(/\*\*code:\*\* (.+?) — \*/);
     expect(summaryMatch?.[1]?.endsWith('...')).toBe(true);
   });
@@ -903,9 +935,9 @@ describe('generateActiveIssuesMarkdown', () => {
         feature: 'Test',
         completed_at: '2026-04-16T10:00:00Z',
         callouts: [
-          { category: 'code', summary: 'Issue in zebra.ts', file: 'zebra.ts' },
-          { category: 'code', summary: 'Issue in alpha.ts', file: 'alpha.ts' },
-          { category: 'upstream', summary: 'General issue without file ref', file: null },
+          { id: 'test-C12', category: 'code', summary: 'Issue in zebra.ts', file: 'zebra.ts', anchor: null },
+          { id: 'test-C13', category: 'code', summary: 'Issue in alpha.ts', file: 'alpha.ts', anchor: null },
+          { id: 'test-C14', category: 'upstream', summary: 'General issue without file ref', file: null, anchor: null },
         ],
       },
     ];
@@ -925,7 +957,7 @@ describe('generateActiveIssuesMarkdown', () => {
       entries.push({
         feature: `Old Feature ${i}`,
         completed_at: `2026-01-${String(i + 1).padStart(2, '0')}T10:00:00Z`,
-        callouts: [{ category: 'code', summary: `old-issue-${i} in file.ts`, file: 'file.ts' }],
+        callouts: [{ id: 'test-C15', category: 'code', summary: `old-issue-${i} in file.ts`, file: 'file.ts', anchor: null }],
       });
     }
     // Add 10 new entries (at end of array = newest)
@@ -933,7 +965,7 @@ describe('generateActiveIssuesMarkdown', () => {
       entries.push({
         feature: `New Feature ${i}`,
         completed_at: `2026-04-${String(i + 1).padStart(2, '0')}T10:00:00Z`,
-        callouts: [{ category: 'code', summary: `new-issue-${i} in file.ts`, file: 'file.ts' }],
+        callouts: [{ id: 'test-C16', category: 'code', summary: `new-issue-${i} in file.ts`, file: 'file.ts', anchor: null }],
       });
     }
     const output = generateActiveIssuesMarkdown(entries);
@@ -953,9 +985,9 @@ describe('generateActiveIssuesMarkdown', () => {
       feature: 'Test',
       completed_at: '2026-04-17T00:00:00Z',
       callouts: [
-        { category: 'code', summary: 'issue one in foo.ts', file: 'foo.ts' },
-        { category: 'test', summary: 'issue two in bar.ts', file: 'bar.ts' },
-        { category: 'code', summary: 'issue three in baz.ts', file: 'baz.ts' },
+        { id: 'test-C17', category: 'code', summary: 'issue one in foo.ts', file: 'foo.ts', anchor: null },
+        { id: 'test-C18', category: 'test', summary: 'issue two in bar.ts', file: 'bar.ts', anchor: null },
+        { id: 'test-C19', category: 'code', summary: 'issue three in baz.ts', file: 'baz.ts', anchor: null },
       ],
     }];
     const md = generateActiveIssuesMarkdown(entries);
@@ -964,10 +996,7 @@ describe('generateActiveIssuesMarkdown', () => {
   });
 
   it('heading shows cap info when over 20 callouts', () => {
-    const callouts = Array.from({ length: 25 }, (_, i) => ({
-      category: 'code',
-      summary: `issue number ${i + 1} in unique-file-${i}.ts`,
-      file: `unique-file-${i}.ts`,
+    const callouts = Array.from({ length: 25 }, (_, i) => ({ id: `test-C${i}`, category: 'code', summary: `issue number ${i + 1} in unique-file-${i}.ts`, file: `unique-file-${i}.ts`, anchor: null,
     }));
     const entries = [{
       feature: 'Big Feature',
@@ -986,10 +1015,7 @@ describe('generateActiveIssuesMarkdown', () => {
   });
 
   it('heading shows exact count at cap boundary', () => {
-    const callouts = Array.from({ length: 20 }, (_, i) => ({
-      category: 'code',
-      summary: `issue ${i + 1} in file-${i}.ts`,
-      file: `file-${i}.ts`,
+    const callouts = Array.from({ length: 20 }, (_, i) => ({ id: `test-C${i}`, category: 'code', summary: `issue ${i + 1} in file-${i}.ts`, file: `file-${i}.ts`, anchor: null,
     }));
     const entries = [{
       feature: 'Feature',
@@ -1002,11 +1028,11 @@ describe('generateActiveIssuesMarkdown', () => {
   });
 
   it('truncates at word boundary with ellipsis', () => {
-    const longSummary = 'This is a long callout summary that exceeds one hundred characters and should be truncated cleanly at a word boundary somewhere around here';
+    const longSummary = 'This is a long callout summary that exceeds two hundred and fifty characters and should be truncated cleanly at a word boundary. The observation continues with more detail about the specific code pattern that was identified during verification. It mentions several files and concerns that the verifier noticed during the independent review somewhere around here';
     const entries = [{
       feature: 'Test',
       completed_at: '2026-04-17T00:00:00Z',
-      callouts: [{ category: 'code', summary: longSummary, file: null }],
+      callouts: [{ id: 'test-C22', category: 'code', summary: longSummary, file: null, anchor: null }],
     }];
     const md = generateActiveIssuesMarkdown(entries);
     expect(md).toContain('...');
@@ -1018,17 +1044,76 @@ describe('generateActiveIssuesMarkdown', () => {
     expect(beforeEllipsis.endsWith(' ') || /\w$/.test(beforeEllipsis)).toBe(true);
   });
 
-  it('falls back to hard cut when no spaces before 100 chars', () => {
-    const noSpaceSummary = 'packages/cli/src/engine/analyzers/patterns/confirmation.ts:847-produces-incorrect-results-when-the-input-contains-special-characters';
+  it('falls back to hard cut when no spaces before 250 chars', () => {
+    const noSpaceSummary = 'packages/cli/src/engine/analyzers/patterns/confirmation.ts:847-produces-incorrect-results-when-the-input-contains-special-characters-and-the-pattern-matcher-fails-to-account-for-escaped-sequences-in-the-regex-which-causes-false-positives-in-the-detection-layer';
     const entries = [{
       feature: 'Test',
       completed_at: '2026-04-17T00:00:00Z',
-      callouts: [{ category: 'code', summary: noSpaceSummary, file: 'packages/cli/src/engine/analyzers/patterns/confirmation.ts' }],
+      callouts: [{ id: 'test-C23', category: 'code', summary: noSpaceSummary, file: 'packages/cli/src/engine/analyzers/patterns/confirmation.ts', anchor: null }],
     }];
     const md = generateActiveIssuesMarkdown(entries);
     expect(md).toContain('...');
-    // Should not be empty — falls back to 100 chars
+    // Should not be empty — falls back to 250 chars
     const calloutLine = md.split('\n').find(l => l.includes('...'))!;
     expect(calloutLine.length).toBeGreaterThan(10);
+  });
+});
+
+describe('parseBuildOpenIssues', () => {
+  it('extracts numbered open issues', () => {
+    const content = `## Open Issues
+
+1. **\`extractFileRefs\` cannot parse dotted test filenames:** \`projectKind.test.ts\` is extracted as \`test.ts\` because the regex doesn't handle dots.
+
+2. **Census dialect as sentinel entry:** Using \`orm: 'drizzle-dialect'\` is a workaround.
+
+Verified complete by second pass.
+`;
+    const issues = parseBuildOpenIssues(content);
+    expect(issues).toHaveLength(2);
+    expect(issues[0]!.summary).toContain('extractFileRefs');
+    expect(issues[0]!.file).toBe('projectKind.test.ts');
+    expect(issues[1]!.summary).toContain('Census dialect');
+  });
+
+  it('extracts bulleted open issues', () => {
+    const content = `## Open Issues
+
+- **agents.test.ts fixture modification:** Added \`.ana/\` directory creation to the helper.
+- **\`slugDir2\` still exists in \`saveArtifact\`:** The rename is cosmetic.
+
+Verified complete by second pass.
+`;
+    const issues = parseBuildOpenIssues(content);
+    expect(issues).toHaveLength(2);
+    expect(issues[0]!.file).toBe('agents.test.ts');
+  });
+
+  it('returns empty array when section says None', () => {
+    const content = `## Open Issues
+
+None — verified by second pass.
+`;
+    const issues = parseBuildOpenIssues(content);
+    expect(issues).toHaveLength(0);
+  });
+
+  it('returns empty array when section is missing', () => {
+    const content = `## Test Results
+
+Tests passed.
+`;
+    const issues = parseBuildOpenIssues(content);
+    expect(issues).toHaveLength(0);
+  });
+
+  it('extracts file references from issue text', () => {
+    const content = `## Open Issues
+
+1. **A017 coverage is partial:** The null-null modelCount sort branch at \`scanProject.test.ts:549\` is not exercised.
+`;
+    const issues = parseBuildOpenIssues(content);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]!.file).toBe('scanProject.test.ts');
   });
 });

@@ -363,7 +363,16 @@ async function detectSchemas(
   if (allDeps['drizzle-orm']) {
     try {
       const censusDrizzle = censusSchemas.filter(s => s.orm === 'drizzle').map(s => s.path);
-      const censusDialect = censusSchemas.find(s => s.orm === 'drizzle-dialect')?.path ?? null;
+      // Read dialect directly from config file (census no longer passes it via sentinel)
+      let configDialect: string | null = null;
+      for (const ext of ['ts', 'js', 'mjs', 'cjs']) {
+        const configPath = path.join(rootPath, `drizzle.config.${ext}`);
+        try {
+          const configContent = await fs.readFile(configPath, 'utf-8');
+          const dialectMatch = configContent.match(/dialect\s*:\s*["'](\w+)["']/);
+          if (dialectMatch?.[1]) { configDialect = dialectMatch[1]; break; }
+        } catch { /* not found, try next */ }
+      }
 
       let matches: string[] = [];
       if (censusDrizzle.length > 0) {
@@ -443,8 +452,8 @@ async function detectSchemas(
 
         if (best) {
           // Dialect fallback: when table helpers didn't reveal a provider
-          if (!best.provider && censusDialect) {
-            best.provider = censusDialect;
+          if (!best.provider && configDialect) {
+            best.provider = configDialect;
           }
           schemas['drizzle'] = { found: true, path: best.path, modelCount: best.modelCount, provider: best.provider };
         } else {
