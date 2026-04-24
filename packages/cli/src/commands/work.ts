@@ -249,7 +249,15 @@ function gatherArtifactState(
       const fullPath = path.join(projectRoot, filePath);
       const exists = fs.existsSync(fullPath);
       const info: ArtifactInfo = { exists };
-      if (exists) info.location = artifactBranch;
+      if (exists) {
+        // Check if file is actually committed, not just on disk
+        try {
+          execSync(`git ls-files --error-unmatch ${filePath}`, { stdio: 'pipe', cwd: projectRoot });
+          info.location = artifactBranch;
+        } catch {
+          info.location = 'untracked';
+        }
+      }
       return info;
     } else {
       const exists = fileExistsOnBranch(branch, filePath);
@@ -561,19 +569,17 @@ function printHumanReadable(output: StatusOutput): void {
     console.log(chalk.bold(`  ${item.slug} (${item.totalPhases} phase${item.totalPhases === 1 ? '' : 's'}):`));
 
     // Show planning artifacts
-    const scopeMark = item.artifacts.scope.exists ? chalk.green('✓') : chalk.red('✗');
-    const scopeLocation = item.artifacts.scope.location || 'missing';
-    console.log(`    scope.md         ${scopeMark} ${scopeLocation}`);
+    const artifactMark = (a: { exists: boolean; location?: string }) =>
+      !a.exists ? chalk.red('✗') : a.location === 'untracked' ? chalk.yellow('⚠') : chalk.green('✓');
+    const artifactLocation = (a: { exists: boolean; location?: string }) =>
+      !a.exists ? 'missing' : a.location === 'untracked' ? 'untracked (run ana artifact save-all)' : (a.location || 'missing');
 
-    const planMark = item.artifacts.plan.exists ? chalk.green('✓') : chalk.red('✗');
-    const planLocation = item.artifacts.plan.location || 'missing';
-    console.log(`    plan.md          ${planMark} ${planLocation}`);
+    console.log(`    scope.md         ${artifactMark(item.artifacts.scope)} ${artifactLocation(item.artifacts.scope)}`);
+    console.log(`    plan.md          ${artifactMark(item.artifacts.plan)} ${artifactLocation(item.artifacts.plan)}`);
 
     // Show specs
     for (const spec of item.artifacts.specs) {
-      const specMark = spec.exists ? chalk.green('✓') : chalk.red('✗');
-      const specLocation = spec.location || 'missing';
-      console.log(`    ${spec.file.padEnd(16)} ${specMark} ${specLocation}`);
+      console.log(`    ${spec.file.padEnd(16)} ${artifactMark(spec)} ${artifactLocation(spec)}`);
     }
 
     // Show phase status for multi-spec

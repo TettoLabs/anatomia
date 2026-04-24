@@ -768,6 +768,42 @@ export function saveArtifact(type: string, slug: string): void {
   // 11. Print success
   if (typeInfo.category === 'planning') {
     console.log(chalk.green(`✓ Saved ${typeInfo.displayName} for \`${slug}\` to \`${artifactBranch}\`.`));
+
+    // 11a. Warn about unsaved siblings in the same plan directory
+    const planDir = path.join(projectRoot, '.ana', 'plans', 'active', slug);
+    if (fs.existsSync(planDir)) {
+      const PLANNING_ARTIFACTS = ['scope.md', 'plan.md', 'spec.md', 'contract.yaml'];
+      const unsaved: string[] = [];
+      for (const name of PLANNING_ARTIFACTS) {
+        const filePath = path.join(planDir, name);
+        if (fs.existsSync(filePath) && name !== path.basename(typeInfo.fileName)) {
+          try {
+            execSync(`git ls-files --error-unmatch ${path.relative(projectRoot, filePath)}`, { stdio: 'pipe', cwd: projectRoot });
+          } catch {
+            unsaved.push(name);
+          }
+        }
+      }
+      // Also check for numbered specs (spec-1.md, spec-2.md, etc.)
+      try {
+        const entries = fs.readdirSync(planDir);
+        for (const entry of entries) {
+          if (entry.match(/^spec-\d+\.md$/) && entry !== path.basename(typeInfo.fileName)) {
+            const filePath = path.join(planDir, entry);
+            try {
+              execSync(`git ls-files --error-unmatch ${path.relative(projectRoot, filePath)}`, { stdio: 'pipe', cwd: projectRoot });
+            } catch {
+              unsaved.push(entry);
+            }
+          }
+        }
+      } catch { /* readdir failed */ }
+
+      if (unsaved.length > 0) {
+        console.log(chalk.yellow(`⚠ ${unsaved.length} unsaved artifact${unsaved.length > 1 ? 's' : ''} in plan directory: ${unsaved.join(', ')}`));
+        console.log(chalk.yellow(`  Run \`ana artifact save-all ${slug}\` to save everything.`));
+      }
+    }
   } else {
     console.log(chalk.green(`✓ Saved ${typeInfo.displayName} for \`${slug}\` on \`${currentBranch}\`.`));
   }

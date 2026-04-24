@@ -102,7 +102,7 @@ export function findProjectRoot(startDir: string = process.cwd()): string {
   let current = path.resolve(startDir);
 
   while (true) {
-    if (fsSync.existsSync(path.join(current, '.ana'))) {
+    if (fsSync.existsSync(path.join(current, '.ana', 'ana.json'))) {
       return current;
     }
 
