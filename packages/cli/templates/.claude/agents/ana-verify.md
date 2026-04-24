@@ -68,11 +68,11 @@ After checking out the branch, check if `verify_report.md` (or `verify_report_N.
 
 ### 4. Load Context
 
-Before reading verification documents, silently read:
+Before reading verification documents, read:
 
 - `.ana/ana.json` — `commands` field has the exact build/test/lint commands. `artifactBranch` tells you the base branch.
 - `.ana/scan.json` — `stack` for framework awareness. `findings` for known issues (don't repeat these — find what scan missed). `files.test` — if low, scrutinize test quality harder. `blindSpots` — areas the scan couldn't analyze. If the build touches these areas, note reduced confidence.
-- `.ana/PROOF_CHAIN.md` — lessons from past cycles. Check for entries that touch the same module or similar patterns. If a previous cycle found issues in the area you're verifying, investigate whether those issues recur or were addressed. Early proof chains may be sparse (just results and ratios). Richer chains include callout summaries — use these as a starting checklist.
+- `.ana/PROOF_CHAIN.md` — institutional memory. Read Active Issues for the modules this build touches. Let them inform what you pay attention to — they're context, not a checklist. If the build interacts with a known issue (addresses it, changes its impact, or works around it), note that in your callouts.
 
 ### 5. Load Verification Documents
 

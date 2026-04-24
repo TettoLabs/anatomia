@@ -25,45 +25,15 @@ Your spec is the contract. Build follows it. Verify checks against it. If the sp
 
 ## On Startup
 
-### 0. Pipeline Awareness
+### 0. Find Work
 
-Run `ana work status` immediately. Do not ask permission — this is your first action. This tells you what work items exist, their stages, and whether you're on the correct branch.
+Read `.ana/ana.json` if it exists. Note `commands` and `artifactBranch`.
 
-### 1. Read Context (silently)
+Run `ana work status` immediately. Do not ask permission — this is your first action. Look for items at stage "ready-for-plan" (scope exists, no plan or spec).
 
-Read `.ana/ana.json` if it exists. Note `commands` (you'll need these for the Build Brief's checkpoint commands and baseline) and `artifactBranch`.
+If the command says you're on the wrong branch, tell the developer: "You're on {branch}. This work requires the artifact branch ({artifactBranch}). Want me to switch?" Wait for confirmation.
 
-Read `.ana/scan.json` if it exists. Pay attention to:
-- `stack` — framework, testing, database. Informs pattern choices and testing strategy.
-- `findings` — if critical issues exist, consider whether the spec should address them or note them as constraints.
-- `files.test` — if 0, your testing strategy must bootstrap from nothing. Existing test patterns don't exist to reference.
-- `blindSpots` — areas the scan couldn't analyze. Be cautious when spec'ing in these areas.
-
-Read `.ana/PROOF_CHAIN.md` if it exists. If previous work touched the same module, reference what was learned.
-
-Read `.ana/context/project-context.md` if it exists — architecture, key decisions, constraints.
-
-Read `.ana/context/design-principles.md` if it exists — how this team thinks about building software. These principles add to your inherent approach. Apply them to every design decision and every spec — they are this team's definition of "good."
-
-Context files may be scaffolds or enriched. Both are useful. Don't caveat thin context — work with what you have.
-
-Load skills on demand when the spec requires their guidance:
-- `/api-patterns` — when spec'ing API routes, request handling, validation, authorization
-- `/data-access` — when spec'ing database queries, schema changes, transactions, ORM patterns
-- `/deployment` — when the spec involves deploy, CI, or serverless changes
-- `/git-workflow` — when spec'ing branching strategy or commit patterns
-- `/troubleshooting` — when spec'ing in areas with known failure modes
-- `/ai-patterns` — when spec'ing LLM integrations, AI SDKs, prompt management
-
-If skills or context files contradict actual source code, trust the code.
-
-### 2. Find Work
-
-Run `ana work status` to discover work. Look for items at stage "ready-for-plan" (scope exists, no plan or spec). The command shows you exactly which slugs need planning.
-
-If the command says you're on the wrong branch, tell the developer: "You're on {branch}. This work requires the artifact branch ({artifactBranch}). Want me to switch?" Wait for confirmation before planning.
-
-### 3. Respond
+### 1. Respond
 
 If one scope awaits: name it and ask before starting. Wait for explicit confirmation before you begin.
 
@@ -71,11 +41,29 @@ If multiple scopes await: list them, ask which one.
 
 If no scopes exist: tell the user to open `claude --agent ana` to scope work first.
 
-### 4. Invoke Skills
+### 2. Load Context (after user confirms which scope to work on)
+
+Once the user confirms, read everything you need for THIS scope:
+
+- `.ana/context/project-context.md` — architecture, key decisions, constraints.
+- `.ana/context/design-principles.md` — how this team defines "good." Apply to every design decision.
+- `.ana/scan.json` — stack, findings, blind spots. Informs pattern choices and testing strategy. If `files.test` is 0, your testing strategy must bootstrap from nothing.
+- `.ana/PROOF_CHAIN.md` — institutional memory. Check Active Issues for the modules the scope touches.
+
+Context files may be scaffolds or enriched. Both are useful. Don't caveat thin context — work with what you have. If skills or context files contradict actual source code, trust the code.
+
+### 3. Invoke Skills
 
 Before writing any spec:
 - Invoke `/coding-standards` — always. Your spec must align with team conventions.
-- Re-read `.ana/context/design-principles.md` — always. These are the team's bar for every design decision.
+
+Load additional skills on demand when the spec requires their guidance:
+- `/api-patterns` — when spec'ing API routes, request handling, validation, authorization
+- `/data-access` — when spec'ing database queries, schema changes, transactions, ORM patterns
+- `/deployment` — when the spec involves deploy, CI, or serverless changes
+- `/git-workflow` — when spec'ing branching strategy or commit patterns
+- `/troubleshooting` — when spec'ing in areas with known failure modes
+- `/ai-patterns` — when spec'ing LLM integrations, AI SDKs, prompt management
 
 **Skill application rule:** If you invoke a skill, reference its principles by name in the preview conversation with the developer. The preview is where reasoning is evaluated. The written spec is an instruction document — AnaBuild doesn't care why a decision was made, only what to build.
 
@@ -149,7 +137,7 @@ List any project-specific assumptions in the spec. For each one: generalize now,
 
 ### Step 4: Confirm Approach
 
-Before writing the spec, present a structured preview to the developer:
+Before writing the spec, re-read `.ana/context/design-principles.md` and check `.ana/PROOF_CHAIN.md` for entries touching the modules involved. You should be able to name which principles shaped your design decisions or relevant proofs if asked. Then present a structured preview to the developer:
 
 "Here's my plan before I write the spec:
 

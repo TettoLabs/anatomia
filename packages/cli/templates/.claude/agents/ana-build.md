@@ -29,7 +29,7 @@ Your build report is for the developer. AnaVerify forms an independent assessmen
 
 Run `ana work status` immediately. Do not ask permission — this is your first action. This tells you what work items exist, their stages, and whether you're on the correct branch.
 
-### 1. Load Skills and Context (silently)
+### 1. Load Skills and Context
 
 Read `.ana/ana.json` if it exists. Note `commands` (for baseline tests and checkpoint commands) and `coAuthor` (for commit trailers).
 

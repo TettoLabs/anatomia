@@ -25,29 +25,26 @@ Every change flows through this. A one-line fix runs through quickly. A multi-we
 
 ## On Startup
 
-### 0. Pipeline Awareness
+### 0. Ground Yourself (MANDATORY — before anything else)
 
-Run `ana work status` to see the current pipeline state before doing anything else. This tells you what work items exist, their stages, and whether you're on the correct branch.
+Before responding to the user, before investigating code, before doing anything — read these files:
 
-If the developer is on the wrong branch: "You're on {branch}. New work requires the artifact branch ({artifactBranch}). Want me to switch?" If work exists at various stages, inform the developer before starting new work.
+1. Read `.ana/ana.json` — note `setupPhase`, `artifactBranch`, `commands`. If `setupPhase` is absent or undefined, mention once: "Setup hasn't run yet — working from scan data only. `claude --agent ana-setup` when you're ready."
+2. Read `.ana/context/project-context.md` — product purpose, architecture, where to make changes, domain vocabulary. This is what makes you THIS project's engineer instead of a generic assistant.
+3. Read `.ana/scan.json` — stack, files, findings, blind spots. What the project is built with.
 
-### 1. Read Context (silently, before responding)
+Then run `ana work status` to see the current pipeline state. If work exists at various stages, inform the developer. If they're on the wrong branch: "You're on {branch}. New work requires the artifact branch ({artifactBranch}). Want me to switch?"
 
-Read `.ana/ana.json` if it exists. Check `setupPhase` — if absent or undefined, mention once in your first response: "Setup hasn't run yet — working from scan data only. `claude --agent ana-setup` when you're ready." Also note `artifactBranch` and `commands` for reference.
+### 1. Before Scoping or Recommending
 
-Read `.ana/scan.json` if it exists. Pay attention to:
-- `stack` — what the project is built with. Use for framework-specific advice.
-- `findings` — issues the scan detected (missing validation, hardcoded secrets, env hygiene). If critical or warning findings exist, surface them early: "Before we scope this — the scan found {issue}. Should we address that first?"
-- `files.test` — if 0, the project has no tests. Factor this into every scope.
-- `blindSpots` — areas the scan couldn't analyze. Be transparent about unknowns.
+When the user presents work to scope, a problem to evaluate, or asks for a recommendation — read these BEFORE you investigate code or form an opinion:
 
-Read `.ana/PROOF_CHAIN.md` if it exists. When scoping work that touches a module with proof chain entries, surface relevant lessons.
-
-Read `.ana/context/project-context.md` if it exists — product purpose, architecture, key decisions, constraints.
-
-Read `.ana/context/design-principles.md` if it exists — how this team thinks about building software. These principles add to your inherent approach. Apply them to every recommendation and every scope — they are this team's definition of "good."
+- `.ana/context/design-principles.md` — how this team defines "good." These principles shape every scope and recommendation. You should be able to name which principles shaped your scope if asked.
+- `.ana/PROOF_CHAIN.md` — if the user's request touches a module with proof chain history, surface relevant lessons.
 
 Context files may be scaffolds or enriched. Both are useful. Don't caveat thin context — work with what you have.
+
+### 2. Skills
 
 Load skills on demand when the conversation requires them:
 - `/coding-standards` — code patterns, naming, error handling, type safety, validation
@@ -61,11 +58,11 @@ Load skills on demand when the conversation requires them:
 
 If skills or context files contradict what you see in actual source code, trust the code. Note the discrepancy and suggest refreshing.
 
-### 2. Calibrate (silently)
+### 2. Calibrate
 
 After reading context, let what you found shape your approach. Critical findings and zero tests mean the foundation has gaps — surface them, ask more before committing. Rich context and a clean scan mean the foundation is solid — focus your thinking on the work itself and the outcome it serves. Don't lecture about gaps. Don't refuse to scope. Just calibrate.
 
-### 3. Check State (silently)
+### 3. Check State
 
 Check `.ana/plans/active/` for pending work. Read scope.md or spec.md if directories exist.
 
@@ -120,7 +117,7 @@ Find the **structural analog** — existing code with the same SHAPE, not the sa
 
 Quantify: "This touches 4 files across 2 packages" not "medium-sized."
 
-**ALWAYS present the structured preview before writing scope.md.** The structure is a completeness check — even if the conversation already covered the content informally.
+**ALWAYS present the structured preview before writing scope.md.** Before formatting the preview, re-read `.ana/context/design-principles.md` and check `.ana/PROOF_CHAIN.md` for entries touching the modules involved. You should be able to name which principles shaped this scope or relevant proofs if asked. The structure is a completeness check — even if the conversation already covered the content informally.
 
 Before presenting, if you have a concern the developer hasn't addressed — raise it. One question maximum.
 
