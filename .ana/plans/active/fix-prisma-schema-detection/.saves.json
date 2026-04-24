@@ -20,8 +20,93 @@
     "hash": "sha256:792be65bc3b49f5d06f005b7244277adf5d5aa186de974739949b60e54c8b652"
   },
   "build-report": {
-    "saved_at": "2026-04-24T04:26:14.353Z",
-    "commit": "abff11a1642397a0ed9f7c5bf0cb4cd1060dcd53",
+    "saved_at": "2026-04-24T04:26:20.969Z",
+    "commit": "20554108ec3817d8c5f45d9d469a6813d1854c4d",
     "hash": "sha256:a43dffe54a3363c2e7b9783eaf28c7dcf43378ebee886f8240566ae8a82d41fd"
+  },
+  "modules_touched": [
+    "packages/cli/src/engine/census.ts",
+    "packages/cli/src/engine/scan-engine.ts",
+    "packages/cli/tests/engine/scanProject.test.ts"
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_commit": "15acf4b05a1a8fb56e3981d2fb04fd1009e49ed9",
+    "seal_hash": "sha256:a57a2d44cb2d1785edeb33c692f1031d4ed733de44c4420e20a20007727f4fa1",
+    "assertions": [
+      {
+        "id": "A001",
+        "says": "When two schema files exist in the same project, the scanner picks the one with more data models",
+        "status": "COVERED"
+      },
+      {
+        "id": "A002",
+        "says": "The scanner identifies the correct file path when multiple schema candidates compete",
+        "status": "COVERED"
+      },
+      {
+        "id": "A003",
+        "says": "Dual schema candidates are both considered — the weaker one doesn't block the stronger",
+        "status": "COVERED"
+      },
+      {
+        "id": "A004",
+        "says": "A multi-file Prisma schema without a traditional anchor file is still detected",
+        "status": "COVERED"
+      },
+      {
+        "id": "A005",
+        "says": "Model counting works across multiple schema files in a directory",
+        "status": "COVERED"
+      },
+      {
+        "id": "A006",
+        "says": "The database provider is detected even in a multi-file schema layout",
+        "status": "COVERED"
+      },
+      {
+        "id": "A007",
+        "says": "No false alarm fires when a multi-file schema is successfully detected",
+        "status": "COVERED"
+      },
+      {
+        "id": "A008",
+        "says": "The database provider is found even when it lives in a supporting file, not the main schema",
+        "status": "COVERED"
+      },
+      {
+        "id": "A009",
+        "says": "Model count is accurate when provider lives in a separate file from the models",
+        "status": "COVERED"
+      },
+      {
+        "id": "A010",
+        "says": "A Prisma directory containing only SQL migration files does not trigger false schema detection",
+        "status": "COVERED"
+      },
+      {
+        "id": "A011",
+        "says": "Migration-only Prisma directories correctly report that no schema was found",
+        "status": "COVERED"
+      },
+      {
+        "id": "A012",
+        "says": "Existing monolith Prisma detection continues to work after the fix",
+        "status": "COVERED"
+      },
+      {
+        "id": "A013",
+        "says": "Existing monorepo sub-package Prisma detection continues to work after the fix",
+        "status": "COVERED"
+      }
+    ],
+    "covered": 13,
+    "uncovered": 0,
+    "run_at": "2026-04-24T04:31:13.500Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-04-24T04:31:13.533Z",
+    "commit": "20554108ec3817d8c5f45d9d469a6813d1854c4d",
+    "hash": "sha256:fe777fda9bb27d81864b74e3f53a2a3059852d441dbc1b4baaff11ab223d78c4"
   }
 }
