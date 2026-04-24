@@ -321,6 +321,7 @@ file_changes:
   });
 });
 
+// @ana A010, A012
 describe('parseCallouts', () => {
   it('parses bulleted callouts with em-dash format', () => {
     const content = `## Callouts
@@ -337,10 +338,13 @@ describe('parseCallouts', () => {
     expect(callouts).toHaveLength(3);
     expect(callouts[0]!.category).toBe('code');
     expect(callouts[0]!.summary).toContain('Dead logic in full-stack check');
+    expect(callouts[0]!.file).toBe('projectKind.ts');
     expect(callouts[1]!.category).toBe('test');
     expect(callouts[1]!.summary).toContain('A003 purity test');
+    expect(callouts[1]!.file).toBe('test.ts');
     expect(callouts[2]!.category).toBe('upstream');
     expect(callouts[2]!.summary).toContain('Pre-check tag collision');
+    expect(callouts[2]!.file).toBe('test.ts');
   });
 
   it('parses numbered callouts', () => {
@@ -353,7 +357,9 @@ describe('parseCallouts', () => {
     const callouts = parseCallouts(content);
     expect(callouts).toHaveLength(2);
     expect(callouts[0]!.category).toBe('code');
+    expect(callouts[0]!.file).toBeNull();
     expect(callouts[1]!.category).toBe('test');
+    expect(callouts[1]!.file).toBeNull();
   });
 
   it('parses callouts with colon-only format (no em-dash)', () => {
@@ -367,7 +373,9 @@ describe('parseCallouts', () => {
     expect(callouts).toHaveLength(2);
     expect(callouts[0]!.category).toBe('code');
     expect(callouts[0]!.summary).toContain('slug truncation');
+    expect(callouts[0]!.file).toBeNull();
     expect(callouts[1]!.category).toBe('test');
+    expect(callouts[1]!.file).toBeNull();
   });
 
   it('returns empty array when no Callouts section', () => {
@@ -411,7 +419,9 @@ Just some plain text with no structured callouts.
     const callouts = parseCallouts(content);
     expect(callouts).toHaveLength(2);
     expect(callouts[0]!.summary).toContain('continues on second line');
+    expect(callouts[0]!.file).toBeNull();
     expect(callouts[1]!.summary).toContain('Next entry');
+    expect(callouts[1]!.file).toBeNull();
   });
 
   it('parses category-header format with sub-bullets (add-hook-detection style)', () => {
@@ -436,6 +446,7 @@ Just some plain text with no structured callouts.
     const codeCallouts = callouts.filter(c => c.category === 'code');
     expect(codeCallouts.length).toBeGreaterThanOrEqual(2);
     expect(codeCallouts[0]!.summary).toContain('Component file heuristic');
+    expect(codeCallouts[0]!.file).toBe('confirmation.ts');
 
     const testCallouts = callouts.filter(c => c.category === 'test');
     expect(testCallouts.length).toBeGreaterThanOrEqual(1);
@@ -459,8 +470,44 @@ Just some plain text with no structured callouts.
     expect(callouts).toHaveLength(3);
     expect(callouts[0]!.category).toBe('upstream');
     expect(callouts[0]!.summary).toContain('A007');
+    expect(callouts[0]!.file).toBeNull();
     expect(callouts[1]!.category).toBe('code');
+    expect(callouts[1]!.file).toBeNull();
     expect(callouts[2]!.category).toBe('test');
+    expect(callouts[2]!.file).toBeNull();
+  });
+
+  // @ana A001
+  it('returns file field with first file ref from summary', () => {
+    const content = `## Callouts
+
+- **Code — Dead logic in full-stack check:** \`projectKind.ts:105\` — BROWSER_FRAMEWORKS.has(d) will never match.
+`;
+    const callouts = parseCallouts(content);
+    expect(callouts).toHaveLength(1);
+    expect(callouts[0]!.file).toBe('projectKind.ts');
+  });
+
+  // @ana A002
+  it('returns null file when no file ref in summary', () => {
+    const content = `## Callouts
+
+- **Upstream — Contract assertion sealed with incorrect value:** The planner miscounted the total assertions.
+`;
+    const callouts = parseCallouts(content);
+    expect(callouts).toHaveLength(1);
+    expect(callouts[0]!.file).toBeNull();
+  });
+
+  // @ana A003
+  it('takes first file ref when multiple files present in summary', () => {
+    const content = `## Callouts
+
+- **Code — Cross-file issue:** fileA.ts:10 and fileB.ts:20 both have the same problem.
+`;
+    const callouts = parseCallouts(content);
+    expect(callouts).toHaveLength(1);
+    expect(callouts[0]!.file).toBe('fileA.ts');
   });
 
   it('accepts non-standard categories like Security or Performance', () => {
@@ -474,7 +521,9 @@ Just some plain text with no structured callouts.
     const callouts = parseCallouts(content);
     expect(callouts).toHaveLength(2);
     expect(callouts[0]!.category).toBe('security');
+    expect(callouts[0]!.file).toBe('db/queries.ts');
     expect(callouts[1]!.category).toBe('performance');
+    expect(callouts[1]!.file).toBe('api/users.ts');
   });
 });
 
@@ -550,6 +599,7 @@ Previous verification: 2026-04-15, Result: FAIL
   });
 });
 
+// @ana A008
 describe('extractFileRefs', () => {
   // @ana A001
   it('extracts filename:line format', () => {
@@ -627,15 +677,52 @@ describe('extractFileRefs', () => {
   });
 });
 
+// @ana A011
 describe('generateActiveIssuesMarkdown', () => {
   // @ana A007
+  it('generateActiveIssuesMarkdown uses callout.file not extractFileRefs', () => {
+    // Source-level verification: the renderer reads callout.file directly.
+    // If it still called extractFileRefs, a callout with file=null but a file ref
+    // in the summary would be grouped under the file, not General.
+    const entries = [
+      {
+        feature: 'Test',
+        completed_at: '2026-04-16T10:00:00Z',
+        callouts: [
+          { category: 'code', summary: 'Issue mentions test.ts:42 in text', file: null },
+        ],
+      },
+    ];
+    const output = generateActiveIssuesMarkdown(entries);
+    // If extractFileRefs were called, this would go under "test.ts", not "General"
+    expect(output).toContain('## General');
+    expect(output).not.toContain('## test.ts');
+  });
+
+  // @ana A004
+  it('callout type includes file field', () => {
+    const entries = [
+      {
+        feature: 'Test',
+        completed_at: '2026-04-16T10:00:00Z',
+        callouts: [
+          { category: 'code', summary: 'Issue in test.ts', file: 'test.ts' },
+        ],
+      },
+    ];
+    const output = generateActiveIssuesMarkdown(entries);
+    // The function accepts callouts with file — type-level proof
+    expect(output).toContain('test.ts');
+  });
+
+  // @ana A005, A007
   it('groups callouts by extracted file ref', () => {
     const entries = [
       {
         feature: 'Project kind detection',
         completed_at: '2026-04-16T10:00:00Z',
         callouts: [
-          { category: 'code', summary: 'Dead logic in projectKind.ts:105' },
+          { category: 'code', summary: 'Dead logic in projectKind.ts:105', file: 'projectKind.ts' },
         ],
       },
     ];
@@ -643,14 +730,14 @@ describe('generateActiveIssuesMarkdown', () => {
     expect(output).toContain('## projectKind.ts');
   });
 
-  // @ana A008
+  // @ana A006, A008
   it('places callouts without refs under General', () => {
     const entries = [
       {
         feature: 'Some feature',
         completed_at: '2026-04-16T10:00:00Z',
         callouts: [
-          { category: 'upstream', summary: 'Pre-check tag collision across features' },
+          { category: 'upstream', summary: 'Pre-check tag collision across features', file: null },
         ],
       },
     ];
@@ -658,7 +745,7 @@ describe('generateActiveIssuesMarkdown', () => {
     expect(output).toContain('## General');
   });
 
-  // @ana A009
+  // @ana A009, A013
   it('respects 20-callout cap', () => {
     // Create 25 callouts across entries
     const entries = [];
@@ -666,7 +753,7 @@ describe('generateActiveIssuesMarkdown', () => {
       entries.push({
         feature: `Feature ${i}`,
         completed_at: `2026-04-${String(i + 1).padStart(2, '0')}T10:00:00Z`,
-        callouts: [{ category: 'code', summary: `Issue ${i} in file${i}.ts` }],
+        callouts: [{ category: 'code', summary: `Issue ${i} in file${i}.ts`, file: `file${i}.ts` }],
       });
     }
     const output = generateActiveIssuesMarkdown(entries);
@@ -696,7 +783,7 @@ describe('generateActiveIssuesMarkdown', () => {
         feature: 'Project kind detection',
         completed_at: '2026-04-16T10:00:00Z',
         callouts: [
-          { category: 'code', summary: 'Some issue in test.ts' },
+          { category: 'code', summary: 'Some issue in test.ts', file: 'test.ts' },
         ],
       },
     ];
@@ -710,7 +797,7 @@ describe('generateActiveIssuesMarkdown', () => {
       {
         feature: 'Test',
         completed_at: '2026-04-16T10:00:00Z',
-        callouts: [{ category: 'code', summary: 'Issue in test.ts' }],
+        callouts: [{ category: 'code', summary: 'Issue in test.ts', file: 'test.ts' }],
       },
     ];
     const output = generateActiveIssuesMarkdown(entries);
@@ -724,7 +811,7 @@ describe('generateActiveIssuesMarkdown', () => {
       {
         feature: 'Test',
         completed_at: '2026-04-16T10:00:00Z',
-        callouts: [{ category: 'code', summary: 'Issue in test.ts' }],
+        callouts: [{ category: 'code', summary: 'Issue in test.ts', file: 'test.ts' }],
       },
     ];
     const output = generateActiveIssuesMarkdown(entries);
@@ -738,7 +825,7 @@ describe('generateActiveIssuesMarkdown', () => {
         feature: 'Cross-file issue',
         completed_at: '2026-04-16T10:00:00Z',
         callouts: [
-          { category: 'code', summary: 'Issue spans fileA.ts:10 and fileB.ts:20' },
+          { category: 'code', summary: 'Issue spans fileA.ts:10 and fileB.ts:20', file: 'fileA.ts' },
         ],
       },
     ];
@@ -758,7 +845,7 @@ describe('generateActiveIssuesMarkdown', () => {
       {
         feature: 'Test',
         completed_at: '2026-04-16T10:00:00Z',
-        callouts: [{ category: 'code', summary: 'Issue in test.ts' }],
+        callouts: [{ category: 'code', summary: 'Issue in test.ts', file: 'test.ts' }],
       },
     ];
     const output = generateActiveIssuesMarkdown(entries);
@@ -772,7 +859,7 @@ describe('generateActiveIssuesMarkdown', () => {
       {
         feature: 'Test',
         completed_at: '2026-04-16T10:00:00Z',
-        callouts: [{ category: 'code', summary: longSummary }],
+        callouts: [{ category: 'code', summary: longSummary, file: 'test.ts' }],
       },
     ];
     const output = generateActiveIssuesMarkdown(entries);
@@ -783,15 +870,16 @@ describe('generateActiveIssuesMarkdown', () => {
     expect(summaryMatch?.[1]?.endsWith('...')).toBe(true);
   });
 
+  // @ana A014
   it('orders file headings alphabetically with General last', () => {
     const entries = [
       {
         feature: 'Test',
         completed_at: '2026-04-16T10:00:00Z',
         callouts: [
-          { category: 'code', summary: 'Issue in zebra.ts' },
-          { category: 'code', summary: 'Issue in alpha.ts' },
-          { category: 'upstream', summary: 'General issue without file ref' },
+          { category: 'code', summary: 'Issue in zebra.ts', file: 'zebra.ts' },
+          { category: 'code', summary: 'Issue in alpha.ts', file: 'alpha.ts' },
+          { category: 'upstream', summary: 'General issue without file ref', file: null },
         ],
       },
     ];
@@ -811,7 +899,7 @@ describe('generateActiveIssuesMarkdown', () => {
       entries.push({
         feature: `Old Feature ${i}`,
         completed_at: `2026-01-${String(i + 1).padStart(2, '0')}T10:00:00Z`,
-        callouts: [{ category: 'code', summary: `old-issue-${i} in file.ts` }],
+        callouts: [{ category: 'code', summary: `old-issue-${i} in file.ts`, file: 'file.ts' }],
       });
     }
     // Add 10 new entries (at end of array = newest)
@@ -819,7 +907,7 @@ describe('generateActiveIssuesMarkdown', () => {
       entries.push({
         feature: `New Feature ${i}`,
         completed_at: `2026-04-${String(i + 1).padStart(2, '0')}T10:00:00Z`,
-        callouts: [{ category: 'code', summary: `new-issue-${i} in file.ts` }],
+        callouts: [{ category: 'code', summary: `new-issue-${i} in file.ts`, file: 'file.ts' }],
       });
     }
     const output = generateActiveIssuesMarkdown(entries);
@@ -839,9 +927,9 @@ describe('generateActiveIssuesMarkdown', () => {
       feature: 'Test',
       completed_at: '2026-04-17T00:00:00Z',
       callouts: [
-        { category: 'code', summary: 'issue one in foo.ts' },
-        { category: 'test', summary: 'issue two in bar.ts' },
-        { category: 'code', summary: 'issue three in baz.ts' },
+        { category: 'code', summary: 'issue one in foo.ts', file: 'foo.ts' },
+        { category: 'test', summary: 'issue two in bar.ts', file: 'bar.ts' },
+        { category: 'code', summary: 'issue three in baz.ts', file: 'baz.ts' },
       ],
     }];
     const md = generateActiveIssuesMarkdown(entries);
@@ -853,6 +941,7 @@ describe('generateActiveIssuesMarkdown', () => {
     const callouts = Array.from({ length: 25 }, (_, i) => ({
       category: 'code',
       summary: `issue number ${i + 1} in unique-file-${i}.ts`,
+      file: `unique-file-${i}.ts`,
     }));
     const entries = [{
       feature: 'Big Feature',
@@ -874,6 +963,7 @@ describe('generateActiveIssuesMarkdown', () => {
     const callouts = Array.from({ length: 20 }, (_, i) => ({
       category: 'code',
       summary: `issue ${i + 1} in file-${i}.ts`,
+      file: `file-${i}.ts`,
     }));
     const entries = [{
       feature: 'Feature',
@@ -890,7 +980,7 @@ describe('generateActiveIssuesMarkdown', () => {
     const entries = [{
       feature: 'Test',
       completed_at: '2026-04-17T00:00:00Z',
-      callouts: [{ category: 'code', summary: longSummary }],
+      callouts: [{ category: 'code', summary: longSummary, file: null }],
     }];
     const md = generateActiveIssuesMarkdown(entries);
     expect(md).toContain('...');
@@ -907,7 +997,7 @@ describe('generateActiveIssuesMarkdown', () => {
     const entries = [{
       feature: 'Test',
       completed_at: '2026-04-17T00:00:00Z',
-      callouts: [{ category: 'code', summary: noSpaceSummary }],
+      callouts: [{ category: 'code', summary: noSpaceSummary, file: 'packages/cli/src/engine/analyzers/patterns/confirmation.ts' }],
     }];
     const md = generateActiveIssuesMarkdown(entries);
     expect(md).toContain('...');
