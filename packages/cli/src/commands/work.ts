@@ -16,7 +16,7 @@ import { execSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as fsPromises from 'node:fs/promises';
 import * as path from 'node:path';
-import { readArtifactBranch, getCurrentBranch } from '../utils/git-operations.js';
+import { readArtifactBranch, readBranchPrefix, getCurrentBranch } from '../utils/git-operations.js';
 import { generateProofSummary, generateActiveIssuesMarkdown, type ProofSummary } from '../utils/proofSummary.js';
 import { findProjectRoot } from '../utils/validators.js';
 import type { ProofChainEntry } from '../types/proof.js';
@@ -72,7 +72,7 @@ interface WorkItem {
   slug: string;
   totalPhases: number;
   artifacts: ArtifactState;
-  featureBranch: string | null;
+  workBranch: string | null;
   stage: string;
   nextAction: string;
 }
@@ -119,20 +119,21 @@ function readFileOnBranch(branch: string, filePath: string): string | null {
 }
 
 /**
- * Get feature branch for a slug
+ * Get work branch for a slug using the configured prefix
  *
  * @param slug - Work item slug
+ * @param branchPrefix - Configured branch prefix (e.g., 'feature/', 'dev/', '')
  * @returns Branch name or null if doesn't exist
  */
-function getFeatureBranch(slug: string): string | null {
+function getWorkBranch(slug: string, branchPrefix: string): string | null {
   try {
     const output = execSync(`git branch -a --list "*${slug}*"`, { encoding: 'utf-8', stdio: 'pipe' }).trim();
     if (!output) return null;
 
     // Parse branches — prefer local over remote
     const branches = output.split('\n').map(b => b.trim().replace(/^\* /, '').replace(/^remotes\//, ''));
-    const local = branches.find(b => b === `feature/${slug}`);
-    const remote = branches.find(b => b === `origin/feature/${slug}`);
+    const local = branches.find(b => b === `${branchPrefix}${slug}`);
+    const remote = branches.find(b => b === `origin/${branchPrefix}${slug}`);
 
     return local || remote || null;
   } catch {
@@ -231,13 +232,15 @@ function discoverSlugs(artifactBranch: string, onArtifactBranch: boolean, projec
  * @param artifactBranch - Artifact branch name
  * @param onArtifactBranch - Whether currently on artifact branch
  * @param projectRoot - Project root path
+ * @param branchPrefix - Configured branch prefix
  * @returns Complete artifact state
  */
 function gatherArtifactState(
   slug: string,
   artifactBranch: string,
   onArtifactBranch: boolean,
-  projectRoot: string
+  projectRoot: string,
+  branchPrefix: string
 ): ArtifactState {
   const basePath = `.ana/plans/active/${slug}`;
   const branch = onArtifactBranch ? artifactBranch : `origin/${artifactBranch}`;
@@ -292,12 +295,12 @@ function gatherArtifactState(
     }
   }
 
-  // Check for build/verify reports on feature branch
-  const featureBranch = getFeatureBranch(slug);
+  // Check for build/verify reports on work branch
+  const workBranch = getWorkBranch(slug, branchPrefix);
   const buildReports: ReportInfo[] = [];
   const verifyReports: VerifyReportInfo[] = [];
 
-  if (featureBranch) {
+  if (workBranch) {
     for (const spec of specs) {
       // Determine report filenames from spec filename
       let buildReportFile: string;
@@ -319,25 +322,25 @@ function gatherArtifactState(
 
       // Check build report
       const buildReportPath = `${basePath}/${buildReportFile}`;
-      const buildExists = fileExistsOnBranch(featureBranch, buildReportPath);
+      const buildExists = fileExistsOnBranch(workBranch, buildReportPath);
       if (buildExists) {
         buildReports.push({
           file: buildReportFile,
           exists: true,
-          location: featureBranch,
+          location: workBranch,
         });
       }
 
       // Check verify report
       const verifyReportPath = `${basePath}/${verifyReportFile}`;
-      const verifyExists = fileExistsOnBranch(featureBranch, verifyReportPath);
+      const verifyExists = fileExistsOnBranch(workBranch, verifyReportPath);
       if (verifyExists) {
-        const verifyContent = readFileOnBranch(featureBranch, verifyReportPath);
+        const verifyContent = readFileOnBranch(workBranch, verifyReportPath);
         const result = verifyContent ? getVerifyResult(verifyContent) : 'unknown';
         verifyReports.push({
           file: verifyReportFile,
           exists: true,
-          location: featureBranch,
+          location: workBranch,
           result,
         });
       }
@@ -358,10 +361,10 @@ function gatherArtifactState(
  *
  * @param slug - Work item slug
  * @param artifacts - Artifact state
- * @param featureBranch - Feature branch name or null
+ * @param workBranch - Work branch name or null
  * @returns Stage name
  */
-function determineStage(slug: string, artifacts: ArtifactState, featureBranch: string | null): string {
+function determineStage(slug: string, artifacts: ArtifactState, workBranch: string | null): string {
   const { scope, plan, specs, buildReports, verifyReports } = artifacts;
   const totalPhases = specs.length;
 
@@ -377,7 +380,7 @@ function determineStage(slug: string, artifacts: ArtifactState, featureBranch: s
 
   // Single-spec workflow
   if (totalPhases === 1) {
-    if (!featureBranch) {
+    if (!workBranch) {
       return 'ready-for-build';
     }
 
@@ -401,11 +404,11 @@ function determineStage(slug: string, artifacts: ArtifactState, featureBranch: s
         try {
           const basePath = `.ana/plans/active/${slug}`;
           const buildTime = execSync(
-            `git log --format='%ct' -1 ${featureBranch} -- ${basePath}/build_report.md`,
+            `git log --format='%ct' -1 ${workBranch} -- ${basePath}/build_report.md`,
             { encoding: 'utf-8', stdio: 'pipe' }
           ).trim();
           const verifyTime = execSync(
-            `git log --format='%ct' -1 ${featureBranch} -- ${basePath}/verify_report.md`,
+            `git log --format='%ct' -1 ${workBranch} -- ${basePath}/verify_report.md`,
             { encoding: 'utf-8', stdio: 'pipe' }
           ).trim();
           if (buildTime && verifyTime && parseInt(buildTime) > parseInt(verifyTime)) {
@@ -421,7 +424,7 @@ function determineStage(slug: string, artifacts: ArtifactState, featureBranch: s
 
   // Multi-spec workflow
   if (totalPhases > 1) {
-    if (!featureBranch) {
+    if (!workBranch) {
       return 'phase-1-ready-for-build';
     }
 
@@ -459,11 +462,11 @@ function determineStage(slug: string, artifacts: ArtifactState, featureBranch: s
             const expectedBuild = phaseBuildReport.file;
             const expectedVerify = phaseVerifyReport.file;
             const bTime = execSync(
-              `git log --format='%ct' -1 ${featureBranch} -- ${basePath}/${expectedBuild}`,
+              `git log --format='%ct' -1 ${workBranch} -- ${basePath}/${expectedBuild}`,
               { encoding: 'utf-8', stdio: 'pipe' }
             ).trim();
             const vTime = execSync(
-              `git log --format='%ct' -1 ${featureBranch} -- ${basePath}/${expectedVerify}`,
+              `git log --format='%ct' -1 ${workBranch} -- ${basePath}/${expectedVerify}`,
               { encoding: 'utf-8', stdio: 'pipe' }
             ).trim();
             if (bTime && vTime && parseInt(bTime) > parseInt(vTime)) {
@@ -492,9 +495,10 @@ function determineStage(slug: string, artifacts: ArtifactState, featureBranch: s
  *
  * @param stage - Pipeline stage
  * @param slug - Work item slug
+ * @param branchPrefix - Configured branch prefix
  * @returns Copy-pasteable command
  */
-function getNextAction(stage: string, slug: string): string {
+function getNextAction(stage: string, slug: string, branchPrefix: string): string {
   if (stage === 'ready-for-plan') {
     return 'claude --agent ana-plan';
   }
@@ -504,19 +508,19 @@ function getNextAction(stage: string, slug: string): string {
   }
 
   if (stage === 'build-in-progress') {
-    return `git checkout feature/${slug} && claude --agent ana-build`;
+    return `git checkout ${branchPrefix}${slug} && claude --agent ana-build`;
   }
 
   if (stage === 'ready-for-verify') {
-    return `git checkout feature/${slug} && claude --agent ana-verify`;
+    return `git checkout ${branchPrefix}${slug} && claude --agent ana-verify`;
   }
 
   if (stage === 'ready-for-re-verify') {
-    return `git checkout feature/${slug} && claude --agent ana-verify`;
+    return `git checkout ${branchPrefix}${slug} && claude --agent ana-verify`;
   }
 
   if (stage === 'needs-fixes') {
-    return `git checkout feature/${slug} && claude --agent ana-build`;
+    return `git checkout ${branchPrefix}${slug} && claude --agent ana-build`;
   }
 
   if (stage === 'ready-to-merge') {
@@ -525,23 +529,23 @@ function getNextAction(stage: string, slug: string): string {
 
   // Multi-phase stages
   if (stage.includes('ready-for-build')) {
-    return `git checkout feature/${slug} && claude --agent ana-build`;
+    return `git checkout ${branchPrefix}${slug} && claude --agent ana-build`;
   }
 
   if (stage.includes('ready-for-re-verify')) {
-    return `git checkout feature/${slug} && claude --agent ana-verify`;
+    return `git checkout ${branchPrefix}${slug} && claude --agent ana-verify`;
   }
 
   if (stage.includes('ready-for-verify')) {
-    return `git checkout feature/${slug} && claude --agent ana-verify`;
+    return `git checkout ${branchPrefix}${slug} && claude --agent ana-verify`;
   }
 
   if (stage.includes('build-in-progress')) {
-    return `git checkout feature/${slug} && claude --agent ana-build`;
+    return `git checkout ${branchPrefix}${slug} && claude --agent ana-build`;
   }
 
   if (stage.includes('needs-fixes')) {
-    return `git checkout feature/${slug} && claude --agent ana-build`;
+    return `git checkout ${branchPrefix}${slug} && claude --agent ana-build`;
   }
 
   return '(unknown stage)';
@@ -635,6 +639,7 @@ function printHumanReadable(output: StatusOutput): void {
 export function getWorkStatus(options: { json?: boolean }): void {
   const projectRoot = findProjectRoot();
   const artifactBranch = readArtifactBranch(projectRoot);
+  const branchPrefix = readBranchPrefix(projectRoot);
   const currentBranch = getCurrentBranch();
 
   if (!currentBranch) {
@@ -683,22 +688,22 @@ export function getWorkStatus(options: { json?: boolean }): void {
   // Gather state for each slug
   const items: WorkItem[] = [];
   for (const slug of slugs) {
-    const artifacts = gatherArtifactState(slug, artifactBranch, onArtifactBranch, projectRoot);
+    const artifacts = gatherArtifactState(slug, artifactBranch, onArtifactBranch, projectRoot, branchPrefix);
 
     // Skip empty directories (no scope = not real work)
     if (!artifacts.scope.exists) {
       continue;
     }
 
-    const featureBranch = getFeatureBranch(slug);
-    const stage = determineStage(slug, artifacts, featureBranch);
-    const nextAction = getNextAction(stage, slug);
+    const workBranch = getWorkBranch(slug, branchPrefix);
+    const stage = determineStage(slug, artifacts, workBranch);
+    const nextAction = getNextAction(stage, slug, branchPrefix);
 
     items.push({
       slug,
       totalPhases: artifacts.specs.length,
       artifacts,
-      featureBranch,
+      workBranch,
       stage,
       nextAction,
     });
@@ -876,9 +881,10 @@ Pipeline: ${timing.total_minutes}m${timingDetails}${deviationSummary}${modulesLi
  * @param slug - Work item slug to complete
  */
 export async function completeWork(slug: string): Promise<void> {
-  // 1. Read artifactBranch from ana.json
+  // 1. Read artifactBranch and branchPrefix from ana.json
   const projectRoot = findProjectRoot();
   const artifactBranch = readArtifactBranch(projectRoot);
+  const branchPrefix = readBranchPrefix(projectRoot);
 
   // 2. Get current branch
   const currentBranch = getCurrentBranch();
@@ -924,19 +930,20 @@ export async function completeWork(slug: string): Promise<void> {
     process.exit(1);
   }
 
-  // 6. Verify feature branch was merged (optional - branch might be deleted)
+  // 6. Verify work branch was merged (optional - branch might be deleted)
   //    Prune stale remote refs — squash merge + --delete-branch removes
   //    the remote branch on GitHub but local refs persist until pruned.
   try {
     execSync('git fetch --prune origin', { stdio: 'pipe' });
   } catch { /* offline — continue with local state */ }
 
-  const featureBranchExists = getFeatureBranch(slug);
-  if (featureBranchExists) {
+  const workBranchName = `${branchPrefix}${slug}`;
+  const workBranchExists = getWorkBranch(slug, branchPrefix);
+  if (workBranchExists) {
     // Check if remote branch still exists after prune
     const hasRemote = (() => {
       try {
-        const output = execSync(`git branch -r --list "origin/feature/${slug}"`, { encoding: 'utf-8', stdio: 'pipe' }).trim();
+        const output = execSync(`git branch -r --list "origin/${workBranchName}"`, { encoding: 'utf-8', stdio: 'pipe' }).trim();
         return output.length > 0;
       } catch { return false; }
     })();
@@ -945,20 +952,20 @@ export async function completeWork(slug: string): Promise<void> {
       // Remote still exists — verify with is-ancestor (regular merge)
       let merged = false;
       try {
-        execSync(`git merge-base --is-ancestor feature/${slug} HEAD`, { stdio: 'pipe' });
+        execSync(`git merge-base --is-ancestor ${workBranchName} HEAD`, { stdio: 'pipe' });
         merged = true;
       } catch {
         // is-ancestor failed — might be squash merge. Check via gh CLI.
         try {
           const prState = execSync(
-            `gh pr view feature/${slug} --json state -q .state`,
+            `gh pr view ${workBranchName} --json state -q .state`,
             { encoding: 'utf-8', stdio: 'pipe' }
           ).trim();
           merged = prState === 'MERGED';
         } catch { /* gh not available or no PR — fall through to error */ }
       }
       if (!merged) {
-        console.error(chalk.red(`Error: \`feature/${slug}\` has not been merged into \`${artifactBranch}\`.`));
+        console.error(chalk.red(`Error: \`${workBranchName}\` has not been merged into \`${artifactBranch}\`.`));
         console.error(chalk.gray('Merge the PR first, then run this command again.'));
         process.exit(1);
       }
@@ -1063,15 +1070,15 @@ export async function completeWork(slug: string): Promise<void> {
     // Don't exit - commit succeeded
   }
 
-  // 12. Delete feature branch (cleanup)
+  // 12. Delete work branch (cleanup)
   try {
-    execSync(`git branch -d feature/${slug}`, { stdio: 'pipe' });
+    execSync(`git branch -d ${workBranchName}`, { stdio: 'pipe' });
   } catch {
     // Silently continue if branch doesn't exist or was already deleted
   }
 
   try {
-    execSync(`git push origin --delete feature/${slug}`, { stdio: 'pipe' });
+    execSync(`git push origin --delete ${workBranchName}`, { stdio: 'pipe' });
   } catch {
     // Silently continue if remote branch doesn't exist or was already deleted
   }

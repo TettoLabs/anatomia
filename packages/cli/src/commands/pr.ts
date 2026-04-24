@@ -14,7 +14,7 @@ import chalk from 'chalk';
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { readArtifactBranch, getCurrentBranch } from '../utils/git-operations.js';
+import { readArtifactBranch, readBranchPrefix, getCurrentBranch } from '../utils/git-operations.js';
 import { generateProofSummary, type ProofSummary } from '../utils/proofSummary.js';
 import { findProjectRoot } from '../utils/validators.js';
 
@@ -150,8 +150,9 @@ function renderProofMarkdown(proof: ProofSummary): string {
 export function createPr(slug: string): void {
   const projectRoot = findProjectRoot();
 
-  // 1. Read artifactBranch from ana.json
+  // 1. Read artifactBranch and branchPrefix from ana.json
   const artifactBranch = readArtifactBranch(projectRoot);
+  const branchPrefix = readBranchPrefix(projectRoot);
 
   // 2. Get current branch and derive slug if needed
   const currentBranch = getCurrentBranch();
@@ -160,9 +161,9 @@ export function createPr(slug: string): void {
     process.exit(1);
   }
 
-  // Warn if not on a feature branch (but don't block)
-  if (!currentBranch.startsWith('feature/')) {
-    console.log(chalk.yellow(`Warning: Current branch is '${currentBranch}' (expected 'feature/{slug}').`));
+  // Warn if not on a work branch (but don't block)
+  if (!currentBranch.startsWith(branchPrefix)) {
+    console.log(chalk.yellow(`Warning: Current branch is '${currentBranch}' (expected '${branchPrefix}{slug}').`));
   }
 
   // 3. Check gh CLI availability

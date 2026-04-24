@@ -24,7 +24,7 @@ import { findProjectRoot } from '../utils/validators.js';
 // readArtifactBranch + getCurrentBranch moved to utils/git-operations.ts (Item 13).
 // artifact.ts still uses them internally; pr.ts and work.ts now import directly
 // from utils/ instead of cross-command-importing from here.
-import { readArtifactBranch, getCurrentBranch } from '../utils/git-operations.js';
+import { readArtifactBranch, readBranchPrefix, getCurrentBranch } from '../utils/git-operations.js';
 
 /**
  * Save metadata entry for .saves.json
@@ -461,12 +461,14 @@ function validateBuildReportFormat(filePath: string): string | null {
  * @param currentBranch - Current git branch
  * @param artifactBranch - Configured artifact branch from ana.json
  * @param slug - Work item slug
+ * @param branchPrefix - Configured branch prefix
  */
 function validateBranch(
   typeInfo: ArtifactTypeInfo,
   currentBranch: string,
   artifactBranch: string,
-  slug: string
+  slug: string,
+  branchPrefix: string
 ): void {
   if (typeInfo.category === 'planning') {
     // Planning artifacts must be on artifact branch
@@ -479,7 +481,7 @@ function validateBranch(
     // Build/verify artifacts must NOT be on artifact branch
     if (currentBranch === artifactBranch) {
       console.error(chalk.red(`Error: You're on \`${artifactBranch}\`. ${typeInfo.displayName} belongs on a feature branch.`));
-      console.error(chalk.gray(`Run: git checkout feature/${slug}`));
+      console.error(chalk.gray(`Run: git checkout ${branchPrefix}${slug}`));
       process.exit(1);
     }
   }
@@ -503,8 +505,9 @@ export function saveArtifact(type: string, slug: string): void {
   // 2. Resolve project root early — needed for readArtifactBranch and throughout
   const projectRoot = findProjectRoot();
 
-  // 3. Read artifactBranch from ana.json
+  // 3. Read artifactBranch and branchPrefix from ana.json
   const artifactBranch = readArtifactBranch(projectRoot);
+  const branchPrefix = readBranchPrefix(projectRoot);
 
   // 4. Get current branch
   const currentBranch = getCurrentBranch();
@@ -514,7 +517,7 @@ export function saveArtifact(type: string, slug: string): void {
   }
 
   // 5. Validate branch
-  validateBranch(typeInfo, currentBranch, artifactBranch, slug);
+  validateBranch(typeInfo, currentBranch, artifactBranch, slug, branchPrefix);
 
   // 6. Resolve file path
   const filePath = path.join('.ana', 'plans', 'active', slug, typeInfo.fileName);
