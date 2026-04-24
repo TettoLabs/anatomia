@@ -30,8 +30,10 @@ describe('ana pr create', () => {
   async function createTestProject(options: {
     artifactBranch?: string;
     currentBranch?: string;
+    branchPrefix?: string;
   }): Promise<void> {
     const artifactBranch = options.artifactBranch || 'main';
+    const branchPrefix = options.branchPrefix;
 
     // Init git
     execSync('git init', { cwd: tempDir, stdio: 'ignore' });
@@ -43,7 +45,7 @@ describe('ana pr create', () => {
     await fs.mkdir(anaDir, { recursive: true });
     await fs.writeFile(
       path.join(anaDir, 'ana.json'),
-      JSON.stringify({ artifactBranch }),
+      JSON.stringify({ artifactBranch, ...(branchPrefix !== undefined && { branchPrefix }) }),
       'utf-8'
     );
 
@@ -132,6 +134,34 @@ describe('ana pr create', () => {
       }
       // If gh is available, test would create a real PR (not desired in tests)
       // We test the validation paths instead
+    });
+  });
+
+  describe('configurable branchPrefix', () => {
+    // @ana A015
+    it('pr create warning uses configured prefix', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'feature/test-feature', branchPrefix: 'dev/' });
+      await createPipelineArtifacts('test-feature', {
+        includeBuild: true,
+        includeVerify: true,
+        verifyResult: 'PASS',
+      });
+
+      const originalLog = console.log;
+      const logs: string[] = [];
+      console.log = (...args: unknown[]) => { logs.push(args.join(' ')); };
+
+      try {
+        createPr('test-feature');
+      } catch {
+        // Expected — gh CLI may not be available, but warning is emitted before that
+      }
+
+      console.log = originalLog;
+      const output = logs.join('\n');
+      // Branch is feature/test-feature but branchPrefix is dev/ — should warn with dev/
+      expect(output).toContain('dev/');
+      expect(output).toContain("Warning: Current branch is 'feature/test-feature'");
     });
   });
 

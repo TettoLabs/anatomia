@@ -32,6 +32,7 @@ describe('ana work status', () => {
    */
   async function createWorkTestProject(options: {
     artifactBranch?: string;
+    branchPrefix?: string;
     slugs?: Array<{
       slug: string;
       artifacts: string[];  // e.g., ['scope.md', 'plan.md', 'spec.md']
@@ -41,6 +42,7 @@ describe('ana work status', () => {
     }>;
   }): Promise<void> {
     const artifactBranch = options.artifactBranch || 'main';
+    const branchPrefix = options.branchPrefix;
 
     // Init git
     execSync('git init', { cwd: tempDir, stdio: 'ignore' });
@@ -52,7 +54,7 @@ describe('ana work status', () => {
     await fs.mkdir(anaDir, { recursive: true });
     await fs.writeFile(
       path.join(anaDir, 'ana.json'),
-      JSON.stringify({ artifactBranch }),
+      JSON.stringify({ artifactBranch, ...(branchPrefix !== undefined && { branchPrefix }) }),
       'utf-8'
     );
 
@@ -77,9 +79,10 @@ describe('ana work status', () => {
         // Commit artifacts on artifact branch
         execSync('git add -A && git commit -m "add artifacts"', { cwd: tempDir, stdio: 'ignore' });
 
-        // Create feature branch if requested
+        // Create work branch if requested
         if (slug.featureBranch) {
-          execSync(`git checkout -b feature/${slug.slug}`, { cwd: tempDir, stdio: 'ignore' });
+          const prefix = branchPrefix !== undefined ? branchPrefix : 'feature/';
+          execSync(`git checkout -b ${prefix}${slug.slug}`, { cwd: tempDir, stdio: 'ignore' });
 
           if (slug.featureArtifacts) {
             for (const artifact of slug.featureArtifacts) {
@@ -367,7 +370,7 @@ describe('ana work status', () => {
       expect(item).toHaveProperty('slug', 'test-slug');
       expect(item).toHaveProperty('totalPhases', 1);
       expect(item).toHaveProperty('artifacts');
-      expect(item).toHaveProperty('featureBranch');
+      expect(item).toHaveProperty('workBranch');
       expect(item).toHaveProperty('stage');
       expect(item).toHaveProperty('nextAction');
     });
@@ -413,6 +416,130 @@ describe('ana work status', () => {
       execSync('git config user.name "Test"', { cwd: tempDir, stdio: 'ignore' });
 
       expect(() => getWorkStatus({ json: false })).toThrow();
+    });
+  });
+
+  describe('configurable branchPrefix', () => {
+    // @ana A008, A009
+    it('getNextAction uses configured prefix in stage commands', async () => {
+      const planContent = `# Plan\n## Phases\n- [ ] Phase 1\n  Spec: spec.md`;
+      await createWorkTestProject({
+        slugs: [{
+          slug: 'test-slug',
+          artifacts: ['scope.md', 'plan.md', 'spec.md'],
+          planContent,
+          featureBranch: true,
+        }],
+        branchPrefix: 'dev/',
+      });
+
+      const output = captureOutput(() => getWorkStatus({ json: false }));
+      expect(output).toContain('dev/');
+      expect(output).not.toContain('feature/');
+    });
+
+    // @ana A010
+    it('getWorkBranch finds branch with custom prefix', async () => {
+      const planContent = `# Plan\n## Phases\n- [ ] Phase 1\n  Spec: spec.md`;
+      await createWorkTestProject({
+        slugs: [{
+          slug: 'test-slug',
+          artifacts: ['scope.md', 'plan.md', 'spec.md'],
+          planContent,
+          featureBranch: true,
+        }],
+        branchPrefix: 'dev/',
+      });
+
+      const output = captureOutput(() => getWorkStatus({ json: true }));
+      const json = JSON.parse(output);
+      expect(json.items[0].workBranch).toContain('dev/');
+    });
+
+    // @ana A011, A012
+    it('work status JSON uses workBranch not featureBranch', async () => {
+      const planContent = `# Plan\n## Phases\n- [ ] Phase 1\n  Spec: spec.md`;
+      await createWorkTestProject({
+        slugs: [{
+          slug: 'test-slug',
+          artifacts: ['scope.md', 'plan.md', 'spec.md'],
+          planContent,
+        }],
+      });
+
+      const output = captureOutput(() => getWorkStatus({ json: true }));
+      const json = JSON.parse(output);
+      expect(json.items[0]).toHaveProperty('workBranch');
+      expect(json.items[0]).not.toHaveProperty('featureBranch');
+    });
+
+    // @ana A021, A022
+    it('empty branchPrefix produces bare slug branch', async () => {
+      const planContent = `# Plan\n## Phases\n- [ ] Phase 1\n  Spec: spec.md`;
+      await createWorkTestProject({
+        slugs: [{
+          slug: 'test-slug',
+          artifacts: ['scope.md', 'plan.md', 'spec.md'],
+          planContent,
+          featureBranch: true,
+        }],
+        branchPrefix: '',
+      });
+
+      const output = captureOutput(() => getWorkStatus({ json: false }));
+      // Should contain "git checkout test-slug" not "/test-slug"
+      expect(output).toContain('git checkout test-slug');
+      expect(output).not.toContain('/test-slug');
+    });
+
+    // @ana A013
+    it('work complete uses configured prefix for branch cleanup', async () => {
+      // Create a merged project with dev/ prefix
+      execSync('git init', { cwd: tempDir, stdio: 'ignore' });
+      execSync('git config user.email "test@test.com"', { cwd: tempDir, stdio: 'ignore' });
+      execSync('git config user.name "Test"', { cwd: tempDir, stdio: 'ignore' });
+
+      const anaDir = path.join(tempDir, '.ana');
+      await fs.mkdir(anaDir, { recursive: true });
+      await fs.writeFile(
+        path.join(anaDir, 'ana.json'),
+        JSON.stringify({ artifactBranch: 'main', branchPrefix: 'dev/' }),
+        'utf-8'
+      );
+
+      execSync('git add -A && git commit -m "init"', { cwd: tempDir, stdio: 'ignore' });
+      execSync('git branch -M main', { cwd: tempDir, stdio: 'ignore' });
+
+      const slugPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug');
+      await fs.mkdir(slugPath, { recursive: true });
+      await fs.writeFile(path.join(slugPath, 'scope.md'), '# Scope', 'utf-8');
+      await fs.writeFile(
+        path.join(slugPath, 'plan.md'),
+        '# Plan\n## Phases\n- [ ] Phase 1\n  Spec: spec.md',
+        'utf-8'
+      );
+      await fs.writeFile(path.join(slugPath, 'spec.md'), '# Spec', 'utf-8');
+      execSync('git add -A && git commit -m "add planning"', { cwd: tempDir, stdio: 'ignore' });
+
+      // Create dev/ branch (not feature/)
+      execSync('git checkout -b dev/test-slug', { cwd: tempDir, stdio: 'ignore' });
+      await fs.writeFile(path.join(slugPath, 'build_report.md'), '# Build', 'utf-8');
+      await fs.writeFile(
+        path.join(slugPath, 'verify_report.md'),
+        '# Verify Report\n\n**Result:** PASS',
+        'utf-8'
+      );
+      execSync('git add -A && git commit -m "add reports"', { cwd: tempDir, stdio: 'ignore' });
+
+      // Merge to main
+      execSync('git checkout main', { cwd: tempDir, stdio: 'ignore' });
+      execSync('git merge --no-ff dev/test-slug -m "merge"', { cwd: tempDir, stdio: 'ignore' });
+
+      await completeWork('test-slug');
+
+      // Branch should be deleted — verify it no longer exists
+      const branches = execSync('git branch', { cwd: tempDir, encoding: 'utf-8' });
+      expect(branches).not.toContain('dev/test-slug');
     });
   });
 
