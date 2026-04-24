@@ -20,9 +20,9 @@
     "hash": "sha256:84011701c7cf9cbd59453c0c73936d85d922a1e9c5bf167e8b405f506d45d419"
   },
   "build-report": {
-    "saved_at": "2026-04-24T20:12:57.879Z",
-    "commit": "185ddc92ff0ba0466913e9b0fdc7734a01c517e6",
-    "hash": "sha256:6205517cc1ff193a655e4118767a422dc4a1a2440d90697a0b46d6af994276d4"
+    "saved_at": "2026-04-24T20:41:26.778Z",
+    "commit": "2ac13465cdf31aae8cfdfc147ae791129810b4c1",
+    "hash": "sha256:dce786d2ad7379c44b5cc282e4dab6f4ddf5de8069637e9039e3622b23a5056a"
   },
   "modules_touched": [
     "packages/cli/src/commands/init/anaJsonSchema.ts",
@@ -151,8 +151,8 @@
     "run_at": "2026-04-24T20:25:12.593Z"
   },
   "verify-report": {
-    "saved_at": "2026-04-24T20:25:12.620Z",
-    "commit": "185ddc92ff0ba0466913e9b0fdc7734a01c517e6",
+    "saved_at": "2026-04-24T20:25:19.855Z",
+    "commit": "3f58b6c41bde940bcc4c1fea6f58920369de2627",
     "hash": "sha256:7d1f9b2b09e70ec562160afdd513d0ef4c703af8a03fe79930d2b527ad6e5fe9"
   }
 }
