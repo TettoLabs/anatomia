@@ -341,10 +341,10 @@ describe('parseCallouts', () => {
     expect(callouts[0]!.file).toBe('projectKind.ts');
     expect(callouts[1]!.category).toBe('test');
     expect(callouts[1]!.summary).toContain('A003 purity test');
-    expect(callouts[1]!.file).toBe('test.ts');
+    expect(callouts[1]!.file).toBe('projectKind.test.ts');
     expect(callouts[2]!.category).toBe('upstream');
     expect(callouts[2]!.summary).toContain('Pre-check tag collision');
-    expect(callouts[2]!.file).toBe('test.ts');
+    expect(callouts[2]!.file).toBe('proof.test.ts');
   });
 
   it('parses numbered callouts', () => {
@@ -674,6 +674,32 @@ describe('extractFileRefs', () => {
   it('handles deep paths', () => {
     const result = extractFileRefs('packages/cli/src/engine/analyzers/patterns/confirmation.ts:847');
     expect(result).toContain('packages/cli/src/engine/analyzers/patterns/confirmation.ts');
+  });
+
+  it('handles dotted filenames like .test.ts', () => {
+    const result = extractFileRefs('projectKind.test.ts has dead logic');
+    expect(result).toContain('projectKind.test.ts');
+    expect(result).not.toContain('test.ts');
+  });
+
+  it('handles dotted filenames with line numbers', () => {
+    const result = extractFileRefs('findProjectRoot.test.ts:90-95 is a tautology');
+    expect(result).toContain('findProjectRoot.test.ts');
+  });
+
+  it('handles multi-dotted filenames like .config.js', () => {
+    const result = extractFileRefs('next.config.js needs updating');
+    expect(result).toContain('next.config.js');
+  });
+
+  it('does not match English sentences with periods', () => {
+    const result = extractFileRefs('This is wrong. The fix is elsewhere.');
+    expect(result).toHaveLength(0);
+  });
+
+  it('does not match version numbers', () => {
+    const result = extractFileRefs('v2.0.0 release notes');
+    expect(result).toHaveLength(0);
   });
 });
 

@@ -16,16 +16,23 @@ describe('findProjectRoot', () => {
     await fs.promises.rm(tempDir, { recursive: true, force: true });
   });
 
+  // Helper: create a valid .ana/ with ana.json
+  function createAnaDir(dir: string): void {
+    const anaDir = path.join(dir, '.ana');
+    fs.mkdirSync(anaDir, { recursive: true });
+    fs.writeFileSync(path.join(anaDir, 'ana.json'), '{}');
+  }
+
   // @ana A001
-  it('returns CWD when .ana/ exists in CWD', () => {
-    fs.mkdirSync(path.join(tempDir, '.ana'));
+  it('returns CWD when .ana/ana.json exists in CWD', () => {
+    createAnaDir(tempDir);
     const result = findProjectRoot(tempDir);
     expect(result).toBe(tempDir);
   });
 
   // @ana A002
-  it('walks up to find .ana/ from a subdirectory', () => {
-    fs.mkdirSync(path.join(tempDir, '.ana'));
+  it('walks up to find .ana/ana.json from a subdirectory', () => {
+    createAnaDir(tempDir);
     const subDir = path.join(tempDir, 'packages', 'cli');
     fs.mkdirSync(subDir, { recursive: true });
 
@@ -34,8 +41,8 @@ describe('findProjectRoot', () => {
   });
 
   // @ana A003
-  it('walks up multiple levels to find .ana/', () => {
-    fs.mkdirSync(path.join(tempDir, '.ana'));
+  it('walks up multiple levels to find .ana/ana.json', () => {
+    createAnaDir(tempDir);
     const deepDir = path.join(tempDir, 'packages', 'cli', 'src', 'commands');
     fs.mkdirSync(deepDir, { recursive: true });
 
@@ -44,7 +51,7 @@ describe('findProjectRoot', () => {
   });
 
   // @ana A004, A005
-  it('throws when no .ana/ exists in the tree', () => {
+  it('throws when no .ana/ana.json exists in the tree', () => {
     // tempDir has no .ana/ — walk will reach filesystem root
     expect(() => findProjectRoot(tempDir)).toThrow('No .ana/ found in');
     expect(() => findProjectRoot(tempDir)).toThrow(
@@ -52,14 +59,20 @@ describe('findProjectRoot', () => {
     );
   });
 
-  // @ana A006
-  it('finds nearest .ana/ when nested projects exist', () => {
-    // Outer project
+  it('ignores .ana/ directory without ana.json (stale test debris)', () => {
+    // Create a stale .ana/ without ana.json — should be skipped
     fs.mkdirSync(path.join(tempDir, '.ana'));
+    expect(() => findProjectRoot(tempDir)).toThrow('No .ana/ found in');
+  });
+
+  // @ana A006
+  it('finds nearest .ana/ana.json when nested projects exist', () => {
+    // Outer project
+    createAnaDir(tempDir);
 
     // Inner project
     const innerProjectDir = path.join(tempDir, 'packages', 'inner');
-    fs.mkdirSync(path.join(innerProjectDir, '.ana'), { recursive: true });
+    createAnaDir(innerProjectDir);
 
     const subDir = path.join(innerProjectDir, 'src');
     fs.mkdirSync(subDir, { recursive: true });

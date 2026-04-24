@@ -40,6 +40,7 @@ master_plan/
 # Anatomia local state (runtime caches, not source)
 **/.ana/state/cache/
 packages/cli/.ana/
+packages/cli/src/.ana/
 
 # Sprint investigation/diagnostic files (not source)
 *DIAGNOSTIC*.md
