@@ -275,36 +275,74 @@ async function detectSchemas(
   // with the most models — production schemas are always larger than examples.
   // Multi-file schemas (prismaSchemaFolder): count models across all sibling
   // .prisma files in the same directory, not just schema.prisma.
+  // Directory entries (path ending with /): read all .prisma files in the dir.
   const hasPrisma = allDeps['prisma'] || allDeps['@prisma/client'];
   if (hasPrisma) {
     try {
       const censusPrisma = censusSchemas.filter(s => s.orm === 'prisma').map(s => s.path);
-      const matches = censusPrisma.length > 0
+      let matches = censusPrisma.length > 0
         ? censusPrisma
         : await glob('**/schema.prisma', SCHEMA_GLOB_OPTS);
+      // Second fallback: if no schema.prisma found anywhere, try multi-file
+      // layouts where .prisma files live in prisma/ directories without an anchor.
+      if (matches.length === 0) {
+        const prismaGlob = await glob('**/prisma/*.prisma', SCHEMA_GLOB_OPTS);
+        // Deduplicate by directory — one entry per unique prisma/ directory
+        const dirs = new Set(prismaGlob.map(f => path.dirname(f as string) + '/'));
+        matches = [...dirs];
+      }
       if (matches.length > 0) {
         // Score each candidate by model count (including sibling .prisma files)
         let best: { path: string; modelCount: number; provider: string | null } | null = null;
         for (const relativePath of matches) {
-          const absPath = path.join(rootPath, relativePath as string);
-          const content = await fs.readFile(absPath, 'utf-8');
-          // Count models in this file
-          let modelCount = (content.match(/^model\s+/gm) || []).length;
-          // Multi-file schema: count models in sibling .prisma files
-          const schemaDir = path.dirname(absPath);
-          try {
-            const siblings = await fs.readdir(schemaDir);
-            const prismaFiles = siblings.filter(f => f.endsWith('.prisma') && f !== path.basename(absPath));
-            for (const sibling of prismaFiles) {
-              const sibContent = await fs.readFile(path.join(schemaDir, sibling), 'utf-8');
-              modelCount += (sibContent.match(/^model\s+/gm) || []).length;
-            }
-          } catch { /* directory read failed — use single-file count */ }
-          // Extract provider from datasource block
-          const providerMatch = content.match(/datasource\s+\w+\s*\{[^}]*provider\s*=\s*"(\w+)"/s);
-          const provider = providerMatch?.[1] || null;
+          const relStr = relativePath as string;
+          const isDirectory = relStr.endsWith('/');
+
+          let modelCount = 0;
+          let provider: string | null = null;
+
+          if (isDirectory) {
+            // Directory entry: read all .prisma files in the directory
+            const absDir = path.join(rootPath, relStr);
+            try {
+              const dirFiles = await fs.readdir(absDir);
+              const prismaFiles = dirFiles.filter(f => f.endsWith('.prisma'));
+              for (const pf of prismaFiles) {
+                const pfContent = await fs.readFile(path.join(absDir, pf), 'utf-8');
+                modelCount += (pfContent.match(/^model\s+/gm) || []).length;
+                if (!provider) {
+                  const pm = pfContent.match(/datasource\s+\w+\s*\{[^}]*provider\s*=\s*"(\w+)"/s);
+                  if (pm) provider = pm[1] || null;
+                }
+              }
+            } catch { /* directory read failed — skip candidate */ }
+          } else {
+            // File entry: read the anchor file
+            const absPath = path.join(rootPath, relStr);
+            const content = await fs.readFile(absPath, 'utf-8');
+            modelCount = (content.match(/^model\s+/gm) || []).length;
+            // Extract provider from anchor file
+            const providerMatch = content.match(/datasource\s+\w+\s*\{[^}]*provider\s*=\s*"(\w+)"/s);
+            provider = providerMatch?.[1] || null;
+            // Multi-file schema: count models + extract provider from siblings
+            const schemaDir = path.dirname(absPath);
+            try {
+              const siblings = await fs.readdir(schemaDir);
+              const prismaFiles = siblings.filter(f => f.endsWith('.prisma') && f !== path.basename(absPath));
+              for (const sibling of prismaFiles) {
+                const sibContent = await fs.readFile(path.join(schemaDir, sibling), 'utf-8');
+                modelCount += (sibContent.match(/^model\s+/gm) || []).length;
+                // Provider fallback: if anchor didn't have it, check siblings
+                if (!provider) {
+                  const pm = sibContent.match(/datasource\s+\w+\s*\{[^}]*provider\s*=\s*"(\w+)"/s);
+                  if (pm) provider = pm[1] || null;
+                }
+              }
+            } catch { /* directory read failed — use single-file count */ }
+          }
+
           if (!best || modelCount > best.modelCount) {
-            best = { path: relativePath as string, modelCount, provider };
+            best = { path: relStr, modelCount, provider };
           }
         }
         schemas['prisma'] = { found: true, path: best!.path, modelCount: best!.modelCount, provider: best!.provider };
