@@ -15,6 +15,28 @@ import type { EngineResult } from '../engine/types/engineResult.js';
 import { SCAFFOLD_MARKER } from '../constants.js';
 
 /**
+ * Select the primary schema across all detected ORMs by highest modelCount.
+ * When all modelCount are null, falls back to first-found (insertion order).
+ *
+ * @param schemas - EngineResult.schemas record
+ * @returns The best schema entry, or null if none found
+ */
+export function selectPrimarySchema(
+  schemas: EngineResult['schemas'],
+): { found: boolean; path: string | null; modelCount: number | null; provider?: string | null } | null {
+  return Object.values(schemas || {})
+    .filter(sc => sc?.found)
+    .sort((a, b) => {
+      const aCount = a?.modelCount;
+      const bCount = b?.modelCount;
+      if (aCount == null && bCount == null) return 0;
+      if (aCount == null) return 1;
+      if (bCount == null) return -1;
+      return bCount - aCount;
+    })[0] ?? null;
+}
+
+/**
  * Generate project-context.md scaffold (D6.6 format)
  *
  * Produces 6 sections with scan-seeded **Detected:** lines.
@@ -57,18 +79,7 @@ export function generateProjectContextScaffold(result: EngineResult): string {
   }
   if (result.stack.auth) descParts.push(`with authentication (${result.stack.auth})`);
   if (result.stack.database) {
-    // Select schema with highest modelCount. Null modelCount loses to any number;
-    // when all are null, first-found is preserved.
-    const schema = Object.values(result.schemas || {})
-      .filter(sc => sc?.found)
-      .sort((a, b) => {
-        const aCount = a?.modelCount;
-        const bCount = b?.modelCount;
-        if (aCount == null && bCount == null) return 0;
-        if (aCount == null) return 1;
-        if (bCount == null) return -1;
-        return bCount - aCount;
-      })[0];
+    const schema = selectPrimarySchema(result.schemas);
     const provider = schema?.provider ? ` → ${schema.provider}` : '';
     const models = schema?.modelCount ? `, ${schema.modelCount} models` : '';
     descParts.push(`database (${result.stack.database}${provider}${models})`);

@@ -24,6 +24,7 @@ import * as fs from 'node:fs/promises';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import type { EngineResult } from '../engine/types/engineResult.js';
 import { computeSkillManifest, CORE_SKILLS } from '../constants.js';
+import { selectPrimarySchema } from '../utils/scaffold-generators.js';
 
 /**
  * Display names imported from shared utility
@@ -107,20 +108,8 @@ function formatHumanReadable(
 
   // ── Helper: enrich database display with provider + model count ──
   function enrichDatabase(value: string): string {
-    // Select schema with highest modelCount across all ORMs.
-    // When all modelCount are null, fall back to first-found.
-    const schemaKey = Object.keys(result.schemas)
-      .filter(k => result.schemas[k]?.found)
-      .sort((a, b) => {
-        const aCount = result.schemas[a]?.modelCount;
-        const bCount = result.schemas[b]?.modelCount;
-        if (aCount == null && bCount == null) return 0;
-        if (aCount == null) return 1;
-        if (bCount == null) return -1;
-        return bCount - aCount;
-      })[0];
-    if (!schemaKey) return value;
-    const schema = result.schemas[schemaKey];
+    const schema = selectPrimarySchema(result.schemas);
+    if (!schema) return value;
     const providerNames: Record<string, string> = {
       postgresql: 'PostgreSQL', mysql: 'MySQL', sqlite: 'SQLite',
       mongodb: 'MongoDB', cockroachdb: 'CockroachDB', sqlserver: 'SQL Server',
