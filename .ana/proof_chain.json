@@ -133,7 +133,8 @@
         "verify-report": "sha256:10fed1db08ac629b7ffe1b4aa40d522f7efcba7841033bf070138287af94e9ea"
       },
       "seal_commit": "d9768360956896c440e3c69b5b9714832c291b03",
-      "completed_at": "2026-04-06T02:01:46.601Z"
+      "completed_at": "2026-04-06T02:01:46.601Z",
+      "callouts": []
     },
     {
       "slug": "add-project-kind-detection",
@@ -253,7 +254,68 @@
         "verify-report": "sha256:063a80e9be00b41bbd645344e4ac2bcc0447685f26bdad533d1b182e46622bdc"
       },
       "seal_commit": "c86a2a27307a5096cae61e49fd6c28f6bcce9d66",
-      "completed_at": "2026-04-16T01:24:02.438Z"
+      "completed_at": "2026-04-16T01:24:02.438Z",
+      "callouts": [
+        {
+          "id": "add-project-kind-detection-C1",
+          "category": "code",
+          "summary": "Dead logic in full-stack browser-dep check: `projectKind.ts:105` — `BROWSER_FRAMEWORKS.has(d)` will never match because dep names are npm packages (lowercase: `'react'`, `'vue'`) while the set contains PascalCase display names (`'React'`, `'Vue'`). The adjacent inline array on lines 106-107 handles the actual matching with lowercase package names. Harmless now, but if someone removes the fallback array trusting the Set, full-stack detection silently breaks. Consider removing `BROWSER_FRAMEWORKS.has(d) ||` from the expression, or normalizing to one casing.",
+          "file": "projectKind.ts",
+          "anchor": "BROWSER_FRAMEWORKS.has(d)"
+        },
+        {
+          "id": "add-project-kind-detection-C2",
+          "category": "code",
+          "summary": "Framework display-name coupling creates latent misclassification: `projectKind.ts:43-64` sets contain PascalCase display names, but the input comes from `getFrameworkDisplayName()` which falls back to raw lowercase keys for unmapped frameworks. Two currently-detectable frameworks would misclassify: Koa (`'koa'` ≠ `'Koa'` → would be library/unknown instead of api-server) and React Router (`'React Router'` not in BROWSER_FRAMEWORKS → would be unknown instead of web-app). Fix: either lowercase-normalize the sets and input, or add missing entries to `FRAMEWORK_DISPLAY_NAMES` in displayNames.ts.",
+          "file": "projectKind.ts",
+          "anchor": "getFrameworkDisplayName()"
+        },
+        {
+          "id": "add-project-kind-detection-C3",
+          "category": "code",
+          "summary": "Unused export `ProjectKindResult`: Exported from projectKind.ts:22-24 but never imported outside the file. `detectProjectKind` returns it, but scan-engine.ts accesses `.kind` directly without typing the intermediate. Minor — not harmful, but if the intent was a typed contract for consumers, nobody is consuming the type.",
+          "file": "projectKind.ts",
+          "anchor": "ProjectKindResult"
+        },
+        {
+          "id": "add-project-kind-detection-C4",
+          "category": "code",
+          "summary": "`hasMain` covers `main` AND `module`: scan-engine.ts:555 sets `hasMain = !!pkgRaw['main'] || !!pkgRaw['module']`. The variable name suggests only `main`. Consider `hasMainOrModule` for clarity, or split into separate booleans matching the spec's language (\"main, module, or exports\").",
+          "file": "scan-engine.ts",
+          "anchor": "hasMain"
+        },
+        {
+          "id": "add-project-kind-detection-C5",
+          "category": "test",
+          "summary": "A003 purity test is comment-fragile: projectKind.test.ts:187-193 reads the source file and asserts `not.toContain('node:fs')`. A future comment mentioning `node:fs` would cause a false failure. A regex-based import check (`/import.*from\\s+['\"]node:fs/`) would be more precise. Not broken, not urgent.",
+          "file": "projectKind.test.ts",
+          "anchor": "not.toContain('node:fs')"
+        },
+        {
+          "id": "add-project-kind-detection-C6",
+          "category": "test",
+          "summary": "No priority test for bin-over-framework or CLI-dep-over-framework: Tests cover bin-over-library (A013) and CLI-dep-over-library (A014), but don't test that `hasBin: true` + `frameworkName: 'Express'` returns `'cli'` (not `'api-server'`). The priority chain handles it correctly (bin check at line 85 returns before framework check at line 95), but no test proves it.",
+          "file": null,
+          "anchor": "hasBin: true"
+        },
+        {
+          "id": "add-project-kind-detection-C7",
+          "category": "upstream",
+          "summary": "Pre-check cross-feature tag collision: The previous round's pre-check reported A015 as COVERED because `@ana A015` existed in `proof.test.ts:296` from a different feature's contract. Pre-check doesn't scope tag searches to the current feature branch's file changes. This masked a real gap until manual review caught it. Worth noting for tooling improvement.",
+          "file": "proof.test.ts",
+          "anchor": "@ana A015"
+        }
+      ],
+      "build_concerns": [
+        {
+          "summary": "`module` folded into `hasMain` — The spec lists `main`/`module`/`exports` as three separate signals but the detector input has only `hasMain` and `hasExports`. I combined `main` and `module` into `hasMain` since both serve the same purpose (library entry point). If they need separate semantics later, the input interface would need a `hasModule` field.",
+          "file": null
+        },
+        {
+          "summary": "Turbo pipe hang — Running `pnpm run test -- --run 2>&1 | grep ...` from the workspace root caused hanging due to turbo's streaming output buffering. Tests must be run via `cd packages/cli && pnpm test -- --run` or without pipe filters. This is pre-existing infrastructure behavior, not introduced by this build. Verified complete by second pass.",
+          "file": null
+        }
+      ]
     },
     {
       "slug": "fix-skill-template-gaps",
@@ -333,7 +395,29 @@
       "seal_commit": null,
       "completed_at": "2026-04-16T22:36:55.334Z",
       "modules_touched": [],
-      "callouts": [],
+      "callouts": [
+        {
+          "id": "fix-skill-template-gaps-C1",
+          "category": "upstream",
+          "summary": "Contract assertions A007 and A008 were sealed with incorrect values. The planner counted 6 rules in coding-standards but main has 7. A007 says 6 rules, should say 7. A008 says 5 unchanged rules, should say 6 (7 - 1 modified = 6). The BUILD is correct — the contract is not.",
+          "file": null,
+          "anchor": null
+        },
+        {
+          "id": "fix-skill-template-gaps-C2",
+          "category": "code",
+          "summary": "The error-handling rule is now longer than the others (spans multiple sentences where most rules are one sentence + why). This is appropriate given the nuance being expressed, but worth noting as a slight voice deviation — the rule is more complex because the guidance is more complex.",
+          "file": null,
+          "anchor": null
+        },
+        {
+          "id": "fix-skill-template-gaps-C3",
+          "category": "test",
+          "summary": "No test coverage for template content. These are static files copied verbatim during init, so testing would require either snapshot tests or parsing the markdown. Current approach (visual inspection against spec) is reasonable for static templates. If templates grow more complex, consider adding a test that at least validates markdown structure.",
+          "file": null,
+          "anchor": null
+        }
+      ],
       "rejection_cycles": 0,
       "previous_failures": []
     },
@@ -442,29 +526,39 @@
       "modules_touched": [],
       "callouts": [
         {
+          "id": "monorepo-primary-agents-md-C1",
           "category": "code",
-          "summary": "Latent edge case with degenerate package paths: — assets.ts:575 `pkg.path.split('/').filter(Boolean).length` would produce incorrect relative paths for `\".\"` (depth 1 → `../AGENTS.md`) or `\"\"` (depth",
-          "file": "assets.ts"
+          "summary": "Latent edge case with degenerate package paths — assets.ts:575 `pkg.path.split('/').filter(Boolean).length` would produce incorrect relative paths for `\".\"` (depth 1 → `../AGENTS.md`) or `\"\"` (depth 0 → bare `AGENTS.md`). These values don't occur in practice — monorepo tools always produce subdirectory paths. Not a blocker, but if this function is ever reused for arbitrary paths, it would need a guard.",
+          "file": "assets.ts",
+          "anchor": "pkg.path.split('/').filter(Boolean).length"
         },
         {
+          "id": "monorepo-primary-agents-md-C2",
           "category": "code",
-          "summary": "Windows path separators in pkg.path: — assets.ts:575 splits on `/` only. If `pkg.path` somehow contained backslashes (e.g., from a Windows monorepo tool), the depth calculation would be wrong. Again u",
-          "file": "assets.ts"
+          "summary": "Windows path separators in pkg.path — assets.ts:575 splits on `/` only. If `pkg.path` somehow contained backslashes (e.g., from a Windows monorepo tool), the depth calculation would be wrong. Again unlikely in practice since the engine normalizes paths, but worth noting for cross-platform awareness.",
+          "file": "assets.ts",
+          "anchor": "pkg.path"
         },
         {
+          "id": "monorepo-primary-agents-md-C3",
           "category": "test",
-          "summary": "No integration test for call-site wiring: — The tests verify `generatePrimaryPackageAgentsMd` directly but don't test that `createClaudeConfiguration` actually calls it. The call sites at assets.ts:19",
-          "file": "assets.ts"
+          "summary": "No integration test for call-site wiring — The tests verify `generatePrimaryPackageAgentsMd` directly but don't test that `createClaudeConfiguration` actually calls it. The call sites at assets.ts:193 and 242 are verified by code reading only, not by a test that runs the full init flow. This is consistent with the project's existing pattern (the root `generateAgentsMd` also lacks an integration test for its call sites), so not a deviation — but the wiring is untested.",
+          "file": "assets.ts",
+          "anchor": "generatePrimaryPackageAgentsMd"
         },
         {
+          "id": "monorepo-primary-agents-md-C4",
           "category": "test",
-          "summary": "A006 assertion is weak for its contract: — The contract says the file \"points readers to the root AGENTS.md.\" The test checks `toContain('AGENTS.md')` and `toContain('Full Project Context')` separatel",
-          "file": "AGENTS.md"
+          "summary": "A006 assertion is weak for its contract — The contract says the file \"points readers to the root AGENTS.md.\" The test checks `toContain('AGENTS.md')` and `toContain('Full Project Context')` separately, but doesn't verify they appear together as a markdown link. The implementation does produce a proper link, but the test would pass even if the function just mentioned \"AGENTS.md\" in a comment. Minor — the A007/A008 tests for relative paths provide stronger evidence.",
+          "file": "AGENTS.md",
+          "anchor": "toContain('AGENTS.md')"
         },
         {
+          "id": "monorepo-primary-agents-md-C5",
           "category": "upstream",
-          "summary": "Contract A006 value is overly broad: — The contract assertion `matcher: contains, value: \"AGENTS.md\"` is too permissive. Every assertion in this test suite mentions AGENTS.md in some form. The value s",
-          "file": "AGENTS.md"
+          "summary": "Contract A006 value is overly broad — The contract assertion `matcher: contains, value: \"AGENTS.md\"` is too permissive. Every assertion in this test suite mentions AGENTS.md in some form. The value should have been `[AGENTS.md](` or similar to verify the markdown link specifically, not just the filename.",
+          "file": "AGENTS.md",
+          "anchor": "matcher: contains, value: \"AGENTS.md\""
         }
       ],
       "rejection_cycles": 0,
@@ -557,29 +651,39 @@
       "modules_touched": [],
       "callouts": [
         {
+          "id": "find-project-root-C1",
           "category": "code",
-          "summary": "`findProjectRoot` checks for `.ana/` directory existence (validators.ts:105), not `.ana/ana.json`. A stale `.ana/` directory containing only `state/` (like `packages/cli/src/.ana/`) causes the functio",
-          "file": "validators.ts"
+          "summary": "`findProjectRoot` checks for `.ana/` directory existence (validators.ts:105), not `.ana/ana.json`. A stale `.ana/` directory containing only `state/` (like `packages/cli/src/.ana/`) causes the function to return the wrong root. `readArtifactBranch` then fails with \"No .ana/ana.json found.\" Checking `fs.existsSync(path.join(current, '.ana', 'ana.json'))` would be more robust. Not a spec violation — the spec explicitly says \"looking for a directory containing `.ana/`\" — but a production fragility worth addressing in a future cycle.",
+          "file": "validators.ts",
+          "anchor": "findProjectRoot"
         },
         {
+          "id": "find-project-root-C2",
           "category": "code",
-          "summary": "`slugDir2` in artifact.ts saveArtifact (line ~708) renamed from `slugDir` to avoid shadowing the pre-check block's `slugDir` (line ~547). Symptom of a long function — cosmetic, not functional. Carried",
-          "file": "artifact.ts"
+          "summary": "`slugDir2` in artifact.ts saveArtifact (line ~708) renamed from `slugDir` to avoid shadowing the pre-check block's `slugDir` (line ~547). Symptom of a long function — cosmetic, not functional. Carried from previous cycles.",
+          "file": "artifact.ts",
+          "anchor": "slugDir2"
         },
         {
+          "id": "find-project-root-C3",
           "category": "test",
-          "summary": "A009 test at findProjectRoot.test.ts:90-95 is `expect(true).toBe(true)` — a tautology that passes regardless of suite health. The builder's comment claims \"if wiring broke existing tests, this file wo",
-          "file": "findProjectRoot.test.ts"
+          "summary": "A009 test at findProjectRoot.test.ts:90-95 is `expect(true).toBe(true)` — a tautology that passes regardless of suite health. The builder's comment claims \"if wiring broke existing tests, this file wouldn't reach execution,\" but Vitest executes test files independently. This test proves nothing. The suite-level result (1156 passed, 2 pre-existing failures) is the real evidence for A009, not this tagged test. Future contracts should express regression requirements as suite-run checks, not per-test tautologies.",
+          "file": "findProjectRoot.test.ts",
+          "anchor": "expect(true).toBe(true)"
         },
         {
+          "id": "find-project-root-C4",
           "category": "test",
-          "summary": "A007 test at findProjectRoot.test.ts:72-73 uses `typeof findProjectRoot === 'function'` — this passes for any function. The import statement at line 5 would throw `ERR_MODULE_NOT_FOUND` if the export",
-          "file": "findProjectRoot.test.ts"
+          "summary": "A007 test at findProjectRoot.test.ts:72-73 uses `typeof findProjectRoot === 'function'` — this passes for any function. The import statement at line 5 would throw `ERR_MODULE_NOT_FOUND` if the export didn't exist, which is the real verification. The typeof check adds no signal beyond the import.",
+          "file": "findProjectRoot.test.ts",
+          "anchor": "typeof findProjectRoot === 'function'"
         },
         {
+          "id": "find-project-root-C5",
           "category": "upstream",
-          "summary": "A009 as a contract assertion (\"all existing tests continue to pass\") is inherently untestable at the unit level. It's a suite-level property. Tagging a single test with `@ana A009` creates pressure to",
-          "file": null
+          "summary": "A009 as a contract assertion (\"all existing tests continue to pass\") is inherently untestable at the unit level. It's a suite-level property. Tagging a single test with `@ana A009` creates pressure to write a sentinel. Future contracts should either omit suite-level regression assertions or express them as \"test command exits 0\" verified during the build step, not as tagged tests.",
+          "file": null,
+          "anchor": "@ana A009"
         }
       ],
       "rejection_cycles": 1,
@@ -587,6 +691,20 @@
         {
           "id": "A009",
           "summary": "Sentinel test `expect(true).toBe(true)` + 4 proof.test.ts regressions"
+        }
+      ],
+      "build_concerns": [
+        {
+          "summary": "agents.test.ts fixture modification: Added `.ana/` directory creation to the `createAgentsDir` helper in `agents.test.ts`. Without this, `listAgents()` throws \"No .ana/ found\" because `findProjectRoot()` requires `.ana/` in the tree. This is fixture setup, not assertion weakening — the test assertions are unchanged. Documenting because AC9 says \"all existing tests pass without modification\" and this required a 1-line fixture addition.",
+          "file": "agents.test.ts"
+        },
+        {
+          "summary": "`slugDir2` still exists in `saveArtifact`: The rename from `slugDir` → `slugDir2` (line 705) exists because the first `slugDir` is block-scoped inside the verify-report pre-check `if`. Not harmful but a symptom of the function being too long. Not addressed — not in the verify report's blockers.",
+          "file": null
+        },
+        {
+          "summary": "A009 test is a meta-assertion: The test body is `expect(true).toBe(true)` — it documents that the suite passes rather than mechanically verifying it. This is the nature of the contract assertion (\"all existing tests continue to pass\") — it can only be verified at the suite level, not per-test. Verify report confirmed 1141 passed with no regressions. Verified complete by second pass.",
+          "file": null
         }
       ]
     },
@@ -803,9 +921,45 @@
       "seal_commit": null,
       "completed_at": "2026-04-16T23:57:17.961Z",
       "modules_touched": [],
-      "callouts": [],
+      "callouts": [
+        {
+          "id": "add-hook-detection-C1",
+          "category": "code",
+          "summary": "- **Component file heuristic may over-count:** confirmation.ts:797-811 `isComponentFile` excludes test files but includes any .tsx/.jsx/.vue file regardless of purpose. A file like `utils/formatters.tsx` would count as a component file, slightly inflating dominance percentages. Not blocking — dominance is still directionally correct. - **Nuxt detection deviates from spec:** Spec said to use regex on raw file content because ParsedFile.functions captures definitions not calls. Implementation uses import matching instead (confirmation.ts:885-888). This is actually MORE reliable — it won't match comments or strings. The deviation improves the implementation.",
+          "file": "confirmation.ts",
+          "anchor": "isComponentFile"
+        },
+        {
+          "id": "add-hook-detection-C2",
+          "category": "test",
+          "summary": "- **No @ana tags for 8 assertions:** A001-A003 (schema), A025-A028 (skills display), A029 (empty analysis) have no @ana tags. The functionality exists and is tested — but pre-check can't track coverage. Future cycles should add tags to: patterns.ts schema tests, skills.test.ts display tests. - **Dominance boundary tests use round numbers:** Tests use 40%, 20%, 5% which are safely inside boundaries. No tests at exact boundary (30%, 10%). The boundary behavior is correct per code inspection, but boundary tests would strengthen confidence.",
+          "file": "patterns.ts",
+          "anchor": null
+        },
+        {
+          "id": "add-hook-detection-C3",
+          "category": "upstream",
+          "summary": "- **Spec suggested regex but import matching is better:** The spec's concern about ParsedFile.functions was valid, but the suggested solution (regex) was suboptimal. Import matching is cleaner. This is a positive deviation but worth noting for future specs.",
+          "file": null,
+          "anchor": null
+        }
+      ],
       "rejection_cycles": 0,
-      "previous_failures": []
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "Nuxt auto-import via regex not implemented as specified: The spec called for regex scanning of raw file content for Nuxt composables. Implementation uses import-based detection instead because ParsedFile doesn't carry raw content. This means fully implicit Nuxt auto-imports (where no import statement exists at all) won't be detected. A follow-up could add raw content access to ParsedFile or a separate file-reading pass.",
+          "file": null
+        },
+        {
+          "summary": "Skills display not directly unit-tested: The `injectCodingStandards` function is private and tested only through integration paths. Contract assertions A025-A028 are satisfied by code structure but not independently verified via unit tests.",
+          "file": null
+        },
+        {
+          "summary": "Component file heuristic may miss some layouts: The `isComponentFile` check uses extensions (.tsx, .jsx, .vue) and directory names (components/, pages/, app/). Files in layouts/, views/, or sections/ directories without component extensions won't be counted, potentially understating dominance in some project structures. Verified complete by second pass.",
+          "file": null
+        }
+      ]
     },
     {
       "slug": "proof-chain-active-issues",
@@ -927,34 +1081,46 @@
       "modules_touched": [],
       "callouts": [
         {
+          "id": "proof-chain-active-issues-C1",
           "category": "code",
-          "summary": "Hard truncation at 100 characters without ellipsis: — proofSummary.ts:361 uses `substring(0, 100)` which can cut mid-word. Adding `+ '…'` when truncated would improve readability. Minor — the active i",
-          "file": "proofSummary.ts"
+          "summary": "Hard truncation at 100 characters without ellipsis — proofSummary.ts:361 uses `substring(0, 100)` which can cut mid-word. Adding `+ '…'` when truncated would improve readability. Minor — the active issues index is a developer tool, not user-facing output.",
+          "file": "proofSummary.ts",
+          "anchor": "substring(0, 100)"
         },
         {
+          "id": "proof-chain-active-issues-C2",
           "category": "code",
-          "summary": "File path segments lost in extractFileRefs: — proofSummary.ts:253 regex uses `\\b` word boundary which won't match after `/`. Callouts mentioning `src/utils/index.ts` will group under `index.ts`, poten",
-          "file": "proofSummary.ts"
+          "summary": "File path segments lost in extractFileRefs — proofSummary.ts:253 regex uses `\\b` word boundary which won't match after `/`. Callouts mentioning `src/utils/index.ts` will group under `index.ts`, potentially merging unrelated files from different directories. In practice, callout text from verify reports typically uses bare filenames (e.g., \"Dead logic in projectKind.ts:105\"), so this is dormant but worth knowing if callout format evolves.",
+          "file": "proofSummary.ts",
+          "anchor": "src/utils/index.ts"
         },
         {
+          "id": "proof-chain-active-issues-C3",
           "category": "code",
-          "summary": "ProofChain interface duplicated in three locations: — work.ts:661, proof.ts:29, and now proofSummary.ts has `ProofChainEntryForIndex`. The gotcha explicitly warned about this. The builder chose a narr",
-          "file": "work.ts"
+          "summary": "ProofChain interface duplicated in three locations — work.ts:661, proof.ts:29, and now proofSummary.ts has `ProofChainEntryForIndex`. The gotcha explicitly warned about this. The builder chose a narrow projection interface rather than importing the full type — defensible, but the duplication count is growing. Consider consolidating in a future cycle.",
+          "file": "work.ts",
+          "anchor": "ProofChainEntryForIndex"
         },
         {
+          "id": "proof-chain-active-issues-C4",
           "category": "test",
-          "summary": "A009 cap test doesn't verify WHICH callouts were dropped: — proofSummary.test.ts:550-564 creates 25 identical-structure callouts and asserts count is 20, but doesn't verify the 5 dropped are the oldes",
-          "file": "proofSummary.test.ts"
+          "summary": "A009 cap test doesn't verify WHICH callouts were dropped — proofSummary.test.ts:550-564 creates 25 identical-structure callouts and asserts count is 20, but doesn't verify the 5 dropped are the oldest. The separate \"takes most recent callouts when capping at 20\" test (line 691) does verify this. Together they provide full coverage, but A009 alone would pass even if the implementation kept the oldest instead of the newest.",
+          "file": "proofSummary.test.ts",
+          "anchor": null
         },
         {
+          "id": "proof-chain-active-issues-C5",
           "category": "test",
-          "summary": "A012 heading position test is fragile: — proofSummary.test.ts:606 asserts `output.indexOf('# Active Issues') === 0`. If the function ever adds a leading newline or BOM, this breaks. The contract says",
-          "file": "proofSummary.test.ts"
+          "summary": "A012 heading position test is fragile — proofSummary.test.ts:606 asserts `output.indexOf('# Active Issues') === 0`. If the function ever adds a leading newline or BOM, this breaks. The contract says \"contains\", but the test asserts position. Stricter than required — not wrong, but fragile.",
+          "file": "proofSummary.test.ts",
+          "anchor": "output.indexOf('# Active Issues') === 0"
         },
         {
+          "id": "proof-chain-active-issues-C6",
           "category": "upstream",
-          "summary": "Contract seal was UNVERIFIABLE: — no `seal_commit` was saved for this contract. This means we can't mechanically verify the contract wasn't modified after planning. Not a blocker for this cycle, but t",
-          "file": null
+          "summary": "Contract seal was UNVERIFIABLE — no `seal_commit` was saved for this contract. This means we can't mechanically verify the contract wasn't modified after planning. Not a blocker for this cycle, but the seal infrastructure should record commits for all contracts.",
+          "file": null,
+          "anchor": "seal_commit"
         }
       ],
       "rejection_cycles": 0,
@@ -1145,29 +1311,39 @@
       "modules_touched": [],
       "callouts": [
         {
+          "id": "add-readme-extraction-C1",
           "category": "code",
-          "summary": "`truncate` word-boundary behavior for CJK: — readme.ts:65-69. When text has no spaces before `cap`, falls back to hard-cut at `cap` characters. Correct for Latin text; may split mid-character for CJK",
-          "file": "readme.ts"
+          "summary": "`truncate` word-boundary behavior for CJK — readme.ts:65-69. When text has no spaces before `cap`, falls back to hard-cut at `cap` characters. Correct for Latin text; may split mid-character for CJK content. Not a blocker — CJK READMEs typically have spaces around headings and code blocks.",
+          "file": "readme.ts",
+          "anchor": "truncate"
         },
         {
+          "id": "add-readme-extraction-C2",
           "category": "code",
-          "summary": "A009 contract deviation: — Contract specifies `value: 5000` for total cap. Implementation now uses 4000 to make the cap reachable. The original 5000 was unreachable dead code (3 × 1500 = 4500 < 5000).",
-          "file": null
+          "summary": "A009 contract deviation — Contract specifies `value: 5000` for total cap. Implementation now uses 4000 to make the cap reachable. The original 5000 was unreachable dead code (3 × 1500 = 4500 < 5000). Lowering to 4000 makes `applyTotalCap` a real constraint. The contract's `says` field (\"capped at 5000 characters\") is now technically inaccurate — the actual cap is 4000. Scope/plan documents reference 5000. This is a justified deviation.",
+          "file": null,
+          "anchor": "value: 5000"
         },
         {
+          "id": "add-readme-extraction-C3",
           "category": "test",
-          "summary": "A014 monorepo test verifies intent not mechanism: — readme.test.ts:157-171. `detectReadme(tmpDir)` has no monorepo concept — it reads from the path it's given. The test proves scan-engine's decision t",
-          "file": "readme.test.ts"
+          "summary": "A014 monorepo test verifies intent not mechanism — readme.test.ts:157-171. `detectReadme(tmpDir)` has no monorepo concept — it reads from the path it's given. The test proves scan-engine's decision to pass rootPath is correct, but the test would pass even without a packages directory. Architecturally sound — just noting the test boundary.",
+          "file": "readme.test.ts",
+          "anchor": "detectReadme(tmpDir)"
         },
         {
+          "id": "add-readme-extraction-C4",
           "category": "test",
-          "summary": "A004 tests serialization, not e2e scan: — readme.test.ts:69-84. The test verifies the ReadmeResult serializes correctly to JSON, not that `ana scan --json` produces the field in CLI output. An e2e tes",
-          "file": "readme.test.ts"
+          "summary": "A004 tests serialization, not e2e scan — readme.test.ts:69-84. The test verifies the ReadmeResult serializes correctly to JSON, not that `ana scan --json` produces the field in CLI output. An e2e test would be stronger but requires a built binary with a fixture project. The unit test is sufficient given the field is wired in scan-engine.ts and the contract test validates field presence.",
+          "file": "readme.test.ts",
+          "anchor": "ana scan --json"
         },
         {
+          "id": "add-readme-extraction-C5",
           "category": "upstream",
-          "summary": "Contract A009 value should be updated: — The contract still says `value: 5000` but the implementation is 4000. If the contract is re-sealed in the future, update the value.",
-          "file": null
+          "summary": "Contract A009 value should be updated — The contract still says `value: 5000` but the implementation is 4000. If the contract is re-sealed in the future, update the value.",
+          "file": null,
+          "anchor": "value: 5000"
         }
       ],
       "rejection_cycles": 1,
@@ -1179,6 +1355,20 @@
         {
           "id": "A009",
           "summary": "Sentinel test — total cap never triggered, matcher mismatch"
+        }
+      ],
+      "build_concerns": [
+        {
+          "summary": "Contract test modified: `analyzer-contract.test.ts` had `readme` added to its expected keys list. This is a necessary update (not a weakened assertion) since the test validates field completeness — but the verifier should confirm the change is proportional.",
+          "file": "analyzer-contract.test.ts"
+        },
+        {
+          "summary": "A004 tested indirectly: The \"scan JSON output includes readme field\" assertion isn't tested via an end-to-end `ana scan --json` call. It's covered by type system guarantees (the field exists on EngineResult, the factory populates it, scan-engine assigns it). A manual `ana scan --json` on a project with a README would confirm.",
+          "file": null
+        },
+        {
+          "summary": "README detection on case-sensitive filesystems: The variant list is explicit (`README.md`, `readme.md`, `Readme.md`, `README`) rather than doing a case-insensitive directory listing. Unusual variants like `ReadMe.md` or `readme.MD` won't match. This is intentional per the spec but worth noting. Verified complete by second pass.",
+          "file": "README.md"
         }
       ]
     },
@@ -1297,28 +1487,42 @@
       ],
       "callouts": [
         {
+          "id": "add-callout-file-field-C1",
           "category": "code",
-          "summary": "File extraction runs on truncated summary: `proofSummary.ts:412-415` — `extractFileRefs` is called on `summary` after `substring(0, 200).trim()`. If a callout's only file reference appears after chara",
-          "file": "proofSummary.ts"
+          "summary": "File extraction runs on truncated summary: `proofSummary.ts:412-415` — `extractFileRefs` is called on `summary` after `substring(0, 200).trim()`. If a callout's only file reference appears after character 200, `file` will be null. Practically unlikely (AnaVerify format puts file refs in the first ~80 chars), but the stored `file` is permanently null for those cases — unlike the old re-derivation approach where fixing the regex would fix all callouts. Design trade-off the spec intended, but worth knowing.",
+          "file": "proofSummary.ts",
+          "anchor": "extractFileRefs"
         },
         {
+          "id": "add-callout-file-field-C2",
           "category": "code",
-          "summary": "`@ana A012` tag misplaced: `proofSummary.test.ts:324` — Tag `@ana A012` (\"extractFileRefs tests unchanged\") is on the `parseCallouts` describe block, not the `extractFileRefs` describe block at line 6",
-          "file": "proofSummary.test.ts"
+          "summary": "`@ana A012` tag misplaced: `proofSummary.test.ts:324` — Tag `@ana A012` (\"extractFileRefs tests unchanged\") is on the `parseCallouts` describe block, not the `extractFileRefs` describe block at line 602. Pre-check counts it as COVERED since the tag exists in the file. Verified independently via diff, but the tag's semantic placement is wrong. A future tag-only search would find A012 covering parseCallouts, not extractFileRefs.",
+          "file": "proofSummary.test.ts",
+          "anchor": "@ana A012"
         },
         {
+          "id": "add-callout-file-field-C3",
           "category": "test",
-          "summary": "A009 backfill verification is indirect: `proofSummary.test.ts:748-763` — The `@ana A009` tag is on the \"respects 20-callout cap\" test, which exercises `file` fields in the cap logic. It doesn't direct",
-          "file": "proofSummary.test.ts"
+          "summary": "A009 backfill verification is indirect: `proofSummary.test.ts:748-763` — The `@ana A009` tag is on the \"respects 20-callout cap\" test, which exercises `file` fields in the cap logic. It doesn't directly verify that proof_chain.json was backfilled. The backfill was verified manually by reading the diff. A direct test (e.g., reading proof_chain.json and asserting every callout has `file`) would be more robust, but the migration is a one-time operation and the backfill is already committed.",
+          "file": "proofSummary.test.ts",
+          "anchor": "@ana A009"
         },
         {
+          "id": "add-callout-file-field-C4",
           "category": "upstream",
-          "summary": "Known extractFileRefs limitation propagated to stored data: The existing regex limitation where `findProjectRoot.test.ts` extracts as `test.ts` (dotted filenames lose their prefix) is now permanently",
-          "file": "findProjectRoot.test.ts"
+          "summary": "Known extractFileRefs limitation propagated to stored data: The existing regex limitation where `findProjectRoot.test.ts` extracts as `test.ts` (dotted filenames lose their prefix) is now permanently stored in proof_chain.json `file` fields. Previously, a regex fix in `extractFileRefs` would retroactively fix all groupings. Now the incorrect `file: \"test.ts\"` values are baked into the data. If `extractFileRefs` is ever fixed, a second backfill of proof_chain.json would be needed. This was already flagged in the proof chain active issues index cycle.",
+          "file": "findProjectRoot.test.ts",
+          "anchor": "findProjectRoot.test.ts"
         }
       ],
       "rejection_cycles": 0,
-      "previous_failures": []
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "`extractFileRefs` cannot parse dotted test filenames: `projectKind.test.ts` is extracted as `test.ts` because the regex `[a-zA-Z0-9_-]+\\.(?:tsx|ts|...)` matches \"test.ts\" as a substring — the first `.` after \"projectKind\" isn't followed by a valid extension. This is pre-existing behavior (not introduced by this build) but it means `file` values for callouts mentioning `*.test.ts` files without directory prefixes will be `test.ts` instead of the full filename. Callouts with directory prefixes like `src/utils/proofSummary.test.ts` work correctly because the path prefix regex consumes the leading segments. Verified complete by second pass.",
+          "file": "projectKind.test.ts"
+        }
+      ]
     },
     {
       "slug": "fix-prisma-schema-detection",
@@ -1431,33 +1635,53 @@
       ],
       "callouts": [
         {
+          "id": "fix-prisma-schema-detection-C1",
           "category": "code",
-          "summary": "First-provider-wins with no conflict detection: `scan-engine.ts:313` and `scan-engine.ts:337` — both directory and sibling handlers use `if (!provider)` to take the first datasource block found. If a",
-          "file": "scan-engine.ts"
+          "summary": "First-provider-wins with no conflict detection: `scan-engine.ts:313` and `scan-engine.ts:337` — both directory and sibling handlers use `if (!provider)` to take the first datasource block found. If a `.prisma` directory contains conflicting provider declarations (theoretically invalid Prisma, but possible in a broken project), the scanner silently picks whichever file `readdir` returns first. File system ordering is non-deterministic on some platforms. Acceptable because Prisma itself rejects multiple datasource blocks, but the scanner's behavior would be platform-dependent on malformed input.",
+          "file": "scan-engine.ts",
+          "anchor": "if (!provider)"
         },
         {
+          "id": "fix-prisma-schema-detection-C2",
           "category": "code",
-          "summary": "Census directory check is non-recursive: `census.ts:219` — `readdirSync(prismaDir)` only checks top-level entries. The second fallback glob `/prisma/*.prisma` in `scan-engine.ts:289` is also one level",
-          "file": "census.ts"
+          "summary": "Census directory check is non-recursive: `census.ts:219` — `readdirSync(prismaDir)` only checks top-level entries. The second fallback glob `/prisma/*.prisma` in `scan-engine.ts:289` is also one level deep. A `prisma/subdir/models.prisma` layout would be missed by both paths. No known Prisma project uses nested subdirectories within the Prisma folder, but this is a documented gap.",
+          "file": "census.ts",
+          "anchor": "readdirSync(prismaDir)"
         },
         {
+          "id": "fix-prisma-schema-detection-C3",
           "category": "test",
-          "summary": "SQL-only edge case tests indirect path: `scanProject.test.ts:210` — The test creates `prisma/migrations/001_init.sql`. Census's `readdirSync('prisma/')` sees `['migrations']` — a directory name, not a",
-          "file": "scanProject.test.ts"
+          "summary": "SQL-only edge case tests indirect path: `scanProject.test.ts:210` — The test creates `prisma/migrations/001_init.sql`. Census's `readdirSync('prisma/')` sees `['migrations']` — a directory name, not a `.sql` file. The test passes because no direct `.prisma` files exist in `prisma/`, not because it explicitly filters `.sql` files. A more direct test would place `.sql` files directly in `prisma/` (e.g., `prisma/seed.sql`). The current test still validates the contract (A010, A011) correctly, but tests the directory-name-filter path, not the extension-filter path.",
+          "file": "scanProject.test.ts",
+          "anchor": "prisma/migrations/001_init.sql"
         },
         {
+          "id": "fix-prisma-schema-detection-C4",
           "category": "test",
-          "summary": "A009 uses weak matcher when specific value is known: `scanProject.test.ts:199` — `toBeGreaterThan(0)` when the test fixture has exactly 2 models. The contract specifies `greater: 0`, so the test match",
-          "file": "scanProject.test.ts"
+          "summary": "A009 uses weak matcher when specific value is known: `scanProject.test.ts:199` — `toBeGreaterThan(0)` when the test fixture has exactly 2 models. The contract specifies `greater: 0`, so the test matches the contract. But `toBe(2)` would catch regressions that `toBeGreaterThan(0)` wouldn't (e.g., if sibling counting broke and only returned 1 model).",
+          "file": "scanProject.test.ts",
+          "anchor": "toBeGreaterThan(0)"
         },
         {
+          "id": "fix-prisma-schema-detection-C5",
           "category": "upstream",
-          "summary": "A002 uses `contains` matcher, allows ambiguous match: Contract A002 says `target: schemas.prisma.path, matcher: contains, value: \"schema.prisma\"`. Both candidates (`prisma/schema.prisma` and `schema.p",
-          "file": null
+          "summary": "A002 uses `contains` matcher, allows ambiguous match: Contract A002 says `target: schemas.prisma.path, matcher: contains, value: \"schema.prisma\"`. Both candidates (`prisma/schema.prisma` and `schema.prisma`) contain `\"schema.prisma\"`. The test passes regardless of which candidate wins — it can't distinguish them. The modelCount assertion (A001) indirectly proves the right candidate won, but A002 alone doesn't verify path correctness. A more precise value like `\"prisma/schema.prisma\"` would be unambiguous.",
+          "file": null,
+          "anchor": "contains"
         }
       ],
       "rejection_cycles": 0,
-      "previous_failures": []
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "A010 assertion ambiguity: Contract A010 uses `matcher: \"exists\"` on `schemas.prisma` without specifying a value. Interpreted as \"the key exists in the schemas object\" (it does — with `found: false`). The test asserts `schemas.prisma` is defined AND `found` is false (A011). If the contract intended `exists: false` (key should NOT exist), the test would need adjustment — but `found: false` is consistent with how the codebase handles \"dependency present, schema not found\" throughout scan-engine.",
+          "file": null
+        },
+        {
+          "summary": "Readdir ordering: Directory entry provider extraction depends on `fs.readdir` order (platform-dependent). In practice this is fine since a Prisma project should have exactly one datasource block across all files. If multiple datasource blocks existed with different providers, the first alphabetically would win. Not a real-world concern but worth noting. Verified complete by second pass.",
+          "file": null
+        }
+      ]
     },
     {
       "slug": "fix-drizzle-schema-detection",
@@ -1607,38 +1831,64 @@
       ],
       "callouts": [
         {
+          "id": "fix-drizzle-schema-detection-C1",
           "category": "code",
-          "summary": "`drizzle-dialect` overloads SchemaFileEntry semantics: `census.ts:267-274` — The `orm: 'drizzle-dialect'` entry stores the dialect string in the `path` field, which is semantically a file path. This w",
-          "file": "census.ts"
+          "summary": "`drizzle-dialect` overloads SchemaFileEntry semantics: `census.ts:267-274` — The `orm: 'drizzle-dialect'` entry stores the dialect string in the `path` field, which is semantically a file path. This works because the type is `string` and scan-engine filters by orm name, but a future developer reading `SchemaFileEntry.path` won't expect it to contain `'postgresql'`. Consider a dedicated field or a separate return channel in a future cycle.",
+          "file": "census.ts",
+          "anchor": "drizzle-dialect"
         },
         {
+          "id": "fix-drizzle-schema-detection-C2",
           "category": "code",
-          "summary": "Consumer sort logic duplicated in two files: `scan.ts:112-121` and `scaffold-generators.ts:62-71` — Identical 10-line sort comparator handling null modelCount values. The spec suggested extraction \"if",
-          "file": "scan.ts"
+          "summary": "Consumer sort logic duplicated in two files: `scan.ts:112-121` and `scaffold-generators.ts:62-71` — Identical 10-line sort comparator handling null modelCount values. The spec suggested extraction \"if the logic is more than a few lines.\" A shared `selectBestSchema(schemas)` helper would prevent divergence if the selection logic evolves.",
+          "file": "scan.ts",
+          "anchor": "selectBestSchema(schemas)"
         },
         {
+          "id": "fix-drizzle-schema-detection-C3",
           "category": "code",
-          "summary": "Config regex can match comments: `census.ts:251` — `schema\\s*:\\s*[\"']([^\"']+)[\"']` would match a commented-out `// schema: \"old/path\"`. In practice, Drizzle config files are small and rarely have comm",
-          "file": "census.ts"
+          "summary": "Config regex can match comments: `census.ts:251` — `schema\\s*:\\s*[\"']([^\"']+)[\"']` would match a commented-out `// schema: \"old/path\"`. In practice, Drizzle config files are small and rarely have commented schema fields, and this is the same pattern used for Prisma extraction. Flagging for awareness, not action.",
+          "file": "census.ts",
+          "anchor": "schema\\s*:\\s*[\"']([^\"']+)[\"']"
         },
         {
+          "id": "fix-drizzle-schema-detection-C4",
           "category": "test",
-          "summary": "A017 doesn't exercise null-modelCount comparison: `scanProject.test.ts:549-566` — Contract says \"when all schemas have unknown model counts, the first found is used.\" Test uses Supabase which gets `mo",
-          "file": "scanProject.test.ts"
+          "summary": "A017 doesn't exercise null-modelCount comparison: `scanProject.test.ts:549-566` — Contract says \"when all schemas have unknown model counts, the first found is used.\" Test uses Supabase which gets `modelCount: 1` from SQL, not null. The null-comparison branch (`aCount == null && bCount == null`) in both consumers is exercised only when multiple ORMs all have null counts — this test has one ORM with a real count. The builder's comment at line 550-552 acknowledges the limitation.",
+          "file": "scanProject.test.ts",
+          "anchor": "modelCount: 1"
         },
         {
+          "id": "fix-drizzle-schema-detection-C5",
           "category": "test",
-          "summary": "A016 verifies precondition, not consumer output: `scanProject.test.ts:523-545` — The test proves Drizzle has more models than Prisma, but doesn't verify that `enrichDatabase()` or `generateProjectCont",
-          "file": "scanProject.test.ts"
+          "summary": "A016 verifies precondition, not consumer output: `scanProject.test.ts:523-545` — The test proves Drizzle has more models than Prisma, but doesn't verify that `enrichDatabase()` or `generateProjectContextMd()` actually selects Drizzle. The consumer logic is correct by code inspection (sort descending, take first), but the test path stops at model counts rather than consumer output.",
+          "file": "scanProject.test.ts",
+          "anchor": "enrichDatabase()"
         },
         {
+          "id": "fix-drizzle-schema-detection-C6",
           "category": "upstream",
-          "summary": "A004/A013 test fixture imports sqliteTable but claims \"no table helpers\": `scanProject.test.ts:331-332` — The schema file has `import { sqliteTable } from 'drizzle-orm/sqlite-core'` but the comment sa",
-          "file": "scanProject.test.ts"
+          "summary": "A004/A013 test fixture imports sqliteTable but claims \"no table helpers\": `scanProject.test.ts:331-332` — The schema file has `import { sqliteTable } from 'drizzle-orm/sqlite-core'` but the comment says \"Intentionally no pgTable/mysqlTable — dialect should be the fallback.\" The regex looks for `sqliteTable\\s*\\(` (with paren), so the import alone doesn't count. Technically correct, but the import line misleads the next reader.",
+          "file": "scanProject.test.ts",
+          "anchor": "import { sqliteTable } from 'drizzle-orm/sqlite-core'"
         }
       ],
       "rejection_cycles": 0,
-      "previous_failures": []
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "A017 coverage is partial: The null-null modelCount sort branch is not exercised by an integration test with two competing ORMs. The sort logic is simple (returns 0 for null == null, preserving insertion order), but a dedicated test with mocked schema results would be stronger evidence. Noted for verifier assessment.",
+          "file": null
+        },
+        {
+          "summary": "Census dialect as sentinel entry: Using `orm: 'drizzle-dialect'` is a pragmatic workaround for the \"no new fields on SchemaFileEntry\" constraint. It works because scan-engine is the only consumer and filters by orm value. If other code iterates census schemas expecting only real ORMs, this sentinel could cause confusion. The spec explicitly required no type changes, so this is the least-invasive path.",
+          "file": null
+        },
+        {
+          "summary": "Array/directory config values not handled: The spec noted that array and directory forms of the `schema` field in drizzle.config are extracted as raw strings and resolved by scan-engine. The current regex only extracts single-string values (e.g., `schema: './src/db/schema.ts'`). Array syntax (`schema: ['./src/db/auth.ts', './src/db/posts.ts']`) is not extracted — these projects fall through to glob fallback, which will find them if they match the glob patterns. The spec explicitly accepted this as an acceptable limitation. Verified complete by second pass.",
+          "file": "./src/db/schema.ts"
+        }
+      ]
     }
   ]
 }

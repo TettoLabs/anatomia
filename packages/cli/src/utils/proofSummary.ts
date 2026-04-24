@@ -67,9 +67,10 @@ export interface ProofSummary {
   seal_commit: string | null;
   completed_at: string;
   // S23 pipeline hardening — intelligence capture
-  callouts: Array<{ category: string; summary: string; file: string | null }>;
+  callouts: Array<{ category: string; summary: string; file: string | null; anchor: string | null }>;
   rejection_cycles: number;
   previous_failures: Array<{ id: string; summary: string }>;
+  build_concerns?: Array<{ summary: string; file: string | null }>;
 }
 
 /**
@@ -234,6 +235,52 @@ function parseDeviations(content: string): ProofDeviation[] {
 }
 
 /**
+ * Parse build report's ## Open Issues section.
+ *
+ * Extracts Build's self-reported concerns. Format: bold title + colon + description,
+ * numbered or bulleted. Returns empty array when section says "None" or is missing.
+ *
+ * @param content - Build report content
+ * @returns Array of { summary, file } for each open issue
+ */
+export function parseBuildOpenIssues(content: string): Array<{ summary: string; file: string | null }> {
+  const results: Array<{ summary: string; file: string | null }> = [];
+
+  const sectionMatch = content.match(/## Open Issues\n([\s\S]*?)(?=\n## |$)/);
+  if (!sectionMatch || !sectionMatch[1]) return results;
+
+  const section = sectionMatch[1].trim();
+  if (section.startsWith('None')) return results;
+
+  // Match bold-prefixed list items and join continuation lines
+  const lines = section.split('\n');
+  let current: string | null = null;
+
+  const flush = () => {
+    if (current) {
+      const summary = current.replace(/\*\*/g, '').substring(0, 1000).trim();
+      if (summary) {
+        const fileRefs = extractFileRefs(summary);
+        results.push({ summary, file: fileRefs[0] ?? null });
+      }
+    }
+    current = null;
+  };
+
+  for (const line of lines) {
+    if (line.match(/^[-*\d.]+\s+\*\*/)) {
+      flush();
+      current = line.replace(/^[-*\d.]+\s+/, '');
+    } else if (current && line.trim() && !line.startsWith('#')) {
+      current += ' ' + line.trim();
+    }
+  }
+  flush();
+
+  return results;
+}
+
+/**
  * Extract file references from callout summary text.
  *
  * Matches patterns like:
@@ -280,7 +327,7 @@ interface CalloutWithFeature {
 interface ProofChainEntryForIndex {
   feature: string;
   completed_at: string;
-  callouts?: Array<{ category: string; summary: string; file: string | null }>;
+  callouts?: Array<{ id: string; category: string; summary: string; file: string | null; anchor: string | null }>;
 }
 
 /**
@@ -363,11 +410,11 @@ export function generateActiveIssuesMarkdown(entries: ProofChainEntryForIndex[])
     md += `## ${fileName}\n\n`;
 
     for (const callout of callouts) {
-      // Truncate summary to ~100 chars for index display (JSON keeps full text)
+      // Truncate summary for index display (JSON keeps full text up to 1000 chars)
       let truncatedSummary = callout.summary;
-      if (truncatedSummary.length > 100) {
-        const lastSpace = truncatedSummary.lastIndexOf(' ', 100);
-        const cutPoint = lastSpace > 0 ? lastSpace : 100;
+      if (truncatedSummary.length > 250) {
+        const lastSpace = truncatedSummary.lastIndexOf(' ', 250);
+        const cutPoint = lastSpace > 0 ? lastSpace : 250;
         truncatedSummary = truncatedSummary.substring(0, cutPoint) + '...';
       }
       md += `- **${callout.category}:** ${truncatedSummary} — *${callout.feature}*\n`;
@@ -392,10 +439,10 @@ export function generateActiveIssuesMarkdown(entries: ProofChainEntryForIndex[])
  *   - `1. **Title:** desc` (numbered, no category — defaults to "code")
  *
  * @param content - Verify report content
- * @returns Array of { category, summary }
+ * @returns Array of { category, summary, file, anchor } (id assigned later by writeProofChain)
  */
-export function parseCallouts(content: string): Array<{ category: string; summary: string; file: string | null }> {
-  const results: Array<{ category: string; summary: string; file: string | null }> = [];
+export function parseCallouts(content: string): Array<{ category: string; summary: string; file: string | null; anchor: string | null }> {
+  const results: Array<{ category: string; summary: string; file: string | null; anchor: string | null }> = [];
 
   // Find ## Callouts section
   const calloutsMatch = content.match(/## Callouts\n([\s\S]*?)(?=\n## |$)/);
@@ -409,10 +456,15 @@ export function parseCallouts(content: string): Array<{ category: string; summar
 
   const flushCallout = () => {
     if (currentCategory && currentSummary.length > 0) {
-      const summary = currentSummary.join(' ').trim().substring(0, 200).trim();
+      const summary = currentSummary.join(' ').trim().substring(0, 1000).trim();
       if (summary) {
         const fileRefs = extractFileRefs(summary);
-        results.push({ category: currentCategory, summary, file: fileRefs[0] ?? null });
+        // Extract code anchor: first backtick-quoted construct >5 chars with a letter, not a file:line ref
+        const backticks = [...summary.matchAll(/`([^`]+)`/g)].map(m => m[1]).filter((b): b is string => b !== undefined);
+        const anchor = backticks.find(b =>
+          b.length > 5 && /[a-zA-Z]/.test(b) && !b.match(/^\S+\.\w+:\d+/)
+        ) ?? null;
+        results.push({ category: currentCategory, summary, file: fileRefs[0] ?? null, anchor });
       }
     }
     currentSummary = [];
@@ -699,12 +751,13 @@ export function generateProofSummary(slugDir: string): ProofSummary {
     }
   }
 
-  // Source 4: build_report.md (for deviations)
+  // Source 4: build_report.md (for deviations and build concerns)
   const buildPath = path.join(slugDir, 'build_report.md');
   if (fs.existsSync(buildPath)) {
     try {
       const buildContent = fs.readFileSync(buildPath, 'utf-8');
       summary.deviations = parseDeviations(buildContent);
+      summary.build_concerns = parseBuildOpenIssues(buildContent);
     } catch {
       // Continue with defaults
     }

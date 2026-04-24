@@ -793,9 +793,13 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
     seal_commit: proof.seal_commit,
     completed_at: new Date().toISOString(),
     modules_touched: modulesTouched,
-    callouts: proof.callouts,
+    callouts: proof.callouts.map((c, i) => ({
+      ...c,
+      id: `${slug}-C${i + 1}`,
+    })),
     rejection_cycles: proof.rejection_cycles,
     previous_failures: proof.previous_failures,
+    ...(proof.build_concerns && proof.build_concerns.length > 0 ? { build_concerns: proof.build_concerns } : {}),
   };
 
   chain.entries.push(entry);
