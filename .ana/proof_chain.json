@@ -1181,6 +1181,144 @@
           "summary": "Sentinel test — total cap never triggered, matcher mismatch"
         }
       ]
+    },
+    {
+      "slug": "add-callout-file-field",
+      "feature": "Add file field to proof chain callouts",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 14,
+        "covered": 14,
+        "uncovered": 0,
+        "satisfied": 14,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Parsing a callout that mentions a file stores that file reference",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "Parsing a callout without any file reference stores null",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "When a callout mentions multiple files, only the first is stored",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "The callout type includes a file field",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "Active Issues groups callouts by stored file field, not by re-parsing",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "Callouts without a file reference appear under General",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "The renderer does not call extractFileRefs to determine grouping",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "The file extraction function remains available for other uses",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "Every existing callout in the proof chain has a file field after migration",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "All existing parseCallouts tests still pass with updated assertions",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "All existing generateActiveIssuesMarkdown tests still pass",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "The extractFileRefs tests are completely unchanged",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "The 20-callout cap still works correctly with the new file field",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "File headings are still sorted alphabetically with General last",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 8,
+        "met": 8
+      },
+      "timing": {
+        "total_minutes": 42,
+        "think": 10,
+        "plan": 10,
+        "build": 17,
+        "verify": 15
+      },
+      "hashes": {
+        "scope": "sha256:1848605c8a99b237174deda2053f8aa833755b6c8fa212a19599d7f7c3f742d1",
+        "contract": "sha256:70f1805eeba99653a6e7d1c50d5f1e2e44c23062f78bb7fcd58b346bfe55e85c",
+        "build-report": "sha256:b1e3de41d2e714f568d08e4104766510a291c401fe4d2ccd1f4cb61ec5e3d1cd",
+        "verify-report": "sha256:7b456425b13e61d7e829c50438c21a424985b3ce7f84cdada82da35bc98f2e94"
+      },
+      "seal_commit": "b57982989133a5deae97d53ba575573d849756c7",
+      "completed_at": "2026-04-24T00:10:33.977Z",
+      "modules_touched": [
+        ".claude/agents/ana.md",
+        "packages/cli/src/types/proof.ts",
+        "packages/cli/src/utils/proofSummary.ts",
+        "packages/cli/tests/utils/proofSummary.test.ts"
+      ],
+      "callouts": [
+        {
+          "category": "code",
+          "summary": "File extraction runs on truncated summary: `proofSummary.ts:412-415` — `extractFileRefs` is called on `summary` after `substring(0, 200).trim()`. If a callout's only file reference appears after chara",
+          "file": "proofSummary.ts"
+        },
+        {
+          "category": "code",
+          "summary": "`@ana A012` tag misplaced: `proofSummary.test.ts:324` — Tag `@ana A012` (\"extractFileRefs tests unchanged\") is on the `parseCallouts` describe block, not the `extractFileRefs` describe block at line 6",
+          "file": "test.ts"
+        },
+        {
+          "category": "test",
+          "summary": "A009 backfill verification is indirect: `proofSummary.test.ts:748-763` — The `@ana A009` tag is on the \"respects 20-callout cap\" test, which exercises `file` fields in the cap logic. It doesn't direct",
+          "file": "test.ts"
+        },
+        {
+          "category": "upstream",
+          "summary": "Known extractFileRefs limitation propagated to stored data: The existing regex limitation where `findProjectRoot.test.ts` extracts as `test.ts` (dotted filenames lose their prefix) is now permanently",
+          "file": "test.ts"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": []
     }
   ]
 }
