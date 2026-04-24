@@ -1458,6 +1458,187 @@
       ],
       "rejection_cycles": 0,
       "previous_failures": []
+    },
+    {
+      "slug": "fix-drizzle-schema-detection",
+      "feature": "Fix Drizzle schema detection",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 20,
+        "covered": 20,
+        "uncovered": 0,
+        "satisfied": 20,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Drizzle config file discovery finds the schema path from the config",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "Config-driven discovery works with defineConfig wrapper syntax",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Config discovery works across config file extensions",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "The database dialect from config becomes the detected provider",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "Schema files are found by glob when no config file exists",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "Glob fallback locates the correct schema file path",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "Table definitions in schema files are counted as models",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "A schema file with no table definitions reports zero models",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "MySQL table definitions are counted alongside PostgreSQL ones",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "PostgreSQL provider is detected from pgTable usage",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "MySQL provider is detected from mysqlTable usage",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "SQLite provider is detected from sqliteTable usage",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "Config dialect is used as provider when table helpers don't indicate one",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "A warning is emitted when Drizzle is installed but no schema is found",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "No blind spot is emitted when Drizzle schema is successfully detected",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "When multiple ORMs have schemas, the one with the most models is selected",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A017",
+          "says": "When all schemas have unknown model counts, the first found is used",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A018",
+          "says": "Existing monorepo Drizzle detection still works after the rewrite",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A019",
+          "says": "Existing monorepo detection now reports model count",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A020",
+          "says": "Existing monorepo detection now reports provider",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 10,
+        "met": 10
+      },
+      "timing": {
+        "total_minutes": 73,
+        "think": 5,
+        "plan": 5,
+        "build": 7,
+        "verify": 61
+      },
+      "hashes": {
+        "scope": "sha256:c1a356f33bd0b30ab044e6e807e909d872b13fe11cd8cdffeb15612e77ea604b",
+        "contract": "sha256:5497373d7df5571b415b69be4786869b830858a236bb815bdccc21c75dd35431",
+        "plan": "sha256:9aeafcb65f4cdd37a7de82ad8e3a85daf354c7767c48c74a2a88bcde3bc31375",
+        "spec": "sha256:369b21fbb84510a05585f175d9bfd286bf10834463dd6d72b52cb94ab3390f6d",
+        "build-report": "sha256:517bc2c0a84c360e8934b37e505e2c7f155ad9971dcd6380149fbc081152ba21",
+        "verify-report": "sha256:0f51d48954db79bd31f2777fdbd1f5c9ae107389b7758178dc009c4d332f884a"
+      },
+      "seal_commit": "7c746c65bc754e893cd1057b1afe78331de35d04",
+      "completed_at": "2026-04-24T05:59:11.072Z",
+      "modules_touched": [
+        "packages/cli/src/commands/scan.ts",
+        "packages/cli/src/engine/census.ts",
+        "packages/cli/src/engine/scan-engine.ts",
+        "packages/cli/src/utils/scaffold-generators.ts",
+        "packages/cli/tests/engine/scanProject.test.ts"
+      ],
+      "callouts": [
+        {
+          "category": "code",
+          "summary": "`drizzle-dialect` overloads SchemaFileEntry semantics: `census.ts:267-274` — The `orm: 'drizzle-dialect'` entry stores the dialect string in the `path` field, which is semantically a file path. This w",
+          "file": "census.ts"
+        },
+        {
+          "category": "code",
+          "summary": "Consumer sort logic duplicated in two files: `scan.ts:112-121` and `scaffold-generators.ts:62-71` — Identical 10-line sort comparator handling null modelCount values. The spec suggested extraction \"if",
+          "file": "scan.ts"
+        },
+        {
+          "category": "code",
+          "summary": "Config regex can match comments: `census.ts:251` — `schema\\s*:\\s*[\"']([^\"']+)[\"']` would match a commented-out `// schema: \"old/path\"`. In practice, Drizzle config files are small and rarely have comm",
+          "file": "census.ts"
+        },
+        {
+          "category": "test",
+          "summary": "A017 doesn't exercise null-modelCount comparison: `scanProject.test.ts:549-566` — Contract says \"when all schemas have unknown model counts, the first found is used.\" Test uses Supabase which gets `mo",
+          "file": "scanProject.test.ts"
+        },
+        {
+          "category": "test",
+          "summary": "A016 verifies precondition, not consumer output: `scanProject.test.ts:523-545` — The test proves Drizzle has more models than Prisma, but doesn't verify that `enrichDatabase()` or `generateProjectCont",
+          "file": "scanProject.test.ts"
+        },
+        {
+          "category": "upstream",
+          "summary": "A004/A013 test fixture imports sqliteTable but claims \"no table helpers\": `scanProject.test.ts:331-332` — The schema file has `import { sqliteTable } from 'drizzle-orm/sqlite-core'` but the comment sa",
+          "file": "scanProject.test.ts"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": []
     }
   ]
 }

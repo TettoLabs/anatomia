@@ -1,7 +1,9 @@
-# Active Issues (20 shown of 30 total)
+# Active Issues (20 shown of 36 total)
 
 ## census.ts
 
+- **code:** `drizzle-dialect` overloads SchemaFileEntry semantics: `census.ts:267-274` — The `orm:... — *Fix Drizzle schema detection*
+- **code:** Config regex can match comments: `census.ts:251` — `schema\s*:\s*["']([^"']+)["']` would match a... — *Fix Drizzle schema detection*
 - **code:** Census directory check is non-recursive: `census.ts:219` — `readdirSync(prismaDir)` only checks... — *Fix Prisma schema detection bugs*
 
 ## findProjectRoot.test.ts
@@ -12,14 +14,10 @@
 
 - **code:** `@ana A012` tag misplaced: `proofSummary.test.ts:324` — Tag `@ana A012` ("extractFileRefs tests... — *Add file field to proof chain callouts*
 - **test:** A009 backfill verification is indirect: `proofSummary.test.ts:748-763` — The `@ana A009` tag is on... — *Add file field to proof chain callouts*
-- **test:** A009 cap test doesn't verify WHICH callouts were dropped: — proofSummary.test.ts:550-564 creates 25... — *Proof chain active issues index*
-- **test:** A012 heading position test is fragile: — proofSummary.test.ts:606 asserts `output.indexOf('# Active... — *Proof chain active issues index*
 
 ## proofSummary.ts
 
 - **code:** File extraction runs on truncated summary: `proofSummary.ts:412-415` — `extractFileRefs` is called... — *Add file field to proof chain callouts*
-- **code:** Hard truncation at 100 characters without ellipsis: — proofSummary.ts:361 uses `substring(0, 100)`... — *Proof chain active issues index*
-- **code:** File path segments lost in extractFileRefs: — proofSummary.ts:253 regex uses `\b` word boundary... — *Proof chain active issues index*
 
 ## readme.test.ts
 
@@ -34,23 +32,36 @@
 
 - **code:** First-provider-wins with no conflict detection: `scan-engine.ts:313` and `scan-engine.ts:337` — both... — *Fix Prisma schema detection bugs*
 
+## scan.ts
+
+- **code:** Consumer sort logic duplicated in two files: `scan.ts:112-121` and `scaffold-generators.ts:62-71` —... — *Fix Drizzle schema detection*
+
 ## scanProject.test.ts
 
+- **test:** A017 doesn't exercise null-modelCount comparison: `scanProject.test.ts:549-566` — Contract says... — *Fix Drizzle schema detection*
+- **test:** A016 verifies precondition, not consumer output: `scanProject.test.ts:523-545` — The test proves... — *Fix Drizzle schema detection*
+- **upstream:** A004/A013 test fixture imports sqliteTable but claims "no table helpers":... — *Fix Drizzle schema detection*
 - **test:** SQL-only edge case tests indirect path: `scanProject.test.ts:210` — The test creates... — *Fix Prisma schema detection bugs*
 - **test:** A009 uses weak matcher when specific value is known: `scanProject.test.ts:199` —... — *Fix Prisma schema detection bugs*
-
-## work.ts
-
-- **code:** ProofChain interface duplicated in three locations: — work.ts:661, proof.ts:29, and now... — *Proof chain active issues index*
 
 ## General
 
 - **upstream:** A002 uses `contains` matcher, allows ambiguous match: Contract A002 says `target:... — *Fix Prisma schema detection bugs*
 - **code:** A009 contract deviation: — Contract specifies `value: 5000` for total cap. Implementation now uses... — *Add README extraction to scan*
 - **upstream:** Contract A009 value should be updated: — The contract still says `value: 5000` but the... — *Add README extraction to scan*
-- **upstream:** Contract seal was UNVERIFIABLE: — no `seal_commit` was saved for this contract. This means we can't... — *Proof chain active issues index*
 
 ---
+
+## Fix Drizzle schema detection (2026-04-24)
+Result: PASS | 20/20 satisfied | 10/10 ACs | 0 deviations
+Pipeline: 73m (Think 5m, Plan 5m, Build 7m, Verify 61m)
+Modules: packages/cli/src/commands/scan.ts, packages/cli/src/engine/census.ts, packages/cli/src/engine/scan-engine.ts, packages/cli/src/utils/scaffold-generators.ts, packages/cli/tests/engine/scanProject.test.ts
+Callouts:
+- code: `drizzle-dialect` overloads SchemaFileEntry semantics: `census.ts:267-274` — The `orm: 'drizzle-dialect'` entry stores the dialect string in the `path` field, which is semantically a file path. This w
+- code: Consumer sort logic duplicated in two files: `scan.ts:112-121` and `scaffold-generators.ts:62-71` — Identical 10-line sort comparator handling null modelCount values. The spec suggested extraction "if
+- code: Config regex can match comments: `census.ts:251` — `schema\s*:\s*["']([^"']+)["']` would match a commented-out `// schema: "old/path"`. In practice, Drizzle config files are small and rarely have comm
+- test: A017 doesn't exercise null-modelCount comparison: `scanProject.test.ts:549-566` — Contract says "when all schemas have unknown model counts, the first found is used." Test uses Supabase which gets `mo
+- test: A016 verifies precondition, not consumer output: `scanProject.test.ts:523-545` — The test proves Drizzle has more models than Prisma, but doesn't verify that `enrichDatabase()` or `generateProjectCont
 
 ## Fix Prisma schema detection bugs (2026-04-24)
 Result: PASS | 13/13 satisfied | 7/7 ACs | 0 deviations
