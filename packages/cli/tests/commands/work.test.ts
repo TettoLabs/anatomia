@@ -492,6 +492,43 @@ describe('ana work status', () => {
       expect(output).not.toContain('/test-slug');
     });
 
+    // @ana A016, A017
+    it('ana-build template uses branchPrefix placeholder', async () => {
+      const content = fsSync.readFileSync(
+        path.join(__dirname, '../../src/../templates/.claude/agents/ana-build.md'),
+        'utf-8'
+      );
+      expect(content).toContain('{branchPrefix}');
+      expect(content).not.toContain('feature/{slug}');
+    });
+
+    // @ana A018
+    it('ana-plan template uses branchPrefix placeholder', async () => {
+      const content = fsSync.readFileSync(
+        path.join(__dirname, '../../src/../templates/.claude/agents/ana-plan.md'),
+        'utf-8'
+      );
+      expect(content).toContain('{branchPrefix}');
+    });
+
+    // @ana A019
+    it('ana-verify template uses branchPrefix placeholder', async () => {
+      const content = fsSync.readFileSync(
+        path.join(__dirname, '../../src/../templates/.claude/agents/ana-verify.md'),
+        'utf-8'
+      );
+      expect(content).toContain('{branchPrefix}');
+    });
+
+    // @ana A020
+    it('injectGitWorkflow uses branchPrefix placeholder', async () => {
+      const content = fsSync.readFileSync(
+        path.join(__dirname, '../../src/commands/init/skills.ts'),
+        'utf-8'
+      );
+      expect(content).toContain('{branchPrefix}');
+    });
+
     // @ana A013
     it('work complete uses configured prefix for branch cleanup', async () => {
       // Create a merged project with dev/ prefix
