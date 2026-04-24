@@ -569,12 +569,12 @@
         {
           "category": "test",
           "summary": "A009 test at findProjectRoot.test.ts:90-95 is `expect(true).toBe(true)` — a tautology that passes regardless of suite health. The builder's comment claims \"if wiring broke existing tests, this file wo",
-          "file": "test.ts"
+          "file": "findProjectRoot.test.ts"
         },
         {
           "category": "test",
           "summary": "A007 test at findProjectRoot.test.ts:72-73 uses `typeof findProjectRoot === 'function'` — this passes for any function. The import statement at line 5 would throw `ERR_MODULE_NOT_FOUND` if the export",
-          "file": "test.ts"
+          "file": "findProjectRoot.test.ts"
         },
         {
           "category": "upstream",
@@ -944,12 +944,12 @@
         {
           "category": "test",
           "summary": "A009 cap test doesn't verify WHICH callouts were dropped: — proofSummary.test.ts:550-564 creates 25 identical-structure callouts and asserts count is 20, but doesn't verify the 5 dropped are the oldes",
-          "file": "test.ts"
+          "file": "proofSummary.test.ts"
         },
         {
           "category": "test",
           "summary": "A012 heading position test is fragile: — proofSummary.test.ts:606 asserts `output.indexOf('# Active Issues') === 0`. If the function ever adds a leading newline or BOM, this breaks. The contract says",
-          "file": "test.ts"
+          "file": "proofSummary.test.ts"
         },
         {
           "category": "upstream",
@@ -1157,12 +1157,12 @@
         {
           "category": "test",
           "summary": "A014 monorepo test verifies intent not mechanism: — readme.test.ts:157-171. `detectReadme(tmpDir)` has no monorepo concept — it reads from the path it's given. The test proves scan-engine's decision t",
-          "file": "test.ts"
+          "file": "readme.test.ts"
         },
         {
           "category": "test",
           "summary": "A004 tests serialization, not e2e scan: — readme.test.ts:69-84. The test verifies the ReadmeResult serializes correctly to JSON, not that `ana scan --json` produces the field in CLI output. An e2e tes",
-          "file": "test.ts"
+          "file": "readme.test.ts"
         },
         {
           "category": "upstream",
@@ -1304,17 +1304,17 @@
         {
           "category": "code",
           "summary": "`@ana A012` tag misplaced: `proofSummary.test.ts:324` — Tag `@ana A012` (\"extractFileRefs tests unchanged\") is on the `parseCallouts` describe block, not the `extractFileRefs` describe block at line 6",
-          "file": "test.ts"
+          "file": "proofSummary.test.ts"
         },
         {
           "category": "test",
           "summary": "A009 backfill verification is indirect: `proofSummary.test.ts:748-763` — The `@ana A009` tag is on the \"respects 20-callout cap\" test, which exercises `file` fields in the cap logic. It doesn't direct",
-          "file": "test.ts"
+          "file": "proofSummary.test.ts"
         },
         {
           "category": "upstream",
           "summary": "Known extractFileRefs limitation propagated to stored data: The existing regex limitation where `findProjectRoot.test.ts` extracts as `test.ts` (dotted filenames lose their prefix) is now permanently",
-          "file": "test.ts"
+          "file": "findProjectRoot.test.ts"
         }
       ],
       "rejection_cycles": 0,

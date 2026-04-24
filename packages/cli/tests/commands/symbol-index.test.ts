@@ -55,8 +55,9 @@ describe('ana setup index', () => {
     });
 
     it('produces valid JSON output', async () => {
-      // Create .ana/ structure
+      // Create .ana/ structure with ana.json (required by findProjectRoot)
       await fs.mkdir(path.join(tempDir, '.ana', 'state'), { recursive: true });
+      await fs.writeFile(path.join(tempDir, '.ana', 'ana.json'), '{}');
 
       // Create a sample TypeScript file
       await fs.mkdir(path.join(tempDir, 'src'), { recursive: true });
@@ -92,6 +93,7 @@ const helper = () => 'internal';
 
     it('extracts functions, classes, and methods', async () => {
       await fs.mkdir(path.join(tempDir, '.ana', 'state'), { recursive: true });
+      await fs.writeFile(path.join(tempDir, '.ana', 'ana.json'), '{}');
       await fs.mkdir(path.join(tempDir, 'src'), { recursive: true });
 
       await fs.writeFile(
@@ -131,6 +133,7 @@ const internalHelper = (x: number) => x * 2;
 
     it('handles arrow functions assigned to const', async () => {
       await fs.mkdir(path.join(tempDir, '.ana', 'state'), { recursive: true });
+      await fs.writeFile(path.join(tempDir, '.ana', 'ana.json'), '{}');
       await fs.mkdir(path.join(tempDir, 'src'), { recursive: true });
 
       await fs.writeFile(
@@ -160,6 +163,7 @@ const privateHelper = () => null;
 
     it('marks exported vs non-exported correctly', async () => {
       await fs.mkdir(path.join(tempDir, '.ana', 'state'), { recursive: true });
+      await fs.writeFile(path.join(tempDir, '.ana', 'ana.json'), '{}');
       await fs.mkdir(path.join(tempDir, 'src'), { recursive: true });
 
       await fs.writeFile(
@@ -194,6 +198,7 @@ class PrivateClass {}
 
     it('excludes node_modules, dist, and test files', async () => {
       await fs.mkdir(path.join(tempDir, '.ana', 'state'), { recursive: true });
+      await fs.writeFile(path.join(tempDir, '.ana', 'ana.json'), '{}');
 
       // Create files that should be excluded
       await fs.mkdir(path.join(tempDir, 'node_modules', 'pkg'), { recursive: true });
@@ -247,6 +252,7 @@ describe('ana setup check with symbol index', () => {
     contextPath = path.join(tempDir, '.ana', 'context');
     await fs.mkdir(contextPath, { recursive: true });
     await fs.mkdir(path.join(tempDir, '.ana', 'state'), { recursive: true });
+    await fs.writeFile(path.join(tempDir, '.ana', 'ana.json'), '{}');
     originalCwd = process.cwd();
     process.chdir(tempDir);
   });

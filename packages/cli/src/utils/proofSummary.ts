@@ -251,7 +251,7 @@ export function extractFileRefs(summary: string): string[] {
   // Captures full path as written: src/utils/proofSummary.ts:361 → src/utils/proofSummary.ts
   // Also handles bare filenames: proofSummary.ts:361 → proofSummary.ts
   // Note: longer extensions must come before shorter prefixes (tsx before ts, json before js, yaml before yml)
-  const pattern = /((?:[\w./-]+\/)?[a-zA-Z0-9_-]+\.(?:tsx|ts|jsx|json|js|yaml|yml|md))(?::\d+(?:-\d+)?)?/g;
+  const pattern = /((?:[\w./-]+\/)?[a-zA-Z0-9_.-]+\.(?:tsx|ts|jsx|json|js|yaml|yml|md))(?::\d+(?:-\d+)?)?/g;
   const matches = summary.matchAll(pattern);
   const refs = new Set<string>();
   for (const match of matches) {
