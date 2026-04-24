@@ -107,7 +107,18 @@ function formatHumanReadable(
 
   // ── Helper: enrich database display with provider + model count ──
   function enrichDatabase(value: string): string {
-    const schemaKey = Object.keys(result.schemas).find(k => result.schemas[k]?.found);
+    // Select schema with highest modelCount across all ORMs.
+    // When all modelCount are null, fall back to first-found.
+    const schemaKey = Object.keys(result.schemas)
+      .filter(k => result.schemas[k]?.found)
+      .sort((a, b) => {
+        const aCount = result.schemas[a]?.modelCount;
+        const bCount = result.schemas[b]?.modelCount;
+        if (aCount == null && bCount == null) return 0;
+        if (aCount == null) return 1;
+        if (bCount == null) return -1;
+        return bCount - aCount;
+      })[0];
     if (!schemaKey) return value;
     const schema = result.schemas[schemaKey];
     const providerNames: Record<string, string> = {

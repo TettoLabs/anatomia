@@ -57,7 +57,18 @@ export function generateProjectContextScaffold(result: EngineResult): string {
   }
   if (result.stack.auth) descParts.push(`with authentication (${result.stack.auth})`);
   if (result.stack.database) {
-    const schema = Object.values(result.schemas || {}).find(sc => sc?.found);
+    // Select schema with highest modelCount. Null modelCount loses to any number;
+    // when all are null, first-found is preserved.
+    const schema = Object.values(result.schemas || {})
+      .filter(sc => sc?.found)
+      .sort((a, b) => {
+        const aCount = a?.modelCount;
+        const bCount = b?.modelCount;
+        if (aCount == null && bCount == null) return 0;
+        if (aCount == null) return 1;
+        if (bCount == null) return -1;
+        return bCount - aCount;
+      })[0];
     const provider = schema?.provider ? ` → ${schema.provider}` : '';
     const models = schema?.modelCount ? `, ${schema.modelCount} models` : '';
     descParts.push(`database (${result.stack.database}${provider}${models})`);

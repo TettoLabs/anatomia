@@ -5,18 +5,145 @@
     "hash": "sha256:c1a356f33bd0b30ab044e6e807e909d872b13fe11cd8cdffeb15612e77ea604b"
   },
   "contract": {
-    "saved_at": "2026-04-24T04:43:49.756Z",
-    "commit": "1bf5aeb854a2b4d54319fa9d7bfa4bbd12889b87",
+    "saved_at": "2026-04-24T04:43:56.316Z",
+    "commit": "7c746c65bc754e893cd1057b1afe78331de35d04",
     "hash": "sha256:5497373d7df5571b415b69be4786869b830858a236bb815bdccc21c75dd35431"
   },
   "plan": {
-    "saved_at": "2026-04-24T04:43:49.761Z",
-    "commit": "1bf5aeb854a2b4d54319fa9d7bfa4bbd12889b87",
+    "saved_at": "2026-04-24T04:43:56.322Z",
+    "commit": "7c746c65bc754e893cd1057b1afe78331de35d04",
     "hash": "sha256:9aeafcb65f4cdd37a7de82ad8e3a85daf354c7767c48c74a2a88bcde3bc31375"
   },
   "spec": {
-    "saved_at": "2026-04-24T04:43:49.765Z",
-    "commit": "1bf5aeb854a2b4d54319fa9d7bfa4bbd12889b87",
+    "saved_at": "2026-04-24T04:43:56.327Z",
+    "commit": "7c746c65bc754e893cd1057b1afe78331de35d04",
     "hash": "sha256:369b21fbb84510a05585f175d9bfd286bf10834463dd6d72b52cb94ab3390f6d"
+  },
+  "build-report": {
+    "saved_at": "2026-04-24T04:50:31.477Z",
+    "commit": "abe4bb3d84ad87bb25778a445f0b083de2eeacea",
+    "hash": "sha256:517bc2c0a84c360e8934b37e505e2c7f155ad9971dcd6380149fbc081152ba21"
+  },
+  "modules_touched": [
+    "packages/cli/src/commands/scan.ts",
+    "packages/cli/src/engine/census.ts",
+    "packages/cli/src/engine/scan-engine.ts",
+    "packages/cli/src/utils/scaffold-generators.ts",
+    "packages/cli/tests/engine/scanProject.test.ts"
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_commit": "7c746c65bc754e893cd1057b1afe78331de35d04",
+    "seal_hash": "sha256:5497373d7df5571b415b69be4786869b830858a236bb815bdccc21c75dd35431",
+    "assertions": [
+      {
+        "id": "A001",
+        "says": "Drizzle config file discovery finds the schema path from the config",
+        "status": "COVERED"
+      },
+      {
+        "id": "A002",
+        "says": "Config-driven discovery works with defineConfig wrapper syntax",
+        "status": "COVERED"
+      },
+      {
+        "id": "A003",
+        "says": "Config discovery works across config file extensions",
+        "status": "COVERED"
+      },
+      {
+        "id": "A004",
+        "says": "The database dialect from config becomes the detected provider",
+        "status": "COVERED"
+      },
+      {
+        "id": "A005",
+        "says": "Schema files are found by glob when no config file exists",
+        "status": "COVERED"
+      },
+      {
+        "id": "A006",
+        "says": "Glob fallback locates the correct schema file path",
+        "status": "COVERED"
+      },
+      {
+        "id": "A007",
+        "says": "Table definitions in schema files are counted as models",
+        "status": "COVERED"
+      },
+      {
+        "id": "A008",
+        "says": "A schema file with no table definitions reports zero models",
+        "status": "COVERED"
+      },
+      {
+        "id": "A009",
+        "says": "MySQL table definitions are counted alongside PostgreSQL ones",
+        "status": "COVERED"
+      },
+      {
+        "id": "A010",
+        "says": "PostgreSQL provider is detected from pgTable usage",
+        "status": "COVERED"
+      },
+      {
+        "id": "A011",
+        "says": "MySQL provider is detected from mysqlTable usage",
+        "status": "COVERED"
+      },
+      {
+        "id": "A012",
+        "says": "SQLite provider is detected from sqliteTable usage",
+        "status": "COVERED"
+      },
+      {
+        "id": "A013",
+        "says": "Config dialect is used as provider when table helpers don't indicate one",
+        "status": "COVERED"
+      },
+      {
+        "id": "A014",
+        "says": "A warning is emitted when Drizzle is installed but no schema is found",
+        "status": "COVERED"
+      },
+      {
+        "id": "A015",
+        "says": "No blind spot is emitted when Drizzle schema is successfully detected",
+        "status": "COVERED"
+      },
+      {
+        "id": "A016",
+        "says": "When multiple ORMs have schemas, the one with the most models is selected",
+        "status": "COVERED"
+      },
+      {
+        "id": "A017",
+        "says": "When all schemas have unknown model counts, the first found is used",
+        "status": "COVERED"
+      },
+      {
+        "id": "A018",
+        "says": "Existing monorepo Drizzle detection still works after the rewrite",
+        "status": "COVERED"
+      },
+      {
+        "id": "A019",
+        "says": "Existing monorepo detection now reports model count",
+        "status": "COVERED"
+      },
+      {
+        "id": "A020",
+        "says": "Existing monorepo detection now reports provider",
+        "status": "COVERED"
+      }
+    ],
+    "covered": 20,
+    "uncovered": 0,
+    "run_at": "2026-04-24T05:51:43.355Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-04-24T05:51:43.387Z",
+    "commit": "abe4bb3d84ad87bb25778a445f0b083de2eeacea",
+    "hash": "sha256:0f51d48954db79bd31f2777fdbd1f5c9ae107389b7758178dc009c4d332f884a"
   }
 }

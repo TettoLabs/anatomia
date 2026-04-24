@@ -8,7 +8,7 @@
  */
 
 import * as path from 'node:path';
-import { existsSync, readdirSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { getPackages } from '@manypkg/get-packages';
 import { getTsconfig } from 'get-tsconfig';
 import type {
@@ -230,14 +230,55 @@ function discoverSchemas(
         }
       }
     }
-    // Drizzle
-    const drizzlePath = path.join(root.absolutePath, 'drizzle');
-    if (existsSync(drizzlePath)) {
-      entries.push({
-        orm: 'drizzle',
-        sourceRootPath: root.relativePath,
-        path: path.relative(rootPath, drizzlePath),
-      });
+    // Drizzle — read drizzle.config.{ts,js,mjs} to extract the schema path.
+    // Config lives at the project root (not per source root), so check rootPath
+    // first. Avoid duplicates if the root IS a source root.
+    const drizzleConfigCandidates = ['drizzle.config.ts', 'drizzle.config.js', 'drizzle.config.mjs'];
+    const searchRoots: string[] = [];
+    // Always check the project root
+    searchRoots.push(rootPath);
+    // Add source root if it differs from rootPath
+    if (root.absolutePath !== rootPath) {
+      searchRoots.push(root.absolutePath);
+    }
+    for (const searchRoot of searchRoots) {
+      for (const configName of drizzleConfigCandidates) {
+        const configPath = path.join(searchRoot, configName);
+        if (!existsSync(configPath)) continue;
+        try {
+          const configContent = readFileSync(configPath, 'utf-8');
+          // Extract schema field: schema: "./src/db/schema" or schema: './src/db/schema.ts'
+          const schemaMatch = configContent.match(/schema\s*:\s*["']([^"']+)["']/);
+          if (schemaMatch?.[1]) {
+            let schemaPath = schemaMatch[1];
+            // Strip leading ./ for consistency with other census paths
+            if (schemaPath.startsWith('./')) schemaPath = schemaPath.slice(2);
+            // Path is relative to the config file location (searchRoot)
+            const absoluteSchemaPath = path.join(searchRoot, schemaPath);
+            entries.push({
+              orm: 'drizzle',
+              sourceRootPath: root.relativePath,
+              path: path.relative(rootPath, absoluteSchemaPath),
+            });
+          }
+          // Extract dialect field for downstream provider detection
+          const dialectMatch = configContent.match(/dialect\s*:\s*["']([^"']+)["']/);
+          if (dialectMatch?.[1]) {
+            // Store dialect as a separate entry with a synthetic path marker
+            // so scan-engine can retrieve it. Use orm 'drizzle-dialect' to
+            // avoid collision with schema entries.
+            entries.push({
+              orm: 'drizzle-dialect',
+              sourceRootPath: root.relativePath,
+              path: dialectMatch[1],
+            });
+          }
+        } catch {
+          // Config file unreadable — skip
+        }
+        // Found a config in this search root — don't check other extensions
+        break;
+      }
     }
   }
   return entries;

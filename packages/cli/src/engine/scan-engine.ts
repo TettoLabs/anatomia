@@ -356,13 +356,115 @@ async function detectSchemas(
     }
   }
 
-  // Drizzle
+  // Drizzle — census-first discovery, glob fallback, multi-candidate scoring.
+  // Mirrors the Prisma block above: census provides config-extracted paths,
+  // glob catches projects without a drizzle.config file, scorer picks the
+  // candidate with the most table definitions.
   if (allDeps['drizzle-orm']) {
     try {
-      const files = await glob('**/drizzle/**/*.ts', SCHEMA_GLOB_OPTS);
-      schemas['drizzle'] = { found: files.length > 0, path: files.length > 0 ? (files[0] ?? null) : null, modelCount: null };
+      const censusDrizzle = censusSchemas.filter(s => s.orm === 'drizzle').map(s => s.path);
+      const censusDialect = censusSchemas.find(s => s.orm === 'drizzle-dialect')?.path ?? null;
+
+      let matches: string[] = [];
+      if (censusDrizzle.length > 0) {
+        // Census found schema paths from config — resolve to actual files.
+        // A census path may be a file or a directory (glob pattern).
+        for (const p of censusDrizzle) {
+          const absPath = path.join(rootPath, p);
+          if (existsSync(absPath)) {
+            try {
+              const stat = await fs.stat(absPath);
+              if (stat.isDirectory()) {
+                // Directory: find all .ts files inside
+                const dirFiles = await glob(`${p}/**/*.ts`, SCHEMA_GLOB_OPTS);
+                matches.push(...dirFiles);
+              } else {
+                matches.push(p);
+              }
+            } catch {
+              matches.push(p);
+            }
+          } else {
+            // Path doesn't exist as-is — try as glob pattern
+            const globbed = await glob(`${p}*.ts`, SCHEMA_GLOB_OPTS);
+            matches.push(...globbed);
+          }
+        }
+      }
+
+      // Glob fallback: broad patterns filtered by content (must contain Table( call)
+      if (matches.length === 0) {
+        const globPatterns = ['**/schema.ts', '**/schema/*.ts', '**/db/schema*.ts'];
+        const rawMatches: string[] = [];
+        for (const pattern of globPatterns) {
+          const found = await glob(pattern, SCHEMA_GLOB_OPTS);
+          rawMatches.push(...found);
+        }
+        // Deduplicate
+        const unique = [...new Set(rawMatches)];
+        // Content filter: file must contain a Drizzle table helper call
+        for (const f of unique) {
+          try {
+            const content = await fs.readFile(path.join(rootPath, f), 'utf-8');
+            if (content.includes('Table(')) {
+              matches.push(f);
+            }
+          } catch { /* skip unreadable files */ }
+        }
+      }
+
+      if (matches.length > 0) {
+        // Score each candidate by model count (pgTable + mysqlTable + sqliteTable calls)
+        let best: { path: string; modelCount: number; provider: string | null } | null = null;
+        for (const relPath of matches) {
+          try {
+            const content = await fs.readFile(path.join(rootPath, relPath), 'utf-8');
+            const pgCount = (content.match(/pgTable\s*\(/g) || []).length;
+            const mysqlCount = (content.match(/mysqlTable\s*\(/g) || []).length;
+            const sqliteCount = (content.match(/sqliteTable\s*\(/g) || []).length;
+            const modelCount = pgCount + mysqlCount + sqliteCount;
+
+            // Provider from table helper names (most common helper wins)
+            let provider: string | null = null;
+            const counts = [
+              { name: 'postgresql', count: pgCount },
+              { name: 'mysql', count: mysqlCount },
+              { name: 'sqlite', count: sqliteCount },
+            ].sort((a, b) => b.count - a.count);
+            if (counts[0]!.count > 0) {
+              provider = counts[0]!.name;
+            }
+
+            if (!best || modelCount > best.modelCount) {
+              best = { path: relPath, modelCount, provider };
+            }
+          } catch { /* skip unreadable files */ }
+        }
+
+        if (best) {
+          // Dialect fallback: when table helpers didn't reveal a provider
+          if (!best.provider && censusDialect) {
+            best.provider = censusDialect;
+          }
+          schemas['drizzle'] = { found: true, path: best.path, modelCount: best.modelCount, provider: best.provider };
+        } else {
+          schemas['drizzle'] = { found: false, path: null, modelCount: null };
+        }
+      } else {
+        schemas['drizzle'] = { found: false, path: null, modelCount: null };
+        blindSpots.push({
+          area: 'Database',
+          issue: 'drizzle-orm found but no schema files detected',
+          resolution: 'Create a drizzle.config.ts pointing to your schema directory',
+        });
+      }
     } catch {
       schemas['drizzle'] = { found: false, path: null, modelCount: null };
+      blindSpots.push({
+        area: 'Database',
+        issue: 'drizzle-orm found but no schema files detected',
+        resolution: 'Create a drizzle.config.ts pointing to your schema directory',
+      });
     }
   }
 
