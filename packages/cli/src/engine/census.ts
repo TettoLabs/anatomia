@@ -261,18 +261,8 @@ function discoverSchemas(
               path: path.relative(rootPath, absoluteSchemaPath),
             });
           }
-          // Extract dialect field for downstream provider detection
-          const dialectMatch = configContent.match(/dialect\s*:\s*["']([^"']+)["']/);
-          if (dialectMatch?.[1]) {
-            // Store dialect as a separate entry with a synthetic path marker
-            // so scan-engine can retrieve it. Use orm 'drizzle-dialect' to
-            // avoid collision with schema entries.
-            entries.push({
-              orm: 'drizzle-dialect',
-              sourceRootPath: root.relativePath,
-              path: dialectMatch[1],
-            });
-          }
+          // Dialect extraction moved to scan-engine — it reads the config
+          // file directly during scoring, keeping census as pure location discovery.
         } catch {
           // Config file unreadable — skip
         }
