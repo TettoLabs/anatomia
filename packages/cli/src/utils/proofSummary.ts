@@ -714,19 +714,29 @@ export function generateProofSummary(slugDir: string): ProofSummary {
     }
   }
 
-  // Source 3: verify_report.md
-  const verifyPath = path.join(slugDir, 'verify_report.md');
-  if (fs.existsSync(verifyPath)) {
+  // Source 3: verify reports (single-spec: verify_report.md, multi-spec: verify_report_N.md)
+  // Read ALL verify reports and aggregate compliance, callouts, and results.
+  const dirFiles = fs.readdirSync(slugDir);
+  const verifyFiles = dirFiles
+    .filter(f => f.match(/^verify_report(_\d+)?\.md$/))
+    .sort();
+
+  let lastResult: string | null = null;
+  const allCallouts: Array<{ category: string; summary: string; file: string | null; anchor: string | null }> = [];
+
+  for (const verifyFile of verifyFiles) {
+    const verifyPath = path.join(slugDir, verifyFile);
     try {
       const verifyContent = fs.readFileSync(verifyPath, 'utf-8');
 
-      // Parse result
-      summary.result = parseResult(verifyContent);
+      // Track result from each phase — last phase determines overall result
+      const phaseResult = parseResult(verifyContent);
+      if (phaseResult !== 'UNKNOWN') lastResult = phaseResult;
 
-      // Parse AC results
+      // Accumulate AC results from last phase (most complete)
       summary.acceptance_criteria = parseACResults(verifyContent);
 
-      // Parse compliance table and overlay on assertions
+      // Parse compliance table and overlay on assertions (each phase has different IDs)
       const complianceRows = parseComplianceTable(verifyContent);
       for (const row of complianceRows) {
         const assertion = summary.assertions.find(a => a.id === row.id);
@@ -736,28 +746,42 @@ export function generateProofSummary(slugDir: string): ProofSummary {
         }
       }
 
-      // Update contract counts from verify statuses
-      summary.contract.satisfied = summary.assertions.filter(a => a.verifyStatus === 'SATISFIED').length;
-      summary.contract.unsatisfied = summary.assertions.filter(a => a.verifyStatus === 'UNSATISFIED').length;
-      summary.contract.deviated = summary.assertions.filter(a => a.verifyStatus === 'DEVIATED').length;
+      // Aggregate callouts from all phases
+      allCallouts.push(...parseCallouts(verifyContent));
 
-      // Parse callouts and rejection cycles (S23 pipeline hardening)
-      summary.callouts = parseCallouts(verifyContent);
+      // Parse rejection cycles from each phase
       const rejectionData = parseRejectionCycles(verifyContent);
-      summary.rejection_cycles = rejectionData.cycles;
-      summary.previous_failures = rejectionData.failures;
+      summary.rejection_cycles += rejectionData.cycles;
+      summary.previous_failures.push(...rejectionData.failures);
     } catch {
       // Continue with defaults
     }
   }
 
-  // Source 4: build_report.md (for deviations and build concerns)
-  const buildPath = path.join(slugDir, 'build_report.md');
-  if (fs.existsSync(buildPath)) {
+  if (lastResult) summary.result = lastResult;
+  summary.callouts = allCallouts;
+
+  // Update contract counts from verify statuses (aggregated across all phases)
+  summary.contract.satisfied = summary.assertions.filter(a => a.verifyStatus === 'SATISFIED').length;
+  summary.contract.unsatisfied = summary.assertions.filter(a => a.verifyStatus === 'UNSATISFIED').length;
+  summary.contract.deviated = summary.assertions.filter(a => a.verifyStatus === 'DEVIATED').length;
+
+  // Source 4: build reports (single-spec: build_report.md, multi-spec: build_report_N.md)
+  // Read ALL build reports and aggregate deviations and build concerns.
+  const buildFiles = dirFiles
+    .filter(f => f.match(/^build_report(_\d+)?\.md$/))
+    .sort();
+
+  for (const buildFile of buildFiles) {
+    const buildPath = path.join(slugDir, buildFile);
     try {
       const buildContent = fs.readFileSync(buildPath, 'utf-8');
-      summary.deviations = parseDeviations(buildContent);
-      summary.build_concerns = parseBuildOpenIssues(buildContent);
+      summary.deviations.push(...parseDeviations(buildContent));
+      const concerns = parseBuildOpenIssues(buildContent);
+      if (concerns.length > 0) {
+        if (!summary.build_concerns) summary.build_concerns = [];
+        summary.build_concerns.push(...concerns);
+      }
     } catch {
       // Continue with defaults
     }

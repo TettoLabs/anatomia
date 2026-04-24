@@ -174,12 +174,22 @@ export function createPr(slug: string): void {
     process.exit(1);
   }
 
-  // 4. Read verify report
-  const verifyReportPath = path.join(projectRoot, '.ana/plans/active', slug, 'verify_report.md');
+  // 4. Read verify report (single-spec: verify_report.md, multi-spec: verify_report_N.md)
+  const planDir = path.join(projectRoot, '.ana/plans/active', slug);
+  let verifyReportPath = path.join(planDir, 'verify_report.md');
   if (!fs.existsSync(verifyReportPath)) {
-    console.error(chalk.red('No verify report found.'));
-    console.error(chalk.dim('Run `claude --agent ana-verify` first.'));
-    process.exit(1);
+    // Multi-spec: find the highest-numbered verify report
+    const dirFiles = fs.readdirSync(planDir);
+    const verifyReports = dirFiles
+      .filter(f => f.match(/^verify_report_\d+\.md$/))
+      .sort();
+    if (verifyReports.length > 0) {
+      verifyReportPath = path.join(planDir, verifyReports[verifyReports.length - 1]!);
+    } else {
+      console.error(chalk.red('No verify report found.'));
+      console.error(chalk.dim('Run `claude --agent ana-verify` first.'));
+      process.exit(1);
+    }
   }
 
   const verifyContent = fs.readFileSync(verifyReportPath, 'utf-8');
