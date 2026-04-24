@@ -168,13 +168,13 @@ Wait for the developer to confirm before writing. This catches disagreements bef
 
 ### Step 5: Write plan.md (REQUIRED — always, even for single-spec)
 
-Before writing the spec, create plan.md. The CLI depends on this file for phase counting.
+Before writing the spec, create plan.md. The CLI depends on this file for phase counting. Read `branchPrefix` from `.ana/ana.json` (default: `feature/`). Use `{branchPrefix}{slug}` for the Branch field.
 
 **Single-spec plan.md format:**
 ```markdown
 # Plan: {slug}
 
-**Branch:** feature/{slug}
+**Branch:** {branchPrefix}{slug}
 
 ## Phases
 
@@ -186,7 +186,7 @@ Before writing the spec, create plan.md. The CLI depends on this file for phase 
 ```markdown
 # Plan: {slug}
 
-**Branch:** feature/{slug}
+**Branch:** {branchPrefix}{slug}
 
 ## Phases
 

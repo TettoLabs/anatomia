@@ -386,6 +386,7 @@ export async function createAnaJson(
     },
     coAuthor: 'Ana <build@anatomia.dev>',
     artifactBranch: detectArtifactBranch(result),
+    branchPrefix: 'feature/',
     lastScanAt: result.overview.scannedAt,
   };
 

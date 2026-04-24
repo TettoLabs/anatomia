@@ -44,12 +44,14 @@ The command tells you which feature branch to check out. Ask the developer befor
 
 If no work needs verification: "No builds ready for verification. Open `claude --agent ana-build` to build a spec first."
 
-### 2. Check Out the Feature Branch
+### 2. Check Out the Work Branch
+
+Read `branchPrefix` from `.ana/ana.json` (default: `feature/`). Use `{branchPrefix}{slug}` for branch names.
 
 After the developer confirms:
 
 ```bash
-git checkout feature/{slug} && git pull
+git checkout {branchPrefix}{slug} && git pull
 ```
 
 ### 3. Check for Re-Verification
@@ -255,7 +257,7 @@ Write your report in this exact format:
 **Created by:** AnaVerify
 **Date:** {date}
 **Spec:** .ana/plans/active/{slug}/spec.md
-**Branch:** feature/{slug}
+**Branch:** {branchPrefix}{slug}
 
 ## Pre-Check Results
 {Paste FULL output from `ana verify pre-check {slug}`.

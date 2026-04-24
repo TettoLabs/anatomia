@@ -352,7 +352,7 @@ function injectGitWorkflow(result: EngineResult): string {
     lines.push(`- Default branch: ${result.git.defaultBranch}`);
   }
   if (result.git.contributorCount !== null) lines.push(`- Contributors: ${result.git.contributorCount}`);
-  lines.push('- Ana CLI: pipeline artifacts committed via `ana artifact save` with [slug] prefix. Build agent creates `feature/{slug}` branches. Co-author from ana.json.');
+  lines.push('- Ana CLI: pipeline artifacts committed via `ana artifact save` with [slug] prefix. Build agent creates `{branchPrefix}{slug}` branches (read `branchPrefix` from `.ana/ana.json`, default `feature/`). Co-author from ana.json.');
   return lines.join('\n');
 }
 

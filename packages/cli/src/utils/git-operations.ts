@@ -49,6 +49,40 @@ export function readArtifactBranch(projectRoot?: string): string {
 }
 
 /**
+ * Read the branch prefix from .ana/ana.json. Returns `'feature/'` as fallback
+ * when the file is missing, corrupted, or lacks the field.
+ *
+ * The fallback behavior is intentional — every existing install lacks
+ * `branchPrefix`, so the common upgrade path must return the historical
+ * default without forcing the user to re-init.
+ *
+ * @param projectRoot - Project root path (defaults to cwd)
+ * @returns The configured branch prefix, or `'feature/'` as default
+ */
+export function readBranchPrefix(projectRoot?: string): string {
+  const anaJsonPath = path.join(projectRoot ?? process.cwd(), '.ana', 'ana.json');
+
+  if (!fs.existsSync(anaJsonPath)) {
+    return 'feature/';
+  }
+
+  let config: Record<string, unknown>;
+  try {
+    const content = fs.readFileSync(anaJsonPath, 'utf-8');
+    config = JSON.parse(content);
+  } catch {
+    return 'feature/';
+  }
+
+  const prefix = config['branchPrefix'];
+  if (typeof prefix !== 'string') {
+    return 'feature/';
+  }
+
+  return prefix;
+}
+
+/**
  * Get the current git branch name, or null if not in a git repo.
  *
  * @returns Current branch name, or null on failure

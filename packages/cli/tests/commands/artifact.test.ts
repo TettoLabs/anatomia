@@ -32,8 +32,10 @@ describe('ana artifact save', () => {
   async function createTestProject(options: {
     artifactBranch?: string;
     currentBranch?: string;
+    branchPrefix?: string;
   }): Promise<void> {
     const artifactBranch = options.artifactBranch || 'main';
+    const branchPrefix = options.branchPrefix;
 
     // Init git
     execSync('git init', { cwd: tempDir, stdio: 'ignore' });
@@ -45,7 +47,7 @@ describe('ana artifact save', () => {
     await fs.mkdir(anaDir, { recursive: true });
     await fs.writeFile(
       path.join(anaDir, 'ana.json'),
-      JSON.stringify({ artifactBranch }),
+      JSON.stringify({ artifactBranch, ...(branchPrefix !== undefined && { branchPrefix }) }),
       'utf-8'
     );
 
@@ -308,6 +310,25 @@ Content...`;
       await createArtifact('test-slug', 'verify_report.md');
 
       expect(() => saveArtifact('verify-report', 'test-slug')).toThrow();
+    });
+  });
+
+  describe('configurable branchPrefix', () => {
+    // @ana A014
+    it('artifact save error uses configured prefix in checkout hint', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main', branchPrefix: 'dev/' });
+      await createArtifact('test-slug', 'build_report.md');
+
+      const originalError = console.error;
+      const errors: string[] = [];
+      console.error = (...args: unknown[]) => { errors.push(args.join(' ')); };
+
+      expect(() => saveArtifact('build-report', 'test-slug')).toThrow();
+
+      console.error = originalError;
+      const errorOutput = errors.join('\n');
+      expect(errorOutput).toContain('dev/test-slug');
+      expect(errorOutput).not.toContain('feature/test-slug');
     });
   });
 

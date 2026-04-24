@@ -4,8 +4,8 @@
 
 ## Phases
 
-- [ ] Foundation — add branchPrefix to ana.json schema, init writer, and reader helper
+- [x] Foundation — add branchPrefix to ana.json schema, init writer, and reader helper
   - Spec: spec-1.md
-- [ ] Migration — replace all hardcoded feature/ references in source, templates, and tests
+- [x] Migration — replace all hardcoded feature/ references in source, templates, and tests
   - Spec: spec-2.md
   - Depends on: Phase 1
