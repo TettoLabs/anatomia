@@ -1,0 +1,194 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Configurable branch prefix"
+
+assertions:
+  # Phase 1 — Foundation
+  - id: A001
+    says: "Fresh installs include a branch prefix setting in the config file"
+    block: "createAnaJson writes branchPrefix"
+    target: "anaJson.branchPrefix"
+    matcher: "equals"
+    value: "feature/"
+
+  - id: A002
+    says: "Re-initializing preserves a user-modified branch prefix"
+    block: "preserveUserState preserves branchPrefix"
+    target: "mergedJson.branchPrefix"
+    matcher: "equals"
+    value: "dev/"
+
+  - id: A003
+    says: "The config reader returns the configured prefix when present"
+    block: "readBranchPrefix returns configured value"
+    target: "result"
+    matcher: "equals"
+    value: "dev/"
+
+  - id: A004
+    says: "Older installs without a prefix setting get the default automatically"
+    block: "readBranchPrefix falls back when field absent"
+    target: "result"
+    matcher: "equals"
+    value: "feature/"
+
+  - id: A005
+    says: "A missing config file does not crash the prefix reader"
+    block: "readBranchPrefix falls back when file missing"
+    target: "result"
+    matcher: "equals"
+    value: "feature/"
+
+  - id: A006
+    says: "Teams using bare branch names can set an empty prefix"
+    block: "readBranchPrefix returns empty string when configured"
+    target: "result"
+    matcher: "equals"
+    value: ""
+
+  - id: A007
+    says: "The schema recovers gracefully from a corrupted prefix value"
+    block: "AnaJsonSchema catches invalid branchPrefix"
+    target: "parsed.branchPrefix"
+    matcher: "equals"
+    value: "feature/"
+
+  # Phase 2 — Migration: work.ts
+  - id: A008
+    says: "Pipeline status commands show the configured prefix in branch instructions"
+    block: "getNextAction uses configured prefix"
+    target: "nextAction"
+    matcher: "contains"
+    value: "dev/"
+
+  - id: A009
+    says: "Pipeline status commands do not show the old hardcoded prefix"
+    block: "getNextAction uses configured prefix"
+    target: "nextAction"
+    matcher: "not_contains"
+    value: "feature/"
+
+  - id: A010
+    says: "Branch detection finds branches under the configured prefix"
+    block: "getWorkBranch finds branch with custom prefix"
+    target: "result"
+    matcher: "contains"
+    value: "dev/"
+
+  - id: A011
+    says: "The status JSON output uses the new workBranch field name"
+    block: "work status JSON uses workBranch"
+    target: "jsonOutput.items[0].workBranch"
+    matcher: "exists"
+
+  - id: A012
+    says: "The old featureBranch field name is removed from status output"
+    block: "work status JSON uses workBranch"
+    target: "jsonOutput.items[0].featureBranch"
+    matcher: "not_equals"
+    value: "defined"
+
+  - id: A013
+    says: "Completing a work item cleans up the branch under the configured prefix"
+    block: "work complete uses configured prefix for branch cleanup"
+    target: "deletedBranch"
+    matcher: "contains"
+    value: "dev/"
+
+  # Phase 2 — Migration: artifact.ts
+  - id: A014
+    says: "Artifact save error messages show the configured prefix in checkout hint"
+    block: "artifact save error uses configured prefix"
+    target: "errorMessage"
+    matcher: "contains"
+    value: "dev/"
+
+  # Phase 2 — Migration: pr.ts
+  - id: A015
+    says: "PR creation warns when branch does not match the configured prefix"
+    block: "pr create warning uses configured prefix"
+    target: "warningMessage"
+    matcher: "contains"
+    value: "dev/"
+
+  # Phase 2 — Migration: templates
+  - id: A016
+    says: "Build agent template references the configurable prefix placeholder"
+    block: "ana-build template uses branchPrefix placeholder"
+    target: "templateContent"
+    matcher: "contains"
+    value: "{branchPrefix}"
+
+  - id: A017
+    says: "Build agent template no longer hardcodes the feature prefix"
+    block: "ana-build template uses branchPrefix placeholder"
+    target: "templateContent"
+    matcher: "not_contains"
+    value: "feature/{slug}"
+
+  - id: A018
+    says: "Plan agent template references the configurable prefix placeholder"
+    block: "ana-plan template uses branchPrefix placeholder"
+    target: "templateContent"
+    matcher: "contains"
+    value: "{branchPrefix}"
+
+  - id: A019
+    says: "Verify agent template references the configurable prefix placeholder"
+    block: "ana-verify template uses branchPrefix placeholder"
+    target: "templateContent"
+    matcher: "contains"
+    value: "{branchPrefix}"
+
+  # Phase 2 — Migration: skills.ts
+  - id: A020
+    says: "The git-workflow skill shows the configurable prefix instead of hardcoded feature/"
+    block: "injectGitWorkflow uses branchPrefix placeholder"
+    target: "detectedSection"
+    matcher: "contains"
+    value: "{branchPrefix}"
+
+  # Phase 2 — Edge cases
+  - id: A021
+    says: "An empty prefix produces branch names with just the slug"
+    block: "empty branchPrefix produces bare slug branch"
+    target: "nextAction"
+    matcher: "contains"
+    value: "git checkout test-slug"
+
+  - id: A022
+    says: "An empty prefix does not produce a leading slash in branch names"
+    block: "empty branchPrefix produces bare slug branch"
+    target: "nextAction"
+    matcher: "not_contains"
+    value: "/test-slug"
+
+file_changes:
+  - path: "src/commands/init/anaJsonSchema.ts"
+    action: modify
+  - path: "src/commands/init/state.ts"
+    action: modify
+  - path: "src/utils/git-operations.ts"
+    action: modify
+  - path: "src/commands/work.ts"
+    action: modify
+  - path: "src/commands/artifact.ts"
+    action: modify
+  - path: "src/commands/pr.ts"
+    action: modify
+  - path: "src/commands/init/skills.ts"
+    action: modify
+  - path: "templates/.claude/agents/ana-build.md"
+    action: modify
+  - path: "templates/.claude/agents/ana-plan.md"
+    action: modify
+  - path: "templates/.claude/agents/ana-verify.md"
+    action: modify
+  - path: "tests/utils/git-operations.test.ts"
+    action: create
+  - path: "tests/commands/work.test.ts"
+    action: modify
+  - path: "tests/commands/artifact.test.ts"
+    action: modify
+  - path: "tests/commands/pr.test.ts"
+    action: modify
