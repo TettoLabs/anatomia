@@ -1126,7 +1126,7 @@ describe('resolveCalloutPaths', () => {
     'packages/cli/src/utils/proofSummary.ts',
   ];
 
-  // @ana A001, A002
+  // @ana A001, A002, A007
   it('resolves single-match basename to full path', () => {
     const items = [{ file: 'census.ts' }];
     resolveCalloutPaths(items, modules);
