@@ -294,6 +294,106 @@ describe('ana proof', () => {
     });
   });
 
+  // ─── Context Subcommand Tests ──────────────────────────────────────
+
+  /**
+   * Helper to create proof chain with callouts for context testing
+   */
+  async function createContextChain(): Promise<void> {
+    const entry = {
+      slug: 'drizzle-detection',
+      feature: 'Fix Drizzle schema detection',
+      result: 'PASS',
+      author: { name: 'Developer', email: 'dev@example.com' },
+      contract: { total: 20, covered: 20, uncovered: 0, satisfied: 20, unsatisfied: 0, deviated: 0 },
+      assertions: [{ id: 'A001', says: 'Drizzle works', status: 'SATISFIED' }],
+      acceptance_criteria: { total: 10, met: 10 },
+      timing: { total_minutes: 73 },
+      hashes: {},
+      seal_commit: 'abc123',
+      completed_at: '2026-04-24T10:00:00Z',
+      modules_touched: ['packages/cli/src/engine/census.ts'],
+      callouts: [
+        { id: 'drizzle-C1', category: 'code', summary: 'drizzle-dialect overloads SchemaFileEntry semantics', file: 'packages/cli/src/engine/census.ts', anchor: 'census.ts:267-274' },
+        { id: 'drizzle-C2', category: 'code', summary: 'Config regex can match comments', file: 'packages/cli/src/engine/census.ts', anchor: 'census.ts:251' },
+      ],
+      rejection_cycles: 0,
+      previous_failures: [],
+      build_concerns: [
+        { summary: 'Census dialect as sentinel entry', file: 'packages/cli/src/engine/census.ts' },
+      ],
+    };
+    await createProofChain([entry]);
+  }
+
+  // @ana A009
+  describe('ana proof context returns callouts', () => {
+    it('shows callout text for queried file', async () => {
+      await createContextChain();
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['context', 'census.ts']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('Proof context for census.ts');
+      expect(stdout).toContain('drizzle-dialect');
+      expect(stdout).toContain('Fix Drizzle schema detection');
+    });
+  });
+
+  // @ana A011, A012
+  describe('ana proof context --json', () => {
+    it('returns valid parseable JSON', async () => {
+      await createContextChain();
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['context', 'census.ts', '--json']);
+      expect(exitCode).toBe(0);
+
+      const json = JSON.parse(stdout);
+      expect(json.results).toBeDefined();
+      expect(json.results[0].callouts).toBeDefined();
+      expect(json.results[0].callouts.length).toBeGreaterThan(0);
+      expect(json.results[0].build_concerns).toBeDefined();
+    });
+  });
+
+  // @ana A013, A014
+  describe('ana proof context unknown file', () => {
+    it('shows clean message for file with no data', async () => {
+      await createContextChain();
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['context', 'unknown-file.ts']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('No proof context');
+    });
+  });
+
+  // @ana A015
+  describe('ana proof context without proof chain', () => {
+    it('shows clean message when no proof_chain.json exists', async () => {
+      await createTestProject(tempDir);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['context', 'anything.ts']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('No proof chain found');
+    });
+  });
+
+  // @ana A024
+  describe('ana proof context multiple files', () => {
+    it('returns results for both files', async () => {
+      await createContextChain();
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['context', 'census.ts', 'scan-engine.ts']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('census.ts');
+      expect(stdout).toContain('scan-engine.ts');
+    });
+  });
+
   // ─── Detail View Tests (existing, unchanged) ──────────────────────
 
   // @ana A015, A016

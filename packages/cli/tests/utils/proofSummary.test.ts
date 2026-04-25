@@ -9,6 +9,8 @@ import {
   extractFileRefs,
   generateActiveIssuesMarkdown,
   parseBuildOpenIssues,
+  resolveCalloutPaths,
+  getProofContext,
 } from '../../src/utils/proofSummary.js';
 
 describe('generateProofSummary', () => {
@@ -1115,5 +1117,266 @@ Tests passed.
     const issues = parseBuildOpenIssues(content);
     expect(issues).toHaveLength(1);
     expect(issues[0]!.file).toBe('scanProject.test.ts');
+  });
+});
+
+describe('resolveCalloutPaths', () => {
+  const modules = [
+    'packages/cli/src/engine/census.ts',
+    'packages/cli/src/engine/scan-engine.ts',
+    'packages/cli/src/utils/proofSummary.ts',
+  ];
+
+  // @ana A001, A002, A007
+  it('resolves single-match basename to full path', () => {
+    const items = [{ file: 'census.ts' }];
+    resolveCalloutPaths(items, modules);
+    expect(items[0]!.file).toBe('packages/cli/src/engine/census.ts');
+  });
+
+  // @ana A004
+  it('keeps basename when no modules match', () => {
+    const items = [{ file: 'unknown.ts' }];
+    resolveCalloutPaths(items, modules);
+    expect(items[0]!.file).toBe('unknown.ts');
+  });
+
+  // @ana A003
+  it('keeps basename when multiple modules match', () => {
+    const dupeModules = [
+      'packages/cli/src/a/index.ts',
+      'packages/cli/src/b/index.ts',
+    ];
+    const items = [{ file: 'index.ts' }];
+    resolveCalloutPaths(items, dupeModules);
+    expect(items[0]!.file).toBe('index.ts');
+  });
+
+  // @ana A005
+  it('skips files already containing path separator', () => {
+    const items = [{ file: 'src/utils/proofSummary.ts' }];
+    resolveCalloutPaths(items, modules);
+    expect(items[0]!.file).toBe('src/utils/proofSummary.ts');
+  });
+
+  it('skips null file fields', () => {
+    const items = [{ file: null }];
+    resolveCalloutPaths(items, modules);
+    expect(items[0]!.file).toBeNull();
+  });
+
+  // @ana A006
+  it('resolves build concern file paths', () => {
+    const concerns = [{ file: 'scan-engine.ts', summary: 'some concern' }];
+    resolveCalloutPaths(concerns, modules);
+    expect(concerns[0]!.file).toBe('packages/cli/src/engine/scan-engine.ts');
+  });
+
+  it('handles empty modules_touched array', () => {
+    const items = [{ file: 'census.ts' }];
+    resolveCalloutPaths(items, []);
+    expect(items[0]!.file).toBe('census.ts');
+  });
+
+  // @ana A008
+  it('uses path-boundary checking to prevent false matches', () => {
+    const boundaryModules = ['packages/cli/src/subroute.ts'];
+    const items = [{ file: 'route.ts' }];
+    resolveCalloutPaths(items, boundaryModules);
+    expect(items[0]!.file).toBe('route.ts');
+  });
+});
+
+describe('getProofContext', () => {
+  let tempDir: string;
+
+  beforeEach(async () => {
+    tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'proof-context-test-'));
+    await fs.promises.mkdir(path.join(tempDir, '.ana'), { recursive: true });
+  });
+
+  afterEach(async () => {
+    await fs.promises.rm(tempDir, { recursive: true, force: true });
+  });
+
+  function writeChain(entries: unknown[]): void {
+    fs.writeFileSync(
+      path.join(tempDir, '.ana', 'proof_chain.json'),
+      JSON.stringify({ entries }, null, 2),
+    );
+  }
+
+  const baseEntry = {
+    feature: 'Fix Drizzle schema detection',
+    completed_at: '2026-04-24T10:00:00Z',
+    modules_touched: ['packages/cli/src/engine/census.ts', 'packages/cli/src/engine/scan-engine.ts'],
+    callouts: [
+      { id: 'drizzle-C1', category: 'code', summary: 'drizzle-dialect overloads SchemaFileEntry semantics', file: 'packages/cli/src/engine/census.ts', anchor: 'census.ts:267-274' },
+      { id: 'drizzle-C2', category: 'code', summary: 'Config regex can match comments', file: 'packages/cli/src/engine/census.ts', anchor: 'census.ts:251' },
+    ],
+    build_concerns: [
+      { summary: 'Census dialect as sentinel entry', file: 'packages/cli/src/engine/census.ts' },
+    ],
+  };
+
+  // @ana A009, A010, A017
+  it('returns callouts for queried file (full path match)', () => {
+    writeChain([baseEntry]);
+    const results = getProofContext(['packages/cli/src/engine/census.ts'], tempDir);
+    expect(results).toHaveLength(1);
+    expect(results[0]!.callouts.length).toBeGreaterThan(0);
+    expect(results[0]!.callouts[0]!.from).toBe('Fix Drizzle schema detection');
+    expect(results[0]!.callouts[0]!.category).toBe('code');
+    expect(results[0]!.callouts[0]!.summary).toContain('drizzle-dialect');
+  });
+
+  // @ana A018
+  it('matches basename query to full-path callout (path suffix)', () => {
+    writeChain([baseEntry]);
+    const results = getProofContext(['census.ts'], tempDir);
+    expect(results[0]!.callouts.length).toBeGreaterThan(0);
+    expect(results[0]!.callouts[0]!.file).toBe('packages/cli/src/engine/census.ts');
+  });
+
+  // @ana A019
+  it('matches full-path query to basename callout (legacy)', () => {
+    const legacyEntry = {
+      ...baseEntry,
+      callouts: [
+        { id: 'legacy-C1', category: 'code', summary: 'Old issue', file: 'census.ts', anchor: null },
+      ],
+    };
+    writeChain([legacyEntry]);
+    const results = getProofContext(['packages/cli/src/engine/census.ts'], tempDir);
+    expect(results[0]!.callouts.length).toBeGreaterThan(0);
+    expect(results[0]!.callouts[0]!.file).toBe('census.ts');
+  });
+
+  it('matches basename query to basename callout (legacy)', () => {
+    const legacyEntry = {
+      ...baseEntry,
+      callouts: [
+        { id: 'legacy-C2', category: 'test', summary: 'Legacy test issue', file: 'census.ts', anchor: null },
+      ],
+    };
+    writeChain([legacyEntry]);
+    const results = getProofContext(['census.ts'], tempDir);
+    expect(results[0]!.callouts.length).toBeGreaterThan(0);
+  });
+
+  // @ana A020
+  it('path-boundary prevents false positive matches', () => {
+    const entry = {
+      ...baseEntry,
+      callouts: [
+        { id: 'boundary-C1', category: 'code', summary: 'Issue in subroute', file: 'packages/cli/src/subroute.ts', anchor: null },
+      ],
+    };
+    writeChain([entry]);
+    const results = getProofContext(['route.ts'], tempDir);
+    expect(results[0]!.callouts.length).toBe(0);
+  });
+
+  // @ana A023
+  it('does not match null-file callouts', () => {
+    const entry = {
+      ...baseEntry,
+      callouts: [
+        { id: 'null-C1', category: 'upstream', summary: 'Ambient observation', file: null, anchor: null },
+      ],
+    };
+    writeChain([entry]);
+    const results = getProofContext(['anything.ts'], tempDir);
+    expect(results[0]!.callouts.length).toBe(0);
+  });
+
+  it('includes build concerns in results', () => {
+    writeChain([baseEntry]);
+    const results = getProofContext(['packages/cli/src/engine/census.ts'], tempDir);
+    expect(results[0]!.build_concerns.length).toBeGreaterThan(0);
+    expect(results[0]!.build_concerns[0]!.summary).toContain('Census dialect');
+    expect(results[0]!.build_concerns[0]!.from).toBe('Fix Drizzle schema detection');
+  });
+
+  it('returns empty result for file with no callouts', () => {
+    writeChain([baseEntry]);
+    const results = getProofContext(['unknown-file.ts'], tempDir);
+    expect(results[0]!.callouts).toHaveLength(0);
+    expect(results[0]!.build_concerns).toHaveLength(0);
+    expect(results[0]!.touch_count).toBe(0);
+    expect(results[0]!.last_touched).toBeNull();
+  });
+
+  it('returns empty results when proof_chain.json does not exist', () => {
+    // Don't write chain file
+    const results = getProofContext(['census.ts'], tempDir);
+    expect(results[0]!.callouts).toHaveLength(0);
+    expect(results[0]!.touch_count).toBe(0);
+    expect(results[0]!.last_touched).toBeNull();
+  });
+
+  // @ana A024
+  it('returns results for multiple queried files', () => {
+    writeChain([baseEntry]);
+    const results = getProofContext(['census.ts', 'scan-engine.ts'], tempDir);
+    expect(results).toHaveLength(2);
+    expect(results[0]!.query).toBe('census.ts');
+    expect(results[1]!.query).toBe('scan-engine.ts');
+    expect(results[0]!.callouts.length).toBeGreaterThan(0);
+  });
+
+  // @ana A021
+  it('returns touch count per file', () => {
+    const entry2 = {
+      feature: 'Fix Prisma detection',
+      completed_at: '2026-04-23T10:00:00Z',
+      callouts: [
+        { id: 'prisma-C1', category: 'code', summary: 'Non-recursive check', file: 'packages/cli/src/engine/census.ts', anchor: null },
+      ],
+    };
+    writeChain([baseEntry, entry2]);
+    const results = getProofContext(['census.ts'], tempDir);
+    expect(results[0]!.touch_count).toBeGreaterThan(0);
+    expect(results[0]!.touch_count).toBe(2);
+  });
+
+  // @ana A022
+  it('returns last touched date', () => {
+    const entry2 = {
+      feature: 'Fix Prisma detection',
+      completed_at: '2026-04-23T10:00:00Z',
+      callouts: [
+        { id: 'prisma-C1', category: 'code', summary: 'Non-recursive check', file: 'packages/cli/src/engine/census.ts', anchor: null },
+      ],
+    };
+    writeChain([entry2, baseEntry]); // baseEntry is newer (2026-04-24)
+    const results = getProofContext(['census.ts'], tempDir);
+    expect(results[0]!.last_touched).toBeDefined();
+    expect(results[0]!.last_touched).toBe('2026-04-24T10:00:00Z');
+  });
+
+  // @ana A016
+  it('getProofContext has no CLI dependencies', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../../src/utils/proofSummary.ts'),
+      'utf-8',
+    );
+    expect(source).not.toContain("from 'chalk");
+    expect(source).not.toContain("from 'commander");
+  });
+
+  it('handles entries without completed_at gracefully', () => {
+    const undatedEntry = {
+      feature: 'Old feature',
+      callouts: [
+        { id: 'old-C1', category: 'code', summary: 'Old issue', file: 'census.ts', anchor: null },
+      ],
+    };
+    writeChain([undatedEntry]);
+    const results = getProofContext(['census.ts'], tempDir);
+    expect(results[0]!.callouts.length).toBeGreaterThan(0);
+    // Undated entries don't contribute to touch_count
+    expect(results[0]!.touch_count).toBe(0);
+    expect(results[0]!.last_touched).toBeNull();
   });
 });

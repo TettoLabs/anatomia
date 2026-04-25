@@ -17,7 +17,7 @@ import * as fs from 'node:fs';
 import * as fsPromises from 'node:fs/promises';
 import * as path from 'node:path';
 import { readArtifactBranch, readBranchPrefix, getCurrentBranch } from '../utils/git-operations.js';
-import { generateProofSummary, generateActiveIssuesMarkdown, type ProofSummary } from '../utils/proofSummary.js';
+import { generateProofSummary, generateActiveIssuesMarkdown, resolveCalloutPaths, type ProofSummary } from '../utils/proofSummary.js';
 import { findProjectRoot } from '../utils/validators.js';
 import type { ProofChainEntry } from '../types/proof.js';
 
@@ -806,6 +806,17 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
     previous_failures: proof.previous_failures,
     ...(proof.build_concerns && proof.build_concerns.length > 0 ? { build_concerns: proof.build_concerns } : {}),
   };
+
+  // Resolve callout/build_concern file fields from basenames to full paths.
+  // New entry: resolve against its own modules_touched
+  resolveCalloutPaths(entry.callouts, entry.modules_touched || []);
+  resolveCalloutPaths(entry.build_concerns || [], entry.modules_touched || []);
+
+  // Existing entries: backfill (idempotent — already-resolved files are skipped)
+  for (const existing of chain.entries) {
+    resolveCalloutPaths(existing.callouts || [], existing.modules_touched || []);
+    resolveCalloutPaths(existing.build_concerns || [], existing.modules_touched || []);
+  }
 
   chain.entries.push(entry);
   await fsPromises.writeFile(chainPath, JSON.stringify(chain, null, 2));

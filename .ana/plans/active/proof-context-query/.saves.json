@@ -5,18 +5,165 @@
     "hash": "sha256:15389cd045e5733f9e6de8b7b1c56c69edfb055873dc18ab5adaccf45ff0ed70"
   },
   "contract": {
-    "saved_at": "2026-04-25T00:22:40.756Z",
-    "commit": "89dcce2eac49b296f8e1979352b8c8c5e21ca75d",
+    "saved_at": "2026-04-25T00:22:47.432Z",
+    "commit": "e8090ba2e93134856621289cec3dfa5cc052d73f",
     "hash": "sha256:dad03df125a21a54399b8aeccf5048f52ee3afcedfe36c1a4ab7c33bdc285a4f"
   },
   "plan": {
-    "saved_at": "2026-04-25T00:22:40.762Z",
-    "commit": "89dcce2eac49b296f8e1979352b8c8c5e21ca75d",
+    "saved_at": "2026-04-25T00:22:47.436Z",
+    "commit": "e8090ba2e93134856621289cec3dfa5cc052d73f",
     "hash": "sha256:5a817ab0107f08439141cc2320a498d25a32ea1bd124f871f487e1c6c447ee1f"
   },
   "spec": {
-    "saved_at": "2026-04-25T00:22:40.773Z",
-    "commit": "89dcce2eac49b296f8e1979352b8c8c5e21ca75d",
+    "saved_at": "2026-04-25T00:22:47.447Z",
+    "commit": "e8090ba2e93134856621289cec3dfa5cc052d73f",
     "hash": "sha256:70972b976088c629b86ecf04f2f8e1f379ff1ec365fea3f81a58e9eaab71f951"
+  },
+  "build-report": {
+    "saved_at": "2026-04-25T00:54:58.225Z",
+    "commit": "221586d1c0705ce97a56616ceab786e29fe88fb3",
+    "hash": "sha256:71aab35b16dfc3786c394924971f8e8d0f6687ee6212789d3d289cba5b3f021d"
+  },
+  "modules_touched": [
+    "packages/cli/src/commands/proof.ts",
+    "packages/cli/src/commands/work.ts",
+    "packages/cli/src/utils/proofSummary.ts",
+    "packages/cli/tests/commands/proof.test.ts",
+    "packages/cli/tests/utils/proofSummary.test.ts"
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_commit": "e8090ba2e93134856621289cec3dfa5cc052d73f",
+    "seal_hash": "sha256:dad03df125a21a54399b8aeccf5048f52ee3afcedfe36c1a4ab7c33bdc285a4f",
+    "assertions": [
+      {
+        "id": "A001",
+        "says": "A callout with a basename that matches exactly one touched module gets upgraded to the full path",
+        "status": "COVERED"
+      },
+      {
+        "id": "A002",
+        "says": "The resolved path matches the module from modules_touched, not a fabricated path",
+        "status": "COVERED"
+      },
+      {
+        "id": "A003",
+        "says": "A basename matching two or more touched modules stays as a basename",
+        "status": "COVERED"
+      },
+      {
+        "id": "A004",
+        "says": "A basename matching zero touched modules stays unchanged",
+        "status": "COVERED"
+      },
+      {
+        "id": "A005",
+        "says": "A callout file that already contains a path separator is not re-resolved",
+        "status": "COVERED"
+      },
+      {
+        "id": "A006",
+        "says": "Build concern file fields are resolved using the same logic as callout files",
+        "status": "COVERED"
+      },
+      {
+        "id": "A007",
+        "says": "Existing proof chain entries get their callout files resolved when the chain is rewritten",
+        "status": "COVERED"
+      },
+      {
+        "id": "A008",
+        "says": "Path boundary checking prevents a file named route.ts from matching subroute.ts",
+        "status": "COVERED"
+      },
+      {
+        "id": "A009",
+        "says": "Querying a file returns all callouts associated with that file",
+        "status": "COVERED"
+      },
+      {
+        "id": "A010",
+        "says": "Each returned callout includes its category, summary, and originating feature name",
+        "status": "COVERED"
+      },
+      {
+        "id": "A011",
+        "says": "The --json flag produces valid parseable JSON output",
+        "status": "COVERED"
+      },
+      {
+        "id": "A012",
+        "says": "JSON output includes callouts array and build_concerns array per result",
+        "status": "COVERED"
+      },
+      {
+        "id": "A013",
+        "says": "Querying a file with no proof data shows a clean message instead of an error",
+        "status": "COVERED"
+      },
+      {
+        "id": "A014",
+        "says": "The no-data message names the queried file so the user knows what was searched",
+        "status": "COVERED"
+      },
+      {
+        "id": "A015",
+        "says": "Querying when no proof_chain.json exists shows a clean message, not an error",
+        "status": "COVERED"
+      },
+      {
+        "id": "A016",
+        "says": "The query function lives in proofSummary.ts and has no CLI imports",
+        "status": "COVERED"
+      },
+      {
+        "id": "A017",
+        "says": "A full-path query matches a full-path callout exactly",
+        "status": "COVERED"
+      },
+      {
+        "id": "A018",
+        "says": "A basename query matches a full-path callout via path suffix",
+        "status": "COVERED"
+      },
+      {
+        "id": "A019",
+        "says": "A full-path query matches a legacy basename callout",
+        "status": "COVERED"
+      },
+      {
+        "id": "A020",
+        "says": "A query for route.ts does not match a callout filed under subroute.ts",
+        "status": "COVERED"
+      },
+      {
+        "id": "A021",
+        "says": "The result includes how many pipeline cycles touched the queried file",
+        "status": "COVERED"
+      },
+      {
+        "id": "A022",
+        "says": "The result includes the date of the most recent pipeline cycle for the file",
+        "status": "COVERED"
+      },
+      {
+        "id": "A023",
+        "says": "Callouts with null file fields are never returned by any file query",
+        "status": "COVERED"
+      },
+      {
+        "id": "A024",
+        "says": "Querying multiple files returns separate results for each file",
+        "status": "COVERED"
+      }
+    ],
+    "covered": 24,
+    "uncovered": 0,
+    "run_at": "2026-04-25T01:01:14.544Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-04-25T01:01:14.573Z",
+    "commit": "221586d1c0705ce97a56616ceab786e29fe88fb3",
+    "hash": "sha256:43324a6b96cda5b0dbbd5456f6a3debab63890ef0602771e4ac47822ee033436"
   }
 }

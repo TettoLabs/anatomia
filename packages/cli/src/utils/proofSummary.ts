@@ -312,6 +312,36 @@ export function extractFileRefs(summary: string): string[] {
 }
 
 /**
+ * Resolve callout/build-concern file fields from basenames to full paths.
+ *
+ * For each item where `file` is non-null and contains no `/`, finds matching
+ * modules using path-boundary check (`module.endsWith('/' + file)`). If exactly
+ * one match, replaces `file` with the full path. Mutates in place.
+ *
+ * Idempotent — files already containing `/` are skipped.
+ *
+ * @param items - Array of objects with a `file` field (callouts or build_concerns)
+ * @param modules - Array of full relative paths from modules_touched
+ * @returns void (mutates items in place)
+ */
+export function resolveCalloutPaths(
+  items: Array<{ file: string | null }>,
+  modules: string[],
+): void {
+  for (const item of items) {
+    if (!item.file) continue;
+    if (item.file.includes('/')) continue;
+
+    const basename = item.file;
+    const matches = modules.filter(m => m.endsWith('/' + basename));
+
+    if (matches.length === 1) {
+      item.file = matches[0]!;
+    }
+  }
+}
+
+/**
  * Callout with feature context for Active Issues index
  */
 interface CalloutWithFeature {
@@ -788,4 +818,166 @@ export function generateProofSummary(slugDir: string): ProofSummary {
   }
 
   return summary;
+}
+
+/**
+ * Result of querying proof context for a single file
+ */
+export interface ProofContextResult {
+  query: string;
+  callouts: Array<{
+    id: string;
+    category: string;
+    summary: string;
+    file: string;
+    anchor: string | null;
+    from: string;
+    date: string;
+  }>;
+  build_concerns: Array<{
+    summary: string;
+    file: string;
+    from: string;
+    date: string;
+  }>;
+  touch_count: number;
+  last_touched: string | null;
+}
+
+/**
+ * Proof chain entry structure for getProofContext (minimal projection)
+ */
+interface ProofChainEntryForContext {
+  feature: string;
+  completed_at?: string;
+  modules_touched?: string[];
+  callouts?: Array<{ id: string; category: string; summary: string; file: string | null; anchor: string | null }>;
+  build_concerns?: Array<{ summary: string; file: string | null }>;
+}
+
+/**
+ * Check if a stored file path matches a queried file path.
+ *
+ * Three-tier matching:
+ * 1. Exact match — stored equals queried
+ * 2. Path-suffix match — one ends with '/' + the other's basename
+ * 3. Basename match — stored has no '/' (legacy) and basenames equal
+ *
+ * Path-boundary checks ('/' prefix) prevent false positives from partial names.
+ *
+ * @param stored - File path from proof chain callout/concern
+ * @param queried - File path from user query
+ * @returns Whether the files match
+ */
+function fileMatches(stored: string, queried: string): boolean {
+  // Exact match
+  if (stored === queried) return true;
+
+  const storedBasename = path.basename(stored);
+  const queriedBasename = path.basename(queried);
+
+  // Basenames must match for any non-exact match
+  if (storedBasename !== queriedBasename) return false;
+
+  // Path-suffix: stored (full path) ends with '/' + queriedBasename
+  if (stored.includes('/') && stored.endsWith('/' + queriedBasename)) return true;
+
+  // Path-suffix: queried (full path) ends with '/' + storedBasename
+  if (queried.includes('/') && queried.endsWith('/' + storedBasename)) return true;
+
+  // Basename match: stored has no '/' (legacy data)
+  if (!stored.includes('/')) return true;
+
+  return false;
+}
+
+/**
+ * Query proof chain for context about specific files.
+ *
+ * Reads proof_chain.json, matches callouts and build concerns against
+ * queried file paths using three-tier matching (exact, path-suffix, basename).
+ * Returns structured results per queried file.
+ *
+ * @param queries - Array of file paths to query
+ * @param projectRoot - Project root directory (where .ana/ lives)
+ * @returns Array of ProofContextResult, one per queried file
+ */
+export function getProofContext(queries: string[], projectRoot: string): ProofContextResult[] {
+  const chainPath = path.join(projectRoot, '.ana', 'proof_chain.json');
+
+  if (!fs.existsSync(chainPath)) {
+    return queries.map(q => ({
+      query: q,
+      callouts: [],
+      build_concerns: [],
+      touch_count: 0,
+      last_touched: null,
+    }));
+  }
+
+  let entries: ProofChainEntryForContext[] = [];
+  try {
+    const content = fs.readFileSync(chainPath, 'utf-8');
+    const chain = JSON.parse(content);
+    entries = chain.entries ?? [];
+  } catch {
+    entries = [];
+  }
+
+  return queries.map(query => {
+    const matchedCallouts: ProofContextResult['callouts'] = [];
+    const matchedConcerns: ProofContextResult['build_concerns'] = [];
+    const touchDates: string[] = [];
+
+    for (const entry of entries) {
+      let entryTouches = false;
+      const entryDate = entry.completed_at ?? '';
+
+      // Match callouts
+      for (const callout of entry.callouts ?? []) {
+        if (!callout.file) continue;
+        if (fileMatches(callout.file, query)) {
+          matchedCallouts.push({
+            id: callout.id,
+            category: callout.category,
+            summary: callout.summary,
+            file: callout.file,
+            anchor: callout.anchor,
+            from: entry.feature,
+            date: entryDate,
+          });
+          entryTouches = true;
+        }
+      }
+
+      // Match build concerns
+      for (const concern of entry.build_concerns ?? []) {
+        if (!concern.file) continue;
+        if (fileMatches(concern.file, query)) {
+          matchedConcerns.push({
+            summary: concern.summary,
+            file: concern.file,
+            from: entry.feature,
+            date: entryDate,
+          });
+          entryTouches = true;
+        }
+      }
+
+      if (entryTouches && entryDate) {
+        touchDates.push(entryDate);
+      }
+    }
+
+    // Sort dates descending to find most recent
+    touchDates.sort((a, b) => b.localeCompare(a));
+
+    return {
+      query,
+      callouts: matchedCallouts,
+      build_concerns: matchedConcerns,
+      touch_count: touchDates.length,
+      last_touched: touchDates[0] ?? null,
+    };
+  });
 }

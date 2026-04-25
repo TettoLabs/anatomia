@@ -176,10 +176,10 @@ export function createPr(slug: string): void {
 
   // 4. Read verify report (single-spec: verify_report.md, multi-spec: verify_report_N.md)
   const planDir = path.join(projectRoot, '.ana/plans/active', slug);
+  const dirFiles = fs.readdirSync(planDir);
   let verifyReportPath = path.join(planDir, 'verify_report.md');
   if (!fs.existsSync(verifyReportPath)) {
     // Multi-spec: find the highest-numbered verify report
-    const dirFiles = fs.readdirSync(planDir);
     const verifyReports = dirFiles
       .filter(f => f.match(/^verify_report_\d+\.md$/))
       .sort();
@@ -208,12 +208,20 @@ export function createPr(slug: string): void {
 
   const testInfo = extractTestInfo(verifyContent);
 
-  // 5. Read build report
-  const buildReportPath = path.join(projectRoot, '.ana/plans/active', slug, 'build_report.md');
+  // 5. Read build report (single-spec: build_report.md, multi-spec: build_report_N.md)
+  let buildReportPath = path.join(planDir, 'build_report.md');
   if (!fs.existsSync(buildReportPath)) {
-    console.error(chalk.red('No build report found.'));
-    console.error(chalk.dim('Run `claude --agent ana-build` first.'));
-    process.exit(1);
+    // Multi-spec: find the highest-numbered build report
+    const buildReports = dirFiles
+      .filter(f => f.match(/^build_report_\d+\.md$/))
+      .sort();
+    if (buildReports.length > 0) {
+      buildReportPath = path.join(planDir, buildReports[buildReports.length - 1]!);
+    } else {
+      console.error(chalk.red('No build report found.'));
+      console.error(chalk.dim('Run `claude --agent ana-build` first.'));
+      process.exit(1);
+    }
   }
 
   const buildContent = fs.readFileSync(buildReportPath, 'utf-8');
@@ -262,8 +270,8 @@ ${prSummary}
 ## Pipeline Artifacts
 - Scope: \`.ana/plans/active/${slug}/scope.md\`
 - Spec: \`.ana/plans/active/${slug}/spec.md\`
-- Build Report: \`.ana/plans/active/${slug}/build_report.md\`
-- Verify Report: \`.ana/plans/active/${slug}/verify_report.md\`
+- Build Report: \`${path.relative(projectRoot, buildReportPath)}\`
+- Verify Report: \`${path.relative(projectRoot, verifyReportPath)}\`
 
 ## Verification
 - **Result:** ${result}
