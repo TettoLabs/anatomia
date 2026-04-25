@@ -1,0 +1,194 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Proof context file query"
+
+assertions:
+  # ── AC1: Single-match basename resolves to full path ──
+  - id: A001
+    says: "A callout with a basename that matches exactly one touched module gets upgraded to the full path"
+    block: "resolves single-match basename to full path"
+    target: "callout.file"
+    matcher: "contains"
+    value: "/"
+
+  - id: A002
+    says: "The resolved path matches the module from modules_touched, not a fabricated path"
+    block: "resolves single-match basename to full path"
+    target: "callout.file"
+    matcher: "equals"
+    value: "packages/cli/src/engine/census.ts"
+
+  # ── AC2: Ambiguous or missing basenames stay unchanged ──
+  - id: A003
+    says: "A basename matching two or more touched modules stays as a basename"
+    block: "keeps basename when multiple modules match"
+    target: "callout.file"
+    matcher: "not_contains"
+    value: "/"
+
+  - id: A004
+    says: "A basename matching zero touched modules stays unchanged"
+    block: "keeps basename when no modules match"
+    target: "callout.file"
+    matcher: "not_contains"
+    value: "/"
+
+  - id: A005
+    says: "A callout file that already contains a path separator is not re-resolved"
+    block: "skips files already containing path separator"
+    target: "callout.file"
+    matcher: "equals"
+    value: "src/utils/proofSummary.ts"
+
+  # ── AC3: Build concerns resolved same as callouts ──
+  - id: A006
+    says: "Build concern file fields are resolved using the same logic as callout files"
+    block: "resolves build concern file paths"
+    target: "buildConcern.file"
+    matcher: "contains"
+    value: "/"
+
+  # ── AC4: Backfill existing entries ──
+  - id: A007
+    says: "Existing proof chain entries get their callout files resolved when the chain is rewritten"
+    block: "backfills existing entries on write"
+    target: "existingEntry.callout.file"
+    matcher: "contains"
+    value: "/"
+
+  # ── AC1/AC2 edge case: path boundary prevents false positives ──
+  - id: A008
+    says: "Path boundary checking prevents a file named route.ts from matching subroute.ts"
+    block: "uses path-boundary checking to prevent false matches"
+    target: "callout.file"
+    matcher: "not_contains"
+    value: "/"
+
+  # ── AC5: Basic query returns callouts ──
+  - id: A009
+    says: "Querying a file returns all callouts associated with that file"
+    block: "returns callouts for queried file"
+    target: "result.callouts.length"
+    matcher: "greater"
+    value: 0
+
+  - id: A010
+    says: "Each returned callout includes its category, summary, and originating feature name"
+    block: "returns callouts for queried file"
+    target: "result.callouts[0].from"
+    matcher: "exists"
+
+  # ── AC6: JSON output ──
+  - id: A011
+    says: "The --json flag produces valid parseable JSON output"
+    block: "outputs valid JSON with --json flag"
+    target: "json.results"
+    matcher: "exists"
+
+  - id: A012
+    says: "JSON output includes callouts array and build_concerns array per result"
+    block: "outputs valid JSON with --json flag"
+    target: "json.results[0].callouts"
+    matcher: "exists"
+
+  # ── AC7: No data produces clean message ──
+  - id: A013
+    says: "Querying a file with no proof data shows a clean message instead of an error"
+    block: "shows clean message when file has no proof data"
+    target: "exitCode"
+    matcher: "equals"
+    value: 0
+
+  - id: A014
+    says: "The no-data message names the queried file so the user knows what was searched"
+    block: "shows clean message when file has no proof data"
+    target: "stdout"
+    matcher: "contains"
+    value: "No proof context"
+
+  # ── AC8: Missing proof chain file ──
+  - id: A015
+    says: "Querying when no proof_chain.json exists shows a clean message, not an error"
+    block: "handles missing proof chain file gracefully"
+    target: "exitCode"
+    matcher: "equals"
+    value: 0
+
+  # ── AC9: Importable without CLI dependencies ──
+  - id: A016
+    says: "The query function lives in proofSummary.ts and has no CLI imports"
+    block: "getProofContext has no CLI dependencies"
+    target: "proofSummarySource"
+    matcher: "not_contains"
+    value: "chalk"
+
+  # ── AC10: Matching handles all path forms ──
+  - id: A017
+    says: "A full-path query matches a full-path callout exactly"
+    block: "matches full path to full path"
+    target: "result.callouts.length"
+    matcher: "greater"
+    value: 0
+
+  - id: A018
+    says: "A basename query matches a full-path callout via path suffix"
+    block: "matches basename query to full-path callout"
+    target: "result.callouts.length"
+    matcher: "greater"
+    value: 0
+
+  - id: A019
+    says: "A full-path query matches a legacy basename callout"
+    block: "matches full-path query to basename callout"
+    target: "result.callouts.length"
+    matcher: "greater"
+    value: 0
+
+  - id: A020
+    says: "A query for route.ts does not match a callout filed under subroute.ts"
+    block: "path-boundary prevents false positive matches"
+    target: "result.callouts.length"
+    matcher: "equals"
+    value: 0
+
+  # ── Touch count and recency ──
+  - id: A021
+    says: "The result includes how many pipeline cycles touched the queried file"
+    block: "returns touch count per file"
+    target: "result.touch_count"
+    matcher: "greater"
+    value: 0
+
+  - id: A022
+    says: "The result includes the date of the most recent pipeline cycle for the file"
+    block: "returns last touched date"
+    target: "result.last_touched"
+    matcher: "exists"
+
+  # ── Null-file callouts ──
+  - id: A023
+    says: "Callouts with null file fields are never returned by any file query"
+    block: "does not match null-file callouts"
+    target: "result.callouts.length"
+    matcher: "equals"
+    value: 0
+
+  # ── Multiple files ──
+  - id: A024
+    says: "Querying multiple files returns separate results for each file"
+    block: "returns results for multiple queried files"
+    target: "json.results.length"
+    matcher: "equals"
+    value: 2
+
+file_changes:
+  - path: "packages/cli/src/utils/proofSummary.ts"
+    action: modify
+  - path: "packages/cli/src/commands/work.ts"
+    action: modify
+  - path: "packages/cli/src/commands/proof.ts"
+    action: modify
+  - path: "packages/cli/tests/utils/proofSummary.test.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/proof.test.ts"
+    action: modify
