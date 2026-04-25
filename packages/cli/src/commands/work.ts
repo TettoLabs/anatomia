@@ -739,8 +739,9 @@ interface ProofChain {
  * @param slug - Work item slug
  * @param proof - Proof summary data
  * @param projectRoot - Project root directory
+ * @returns Chain health counts: total runs and cumulative callouts
  */
-async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: string): Promise<void> {
+async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: string): Promise<{ runs: number; callouts: number }> {
   const anaDir = path.join(projectRoot, '.ana');
 
   // Ensure .ana directory exists
@@ -884,6 +885,11 @@ Pipeline: ${timing.total_minutes}m${timingDetails}${deviationSummary}${modulesLi
   // Combine Active Issues + history
   const fullMd = activeIssuesMd + '\n' + historyEntries.join('\n');
   await fsPromises.writeFile(chainMdPath, fullMd);
+
+  // Compute chain health counts
+  const runs = chain.entries.length;
+  const callouts = chain.entries.reduce((sum, e) => sum + (e.callouts || []).length, 0);
+  return { runs, callouts };
 }
 
 /**
@@ -1053,7 +1059,7 @@ export async function completeWork(slug: string): Promise<void> {
 
   // 9a. Generate proof summary and write proof chain
   const proof = generateProofSummary(completedPath);
-  await writeProofChain(slug, proof, projectRoot);
+  const { runs, callouts } = await writeProofChain(slug, proof, projectRoot);
 
   // 10. Stage and commit
   try {
@@ -1098,7 +1104,7 @@ export async function completeWork(slug: string): Promise<void> {
   const statusIcon = proof.result === 'PASS' ? '✓' : '✗';
   console.log(`\n${statusIcon} ${proof.result} — ${proof.feature}`);
   console.log(`  ${proof.contract.covered}/${proof.contract.total} covered · ${proof.contract.satisfied}/${proof.contract.total} satisfied · ${proof.deviations.length} deviation${proof.deviations.length !== 1 ? 's' : ''}`);
-  console.log('  Proof saved to chain.');
+  console.log(chalk.gray(`  Chain: ${runs} ${runs !== 1 ? 'runs' : 'run'} · ${callouts} ${callouts !== 1 ? 'callouts' : 'callout'}`));
 }
 
 /**
