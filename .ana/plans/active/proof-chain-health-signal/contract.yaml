@@ -1,0 +1,73 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Proof chain health signal"
+
+assertions:
+  - id: A001
+    says: "Completion output shows the chain balance instead of a static confirmation"
+    block: "prints chain balance on first run"
+    target: "output"
+    matcher: "contains"
+    value: "Chain: 1 run"
+
+  - id: A002
+    says: "The old write confirmation no longer appears"
+    block: "prints chain balance on first run"
+    target: "output"
+    matcher: "not_contains"
+    value: "Proof saved to chain"
+
+  - id: A003
+    says: "Callout count is zero when the entry has no callouts"
+    block: "prints chain balance on first run"
+    target: "output"
+    matcher: "contains"
+    value: "0 callouts"
+
+  - id: A004
+    says: "Singular 'run' is used when chain has exactly one entry"
+    block: "prints chain balance on first run"
+    target: "output"
+    matcher: "contains"
+    value: "1 run "
+
+  - id: A005
+    says: "Cumulative run count reflects all entries in the chain"
+    block: "prints cumulative chain balance with existing entries"
+    target: "output"
+    matcher: "contains"
+    value: "Chain: 2 runs"
+
+  - id: A006
+    says: "Plural 'runs' is used when chain has more than one entry"
+    block: "prints cumulative chain balance with existing entries"
+    target: "output"
+    matcher: "contains"
+    value: "2 runs"
+
+  - id: A007
+    says: "Chain balance line uses the dot separator convention"
+    block: "prints chain balance on first run"
+    target: "output"
+    matcher: "contains"
+    value: "run · "
+
+  - id: A008
+    says: "writeProofChain returns run and callout counts"
+    block: "returns chain health counts"
+    target: "result.runs"
+    matcher: "equals"
+    value: 1
+
+  - id: A009
+    says: "Returned callout count sums across all entries defensively"
+    block: "returns cumulative callout counts with existing chain"
+    target: "result.callouts"
+    matcher: "equals"
+    value: 0
+
+file_changes:
+  - path: "packages/cli/src/commands/work.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/work.test.ts"
+    action: modify
