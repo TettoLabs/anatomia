@@ -20,9 +20,9 @@
     "hash": "sha256:70972b976088c629b86ecf04f2f8e1f379ff1ec365fea3f81a58e9eaab71f951"
   },
   "build-report": {
-    "saved_at": "2026-04-25T00:41:12.220Z",
-    "commit": "db3f2d5d6a94038a69ccf4655b9aacf829c21d91",
-    "hash": "sha256:5193f5375ad4b7eb32b4dd8c1173de61a2004f44bdbc049c500f10850b527a93"
+    "saved_at": "2026-04-25T00:54:51.259Z",
+    "commit": "d9de881b8d488853626d1e3f90ad9d4eb21b94e1",
+    "hash": "sha256:71aab35b16dfc3786c394924971f8e8d0f6687ee6212789d3d289cba5b3f021d"
   },
   "modules_touched": [
     "packages/cli/src/commands/work.ts",
@@ -160,8 +160,8 @@
     "run_at": "2026-04-25T00:45:38.091Z"
   },
   "verify-report": {
-    "saved_at": "2026-04-25T00:45:38.124Z",
-    "commit": "db3f2d5d6a94038a69ccf4655b9aacf829c21d91",
+    "saved_at": "2026-04-25T00:45:45.292Z",
+    "commit": "0124c366cc17632b2195a0a77cadcabdaf44dc5f",
     "hash": "sha256:939b01589f3b4147596ce89d28ed42048e8c39e6ec397e154de9277e0a19bb79"
   }
 }
