@@ -20,8 +20,74 @@
     "hash": "sha256:70529a0235ec00f2233bced393bf0362b2d811d8ebe6eb1e59379c0fe6150471"
   },
   "build-report": {
-    "saved_at": "2026-04-25T06:23:23.733Z",
-    "commit": "e9f35fd9e6851efd582ba01ee2f09a421bbfcf25",
+    "saved_at": "2026-04-25T06:23:30.889Z",
+    "commit": "feb6a18998403a23877c16d83bf60714746137b4",
     "hash": "sha256:557de239ac4d3e7eb4b17accc4f57c75ee70905ade90a1df88db2a72e0aacdc2"
+  },
+  "modules_touched": [
+    ".claude/agents/ana-build.md",
+    ".claude/agents/ana-plan.md",
+    ".claude/agents/ana-verify.md",
+    ".claude/agents/ana.md",
+    "packages/cli/templates/.claude/agents/ana-build.md",
+    "packages/cli/templates/.claude/agents/ana-plan.md",
+    "packages/cli/templates/.claude/agents/ana-verify.md",
+    "packages/cli/templates/.claude/agents/ana.md",
+    "packages/cli/tests/templates/agent-proof-context.test.ts"
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_commit": "ff6bd5fa7c0942e711e2897254e321e06a0b9079",
+    "seal_hash": "sha256:038d5bfc0c3a500cdf9c468961b048bca632d6e9134d8fd020ff56fba45cce93",
+    "assertions": [
+      {
+        "id": "A001",
+        "says": "Ana queries proof chain history using the targeted command during exploration",
+        "status": "COVERED"
+      },
+      {
+        "id": "A002",
+        "says": "Ana's checkpoint references existing findings instead of re-reading the proof chain file",
+        "status": "COVERED"
+      },
+      {
+        "id": "A003",
+        "says": "Ana no longer reads the proof chain file before scoping",
+        "status": "COVERED"
+      },
+      {
+        "id": "A004",
+        "says": "Verify queries proof chain history using the targeted command after loading the contract",
+        "status": "COVERED"
+      },
+      {
+        "id": "A005",
+        "says": "Verify falls back to reading the proof chain file when the command is unavailable",
+        "status": "COVERED"
+      },
+      {
+        "id": "A006",
+        "says": "Plan agents receive proof context through the scope, not by reading the file directly",
+        "status": "COVERED"
+      },
+      {
+        "id": "A007",
+        "says": "Build agents receive proof context through the spec, not by reading the file directly",
+        "status": "COVERED"
+      },
+      {
+        "id": "A008",
+        "says": "Dogfood agent definitions match the shipped templates exactly",
+        "status": "COVERED"
+      }
+    ],
+    "covered": 8,
+    "uncovered": 0,
+    "run_at": "2026-04-25T06:28:14.766Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-04-25T06:28:14.794Z",
+    "commit": "feb6a18998403a23877c16d83bf60714746137b4",
+    "hash": "sha256:89a85e043c72615000f56b3b0e9a77dc52df6acaf2f209afc0376097f5026249"
   }
 }
