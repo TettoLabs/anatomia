@@ -20,13 +20,15 @@
     "hash": "sha256:70972b976088c629b86ecf04f2f8e1f379ff1ec365fea3f81a58e9eaab71f951"
   },
   "build-report": {
-    "saved_at": "2026-04-25T00:54:51.259Z",
-    "commit": "d9de881b8d488853626d1e3f90ad9d4eb21b94e1",
+    "saved_at": "2026-04-25T00:54:58.225Z",
+    "commit": "221586d1c0705ce97a56616ceab786e29fe88fb3",
     "hash": "sha256:71aab35b16dfc3786c394924971f8e8d0f6687ee6212789d3d289cba5b3f021d"
   },
   "modules_touched": [
+    "packages/cli/src/commands/proof.ts",
     "packages/cli/src/commands/work.ts",
     "packages/cli/src/utils/proofSummary.ts",
+    "packages/cli/tests/commands/proof.test.ts",
     "packages/cli/tests/utils/proofSummary.test.ts"
   ],
   "pre-check": {
@@ -117,51 +119,51 @@
       {
         "id": "A017",
         "says": "A full-path query matches a full-path callout exactly",
-        "status": "UNCOVERED"
+        "status": "COVERED"
       },
       {
         "id": "A018",
         "says": "A basename query matches a full-path callout via path suffix",
-        "status": "UNCOVERED"
+        "status": "COVERED"
       },
       {
         "id": "A019",
         "says": "A full-path query matches a legacy basename callout",
-        "status": "UNCOVERED"
+        "status": "COVERED"
       },
       {
         "id": "A020",
         "says": "A query for route.ts does not match a callout filed under subroute.ts",
-        "status": "UNCOVERED"
+        "status": "COVERED"
       },
       {
         "id": "A021",
         "says": "The result includes how many pipeline cycles touched the queried file",
-        "status": "UNCOVERED"
+        "status": "COVERED"
       },
       {
         "id": "A022",
         "says": "The result includes the date of the most recent pipeline cycle for the file",
-        "status": "UNCOVERED"
+        "status": "COVERED"
       },
       {
         "id": "A023",
         "says": "Callouts with null file fields are never returned by any file query",
-        "status": "UNCOVERED"
+        "status": "COVERED"
       },
       {
         "id": "A024",
         "says": "Querying multiple files returns separate results for each file",
-        "status": "UNCOVERED"
+        "status": "COVERED"
       }
     ],
-    "covered": 16,
-    "uncovered": 8,
-    "run_at": "2026-04-25T00:45:38.091Z"
+    "covered": 24,
+    "uncovered": 0,
+    "run_at": "2026-04-25T01:01:14.544Z"
   },
   "verify-report": {
-    "saved_at": "2026-04-25T00:45:45.292Z",
-    "commit": "0124c366cc17632b2195a0a77cadcabdaf44dc5f",
-    "hash": "sha256:939b01589f3b4147596ce89d28ed42048e8c39e6ec397e154de9277e0a19bb79"
+    "saved_at": "2026-04-25T01:01:14.573Z",
+    "commit": "221586d1c0705ce97a56616ceab786e29fe88fb3",
+    "hash": "sha256:43324a6b96cda5b0dbbd5456f6a3debab63890ef0602771e4ac47822ee033436"
   }
 }
