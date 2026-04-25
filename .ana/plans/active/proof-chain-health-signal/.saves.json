@@ -20,8 +20,72 @@
     "hash": "sha256:eec3939fad722c7584f3284c7f34e5163e5b4927e00fc518983818bc1d44c0e9"
   },
   "build-report": {
-    "saved_at": "2026-04-25T23:17:34.205Z",
-    "commit": "65f115d23569bd790122579c8c646051e02890a3",
+    "saved_at": "2026-04-25T23:17:41.227Z",
+    "commit": "3bd5d308469a08a46e16a9ef3a38c34aae036d8a",
     "hash": "sha256:e5d147bbcee2d0f6807326c357e28acbce5e51b52e795c4740801c6313701044"
+  },
+  "modules_touched": [
+    "packages/cli/src/commands/work.ts",
+    "packages/cli/tests/commands/work.test.ts"
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_commit": "d7bc52118d47afe7501e0e433657542850a6374c",
+    "seal_hash": "sha256:c93755baac76b51a6ea67113c92891eb86c11f2cefe17bfe991677bdac02f93f",
+    "assertions": [
+      {
+        "id": "A001",
+        "says": "Completion output shows the chain balance instead of a static confirmation",
+        "status": "COVERED"
+      },
+      {
+        "id": "A002",
+        "says": "The old write confirmation no longer appears",
+        "status": "COVERED"
+      },
+      {
+        "id": "A003",
+        "says": "Callout count is zero when the entry has no callouts",
+        "status": "COVERED"
+      },
+      {
+        "id": "A004",
+        "says": "Singular 'run' is used when chain has exactly one entry",
+        "status": "COVERED"
+      },
+      {
+        "id": "A005",
+        "says": "Cumulative run count reflects all entries in the chain",
+        "status": "COVERED"
+      },
+      {
+        "id": "A006",
+        "says": "Plural 'runs' is used when chain has more than one entry",
+        "status": "COVERED"
+      },
+      {
+        "id": "A007",
+        "says": "Chain balance line uses the dot separator convention",
+        "status": "COVERED"
+      },
+      {
+        "id": "A008",
+        "says": "writeProofChain returns run and callout counts",
+        "status": "COVERED"
+      },
+      {
+        "id": "A009",
+        "says": "Returned callout count sums across all entries defensively",
+        "status": "COVERED"
+      }
+    ],
+    "covered": 9,
+    "uncovered": 0,
+    "run_at": "2026-04-25T23:29:10.240Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-04-25T23:29:10.280Z",
+    "commit": "3bd5d308469a08a46e16a9ef3a38c34aae036d8a",
+    "hash": "sha256:b18445cc536412d02bee5e7aedde6b330162756e0e36846feb8f75dde997fe59"
   }
 }
