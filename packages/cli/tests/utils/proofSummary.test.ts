@@ -9,6 +9,7 @@ import {
   extractFileRefs,
   generateActiveIssuesMarkdown,
   parseBuildOpenIssues,
+  resolveCalloutPaths,
 } from '../../src/utils/proofSummary.js';
 
 describe('generateProofSummary', () => {
@@ -1115,5 +1116,72 @@ Tests passed.
     const issues = parseBuildOpenIssues(content);
     expect(issues).toHaveLength(1);
     expect(issues[0]!.file).toBe('scanProject.test.ts');
+  });
+});
+
+describe('resolveCalloutPaths', () => {
+  const modules = [
+    'packages/cli/src/engine/census.ts',
+    'packages/cli/src/engine/scan-engine.ts',
+    'packages/cli/src/utils/proofSummary.ts',
+  ];
+
+  // @ana A001, A002
+  it('resolves single-match basename to full path', () => {
+    const items = [{ file: 'census.ts' }];
+    resolveCalloutPaths(items, modules);
+    expect(items[0]!.file).toBe('packages/cli/src/engine/census.ts');
+  });
+
+  // @ana A004
+  it('keeps basename when no modules match', () => {
+    const items = [{ file: 'unknown.ts' }];
+    resolveCalloutPaths(items, modules);
+    expect(items[0]!.file).toBe('unknown.ts');
+  });
+
+  // @ana A003
+  it('keeps basename when multiple modules match', () => {
+    const dupeModules = [
+      'packages/cli/src/a/index.ts',
+      'packages/cli/src/b/index.ts',
+    ];
+    const items = [{ file: 'index.ts' }];
+    resolveCalloutPaths(items, dupeModules);
+    expect(items[0]!.file).toBe('index.ts');
+  });
+
+  // @ana A005
+  it('skips files already containing path separator', () => {
+    const items = [{ file: 'src/utils/proofSummary.ts' }];
+    resolveCalloutPaths(items, modules);
+    expect(items[0]!.file).toBe('src/utils/proofSummary.ts');
+  });
+
+  it('skips null file fields', () => {
+    const items = [{ file: null }];
+    resolveCalloutPaths(items, modules);
+    expect(items[0]!.file).toBeNull();
+  });
+
+  // @ana A006
+  it('resolves build concern file paths', () => {
+    const concerns = [{ file: 'scan-engine.ts', summary: 'some concern' }];
+    resolveCalloutPaths(concerns, modules);
+    expect(concerns[0]!.file).toBe('packages/cli/src/engine/scan-engine.ts');
+  });
+
+  it('handles empty modules_touched array', () => {
+    const items = [{ file: 'census.ts' }];
+    resolveCalloutPaths(items, []);
+    expect(items[0]!.file).toBe('census.ts');
+  });
+
+  // @ana A008
+  it('uses path-boundary checking to prevent false matches', () => {
+    const boundaryModules = ['packages/cli/src/subroute.ts'];
+    const items = [{ file: 'route.ts' }];
+    resolveCalloutPaths(items, boundaryModules);
+    expect(items[0]!.file).toBe('route.ts');
   });
 });

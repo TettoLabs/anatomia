@@ -312,6 +312,36 @@ export function extractFileRefs(summary: string): string[] {
 }
 
 /**
+ * Resolve callout/build-concern file fields from basenames to full paths.
+ *
+ * For each item where `file` is non-null and contains no `/`, finds matching
+ * modules using path-boundary check (`module.endsWith('/' + file)`). If exactly
+ * one match, replaces `file` with the full path. Mutates in place.
+ *
+ * Idempotent — files already containing `/` are skipped.
+ *
+ * @param items - Array of objects with a `file` field (callouts or build_concerns)
+ * @param modules - Array of full relative paths from modules_touched
+ * @returns void (mutates items in place)
+ */
+export function resolveCalloutPaths(
+  items: Array<{ file: string | null }>,
+  modules: string[],
+): void {
+  for (const item of items) {
+    if (!item.file) continue;
+    if (item.file.includes('/')) continue;
+
+    const basename = item.file;
+    const matches = modules.filter(m => m.endsWith('/' + basename));
+
+    if (matches.length === 1) {
+      item.file = matches[0]!;
+    }
+  }
+}
+
+/**
  * Callout with feature context for Active Issues index
  */
 interface CalloutWithFeature {
