@@ -1,0 +1,80 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Replace PROOF_CHAIN.md reads with targeted proof context queries"
+
+assertions:
+  - id: A001
+    says: "Ana queries proof chain history using the targeted command during exploration"
+    block: "ana exploration references proof context command"
+    target: "ana.md.content"
+    matcher: "contains"
+    value: "ana proof context"
+
+  - id: A002
+    says: "Ana's checkpoint references existing findings instead of re-reading the proof chain file"
+    block: "ana checkpoint does not reference PROOF_CHAIN.md"
+    target: "ana.md.checkpoint"
+    matcher: "not_contains"
+    value: "PROOF_CHAIN.md"
+
+  - id: A003
+    says: "Ana no longer reads the proof chain file before scoping"
+    block: "ana pre-scoping list omits PROOF_CHAIN.md"
+    target: "ana.md.step1"
+    matcher: "not_contains"
+    value: "PROOF_CHAIN.md"
+
+  - id: A004
+    says: "Verify queries proof chain history using the targeted command after loading the contract"
+    block: "verify references proof context command"
+    target: "ana-verify.md.content"
+    matcher: "contains"
+    value: "ana proof context"
+
+  - id: A005
+    says: "Verify falls back to reading the proof chain file when the command is unavailable"
+    block: "verify includes command-unavailable fallback"
+    target: "ana-verify.md.fallback"
+    matcher: "contains"
+    value: "If the command is not available"
+
+  - id: A006
+    says: "Plan agents receive proof context through the scope, not by reading the file directly"
+    block: "plan template has no PROOF_CHAIN.md references"
+    target: "ana-plan.md.content"
+    matcher: "not_contains"
+    value: "PROOF_CHAIN.md"
+
+  - id: A007
+    says: "Build agents receive proof context through the spec, not by reading the file directly"
+    block: "build template has no PROOF_CHAIN.md references"
+    target: "ana-build.md.content"
+    matcher: "not_contains"
+    value: "PROOF_CHAIN.md"
+
+  - id: A008
+    says: "Dogfood agent definitions match the shipped templates exactly"
+    block: "dogfood files match templates"
+    target: "dogfood.sync"
+    matcher: "equals"
+    value: true
+
+file_changes:
+  - path: "packages/cli/templates/.claude/agents/ana.md"
+    action: modify
+  - path: "packages/cli/templates/.claude/agents/ana-plan.md"
+    action: modify
+  - path: "packages/cli/templates/.claude/agents/ana-build.md"
+    action: modify
+  - path: "packages/cli/templates/.claude/agents/ana-verify.md"
+    action: modify
+  - path: ".claude/agents/ana.md"
+    action: modify
+  - path: ".claude/agents/ana-plan.md"
+    action: modify
+  - path: ".claude/agents/ana-build.md"
+    action: modify
+  - path: ".claude/agents/ana-verify.md"
+    action: modify
+  - path: "packages/cli/tests/templates/agent-proof-context.test.ts"
+    action: create

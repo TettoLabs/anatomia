@@ -1,7 +1,22 @@
 {
   "scope": {
-    "saved_at": "2026-04-25T05:48:45.515Z",
-    "commit": "524726f43cd102b617e2b342503d6c4588d4750b",
+    "saved_at": "2026-04-25T05:48:52.810Z",
+    "commit": "ee1939892d25526aa5eec6321d5e784197dc8859",
     "hash": "sha256:01d677eb450054fcd10477797465f58f11e30453ac968f6be89e74d18e620bbc"
+  },
+  "contract": {
+    "saved_at": "2026-04-25T06:05:04.134Z",
+    "commit": "ee1939892d25526aa5eec6321d5e784197dc8859",
+    "hash": "sha256:038d5bfc0c3a500cdf9c468961b048bca632d6e9134d8fd020ff56fba45cce93"
+  },
+  "plan": {
+    "saved_at": "2026-04-25T06:05:04.139Z",
+    "commit": "ee1939892d25526aa5eec6321d5e784197dc8859",
+    "hash": "sha256:b8783cef855a0dffa3dc8ddb2ecb0cca8c2ee20f51f8c45a8e520b6553b05042"
+  },
+  "spec": {
+    "saved_at": "2026-04-25T06:05:04.144Z",
+    "commit": "ee1939892d25526aa5eec6321d5e784197dc8859",
+    "hash": "sha256:70529a0235ec00f2233bced393bf0362b2d811d8ebe6eb1e59379c0fe6150471"
   }
 }
