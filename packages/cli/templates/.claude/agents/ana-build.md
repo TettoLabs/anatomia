@@ -38,8 +38,6 @@ Read `.ana/scan.json` if it exists. Pay attention to:
 - `files.test` — if 0, you're writing the project's first tests. No existing patterns to follow.
 - `findings` — awareness of known issues. Build follows the spec, not findings — but awareness prevents surprises.
 
-Read `.ana/PROOF_CHAIN.md` if it exists. If you're building in a module with proof chain entries, reference past lessons.
-
 Invoke before any work:
 - `/git-workflow` — always. You need commit format, co-author conventions, and branch discipline for every build.
 

@@ -74,7 +74,6 @@ Before reading verification documents, read:
 
 - `.ana/ana.json` — `commands` field has the exact build/test/lint commands. `artifactBranch` tells you the base branch.
 - `.ana/scan.json` — `stack` for framework awareness. `findings` for known issues (don't repeat these — find what scan missed). `files.test` — if low, scrutinize test quality harder. `blindSpots` — areas the scan couldn't analyze. If the build touches these areas, note reduced confidence.
-- `.ana/PROOF_CHAIN.md` — institutional memory. Read Active Issues for the modules this build touches. Let them inform what you pay attention to — they're context, not a checklist. If the build interacts with a known issue (addresses it, changes its impact, or works around it), note that in your callouts.
 
 ### 5. Load Verification Documents
 
@@ -89,6 +88,10 @@ The contract is authoritative. If the contract and spec conflict, the contract w
 **Known paths — read directly, do not search:**
 - `.ana/ana.json` — project config
 - `.ana/plans/active/{slug}/` — all plan artifacts (scope, spec, contract, reports)
+
+After reading the contract, run `ana proof context {files from contract file_changes}` to surface proof chain history for the modules this build touches. Let the callouts inform what you pay attention to during code review — they're context, not a checklist. If the build interacts with a known issue (addresses it, changes its impact, or works around it), note that in your callouts.
+
+If the command is not available: check `.ana/PROOF_CHAIN.md` if it exists and look for Active Issues mentioning the modules from file_changes.
 
 ### 6. Load Skills (reference material)
 
