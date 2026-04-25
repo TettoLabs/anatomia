@@ -20,8 +20,148 @@
     "hash": "sha256:70972b976088c629b86ecf04f2f8e1f379ff1ec365fea3f81a58e9eaab71f951"
   },
   "build-report": {
-    "saved_at": "2026-04-25T00:30:02.044Z",
-    "commit": "c52650f42ed4bf3892328a04e7815994295440c1",
+    "saved_at": "2026-04-25T00:30:09.588Z",
+    "commit": "28cbfee9f56acbf68aa718b202afc78e2caf655c",
     "hash": "sha256:63792522e0226443b4b65456920c2f53f6d0332e263509d4dcd6398a9c3e83af"
+  },
+  "modules_touched": [
+    "packages/cli/src/commands/work.ts",
+    "packages/cli/src/utils/proofSummary.ts",
+    "packages/cli/tests/utils/proofSummary.test.ts"
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_commit": "e8090ba2e93134856621289cec3dfa5cc052d73f",
+    "seal_hash": "sha256:dad03df125a21a54399b8aeccf5048f52ee3afcedfe36c1a4ab7c33bdc285a4f",
+    "assertions": [
+      {
+        "id": "A001",
+        "says": "A callout with a basename that matches exactly one touched module gets upgraded to the full path",
+        "status": "COVERED"
+      },
+      {
+        "id": "A002",
+        "says": "The resolved path matches the module from modules_touched, not a fabricated path",
+        "status": "COVERED"
+      },
+      {
+        "id": "A003",
+        "says": "A basename matching two or more touched modules stays as a basename",
+        "status": "COVERED"
+      },
+      {
+        "id": "A004",
+        "says": "A basename matching zero touched modules stays unchanged",
+        "status": "COVERED"
+      },
+      {
+        "id": "A005",
+        "says": "A callout file that already contains a path separator is not re-resolved",
+        "status": "COVERED"
+      },
+      {
+        "id": "A006",
+        "says": "Build concern file fields are resolved using the same logic as callout files",
+        "status": "COVERED"
+      },
+      {
+        "id": "A007",
+        "says": "Existing proof chain entries get their callout files resolved when the chain is rewritten",
+        "status": "COVERED"
+      },
+      {
+        "id": "A008",
+        "says": "Path boundary checking prevents a file named route.ts from matching subroute.ts",
+        "status": "COVERED"
+      },
+      {
+        "id": "A009",
+        "says": "Querying a file returns all callouts associated with that file",
+        "status": "COVERED"
+      },
+      {
+        "id": "A010",
+        "says": "Each returned callout includes its category, summary, and originating feature name",
+        "status": "COVERED"
+      },
+      {
+        "id": "A011",
+        "says": "The --json flag produces valid parseable JSON output",
+        "status": "COVERED"
+      },
+      {
+        "id": "A012",
+        "says": "JSON output includes callouts array and build_concerns array per result",
+        "status": "COVERED"
+      },
+      {
+        "id": "A013",
+        "says": "Querying a file with no proof data shows a clean message instead of an error",
+        "status": "COVERED"
+      },
+      {
+        "id": "A014",
+        "says": "The no-data message names the queried file so the user knows what was searched",
+        "status": "COVERED"
+      },
+      {
+        "id": "A015",
+        "says": "Querying when no proof_chain.json exists shows a clean message, not an error",
+        "status": "COVERED"
+      },
+      {
+        "id": "A016",
+        "says": "The query function lives in proofSummary.ts and has no CLI imports",
+        "status": "COVERED"
+      },
+      {
+        "id": "A017",
+        "says": "A full-path query matches a full-path callout exactly",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A018",
+        "says": "A basename query matches a full-path callout via path suffix",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A019",
+        "says": "A full-path query matches a legacy basename callout",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A020",
+        "says": "A query for route.ts does not match a callout filed under subroute.ts",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A021",
+        "says": "The result includes how many pipeline cycles touched the queried file",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A022",
+        "says": "The result includes the date of the most recent pipeline cycle for the file",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A023",
+        "says": "Callouts with null file fields are never returned by any file query",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A024",
+        "says": "Querying multiple files returns separate results for each file",
+        "status": "UNCOVERED"
+      }
+    ],
+    "covered": 16,
+    "uncovered": 8,
+    "run_at": "2026-04-25T00:36:42.286Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-04-25T00:36:42.314Z",
+    "commit": "28cbfee9f56acbf68aa718b202afc78e2caf655c",
+    "hash": "sha256:d19ecac7b828993e35d3c2c734c0a16569e7e8531780edf0b7095cff6351b7c0"
   }
 }
