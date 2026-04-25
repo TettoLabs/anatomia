@@ -23,6 +23,8 @@ import * as path from 'node:path';
 import * as fs from 'node:fs';
 import type { ProofChainEntry } from '../types/proof.js';
 import { findProjectRoot } from '../utils/validators.js';
+import { getProofContext } from '../utils/proofSummary.js';
+import type { ProofContextResult } from '../utils/proofSummary.js';
 
 /**
  * Proof chain JSON structure
@@ -292,5 +294,94 @@ export function registerProofCommand(program: Command): void {
     }
   });
 
+  // Register context subcommand
+  // Commander subcommands share parent options when parent has same flag.
+  // Parent proof command defines --json, so context reads it from parent.
+  const contextCommand = new Command('context')
+    .description('Query proof chain for context about specific files')
+    .argument('<files...>', 'File paths to query')
+    .option('--json', 'Output JSON format')
+    .action(async (files: string[], options: { json?: boolean }) => {
+      const proofRoot = findProjectRoot();
+      const proofChainPath = path.join(proofRoot, '.ana', 'proof_chain.json');
+
+      // Check if proof chain exists
+      if (!fs.existsSync(proofChainPath)) {
+        console.log('No proof chain found. Complete pipeline cycles to build proof context.');
+        return;
+      }
+
+      const results = getProofContext(files, proofRoot);
+
+      // Check both own --json and parent's --json
+      const parentOpts = proofCommand.opts();
+      const useJson = options.json || parentOpts['json'];
+
+      if (useJson) {
+        console.log(JSON.stringify({ results }, null, 2));
+        return;
+      }
+
+      // Human-readable output
+      const outputs: string[] = [];
+      for (const result of results) {
+        outputs.push(formatContextResult(result));
+      }
+
+      console.log(outputs.join('\n───\n\n'));
+    });
+
+  proofCommand.addCommand(contextCommand);
+
   program.addCommand(proofCommand);
+}
+
+/**
+ * Format a single proof context result for human-readable terminal output.
+ *
+ * @param result - Proof context result to format
+ * @returns Formatted string
+ */
+function formatContextResult(result: ProofContextResult): string {
+  const hasData = result.callouts.length > 0 || result.build_concerns.length > 0;
+
+  if (!hasData) {
+    return `No proof context found for ${result.query}`;
+  }
+
+  const lines: string[] = [];
+
+  // Header
+  lines.push(`Proof context for ${result.query}`);
+  if (result.touch_count > 0 && result.last_touched) {
+    const lastDate = result.last_touched.split('T')[0] ?? result.last_touched;
+    lines.push(`Touched in ${result.touch_count} pipeline cycle${result.touch_count === 1 ? '' : 's'} (last: ${lastDate})`);
+  }
+  lines.push('');
+
+  // Callouts
+  if (result.callouts.length > 0) {
+    lines.push('Callouts:');
+    for (const callout of result.callouts) {
+      const anchor = callout.anchor ? ` ${callout.anchor} —` : '';
+      lines.push(`  ${chalk.dim(`[${callout.category}]`)}${anchor} ${callout.summary}`);
+      lines.push(`         ${chalk.gray(`From: ${callout.from}`)}`);
+      lines.push('');
+    }
+  }
+
+  // Build concerns
+  if (result.build_concerns.length > 0) {
+    lines.push('Build concerns:');
+    for (const concern of result.build_concerns) {
+      lines.push(`  ${concern.summary}`);
+      lines.push(`         ${chalk.gray(`From: ${concern.from}`)}`);
+      lines.push('');
+    }
+  } else if (result.callouts.length > 0) {
+    lines.push('No build concerns for this file.');
+    lines.push('');
+  }
+
+  return lines.join('\n');
 }
