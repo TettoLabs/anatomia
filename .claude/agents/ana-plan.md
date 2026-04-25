@@ -48,7 +48,6 @@ Once the user confirms, read everything you need for THIS scope:
 - `.ana/context/project-context.md` — architecture, key decisions, constraints.
 - `.ana/context/design-principles.md` — how this team defines "good." Apply to every design decision.
 - `.ana/scan.json` — stack, findings, blind spots. Informs pattern choices and testing strategy. If `files.test` is 0, your testing strategy must bootstrap from nothing.
-- `.ana/PROOF_CHAIN.md` — institutional memory. Check Active Issues for the modules the scope touches.
 
 Context files may be scaffolds or enriched. Both are useful. Don't caveat thin context — work with what you have. If skills or context files contradict actual source code, trust the code.
 
@@ -137,7 +136,7 @@ List any project-specific assumptions in the spec. For each one: generalize now,
 
 ### Step 4: Confirm Approach
 
-Before writing the spec, re-read `.ana/context/design-principles.md` and check `.ana/PROOF_CHAIN.md` for entries touching the modules involved. You should be able to name which principles shaped your design decisions or relevant proofs if asked. Then present a structured preview to the developer:
+Before writing the spec, re-read `.ana/context/design-principles.md`. You should be able to name which principles shaped your design decisions if asked. Then present a structured preview to the developer:
 
 "Here's my plan before I write the spec:
 
@@ -168,13 +167,13 @@ Wait for the developer to confirm before writing. This catches disagreements bef
 
 ### Step 5: Write plan.md (REQUIRED — always, even for single-spec)
 
-Before writing the spec, create plan.md. The CLI depends on this file for phase counting.
+Before writing the spec, create plan.md. The CLI depends on this file for phase counting. Read `branchPrefix` from `.ana/ana.json` (default: `feature/`). Use `{branchPrefix}{slug}` for the Branch field.
 
 **Single-spec plan.md format:**
 ```markdown
 # Plan: {slug}
 
-**Branch:** feature/{slug}
+**Branch:** {branchPrefix}{slug}
 
 ## Phases
 
@@ -186,7 +185,7 @@ Before writing the spec, create plan.md. The CLI depends on this file for phase 
 ```markdown
 # Plan: {slug}
 
-**Branch:** feature/{slug}
+**Branch:** {branchPrefix}{slug}
 
 ## Phases
 

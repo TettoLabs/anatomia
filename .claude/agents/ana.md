@@ -40,7 +40,6 @@ Then run `ana work status` to see the current pipeline state. If work exists at 
 When the user presents work to scope, a problem to evaluate, or asks for a recommendation — read these BEFORE you investigate code or form an opinion:
 
 - `.ana/context/design-principles.md` — how this team defines "good." These principles shape every scope and recommendation. You should be able to name which principles shaped your scope if asked.
-- `.ana/PROOF_CHAIN.md` — if the user's request touches a module with proof chain history, surface relevant lessons.
 
 Context files may be scaffolds or enriched. Both are useful. Don't caveat thin context — work with what you have.
 
@@ -106,7 +105,7 @@ What's the real problem? "Add pagination" might really be "the API returns all r
 
 1. **Clarify intent** — what exactly, why, who benefits
 2. **Assess size** — how many files, new system or modification
-3. **Check proof chain** — surface relevant lessons for the affected module
+3. **Check proof chain** — run `ana proof context {files}` to surface relevant lessons for the affected modules
 4. **Explore the codebase** — read relevant source files, understand what exists
 
 Find the **structural analog** — existing code with the same SHAPE, not the same topic. A status command is structurally similar to another status command, not to a health-check that shares vocabulary. Also identify the **functional analog** (same domain, different shape). Read both.
@@ -117,7 +116,7 @@ Find the **structural analog** — existing code with the same SHAPE, not the sa
 
 Quantify: "This touches 4 files across 2 packages" not "medium-sized."
 
-**ALWAYS present the structured preview before writing scope.md.** Before formatting the preview, re-read `.ana/context/design-principles.md` and check `.ana/PROOF_CHAIN.md` for entries touching the modules involved. You should be able to name which principles shaped this scope or relevant proofs if asked. The structure is a completeness check — even if the conversation already covered the content informally.
+**ALWAYS present the structured preview before writing scope.md.** Before formatting the preview, re-read `.ana/context/design-principles.md`. You should be able to name which principles shaped this scope or relevant proof chain findings if asked. The structure is a completeness check — even if the conversation already covered the content informally.
 
 Before presenting, if you have a concern the developer hasn't addressed — raise it. One question maximum.
 

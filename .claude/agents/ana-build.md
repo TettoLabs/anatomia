@@ -38,8 +38,6 @@ Read `.ana/scan.json` if it exists. Pay attention to:
 - `files.test` — if 0, you're writing the project's first tests. No existing patterns to follow.
 - `findings` — awareness of known issues. Build follows the spec, not findings — but awareness prevents surprises.
 
-Read `.ana/PROOF_CHAIN.md` if it exists. If you're building in a module with proof chain entries, reference past lessons.
-
 Invoke before any work:
 - `/git-workflow` — always. You need commit format, co-author conventions, and branch discipline for every build.
 
@@ -106,23 +104,25 @@ Record the results: how many tests, how many passed, how many failed.
 
 ### 4. Create or Resume Branch
 
+Read `branchPrefix` from `.ana/ana.json` (default: `feature/`). Use `{branchPrefix}{slug}` for all branch names.
+
 Based on `ana work status` output:
 
 **If "ready-for-build":**
 ```bash
 git checkout {artifactBranch} && git pull
-git checkout -b feature/{slug}
+git checkout -b {branchPrefix}{slug}
 ```
 
 **If "build-in-progress":**
 ```bash
-git checkout feature/{slug} && git pull
+git checkout {branchPrefix}{slug} && git pull
 ```
 Run `git log --oneline {artifactBranch}..HEAD` to see what was already committed. Compare against the spec's File Changes to determine what's done vs remaining. Resume from the first incomplete item. Do NOT redo completed work.
 
 **If "needs-fixes":**
 ```bash
-git checkout feature/{slug} && git pull
+git checkout {branchPrefix}{slug} && git pull
 ```
 Follow the full protocol in **Resume After Failed Verify** below.
 
@@ -294,7 +294,7 @@ Write `.ana/plans/active/{slug}/build_report.md` with ALL of these sections:
 **Created by:** AnaBuild
 **Date:** {date}
 **Spec:** .ana/plans/active/{slug}/spec.md
-**Branch:** feature/{slug}
+**Branch:** {branchPrefix}{slug}
 
 ## What Was Built
 For each file created or modified:
@@ -408,7 +408,7 @@ If you include an acceptance criteria checklist in the report, use these markers
 When `ana work status` reports a multi-phase stage (e.g., "phase-2-ready-for-build"):
 
 1. Read the spec for that phase (e.g., `spec-2.md`) — `ana work status` tells you which phase
-2. Check out the existing branch: `git checkout feature/{slug} && git pull`
+2. Check out the existing branch: `git checkout {branchPrefix}{slug} && git pull`
 3. The branch already has previous phases' work — build on top of it
 4. Commit with phase-numbered messages: `[{slug}:s{N}] {description}`
 5. Write `build_report_{N}.md` (matching the spec number)
@@ -430,7 +430,7 @@ When `verify_report.md` exists with failures:
 6. Fix ONLY what the verify report identified as failing. Don't redo work that passed verification.
 7. Run the full test suite after fixes.
 8. Commit fixes on the same branch with descriptive messages: `[{slug}] Fix: {what was fixed}`
-9. Push code commits: `git push -u origin feature/{slug}`
+9. Push code commits: `git push -u origin {branchPrefix}{slug}`
 10. Regenerate `build_report.md` from scratch as a clean snapshot of final state. Do not surgically edit the existing report — after multiple fix cycles, surgical edits produce unreadable palimpsests. Sections: "What Was Built" (original + fixes as one unified list), "Fix History" (brief summary per cycle), current test counts, current git log, current open issues. Old versions are in git history.
 11. Save the updated build report:
     ```bash
@@ -482,7 +482,7 @@ When done:
 
 2. Push code commits:
 ```bash
-git push -u origin feature/{slug}
+git push -u origin {branchPrefix}{slug}
 ```
 
 3. Run pre-check to verify tag coverage:
@@ -498,7 +498,7 @@ ana artifact save build-report {slug}
 
 For multi-spec phases:
 ```bash
-git push -u origin feature/{slug}
+git push -u origin {branchPrefix}{slug}
 ana verify pre-check {slug}
 ana artifact save build-report-1 {slug}
 ```
@@ -518,7 +518,7 @@ ana artifact save build-report-1 {slug}
 
 **Skills:** `/git-workflow` (always). Coding-standards, testing-standards, api-patterns, data-access, ai-patterns, deployment available on demand — Build Brief in spec is the primary source.
 
-**Branch naming:** `feature/{slug}`
+**Branch naming:** `{branchPrefix}{slug}`
 **Commit format:** `[{slug}] {description}` or `[{slug}:s{N}] {description}` for multi-phase
 **Co-author trailer:** Read from `ana.json` `coAuthor` field. Add to every commit.
 
