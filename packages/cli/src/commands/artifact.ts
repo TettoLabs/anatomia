@@ -520,9 +520,25 @@ export function saveArtifact(type: string, slug: string): void {
   validateBranch(typeInfo, currentBranch, artifactBranch, slug, branchPrefix);
 
   // 6. Resolve file path
-  const filePath = path.join('.ana', 'plans', 'active', slug, typeInfo.fileName);
+  let filePath = path.join('.ana', 'plans', 'active', slug, typeInfo.fileName);
 
-  // 6. Verify file exists
+  // 6a. Auto-rename fallback for multi-spec: if build_report_1.md doesn't exist
+  // but build_report.md does, rename it. Same for verify_report. Build agents
+  // commonly write the default filename instead of the phase-numbered one.
+  const isNumbered = typeInfo.fileName.match(/_\d+\.md$/);
+  if (!fs.existsSync(filePath) && isNumbered) {
+    const defaultName = typeInfo.baseType === 'build-report' ? 'build_report.md'
+      : typeInfo.baseType === 'verify-report' ? 'verify_report.md' : null;
+    if (defaultName) {
+      const defaultPath = path.join('.ana', 'plans', 'active', slug, defaultName);
+      if (fs.existsSync(defaultPath)) {
+        fs.renameSync(defaultPath, filePath);
+        console.log(chalk.gray(`Renamed ${defaultName} → ${typeInfo.fileName}`));
+      }
+    }
+  }
+
+  // 6b. Verify file exists
   if (!fs.existsSync(filePath)) {
     console.error(chalk.red(`Error: No ${typeInfo.displayName.toLowerCase()} found at \`${filePath}\`.`));
     console.error(chalk.gray('Write the file first, then run this command.'));

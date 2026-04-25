@@ -1057,7 +1057,7 @@ export async function completeWork(slug: string): Promise<void> {
 
   // 10. Stage and commit
   try {
-    execSync('git add .ana/plans/active/ .ana/plans/completed/ .ana/proof_chain.json .ana/PROOF_CHAIN.md', { stdio: 'pipe' });
+    execSync('git add .ana/plans/ .ana/proof_chain.json .ana/PROOF_CHAIN.md', { stdio: 'pipe' });
     // Read coAuthor from ana.json
     const anaJsonPath = path.join(projectRoot, '.ana', 'ana.json');
     let coAuthor = 'Ana <build@anatomia.dev>';
