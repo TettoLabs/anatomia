@@ -1,42 +1,34 @@
-# Active Issues (20 shown of 49 total)
+# Active Issues (20 shown of 58 total)
 
-## census.ts
+## packages/cli/src/commands/proof.ts
+
+- **code:** No truncation on callout summaries in terminal output: `proof.ts:367` — `formatContextResult` outputs full callout summaries, which can be 200+ characters per line. Live test shows long lines wrapping awkwardly. The spec mockup shows truncated... — *Proof context file query*
+
+## packages/cli/src/commands/scan.ts
+
+- **code:** Consumer sort logic duplicated in two files: `scan.ts:112-121` and `scaffold-generators.ts:62-71` — Identical 10-line sort comparator handling null modelCount values. The spec suggested extraction "if the logic is more than a few lines." A shared... — *Fix Drizzle schema detection*
+
+## packages/cli/src/engine/census.ts
 
 - **code:** `drizzle-dialect` overloads SchemaFileEntry semantics: `census.ts:267-274` — The `orm: 'drizzle-dialect'` entry stores the dialect string in the `path` field, which is semantically a file path. This works because the type is `string` and scan-engine... — *Fix Drizzle schema detection*
 - **code:** Config regex can match comments: `census.ts:251` — `schema\s*:\s*["']([^"']+)["']` would match a commented-out `// schema: "old/path"`. In practice, Drizzle config files are small and rarely have commented schema fields, and this is the same pattern... — *Fix Drizzle schema detection*
 - **code:** Census directory check is non-recursive: `census.ts:219` — `readdirSync(prismaDir)` only checks top-level entries. The second fallback glob `/prisma/*.prisma` in `scan-engine.ts:289` is also one level deep. A `prisma/subdir/models.prisma` layout... — *Fix Prisma schema detection bugs*
 
-## findProjectRoot.test.ts
-
-- **upstream:** Known extractFileRefs limitation propagated to stored data: The existing regex limitation where `findProjectRoot.test.ts` extracts as `test.ts` (dotted filenames lose their prefix) is now permanently stored in proof_chain.json `file` fields.... — *Add file field to proof chain callouts*
-
-## proofSummary.test.ts
-
-- **code:** `@ana A012` tag misplaced: `proofSummary.test.ts:324` — Tag `@ana A012` ("extractFileRefs tests unchanged") is on the `parseCallouts` describe block, not the `extractFileRefs` describe block at line 602. Pre-check counts it as COVERED since the tag... — *Add file field to proof chain callouts*
-- **test:** A009 backfill verification is indirect: `proofSummary.test.ts:748-763` — The `@ana A009` tag is on the "respects 20-callout cap" test, which exercises `file` fields in the cap logic. It doesn't directly verify that proof_chain.json was backfilled.... — *Add file field to proof chain callouts*
-
-## proofSummary.ts
-
-- **code:** File extraction runs on truncated summary: `proofSummary.ts:412-415` — `extractFileRefs` is called on `summary` after `substring(0, 200).trim()`. If a callout's only file reference appears after character 200, `file` will be null. Practically... — *Add file field to proof chain callouts*
-
-## readme.test.ts
-
-- **test:** A014 monorepo test verifies intent not mechanism — readme.test.ts:157-171. `detectReadme(tmpDir)` has no monorepo concept — it reads from the path it's given. The test proves scan-engine's decision to pass rootPath is correct, but the test would pass... — *Add README extraction to scan*
-- **test:** A004 tests serialization, not e2e scan — readme.test.ts:69-84. The test verifies the ReadmeResult serializes correctly to JSON, not that `ana scan --json` produces the field in CLI output. An e2e test would be stronger but requires a built binary... — *Add README extraction to scan*
-
-## readme.ts
-
-- **code:** `truncate` word-boundary behavior for CJK — readme.ts:65-69. When text has no spaces before `cap`, falls back to hard-cut at `cap` characters. Correct for Latin text; may split mid-character for CJK content. Not a blocker — CJK READMEs typically have... — *Add README extraction to scan*
-
-## scan-engine.ts
+## packages/cli/src/engine/scan-engine.ts
 
 - **code:** First-provider-wins with no conflict detection: `scan-engine.ts:313` and `scan-engine.ts:337` — both directory and sibling handlers use `if (!provider)` to take the first datasource block found. If a `.prisma` directory contains conflicting provider... — *Fix Prisma schema detection bugs*
 
-## scan.ts
+## packages/cli/src/utils/proofSummary.ts
 
-- **code:** Consumer sort logic duplicated in two files: `scan.ts:112-121` and `scaffold-generators.ts:62-71` — Identical 10-line sort comparator handling null modelCount values. The spec suggested extraction "if the logic is more than a few lines." A shared... — *Fix Drizzle schema detection*
+- **code:** Root-level module paths won't match: `proofSummary.ts:336` — `m.endsWith('/' + basename)` requires a `/` prefix. A module at the repository root (e.g., bare `census.ts` in `modules_touched`) wouldn't match. Dormant — `git diff` always produces paths... — *Proof context file query*
+- **code:** `fileMatches` overmatch on same-basename different-directory paths: `proofSummary.ts:883` — If stored=`packages/a/census.ts` and queried=`packages/b/census.ts`, the function returns true because both paths end with `/census.ts`. The spec's three-tier... — *Proof context file query*
 
-## scanProject.test.ts
+## packages/cli/tests/commands/proof.test.ts
+
+- **test:** Integration test for A014 checks substring not specific file name: `proof.test.ts:368` — Asserts `stdout.toContain('No proof context')` but doesn't verify the queried filename appears in the message. The contract says "names the queried file." Live... — *Proof context file query*
+- **upstream:** Contract `@ana` tags shared across two phases in same file: `proof.test.ts:425-658` — The existing proof list/detail tests have `@ana A001`–`@ana A023` tags from the original proof-list-view feature's contract. Pre-check reports COVERED for all 24... — *Proof context file query*
+
+## packages/cli/tests/engine/scanProject.test.ts
 
 - **test:** A017 doesn't exercise null-modelCount comparison: `scanProject.test.ts:549-566` — Contract says "when all schemas have unknown model counts, the first found is used." Test uses Supabase which gets `modelCount: 1` from SQL, not null. The... — *Fix Drizzle schema detection*
 - **test:** A016 verifies precondition, not consumer output: `scanProject.test.ts:523-545` — The test proves Drizzle has more models than Prisma, but doesn't verify that `enrichDatabase()` or `generateProjectContextMd()` actually selects Drizzle. The consumer... — *Fix Drizzle schema detection*
@@ -44,13 +36,30 @@
 - **test:** SQL-only edge case tests indirect path: `scanProject.test.ts:210` — The test creates `prisma/migrations/001_init.sql`. Census's `readdirSync('prisma/')` sees `['migrations']` — a directory name, not a `.sql` file. The test passes because no direct... — *Fix Prisma schema detection bugs*
 - **test:** A009 uses weak matcher when specific value is known: `scanProject.test.ts:199` — `toBeGreaterThan(0)` when the test fixture has exactly 2 models. The contract specifies `greater: 0`, so the test matches the contract. But `toBe(2)` would catch... — *Fix Prisma schema detection bugs*
 
+## packages/cli/tests/utils/proofSummary.test.ts
+
+- **test:** A007 coverage is indirect for backfill: `proofSummary.test.ts:1129` — The `@ana A007` tag is on a unit test of `resolveCalloutPaths`, not an integration test of the backfill wiring at `work.ts:815-818`. The function IS the mechanism for backfill —... — *Proof context file query*
+- **upstream:** Pre-check tag collision across contracts: `proofSummary.test.ts:741` — The `@ana A007` tag from "file field to proof chain callouts" still exists alongside the new tag at line 1129. Pre-check counts both as coverage but can't distinguish contracts.... — *Proof context file query*
+- **test:** Tag at line 741 is now redundant for this contract: `proofSummary.test.ts:741` — Two `@ana A007` tags exist in the same file, from different contracts. The one at line 741 ("generateActiveIssuesMarkdown uses callout.file") is from a prior feature and... — *Proof context file query*
+- **test:** Weak matchers where specific counts are known: `proofSummary.test.ts:1227,1296` — Uses `toBeGreaterThan(0)` for callout count and build concern count when test data has exactly 2 and 1 entries respectively. The contract specifies `greater: 0` so the... — *Proof context file query*
+
 ## General
 
 - **upstream:** A002 uses `contains` matcher, allows ambiguous match: Contract A002 says `target: schemas.prisma.path, matcher: contains, value: "schema.prisma"`. Both candidates (`prisma/schema.prisma` and `schema.prisma`) contain `"schema.prisma"`. The test passes... — *Fix Prisma schema detection bugs*
-- **code:** A009 contract deviation — Contract specifies `value: 5000` for total cap. Implementation now uses 4000 to make the cap reachable. The original 5000 was unreachable dead code (3 × 1500 = 4500 < 5000). Lowering to 4000 makes `applyTotalCap` a real... — *Add README extraction to scan*
-- **upstream:** Contract A009 value should be updated — The contract still says `value: 5000` but the implementation is 4000. If the contract is re-sealed in the future, update the value. — *Add README extraction to scan*
 
 ---
+
+## Proof context file query (2026-04-25)
+Result: PASS | 24/24 satisfied | 0/0 ACs | 0 deviations
+Pipeline: 45m (Think 7m, Plan 7m, Build 32m, Verify 6m)
+Modules: packages/cli/src/commands/proof.ts, packages/cli/src/commands/work.ts, packages/cli/src/utils/proofSummary.ts, packages/cli/tests/commands/proof.test.ts, packages/cli/tests/utils/proofSummary.test.ts
+Rejection cycles: 1 (A007 Pre-check falsely COVERED via prior feature tag at line 741; no A007 tag on resolveCalloutPaths tests)
+Callouts:
+- code: Root-level module paths won't match: `proofSummary.ts:336` — `m.endsWith('/' + basename)` requires a `/` prefix. A module at the repository root (e.g., bare `census.ts` in `modules_touched`) wouldn't match. Dormant — `git diff` always produces paths with directory segments. If `modules_touched` ever comes from a source that produces bare filenames, resolution silently skips them.
+- code: `fileMatches` overmatch on same-basename different-directory paths: `proofSummary.ts:883` — If stored=`packages/a/census.ts` and queried=`packages/b/census.ts`, the function returns true because both paths end with `/census.ts`. The spec's three-tier matching intentionally prioritizes recall over precision, so this is by design. In practice, proof chain callouts rarely have duplicate basenames across different directories. If this becomes noisy, a future cycle could add exact-path-prefix matching as tier 1.5.
+- code: No truncation on callout summaries in terminal output: `proof.ts:367` — `formatContextResult` outputs full callout summaries, which can be 200+ characters per line. Live test shows long lines wrapping awkwardly. The spec mockup shows truncated summaries (`...`) but the spec text doesn't list truncation as a requirement. For terminal aesthetics, consider truncating summaries to ~120 chars in a future cycle.
+- test: A007 coverage is indirect for backfill: `proofSummary.test.ts:1129` — The `@ana A007` tag is on a unit test of `resolveCalloutPaths`, not an integration test of the backfill wiring at `work.ts:815-818`. The function IS the mechanism for backfill — proving the function works proves the mechanism works. But the 4-line loop calling it on `chain.entries` is verified only by code reading. Acceptable trade-off for straightforward wiring; a dedicated test would require mock filesystem for `proof_chain.json`.
+- test: Tag at line 741 is now redundant for this contract: `proofSummary.test.ts:741` — Two `@ana A007` tags exist in the same file, from different contracts. The one at line 741 ("generateActiveIssuesMarkdown uses callout.file") is from a prior feature and is semantically unrelated to backfill. Not harmful, but future readers may be confused about which test covers A007 for which contract.
 
 ## Configurable branch prefix (2026-04-24)
 Result: UNKNOWN | 0/22 satisfied | 0/0 ACs | 0 deviations
