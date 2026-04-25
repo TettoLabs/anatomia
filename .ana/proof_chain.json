@@ -2319,6 +2319,129 @@
           "file": "types/proof.ts"
         }
       ]
+    },
+    {
+      "slug": "proof-chain-targeted-queries",
+      "feature": "Replace PROOF_CHAIN.md reads with targeted proof context queries",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 8,
+        "covered": 8,
+        "uncovered": 0,
+        "satisfied": 8,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Ana queries proof chain history using the targeted command during exploration",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "Ana's checkpoint references existing findings instead of re-reading the proof chain file",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Ana no longer reads the proof chain file before scoping",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "Verify queries proof chain history using the targeted command after loading the contract",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "Verify falls back to reading the proof chain file when the command is unavailable",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "Plan agents receive proof context through the scope, not by reading the file directly",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "Build agents receive proof context through the spec, not by reading the file directly",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "Dogfood agent definitions match the shipped templates exactly",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 10,
+        "met": 10
+      },
+      "timing": {
+        "total_minutes": 39,
+        "think": 16,
+        "plan": 16,
+        "build": 18,
+        "verify": 5
+      },
+      "hashes": {
+        "scope": "sha256:01d677eb450054fcd10477797465f58f11e30453ac968f6be89e74d18e620bbc",
+        "contract": "sha256:038d5bfc0c3a500cdf9c468961b048bca632d6e9134d8fd020ff56fba45cce93",
+        "plan": "sha256:b8783cef855a0dffa3dc8ddb2ecb0cca8c2ee20f51f8c45a8e520b6553b05042",
+        "spec": "sha256:70529a0235ec00f2233bced393bf0362b2d811d8ebe6eb1e59379c0fe6150471",
+        "build-report": "sha256:557de239ac4d3e7eb4b17accc4f57c75ee70905ade90a1df88db2a72e0aacdc2",
+        "verify-report": "sha256:89a85e043c72615000f56b3b0e9a77dc52df6acaf2f209afc0376097f5026249"
+      },
+      "seal_commit": "ff6bd5fa7c0942e711e2897254e321e06a0b9079",
+      "completed_at": "2026-04-25T06:29:26.320Z",
+      "modules_touched": [
+        ".claude/agents/ana-build.md",
+        ".claude/agents/ana-plan.md",
+        ".claude/agents/ana-verify.md",
+        ".claude/agents/ana.md",
+        "packages/cli/templates/.claude/agents/ana-build.md",
+        "packages/cli/templates/.claude/agents/ana-plan.md",
+        "packages/cli/templates/.claude/agents/ana-verify.md",
+        "packages/cli/templates/.claude/agents/ana.md",
+        "packages/cli/tests/templates/agent-proof-context.test.ts"
+      ],
+      "callouts": [
+        {
+          "category": "test",
+          "summary": "A001/A004 use whole-file contains, weaker than section-specific extraction: `packages/cli/tests/templates/agent-proof-context.test.ts:14,43` — These tests would still pass if someone moved `ana proof context` to the wrong section of the file. The contract targets (`ana.md.content`, `ana-verify.md.content`) are whole-file scoped, so the test is technically correct. But A002/A003 demonstrate the stronger pattern (section extraction before assertion). Future contract assertions for section-specific content should use section-specific targets.",
+          "file": "packages/cli/tests/templates/agent-proof-context.test.ts",
+          "anchor": "ana proof context",
+          "id": "proof-chain-targeted-queries-C1"
+        },
+        {
+          "category": "test",
+          "summary": "A008 tests all 4 dogfood files in a single `it` block: `agent-proof-context.test.ts:67-75` — If the first file comparison fails, the loop short-circuits and the remaining 3 aren't checked. The error message includes the filename (`${file} dogfood should match template`), which mitigates debugging difficulty. Separate `it` blocks per file would give complete coverage reporting, but the contract only has one assertion (A008) covering all 4, making a single test reasonable.",
+          "file": "packages/cli/tests/templates/agent-proof-context.test.ts",
+          "anchor": "${file} dogfood should match template",
+          "id": "proof-chain-targeted-queries-C2"
+        },
+        {
+          "category": "code",
+          "summary": "Checkpoint wording deviates from spec prescription: `packages/cli/templates/.claude/agents/ana.md:119` — Spec said `\"relevant proofs if asked\"`, implementation says `\"relevant proof chain findings if asked\"`. The implementation wording is arguably better (more specific), but it's a spec-implementation delta the deployer should be aware of.",
+          "file": "packages/cli/templates/.claude/agents/ana.md",
+          "anchor": "\"relevant proofs if asked\"",
+          "id": "proof-chain-targeted-queries-C3"
+        },
+        {
+          "category": "upstream",
+          "summary": "AC7 and AC8 are in tension: AC7 says \"no agent definition references `.ana/PROOF_CHAIN.md` as a file to read\" while AC8 requires a fallback that references it. The spec's gotcha resolves this (\"exactly ONE `.ana/PROOF_CHAIN.md` literal string should remain\"), but future scope should word AC7 more precisely: \"no agent definition references `.ana/PROOF_CHAIN.md` as a primary file to read in its normal flow.\"",
+          "file": ".ana/PROOF_CHAIN.md",
+          "anchor": ".ana/PROOF_CHAIN.md",
+          "id": "proof-chain-targeted-queries-C4"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": []
     }
   ]
 }
