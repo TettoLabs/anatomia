@@ -2442,6 +2442,134 @@
       ],
       "rejection_cycles": 0,
       "previous_failures": []
+    },
+    {
+      "slug": "proof-chain-health-signal",
+      "feature": "Proof chain health signal",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 9,
+        "covered": 9,
+        "uncovered": 0,
+        "satisfied": 9,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Completion output shows the chain balance instead of a static confirmation",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "The old write confirmation no longer appears",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Callout count is zero when the entry has no callouts",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "Singular 'run' is used when chain has exactly one entry",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "Cumulative run count reflects all entries in the chain",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "Plural 'runs' is used when chain has more than one entry",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "Chain balance line uses the dot separator convention",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "writeProofChain returns run and callout counts",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "Returned callout count sums across all entries defensively",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 8,
+        "met": 8
+      },
+      "timing": {
+        "total_minutes": 426,
+        "think": 410,
+        "plan": 410,
+        "build": 4,
+        "verify": 11
+      },
+      "hashes": {
+        "scope": "sha256:c8b2040c11e302f3705bcfeafbb5de637c05e84c9c0071da4a86ff2eaae2ee87",
+        "contract": "sha256:c93755baac76b51a6ea67113c92891eb86c11f2cefe17bfe991677bdac02f93f",
+        "plan": "sha256:2be634c38900b0774b82c52636665defb46579b5eb1a1f7b90a93235b66733f0",
+        "spec": "sha256:eec3939fad722c7584f3284c7f34e5163e5b4927e00fc518983818bc1d44c0e9",
+        "build-report": "sha256:e5d147bbcee2d0f6807326c357e28acbce5e51b52e795c4740801c6313701044",
+        "verify-report": "sha256:b18445cc536412d02bee5e7aedde6b330162756e0e36846feb8f75dde997fe59"
+      },
+      "seal_commit": "d7bc52118d47afe7501e0e433657542850a6374c",
+      "completed_at": "2026-04-26T03:10:57.958Z",
+      "modules_touched": [
+        "packages/cli/src/commands/work.ts",
+        "packages/cli/tests/commands/work.test.ts"
+      ],
+      "callouts": [
+        {
+          "category": "code",
+          "summary": "Inline return type instead of named interface: `work.ts:744` — `Promise<{ runs: number; callouts: number }>` is an anonymous object type. If other consumers ever need these counts (e.g., a JSON output mode for `work complete`), this shape would need to be extracted into a named interface. Low priority — the function is internal and has one call site.",
+          "file": "packages/cli/src/commands/work.ts",
+          "anchor": "Promise<{ runs: number; callouts: number }>",
+          "id": "proof-chain-health-signal-C1"
+        },
+        {
+          "category": "code",
+          "summary": "A008/A009 tag collision with prior feature: `work.test.ts:423` — Tags `@ana A008, A009` exist from a previous feature's contract (configurable branchPrefix). Pre-check tools that grep for `@ana A008` will find both. No functional impact today, but as tag density grows, disambiguation may be needed (e.g., feature-scoped tag namespaces).",
+          "file": "packages/cli/tests/commands/work.test.ts",
+          "anchor": "@ana A008, A009",
+          "id": "proof-chain-health-signal-C2"
+        },
+        {
+          "category": "test",
+          "summary": "No test exercises nonzero callout counts: Both test paths (single entry and existing chain) produce `0 callouts` because neither fixture includes callouts in the verify report or prior chain entry. A test with a fixture that has actual callouts would exercise the accumulation arithmetic beyond `0 + 0`. The `reduce` logic is correct by inspection (`(e.callouts || []).length` summed), but it's untested with nonzero values.",
+          "file": null,
+          "anchor": "0 callouts",
+          "id": "proof-chain-health-signal-C3"
+        },
+        {
+          "category": "test",
+          "summary": "chalk.gray verified only by absence of failure: The spec requires `chalk.gray()` wrapping (constraint). The tests confirm the text content but not the styling — chalk strips ANSI in non-TTY. This is standard for CLI tests and not a gap per se, but the chalk.gray requirement is verified by code reading (`work.ts:1107`), not by test assertion.",
+          "file": "packages/cli/src/commands/work.ts",
+          "anchor": "chalk.gray()",
+          "id": "proof-chain-health-signal-C4"
+        },
+        {
+          "category": "upstream",
+          "summary": "Contract A008/A009 block names imply unit tests: Contract blocks \"returns chain health counts\" and \"returns cumulative callout counts with existing chain\" suggest direct unit assertions on the return value (`result.runs equals 1`). The builder used integration tests instead, which is the right call since `writeProofChain` is internal. But the contract's `target: result.runs` / `matcher: equals` framing doesn't match `toContain` on console output. Future contracts for internal functions could use `target: output` to match the actual test approach.",
+          "file": null,
+          "anchor": "result.runs equals 1",
+          "id": "proof-chain-health-signal-C5"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": []
     }
   ]
 }

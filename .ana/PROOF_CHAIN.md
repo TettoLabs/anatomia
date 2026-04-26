@@ -1,4 +1,4 @@
-# Active Issues (20 shown of 62 total)
+# Active Issues (20 shown of 67 total)
 
 ## .ana/PROOF_CHAIN.md
 
@@ -12,14 +12,14 @@
 
 - **code:** Consumer sort logic duplicated in two files: `scan.ts:112-121` and `scaffold-generators.ts:62-71` — Identical 10-line sort comparator handling null modelCount values. The spec suggested extraction "if the logic is more than a few lines." A shared... — *Fix Drizzle schema detection*
 
+## packages/cli/src/commands/work.ts
+
+- **code:** Inline return type instead of named interface: `work.ts:744` — `Promise<{ runs: number; callouts: number }>` is an anonymous object type. If other consumers ever need these counts (e.g., a JSON output mode for `work complete`), this shape would need... — *Proof chain health signal*
+- **test:** chalk.gray verified only by absence of failure: The spec requires `chalk.gray()` wrapping (constraint). The tests confirm the text content but not the styling — chalk strips ANSI in non-TTY. This is standard for CLI tests and not a gap per se, but... — *Proof chain health signal*
+
 ## packages/cli/src/engine/census.ts
 
 - **code:** `drizzle-dialect` overloads SchemaFileEntry semantics: `census.ts:267-274` — The `orm: 'drizzle-dialect'` entry stores the dialect string in the `path` field, which is semantically a file path. This works because the type is `string` and scan-engine... — *Fix Drizzle schema detection*
-- **code:** Config regex can match comments: `census.ts:251` — `schema\s*:\s*["']([^"']+)["']` would match a commented-out `// schema: "old/path"`. In practice, Drizzle config files are small and rarely have commented schema fields, and this is the same pattern... — *Fix Drizzle schema detection*
-
-## packages/cli/src/engine/scan-engine.ts
-
-- **code:** First-provider-wins with no conflict detection: `scan-engine.ts:313` and `scan-engine.ts:337` — both directory and sibling handlers use `if (!provider)` to take the first datasource block found. If a `.prisma` directory contains conflicting provider... — *Fix Prisma schema detection bugs*
 
 ## packages/cli/src/utils/proofSummary.ts
 
@@ -35,11 +35,9 @@
 - **test:** Integration test for A014 checks substring not specific file name: `proof.test.ts:368` — Asserts `stdout.toContain('No proof context')` but doesn't verify the queried filename appears in the message. The contract says "names the queried file." Live... — *Proof context file query*
 - **upstream:** Contract `@ana` tags shared across two phases in same file: `proof.test.ts:425-658` — The existing proof list/detail tests have `@ana A001`–`@ana A023` tags from the original proof-list-view feature's contract. Pre-check reports COVERED for all 24... — *Proof context file query*
 
-## packages/cli/tests/engine/scanProject.test.ts
+## packages/cli/tests/commands/work.test.ts
 
-- **test:** A017 doesn't exercise null-modelCount comparison: `scanProject.test.ts:549-566` — Contract says "when all schemas have unknown model counts, the first found is used." Test uses Supabase which gets `modelCount: 1` from SQL, not null. The... — *Fix Drizzle schema detection*
-- **test:** A016 verifies precondition, not consumer output: `scanProject.test.ts:523-545` — The test proves Drizzle has more models than Prisma, but doesn't verify that `enrichDatabase()` or `generateProjectContextMd()` actually selects Drizzle. The consumer... — *Fix Drizzle schema detection*
-- **upstream:** A004/A013 test fixture imports sqliteTable but claims "no table helpers": `scanProject.test.ts:331-332` — The schema file has `import { sqliteTable } from 'drizzle-orm/sqlite-core'` but the comment says "Intentionally no pgTable/mysqlTable — dialect... — *Fix Drizzle schema detection*
+- **code:** A008/A009 tag collision with prior feature: `work.test.ts:423` — Tags `@ana A008, A009` exist from a previous feature's contract (configurable branchPrefix). Pre-check tools that grep for `@ana A008` will find both. No functional impact today, but as... — *Proof chain health signal*
 
 ## packages/cli/tests/templates/agent-proof-context.test.ts
 
@@ -53,7 +51,23 @@
 - **test:** Tag at line 741 is now redundant for this contract: `proofSummary.test.ts:741` — Two `@ana A007` tags exist in the same file, from different contracts. The one at line 741 ("generateActiveIssuesMarkdown uses callout.file") is from a prior feature and... — *Proof context file query*
 - **test:** Weak matchers where specific counts are known: `proofSummary.test.ts:1227,1296` — Uses `toBeGreaterThan(0)` for callout count and build concern count when test data has exactly 2 and 1 entries respectively. The contract specifies `greater: 0` so the... — *Proof context file query*
 
+## General
+
+- **test:** No test exercises nonzero callout counts: Both test paths (single entry and existing chain) produce `0 callouts` because neither fixture includes callouts in the verify report or prior chain entry. A test with a fixture that has actual callouts would... — *Proof chain health signal*
+- **upstream:** Contract A008/A009 block names imply unit tests: Contract blocks "returns chain health counts" and "returns cumulative callout counts with existing chain" suggest direct unit assertions on the return value (`result.runs equals 1`). The builder used... — *Proof chain health signal*
+
 ---
+
+## Proof chain health signal (2026-04-26)
+Result: PASS | 9/9 satisfied | 8/8 ACs | 0 deviations
+Pipeline: 426m (Think 410m, Plan 410m, Build 4m, Verify 11m)
+Modules: packages/cli/src/commands/work.ts, packages/cli/tests/commands/work.test.ts
+Callouts:
+- code: Inline return type instead of named interface: `work.ts:744` — `Promise<{ runs: number; callouts: number }>` is an anonymous object type. If other consumers ever need these counts (e.g., a JSON output mode for `work complete`), this shape would need to be extracted into a named interface. Low priority — the function is internal and has one call site.
+- code: A008/A009 tag collision with prior feature: `work.test.ts:423` — Tags `@ana A008, A009` exist from a previous feature's contract (configurable branchPrefix). Pre-check tools that grep for `@ana A008` will find both. No functional impact today, but as tag density grows, disambiguation may be needed (e.g., feature-scoped tag namespaces).
+- test: No test exercises nonzero callout counts: Both test paths (single entry and existing chain) produce `0 callouts` because neither fixture includes callouts in the verify report or prior chain entry. A test with a fixture that has actual callouts would exercise the accumulation arithmetic beyond `0 + 0`. The `reduce` logic is correct by inspection (`(e.callouts || []).length` summed), but it's untested with nonzero values.
+- test: chalk.gray verified only by absence of failure: The spec requires `chalk.gray()` wrapping (constraint). The tests confirm the text content but not the styling — chalk strips ANSI in non-TTY. This is standard for CLI tests and not a gap per se, but the chalk.gray requirement is verified by code reading (`work.ts:1107`), not by test assertion.
+- upstream: Contract A008/A009 block names imply unit tests: Contract blocks "returns chain health counts" and "returns cumulative callout counts with existing chain" suggest direct unit assertions on the return value (`result.runs equals 1`). The builder used integration tests instead, which is the right call since `writeProofChain` is internal. But the contract's `target: result.runs` / `matcher: equals` framing doesn't match `toContain` on console output. Future contracts for internal functions could use `target: output` to match the actual test approach.
 
 ## Replace PROOF_CHAIN.md reads with targeted proof context queries (2026-04-25)
 Result: PASS | 8/8 satisfied | 10/10 ACs | 0 deviations
