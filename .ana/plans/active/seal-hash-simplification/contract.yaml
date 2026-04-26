@@ -1,0 +1,111 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Seal hash simplification"
+
+assertions:
+  - id: A001
+    says: "An unchanged contract is verified as intact"
+    block: "reports INTACT when contract unchanged"
+    target: "result.seal"
+    matcher: "equals"
+    value: "INTACT"
+
+  - id: A002
+    says: "A modified contract is detected as tampered"
+    block: "reports TAMPERED when contract modified after save"
+    target: "result.seal"
+    matcher: "equals"
+    value: "TAMPERED"
+
+  - id: A003
+    says: "A tampered contract blocks saving the verify report"
+    block: "TAMPERED blocks verify-report save"
+    target: "result.seal"
+    matcher: "equals"
+    value: "TAMPERED"
+
+  - id: A004
+    says: "Tag search finds tests changed since the feature branch diverged"
+    block: "scopes search to files changed since merge-base"
+    target: "result.assertions[0].status"
+    matcher: "equals"
+    value: "UNCOVERED"
+
+  - id: A005
+    says: "Tag search falls back to global when merge-base is unavailable"
+    block: "falls back to global search when merge-base unavailable"
+    target: "result.assertions[0].status"
+    matcher: "equals"
+    value: "COVERED"
+
+  - id: A006
+    says: "A missing saves file makes the seal unverifiable"
+    block: "reports UNVERIFIABLE when no .saves.json"
+    target: "result.seal"
+    matcher: "equals"
+    value: "UNVERIFIABLE"
+
+  - id: A007
+    says: "New proof chain entries record no commit hash"
+    block: "new proof chain entries have null seal_commit"
+    target: "summary.seal_commit"
+    matcher: "equals"
+    value: null
+
+  - id: A008
+    says: "The commit field is no longer written to saves metadata"
+    block: "writeSaveMetadata does not write commit field"
+    target: "saves.contract.commit"
+    matcher: "not_equals"
+    value: "exists"
+
+  - id: A009
+    says: "The post-commit fixup no longer exists in artifact save"
+    block: "step 9a fixup removed from single-save"
+    target: "source"
+    matcher: "not_contains"
+    value: "9a"
+
+  - id: A010
+    says: "The seal display shows only the hash, not a commit reference"
+    block: "display shows hash without commit"
+    target: "output"
+    matcher: "contains"
+    value: "hash sha256:"
+
+  - id: A011
+    says: "The unverifiable message references the hash, not the commit"
+    block: "UNVERIFIABLE message says no saved contract hash"
+    target: "output"
+    matcher: "contains"
+    value: "no saved contract hash"
+
+  - id: A012
+    says: "Scoped search finds tagged tests on the feature branch"
+    block: "finds tags in files changed after merge-base"
+    target: "result.assertions[0].status"
+    matcher: "equals"
+    value: "COVERED"
+
+  - id: A013
+    says: "The pre-check block no longer includes a seal commit field"
+    block: "pre-check storage drops seal_commit"
+    target: "saves.pre-check.seal_commit"
+    matcher: "not_equals"
+    value: "exists"
+
+file_changes:
+  - path: packages/cli/src/commands/artifact.ts
+    action: modify
+  - path: packages/cli/src/commands/verify.ts
+    action: modify
+  - path: packages/cli/src/utils/proofSummary.ts
+    action: modify
+  - path: packages/cli/tests/commands/verify.test.ts
+    action: modify
+  - path: packages/cli/tests/utils/proofSummary.test.ts
+    action: modify
+  - path: packages/cli/tests/commands/work.test.ts
+    action: modify
+  - path: packages/cli/tests/commands/pr.test.ts
+    action: modify
