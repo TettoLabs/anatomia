@@ -2570,6 +2570,163 @@
       ],
       "rejection_cycles": 0,
       "previous_failures": []
+    },
+    {
+      "slug": "seal-hash-simplification",
+      "feature": "Seal hash simplification",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 13,
+        "covered": 13,
+        "uncovered": 0,
+        "satisfied": 13,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "An unchanged contract is verified as intact",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "A modified contract is detected as tampered",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "A tampered contract blocks saving the verify report",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "Tag search finds tests changed since the feature branch diverged",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "Tag search falls back to global when merge-base is unavailable",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "A missing saves file makes the seal unverifiable",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "New proof chain entries record no commit hash",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "The commit field is no longer written to saves metadata",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "The post-commit fixup no longer exists in artifact save",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "The seal display shows only the hash, not a commit reference",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "The unverifiable message references the hash, not the commit",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "Scoped search finds tagged tests on the feature branch",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "The pre-check block no longer includes a seal commit field",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 14,
+        "met": 12
+      },
+      "timing": {
+        "total_minutes": 29,
+        "think": 7,
+        "plan": 7,
+        "build": 17,
+        "verify": 6
+      },
+      "hashes": {
+        "scope": "sha256:c78c7724c4754fbcea8312281595fb1aa310c4cc6debfa80689aa82dd6745951",
+        "contract": "sha256:10f28abd1a9f765585958eeb8e708afac411ad57f1cb0c35a7a4460b7b69802b",
+        "plan": "sha256:e9f97d3db253709d4a2b1bf9a983c0072146a1d5744be0ae56de1f54febb3a68",
+        "spec": "sha256:4017622839f926fac525f20283af30b3124db20e19a2806a7cd3b9a05e8d9991",
+        "build-report": "sha256:6d369a73eb8dd0a6b77291abd5b39a8dfa75e965c929797e5dffda50111216ab",
+        "verify-report": "sha256:21a60d89904c6585819ceac64a119f99bf6758aa63b5ca2d3e01a7fd3bc30eef"
+      },
+      "seal_commit": null,
+      "completed_at": "2026-04-26T04:29:13.409Z",
+      "modules_touched": [
+        "packages/cli/src/commands/artifact.ts",
+        "packages/cli/src/commands/verify.ts",
+        "packages/cli/src/utils/proofSummary.ts",
+        "packages/cli/tests/commands/artifact.test.ts",
+        "packages/cli/tests/commands/pr.test.ts",
+        "packages/cli/tests/commands/verify.test.ts",
+        "packages/cli/tests/commands/work.test.ts",
+        "packages/cli/tests/utils/proofSummary.test.ts"
+      ],
+      "callouts": [
+        {
+          "category": "test",
+          "summary": "Stale commit assertion passes trivially: `artifact.test.ts:1233,1242` — the \"appends to existing .saves.json\" test saves `scope.commit` and later asserts it's unchanged. Since `writeSaveMetadata` no longer writes `commit`, both values are `undefined`, so `expect(undefined).toBe(undefined)` passes without testing anything. The test still verifies scope entry survives a spec save via `toBeDefined()` at line 1239, but the commit-specific line is dead weight. Next cycle touching this test should remove lines 1233 and 1242.",
+          "file": "packages/cli/tests/commands/artifact.test.ts",
+          "anchor": "scope.commit",
+          "id": "seal-hash-simplification-C1"
+        },
+        {
+          "category": "code",
+          "summary": "`execSync` import retained but usage reduced: `verify.ts:17` — `execSync` is still imported and used for the merge-base/diff commands (lines 150-157). The old `git show` call was the fragile one (required exact commit hash). The remaining `execSync` calls use merge-base, which is robust. Not a problem — just noting that the file still has a child-process dependency for the scoped search path.",
+          "file": "packages/cli/src/commands/verify.ts",
+          "anchor": "execSync",
+          "id": "seal-hash-simplification-C2"
+        },
+        {
+          "category": "test",
+          "summary": "A005 fallback test triggers via missing ana.json, not missing branch: `verify.test.ts:548-590` — the fallback test causes `readArtifactBranch` to throw by omitting `ana.json` entirely. This is a valid trigger but tests a different failure mode than \"artifact branch exists but merge-base fails\" (e.g., on a repo with no shared history). Both paths hit the same catch block, so the behavioral coverage is equivalent. A future cycle could add a test where `ana.json` exists but `git merge-base` fails (orphan branches, shallow clones).",
+          "file": "ana.json",
+          "anchor": "readArtifactBranch",
+          "id": "seal-hash-simplification-C3"
+        },
+        {
+          "category": "upstream",
+          "summary": "pr.test.ts fixture retains old `commit` fields: `pr.test.ts:278` — the fixture has `commit: 'def456'` on the contract entry. This represents old-format data and is harmless (JSON.parse ignores extra properties), but it means the pr.test.ts fixture doesn't reflect what current code produces. If a future test asserts on the shape of `.saves.json` entries, this fixture would give a false impression. Low priority.",
+          "file": "packages/cli/tests/commands/pr.test.ts",
+          "anchor": "commit",
+          "id": "seal-hash-simplification-C4"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "Display format change: The seal display changed from `(commit abc1234, hash sha256:abc...)` to `(hash sha256:full-hash)`. This is a user-visible format change. If any scripts parse this output, they'll need updating.",
+          "file": null
+        },
+        {
+          "summary": "Backward compatibility of hash field: Old `.saves.json` files that have `commit` but no `hash` field will now produce UNVERIFIABLE instead of the previous behavior (which used the commit for git-show). This is by design per the spec but worth noting as a behavioral change. Verified complete by second pass.",
+          "file": ".saves.json"
+        }
+      ]
     }
   ]
 }

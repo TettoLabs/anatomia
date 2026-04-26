@@ -1,25 +1,25 @@
-# Active Issues (20 shown of 67 total)
+# Active Issues (20 shown of 71 total)
 
 ## .ana/PROOF_CHAIN.md
 
 - **upstream:** AC7 and AC8 are in tension: AC7 says "no agent definition references `.ana/PROOF_CHAIN.md` as a file to read" while AC8 requires a fallback that references it. The spec's gotcha resolves this ("exactly ONE `.ana/PROOF_CHAIN.md` literal string should... — *Replace PROOF_CHAIN.md reads with targeted proof context queries*
 
+## ana.json
+
+- **test:** A005 fallback test triggers via missing ana.json, not missing branch: `verify.test.ts:548-590` — the fallback test causes `readArtifactBranch` to throw by omitting `ana.json` entirely. This is a valid trigger but tests a different failure mode than... — *Seal hash simplification*
+
 ## packages/cli/src/commands/proof.ts
 
 - **code:** No truncation on callout summaries in terminal output: `proof.ts:367` — `formatContextResult` outputs full callout summaries, which can be 200+ characters per line. Live test shows long lines wrapping awkwardly. The spec mockup shows truncated... — *Proof context file query*
 
-## packages/cli/src/commands/scan.ts
+## packages/cli/src/commands/verify.ts
 
-- **code:** Consumer sort logic duplicated in two files: `scan.ts:112-121` and `scaffold-generators.ts:62-71` — Identical 10-line sort comparator handling null modelCount values. The spec suggested extraction "if the logic is more than a few lines." A shared... — *Fix Drizzle schema detection*
+- **code:** `execSync` import retained but usage reduced: `verify.ts:17` — `execSync` is still imported and used for the merge-base/diff commands (lines 150-157). The old `git show` call was the fragile one (required exact commit hash). The remaining `execSync`... — *Seal hash simplification*
 
 ## packages/cli/src/commands/work.ts
 
 - **code:** Inline return type instead of named interface: `work.ts:744` — `Promise<{ runs: number; callouts: number }>` is an anonymous object type. If other consumers ever need these counts (e.g., a JSON output mode for `work complete`), this shape would need... — *Proof chain health signal*
 - **test:** chalk.gray verified only by absence of failure: The spec requires `chalk.gray()` wrapping (constraint). The tests confirm the text content but not the styling — chalk strips ANSI in non-TTY. This is standard for CLI tests and not a gap per se, but... — *Proof chain health signal*
-
-## packages/cli/src/engine/census.ts
-
-- **code:** `drizzle-dialect` overloads SchemaFileEntry semantics: `census.ts:267-274` — The `orm: 'drizzle-dialect'` entry stores the dialect string in the `path` field, which is semantically a file path. This works because the type is `string` and scan-engine... — *Fix Drizzle schema detection*
 
 ## packages/cli/src/utils/proofSummary.ts
 
@@ -30,10 +30,13 @@
 
 - **code:** Checkpoint wording deviates from spec prescription: `packages/cli/templates/.claude/agents/ana.md:119` — Spec said `"relevant proofs if asked"`, implementation says `"relevant proof chain findings if asked"`. The implementation wording is arguably... — *Replace PROOF_CHAIN.md reads with targeted proof context queries*
 
-## packages/cli/tests/commands/proof.test.ts
+## packages/cli/tests/commands/artifact.test.ts
 
-- **test:** Integration test for A014 checks substring not specific file name: `proof.test.ts:368` — Asserts `stdout.toContain('No proof context')` but doesn't verify the queried filename appears in the message. The contract says "names the queried file." Live... — *Proof context file query*
-- **upstream:** Contract `@ana` tags shared across two phases in same file: `proof.test.ts:425-658` — The existing proof list/detail tests have `@ana A001`–`@ana A023` tags from the original proof-list-view feature's contract. Pre-check reports COVERED for all 24... — *Proof context file query*
+- **test:** Stale commit assertion passes trivially: `artifact.test.ts:1233,1242` — the "appends to existing .saves.json" test saves `scope.commit` and later asserts it's unchanged. Since `writeSaveMetadata` no longer writes `commit`, both values are... — *Seal hash simplification*
+
+## packages/cli/tests/commands/pr.test.ts
+
+- **upstream:** pr.test.ts fixture retains old `commit` fields: `pr.test.ts:278` — the fixture has `commit: 'def456'` on the contract entry. This represents old-format data and is harmless (JSON.parse ignores extra properties), but it means the pr.test.ts fixture... — *Seal hash simplification*
 
 ## packages/cli/tests/commands/work.test.ts
 
@@ -57,6 +60,16 @@
 - **upstream:** Contract A008/A009 block names imply unit tests: Contract blocks "returns chain health counts" and "returns cumulative callout counts with existing chain" suggest direct unit assertions on the return value (`result.runs equals 1`). The builder used... — *Proof chain health signal*
 
 ---
+
+## Seal hash simplification (2026-04-26)
+Result: PASS | 13/13 satisfied | 12/14 ACs | 0 deviations
+Pipeline: 29m (Think 7m, Plan 7m, Build 17m, Verify 6m)
+Modules: packages/cli/src/commands/artifact.ts, packages/cli/src/commands/verify.ts, packages/cli/src/utils/proofSummary.ts, packages/cli/tests/commands/artifact.test.ts, packages/cli/tests/commands/pr.test.ts, packages/cli/tests/commands/verify.test.ts, packages/cli/tests/commands/work.test.ts, packages/cli/tests/utils/proofSummary.test.ts
+Callouts:
+- code: `execSync` import retained but usage reduced: `verify.ts:17` — `execSync` is still imported and used for the merge-base/diff commands (lines 150-157). The old `git show` call was the fragile one (required exact commit hash). The remaining `execSync` calls use merge-base, which is robust. Not a problem — just noting that the file still has a child-process dependency for the scoped search path.
+- test: Stale commit assertion passes trivially: `artifact.test.ts:1233,1242` — the "appends to existing .saves.json" test saves `scope.commit` and later asserts it's unchanged. Since `writeSaveMetadata` no longer writes `commit`, both values are `undefined`, so `expect(undefined).toBe(undefined)` passes without testing anything. The test still verifies scope entry survives a spec save via `toBeDefined()` at line 1239, but the commit-specific line is dead weight. Next cycle touching this test should remove lines 1233 and 1242.
+- test: A005 fallback test triggers via missing ana.json, not missing branch: `verify.test.ts:548-590` — the fallback test causes `readArtifactBranch` to throw by omitting `ana.json` entirely. This is a valid trigger but tests a different failure mode than "artifact branch exists but merge-base fails" (e.g., on a repo with no shared history). Both paths hit the same catch block, so the behavioral coverage is equivalent. A future cycle could add a test where `ana.json` exists but `git merge-base` fails (orphan branches, shallow clones).
+- upstream: pr.test.ts fixture retains old `commit` fields: `pr.test.ts:278` — the fixture has `commit: 'def456'` on the contract entry. This represents old-format data and is harmless (JSON.parse ignores extra properties), but it means the pr.test.ts fixture doesn't reflect what current code produces. If a future test asserts on the shape of `.saves.json` entries, this fixture would give a false impression. Low priority.
 
 ## Proof chain health signal (2026-04-26)
 Result: PASS | 9/9 satisfied | 8/8 ACs | 0 deviations
