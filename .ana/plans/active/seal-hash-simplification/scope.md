@@ -14,15 +14,15 @@ Remove the cause. Don't work around the consequence.
 ## Complexity Assessment
 - **Size:** medium
 - **Files affected:** 5 production files, 4 test files
-  - `packages/cli/src/commands/artifact.ts` — remove post-commit fixup (step 9a), stop recording commit hash
-  - `packages/cli/src/commands/verify.ts` — seal check uses content hash, scoped search uses merge-base
+  - `packages/cli/src/commands/artifact.ts` — remove post-commit fixup (step 9a in single-save and step 8a in save-all), stop recording commit hash in `writeSaveMetadata`, update pre-check storage (lines 600-603) to drop `seal_commit`
+  - `packages/cli/src/commands/verify.ts` — seal check uses content hash instead of git show, scoped search uses merge-base instead of sealCommit, remove `sealCommit` from `ContractPreCheckResult` interface, display line drops commit reference, add `readArtifactBranch` and `createHash` imports
   - `packages/cli/src/utils/proofSummary.ts` — seal_commit becomes null for new entries
   - `packages/cli/src/types/proof.ts` — no schema change (seal_commit is already `string | null`)
-  - `packages/cli/src/commands/verify.ts` — display line drops commit reference
   - `packages/cli/tests/commands/verify.test.ts` — update seal tests to use hash comparison
   - `packages/cli/tests/utils/proofSummary.test.ts` — update seal_commit expectations
   - `packages/cli/tests/commands/work.test.ts` — minor fixture updates
   - `packages/cli/tests/commands/proof.test.ts` — fixture data (seal_commit in old entries stays)
+  - `packages/cli/tests/commands/pr.test.ts` — fixture data has `seal_commit` in pre-check block, minor update
 - **Blast radius:** The seal gate behavior is unchanged — INTACT/TAMPERED still works, verify-report save is still blocked on TAMPERED. What changes is the mechanism (hash comparison instead of git show) and a side effect elimination (no dirty .saves.json). Proof chain entries from previous runs keep their seal_commit values. New entries get `null`.
 - **Estimated effort:** 1-2 hours implementation
 - **Multi-phase:** no
@@ -58,7 +58,7 @@ Three connected changes that remove the commit hash dependency:
 - **Old `.saves.json` files with commit field.** Verify might encounter `.saves.json` files from before this change that still have `commit` but no meaningful change needed — hash comparison doesn't read the `commit` field. Backward compatible by default.
 - **No `.saves.json` at all.** Already handled — verify returns `UNVERIFIABLE`. Unchanged.
 - **No `hash` field in `.saves.json`.** Old entries might lack it. Verify should return `UNVERIFIABLE` (same as current behavior for missing `commit`).
-- **Content hash mismatch from whitespace.** Current `git show` approach trims both sides. Hash-based approach must hash the same content that was hashed at save time. `writeSaveMetadata` hashes the raw content passed to it. Verify must hash the raw file content (not trimmed). Potential discrepancy if the file was saved with different line endings. Planner should investigate whether `writeSaveMetadata` and the seal check read content identically.
+- **Content hash mismatch from whitespace — RESOLVED.** Investigated: `writeSaveMetadata` hashes `fs.readFileSync(filePath, 'utf-8')` — untrimmed raw content (artifact.ts:63,707). The current `git show` seal check trims both sides (verify.ts:122-123, `.trim()`). The new hash-based seal check MUST hash untrimmed content via `fs.readFileSync(contractPath, 'utf-8')` to match the saved hash. Do NOT trim before hashing. This is simpler and more correct than the current approach.
 - **merge-base unavailable.** Feature branch might not have a merge-base with the artifact branch (orphan branch, shallow clone). The existing fallback to global test search handles this — `catch` block falls through to global search.
 - **`modules_touched` still written post-commit in step 9b.** This is NOT removed. It's still written after the build-report commit, and it's still picked up by the subsequent verify-report save (which reads the full `.saves.json` and commits it). The mechanism that carries `modules_touched` into the committed version is unchanged. Only step 9a (the commit hash fixup) is removed.
 - **seal_commit display.** Line 278 in verify.ts shows `(commit abc1234, hash sha256:...)`. With no commit, this becomes just the hash display. The `UNVERIFIABLE` message at line 273 references "no saved contract commit" — should be updated to reference hash.
@@ -88,7 +88,7 @@ None. All design decisions resolved during investigation.
 ### Constraints Discovered
 
 - [TYPE-VERIFIED] `seal_commit: string | null` on ProofChainEntry (proof.ts:38) — null is already valid, no schema change needed
-- [TYPE-VERIFIED] `sealCommit?: string | undefined` on ContractPreCheckResult (verify.ts:29) — optional, can be dropped
+- [TYPE-VERIFIED] `sealCommit?: string | undefined` on ContractPreCheckResult (verify.ts:29) — REMOVE from interface. Downstream: return values at verify.ts:140,151,250 drop the field; artifact.ts:602 stops writing `seal_commit` to pre-check block in `.saves.json`
 - [OBSERVED] Verify display (verify.ts:278) shows commit hash to user — needs display update
 - [OBSERVED] UNVERIFIABLE message (verify.ts:273) says "no saved contract commit" — needs text update
 - [OBSERVED] proofSummary.test.ts (line 128, 301, 314) asserts specific seal_commit values — needs update
@@ -109,13 +109,18 @@ The `modules_touched` computation in `artifact.ts` (lines 743-764) is the closes
 
 ### Relevant Code Paths
 
-- `packages/cli/src/commands/artifact.ts` lines 45-73: `writeSaveMetadata` — remove `commit` field recording
+- `packages/cli/src/commands/artifact.ts` lines 45-73: `writeSaveMetadata` — remove `commit` field recording and `git rev-parse HEAD` call
+- `packages/cli/src/commands/artifact.ts` lines 59-60: `execSync('git rev-parse HEAD')` — DELETE (no longer needed)
+- `packages/cli/src/commands/artifact.ts` lines 600-603: pre-check storage — drop `seal_commit: preCheckResult.sealCommit` from the saved pre-check block
 - `packages/cli/src/commands/artifact.ts` lines 735-738: step 9a single-save fixup — DELETE
 - `packages/cli/src/commands/artifact.ts` lines 1032-1037: step 8a save-all fixup — DELETE
-- `packages/cli/src/commands/verify.ts` lines 90-131: seal check — replace git show with hash comparison
-- `packages/cli/src/commands/verify.ts` lines 159-178: scoped test search — replace sealCommit with merge-base
-- `packages/cli/src/commands/verify.ts` lines 268-278: display — drop commit reference
-- `packages/cli/src/utils/proofSummary.ts` lines 693-697: seal_commit extraction — set to null
+- `packages/cli/src/commands/verify.ts` lines 27-30: `ContractPreCheckResult` interface — remove `sealCommit` field
+- `packages/cli/src/commands/verify.ts` lines 90-131: seal check — replace git show with content hash comparison. Guard on `sealHash` instead of `sealCommit`
+- `packages/cli/src/commands/verify.ts` lines 140,151,250: return values — drop `sealCommit` field
+- `packages/cli/src/commands/verify.ts` lines 159-178: scoped test search — replace `sealCommit` with merge-base (needs `readArtifactBranch` import from `../utils/git-operations.js` and `createHash` from `node:crypto`)
+- `packages/cli/src/commands/verify.ts` lines 268-278: display — drop commit reference, update UNVERIFIABLE message
+- `packages/cli/src/utils/proofSummary.ts` lines 693-697: seal_commit extraction — set to null (stop reading `contractSave?.commit`)
+- `packages/cli/src/utils/proofSummary.ts` lines 97-99: `PreCheckData` interface — `seal_commit` field is dead (never read), can be left or removed
 
 ### Patterns to Follow
 
@@ -125,10 +130,12 @@ The `modules_touched` computation in `artifact.ts` (lines 743-764) is the closes
 
 ### Known Gotchas
 
-- **Content hashing consistency.** `writeSaveMetadata` hashes the `content` parameter passed to it (the raw file content as read by the caller). Verify must hash the file content the same way — `fs.readFileSync(contractPath, 'utf-8')`. The current git-show approach trims both sides (line 122: `.trim()`). If the saved hash was computed on untrimmed content but verify hashes trimmed content, seals break. Planner must verify that both paths hash identical content.
-- **`modules_touched` survives.** Step 9b is NOT removed. Only step 9a is removed. The pickup mechanism (verify-report save reads full .saves.json and commits it) must remain intact. Planner should verify that removing step 9a doesn't break step 9b's data flow.
-- **readArtifactBranch dependency in verify.ts.** The scoped search will need `readArtifactBranch` to compute merge-base. Check whether this import already exists in verify.ts.
+- **Content hashing consistency — RESOLVED.** `writeSaveMetadata` hashes `fs.readFileSync(filePath, 'utf-8')` (untrimmed). Verify must hash `fs.readFileSync(contractPath, 'utf-8')` (also untrimmed). Do NOT trim before hashing. The current git-show code trims (verify.ts:122-123) — the new hash code must not follow that pattern.
+- **`modules_touched` survives — VERIFIED.** Step 9b is NOT removed. Only step 9a is removed. The pickup mechanism works: build-report save writes `modules_touched` post-commit (step 9b) → verify-report save reads the full `.saves.json` at step 8b (pre-commit) which includes `modules_touched` → commits it. Removing step 9a does not affect this flow. Confirmed by tracing the data through the proof-chain-health-signal pipeline run.
+- **`readArtifactBranch` not imported in verify.ts — RESOLVED.** verify.ts currently imports only from `commander`, `chalk`, `node:child_process`, `node:fs`, `node:path`, `yaml`, `glob`, and `../utils/validators.js`. The scoped search needs `readArtifactBranch` from `../utils/git-operations.js`. The seal check needs `createHash` from `node:crypto`. Both are new imports.
+- **`SaveMetadata` interface change.** The `commit` field in `SaveMetadata` (artifact.ts:33-35) should be removed or made optional. Old `.saves.json` files will still have it — readers must tolerate its presence. `writeSaveMetadata` stops writing it. The interface should reflect this: remove `commit` from `SaveMetadata`, change the type to `{ saved_at: string; hash: string }`.
+- **`pre-check.seal_commit` is dead data.** `proofSummary.ts` has `PreCheckData.seal_commit` (line 99) but nothing reads it. `artifact.ts:602` writes it. After this change, `sealCommit` no longer exists on `ContractPreCheckResult`, so artifact.ts:602 must stop writing it. The `PreCheckData` interface field can be left for backward compatibility with old `.saves.json` files or removed — either is safe.
 
 ### Things to Investigate
 
-- Whether the content hash in `.saves.json` was computed from the exact same bytes that `fs.readFileSync` would return at verify time. If `writeSaveMetadata` receives content that was pre-processed (trimmed, normalized), there's a mismatch risk.
+None. All questions resolved during investigation.
