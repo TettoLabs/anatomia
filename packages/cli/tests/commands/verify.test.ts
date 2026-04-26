@@ -171,6 +171,7 @@ describe('ana verify pre-check', () => {
       }
     }
 
+    // @ana A001
     it('reports INTACT when contract unchanged', async () => {
       const contract = `version: "1.0"
 sealed_by: "AnaPlan"
@@ -195,6 +196,7 @@ file_changes:
       expect(result.seal).toBe('INTACT');
     });
 
+    // @ana A002
     it('reports TAMPERED when contract modified after save', async () => {
       const contract = `version: "1.0"
 sealed_by: "AnaPlan"
@@ -346,6 +348,7 @@ file_changes:
       expect(result.assertions[0]!.says).toBe('Creating a payment returns success');
     });
 
+    // @ana A006
     it('reports UNVERIFIABLE when no .saves.json', async () => {
       const contract = `version: "1.0"
 sealed_by: "AnaPlan"
@@ -370,6 +373,7 @@ file_changes:
       expect(result.seal).toBe('UNVERIFIABLE');
     });
 
+    // @ana A010
     it('prints formatted output via runPreCheck', async () => {
       const contract = `version: "1.0"
 sealed_by: "AnaPlan"
@@ -396,10 +400,39 @@ file_changes:
       expect(output.stdout).toContain('A001');
       expect(output.stdout).toContain('COVERED');
       expect(output.stdout).toContain('Test passes');
+      expect(output.stdout).toContain('hash sha256:');
+    });
+
+    // @ana A011
+    it('UNVERIFIABLE message says no saved contract hash', async () => {
+      const contract = `version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Test Feature"
+assertions:
+  - id: A001
+    says: "Test passes"
+    block: "test"
+    target: "result"
+    matcher: "truthy"
+file_changes:
+  - path: src/test.ts
+    action: create`;
+
+      await createContractProject({
+        slug: 'test-slug',
+        contract,
+        saveContract: false,
+      });
+
+      const output = captureOutput(() => runPreCheck('test-slug'));
+
+      expect(output.stdout).toContain('UNVERIFIABLE');
+      expect(output.stdout).toContain('no saved contract hash');
     });
   });
 
   describe('scoped tag search (merge-base)', () => {
+    // @ana A004
     it('scopes search to files changed since merge-base', async () => {
       const contract = `version: "1.0"
 sealed_by: "AnaPlan"
@@ -460,6 +493,7 @@ file_changes:
       expect(result.outOfScope[0]!.file).toContain('old-feature.test.ts');
     });
 
+    // @ana A012
     it('finds tags in files changed after merge-base', async () => {
       const contract = `version: "1.0"
 sealed_by: "AnaPlan"
@@ -510,6 +544,7 @@ file_changes:
       expect(result.outOfScope).toHaveLength(0);
     });
 
+    // @ana A005
     it('falls back to global search when merge-base unavailable', async () => {
       const contract = `version: "1.0"
 sealed_by: "AnaPlan"

@@ -288,6 +288,7 @@ file_changes:
     expect(summary.timing.verify).toBe(30); // build to verify
   });
 
+  // @ana A007
   it('seal_commit is null even when contract.commit exists in saves', () => {
     const saves = {
       scope: { saved_at: '2026-04-01T10:00:00Z', commit: 'aaa111', hash: 'sha256:scope' },
