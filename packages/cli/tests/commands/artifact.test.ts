@@ -3,6 +3,7 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import * as os from 'node:os';
 import { execSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { saveArtifact, saveAllArtifacts } from '../../src/commands/artifact.js';
 
 /**
@@ -1066,21 +1067,22 @@ file_changes:
 All good.`;
     }
 
+    // @ana A003
     it('blocks save when contract is tampered', async () => {
       await createTestProject({ artifactBranch: 'main', currentBranch: 'feature/test-slug' });
 
       // Create contract and save it (creates .saves.json)
-      await createArtifact('test-slug', 'contract.yaml', getValidContractContent());
+      const contractContent = getValidContractContent();
+      await createArtifact('test-slug', 'contract.yaml', contractContent);
       execSync('git add -A && git commit -m "contract"', { cwd: tempDir, stdio: 'ignore' });
 
-      // Write .saves.json with the contract commit
-      const commit = execSync('git rev-parse HEAD', { cwd: tempDir, encoding: 'utf-8' }).trim();
+      // Write .saves.json with the contract hash
+      const hash = `sha256:${createHash('sha256').update(contractContent).digest('hex')}`;
       const savesPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug', '.saves.json');
       await fs.writeFile(savesPath, JSON.stringify({
         contract: {
           saved_at: new Date().toISOString(),
-          commit,
-          hash: 'sha256:abc123',
+          hash,
         }
       }), 'utf-8');
 
@@ -1124,13 +1126,12 @@ file_changes:
       await createArtifact('test-slug', 'contract.yaml', contractWithTwo);
       execSync('git add -A && git commit -m "contract"', { cwd: tempDir, stdio: 'ignore' });
 
-      const commit = execSync('git rev-parse HEAD', { cwd: tempDir, encoding: 'utf-8' }).trim();
+      const hash = `sha256:${createHash('sha256').update(contractWithTwo).digest('hex')}`;
       const savesPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug', '.saves.json');
       await fs.writeFile(savesPath, JSON.stringify({
         contract: {
           saved_at: new Date().toISOString(),
-          commit,
-          hash: 'sha256:abc123',
+          hash,
         }
       }), 'utf-8');
 
@@ -1159,19 +1160,20 @@ file_changes:
       expect(isFileCommitted('.ana/plans/active/test-slug/verify_report.md')).toBe(true);
     });
 
+    // @ana A013
     it('stores pre-check results in .saves.json', async () => {
       await createTestProject({ artifactBranch: 'main', currentBranch: 'feature/test-slug' });
 
-      await createArtifact('test-slug', 'contract.yaml', getValidContractContent());
+      const contractContent = getValidContractContent();
+      await createArtifact('test-slug', 'contract.yaml', contractContent);
       execSync('git add -A && git commit -m "contract"', { cwd: tempDir, stdio: 'ignore' });
 
-      const commit = execSync('git rev-parse HEAD', { cwd: tempDir, encoding: 'utf-8' }).trim();
+      const hash = `sha256:${createHash('sha256').update(contractContent).digest('hex')}`;
       const savesPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug', '.saves.json');
       await fs.writeFile(savesPath, JSON.stringify({
         contract: {
           saved_at: new Date().toISOString(),
-          commit,
-          hash: 'sha256:abc123',
+          hash,
         }
       }), 'utf-8');
 
@@ -1182,12 +1184,14 @@ file_changes:
       const saves = JSON.parse(await fs.readFile(savesPath, 'utf-8'));
       expect(saves['pre-check']).toBeDefined();
       expect(saves['pre-check'].seal).toBe('INTACT');
+      expect(saves['pre-check'].seal_commit).toBeUndefined();
       expect(saves['pre-check'].assertions).toBeDefined();
       expect(saves['pre-check'].run_at).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
     });
   });
 
   describe('.saves.json metadata', () => {
+    // @ana A008
     it('writes .saves.json with save metadata', async () => {
       await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
       await createArtifact('test-slug', 'scope.md');
@@ -1201,8 +1205,18 @@ file_changes:
       const saves = JSON.parse(await fs.readFile(savesPath, 'utf-8'));
       expect(saves.scope).toBeDefined();
       expect(saves.scope.saved_at).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
-      expect(saves.scope.commit).toMatch(/^[a-f0-9]{40}$/);
+      expect(saves.scope.commit).toBeUndefined();
       expect(saves.scope.hash).toMatch(/^sha256:[a-f0-9]{64}$/);
+    });
+
+    // @ana A009
+    it('step 9a post-commit fixup no longer exists in source', async () => {
+      const fsSync = await import('node:fs');
+      const sourcePath = path.resolve(__dirname, '../../src/commands/artifact.ts');
+      const source = fsSync.readFileSync(sourcePath, 'utf-8');
+      // Step 9a was the post-commit fixup that re-wrote .saves.json with the real commit hash
+      expect(source).not.toContain('9a.');
+      expect(source).not.toContain('Update .saves.json on disk with the real commit hash');
     });
 
     it('appends to existing .saves.json on subsequent saves', async () => {
@@ -1483,7 +1497,7 @@ Rules.`;
     // Each should have proper metadata
     for (const type of ['plan', 'spec']) {
       expect(saves[type].saved_at).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
-      expect(saves[type].commit).toMatch(/^[a-f0-9]{40}$/);
+      expect(saves[type].commit).toBeUndefined();
       expect(saves[type].hash).toMatch(/^sha256:[a-f0-9]{64}$/);
     }
   });

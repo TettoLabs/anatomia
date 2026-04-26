@@ -19,14 +19,15 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as yaml from 'yaml';
 import { glob } from 'glob';
+import { createHash } from 'node:crypto';
 import { findProjectRoot } from '../utils/validators.js';
+import { readArtifactBranch } from '../utils/git-operations.js';
 
 /**
  * Contract pre-check result (S8+)
  */
 interface ContractPreCheckResult {
   seal: 'INTACT' | 'TAMPERED' | 'UNVERIFIABLE';
-  sealCommit?: string | undefined;
   sealHash?: string | undefined;
   assertions: Array<{
     id: string;
@@ -87,15 +88,13 @@ export function runContractPreCheck(slug: string, projectRoot: string = findProj
     };
   }
 
-  // Read .saves.json for contract commit
-  let sealCommit: string | undefined;
+  // Read .saves.json for contract hash
   let sealHash: string | undefined;
 
   if (fs.existsSync(savesPath)) {
     try {
-      const saves: Record<string, { commit?: string; hash?: string }> = JSON.parse(fs.readFileSync(savesPath, 'utf-8'));
+      const saves: Record<string, { hash?: string }> = JSON.parse(fs.readFileSync(savesPath, 'utf-8'));
       if (saves['contract']) {
-        sealCommit = saves['contract'].commit;
         sealHash = saves['contract'].hash;
       }
     } catch {
@@ -103,7 +102,7 @@ export function runContractPreCheck(slug: string, projectRoot: string = findProj
     }
   }
 
-  if (!sealCommit) {
+  if (!sealHash) {
     return {
       seal: 'UNVERIFIABLE',
       assertions: [],
@@ -112,23 +111,10 @@ export function runContractPreCheck(slug: string, projectRoot: string = findProj
     };
   }
 
-  // Seal check: compare contract at plan commit vs current
-  let seal: 'INTACT' | 'TAMPERED' = 'INTACT';
-  try {
-    const relativePath = path.relative(projectRoot, contractPath);
-    const sealedContent = execSync(
-      `git show ${sealCommit}:${relativePath}`,
-      { encoding: 'utf-8', cwd: projectRoot, stdio: ['pipe', 'pipe', 'pipe'] }
-    ).trim();
-    const currentContent = fs.readFileSync(contractPath, 'utf-8').trim();
-
-    if (sealedContent !== currentContent) {
-      seal = 'TAMPERED';
-    }
-  } catch {
-    // If git show fails, contract was modified or commit doesn't exist
-    seal = 'TAMPERED';
-  }
+  // Seal check: compare current contract hash against saved hash
+  const currentContent = fs.readFileSync(contractPath, 'utf-8');
+  const currentHash = `sha256:${createHash('sha256').update(currentContent).digest('hex')}`;
+  const seal: 'INTACT' | 'TAMPERED' = currentHash === sealHash ? 'INTACT' : 'TAMPERED';
 
   // Parse current contract for assertions
   let contract: ContractSchema;
@@ -137,7 +123,6 @@ export function runContractPreCheck(slug: string, projectRoot: string = findProj
   } catch {
     return {
       seal,
-      sealCommit,
       sealHash,
       assertions: [],
       summary: { total: 0, covered: 0, uncovered: 0 },
@@ -148,7 +133,6 @@ export function runContractPreCheck(slug: string, projectRoot: string = findProj
   if (!contract.assertions || !Array.isArray(contract.assertions)) {
     return {
       seal,
-      sealCommit,
       sealHash,
       assertions: [],
       summary: { total: 0, covered: 0, uncovered: 0 },
@@ -156,14 +140,19 @@ export function runContractPreCheck(slug: string, projectRoot: string = findProj
     };
   }
 
-  // Scope tag search to files Build changed (git diff from seal commit to HEAD).
+  // Scope tag search to files Build changed (git diff from merge-base to HEAD).
   // Prevents false COVERED from @ana tags in other features' test files.
-  // Falls back to global search if git diff is unavailable.
+  // Falls back to global search if merge-base is unavailable.
   let testFiles: string[] = [];
   let scopedSearch = false;
   try {
+    const artBranch = readArtifactBranch(projectRoot);
+    const mergeBase = execSync(
+      `git merge-base ${artBranch} HEAD`,
+      { encoding: 'utf-8', cwd: projectRoot, stdio: ['pipe', 'pipe', 'pipe'] }
+    ).trim();
     const diffOutput = execSync(
-      `git diff --name-only ${sealCommit}..HEAD`,
+      `git diff ${mergeBase}..HEAD --name-only`,
       { encoding: 'utf-8', cwd: projectRoot, stdio: ['pipe', 'pipe', 'pipe'] }
     ).trim();
     if (diffOutput) {
@@ -247,7 +236,6 @@ export function runContractPreCheck(slug: string, projectRoot: string = findProj
 
   return {
     seal,
-    sealCommit,
     sealHash,
     assertions,
     summary: {
@@ -270,12 +258,12 @@ function printContractResults(result: ContractPreCheckResult, slugDir: string): 
   console.log(`  Contract: ${path.join(slugDir, 'contract.yaml')}`);
 
   if (result.seal === 'UNVERIFIABLE') {
-    console.log(`  Seal: ${chalk.yellow('UNVERIFIABLE')} (no saved contract commit)`);
+    console.log(`  Seal: ${chalk.yellow('UNVERIFIABLE')} (no saved contract hash)`);
     return;
   }
 
   const sealColor = result.seal === 'INTACT' ? chalk.green : chalk.red;
-  console.log(`  Seal: ${sealColor(result.seal)} (commit ${result.sealCommit?.substring(0, 7)}, hash ${result.sealHash?.substring(0, 20)}...)`);
+  console.log(`  Seal: ${sealColor(result.seal)} (hash ${result.sealHash})`);
   console.log();
 
   if (result.assertions.length === 0) {

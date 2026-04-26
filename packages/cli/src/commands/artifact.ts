@@ -31,7 +31,6 @@ import { readArtifactBranch, readBranchPrefix, getCurrentBranch } from '../utils
  */
 interface SaveMetadata {
   saved_at: string;
-  commit: string;
   hash: string;
 }
 
@@ -56,16 +55,12 @@ function writeSaveMetadata(slugDir: string, artifactType: string, content: strin
     }
   }
 
-  // Get current commit hash
-  const commit = execSync('git rev-parse HEAD', { encoding: 'utf-8' }).trim();
-
   // Compute SHA256 of content
   const hash = createHash('sha256').update(content).digest('hex');
 
   // Write entry for this artifact type
   saves[artifactType] = {
     saved_at: new Date().toISOString(),
-    commit,
     hash: `sha256:${hash}`,
   };
 
@@ -599,7 +594,6 @@ export function saveArtifact(type: string, slug: string): void {
 
       saves['pre-check'] = {
         seal: preCheckResult.seal,
-        seal_commit: preCheckResult.sealCommit,
         seal_hash: preCheckResult.sealHash,
         assertions: preCheckResult.assertions,
         covered: preCheckResult.summary.covered,
@@ -701,8 +695,7 @@ export function saveArtifact(type: string, slug: string): void {
 
   // 8b. Write .saves.json and stage it alongside the artifact.
   // Done AFTER the no-changes check so unchanged artifacts don't trigger
-  // a commit just from .saves.json metadata. The commit hash in .saves.json
-  // will be the previous commit's — post-commit update fixes the on-disk version.
+  // a commit just from .saves.json metadata.
   const slugDir2 = path.join(projectRoot, '.ana', 'plans', 'active', slug);
   const artifactContent = fs.readFileSync(filePath, 'utf-8');
   writeSaveMetadata(slugDir2, typeInfo.baseType, artifactContent);
@@ -731,11 +724,6 @@ export function saveArtifact(type: string, slug: string): void {
     console.error(chalk.red(`Error: Commit failed. ${error instanceof Error ? error.message : 'Unknown error'}`));
     process.exit(1);
   }
-
-  // 9a. Update .saves.json on disk with the real commit hash (the pre-commit
-  // version had the previous commit's hash). This fixes the on-disk version
-  // for local reads without recommitting.
-  writeSaveMetadata(slugDir2, typeInfo.baseType, artifactContent);
 
   // 9b. Capture modules_touched at build-report time (when the feature branch
   // definitely exists and all code is committed). Stored in .saves.json for
@@ -1027,13 +1015,6 @@ export function saveAllArtifacts(slug: string): void {
   } catch (error) {
     console.error(chalk.red(`Error: Commit failed. ${error instanceof Error ? error.message : 'Unknown error'}`));
     process.exit(1);
-  }
-
-  // 8a. Update .saves.json on disk with real commit hash (pre-commit version
-  // had the previous commit's hash). Fixes on-disk version for local reads.
-  for (const artifact of artifacts) {
-    const content = fs.readFileSync(artifact.path, 'utf-8');
-    writeSaveMetadata(planDir, artifact.typeInfo.baseType, content);
   }
 
   // 9. Push (planning artifacts only)

@@ -5,18 +5,110 @@
     "hash": "sha256:c78c7724c4754fbcea8312281595fb1aa310c4cc6debfa80689aa82dd6745951"
   },
   "contract": {
-    "saved_at": "2026-04-26T04:02:47.674Z",
-    "commit": "a8383c268e2b98372a654c6559fdf8dfddf697a8",
+    "saved_at": "2026-04-26T04:02:55.067Z",
+    "commit": "46b84b171d1a1cd85b4e0011b29e7fac2e7b1884",
     "hash": "sha256:10f28abd1a9f765585958eeb8e708afac411ad57f1cb0c35a7a4460b7b69802b"
   },
   "plan": {
-    "saved_at": "2026-04-26T04:02:47.680Z",
-    "commit": "a8383c268e2b98372a654c6559fdf8dfddf697a8",
+    "saved_at": "2026-04-26T04:02:55.074Z",
+    "commit": "46b84b171d1a1cd85b4e0011b29e7fac2e7b1884",
     "hash": "sha256:e9f97d3db253709d4a2b1bf9a983c0072146a1d5744be0ae56de1f54febb3a68"
   },
   "spec": {
-    "saved_at": "2026-04-26T04:02:47.685Z",
-    "commit": "a8383c268e2b98372a654c6559fdf8dfddf697a8",
+    "saved_at": "2026-04-26T04:02:55.080Z",
+    "commit": "46b84b171d1a1cd85b4e0011b29e7fac2e7b1884",
     "hash": "sha256:4017622839f926fac525f20283af30b3124db20e19a2806a7cd3b9a05e8d9991"
+  },
+  "build-report": {
+    "saved_at": "2026-04-26T04:19:39.963Z",
+    "hash": "sha256:6d369a73eb8dd0a6b77291abd5b39a8dfa75e965c929797e5dffda50111216ab"
+  },
+  "modules_touched": [
+    "packages/cli/src/commands/artifact.ts",
+    "packages/cli/src/commands/verify.ts",
+    "packages/cli/src/utils/proofSummary.ts",
+    "packages/cli/tests/commands/artifact.test.ts",
+    "packages/cli/tests/commands/pr.test.ts",
+    "packages/cli/tests/commands/verify.test.ts",
+    "packages/cli/tests/commands/work.test.ts",
+    "packages/cli/tests/utils/proofSummary.test.ts"
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:10f28abd1a9f765585958eeb8e708afac411ad57f1cb0c35a7a4460b7b69802b",
+    "assertions": [
+      {
+        "id": "A001",
+        "says": "An unchanged contract is verified as intact",
+        "status": "COVERED"
+      },
+      {
+        "id": "A002",
+        "says": "A modified contract is detected as tampered",
+        "status": "COVERED"
+      },
+      {
+        "id": "A003",
+        "says": "A tampered contract blocks saving the verify report",
+        "status": "COVERED"
+      },
+      {
+        "id": "A004",
+        "says": "Tag search finds tests changed since the feature branch diverged",
+        "status": "COVERED"
+      },
+      {
+        "id": "A005",
+        "says": "Tag search falls back to global when merge-base is unavailable",
+        "status": "COVERED"
+      },
+      {
+        "id": "A006",
+        "says": "A missing saves file makes the seal unverifiable",
+        "status": "COVERED"
+      },
+      {
+        "id": "A007",
+        "says": "New proof chain entries record no commit hash",
+        "status": "COVERED"
+      },
+      {
+        "id": "A008",
+        "says": "The commit field is no longer written to saves metadata",
+        "status": "COVERED"
+      },
+      {
+        "id": "A009",
+        "says": "The post-commit fixup no longer exists in artifact save",
+        "status": "COVERED"
+      },
+      {
+        "id": "A010",
+        "says": "The seal display shows only the hash, not a commit reference",
+        "status": "COVERED"
+      },
+      {
+        "id": "A011",
+        "says": "The unverifiable message references the hash, not the commit",
+        "status": "COVERED"
+      },
+      {
+        "id": "A012",
+        "says": "Scoped search finds tagged tests on the feature branch",
+        "status": "COVERED"
+      },
+      {
+        "id": "A013",
+        "says": "The pre-check block no longer includes a seal commit field",
+        "status": "COVERED"
+      }
+    ],
+    "covered": 13,
+    "uncovered": 0,
+    "run_at": "2026-04-26T04:25:19.213Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-04-26T04:25:19.242Z",
+    "hash": "sha256:21a60d89904c6585819ceac64a119f99bf6758aa63b5ca2d3e01a7fd3bc30eef"
   }
 }
