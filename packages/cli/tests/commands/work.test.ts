@@ -956,7 +956,6 @@ file_changes:
             },
             'pre-check': {
               seal: 'INTACT',
-              seal_commit: 'def456',
               assertions: [
                 { id: 'A001', says: 'Creates item successfully', status: 'COVERED' },
                 { id: 'A002', says: 'Returns proper status', status: 'COVERED' }

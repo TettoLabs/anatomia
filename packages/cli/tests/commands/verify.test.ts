@@ -4,6 +4,7 @@ import * as fsSync from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
 import { execSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { runPreCheck, runContractPreCheck } from '../../src/commands/verify.js';
 
 /**
@@ -147,15 +148,15 @@ describe('ana verify pre-check', () => {
       // Initial commit
       execSync('git add -A && git commit -m "init"', { cwd: tempDir, stdio: 'ignore' });
 
-      // Write .saves.json with contract commit if requested
+      // Write .saves.json with contract hash if requested
       if (options.saveContract !== false) {
-        const commit = execSync('git rev-parse HEAD', { cwd: tempDir, encoding: 'utf-8' }).trim();
+        const contractContent = await fs.readFile(path.join(planDir, 'contract.yaml'), 'utf-8');
+        const hash = `sha256:${createHash('sha256').update(contractContent).digest('hex')}`;
         const savesPath = path.join(planDir, '.saves.json');
         await fs.writeFile(savesPath, JSON.stringify({
           contract: {
             saved_at: new Date().toISOString(),
-            commit,
-            hash: 'sha256:abc123',
+            hash,
           }
         }), 'utf-8');
       }
@@ -398,8 +399,8 @@ file_changes:
     });
   });
 
-  describe('scoped tag search (S23 pipeline hardening)', () => {
-    it('scopes search to files changed after seal commit', async () => {
+  describe('scoped tag search (merge-base)', () => {
+    it('scopes search to files changed since merge-base', async () => {
       const contract = `version: "1.0"
 sealed_by: "AnaPlan"
 feature: "Test Feature"
@@ -413,7 +414,7 @@ file_changes:
   - path: src/feature.ts
     action: create`;
 
-      // Create project with contract
+      // Create project on main (artifact branch)
       execSync('git init', { cwd: tempDir, stdio: 'ignore' });
       execSync('git config user.email "test@test.com"', { cwd: tempDir, stdio: 'ignore' });
       execSync('git config user.name "Test"', { cwd: tempDir, stdio: 'ignore' });
@@ -422,28 +423,35 @@ file_changes:
       const planDir = path.join(anaDir, 'plans', 'active', 'test-slug');
       await fs.mkdir(planDir, { recursive: true });
       await fs.writeFile(path.join(planDir, 'contract.yaml'), contract, 'utf-8');
+      await fs.writeFile(
+        path.join(anaDir, 'ana.json'),
+        JSON.stringify({ artifactBranch: 'main' }),
+        'utf-8'
+      );
 
       // Write a "previous feature" test with A001 tag (collision source)
       const oldTestDir = path.join(tempDir, 'tests');
       await fs.mkdir(oldTestDir, { recursive: true });
       await fs.writeFile(path.join(oldTestDir, 'old-feature.test.ts'), '// @ana A001\nold test', 'utf-8');
 
-      execSync('git add -A && git commit -m "seal: contract + old test"', { cwd: tempDir, stdio: 'ignore' });
-
-      // Save seal commit
-      const sealCommit = execSync('git rev-parse HEAD', { cwd: tempDir, encoding: 'utf-8' }).trim();
+      // Compute real hash for the contract
+      const contractContent = await fs.readFile(path.join(planDir, 'contract.yaml'), 'utf-8');
+      const hash = `sha256:${createHash('sha256').update(contractContent).digest('hex')}`;
       await fs.writeFile(path.join(planDir, '.saves.json'), JSON.stringify({
-        contract: { saved_at: new Date().toISOString(), commit: sealCommit, hash: 'sha256:abc' }
+        contract: { saved_at: new Date().toISOString(), hash }
       }), 'utf-8');
 
-      // Simulate Build: create a new test file (WITHOUT A001 tag) and commit
+      execSync('git add -A && git commit -m "init on main"', { cwd: tempDir, stdio: 'ignore' });
+
+      // Create feature branch and add a new test file (WITHOUT A001 tag)
+      execSync('git checkout -b feature/test-slug', { cwd: tempDir, stdio: 'ignore' });
       await fs.writeFile(path.join(oldTestDir, 'new-feature.test.ts'), '// no tags here\nnew test', 'utf-8');
       execSync('git add -A && git commit -m "build: new test file"', { cwd: tempDir, stdio: 'ignore' });
 
       const result = runContractPreCheck('test-slug', tempDir);
 
       // A001 should be UNCOVERED because the scoped search only looks at
-      // files changed after seal (new-feature.test.ts), not old-feature.test.ts
+      // files changed since merge-base (new-feature.test.ts), not old-feature.test.ts
       expect(result.assertions.find(a => a.id === 'A001')?.status).toBe('UNCOVERED');
 
       // out-of-scope warning should flag where the tag actually lives
@@ -452,7 +460,7 @@ file_changes:
       expect(result.outOfScope[0]!.file).toContain('old-feature.test.ts');
     });
 
-    it('finds tags in files changed after seal commit', async () => {
+    it('finds tags in files changed after merge-base', async () => {
       const contract = `version: "1.0"
 sealed_by: "AnaPlan"
 feature: "Test Feature"
@@ -474,15 +482,23 @@ file_changes:
       const planDir = path.join(anaDir, 'plans', 'active', 'test-slug');
       await fs.mkdir(planDir, { recursive: true });
       await fs.writeFile(path.join(planDir, 'contract.yaml'), contract, 'utf-8');
+      await fs.writeFile(
+        path.join(anaDir, 'ana.json'),
+        JSON.stringify({ artifactBranch: 'main' }),
+        'utf-8'
+      );
 
-      execSync('git add -A && git commit -m "seal"', { cwd: tempDir, stdio: 'ignore' });
-
-      const sealCommit = execSync('git rev-parse HEAD', { cwd: tempDir, encoding: 'utf-8' }).trim();
+      // Compute real hash for the contract
+      const contractContent = await fs.readFile(path.join(planDir, 'contract.yaml'), 'utf-8');
+      const hash = `sha256:${createHash('sha256').update(contractContent).digest('hex')}`;
       await fs.writeFile(path.join(planDir, '.saves.json'), JSON.stringify({
-        contract: { saved_at: new Date().toISOString(), commit: sealCommit, hash: 'sha256:abc' }
+        contract: { saved_at: new Date().toISOString(), hash }
       }), 'utf-8');
 
-      // Build creates test file with tag and commits
+      execSync('git add -A && git commit -m "init on main"', { cwd: tempDir, stdio: 'ignore' });
+
+      // Create feature branch, add test file with tag, and commit
+      execSync('git checkout -b feature/test-slug', { cwd: tempDir, stdio: 'ignore' });
       const testDir = path.join(tempDir, 'tests');
       await fs.mkdir(testDir, { recursive: true });
       await fs.writeFile(path.join(testDir, 'feature.test.ts'), '// @ana A001\ntest()', 'utf-8');
@@ -494,7 +510,7 @@ file_changes:
       expect(result.outOfScope).toHaveLength(0);
     });
 
-    it('falls back to global search when no commits after seal', async () => {
+    it('falls back to global search when merge-base unavailable', async () => {
       const contract = `version: "1.0"
 sealed_by: "AnaPlan"
 feature: "Test Feature"
@@ -508,7 +524,7 @@ file_changes:
   - path: src/test.ts
     action: create`;
 
-      // Create project — test file exists at seal time (no post-seal changes)
+      // Create project — no artifact branch configured, so merge-base will fail
       execSync('git init', { cwd: tempDir, stdio: 'ignore' });
       execSync('git config user.email "test@test.com"', { cwd: tempDir, stdio: 'ignore' });
       execSync('git config user.name "Test"', { cwd: tempDir, stdio: 'ignore' });
@@ -517,19 +533,21 @@ file_changes:
       const planDir = path.join(anaDir, 'plans', 'active', 'test-slug');
       await fs.mkdir(planDir, { recursive: true });
       await fs.writeFile(path.join(planDir, 'contract.yaml'), contract, 'utf-8');
+      // No ana.json — readArtifactBranch will fail, triggering fallback
 
       const testDir = path.join(tempDir, 'tests');
       await fs.mkdir(testDir, { recursive: true });
       await fs.writeFile(path.join(testDir, 'test.test.ts'), '// @ana A001\ntest()', 'utf-8');
 
-      execSync('git add -A && git commit -m "init"', { cwd: tempDir, stdio: 'ignore' });
-
-      const sealCommit = execSync('git rev-parse HEAD', { cwd: tempDir, encoding: 'utf-8' }).trim();
+      // Compute real hash for the contract
+      const contractContent = await fs.readFile(path.join(planDir, 'contract.yaml'), 'utf-8');
+      const hash = `sha256:${createHash('sha256').update(contractContent).digest('hex')}`;
       await fs.writeFile(path.join(planDir, '.saves.json'), JSON.stringify({
-        contract: { saved_at: new Date().toISOString(), commit: sealCommit, hash: 'sha256:abc' }
+        contract: { saved_at: new Date().toISOString(), hash }
       }), 'utf-8');
 
-      // No commits after seal — git diff is empty, falls back to global
+      execSync('git add -A && git commit -m "init"', { cwd: tempDir, stdio: 'ignore' });
+
       const result = runContractPreCheck('test-slug', tempDir);
 
       // Global fallback should still find the tag
