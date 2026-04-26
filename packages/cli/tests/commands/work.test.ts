@@ -1087,10 +1087,31 @@ Tests: 5 passed
         console.log = originalLog;
         const output = logs.join('\n');
 
+        // @ana A001, A002, A003, A004, A007, A008
         expect(output).toContain('✓ PASS');
         expect(output).toContain('Test Feature');
         expect(output).toContain('2/2 covered');
-        expect(output).toContain('Proof saved to chain');
+        expect(output).not.toContain('Proof saved to chain');
+        expect(output).toContain('Chain: 1 run · 0 callouts');
+      });
+
+      // @ana A005, A006, A009
+      it('prints cumulative chain balance with existing entries', async () => {
+        await createProofProject('test-feature', { existingChain: true });
+
+        // Capture console output
+        const originalLog = console.log;
+        const logs: string[] = [];
+        console.log = (...args: unknown[]) => {
+          logs.push(args.join(' '));
+        };
+
+        await completeWork('test-feature');
+
+        console.log = originalLog;
+        const output = logs.join('\n');
+
+        expect(output).toContain('Chain: 2 runs · 0 callouts');
       });
     });
   });
