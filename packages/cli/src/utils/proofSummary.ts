@@ -690,11 +690,9 @@ export function generateProofSummary(slugDir: string): ProofSummary {
       // Extract timing
       summary.timing = computeTiming(saves);
 
-      // Primary source for seal_commit: contract.commit (always populated).
-      // Pre-check.seal_commit is the same value but only present when
-      // Verify used single-file save (not save-all).
-      const contractSave = saves['contract'] as SaveEntry | undefined;
-      summary.seal_commit = contractSave?.commit ?? null;
+      // seal_commit is no longer populated — new saves have no commit field.
+      // Old proof chain entries keep their values; only new entries get null.
+      summary.seal_commit = null;
 
       // Extract pre-check data
       const preCheck = saves['pre-check'] as PreCheckData | undefined;
