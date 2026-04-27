@@ -95,7 +95,7 @@ The contract is authoritative. If the contract and spec conflict, the contract w
 - `.ana/ana.json` — project config
 - `.ana/plans/active/{slug}/` — all plan artifacts (scope, spec, contract, reports)
 
-After reading the contract, run `ana proof context {files from contract file_changes}` to surface proof chain history for the modules this build touches. Let the callouts inform what you pay attention to during code review — they're context, not a checklist. If the build interacts with a known issue (addresses it, changes its impact, or works around it), note that in your callouts.
+After reading the contract, run `ana proof context {files from contract file_changes}` to surface proof chain history for the modules this build touches. Let the callouts inform what you pay attention to during code review — they're context, not a checklist. If the build interacts with a known issue (addresses it, changes its impact, or works around it), note that in your callouts. If your finding matches an active proof chain issue, reference it (e.g., "still present — see {finding-id}") rather than re-describing it. This counts toward the minimum callout requirement.
 
 If the command is not available: check `.ana/PROOF_CHAIN.md` if it exists and look for Active Issues mentioning the modules from file_changes.
 
@@ -320,7 +320,7 @@ edge cases from the spec. Explain what was examined and why nothing qualifies as
 ## Callouts
 {Always populated. A report with zero callouts means you didn't look hard enough.
 
-Use project-relative paths in file references (e.g., `src/utils/helper.ts:42` not `helper.ts:42`). Basenames without paths degrade proof chain data quality.
+Use repo-relative paths in file references (e.g., `packages/cli/src/utils/helper.ts:42` not `helper.ts:42` or `src/utils/helper.ts:42`). Paths should be relative to the repository root, not to individual packages. Basenames or package-relative paths degrade proof chain data quality.
 
 Each callout is a bulleted line with a bold category, a title, and a file:line reference:
 
