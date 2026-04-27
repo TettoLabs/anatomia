@@ -18,5 +18,142 @@
   "build-report": {
     "saved_at": "2026-04-27T03:58:11.094Z",
     "hash": "sha256:2ff4cc55a9a77881cfd6f9a78caaa2d45efe1aed5eac5f7906419d1d23d9e53d"
+  },
+  "modules_touched": [
+    ".claude/agents/ana-build.md",
+    ".claude/agents/ana-plan.md",
+    ".claude/agents/ana-setup.md",
+    ".claude/agents/ana-verify.md",
+    ".claude/agents/ana.md",
+    "packages/cli/src/commands/artifact.ts",
+    "packages/cli/src/commands/check.ts",
+    "packages/cli/src/commands/work.ts",
+    "packages/cli/src/types/proof.ts",
+    "packages/cli/src/utils/proofSummary.ts",
+    "packages/cli/templates/.claude/agents/ana-build.md",
+    "packages/cli/templates/.claude/agents/ana-plan.md",
+    "packages/cli/templates/.claude/agents/ana-setup.md",
+    "packages/cli/templates/.claude/agents/ana-verify.md",
+    "packages/cli/templates/.claude/agents/ana.md",
+    "packages/cli/tests/commands/work.test.ts",
+    "packages/cli/tests/utils/proofSummary.test.ts"
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:e0f767bf92303cc146d8d7c4d50541438f39b1278f44175dc0ebd57f35d15673",
+    "assertions": [
+      {
+        "id": "A001",
+        "says": "Every agent session gets the full 1M context window",
+        "status": "COVERED"
+      },
+      {
+        "id": "A002",
+        "says": "Verify asks the developer before starting verification",
+        "status": "COVERED"
+      },
+      {
+        "id": "A003",
+        "says": "Build no longer tells agents to skip asking permission",
+        "status": "COVERED"
+      },
+      {
+        "id": "A004",
+        "says": "Verify callouts use project-relative paths for better data quality",
+        "status": "COVERED"
+      },
+      {
+        "id": "A005",
+        "says": "Setup reads validation schema files to understand project patterns",
+        "status": "COVERED"
+      },
+      {
+        "id": "A006",
+        "says": "Setup surfaces validation and test findings in the context draft",
+        "status": "COVERED"
+      },
+      {
+        "id": "A007",
+        "says": "Setup reads auth config when the project has authentication",
+        "status": "COVERED"
+      },
+      {
+        "id": "A008",
+        "says": "The confusing slugDir2 variable name is cleaned up",
+        "status": "COVERED"
+      },
+      {
+        "id": "A009",
+        "says": "Setup validation checks use real scan data instead of null",
+        "status": "COVERED"
+      },
+      {
+        "id": "A010",
+        "says": "Build concerns are always present on proof chain entries",
+        "status": "COVERED"
+      },
+      {
+        "id": "A011",
+        "says": "ProofSummary build concerns are always present",
+        "status": "COVERED"
+      },
+      {
+        "id": "A012",
+        "says": "Completed work always records build concerns, even when empty",
+        "status": "COVERED"
+      },
+      {
+        "id": "A013",
+        "says": "All historical proof chain entries have consistent data",
+        "status": "COVERED"
+      },
+      {
+        "id": "A014",
+        "says": "File references resolve even when the file wasn't modified in the build",
+        "status": "COVERED"
+      },
+      {
+        "id": "A015",
+        "says": "Ambiguous file references stay unresolved rather than guessing wrong",
+        "status": "COVERED"
+      },
+      {
+        "id": "A016",
+        "says": "File resolution ignores dependency folders to avoid false matches",
+        "status": "COVERED"
+      },
+      {
+        "id": "A017",
+        "says": "File resolution ignores Anatomia's own data to avoid self-matching",
+        "status": "COVERED"
+      },
+      {
+        "id": "A018",
+        "says": "All proof chain write paths pass project root for file resolution",
+        "status": "COVERED"
+      },
+      {
+        "id": "A019",
+        "says": "Proof chain accumulation correctly counts callouts across pipeline runs",
+        "status": "COVERED"
+      },
+      {
+        "id": "A020",
+        "says": "All existing tests continue to pass after the changes",
+        "status": "COVERED"
+      },
+      {
+        "id": "A021",
+        "says": "Code meets lint standards with no new violations",
+        "status": "COVERED"
+      }
+    ],
+    "covered": 21,
+    "uncovered": 0,
+    "run_at": "2026-04-27T04:05:22.609Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-04-27T04:05:22.630Z",
+    "hash": "sha256:547440cc887e120e61c93ab8293546f5a506514865d8076ae1141bd4bfab5d68"
   }
 }
