@@ -1,4 +1,4 @@
-# Active Issues (20 shown of 71 total)
+# Active Issues (20 shown of 77 total)
 
 ## .ana/PROOF_CHAIN.md
 
@@ -7,10 +7,6 @@
 ## ana.json
 
 - **test:** A005 fallback test triggers via missing ana.json, not missing branch: `verify.test.ts:548-590` — the fallback test causes `readArtifactBranch` to throw by omitting `ana.json` entirely. This is a valid trigger but tests a different failure mode than... — *Seal hash simplification*
-
-## packages/cli/src/commands/proof.ts
-
-- **code:** No truncation on callout summaries in terminal output: `proof.ts:367` — `formatContextResult` outputs full callout summaries, which can be 200+ characters per line. Live test shows long lines wrapping awkwardly. The spec mockup shows truncated... — *Proof context file query*
 
 ## packages/cli/src/commands/verify.ts
 
@@ -24,7 +20,6 @@
 ## packages/cli/src/utils/proofSummary.ts
 
 - **code:** Root-level module paths won't match: `proofSummary.ts:336` — `m.endsWith('/' + basename)` requires a `/` prefix. A module at the repository root (e.g., bare `census.ts` in `modules_touched`) wouldn't match. Dormant — `git diff` always produces paths... — *Proof context file query*
-- **code:** `fileMatches` overmatch on same-basename different-directory paths: `proofSummary.ts:883` — If stored=`packages/a/census.ts` and queried=`packages/b/census.ts`, the function returns true because both paths end with `/census.ts`. The spec's three-tier... — *Proof context file query*
 
 ## packages/cli/templates/.claude/agents/ana.md
 
@@ -33,6 +28,10 @@
 ## packages/cli/tests/commands/artifact.test.ts
 
 - **test:** Stale commit assertion passes trivially: `artifact.test.ts:1233,1242` — the "appends to existing .saves.json" test saves `scope.commit` and later asserts it's unchanged. Since `writeSaveMetadata` no longer writes `commit`, both values are... — *Seal hash simplification*
+
+## packages/cli/tests/commands/init.test.ts
+
+- **code:** Extra test files not in spec file_changes: 7 test files were modified beyond the spec's file_changes list (init.test.ts, verify.test.ts, fixtures.ts, 3 backward-compat tests, cross-platform.test.ts). All are lint-fix-required changes — removing... — *Clear the Deck — foundation fixes from proof chain audit*
 
 ## packages/cli/tests/commands/pr.test.ts
 
@@ -47,19 +46,40 @@
 - **test:** A001/A004 use whole-file contains, weaker than section-specific extraction: `packages/cli/tests/templates/agent-proof-context.test.ts:14,43` — These tests would still pass if someone moved `ana proof context` to the wrong section of the file. The... — *Replace PROOF_CHAIN.md reads with targeted proof context queries*
 - **test:** A008 tests all 4 dogfood files in a single `it` block: `agent-proof-context.test.ts:67-75` — If the first file comparison fails, the loop short-circuits and the remaining 3 aren't checked. The error message includes the filename (`${file} dogfood... — *Replace PROOF_CHAIN.md reads with targeted proof context queries*
 
-## packages/cli/tests/utils/proofSummary.test.ts
+## src/commands/artifact.ts
 
-- **test:** A007 coverage is indirect for backfill: `proofSummary.test.ts:1129` — The `@ana A007` tag is on a unit test of `resolveCalloutPaths`, not an integration test of the backfill wiring at `work.ts:815-818`. The function IS the mechanism for backfill —... — *Proof context file query*
-- **upstream:** Pre-check tag collision across contracts: `proofSummary.test.ts:741` — The `@ana A007` tag from "file field to proof chain callouts" still exists alongside the new tag at line 1129. Pre-check counts both as coverage but can't distinguish contracts.... — *Proof context file query*
-- **test:** Tag at line 741 is now redundant for this contract: `proofSummary.test.ts:741` — Two `@ana A007` tags exist in the same file, from different contracts. The one at line 741 ("generateActiveIssuesMarkdown uses callout.file") is from a prior feature and... — *Proof context file query*
-- **test:** Weak matchers where specific counts are known: `proofSummary.test.ts:1227,1296` — Uses `toBeGreaterThan(0)` for callout count and build concern count when test data has exactly 2 and 1 entries respectively. The contract specifies `greater: 0` so the... — *Proof context file query*
+- **code:** `captureModulesTouched` silent catch: `src/commands/artifact.ts:161` — The outer try/catch swallows all errors silently. If `readArtifactBranch` fails (missing ana.json), `git merge-base` fails (detached HEAD), or `git diff` fails (corrupt index),... — *Clear the Deck — foundation fixes from proof chain audit*
+
+## src/commands/proof.ts
+
+- **test:** No dedicated test for `formatContextResult` truncation: `src/commands/proof.ts:362-367` — The truncation logic is tagged `@ana A020, A021` in source code, but no test file exercises this code path. Pre-check reports COVERED due to tag collision with... — *Clear the Deck — foundation fixes from proof chain audit*
+
+## src/types/contract.ts
+
+- **code:** `ContractAssertion` and `ContractFileChange` exported but never directly imported: `src/types/contract.ts:14,26` — Both interfaces are exported but no consumer imports them directly. They're accessed structurally through `ContractSchema.assertions`... — *Clear the Deck — foundation fixes from proof chain audit*
+
+## tests/commands/artifact.test.ts
+
+- **test:** A024 weak assertion on coverage count: `tests/commands/artifact.test.ts:1650` — `expect(saves['pre-check'].covered).toBeGreaterThanOrEqual(0)` passes even if coverage is 0. The test sets up one tagged assertion that should be covered, so... — *Clear the Deck — foundation fixes from proof chain audit*
 
 ## General
 
+- **upstream:** Pre-check tag collision across features: The `@ana` tag system uses non-unique IDs (A001, A002, ...) scoped per-contract. Pre-check searches ALL test files for matching IDs, meaning coverage from unrelated features can false-positive as COVERED. This... — *Clear the Deck — foundation fixes from proof chain audit*
 - **test:** No test exercises nonzero callout counts: Both test paths (single entry and existing chain) produce `0 callouts` because neither fixture includes callouts in the verify report or prior chain entry. A test with a fixture that has actual callouts would... — *Proof chain health signal*
 - **upstream:** Contract A008/A009 block names imply unit tests: Contract blocks "returns chain health counts" and "returns cumulative callout counts with existing chain" suggest direct unit assertions on the return value (`result.runs equals 1`). The builder used... — *Proof chain health signal*
 
 ---
+
+## Clear the Deck — foundation fixes from proof chain audit (2026-04-27)
+Result: PASS | 28/28 satisfied | 16/16 ACs | 0 deviations
+Pipeline: 52m (Think 22m, Plan 22m, Build 22m, Verify 8m)
+Modules: packages/cli/eslint.config.js, packages/cli/package.json, packages/cli/src/commands/artifact.ts, packages/cli/src/commands/init/anaJsonSchema.ts, packages/cli/src/commands/init/state.ts, packages/cli/src/commands/proof.ts, packages/cli/src/commands/verify.ts, packages/cli/src/commands/work.ts, packages/cli/src/types/contract.ts, packages/cli/src/types/proof.ts (+13 more)
+Callouts:
+- code: `ContractAssertion` and `ContractFileChange` exported but never directly imported: `src/types/contract.ts:14,26` — Both interfaces are exported but no consumer imports them directly. They're accessed structurally through `ContractSchema.assertions` and `ContractSchema.file_changes`. The exports are forward-looking — a future consumer (e.g., a contract linter) would import them. Not a problem today, but if the interfaces drift from what `ContractSchema` uses, the exported types become misleading.
+- code: `captureModulesTouched` silent catch: `src/commands/artifact.ts:161` — The outer try/catch swallows all errors silently. If `readArtifactBranch` fails (missing ana.json), `git merge-base` fails (detached HEAD), or `git diff` fails (corrupt index), `modules_touched` simply isn't written. This is acceptable graceful degradation for a metadata-capture function, but it means a misconfigured environment silently produces incomplete proof chain data. A `console.warn` on failure would make debugging easier without breaking the pipeline.
+- code: Extra test files not in spec file_changes: 7 test files were modified beyond the spec's file_changes list (init.test.ts, verify.test.ts, fixtures.ts, 3 backward-compat tests, cross-platform.test.ts). All are lint-fix-required changes — removing unused imports and prefixing unused variables. The builder was forced to make these to satisfy the new `no-unused-vars: error` rule. The spec should have anticipated this cascade (the constraint section mentions "atomic unused import cleanup across 3 test files" but the actual count was 7+). Not a code problem — a spec undercount.
+- test: No dedicated test for `formatContextResult` truncation: `src/commands/proof.ts:362-367` — The truncation logic is tagged `@ana A020, A021` in source code, but no test file exercises this code path. Pre-check reports COVERED due to tag collision with other features' A020/A021 tags. The behavior is correct (verified by code review and live `ana proof context` output), but a regression in this function would not be caught by automated tests. A test in `proof.test.ts` that creates a proof chain entry with a >250-char callout summary and asserts the `proof context` output is truncated would close this gap.
+- test: A024 weak assertion on coverage count: `tests/commands/artifact.test.ts:1650` — `expect(saves['pre-check'].covered).toBeGreaterThanOrEqual(0)` passes even if coverage is 0. The test sets up one tagged assertion that should be covered, so `toBeGreaterThanOrEqual(1)` or `toBe(1)` would be more specific. Not a false positive today (the setup ensures coverage), but the assertion is weaker than it needs to be.
 
 ## Seal hash simplification (2026-04-26)
 Result: PASS | 13/13 satisfied | 12/14 ACs | 0 deviations

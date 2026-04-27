@@ -2727,6 +2727,271 @@
           "file": ".saves.json"
         }
       ]
+    },
+    {
+      "slug": "clear-the-deck",
+      "feature": "Clear the Deck — foundation fixes from proof chain audit",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 28,
+        "covered": 28,
+        "uncovered": 0,
+        "satisfied": 28,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Contract types live in one place, not scattered across commands",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "Contract type requires an ID for every assertion",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Contract type requires a human-readable description for every assertion",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "Artifact command uses the shared contract types, not its own copy",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "Verify command uses the shared contract types, not its own copy",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "Proof chain structure lives in one place, not duplicated across commands",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "Proof chain health stats have a named type instead of inline object shape",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "writeProofChain returns a named type instead of an anonymous shape",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "The lint command actually checks test files, not just source files",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "Test files are covered by lint rules",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "Test files enforce unused variable detection",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "Test files allow type assertions without blocking commits",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "Lint passes clean after adding test file coverage",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "No tautological tests remain that pass regardless of behavior",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "Scope immutability test checks a real field that exists",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "Test fixtures match the current schema without ghost fields",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A017",
+          "says": "Projects can store custom configuration that survives schema validation",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A018",
+          "says": "Custom configuration round-trips through parse without data loss",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A019",
+          "says": "Fresh projects get an empty custom namespace by default",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A020",
+          "says": "Long callout summaries are truncated so they don't flood the terminal",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A021",
+          "says": "Truncation respects word boundaries instead of cutting mid-word",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A022",
+          "says": "Saving all artifacts checks contract integrity when verification data exists",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A023",
+          "says": "Contract tampering blocks save-all just like it blocks individual saves",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A024",
+          "says": "Save-all records verification proof data for the proof chain to consume",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A025",
+          "says": "Save-all records which source files changed for the proof chain",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A026",
+          "says": "Pre-check logic exists once, not copied between save paths",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A027",
+          "says": "Module tracking logic exists once, not copied between save paths",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A028",
+          "says": "All tests pass after both commits",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 16,
+        "met": 16
+      },
+      "timing": {
+        "total_minutes": 52,
+        "think": 22,
+        "plan": 22,
+        "build": 22,
+        "verify": 8
+      },
+      "hashes": {
+        "scope": "sha256:e865935e675b96ac98cb292ad29d06453c7895306a62e18754a81d489569e933",
+        "contract": "sha256:6567b885668185558c71fda7febaef4e26993843fd4f591c059cb62b6ef775fc",
+        "plan": "sha256:a96dff0ea85a5301a75b0f4ae7457e45674636ad276eca63c05fd2425fd876c0",
+        "spec": "sha256:39b013a6aecba00e7212e1af519e6a1f071b48c1d3c7148709b0dc0c7d3ebafc",
+        "build-report": "sha256:469683e462152c4d6264ac614c358920efaa9685a46bd993c8d5c47de01a3696",
+        "verify-report": "sha256:e1b365ad1fd19bc3d5caebf2921f4d439dd913db66c5a6c85afa9c2040af05c1"
+      },
+      "seal_commit": null,
+      "completed_at": "2026-04-27T02:44:09.803Z",
+      "modules_touched": [
+        "packages/cli/eslint.config.js",
+        "packages/cli/package.json",
+        "packages/cli/src/commands/artifact.ts",
+        "packages/cli/src/commands/init/anaJsonSchema.ts",
+        "packages/cli/src/commands/init/state.ts",
+        "packages/cli/src/commands/proof.ts",
+        "packages/cli/src/commands/verify.ts",
+        "packages/cli/src/commands/work.ts",
+        "packages/cli/src/types/contract.ts",
+        "packages/cli/src/types/proof.ts",
+        "packages/cli/tests/commands/artifact.test.ts",
+        "packages/cli/tests/commands/init.test.ts",
+        "packages/cli/tests/commands/init/anaJsonSchema.test.ts",
+        "packages/cli/tests/commands/pr.test.ts",
+        "packages/cli/tests/commands/symbol-index.test.ts",
+        "packages/cli/tests/commands/verify.test.ts",
+        "packages/cli/tests/engine/analyzers/patterns/dependencies.test.ts",
+        "packages/cli/tests/engine/fixtures.ts",
+        "packages/cli/tests/engine/parsed-backward-compat.test.ts",
+        "packages/cli/tests/engine/patterns-backward-compat.test.ts",
+        "packages/cli/tests/engine/structure-backward-compat.test.ts",
+        "packages/cli/tests/templates/cross-platform.test.ts",
+        "packages/cli/tests/utils/findProjectRoot.test.ts"
+      ],
+      "callouts": [
+        {
+          "category": "code",
+          "summary": "`ContractAssertion` and `ContractFileChange` exported but never directly imported: `src/types/contract.ts:14,26` — Both interfaces are exported but no consumer imports them directly. They're accessed structurally through `ContractSchema.assertions` and `ContractSchema.file_changes`. The exports are forward-looking — a future consumer (e.g., a contract linter) would import them. Not a problem today, but if the interfaces drift from what `ContractSchema` uses, the exported types become misleading.",
+          "file": "src/types/contract.ts",
+          "anchor": "ContractAssertion",
+          "id": "clear-the-deck-C1"
+        },
+        {
+          "category": "test",
+          "summary": "No dedicated test for `formatContextResult` truncation: `src/commands/proof.ts:362-367` — The truncation logic is tagged `@ana A020, A021` in source code, but no test file exercises this code path. Pre-check reports COVERED due to tag collision with other features' A020/A021 tags. The behavior is correct (verified by code review and live `ana proof context` output), but a regression in this function would not be caught by automated tests. A test in `proof.test.ts` that creates a proof chain entry with a >250-char callout summary and asserts the `proof context` output is truncated would close this gap.",
+          "file": "src/commands/proof.ts",
+          "anchor": "formatContextResult",
+          "id": "clear-the-deck-C2"
+        },
+        {
+          "category": "test",
+          "summary": "A024 weak assertion on coverage count: `tests/commands/artifact.test.ts:1650` — `expect(saves['pre-check'].covered).toBeGreaterThanOrEqual(0)` passes even if coverage is 0. The test sets up one tagged assertion that should be covered, so `toBeGreaterThanOrEqual(1)` or `toBe(1)` would be more specific. Not a false positive today (the setup ensures coverage), but the assertion is weaker than it needs to be.",
+          "file": "tests/commands/artifact.test.ts",
+          "anchor": "expect(saves['pre-check'].covered).toBeGreaterThanOrEqual(0)",
+          "id": "clear-the-deck-C3"
+        },
+        {
+          "category": "code",
+          "summary": "`captureModulesTouched` silent catch: `src/commands/artifact.ts:161` — The outer try/catch swallows all errors silently. If `readArtifactBranch` fails (missing ana.json), `git merge-base` fails (detached HEAD), or `git diff` fails (corrupt index), `modules_touched` simply isn't written. This is acceptable graceful degradation for a metadata-capture function, but it means a misconfigured environment silently produces incomplete proof chain data. A `console.warn` on failure would make debugging easier without breaking the pipeline.",
+          "file": "src/commands/artifact.ts",
+          "anchor": "captureModulesTouched",
+          "id": "clear-the-deck-C4"
+        },
+        {
+          "category": "upstream",
+          "summary": "Pre-check tag collision across features: The `@ana` tag system uses non-unique IDs (A001, A002, ...) scoped per-contract. Pre-check searches ALL test files for matching IDs, meaning coverage from unrelated features can false-positive as COVERED. This build's A020/A021 are an example. This isn't a bug in THIS build — it's an architectural limitation of the pre-check tool that could mask missing test coverage in future builds.",
+          "file": null,
+          "anchor": null,
+          "id": "clear-the-deck-C5"
+        },
+        {
+          "category": "code",
+          "summary": "Extra test files not in spec file_changes: 7 test files were modified beyond the spec's file_changes list (init.test.ts, verify.test.ts, fixtures.ts, 3 backward-compat tests, cross-platform.test.ts). All are lint-fix-required changes — removing unused imports and prefixing unused variables. The builder was forced to make these to satisfy the new `no-unused-vars: error` rule. The spec should have anticipated this cascade (the constraint section mentions \"atomic unused import cleanup across 3 test files\" but the actual count was 7+). Not a code problem — a spec undercount.",
+          "file": "packages/cli/tests/commands/init.test.ts",
+          "anchor": "no-unused-vars: error",
+          "id": "clear-the-deck-C6"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "Save-all pre-check only testable on artifact branch: `saveAllArtifacts` always scans the full slug directory, picking up planning artifacts (contract.yaml) alongside build-verify artifacts. On a feature branch, this triggers branch validation failure. The pre-check and modules_touched wiring works correctly in production (tested on main), but testing on a feature branch would require save-all to skip already-committed planning artifacts. This is a design limitation in `saveAllArtifacts`, not introduced by this build.",
+          "file": "contract.yaml"
+        },
+        {
+          "summary": "A020/A021 lack unit tests: Truncation logic is implemented and tagged in source code but has no dedicated unit test. The `formatContextResult` function is private and would need either export or output capture to test directly. Noted for potential future coverage.",
+          "file": null
+        },
+        {
+          "summary": "14 `no-explicit-any` warnings in test files: Pre-existing `any` usage in test files (analyzer-contract, confirmation, imports, ai-sdk-detection). These are warnings, not errors — `no-explicit-any: warn` is the intended test override level. Not introduced by this build. Verified complete by second pass.",
+          "file": null
+        }
+      ]
     }
   ]
 }
