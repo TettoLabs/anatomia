@@ -986,10 +986,19 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
  * @param slug - Work item slug to complete
  */
 export async function completeWork(slug: string): Promise<void> {
-  // 1. Read artifactBranch and branchPrefix from ana.json
+  // 1. Read artifactBranch, branchPrefix, and coAuthor from ana.json
   const projectRoot = findProjectRoot();
   const artifactBranch = readArtifactBranch(projectRoot);
   const branchPrefix = readBranchPrefix(projectRoot);
+
+  // Hoist coAuthor read — shared by recovery path (step 5) and main commit path (step 10)
+  const anaJsonPath = path.join(projectRoot, '.ana', 'ana.json');
+  let coAuthor = 'Ana <build@anatomia.dev>';
+  try {
+    const anaJsonContent = fs.readFileSync(anaJsonPath, 'utf-8');
+    const config: { coAuthor?: string } = JSON.parse(anaJsonContent);
+    coAuthor = config.coAuthor || 'Ana <build@anatomia.dev>';
+  } catch { /* fallback to default */ }
 
   // 2. Get current branch
   const currentBranch = getCurrentBranch();
@@ -1009,9 +1018,9 @@ export async function completeWork(slug: string): Promise<void> {
   // 4. Pull latest to get merged content
   try {
     // Check if remote exists first
-    const remotes = execSync('git remote', { stdio: 'pipe', encoding: 'utf-8' }).trim();
+    const remotes = execSync('git remote', { stdio: 'pipe', encoding: 'utf-8', cwd: projectRoot }).trim();
     if (remotes) {
-      execSync('git pull --rebase', { stdio: 'pipe', encoding: 'utf-8' });
+      execSync('git pull --rebase', { stdio: 'pipe', encoding: 'utf-8', cwd: projectRoot });
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : '';
@@ -1021,13 +1030,55 @@ export async function completeWork(slug: string): Promise<void> {
     }
   }
 
-  // 5. Verify slug directory exists
+  // 5. Verify slug directory exists — with crash recovery
   const activePath = path.join(projectRoot, '.ana', 'plans', 'active', slug);
   const completedPath = path.join(projectRoot, '.ana', 'plans', 'completed', slug);
 
   if (!fs.existsSync(activePath)) {
-    // Check if already completed
     if (fs.existsSync(completedPath)) {
+      // Check for uncommitted changes — indicates a failed prior run
+      try {
+        const porcelain = execSync('git status --porcelain .ana/', {
+          encoding: 'utf-8', stdio: 'pipe', cwd: projectRoot,
+        }).trim();
+        if (porcelain) {
+          // Recovery: retry the commit
+          console.log(chalk.yellow('Recovering incomplete completion — retrying commit...'));
+          execSync('git add .ana/plans/ .ana/proof_chain.json .ana/PROOF_CHAIN.md', {
+            stdio: 'pipe', cwd: projectRoot,
+          });
+          const commitMessage = `[${slug}] Complete — archived to plans/completed\n\nCo-authored-by: ${coAuthor}`;
+          execSync(`git commit -m "${commitMessage}"`, { stdio: 'pipe', cwd: projectRoot });
+          try {
+            execSync('git push', { stdio: 'pipe', cwd: projectRoot });
+          } catch {
+            console.error(chalk.yellow('Warning: Push failed. Changes committed locally. Run `git push` manually.'));
+          }
+
+          // Print summary from completed path
+          const proof = generateProofSummary(completedPath);
+          const chainPath = path.join(projectRoot, '.ana', 'proof_chain.json');
+          let runs = 0;
+          let activeCount = 0;
+          if (fs.existsSync(chainPath)) {
+            try {
+              const chain = JSON.parse(fs.readFileSync(chainPath, 'utf-8'));
+              runs = Array.isArray(chain.entries) ? chain.entries.length : 0;
+              for (const e of chain.entries || []) {
+                for (const f of e.findings || []) {
+                  if (f.status === 'active' || !f.status) activeCount++;
+                }
+              }
+            } catch { /* */ }
+          }
+          const statusIcon = proof.result === 'PASS' ? '✓' : '✗';
+          console.log(`\n${statusIcon} ${proof.result} — ${proof.feature}`);
+          console.log(`  ${proof.contract.covered}/${proof.contract.total} covered · ${proof.contract.satisfied}/${proof.contract.total} satisfied · ${proof.deviations.length} deviation${proof.deviations.length !== 1 ? 's' : ''}`);
+          console.log(chalk.gray(`  Chain: ${runs} ${runs !== 1 ? 'runs' : 'run'} · ${activeCount} active finding${activeCount !== 1 ? 's' : ''}`));
+          return;
+        }
+      } catch { /* git status failed — treat as genuinely completed */ }
+
       console.log(chalk.gray(`Work item \`${slug}\` was already completed.`));
       process.exit(0);
     }
@@ -1039,7 +1090,7 @@ export async function completeWork(slug: string): Promise<void> {
   //    Prune stale remote refs — squash merge + --delete-branch removes
   //    the remote branch on GitHub but local refs persist until pruned.
   try {
-    execSync('git fetch --prune origin', { stdio: 'pipe' });
+    execSync('git fetch --prune origin', { stdio: 'pipe', cwd: projectRoot });
   } catch { /* offline — continue with local state */ }
 
   const workBranchName = `${branchPrefix}${slug}`;
@@ -1048,7 +1099,7 @@ export async function completeWork(slug: string): Promise<void> {
     // Check if remote branch still exists after prune
     const hasRemote = (() => {
       try {
-        const output = execSync(`git branch -r --list "origin/${workBranchName}"`, { encoding: 'utf-8', stdio: 'pipe' }).trim();
+        const output = execSync(`git branch -r --list "origin/${workBranchName}"`, { encoding: 'utf-8', stdio: 'pipe', cwd: projectRoot }).trim();
         return output.length > 0;
       } catch { return false; }
     })();
@@ -1057,7 +1108,7 @@ export async function completeWork(slug: string): Promise<void> {
       // Remote still exists — verify with is-ancestor (regular merge)
       let merged = false;
       try {
-        execSync(`git merge-base --is-ancestor ${workBranchName} HEAD`, { stdio: 'pipe' });
+        execSync(`git merge-base --is-ancestor ${workBranchName} HEAD`, { stdio: 'pipe', cwd: projectRoot });
         merged = true;
       } catch {
         // is-ancestor failed — might be squash merge. Check via gh CLI.
@@ -1139,6 +1190,35 @@ export async function completeWork(slug: string): Promise<void> {
     }
   }
 
+  // 8b. Completeness check — verify both reports were saved through the pipeline
+  const savesJsonPath = path.join(activePath, '.saves.json');
+  let savesData: Record<string, { saved_at?: string; hash?: string }> = {};
+  if (fs.existsSync(savesJsonPath)) {
+    try {
+      savesData = JSON.parse(fs.readFileSync(savesJsonPath, 'utf-8'));
+    } catch { /* treat as empty */ }
+  }
+
+  const buildSave = savesData['build-report'];
+  const verifySave = savesData['verify-report'];
+  const buildMissing = !buildSave || !buildSave.saved_at || !buildSave.hash;
+  const verifyMissing = !verifySave || !verifySave.saved_at || !verifySave.hash;
+
+  if (buildMissing && verifyMissing) {
+    console.error(chalk.red('Error: Artifacts not saved through the pipeline:'));
+    console.error(chalk.red(`  - build-report: run \`ana artifact save build-report ${slug}\``));
+    console.error(chalk.red(`  - verify-report: run \`ana artifact save verify-report ${slug}\``));
+    process.exit(1);
+  } else if (buildMissing) {
+    console.error(chalk.red(`Error: build-report was not saved through the pipeline.`));
+    console.error(chalk.red(`Run: ana artifact save build-report ${slug}`));
+    process.exit(1);
+  } else if (verifyMissing) {
+    console.error(chalk.red(`Error: verify-report was not saved through the pipeline.`));
+    console.error(chalk.red(`Run: ana artifact save verify-report ${slug}`));
+    process.exit(1);
+  }
+
   // 9. Move the directory
   const completedDir = path.join(projectRoot, '.ana', 'plans', 'completed');
   await fsPromises.mkdir(completedDir, { recursive: true });
@@ -1151,25 +1231,17 @@ export async function completeWork(slug: string): Promise<void> {
 
   // 10. Stage and commit
   try {
-    execSync('git add .ana/plans/ .ana/proof_chain.json .ana/PROOF_CHAIN.md', { stdio: 'pipe' });
-    // Read coAuthor from ana.json
-    const anaJsonPath = path.join(projectRoot, '.ana', 'ana.json');
-    let coAuthor = 'Ana <build@anatomia.dev>';
-    try {
-      const anaJsonContent = fs.readFileSync(anaJsonPath, 'utf-8');
-      const config: { coAuthor?: string } = JSON.parse(anaJsonContent);
-      coAuthor = config.coAuthor || 'Ana <build@anatomia.dev>';
-    } catch { /* fallback to default */ }
+    execSync('git add .ana/plans/ .ana/proof_chain.json .ana/PROOF_CHAIN.md', { stdio: 'pipe', cwd: projectRoot });
     const commitMessage = `[${slug}] Complete — archived to plans/completed\n\nCo-authored-by: ${coAuthor}`;
-    execSync(`git commit -m "${commitMessage}"`, { stdio: 'pipe' });
-  } catch (error) {
-    console.error(chalk.red(`Error: Failed to commit. ${error instanceof Error ? error.message : 'Unknown error'}`));
+    execSync(`git commit -m "${commitMessage}"`, { stdio: 'pipe', cwd: projectRoot });
+  } catch {
+    console.error(chalk.red(`Error: Failed to commit. Run \`ana work complete ${slug}\` to retry.`));
     process.exit(1);
   }
 
   // 11. Push
   try {
-    execSync('git push', { stdio: 'pipe' });
+    execSync('git push', { stdio: 'pipe', cwd: projectRoot });
   } catch {
     console.error(chalk.yellow('Warning: Push failed. Changes committed locally. Run `git push` manually.'));
     // Don't exit - commit succeeded
@@ -1177,13 +1249,13 @@ export async function completeWork(slug: string): Promise<void> {
 
   // 12. Delete work branch (cleanup)
   try {
-    execSync(`git branch -d ${workBranchName}`, { stdio: 'pipe' });
+    execSync(`git branch -d ${workBranchName}`, { stdio: 'pipe', cwd: projectRoot });
   } catch {
     // Silently continue if branch doesn't exist or was already deleted
   }
 
   try {
-    execSync(`git push origin --delete ${workBranchName}`, { stdio: 'pipe' });
+    execSync(`git push origin --delete ${workBranchName}`, { stdio: 'pipe', cwd: projectRoot });
   } catch {
     // Silently continue if remote branch doesn't exist or was already deleted
   }

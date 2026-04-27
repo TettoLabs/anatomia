@@ -14,5 +14,128 @@
   "spec": {
     "saved_at": "2026-04-27T21:40:02.727Z",
     "hash": "sha256:f782569a45f58bec2b0978d3ae692a6cfa3dfddb832d4f23e1e1408eb26c606e"
+  },
+  "build-report": {
+    "saved_at": "2026-04-27T21:53:30.483Z",
+    "hash": "sha256:10ce5e47ff24db82029d7ce16d9004188c50755baa67319e50c263375a143a38"
+  },
+  "modules_touched": [
+    "packages/cli/src/commands/artifact.ts",
+    "packages/cli/src/commands/work.ts",
+    "packages/cli/tests/commands/artifact.test.ts",
+    "packages/cli/tests/commands/work.test.ts"
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:70764936b97974cfe7af1f0766f73ac4d8129eb21cd01ea3a55dd1ed25114501",
+    "assertions": [
+      {
+        "id": "A001",
+        "says": "Saving an artifact that was committed outside the pipeline still records its metadata",
+        "status": "COVERED"
+      },
+      {
+        "id": "A002",
+        "says": "Saving an artifact that was committed outside the pipeline captures which files were changed",
+        "status": "COVERED"
+      },
+      {
+        "id": "A003",
+        "says": "Saving an artifact that was committed outside the pipeline produces a commit",
+        "status": "COVERED"
+      },
+      {
+        "id": "A004",
+        "says": "Saving the same artifact twice without changes does not create a spurious commit",
+        "status": "COVERED"
+      },
+      {
+        "id": "A005",
+        "says": "Metadata write is skipped when the artifact hash has not changed",
+        "status": "COVERED"
+      },
+      {
+        "id": "A006",
+        "says": "Metadata timestamp is preserved when the artifact hash has not changed",
+        "status": "COVERED"
+      },
+      {
+        "id": "A007",
+        "says": "Metadata write preserves existing entries like pre-check and modules_touched",
+        "status": "COVERED"
+      },
+      {
+        "id": "A008",
+        "says": "Artifact save succeeds when run from a subdirectory",
+        "status": "COVERED"
+      },
+      {
+        "id": "A009",
+        "says": "Work complete succeeds when run from a subdirectory",
+        "status": "COVERED"
+      },
+      {
+        "id": "A010",
+        "says": "Work complete blocks when build-report was never saved through the pipeline",
+        "status": "COVERED"
+      },
+      {
+        "id": "A011",
+        "says": "Work complete blocks when verify-report was never saved through the pipeline",
+        "status": "COVERED"
+      },
+      {
+        "id": "A012",
+        "says": "Work complete blocks when both reports are missing and names both",
+        "status": "COVERED"
+      },
+      {
+        "id": "A013",
+        "says": "Work complete blocks when both reports are missing and names the verify-report too",
+        "status": "COVERED"
+      },
+      {
+        "id": "A014",
+        "says": "Work complete proceeds when both reports have valid save metadata",
+        "status": "COVERED"
+      },
+      {
+        "id": "A015",
+        "says": "The completeness check does not mutate any files when it fails",
+        "status": "COVERED"
+      },
+      {
+        "id": "A016",
+        "says": "A failed work complete is automatically recovered on retry",
+        "status": "COVERED"
+      },
+      {
+        "id": "A017",
+        "says": "Recovery commits the archived plan and proof chain",
+        "status": "COVERED"
+      },
+      {
+        "id": "A018",
+        "says": "A genuinely completed work item is reported as already completed",
+        "status": "COVERED"
+      },
+      {
+        "id": "A019",
+        "says": "Double recovery works when the first recovery also fails",
+        "status": "COVERED"
+      },
+      {
+        "id": "A020",
+        "says": "Main-path commit failure tells the user how to retry",
+        "status": "COVERED"
+      }
+    ],
+    "covered": 20,
+    "uncovered": 0,
+    "run_at": "2026-04-27T22:01:07.713Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-04-27T22:01:07.729Z",
+    "hash": "sha256:86fbacf24fed913913328c77b9fa1fbc8187feedce89cbb57ad781b1a7418661"
   }
 }

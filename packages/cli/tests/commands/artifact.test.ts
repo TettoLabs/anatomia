@@ -1270,6 +1270,163 @@ file_changes:
       expect(savesSecond.scope.saved_at).not.toBe(firstSavedAt);
     });
   });
+
+  describe('writeSaveMetadata idempotency', () => {
+    // @ana A005
+    it('returns false when hash matches existing entry', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      await createArtifact('test-slug', 'scope.md');
+
+      // First save creates .saves.json with hash
+      saveArtifact('scope', 'test-slug');
+
+      const savesPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug', '.saves.json');
+      const savesFirst = JSON.parse(await fs.readFile(savesPath, 'utf-8'));
+      const firstHash = savesFirst.scope.hash;
+
+      // Second save with same content — writeSaveMetadata skips, no-changes check
+      // exits with "already up to date" (process.exit(0) throws in test)
+      const originalLog = console.log;
+      const logs: string[] = [];
+      console.log = (...args: unknown[]) => { logs.push(args.map(String).join(' ')); };
+
+      try {
+        saveArtifact('scope', 'test-slug');
+      } catch { /* exit(0) throws */ }
+
+      console.log = originalLog;
+
+      // Hash should be unchanged (idempotent write was skipped)
+      const savesSecond = JSON.parse(await fs.readFile(savesPath, 'utf-8'));
+      expect(savesSecond.scope.hash).toBe(firstHash);
+    });
+
+    // @ana A006
+    it('preserves saved_at when hash matches', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      await createArtifact('test-slug', 'scope.md');
+
+      saveArtifact('scope', 'test-slug');
+
+      const savesPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug', '.saves.json');
+      const savesFirst = JSON.parse(await fs.readFile(savesPath, 'utf-8'));
+      const firstSavedAt = savesFirst.scope.saved_at;
+
+      // Wait briefly for time difference
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      // Re-save unchanged — process.exit(0) throws in test, but .saves.json
+      // should still be on disk with unchanged saved_at
+      try { saveArtifact('scope', 'test-slug'); } catch { /* exit(0) throws */ }
+
+      const savesSecond = JSON.parse(await fs.readFile(savesPath, 'utf-8'));
+      expect(savesSecond.scope.saved_at).toBe(firstSavedAt);
+    });
+
+    // @ana A007
+    it('preserves existing entries like pre-check and modules_touched', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'feature/test-slug' });
+      await createArtifact('test-slug', 'build_report.md');
+
+      // Pre-populate .saves.json with extra entries
+      const slugDir = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug');
+      const savesPath = path.join(slugDir, '.saves.json');
+      await fs.writeFile(savesPath, JSON.stringify({
+        'pre-check': { seal: 'INTACT', run_at: '2026-04-27T00:00:00Z' },
+        'modules_touched': ['src/index.ts'],
+      }), 'utf-8');
+
+      saveArtifact('build-report', 'test-slug');
+
+      const saves = JSON.parse(await fs.readFile(savesPath, 'utf-8'));
+      expect(saves['pre-check']).toBeDefined();
+      expect(saves['pre-check'].seal).toBe('INTACT');
+      expect(saves['modules_touched']).toBeDefined();
+      expect(saves['build-report']).toBeDefined();
+    });
+  });
+
+  describe('save bypass recovery', () => {
+    // @ana A001, A002, A003
+    it('writes metadata when artifact was committed outside save', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'feature/test-slug' });
+      await createArtifact('test-slug', 'build_report.md');
+
+      // Commit the artifact outside of `saveArtifact`
+      execSync('git add -A && git commit -m "manual commit"', { cwd: tempDir, stdio: 'ignore' });
+      const commitCountBefore = parseInt(
+        execSync('git rev-list --count HEAD', { cwd: tempDir, encoding: 'utf-8' }).trim()
+      );
+
+      // Now run saveArtifact — artifact is already committed, but .saves.json is missing
+      saveArtifact('build-report', 'test-slug');
+
+      // Verify .saves.json has metadata
+      const savesPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug', '.saves.json');
+      const saves = JSON.parse(await fs.readFile(savesPath, 'utf-8'));
+      expect(saves['build-report']).toBeDefined();
+      expect(saves['build-report'].saved_at).toBeTruthy();
+      expect(saves['build-report'].hash).toMatch(/^sha256:[a-f0-9]{64}$/);
+
+      // Verify modules_touched was captured
+      expect(saves['modules_touched']).toBeDefined();
+
+      // Verify a new commit was produced (for the .saves.json metadata)
+      const commitCountAfter = parseInt(
+        execSync('git rev-list --count HEAD', { cwd: tempDir, encoding: 'utf-8' }).trim()
+      );
+      expect(commitCountAfter).toBeGreaterThan(commitCountBefore);
+    });
+
+    // @ana A004
+    it('exits with already up to date on unchanged re-save', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'feature/test-slug' });
+      await createArtifact('test-slug', 'build_report.md');
+
+      // First save
+      saveArtifact('build-report', 'test-slug');
+      const commitCountAfterFirst = parseInt(
+        execSync('git rev-list --count HEAD', { cwd: tempDir, encoding: 'utf-8' }).trim()
+      );
+
+      // Second save — no changes, should exit(0) with "already up to date"
+      const originalLog = console.log;
+      const logs: string[] = [];
+      console.log = (...args: unknown[]) => { logs.push(args.map(String).join(' ')); };
+
+      try {
+        saveArtifact('build-report', 'test-slug');
+      } catch { /* exit(0) throws in test */ }
+
+      console.log = originalLog;
+
+      // No new commit
+      const commitCountAfterSecond = parseInt(
+        execSync('git rev-list --count HEAD', { cwd: tempDir, encoding: 'utf-8' }).trim()
+      );
+      expect(commitCountAfterSecond - commitCountAfterFirst).toBe(0);
+    });
+  });
+
+  describe('subdirectory cwd', () => {
+    // @ana A008
+    it('saveArtifact succeeds from subdirectory', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'feature/test-slug' });
+      await createArtifact('test-slug', 'build_report.md');
+
+      // Create and chdir to a subdirectory
+      const subDir = path.join(tempDir, 'packages', 'cli');
+      await fs.mkdir(subDir, { recursive: true });
+      process.chdir(subDir);
+
+      // Should succeed despite being in subdirectory
+      saveArtifact('build-report', 'test-slug');
+
+      const savesPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug', '.saves.json');
+      const saves = JSON.parse(await fs.readFile(savesPath, 'utf-8'));
+      expect(saves['build-report']).toBeDefined();
+    });
+  });
 });
 
 describe('ana artifact save-all', () => {

@@ -36,13 +36,15 @@ interface SaveMetadata {
 }
 
 /**
- * Write save metadata to .saves.json after artifact commit
+ * Write save metadata to .saves.json after artifact commit.
+ * Idempotent: if the computed hash matches the existing entry, the write is skipped.
  *
  * @param slugDir - Path to the slug directory
  * @param artifactType - The artifact type key (e.g., 'scope', 'spec', 'contract')
  * @param content - The artifact content for hashing
+ * @returns true if metadata was written, false if skipped (hash unchanged)
  */
-function writeSaveMetadata(slugDir: string, artifactType: string, content: string): void {
+function writeSaveMetadata(slugDir: string, artifactType: string, content: string): boolean {
   const savesPath = path.join(slugDir, '.saves.json');
 
   // Read existing .saves.json or start fresh
@@ -58,14 +60,22 @@ function writeSaveMetadata(slugDir: string, artifactType: string, content: strin
 
   // Compute SHA256 of content
   const hash = createHash('sha256').update(content).digest('hex');
+  const fullHash = `sha256:${hash}`;
+
+  // Idempotent: skip write if hash matches existing entry
+  const existing = saves[artifactType];
+  if (existing && existing.hash === fullHash) {
+    return false;
+  }
 
   // Write entry for this artifact type
   saves[artifactType] = {
     saved_at: new Date().toISOString(),
-    hash: `sha256:${hash}`,
+    hash: fullHash,
   };
 
   fs.writeFileSync(savesPath, JSON.stringify(saves, null, 2));
+  return true;
 }
 
 /**
@@ -579,8 +589,9 @@ export function saveArtifact(type: string, slug: string): void {
   // 5. Validate branch
   validateBranch(typeInfo, currentBranch, artifactBranch, slug, branchPrefix);
 
-  // 6. Resolve file path
-  let filePath = path.join('.ana', 'plans', 'active', slug, typeInfo.fileName);
+  // 6. Resolve file path (relative to projectRoot for git, absolute for fs)
+  const relFilePath = path.join('.ana', 'plans', 'active', slug, typeInfo.fileName);
+  let filePath = path.join(projectRoot, relFilePath);
 
   // 6a. Auto-rename fallback for multi-spec: if build_report_1.md doesn't exist
   // but build_report.md does, rename it. Same for verify_report. Build agents
@@ -590,7 +601,7 @@ export function saveArtifact(type: string, slug: string): void {
     const defaultName = typeInfo.baseType === 'build-report' ? 'build_report.md'
       : typeInfo.baseType === 'verify-report' ? 'verify_report.md' : null;
     if (defaultName) {
-      const defaultPath = path.join('.ana', 'plans', 'active', slug, defaultName);
+      const defaultPath = path.join(projectRoot, '.ana', 'plans', 'active', slug, defaultName);
       if (fs.existsSync(defaultPath)) {
         fs.renameSync(defaultPath, filePath);
         console.log(chalk.gray(`Renamed ${defaultName} → ${typeInfo.fileName}`));
@@ -600,7 +611,7 @@ export function saveArtifact(type: string, slug: string): void {
 
   // 6b. Verify file exists
   if (!fs.existsSync(filePath)) {
-    console.error(chalk.red(`Error: No ${typeInfo.displayName.toLowerCase()} found at \`${filePath}\`.`));
+    console.error(chalk.red(`Error: No ${typeInfo.displayName.toLowerCase()} found at \`${relFilePath}\`.`));
     console.error(chalk.gray('Write the file first, then run this command.'));
     process.exit(1);
   }
@@ -666,7 +677,7 @@ export function saveArtifact(type: string, slug: string): void {
   }
 
   // 7b. Check if file is tracked (before staging, for create vs update message)
-  const isTracked = spawnSync('git', ['ls-files', '--error-unmatch', filePath], {
+  const isTracked = spawnSync('git', ['ls-files', '--error-unmatch', relFilePath], {
     cwd: projectRoot,
     stdio: 'pipe'
   }).status === 0;
@@ -675,9 +686,9 @@ export function saveArtifact(type: string, slug: string): void {
   if (typeInfo.category === 'planning') {
     try {
       // Check if remote exists first
-      const remotes = execSync('git remote', { stdio: 'pipe', encoding: 'utf-8' }).trim();
+      const remotes = execSync('git remote', { stdio: 'pipe', encoding: 'utf-8', cwd: projectRoot }).trim();
       if (remotes) {
-        execSync('git pull --rebase', { stdio: 'pipe', encoding: 'utf-8' });
+        execSync('git pull --rebase', { stdio: 'pipe', encoding: 'utf-8', cwd: projectRoot });
       }
       // If no remotes, skip pull (e.g., in tests or new repos)
     } catch (error) {
@@ -693,18 +704,38 @@ export function saveArtifact(type: string, slug: string): void {
 
   // 8. Stage the artifact file(s)
   try {
-    execSync(`git add ${filePath}`, { stdio: 'pipe' });
+    execSync(`git add ${relFilePath}`, { stdio: 'pipe', cwd: projectRoot });
 
     // Special case: verify-report also stages plan.md if it exists
     if (type.startsWith('verify-report')) {
-      const planPath = path.join('.ana', 'plans', 'active', slug, 'plan.md');
-      if (fs.existsSync(planPath)) {
-        execSync(`git add ${planPath}`, { stdio: 'pipe' });
+      const relPlanPath = path.join('.ana', 'plans', 'active', slug, 'plan.md');
+      if (fs.existsSync(path.join(projectRoot, relPlanPath))) {
+        execSync(`git add ${relPlanPath}`, { stdio: 'pipe', cwd: projectRoot });
       }
     }
   } catch (error) {
     console.error(chalk.red(`Error: Failed to stage files. ${error instanceof Error ? error.message : 'Unknown error'}`));
     process.exit(1);
+  }
+
+  // 8b. Write .saves.json metadata and capture modules_touched BEFORE the
+  // no-changes check. With idempotent writeSaveMetadata, unchanged artifacts
+  // produce no .saves.json diff, so the check still works correctly.
+  const slugDir = path.join(projectRoot, '.ana', 'plans', 'active', slug);
+  const artifactContent = fs.readFileSync(filePath, 'utf-8');
+  writeSaveMetadata(slugDir, typeInfo.baseType, artifactContent);
+
+  // Capture modules_touched at build-report time (when the feature branch
+  // definitely exists and all code is committed).
+  if (typeInfo.baseType === 'build-report') {
+    captureModulesTouched(projectRoot, slugDir);
+  }
+
+  const savesPath = path.join(slugDir, '.saves.json');
+  if (fs.existsSync(savesPath)) {
+    try {
+      execSync(`git add ${path.relative(projectRoot, savesPath)}`, { stdio: 'pipe', cwd: projectRoot });
+    } catch { /* */ }
   }
 
   // 8a. Check if there are staged changes
@@ -713,17 +744,6 @@ export function saveArtifact(type: string, slug: string): void {
     // status 0 means no differences — nothing to commit
     console.log(chalk.yellow('No changes to save — artifact is already up to date.'));
     process.exit(0);
-  }
-
-  // 8b. Write .saves.json and stage it alongside the artifact.
-  // Done AFTER the no-changes check so unchanged artifacts don't trigger
-  // a commit just from .saves.json metadata.
-  const slugDir = path.join(projectRoot, '.ana', 'plans', 'active', slug);
-  const artifactContent = fs.readFileSync(filePath, 'utf-8');
-  writeSaveMetadata(slugDir, typeInfo.baseType, artifactContent);
-  const savesPath = path.join(slugDir, '.saves.json');
-  if (fs.existsSync(savesPath)) {
-    try { execSync(`git add ${savesPath}`, { stdio: 'pipe' }); } catch { /* */ }
   }
 
   // 9. Commit
@@ -741,23 +761,16 @@ export function saveArtifact(type: string, slug: string): void {
   const prefix = isTracked ? 'Update: ' : '';
   const commitMessage = `[${slug}] ${prefix}${typeInfo.displayName}\n\nCo-authored-by: ${coAuthor}`;
   try {
-    execSync(`git commit -m "${commitMessage}"`, { stdio: 'pipe' });
+    execSync(`git commit -m "${commitMessage}"`, { stdio: 'pipe', cwd: projectRoot });
   } catch (error) {
     console.error(chalk.red(`Error: Commit failed. ${error instanceof Error ? error.message : 'Unknown error'}`));
     process.exit(1);
   }
 
-  // 9b. Capture modules_touched at build-report time (when the feature branch
-  // definitely exists and all code is committed). Stored in .saves.json for
-  // proof chain to read at work-complete time.
-  if (typeInfo.baseType === 'build-report') {
-    captureModulesTouched(projectRoot, slugDir);
-  }
-
   // 10. Push (artifact branch only)
   if (typeInfo.category === 'planning') {
     try {
-      execSync('git push', { stdio: 'pipe' });
+      execSync('git push', { stdio: 'pipe', cwd: projectRoot });
     } catch (_error) {
       console.error(chalk.yellow('Warning: Push failed. Artifact committed locally. Run `git push` manually.'));
       // Don't exit - commit succeeded
@@ -767,7 +780,7 @@ export function saveArtifact(type: string, slug: string): void {
   // Push build-verify artifacts to feature branch
   if (typeInfo.category === 'build-verify') {
     try {
-      execSync('git push', { stdio: 'pipe' });
+      execSync('git push', { stdio: 'pipe', cwd: projectRoot });
     } catch (_error) {
       console.error(chalk.yellow(
         'Warning: Push failed. Artifact committed locally. Run `git push` manually.'
@@ -999,14 +1012,8 @@ export function saveAllArtifacts(slug: string): void {
     process.exit(1);
   }
 
-  // 7. Check if there are staged changes
-  const diffResult = spawnSync('git', ['diff', '--staged', '--quiet'], { cwd: projectRoot });
-  if (diffResult.status === 0) {
-    console.log(chalk.yellow('No changes to save — artifacts are already up to date.'));
-    process.exit(0);
-  }
-
-  // 7b. Write .saves.json and stage it alongside artifacts.
+  // 7b. Write .saves.json and stage it alongside artifacts (before no-changes check).
+  // With idempotent writeSaveMetadata, unchanged artifacts produce no .saves.json diff.
   for (const artifact of artifacts) {
     const content = fs.readFileSync(artifact.path, 'utf-8');
     writeSaveMetadata(planDir, artifact.typeInfo.baseType, content);
@@ -1016,6 +1023,13 @@ export function saveAllArtifacts(slug: string): void {
     try {
       execSync(`git add ${path.relative(projectRoot, savesPathAll)}`, { stdio: 'pipe', cwd: projectRoot });
     } catch { /* */ }
+  }
+
+  // 7. Check if there are staged changes
+  const diffResult = spawnSync('git', ['diff', '--staged', '--quiet'], { cwd: projectRoot });
+  if (diffResult.status === 0) {
+    console.log(chalk.yellow('No changes to save — artifacts are already up to date.'));
+    process.exit(0);
   }
 
   // 8. Commit
