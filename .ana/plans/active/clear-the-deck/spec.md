@@ -32,7 +32,7 @@ The `captureModulesTouched` function takes `slug`, `projectRoot`, and `slugDir` 
 **ESLint after Commit 1** (no output = clean):
 ```
 $ pnpm lint
-> eslint src/
+> eslint src/ tests/
 ```
 
 **ana proof context truncation:**
@@ -93,10 +93,15 @@ This invalidates the verification. Re-plan or restore the contract.
 **Pattern to follow:** Existing field ordering in the same function.
 **Why:** Schema/creator parity contract documented at anaJsonSchema.ts lines 19-23. Field exists in schema but not creator = fresh inits missing it.
 
+### `packages/cli/package.json` (modify)
+**What changes:** Change `"lint": "eslint src/"` to `"lint": "eslint src/ tests/"`. Change `"lint:fix": "eslint src/ --fix"` to `"lint:fix": "eslint src/ tests/ --fix"`. Lines 47-48.
+**Pattern to follow:** Existing script entries in the same file.
+**Why:** Without this, `pnpm lint` (and the pre-commit hook that runs it) never passes test files to ESLint. The config block alone is dead config that no automated check invokes. This is load-bearing for AC1 — lint passes clean because it never looks at tests, not because tests are clean.
+
 ### `eslint.config.js` (modify)
 **What changes:** Add a test override block before the ignores block. Rules: `no-unused-vars: error` (with `_` ignore patterns), `no-explicit-any: warn`, JSDoc rules off, `no-warning-comments: off`. Remove `tests/` from the ignores array.
 **Pattern to follow:** The engine-code relaxation block (lines 37-51) — same "override rules for a specific directory" pattern.
-**Why:** Tests enter lint scope. 100 test files gain baseline quality enforcement.
+**Why:** Tests enter lint scope. 100 test files gain baseline quality enforcement. Paired with the package.json change — config defines the rules, package.json makes the pre-commit hook invoke them.
 
 ### `tests/utils/findProjectRoot.test.ts` (modify)
 **What changes:** Remove two tests: (1) "is exported from validators module" (line 85-87, `typeof` tautology — `expect(typeof findProjectRoot).toBe('function')`), (2) "all existing tests continue to pass" (lines 103-108, `expect(true).toBe(true)` meta-assertion). Both prove nothing.
@@ -163,7 +168,7 @@ None. All referenced modules exist. `runContractPreCheck` is already exported fr
 
 ## Constraints
 
-- ESLint config change and unused import cleanup are atomic — they MUST be in the same commit. If the config lands without cleanup, the pre-commit hook rejects the next commit touching any of the affected test files.
+- ESLint config change, package.json lint script change, and unused import cleanup are atomic — all three MUST be in the same commit. The config defines the rules, the package.json change makes `pnpm lint` invoke them, and the import cleanup prevents immediate lint failures. If any piece lands without the others, the pre-commit hook either doesn't enforce tests (missing package.json) or rejects commits (missing cleanup).
 - Pre-commit hook runs `tsc --noEmit`, `eslint`, and tests. Both commits must pass all three independently.
 - Test count must not decrease. Current: 1478 passed, 97 files.
 - `createAnaJson` returns `Record<string, unknown>`, not `AnaJson`. Adding `custom: {}` doesn't require a type change.
@@ -254,6 +259,6 @@ function writeSaveMetadata(slugDir: string, artifactType: string, content: strin
 - Current tests: 1478 passed, 2 skipped, 97 test files
 - Command used: `(cd packages/cli && pnpm vitest run)`
 - Current lint: clean (0 errors)
-- Command used: `pnpm lint` (runs `eslint src/` — tests not yet in scope)
+- Command used: `pnpm lint` (currently runs `eslint src/` — tests not yet in scope)
 - After build: expected 1480+ tests in 97 files
 - Regression focus: `tests/commands/artifact.test.ts` (save-all tests touch shared code), `tests/commands/pr.test.ts` (fixture change), `tests/utils/findProjectRoot.test.ts` (test removal)

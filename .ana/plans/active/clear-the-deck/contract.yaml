@@ -59,125 +59,132 @@ assertions:
 
   # Cluster B — Quality floor + config
   - id: A009
+    says: "The lint command actually checks test files, not just source files"
+    block: "package.json lint script includes tests/"
+    target: "package.json.scripts.lint"
+    matcher: "contains"
+    value: "tests/"
+
+  - id: A010
     says: "Test files are covered by lint rules"
     block: "ESLint config includes tests/**/*.ts override"
     target: "eslint.config.tests.files"
     matcher: "contains"
     value: "tests/**/*.ts"
 
-  - id: A010
+  - id: A011
     says: "Test files enforce unused variable detection"
     block: "ESLint test override has no-unused-vars error"
     target: "eslint.config.tests.rules.no-unused-vars"
     matcher: "equals"
     value: "error"
 
-  - id: A011
+  - id: A012
     says: "Test files allow type assertions without blocking commits"
     block: "ESLint test override has no-explicit-any warn"
     target: "eslint.config.tests.rules.no-explicit-any"
     matcher: "equals"
     value: "warn"
 
-  - id: A012
+  - id: A013
     says: "Lint passes clean after adding test file coverage"
     block: "pnpm lint exits with zero errors"
     target: "lint.exitCode"
     matcher: "equals"
     value: 0
 
-  - id: A013
+  - id: A014
     says: "No tautological tests remain that pass regardless of behavior"
     block: "findProjectRoot.test.ts has no expect(true).toBe(true)"
     target: "findProjectRoot.test.tautologies"
     matcher: "equals"
     value: 0
 
-  - id: A014
+  - id: A015
     says: "Scope immutability test checks a real field that exists"
     block: "artifact.test.ts scope immutability compares hash not commit"
     target: "artifact.test.scopeImmutability.field"
     matcher: "equals"
     value: "hash"
 
-  - id: A015
+  - id: A016
     says: "Test fixtures match the current schema without ghost fields"
     block: "pr.test.ts .saves.json fixture has no commit fields"
     target: "pr.test.fixture.commitFields"
     matcher: "equals"
     value: 0
 
-  - id: A016
+  - id: A017
     says: "Projects can store custom configuration that survives schema validation"
     block: "AnaJsonSchema includes custom field with record type"
     target: "anaJsonSchema.custom"
     matcher: "exists"
 
-  - id: A017
+  - id: A018
     says: "Custom configuration round-trips through parse without data loss"
     block: "custom field round-trips through AnaJsonSchema.parse"
     target: "parsed.custom.myKey"
     matcher: "equals"
     value: "myValue"
 
-  - id: A018
+  - id: A019
     says: "Fresh projects get an empty custom namespace by default"
     block: "createAnaJson includes custom: {}"
     target: "anaConfig.custom"
     matcher: "exists"
 
-  - id: A019
+  - id: A020
     says: "Long callout summaries are truncated so they don't flood the terminal"
     block: "proof context truncates summaries at 250 chars"
     target: "truncatedSummary.length"
     matcher: "greater"
     value: 0
 
-  - id: A020
+  - id: A021
     says: "Truncation respects word boundaries instead of cutting mid-word"
     block: "truncation uses lastIndexOf space for word boundary"
     target: "truncation.wordBoundary"
     matcher: "truthy"
 
   # Cluster C — Save pipeline parity
-  - id: A021
+  - id: A022
     says: "Saving all artifacts checks contract integrity when verification data exists"
     block: "saveAllArtifacts runs pre-check when verify-report and contract present"
     target: "saveAll.preCheck.executed"
     matcher: "truthy"
 
-  - id: A022
+  - id: A023
     says: "Contract tampering blocks save-all just like it blocks individual saves"
     block: "saveAllArtifacts blocks on TAMPERED seal"
     target: "saveAll.tampered.exitCode"
     matcher: "equals"
     value: 1
 
-  - id: A023
+  - id: A024
     says: "Save-all records verification proof data for the proof chain to consume"
     block: "saveAllArtifacts writes pre-check data to .saves.json"
     target: "saves.pre-check.seal"
     matcher: "exists"
 
-  - id: A024
+  - id: A025
     says: "Save-all records which source files changed for the proof chain"
     block: "saveAllArtifacts writes modules_touched to .saves.json"
     target: "saves.modules_touched"
     matcher: "exists"
 
-  - id: A025
+  - id: A026
     says: "Pre-check logic exists once, not copied between save paths"
     block: "shared pre-check function called by both saveArtifact and saveAllArtifacts"
     target: "artifact.ts.sharedPreCheck"
     matcher: "exists"
 
-  - id: A026
+  - id: A027
     says: "Module tracking logic exists once, not copied between save paths"
     block: "shared modules_touched function called by both save paths"
     target: "artifact.ts.sharedModulesTouched"
     matcher: "exists"
 
-  - id: A027
+  - id: A028
     says: "All tests pass after both commits"
     block: "full test suite passes"
     target: "tests.passed"
@@ -200,6 +207,8 @@ file_changes:
   - path: "src/commands/init/anaJsonSchema.ts"
     action: modify
   - path: "src/commands/init/state.ts"
+    action: modify
+  - path: "package.json"
     action: modify
   - path: "eslint.config.js"
     action: modify
