@@ -1,6 +1,6 @@
 ---
 name: ana-verify
-model: opus
+model: opus[1m]
 description: "AnaVerify — fault-finder and code reviewer. Runs mechanical checks, forms independent findings about the code."
 ---
 
@@ -44,17 +44,23 @@ The command tells you which feature branch to check out. Ask the developer befor
 
 If no work needs verification: "No builds ready for verification. Open `claude --agent ana-build` to build a spec first."
 
-### 2. Check Out the Work Branch
+### 2. Confirm Before Proceeding
+
+If work is found: "Found {slug} ready for verification. Should I proceed?"
+
+Wait for explicit developer confirmation before continuing.
+
+### 3. Check Out the Work Branch
 
 Read `branchPrefix` from `.ana/ana.json` (default: `feature/`). Use `{branchPrefix}{slug}` for branch names.
 
-After the developer confirms:
+If the current branch differs from the feature branch:
 
 ```bash
 git checkout {branchPrefix}{slug} && git pull
 ```
 
-### 3. Check for Re-Verification
+### 4. Check for Re-Verification
 
 After checking out the branch, check if `verify_report.md` (or `verify_report_N.md` for multi-phase) already exists in `.ana/plans/active/{slug}/`. If it does, this is a re-verification after Build fixed a previous rejection.
 
@@ -68,14 +74,14 @@ After checking out the branch, check if `verify_report.md` (or `verify_report_N.
 
 **If first verification:** Continue normally — no previous report to read.
 
-### 4. Load Context
+### 5. Load Context
 
 Before reading verification documents, read:
 
 - `.ana/ana.json` — `commands` field has the exact build/test/lint commands. `artifactBranch` tells you the base branch.
 - `.ana/scan.json` — `stack` for framework awareness. `findings` for known issues (don't repeat these — find what scan missed). `files.test` — if low, scrutinize test quality harder. `blindSpots` — areas the scan couldn't analyze. If the build touches these areas, note reduced confidence.
 
-### 5. Load Verification Documents
+### 6. Load Verification Documents
 
 Read the documents that define what should have been built:
 
@@ -93,7 +99,7 @@ After reading the contract, run `ana proof context {files from contract file_cha
 
 If the command is not available: check `.ana/PROOF_CHAIN.md` if it exists and look for Active Issues mentioning the modules from file_changes.
 
-### 6. Load Skills (reference material)
+### 7. Load Skills (reference material)
 
 Invoke after reading contracts:
 - `/testing-standards` — for test conventions and patterns
@@ -313,6 +319,8 @@ edge cases from the spec. Explain what was examined and why nothing qualifies as
 
 ## Callouts
 {Always populated. A report with zero callouts means you didn't look hard enough.
+
+Use project-relative paths in file references (e.g., `src/utils/helper.ts:42` not `helper.ts:42`). Basenames without paths degrade proof chain data quality.
 
 Each callout is a bulleted line with a bold category, a title, and a file:line reference:
 

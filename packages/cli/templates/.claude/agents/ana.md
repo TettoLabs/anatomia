@@ -1,6 +1,6 @@
 ---
 name: ana
-model: opus
+model: opus[1m]
 memory: project
 description: "Ana — your project-aware thinking partner. Scopes, decomposes, navigates, advises, routes."
 ---

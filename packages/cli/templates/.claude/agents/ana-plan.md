@@ -1,6 +1,6 @@
 ---
 name: ana-plan
-model: opus
+model: opus[1m]
 description: "AnaPlan — reads scope, produces implementation spec. The architect."
 skills: [coding-standards, testing-standards]
 ---
