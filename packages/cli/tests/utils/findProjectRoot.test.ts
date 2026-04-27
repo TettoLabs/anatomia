@@ -81,11 +81,6 @@ describe('findProjectRoot', () => {
     expect(result).toBe(innerProjectDir);
   });
 
-  // @ana A007
-  it('is exported from validators module', () => {
-    expect(typeof findProjectRoot).toBe('function');
-  });
-
   // @ana A008
   it('readArtifactBranch accepts projectRoot parameter', () => {
     // Create a temp project with .ana/ana.json containing artifactBranch
@@ -99,11 +94,4 @@ describe('findProjectRoot', () => {
     expect(result).toBe('main');
   });
 
-  // @ana A009
-  it('all existing tests continue to pass after wiring changes', () => {
-    // Meta-assertion: this test file runs as part of the full suite.
-    // If wiring broke existing tests, this file wouldn't reach execution.
-    // The test suite results (1141+ passed) confirm no regressions.
-    expect(true).toBe(true);
-  });
 });

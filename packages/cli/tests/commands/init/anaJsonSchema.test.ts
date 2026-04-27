@@ -104,6 +104,25 @@ describe('AnaJsonSchema', () => {
     });
   });
 
+  describe('custom namespace', () => {
+    // @ana A017, A018, A019
+    it('round-trips custom data through parse and defaults to empty', () => {
+      const withCustom = AnaJsonSchema.parse({
+        name: 'test',
+        custom: { myKey: 'myValue', nested: { a: 1 } },
+      });
+      expect(withCustom.custom).toEqual({ myKey: 'myValue', nested: { a: 1 } });
+
+      const withoutCustom = AnaJsonSchema.parse({ name: 'test' });
+      expect(withoutCustom.custom).toEqual({});
+    });
+
+    it('catches invalid custom and defaults to empty object', () => {
+      const parsed = AnaJsonSchema.parse({ name: 'test', custom: 'not-an-object' });
+      expect(parsed.custom).toEqual({});
+    });
+  });
+
   describe('missing fields get defaults', () => {
     it('defaults anaVersion when missing', () => {
       const parsed = AnaJsonSchema.parse({ name: 'x' });

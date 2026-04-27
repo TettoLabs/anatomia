@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import * as path from 'node:path';
 
 describe('Cross-Platform Path Handling', () => {
   // Note: We can't actually test on Windows/Linux without CI,

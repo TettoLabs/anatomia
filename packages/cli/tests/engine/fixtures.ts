@@ -53,7 +53,7 @@ export async function loadFixture(
 
   try {
     return await fs.readFile(fixturePath, 'utf-8');
-  } catch (error) {
+  } catch (_error) {
     throw new Error(`Failed to load fixture: ${fixturePath}`);
   }
 }

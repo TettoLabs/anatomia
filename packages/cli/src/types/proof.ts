@@ -20,6 +20,21 @@ import type { ProofSummary } from '../utils/proofSummary.js';
  *   4. Display in formatHumanReadable() or formatListTable() (commands/proof.ts)
  * Old entries in proof_chain.json may lack new fields — consumers must handle undefined.
  */
+/**
+ * Proof chain JSON structure — the top-level container.
+ */
+export interface ProofChain {
+  entries: ProofChainEntry[];
+}
+
+/**
+ * Health stats returned by writeProofChain.
+ */
+export interface ProofChainStats {
+  runs: number;
+  callouts: number;
+}
+
 export interface ProofChainEntry {
   slug: string;
   feature: string;

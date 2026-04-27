@@ -404,7 +404,7 @@ describe('ana init', () => {
       await fs.writeFile(settingsPath, JSON.stringify(settingsWithOurHooks, null, 2));
 
       // Simulate re-init merge (should detect duplicates)
-      const templateSettings = { ...settingsWithOurHooks };
+      const _templateSettings = { ...settingsWithOurHooks };
 
       // Check if hook already exists by command path
       const existingPostToolUse = settingsWithOurHooks.hooks.PostToolUse;

@@ -21,17 +21,12 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import * as path from 'node:path';
 import * as fs from 'node:fs';
-import type { ProofChainEntry } from '../types/proof.js';
+import type { ProofChainEntry, ProofChain } from '../types/proof.js';
 import { findProjectRoot } from '../utils/validators.js';
 import { getProofContext } from '../utils/proofSummary.js';
 import type { ProofContextResult } from '../utils/proofSummary.js';
 
-/**
- * Proof chain JSON structure
- */
-interface ProofChain {
-  entries: ProofChainEntry[];
-}
+// ProofChain imported from types/proof.ts
 
 /**
  * Box-drawing characters for terminal output
@@ -364,7 +359,14 @@ function formatContextResult(result: ProofContextResult): string {
     lines.push('Callouts:');
     for (const callout of result.callouts) {
       const anchor = callout.anchor ? ` ${callout.anchor} —` : '';
-      lines.push(`  ${chalk.dim(`[${callout.category}]`)}${anchor} ${callout.summary}`);
+      // @ana A020, A021
+      let truncatedSummary = callout.summary;
+      if (truncatedSummary.length > 250) {
+        const lastSpace = truncatedSummary.lastIndexOf(' ', 250);
+        const cutPoint = lastSpace > 0 ? lastSpace : 250;
+        truncatedSummary = truncatedSummary.substring(0, cutPoint) + '...';
+      }
+      lines.push(`  ${chalk.dim(`[${callout.category}]`)}${anchor} ${truncatedSummary}`);
       lines.push(`         ${chalk.gray(`From: ${callout.from}`)}`);
       lines.push('');
     }

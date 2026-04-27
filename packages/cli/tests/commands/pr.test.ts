@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import * as os from 'node:os';
@@ -263,19 +263,18 @@ file_changes:
         );
       }
 
-      // .saves.json with pre-check data
+      // @ana A016
+      // .saves.json with pre-check data (no ghost commit fields)
       if (options.includePreCheck !== false && options.includeContract !== false) {
         await fs.writeFile(
           path.join(artifactPath, '.saves.json'),
           JSON.stringify({
             scope: {
               saved_at: '2026-04-01T10:00:00.000Z',
-              commit: 'abc123',
               hash: 'sha256:scope123'
             },
             contract: {
               saved_at: '2026-04-01T10:30:00.000Z',
-              commit: 'def456',
               hash: 'sha256:contract456'
             },
             'pre-check': {

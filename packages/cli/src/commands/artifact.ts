@@ -25,6 +25,7 @@ import { findProjectRoot } from '../utils/validators.js';
 // artifact.ts still uses them internally; pr.ts and work.ts now import directly
 // from utils/ instead of cross-command-importing from here.
 import { readArtifactBranch, readBranchPrefix, getCurrentBranch } from '../utils/git-operations.js';
+import type { ContractSchema } from '../types/contract.js';
 
 /**
  * Save metadata entry for .saves.json
@@ -65,6 +66,99 @@ function writeSaveMetadata(slugDir: string, artifactType: string, content: strin
   };
 
   fs.writeFileSync(savesPath, JSON.stringify(saves, null, 2));
+}
+
+/**
+ * Run contract pre-check and store results in .saves.json.
+ *
+ * Blocks (process.exit(1)) on TAMPERED seal. Warns on uncovered assertions.
+ * Called by both saveArtifact and saveAllArtifacts when a verify-report is present.
+ *
+ * @param slug - Work item slug
+ * @param slugDir - Path to the slug plan directory
+ * @param projectRoot - Project root directory
+ * @returns true if pre-check ran, false if no contract found
+ */
+function runPreCheckAndStore(slug: string, slugDir: string, projectRoot: string): boolean {
+  const contractPath = path.join(slugDir, 'contract.yaml');
+  if (!fs.existsSync(contractPath)) {
+    return false;
+  }
+
+  const preCheckResult = runContractPreCheck(slug, projectRoot);
+
+  // TAMPERED blocks save
+  if (preCheckResult.seal === 'TAMPERED') {
+    console.error(chalk.red('ERROR: Contract tampered since plan commit. Cannot save verify report.'));
+    console.error(chalk.gray('The contract was modified after it was sealed by the planner.'));
+    console.error(chalk.gray('This invalidates the verification. Re-plan or restore the contract.'));
+    process.exit(1);
+  }
+
+  // UNCOVERED warns but proceeds
+  if (preCheckResult.summary.uncovered > 0) {
+    console.warn(chalk.yellow(`WARNING: ${preCheckResult.summary.uncovered} contract assertions uncovered:`));
+    preCheckResult.assertions
+      .filter(a => a.status === 'UNCOVERED')
+      .forEach(a => console.warn(chalk.yellow(`  ${a.id}  ✗ UNCOVERED  "${a.says}"`)));
+    console.warn(chalk.gray('Verify report saved. Uncovered assertions will appear in the proof.'));
+  }
+
+  // Store pre-check results in .saves.json
+  const savesPath = path.join(slugDir, '.saves.json');
+  let saves: Record<string, unknown> = {};
+  if (fs.existsSync(savesPath)) {
+    try {
+      saves = JSON.parse(fs.readFileSync(savesPath, 'utf-8'));
+    } catch {
+      // Ignore parse errors
+    }
+  }
+
+  saves['pre-check'] = {
+    seal: preCheckResult.seal,
+    seal_hash: preCheckResult.sealHash,
+    assertions: preCheckResult.assertions,
+    covered: preCheckResult.summary.covered,
+    uncovered: preCheckResult.summary.uncovered,
+    run_at: new Date().toISOString(),
+  };
+
+  fs.writeFileSync(savesPath, JSON.stringify(saves, null, 2));
+  return true;
+}
+
+/**
+ * Capture modules_touched via git diff and write to .saves.json.
+ *
+ * Computes the list of non-.ana files changed since the merge-base with
+ * the artifact branch. Called by both saveArtifact and saveAllArtifacts
+ * when a build-report is present.
+ *
+ * @param projectRoot - Project root directory
+ * @param slugDir - Path to the slug plan directory
+ */
+function captureModulesTouched(projectRoot: string, slugDir: string): void {
+  try {
+    const artBranch = readArtifactBranch(projectRoot);
+    const mergeBase = execSync(
+      `git merge-base ${artBranch} HEAD`,
+      { encoding: 'utf-8', cwd: projectRoot, stdio: ['pipe', 'pipe', 'pipe'] }
+    ).trim();
+    const diffOutput = execSync(
+      `git diff ${mergeBase} --name-only -- . ':!.ana'`,
+      { encoding: 'utf-8', cwd: projectRoot, stdio: ['pipe', 'pipe', 'pipe'] }
+    ).trim();
+    const modulesList = diffOutput ? diffOutput.split('\n').filter(Boolean) : [];
+
+    const savesPath = path.join(slugDir, '.saves.json');
+    let savesData: Record<string, unknown> = {};
+    if (fs.existsSync(savesPath)) {
+      try { savesData = JSON.parse(fs.readFileSync(savesPath, 'utf-8')); } catch { /* */ }
+    }
+    savesData['modules_touched'] = modulesList;
+    fs.writeFileSync(savesPath, JSON.stringify(savesData, null, 2));
+  } catch { /* merge-base or diff failed — modules_touched stays empty */ }
 }
 
 /**
@@ -283,36 +377,7 @@ function validateSpecFormat(filePath: string): { error?: string; warning?: strin
 const VALID_MATCHERS = ['equals', 'exists', 'contains', 'greater', 'truthy', 'not_equals', 'not_contains'];
 const VALUE_REQUIRED_MATCHERS = ['equals', 'contains', 'greater', 'not_equals', 'not_contains'];
 
-/**
- * Contract assertion structure
- */
-interface ContractAssertion {
-  id?: string;
-  says?: string;
-  block?: string;
-  target?: string;
-  matcher?: string;
-  value?: unknown;
-}
-
-/**
- * Contract file change structure
- */
-interface ContractFileChange {
-  path?: string;
-  action?: string;
-}
-
-/**
- * Contract schema structure
- */
-interface ContractSchema {
-  version?: string;
-  sealed_by?: string;
-  feature?: string;
-  assertions?: ContractAssertion[];
-  file_changes?: ContractFileChange[];
-}
+// ContractAssertion, ContractFileChange, ContractSchema imported from types/contract.ts
 
 /**
  * Validate contract format
@@ -559,50 +624,7 @@ export function saveArtifact(type: string, slug: string): void {
 
     // Auto pre-check for contract mode
     const slugDir = path.join(projectRoot, '.ana', 'plans', 'active', slug);
-    const contractPath = path.join(slugDir, 'contract.yaml');
-
-    if (fs.existsSync(contractPath)) {
-      const preCheckResult = runContractPreCheck(slug, projectRoot);
-
-      // TAMPERED blocks save
-      if (preCheckResult.seal === 'TAMPERED') {
-        console.error(chalk.red('ERROR: Contract tampered since plan commit. Cannot save verify report.'));
-        console.error(chalk.gray('The contract was modified after it was sealed by the planner.'));
-        console.error(chalk.gray('This invalidates the verification. Re-plan or restore the contract.'));
-        process.exit(1);
-      }
-
-      // UNCOVERED warns but proceeds
-      if (preCheckResult.summary.uncovered > 0) {
-        console.warn(chalk.yellow(`WARNING: ${preCheckResult.summary.uncovered} contract assertions uncovered:`));
-        preCheckResult.assertions
-          .filter(a => a.status === 'UNCOVERED')
-          .forEach(a => console.warn(chalk.yellow(`  ${a.id}  ✗ UNCOVERED  "${a.says}"`)));
-        console.warn(chalk.gray('Verify report saved. Uncovered assertions will appear in the proof.'));
-      }
-
-      // Store pre-check results in .saves.json
-      const savesPath = path.join(slugDir, '.saves.json');
-      let saves: Record<string, unknown> = {};
-      if (fs.existsSync(savesPath)) {
-        try {
-          saves = JSON.parse(fs.readFileSync(savesPath, 'utf-8'));
-        } catch {
-          // Ignore parse errors
-        }
-      }
-
-      saves['pre-check'] = {
-        seal: preCheckResult.seal,
-        seal_hash: preCheckResult.sealHash,
-        assertions: preCheckResult.assertions,
-        covered: preCheckResult.summary.covered,
-        uncovered: preCheckResult.summary.uncovered,
-        run_at: new Date().toISOString(),
-      };
-
-      fs.writeFileSync(savesPath, JSON.stringify(saves, null, 2));
-    }
+    runPreCheckAndStore(slug, slugDir, projectRoot);
   }
 
   if (typeInfo.baseType === 'scope') {
@@ -729,26 +751,7 @@ export function saveArtifact(type: string, slug: string): void {
   // definitely exists and all code is committed). Stored in .saves.json for
   // proof chain to read at work-complete time.
   if (typeInfo.baseType === 'build-report') {
-    try {
-      const artBranch = readArtifactBranch(projectRoot);
-      const mergeBase = execSync(
-        `git merge-base ${artBranch} HEAD`,
-        { encoding: 'utf-8', cwd: projectRoot, stdio: ['pipe', 'pipe', 'pipe'] }
-      ).trim();
-      const diffOutput = execSync(
-        `git diff ${mergeBase} --name-only -- . ':!.ana'`,
-        { encoding: 'utf-8', cwd: projectRoot, stdio: ['pipe', 'pipe', 'pipe'] }
-      ).trim();
-      const modulesList = diffOutput ? diffOutput.split('\n').filter(Boolean) : [];
-
-      const savesPath2 = path.join(slugDir2, '.saves.json');
-      let savesData: Record<string, unknown> = {};
-      if (fs.existsSync(savesPath2)) {
-        try { savesData = JSON.parse(fs.readFileSync(savesPath2, 'utf-8')); } catch { /* */ }
-      }
-      savesData['modules_touched'] = modulesList;
-      fs.writeFileSync(savesPath2, JSON.stringify(savesData, null, 2));
-    } catch { /* merge-base or diff failed — modules_touched stays empty */ }
+    captureModulesTouched(projectRoot, slugDir2);
   }
 
   // 10. Push (artifact branch only)
@@ -935,6 +938,16 @@ export function saveAllArtifacts(slug: string): void {
         process.exit(1);
       }
     }
+  }
+
+  // 3b. Pre-check for verify-report (contract integrity) — blocks on TAMPERED
+  if (artifacts.some(a => a.typeInfo.baseType === 'verify-report')) {
+    runPreCheckAndStore(slug, planDir, projectRoot);
+  }
+
+  // 3c. Capture modules_touched for build-report
+  if (artifacts.some(a => a.typeInfo.baseType === 'build-report')) {
+    captureModulesTouched(projectRoot, planDir);
   }
 
   // 4. Validate branch — planning artifacts must be on artifact branch
