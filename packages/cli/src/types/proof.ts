@@ -32,7 +32,15 @@ export interface ProofChain {
  */
 export interface ProofChainStats {
   runs: number;
-  callouts: number;
+  findings: number;
+  active: number;
+  lessons: number;
+  promoted: number;
+  closed: number;
+  maintenance?: {
+    auto_closed: number;
+    lessons_classified: number;
+  };
 }
 
 export interface ProofChainEntry {
@@ -54,7 +62,19 @@ export interface ProofChainEntry {
   completed_at: string;
   // S23 pipeline hardening — intelligence capture
   modules_touched: string[];
-  callouts: Array<{ id: string; category: string; summary: string; file: string | null; anchor: string | null }>;
+  scope_summary?: string | undefined;
+  findings: Array<{
+    id: string;
+    category: string;
+    summary: string;
+    file: string | null;
+    anchor: string | null;
+    status?: 'active' | 'lesson' | 'promoted' | 'closed';
+    closed_reason?: string;
+    closed_at?: string;
+    closed_by?: 'mechanical' | 'human' | 'agent';
+    promoted_to?: string;
+  }>;
   rejection_cycles: number;
   previous_failures: Array<{ id: string; summary: string }>;
   build_concerns: Array<{ summary: string; file: string | null }>;

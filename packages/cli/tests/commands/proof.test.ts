@@ -297,7 +297,7 @@ describe('ana proof', () => {
   // ─── Context Subcommand Tests ──────────────────────────────────────
 
   /**
-   * Helper to create proof chain with callouts for context testing
+   * Helper to create proof chain with findings for context testing
    */
   async function createContextChain(): Promise<void> {
     const entry = {
@@ -313,7 +313,7 @@ describe('ana proof', () => {
       seal_commit: 'abc123',
       completed_at: '2026-04-24T10:00:00Z',
       modules_touched: ['packages/cli/src/engine/census.ts'],
-      callouts: [
+      findings: [
         { id: 'drizzle-C1', category: 'code', summary: 'drizzle-dialect overloads SchemaFileEntry semantics', file: 'packages/cli/src/engine/census.ts', anchor: 'census.ts:267-274' },
         { id: 'drizzle-C2', category: 'code', summary: 'Config regex can match comments', file: 'packages/cli/src/engine/census.ts', anchor: 'census.ts:251' },
       ],
@@ -327,8 +327,8 @@ describe('ana proof', () => {
   }
 
   // @ana A009
-  describe('ana proof context returns callouts', () => {
-    it('shows callout text for queried file', async () => {
+  describe('ana proof context returns findings', () => {
+    it('shows finding text for queried file', async () => {
       await createContextChain();
       process.chdir(tempDir);
 
@@ -351,8 +351,8 @@ describe('ana proof', () => {
 
       const json = JSON.parse(stdout);
       expect(json.results).toBeDefined();
-      expect(json.results[0].callouts).toBeDefined();
-      expect(json.results[0].callouts.length).toBeGreaterThan(0);
+      expect(json.results[0].findings).toBeDefined();
+      expect(json.results[0].findings.length).toBeGreaterThan(0);
       expect(json.results[0].build_concerns).toBeDefined();
     });
   });

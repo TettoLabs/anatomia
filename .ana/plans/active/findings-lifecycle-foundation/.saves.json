@@ -14,5 +14,173 @@
   "spec": {
     "saved_at": "2026-04-27T19:46:25.042Z",
     "hash": "sha256:3587d5e411c0181e5aed291d2f23e36cff9c65b221aa727372771bdc059ec9bc"
+  },
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:7e78e329cd74ff4f5745517f6155d1efb1636744dd809250fa0c5d2ce14292b4",
+    "assertions": [
+      {
+        "id": "A001",
+        "says": "Each proof chain entry stores its findings with the renamed field",
+        "status": "COVERED"
+      },
+      {
+        "id": "A002",
+        "says": "Findings can have a lifecycle status: active, lesson, promoted, or closed",
+        "status": "COVERED"
+      },
+      {
+        "id": "A003",
+        "says": "The old 'callouts' field name is removed from TypeScript type definitions, variable names, and interface names. The parser regex matching ## Callouts in verify report markdown and test fixture strings containing that markdown heading are intentionally retained.",
+        "status": "COVERED"
+      },
+      {
+        "id": "A004",
+        "says": "Chain health stats include counts for each finding status",
+        "status": "COVERED"
+      },
+      {
+        "id": "A005",
+        "says": "Chain health stats include maintenance activity counts when maintenance occurred",
+        "status": "COVERED"
+      },
+      {
+        "id": "A006",
+        "says": "Existing findings without a status are treated as active during backfill",
+        "status": "COVERED"
+      },
+      {
+        "id": "A007",
+        "says": "Findings from upstream observations are classified as lessons",
+        "status": "COVERED"
+      },
+      {
+        "id": "A008",
+        "says": "New code and test findings start with active status",
+        "status": "COVERED"
+      },
+      {
+        "id": "A009",
+        "says": "New upstream findings start as lessons, not active items",
+        "status": "COVERED"
+      },
+      {
+        "id": "A010",
+        "says": "Findings referencing deleted files are automatically closed",
+        "status": "COVERED"
+      },
+      {
+        "id": "A011",
+        "says": "Findings without a file reference are skipped by staleness checks",
+        "status": "COVERED"
+      },
+      {
+        "id": "A012",
+        "says": "Findings whose code anchor disappeared are automatically closed",
+        "status": "COVERED"
+      },
+      {
+        "id": "A013",
+        "says": "Findings without an anchor are skipped by the anchor check",
+        "status": "COVERED"
+      },
+      {
+        "id": "A014",
+        "says": "When a newer finding exists on the same file and category, the older one is closed",
+        "status": "COVERED"
+      },
+      {
+        "id": "A015",
+        "says": "Supersession only compares findings with fully resolved file paths",
+        "status": "COVERED"
+      },
+      {
+        "id": "A016",
+        "says": "Findings from the same pipeline run are never superseded against each other",
+        "status": "COVERED"
+      },
+      {
+        "id": "A017",
+        "says": "Only active findings appear in the Active Issues markdown section",
+        "status": "COVERED"
+      },
+      {
+        "id": "A018",
+        "says": "Closed findings are excluded from the Active Issues section",
+        "status": "COVERED"
+      },
+      {
+        "id": "A019",
+        "says": "Proof context queries return only active findings by default",
+        "status": "COVERED"
+      },
+      {
+        "id": "A020",
+        "says": "Proof context with includeAll returns findings of every status",
+        "status": "COVERED"
+      },
+      {
+        "id": "A021",
+        "says": "Proof context results include the finding's lifecycle status",
+        "status": "COVERED"
+      },
+      {
+        "id": "A022",
+        "says": "The scope summary captures the first paragraph of the scope's Intent section",
+        "status": "COVERED"
+      },
+      {
+        "id": "A023",
+        "says": "Missing or malformed scope files result in no scope summary, not an error",
+        "status": "COVERED"
+      },
+      {
+        "id": "A024",
+        "says": "An UNKNOWN result with an existing verify report triggers a warning",
+        "status": "COVERED"
+      },
+      {
+        "id": "A025",
+        "says": "The dashboard shows total runs and counts for each finding status",
+        "status": "COVERED"
+      },
+      {
+        "id": "A026",
+        "says": "The dashboard highlights files that generated findings across multiple pipeline runs",
+        "status": "COVERED"
+      },
+      {
+        "id": "A027",
+        "says": "The dashboard groups active findings by file",
+        "status": "COVERED"
+      },
+      {
+        "id": "A028",
+        "says": "The dashboard caps displayed active findings at 30",
+        "status": "COVERED"
+      },
+      {
+        "id": "A029",
+        "says": "Work completion output shows active finding count instead of total callouts",
+        "status": "COVERED"
+      },
+      {
+        "id": "A030",
+        "says": "A maintenance summary appears when findings were auto-closed or classified",
+        "status": "COVERED"
+      },
+      {
+        "id": "A031",
+        "says": "Existing proof chain entries have their callouts field migrated to findings",
+        "status": "COVERED"
+      }
+    ],
+    "covered": 31,
+    "uncovered": 0,
+    "run_at": "2026-04-27T20:33:59.557Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-04-27T20:33:59.582Z",
+    "hash": "sha256:195c7c1fb835c840da5f811e0ed0119eaeacd2998c9845655ba8c7935f4f199b"
   }
 }
