@@ -105,7 +105,7 @@ describe('AnaJsonSchema', () => {
   });
 
   describe('custom namespace', () => {
-    // @ana A017, A018
+    // @ana A017, A018, A019
     it('round-trips custom data through parse and defaults to empty', () => {
       const withCustom = AnaJsonSchema.parse({
         name: 'test',

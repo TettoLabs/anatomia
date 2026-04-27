@@ -263,7 +263,8 @@ file_changes:
         );
       }
 
-      // .saves.json with pre-check data
+      // @ana A016
+      // .saves.json with pre-check data (no ghost commit fields)
       if (options.includePreCheck !== false && options.includeContract !== false) {
         await fs.writeFile(
           path.join(artifactPath, '.saves.json'),

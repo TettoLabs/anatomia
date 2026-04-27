@@ -359,6 +359,7 @@ function formatContextResult(result: ProofContextResult): string {
     lines.push('Callouts:');
     for (const callout of result.callouts) {
       const anchor = callout.anchor ? ` ${callout.anchor} —` : '';
+      // @ana A020, A021
       let truncatedSummary = callout.summary;
       if (truncatedSummary.length > 250) {
         const lastSpace = truncatedSummary.lastIndexOf(' ', 250);

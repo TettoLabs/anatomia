@@ -1594,7 +1594,7 @@ file_changes:
     expect(error).toContain('tampered');
   });
 
-  // @ana A022, A024
+  // @ana A022, A024, A026
   it('save-all runs pre-check and writes data to .saves.json', async () => {
     await createTestProject();
 
@@ -1650,7 +1650,7 @@ file_changes:
     expect(saves['pre-check'].covered).toBeGreaterThanOrEqual(0);
   });
 
-  // @ana A025
+  // @ana A025, A027, A028
   it('save-all captures modules_touched for build-report', async () => {
     await createTestProject();
 
