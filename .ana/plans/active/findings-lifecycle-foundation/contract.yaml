@@ -1,0 +1,246 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Findings Lifecycle Foundation"
+
+assertions:
+  # AC1 — Type definitions
+  - id: A001
+    says: "Each proof chain entry stores its findings with the renamed field"
+    block: "defines finding lifecycle types"
+    target: "ProofChainEntry.findings"
+    matcher: "exists"
+
+  - id: A002
+    says: "Findings can have a lifecycle status: active, lesson, promoted, or closed"
+    block: "defines finding lifecycle types"
+    target: "finding.status"
+    matcher: "exists"
+
+  # AC2 — Rename completeness
+  - id: A003
+    says: "The old 'callouts' field name is completely removed from source code"
+    block: "verifies complete rename"
+    target: "source.callouts_references"
+    matcher: "equals"
+    value: 0
+
+  # AC3 — Expanded stats
+  - id: A004
+    says: "Chain health stats include counts for each finding status"
+    block: "returns expanded chain health stats"
+    target: "stats.active"
+    matcher: "exists"
+
+  - id: A005
+    says: "Chain health stats include maintenance activity counts when maintenance occurred"
+    block: "returns expanded chain health stats"
+    target: "stats.maintenance.auto_closed"
+    matcher: "exists"
+
+  # AC4 — Backfill status assignment
+  - id: A006
+    says: "Existing findings without a status are treated as active during backfill"
+    block: "assigns correct status during backfill"
+    target: "backfilled_finding.status"
+    matcher: "equals"
+    value: "active"
+
+  - id: A007
+    says: "Findings from upstream observations are classified as lessons"
+    block: "assigns correct status during backfill"
+    target: "upstream_finding.status"
+    matcher: "equals"
+    value: "lesson"
+
+  # AC5 — New finding status
+  - id: A008
+    says: "New code and test findings start with active status"
+    block: "assigns status to new findings"
+    target: "new_code_finding.status"
+    matcher: "equals"
+    value: "active"
+
+  - id: A009
+    says: "New upstream findings start as lessons, not active items"
+    block: "assigns status to new findings"
+    target: "new_upstream_finding.status"
+    matcher: "equals"
+    value: "lesson"
+
+  # AC6 — File-deleted closure
+  - id: A010
+    says: "Findings referencing deleted files are automatically closed"
+    block: "closes findings for deleted files"
+    target: "deleted_file_finding.status"
+    matcher: "equals"
+    value: "closed"
+
+  - id: A011
+    says: "Findings without a file reference are skipped by staleness checks"
+    block: "closes findings for deleted files"
+    target: "no_file_finding.status"
+    matcher: "equals"
+    value: "active"
+
+  # AC7 — Anchor-absent closure
+  - id: A012
+    says: "Findings whose code anchor disappeared are automatically closed"
+    block: "closes findings with absent anchors"
+    target: "absent_anchor_finding.status"
+    matcher: "equals"
+    value: "closed"
+
+  - id: A013
+    says: "Findings without an anchor are skipped by the anchor check"
+    block: "closes findings with absent anchors"
+    target: "no_anchor_finding.status"
+    matcher: "not_equals"
+    value: "closed"
+
+  # AC8 — Supersession
+  - id: A014
+    says: "When a newer finding exists on the same file and category, the older one is closed"
+    block: "supersedes older findings on same file and category"
+    target: "older_finding.status"
+    matcher: "equals"
+    value: "closed"
+
+  - id: A015
+    says: "Supersession only compares findings with fully resolved file paths"
+    block: "supersedes older findings on same file and category"
+    target: "unresolved_finding.status"
+    matcher: "not_equals"
+    value: "closed"
+
+  - id: A016
+    says: "Findings from the same pipeline run are never superseded against each other"
+    block: "supersedes older findings on same file and category"
+    target: "same_entry_findings.status"
+    matcher: "equals"
+    value: "active"
+
+  # AC9 — Active issues filtering
+  - id: A017
+    says: "Only active findings appear in the Active Issues markdown section"
+    block: "filters active issues by status"
+    target: "active_issues_md"
+    matcher: "contains"
+    value: "active finding summary"
+
+  - id: A018
+    says: "Closed findings are excluded from the Active Issues section"
+    block: "filters active issues by status"
+    target: "active_issues_md"
+    matcher: "not_contains"
+    value: "closed finding summary"
+
+  # AC10 — Proof context filtering
+  - id: A019
+    says: "Proof context queries return only active findings by default"
+    block: "filters proof context by status"
+    target: "default_results.findings"
+    matcher: "not_contains"
+    value: "closed"
+
+  - id: A020
+    says: "Proof context with includeAll returns findings of every status"
+    block: "filters proof context by status"
+    target: "includeAll_results.findings.length"
+    matcher: "greater"
+    value: 0
+
+  - id: A021
+    says: "Proof context results include the finding's lifecycle status"
+    block: "filters proof context by status"
+    target: "result.findings[0].status"
+    matcher: "exists"
+
+  # AC11 — Scope summary
+  - id: A022
+    says: "The scope summary captures the first paragraph of the scope's Intent section"
+    block: "extracts scope summary from intent section"
+    target: "entry.scope_summary"
+    matcher: "contains"
+    value: "Intent paragraph text"
+
+  - id: A023
+    says: "Missing or malformed scope files result in no scope summary, not an error"
+    block: "extracts scope summary from intent section"
+    target: "entry_without_scope.scope_summary"
+    matcher: "equals"
+    value: null
+
+  # AC12 — UNKNOWN result warning
+  - id: A024
+    says: "An UNKNOWN result with an existing verify report triggers a warning"
+    block: "warns on unknown result with verify report"
+    target: "stderr"
+    matcher: "contains"
+    value: "UNKNOWN"
+
+  # AC13, AC14 — Dashboard
+  - id: A025
+    says: "The dashboard shows total runs and counts for each finding status"
+    block: "generates quality dashboard"
+    target: "dashboard_md"
+    matcher: "contains"
+    value: "runs"
+
+  - id: A026
+    says: "The dashboard highlights files that generated findings across multiple pipeline runs"
+    block: "generates quality dashboard"
+    target: "dashboard_md"
+    matcher: "contains"
+    value: "Hot Modules"
+
+  - id: A027
+    says: "The dashboard groups active findings by file"
+    block: "generates quality dashboard"
+    target: "dashboard_md.active_section"
+    matcher: "contains"
+    value: "###"
+
+  - id: A028
+    says: "The dashboard caps displayed active findings at 30"
+    block: "generates quality dashboard"
+    target: "dashboard_active_count"
+    matcher: "equals"
+    value: 30
+
+  # AC15 — Output format
+  - id: A029
+    says: "Work completion output shows active finding count instead of total callouts"
+    block: "shows finding lifecycle in completion output"
+    target: "output"
+    matcher: "contains"
+    value: "active findings"
+
+  - id: A030
+    says: "A maintenance summary appears when findings were auto-closed or classified"
+    block: "shows finding lifecycle in completion output"
+    target: "output"
+    matcher: "contains"
+    value: "Maintenance:"
+
+  # AC16 — Migration
+  - id: A031
+    says: "Existing proof chain entries have their callouts field migrated to findings"
+    block: "migrates callouts field to findings"
+    target: "migrated_entry.findings"
+    matcher: "exists"
+
+file_changes:
+  - path: "packages/cli/src/types/proof.ts"
+    action: modify
+  - path: "packages/cli/src/commands/work.ts"
+    action: modify
+  - path: "packages/cli/src/utils/proofSummary.ts"
+    action: modify
+  - path: "packages/cli/src/commands/proof.ts"
+    action: modify
+  - path: "packages/cli/tests/utils/proofSummary.test.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/work.test.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/proof.test.ts"
+    action: modify
