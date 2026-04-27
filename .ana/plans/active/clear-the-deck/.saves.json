@@ -18,5 +18,183 @@
   "build-report": {
     "saved_at": "2026-04-27T01:09:04.015Z",
     "hash": "sha256:469683e462152c4d6264ac614c358920efaa9685a46bd993c8d5c47de01a3696"
+  },
+  "modules_touched": [
+    "packages/cli/eslint.config.js",
+    "packages/cli/package.json",
+    "packages/cli/src/commands/artifact.ts",
+    "packages/cli/src/commands/init/anaJsonSchema.ts",
+    "packages/cli/src/commands/init/state.ts",
+    "packages/cli/src/commands/proof.ts",
+    "packages/cli/src/commands/verify.ts",
+    "packages/cli/src/commands/work.ts",
+    "packages/cli/src/types/contract.ts",
+    "packages/cli/src/types/proof.ts",
+    "packages/cli/tests/commands/artifact.test.ts",
+    "packages/cli/tests/commands/init.test.ts",
+    "packages/cli/tests/commands/init/anaJsonSchema.test.ts",
+    "packages/cli/tests/commands/pr.test.ts",
+    "packages/cli/tests/commands/symbol-index.test.ts",
+    "packages/cli/tests/commands/verify.test.ts",
+    "packages/cli/tests/engine/analyzers/patterns/dependencies.test.ts",
+    "packages/cli/tests/engine/fixtures.ts",
+    "packages/cli/tests/engine/parsed-backward-compat.test.ts",
+    "packages/cli/tests/engine/patterns-backward-compat.test.ts",
+    "packages/cli/tests/engine/structure-backward-compat.test.ts",
+    "packages/cli/tests/templates/cross-platform.test.ts",
+    "packages/cli/tests/utils/findProjectRoot.test.ts"
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:6567b885668185558c71fda7febaef4e26993843fd4f591c059cb62b6ef775fc",
+    "assertions": [
+      {
+        "id": "A001",
+        "says": "Contract types live in one place, not scattered across commands",
+        "status": "COVERED"
+      },
+      {
+        "id": "A002",
+        "says": "Contract type requires an ID for every assertion",
+        "status": "COVERED"
+      },
+      {
+        "id": "A003",
+        "says": "Contract type requires a human-readable description for every assertion",
+        "status": "COVERED"
+      },
+      {
+        "id": "A004",
+        "says": "Artifact command uses the shared contract types, not its own copy",
+        "status": "COVERED"
+      },
+      {
+        "id": "A005",
+        "says": "Verify command uses the shared contract types, not its own copy",
+        "status": "COVERED"
+      },
+      {
+        "id": "A006",
+        "says": "Proof chain structure lives in one place, not duplicated across commands",
+        "status": "COVERED"
+      },
+      {
+        "id": "A007",
+        "says": "Proof chain health stats have a named type instead of inline object shape",
+        "status": "COVERED"
+      },
+      {
+        "id": "A008",
+        "says": "writeProofChain returns a named type instead of an anonymous shape",
+        "status": "COVERED"
+      },
+      {
+        "id": "A009",
+        "says": "The lint command actually checks test files, not just source files",
+        "status": "COVERED"
+      },
+      {
+        "id": "A010",
+        "says": "Test files are covered by lint rules",
+        "status": "COVERED"
+      },
+      {
+        "id": "A011",
+        "says": "Test files enforce unused variable detection",
+        "status": "COVERED"
+      },
+      {
+        "id": "A012",
+        "says": "Test files allow type assertions without blocking commits",
+        "status": "COVERED"
+      },
+      {
+        "id": "A013",
+        "says": "Lint passes clean after adding test file coverage",
+        "status": "COVERED"
+      },
+      {
+        "id": "A014",
+        "says": "No tautological tests remain that pass regardless of behavior",
+        "status": "COVERED"
+      },
+      {
+        "id": "A015",
+        "says": "Scope immutability test checks a real field that exists",
+        "status": "COVERED"
+      },
+      {
+        "id": "A016",
+        "says": "Test fixtures match the current schema without ghost fields",
+        "status": "COVERED"
+      },
+      {
+        "id": "A017",
+        "says": "Projects can store custom configuration that survives schema validation",
+        "status": "COVERED"
+      },
+      {
+        "id": "A018",
+        "says": "Custom configuration round-trips through parse without data loss",
+        "status": "COVERED"
+      },
+      {
+        "id": "A019",
+        "says": "Fresh projects get an empty custom namespace by default",
+        "status": "COVERED"
+      },
+      {
+        "id": "A020",
+        "says": "Long callout summaries are truncated so they don't flood the terminal",
+        "status": "COVERED"
+      },
+      {
+        "id": "A021",
+        "says": "Truncation respects word boundaries instead of cutting mid-word",
+        "status": "COVERED"
+      },
+      {
+        "id": "A022",
+        "says": "Saving all artifacts checks contract integrity when verification data exists",
+        "status": "COVERED"
+      },
+      {
+        "id": "A023",
+        "says": "Contract tampering blocks save-all just like it blocks individual saves",
+        "status": "COVERED"
+      },
+      {
+        "id": "A024",
+        "says": "Save-all records verification proof data for the proof chain to consume",
+        "status": "COVERED"
+      },
+      {
+        "id": "A025",
+        "says": "Save-all records which source files changed for the proof chain",
+        "status": "COVERED"
+      },
+      {
+        "id": "A026",
+        "says": "Pre-check logic exists once, not copied between save paths",
+        "status": "COVERED"
+      },
+      {
+        "id": "A027",
+        "says": "Module tracking logic exists once, not copied between save paths",
+        "status": "COVERED"
+      },
+      {
+        "id": "A028",
+        "says": "All tests pass after both commits",
+        "status": "COVERED"
+      }
+    ],
+    "covered": 28,
+    "uncovered": 0,
+    "run_at": "2026-04-27T01:16:59.486Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-04-27T01:16:59.506Z",
+    "hash": "sha256:e1b365ad1fd19bc3d5caebf2921f4d439dd913db66c5a6c85afa9c2040af05c1"
   }
 }
