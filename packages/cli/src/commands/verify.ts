@@ -22,6 +22,7 @@ import { glob } from 'glob';
 import { createHash } from 'node:crypto';
 import { findProjectRoot } from '../utils/validators.js';
 import { readArtifactBranch } from '../utils/git-operations.js';
+import type { ContractSchema } from '../types/contract.js';
 
 /**
  * Contract pre-check result (S8+)
@@ -42,28 +43,7 @@ interface ContractPreCheckResult {
   outOfScope: Array<{ id: string; file: string }>;
 }
 
-/**
- * Contract assertion from YAML
- */
-interface ContractAssertion {
-  id: string;
-  says: string;
-  block?: string;
-  target?: string;
-  matcher?: string;
-  value?: unknown;
-}
-
-/**
- * Contract schema
- */
-interface ContractSchema {
-  version?: string;
-  sealed_by?: string;
-  feature?: string;
-  assertions?: ContractAssertion[];
-  file_changes?: Array<{ path: string; action: string }>;
-}
+// ContractAssertion, ContractSchema imported from types/contract.ts
 
 /**
  * Run contract-mode pre-check (S8+)

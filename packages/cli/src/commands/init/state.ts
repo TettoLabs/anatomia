@@ -388,6 +388,7 @@ export async function createAnaJson(
     artifactBranch: detectArtifactBranch(result),
     branchPrefix: 'feature/',
     lastScanAt: result.overview.scannedAt,
+    custom: {},
   };
 
   const anaJsonPath = path.join(tmpAnaPath, 'ana.json');

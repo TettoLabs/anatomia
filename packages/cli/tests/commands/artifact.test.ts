@@ -1230,7 +1230,7 @@ file_changes:
       const savesPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug', '.saves.json');
       const savesAfterScope = JSON.parse(await fs.readFile(savesPath, 'utf-8'));
       expect(savesAfterScope.scope).toBeDefined();
-      const scopeCommit = savesAfterScope.scope.commit;
+      const scopeHash = savesAfterScope.scope.hash;
 
       // Save spec second
       saveArtifact('spec', 'test-slug');
@@ -1239,7 +1239,7 @@ file_changes:
       expect(savesAfterSpec.scope).toBeDefined();
       expect(savesAfterSpec.spec).toBeDefined();
       // Scope entry should be unchanged
-      expect(savesAfterSpec.scope.commit).toBe(scopeCommit);
+      expect(savesAfterSpec.scope.hash).toBe(scopeHash);
     });
 
     it('overwrites entry on re-save of same type', async () => {

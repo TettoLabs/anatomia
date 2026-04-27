@@ -1,8 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  AnalysisResult,
   AnalysisResultSchema,
-  createEmptyAnalysisResult,
 } from '../../src/engine/types/index.js';
 
 describe('STEP_2.1 backward compatibility', () => {

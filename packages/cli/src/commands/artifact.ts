@@ -25,6 +25,7 @@ import { findProjectRoot } from '../utils/validators.js';
 // artifact.ts still uses them internally; pr.ts and work.ts now import directly
 // from utils/ instead of cross-command-importing from here.
 import { readArtifactBranch, readBranchPrefix, getCurrentBranch } from '../utils/git-operations.js';
+import type { ContractSchema } from '../types/contract.js';
 
 /**
  * Save metadata entry for .saves.json
@@ -283,36 +284,7 @@ function validateSpecFormat(filePath: string): { error?: string; warning?: strin
 const VALID_MATCHERS = ['equals', 'exists', 'contains', 'greater', 'truthy', 'not_equals', 'not_contains'];
 const VALUE_REQUIRED_MATCHERS = ['equals', 'contains', 'greater', 'not_equals', 'not_contains'];
 
-/**
- * Contract assertion structure
- */
-interface ContractAssertion {
-  id?: string;
-  says?: string;
-  block?: string;
-  target?: string;
-  matcher?: string;
-  value?: unknown;
-}
-
-/**
- * Contract file change structure
- */
-interface ContractFileChange {
-  path?: string;
-  action?: string;
-}
-
-/**
- * Contract schema structure
- */
-interface ContractSchema {
-  version?: string;
-  sealed_by?: string;
-  feature?: string;
-  assertions?: ContractAssertion[];
-  file_changes?: ContractFileChange[];
-}
+// ContractAssertion, ContractFileChange, ContractSchema imported from types/contract.ts
 
 /**
  * Validate contract format

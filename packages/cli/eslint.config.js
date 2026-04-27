@@ -49,7 +49,34 @@ export default [
       }],
     },
   },
+  // Test files: baseline quality without documentation overhead
   {
-    ignores: ['dist/', 'node_modules/', '*.config.ts', '*.config.js', 'tests/'],
+    files: ['tests/**/*.ts'],
+    languageOptions: {
+      parser: tsparser,
+      parserOptions: {
+        project: './tsconfig.test.json',
+      },
+    },
+    plugins: {
+      '@typescript-eslint': tseslint,
+      jsdoc,
+    },
+    rules: {
+      '@typescript-eslint/no-unused-vars': ['error', {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+        caughtErrorsIgnorePattern: '^_',
+      }],
+      '@typescript-eslint/no-explicit-any': 'warn',
+      'jsdoc/require-jsdoc': 'off',
+      'jsdoc/require-description': 'off',
+      'jsdoc/require-param': 'off',
+      'jsdoc/require-returns': 'off',
+      'no-warning-comments': 'off',
+    },
+  },
+  {
+    ignores: ['dist/', 'node_modules/', '*.config.ts', '*.config.js'],
   },
 ];

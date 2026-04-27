@@ -19,7 +19,7 @@ import * as path from 'node:path';
 import { readArtifactBranch, readBranchPrefix, getCurrentBranch } from '../utils/git-operations.js';
 import { generateProofSummary, generateActiveIssuesMarkdown, resolveCalloutPaths, type ProofSummary } from '../utils/proofSummary.js';
 import { findProjectRoot } from '../utils/validators.js';
-import type { ProofChainEntry } from '../types/proof.js';
+import type { ProofChainEntry, ProofChain, ProofChainStats } from '../types/proof.js';
 
 /**
  * Artifact state for a work item
@@ -726,12 +726,7 @@ export function getWorkStatus(options: { json?: boolean }): void {
 // ProofChainEntry moved to src/types/proof.ts (Item 13).
 // Imported above for internal use in this file.
 
-/**
- * Proof chain JSON structure
- */
-interface ProofChain {
-  entries: ProofChainEntry[];
-}
+// ProofChain, ProofChainStats imported from types/proof.ts
 
 /**
  * Write proof chain files (JSON and markdown)
@@ -741,7 +736,7 @@ interface ProofChain {
  * @param projectRoot - Project root directory
  * @returns Chain health counts: total runs and cumulative callouts
  */
-async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: string): Promise<{ runs: number; callouts: number }> {
+async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: string): Promise<ProofChainStats> {
   const anaDir = path.join(projectRoot, '.ana');
 
   // Ensure .ana directory exists

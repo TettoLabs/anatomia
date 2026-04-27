@@ -44,6 +44,7 @@ export const AnaJsonSchema = z
       .optional()
       .catch(undefined),
     lastScanAt: z.string().nullable().optional().default(null).catch(null),
+    custom: z.record(z.string(), z.unknown()).optional().default({}).catch({}),
   })
   .strip();
 
