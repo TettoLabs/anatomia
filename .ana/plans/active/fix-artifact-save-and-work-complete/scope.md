@@ -18,19 +18,21 @@ Backlog references: ANA-INFRA-060, ANA-INFRA-061, ANA-INFRA-062.
 - **Files affected:**
   - `packages/cli/src/commands/artifact.ts` (INFRA-060 structural reorder + INFRA-061 cwd)
   - `packages/cli/src/commands/work.ts` (INFRA-061 cwd + INFRA-062 recovery)
-- **Blast radius:** `saveArtifact`, `saveAllArtifacts`, and `completeWork` are the three functions that commit to git on behalf of the pipeline. All three are affected. No changes to types, engine, or templates.
+- **Blast radius:** `saveArtifact`, `saveAllArtifacts`, and `completeWork` are the three functions that commit to git on behalf of the pipeline. All three are affected. `writeSaveMetadata` gains idempotency (hash comparison). No changes to types, engine, templates, or proof summary generation.
 - **Estimated effort:** 2-3 hours including tests
 - **Multi-phase:** no
 
 ## Approach
 
-Three independent fixes, one coherent rationale: verify, don't trust.
+Four fixes, one coherent rationale: verify, don't trust.
 
 **INFRA-061 (cwd):** Add `cwd: projectRoot` to every `execSync`/`spawnSync` git call in `saveArtifact` and `completeWork` that's missing it. `saveAllArtifacts` already does this correctly — match its pattern. Mechanical, no design judgment needed.
 
 **INFRA-060 (save bypass):** Restructure the save flow in both `saveArtifact` and `saveAllArtifacts` so metadata is written and staged *before* the no-changes check, not after. Make `writeSaveMetadata` idempotent by comparing hashes — skip the write when the hash matches the existing entry. Move `captureModulesTouched` before the commit (safe because the merge-base diff excludes `.ana/` files, and `saveAllArtifacts` already captures it pre-commit at line 948). This eliminates the bypass by removing the ordering gap rather than adding detection logic.
 
-**INFRA-062 (crash recovery):** Refine the existing "already completed" check in `completeWork` (lines 1028-1036). When the slug exists in `completed/` but not `active/`, verify whether the completion was actually committed. If uncommitted changes exist in `.ana/`, this is a failed prior run — recover by retrying the commit step. Also improve the error message on commit failure in the main path to tell the user to retry.
+**Completeness check (closes the INFRA-060 loop):** The reorder makes `save` correct whenever it runs. The completeness check ensures `save` ran. Before the directory move in `completeWork`, read `.saves.json` and verify that both `build-report` and `verify-report` entries exist with `saved_at` and `hash`. If either is missing, exit with an error directing the user to run the specific `ana artifact save` command. This check is two key lookups before the phase loop — not per-phase, because all phases share one key per artifact type (phase 2 overwrites phase 1). Nothing mutates if the check fails. The key-scheme limitation (can't detect partial-phase bypass in multi-spec features) is a known gap for a future scope.
+
+**INFRA-062 (crash recovery):** Refine the existing "already completed" check in `completeWork` (lines 1028-1036). When the slug exists in `completed/` but not `active/`, verify whether the completion was actually committed. If uncommitted changes exist in `.ana/`, this is a failed prior run — recover by retrying the commit step. On commit failure in the main path, the error message directs the user to retry `ana work complete`.
 
 ## Acceptance Criteria
 - AC1: Running `ana artifact save build-report {slug}` when the artifact was committed outside `save` writes `.saves.json` metadata (hash, timestamp), captures `modules_touched`, and commits the metadata.
@@ -40,6 +42,8 @@ Three independent fixes, one coherent rationale: verify, don't trust.
 - AC5: Running `ana work complete` after a previously failed completion (plan moved to `completed/`, proof chain written, but commit failed) recovers automatically by retrying the commit.
 - AC6: After successful recovery (AC5), the proof chain entry and plan archive are committed and the work item is fully completed.
 - AC7: All existing tests pass. No test count decrease.
+- AC8: When `work complete` commit fails in the main path, the error message directs the user to retry `ana work complete {slug}`.
+- AC9: `work complete` reads `.saves.json` before the directory move and verifies that both `build-report` and `verify-report` entries exist with `saved_at` and `hash`. If either is missing, exits with an error directing the user to run the specific `ana artifact save` command. Nothing mutates if this check fails.
 
 ## Edge Cases & Risks
 - **Double recovery:** User runs `work complete`, commit fails, runs again (recovery), commit fails again. Second recovery should also work — the detection logic must be re-entrant.
@@ -47,6 +51,8 @@ Three independent fixes, one coherent rationale: verify, don't trust.
 - **Race with `saveAllArtifacts`:** Both `saveArtifact` and `saveAllArtifacts` need the same reorder. Ensure `saveAllArtifacts` doesn't double-capture `modules_touched` (it already calls `captureModulesTouched` at line 948 before staging — the metadata reorder should integrate with that, not duplicate it).
 - **`writeSaveMetadata` idempotency edge case:** The hash comparison must use the full `sha256:{hex}` string, not just the hex. Current code stores `sha256:${hash}` — the comparison must match that format.
 - **Recovery false positive:** A legitimately completed work item (committed, pushed) shouldn't trigger recovery. The detection must verify uncommitted `.ana/` changes exist, not just that `completed/` has the slug.
+- **Branch-deleted modules_touched:** If the feature branch was squash-merged and auto-deleted before the developer runs `save` (post-merge recovery from AC9 block), `captureModulesTouched` diffs `merge-base main HEAD` — both are main, diff is empty, `modules_touched` is `[]`. This is correct, not a defect — the branch is gone, the diff is unrecoverable. Empty array is the honest answer.
+- **Key-scheme limitation in multi-spec:** All phases write to the same `.saves.json` key (`build-report`, `verify-report`) because `writeSaveMetadata` uses `typeInfo.baseType`. Phase 2 overwrites phase 1. The completeness check catches total bypass but not partial-phase bypass (e.g., phase 1 bypassed save, phase 2 used save correctly). Fixing the key scheme to use numbered keys affects `computeTiming`, proof summary generation, and downstream consumers — separate scope.
 
 ## Rejected Approaches
 
@@ -57,6 +63,10 @@ Three independent fixes, one coherent rationale: verify, don't trust.
 **Commit-first / transactional approach for INFRA-062 (backlog Option 1).** Stage the deletion of `active/` via `git rm --cached` (index only), commit atomically, then delete from filesystem. On failure, `git reset HEAD` to rollback. Principled but fragile — the rollback itself can fail, creating a worse state than the original problem. Also requires changing `writeProofChain` to read `.saves.json` from `active/` instead of hardcoded `completed/`.
 
 **Full rollback for INFRA-062 (backlog Option 2).** On commit failure, move the plan back, undo proof chain writes. The proof chain write involves backfill mutations on existing entries (finding lifecycle resolution, auto-close). Reversing those is non-trivial and error-prone.
+
+**Warning on empty modules_touched.** Considered as AC10, dropped. After the INFRA-060 reorder, `modules_touched` is captured as part of `save`. If `save` ran (AC9 passes), `captureModulesTouched` ran. If the array is empty afterward, it's because the feature branch was already merged before the recovery save (diff against self is empty) or the feature had no non-`.ana/` file changes. Warning on either case is noise — the most common recovery path (post-merge) would always trigger a false alarm.
+
+**`--force` flag to skip completeness check.** If we add `--force`, agents will learn to use it. Prompts will include it as a convenience. The guardrail erodes. The fix is always "run `save`" — and with the INFRA-060 reorder, `save` always works, even after merge.
 
 ## Open Questions
 
@@ -88,7 +98,7 @@ None — all design decisions resolved during investigation.
 - `artifact.ts:45-69` — `writeSaveMetadata`. Needs hash-comparison guard to become idempotent. Return type should change to boolean (whether it wrote).
 - `artifact.ts:556-820` — `saveArtifact`. Lines 694-755 need reordering: metadata + modules_touched + staging before the no-changes check. Lines 696, 702, 726, 744 need `cwd: projectRoot`.
 - `artifact.ts:827-1057` — `saveAllArtifacts`. Lines 1009-1019 (metadata writing) need to move before lines 1002-1007 (no-changes check). Already has correct cwd on all git calls.
-- `work.ts:988-1199` — `completeWork`. Lines 1028-1036 need recovery detection. Lines 1154, 1164 need `cwd: projectRoot`. Lines 1172, 1180, 1186 need `cwd: projectRoot` (push/branch-delete — not strictly path-dependent but should be consistent).
+- `work.ts:988-1199` — `completeWork`. Lines 1028-1036 need recovery detection. Lines 1154, 1164 need `cwd: projectRoot`. Lines 1172, 1180, 1186 need `cwd: projectRoot` (push/branch-delete — not strictly path-dependent but should be consistent). Completeness check goes after verify-report validation (line 1140) and before directory move (line 1142).
 - `work.ts:739-870` — `writeProofChain`. Read-only for this scope — understand its `completed/` path dependency but don't modify.
 - `utils/proofSummary.ts:752-779` — `computeTiming`. Read-only — understand that it reads `build-report.saved_at` from `.saves.json`, which is what goes null on bypass.
 
@@ -102,6 +112,9 @@ None — all design decisions resolved during investigation.
 - The no-changes check uses `spawnSync('git', ['diff', '--staged', '--quiet'])`. After the reorder, `.saves.json` will be staged alongside the artifact. If the artifact is unchanged but `.saves.json` was updated (bypass recovery case), this check correctly detects changes. If both are unchanged (true re-save), this check correctly detects no changes. Verify both paths.
 - `completeWork` recovery must re-read `coAuthor` from `ana.json` for the commit message. The variable is currently scoped inside the try block at line 1156-1162. The recovery path needs its own read or the read should be hoisted.
 - `git status --porcelain .ana/` in the recovery detection should use `cwd: projectRoot` (eat your own dog food).
+- The completeness check reads `.saves.json` from `activePath` (before the move). Two key lookups: `saves['build-report']` and `saves['verify-report']`. Each must have `saved_at` (string) and `hash` (string). Don't check per-phase — the key scheme makes it pointless. Note: `.saves.json` may also contain `pre-check`, `modules_touched`, and planning artifact entries — don't require those, only build-report and verify-report.
+- `computeTiming` (proofSummary.ts:760) reads `saves['build-report']` — same key the completeness check validates. If AC9 passes, timing will have data. The completeness check is the upstream guarantee that `computeTiming` won't produce nulls.
 
 ### Things to Investigate
 - Determine the minimal `git status` check that distinguishes "completed and committed" from "completed but uncommitted." Consider: `git status --porcelain .ana/plans/completed/{slug}` vs broader `.ana/` check. The narrower check is more precise but might miss uncommitted proof chain changes. The broader check is safer.
+- The completeness check error message should name the specific missing artifact(s): "build-report was not saved through the pipeline. Run `ana artifact save build-report {slug}`." Not a generic "metadata incomplete." If both are missing, list both commands.
