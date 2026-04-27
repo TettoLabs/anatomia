@@ -800,18 +800,18 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
     })),
     rejection_cycles: proof.rejection_cycles,
     previous_failures: proof.previous_failures,
-    ...(proof.build_concerns && proof.build_concerns.length > 0 ? { build_concerns: proof.build_concerns } : {}),
+    build_concerns: proof.build_concerns ?? [],
   };
 
   // Resolve callout/build_concern file fields from basenames to full paths.
   // New entry: resolve against its own modules_touched
-  resolveCalloutPaths(entry.callouts, entry.modules_touched || []);
-  resolveCalloutPaths(entry.build_concerns || [], entry.modules_touched || []);
+  resolveCalloutPaths(entry.callouts, entry.modules_touched || [], projectRoot);
+  resolveCalloutPaths(entry.build_concerns || [], entry.modules_touched || [], projectRoot);
 
   // Existing entries: backfill (idempotent — already-resolved files are skipped)
   for (const existing of chain.entries) {
-    resolveCalloutPaths(existing.callouts || [], existing.modules_touched || []);
-    resolveCalloutPaths(existing.build_concerns || [], existing.modules_touched || []);
+    resolveCalloutPaths(existing.callouts || [], existing.modules_touched || [], projectRoot);
+    resolveCalloutPaths(existing.build_concerns || [], existing.modules_touched || [], projectRoot);
   }
 
   chain.entries.push(entry);

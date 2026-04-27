@@ -718,10 +718,10 @@ export function saveArtifact(type: string, slug: string): void {
   // 8b. Write .saves.json and stage it alongside the artifact.
   // Done AFTER the no-changes check so unchanged artifacts don't trigger
   // a commit just from .saves.json metadata.
-  const slugDir2 = path.join(projectRoot, '.ana', 'plans', 'active', slug);
+  const slugDir = path.join(projectRoot, '.ana', 'plans', 'active', slug);
   const artifactContent = fs.readFileSync(filePath, 'utf-8');
-  writeSaveMetadata(slugDir2, typeInfo.baseType, artifactContent);
-  const savesPath = path.join(slugDir2, '.saves.json');
+  writeSaveMetadata(slugDir, typeInfo.baseType, artifactContent);
+  const savesPath = path.join(slugDir, '.saves.json');
   if (fs.existsSync(savesPath)) {
     try { execSync(`git add ${savesPath}`, { stdio: 'pipe' }); } catch { /* */ }
   }
@@ -751,7 +751,7 @@ export function saveArtifact(type: string, slug: string): void {
   // definitely exists and all code is committed). Stored in .saves.json for
   // proof chain to read at work-complete time.
   if (typeInfo.baseType === 'build-report') {
-    captureModulesTouched(projectRoot, slugDir2);
+    captureModulesTouched(projectRoot, slugDir);
   }
 
   // 10. Push (artifact branch only)

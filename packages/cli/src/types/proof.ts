@@ -57,5 +57,5 @@ export interface ProofChainEntry {
   callouts: Array<{ id: string; category: string; summary: string; file: string | null; anchor: string | null }>;
   rejection_cycles: number;
   previous_failures: Array<{ id: string; summary: string }>;
-  build_concerns?: Array<{ summary: string; file: string | null }>;
+  build_concerns: Array<{ summary: string; file: string | null }>;
 }

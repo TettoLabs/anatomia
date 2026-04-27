@@ -1,6 +1,6 @@
 ---
 name: ana-setup
-model: opus
+model: opus[1m]
 description: "Setup orchestrator — calibrates Ana's knowledge with your project's identity, architecture, and values."
 initialPrompt: "Set up this project"
 ---
@@ -223,6 +223,14 @@ No user interaction. Read whatever files give you real signal for each section o
 
 **Domain Vocabulary** needs terms that have project-specific meaning a new engineer would misunderstand. Look at model names, type names, domain concepts in code.
 
+### Stack-aware investigation
+
+If `stack.validation` is non-null, read up to 3 schema files to understand validation patterns and conventions (Zod schemas, Joi schemas, Yup schemas — whichever the project uses).
+
+If `stack.auth` is non-null, read auth configuration files — middleware, providers, session config — to understand the authentication setup.
+
+Surface these findings in Step 5's Architecture section of the project-context draft: validation patterns (schema location, naming conventions, reuse approach) and auth setup (provider, session strategy, middleware chain).
+
 ### Investigation philosophy
 
 Start with what the scan already gave you — structure, conventions, patterns, git activity. Then read the files that fill gaps. Don't count files — evaluate whether each section has real signal. A complex monorepo might need 10-12 reads. A simple CLI tool might need 3. Calibrate to the project.
@@ -249,7 +257,8 @@ Draft the REMAINING sections (everything except "What This Product Does" which w
 [Already written — show for context]
 
 ## Architecture
-[Draft from directory structure, key file reads, scan.structure]
+[Draft from directory structure, key file reads, scan.structure.
+Include validation patterns and auth setup if discovered in Step 4.]
 
 ## Where to Make Changes
 [Draft from high-churn files, entry points. Frame as task-to-location.]

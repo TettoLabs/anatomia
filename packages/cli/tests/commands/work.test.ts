@@ -1094,6 +1094,42 @@ Tests: 5 passed
         expect(output).toContain('Chain: 1 run · 0 callouts');
       });
 
+      // @ana A019
+      it('prints nonzero callout count when verify report has callouts', async () => {
+        await createProofProject('test-feature');
+
+        // Patch the verify report to include callouts
+        const slugPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-feature');
+        const verifyPath = path.join(slugPath, 'verify_report.md');
+        const verifyContent = fsSync.readFileSync(verifyPath, 'utf-8');
+        const patchedContent = verifyContent.replace(
+          '## Verdict',
+          `## Callouts
+- **Code — Hard-coded timeout:** \`src/client.ts:47\` — uses 5000ms constant
+- **Test — Weak assertion:** \`tests/auth.test.ts:89\` — uses toBeDefined instead of specific check
+- **Code — Missing error handler:** \`src/api.ts:12\` — catch block is empty
+
+## Verdict`,
+        );
+        fsSync.writeFileSync(verifyPath, patchedContent);
+        execSync('git add -A && git commit -m "add callouts"', { cwd: tempDir, stdio: 'ignore' });
+        execSync('git checkout main', { cwd: tempDir, stdio: 'ignore' });
+        execSync('git merge --no-ff feature/test-feature -m "merge callouts"', { cwd: tempDir, stdio: 'ignore' });
+
+        const originalLog = console.log;
+        const logs: string[] = [];
+        console.log = (...args: unknown[]) => {
+          logs.push(args.join(' '));
+        };
+
+        await completeWork('test-feature');
+
+        console.log = originalLog;
+        const output = logs.join('\n');
+
+        expect(output).toContain('Chain: 1 run · 3 callouts');
+      });
+
       // @ana A005, A006, A009
       it('prints cumulative chain balance with existing entries', async () => {
         await createProofProject('test-feature', { existingChain: true });

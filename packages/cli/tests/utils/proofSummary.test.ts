@@ -1186,6 +1186,60 @@ describe('resolveCalloutPaths', () => {
     resolveCalloutPaths(items, boundaryModules);
     expect(items[0]!.file).toBe('route.ts');
   });
+
+  describe('glob fallback', () => {
+    let tempDir: string;
+
+    beforeEach(async () => {
+      tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'callout-glob-test-'));
+    });
+
+    afterEach(async () => {
+      await fs.promises.rm(tempDir, { recursive: true, force: true });
+    });
+
+    // @ana A014
+    it('resolves basename via glob when modules_touched fails', async () => {
+      await fs.promises.mkdir(path.join(tempDir, 'src', 'utils'), { recursive: true });
+      await fs.promises.writeFile(path.join(tempDir, 'src', 'utils', 'helper.ts'), '');
+
+      const items = [{ file: 'helper.ts' }];
+      resolveCalloutPaths(items, [], tempDir);
+      expect(items[0]!.file).toBe('src/utils/helper.ts');
+    });
+
+    // @ana A015
+    it('skips ambiguous basename with 2+ glob matches', async () => {
+      await fs.promises.mkdir(path.join(tempDir, 'src', 'a'), { recursive: true });
+      await fs.promises.mkdir(path.join(tempDir, 'src', 'b'), { recursive: true });
+      await fs.promises.writeFile(path.join(tempDir, 'src', 'a', 'index.ts'), '');
+      await fs.promises.writeFile(path.join(tempDir, 'src', 'b', 'index.ts'), '');
+
+      const items = [{ file: 'index.ts' }];
+      resolveCalloutPaths(items, [], tempDir);
+      expect(items[0]!.file).toBe('index.ts');
+    });
+
+    // @ana A016
+    it('ignores node_modules matches', async () => {
+      await fs.promises.mkdir(path.join(tempDir, 'node_modules', 'pkg'), { recursive: true });
+      await fs.promises.writeFile(path.join(tempDir, 'node_modules', 'pkg', 'helper.ts'), '');
+
+      const items = [{ file: 'helper.ts' }];
+      resolveCalloutPaths(items, [], tempDir);
+      expect(items[0]!.file).toBe('helper.ts');
+    });
+
+    // @ana A017
+    it('ignores .ana matches', async () => {
+      await fs.promises.mkdir(path.join(tempDir, '.ana', 'plans'), { recursive: true });
+      await fs.promises.writeFile(path.join(tempDir, '.ana', 'plans', 'spec.md'), '');
+
+      const items = [{ file: 'spec.md' }];
+      resolveCalloutPaths(items, [], tempDir);
+      expect(items[0]!.file).toBe('spec.md');
+    });
+  });
 });
 
 describe('getProofContext', () => {

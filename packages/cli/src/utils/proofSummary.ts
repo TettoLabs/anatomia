@@ -8,6 +8,7 @@
 import { execSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { globSync } from 'glob';
 import * as yaml from 'yaml';
 
 /**
@@ -70,7 +71,7 @@ export interface ProofSummary {
   callouts: Array<{ category: string; summary: string; file: string | null; anchor: string | null }>;
   rejection_cycles: number;
   previous_failures: Array<{ id: string; summary: string }>;
-  build_concerns?: Array<{ summary: string; file: string | null }>;
+  build_concerns: Array<{ summary: string; file: string | null }>;
 }
 
 /**
@@ -322,11 +323,13 @@ export function extractFileRefs(summary: string): string[] {
  *
  * @param items - Array of objects with a `file` field (callouts or build_concerns)
  * @param modules - Array of full relative paths from modules_touched
+ * @param projectRoot - Optional project root for glob fallback when modules_touched matching fails
  * @returns void (mutates items in place)
  */
 export function resolveCalloutPaths(
   items: Array<{ file: string | null }>,
   modules: string[],
+  projectRoot?: string,
 ): void {
   for (const item of items) {
     if (!item.file) continue;
@@ -337,6 +340,15 @@ export function resolveCalloutPaths(
 
     if (matches.length === 1) {
       item.file = matches[0]!;
+    } else if (projectRoot) {
+      // Glob fallback: search the project filesystem for an unambiguous match
+      const globMatches = globSync('**/' + basename, {
+        cwd: projectRoot,
+        ignore: ['**/node_modules/**', '**/.ana/**'],
+      });
+      if (globMatches.length === 1) {
+        item.file = globMatches[0]!;
+      }
     }
   }
 }
@@ -668,6 +680,7 @@ export function generateProofSummary(slugDir: string): ProofSummary {
     callouts: [],
     rejection_cycles: 0,
     previous_failures: [],
+    build_concerns: [],
   };
 
   // Source 1: .saves.json
@@ -807,7 +820,6 @@ export function generateProofSummary(slugDir: string): ProofSummary {
       summary.deviations.push(...parseDeviations(buildContent));
       const concerns = parseBuildOpenIssues(buildContent);
       if (concerns.length > 0) {
-        if (!summary.build_concerns) summary.build_concerns = [];
         summary.build_concerns.push(...concerns);
       }
     } catch {
