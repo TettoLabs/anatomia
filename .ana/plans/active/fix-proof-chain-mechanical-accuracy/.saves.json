@@ -14,5 +14,17 @@
   "spec": {
     "saved_at": "2026-04-27T23:37:44.860Z",
     "hash": "sha256:264a837100c107ccaf84eb386dddc91e12e35a8cb3381a7b710c333236835752"
-  }
+  },
+  "build-report": {
+    "saved_at": "2026-04-27T23:57:01.836Z",
+    "hash": "sha256:e387f173c6c8d879b8b13b883d28efabed2ad55c5fda2546fad90b0c8468a3c8"
+  },
+  "modules_touched": [
+    ".claude/agents/ana-verify.md",
+    "packages/cli/src/commands/work.ts",
+    "packages/cli/src/utils/proofSummary.ts",
+    "packages/cli/templates/.claude/agents/ana-verify.md",
+    "packages/cli/tests/commands/work.test.ts",
+    "packages/cli/tests/utils/proofSummary.test.ts"
+  ]
 }
