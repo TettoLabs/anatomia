@@ -11,6 +11,8 @@ import {
   parseBuildOpenIssues,
   resolveFindingPaths,
   getProofContext,
+  extractScopeSummary,
+  generateDashboard,
 } from '../../src/utils/proofSummary.js';
 
 describe('generateProofSummary', () => {
@@ -1433,5 +1435,216 @@ describe('getProofContext', () => {
     // Undated entries don't contribute to touch_count
     expect(results[0]!.touch_count).toBe(0);
     expect(results[0]!.last_touched).toBeNull();
+  });
+
+  // @ana A019
+  it('excludes closed findings by default', () => {
+    const entry = {
+      feature: 'Test',
+      completed_at: '2026-04-24T10:00:00Z',
+      findings: [
+        { id: 'c1', category: 'code', summary: 'Active issue', file: 'packages/cli/src/engine/census.ts', anchor: null, status: 'active' },
+        { id: 'c2', category: 'code', summary: 'Closed issue', file: 'packages/cli/src/engine/census.ts', anchor: null, status: 'closed' },
+      ],
+    };
+    writeChain([entry]);
+    const results = getProofContext(['census.ts'], tempDir);
+    expect(results[0]!.findings).toHaveLength(1);
+    expect(results[0]!.findings[0]!.summary).toBe('Active issue');
+  });
+
+  // @ana A020
+  it('returns all findings with includeAll option', () => {
+    const entry = {
+      feature: 'Test',
+      completed_at: '2026-04-24T10:00:00Z',
+      findings: [
+        { id: 'c1', category: 'code', summary: 'Active issue', file: 'packages/cli/src/engine/census.ts', anchor: null, status: 'active' },
+        { id: 'c2', category: 'code', summary: 'Closed issue', file: 'packages/cli/src/engine/census.ts', anchor: null, status: 'closed' },
+      ],
+    };
+    writeChain([entry]);
+    const results = getProofContext(['census.ts'], tempDir, { includeAll: true });
+    expect(results[0]!.findings).toHaveLength(2);
+  });
+
+  // @ana A021
+  it('includes status field in returned findings', () => {
+    const entry = {
+      feature: 'Test',
+      completed_at: '2026-04-24T10:00:00Z',
+      findings: [
+        { id: 'c1', category: 'code', summary: 'Issue', file: 'packages/cli/src/engine/census.ts', anchor: null, status: 'active' },
+      ],
+    };
+    writeChain([entry]);
+    const results = getProofContext(['census.ts'], tempDir);
+    expect(results[0]!.findings[0]!.status).toBe('active');
+  });
+});
+
+// @ana A017, A018
+describe('generateActiveIssuesMarkdown status filtering', () => {
+  it('only includes active findings, excludes closed', () => {
+    const entries = [{
+      feature: 'Test',
+      completed_at: '2026-04-16T10:00:00Z',
+      findings: [
+        { id: 'c1', category: 'code', summary: 'Active finding summary', file: 'file.ts', anchor: null, status: 'active' },
+        { id: 'c2', category: 'code', summary: 'Closed finding summary', file: 'file.ts', anchor: null, status: 'closed' },
+        { id: 'c3', category: 'code', summary: 'Lesson finding summary', file: 'file.ts', anchor: null, status: 'lesson' },
+      ],
+    }];
+    const output = generateActiveIssuesMarkdown(entries);
+    expect(output).toContain('Active finding summary');
+    expect(output).not.toContain('Closed finding summary');
+    expect(output).not.toContain('Lesson finding summary');
+  });
+
+  it('includes findings without status for backward compat', () => {
+    const entries = [{
+      feature: 'Test',
+      completed_at: '2026-04-16T10:00:00Z',
+      findings: [
+        { id: 'c1', category: 'code', summary: 'No status finding', file: 'file.ts', anchor: null },
+      ],
+    }];
+    const output = generateActiveIssuesMarkdown(entries);
+    expect(output).toContain('No status finding');
+  });
+});
+
+// @ana A022, A023
+describe('extractScopeSummary', () => {
+  let tempDir: string;
+
+  beforeEach(async () => {
+    tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'scope-summary-test-'));
+  });
+
+  afterEach(async () => {
+    await fs.promises.rm(tempDir, { recursive: true, force: true });
+  });
+
+  it('extracts first paragraph from Intent section', () => {
+    const scopePath = path.join(tempDir, 'scope.md');
+    fs.writeFileSync(scopePath, '# Scope\n\n## Intent\nThis is the intent paragraph text.\n\n## Other section\n');
+    const result = extractScopeSummary(scopePath);
+    expect(result).toBe('This is the intent paragraph text.');
+  });
+
+  it('returns undefined when scope.md does not exist', () => {
+    const result = extractScopeSummary(path.join(tempDir, 'nonexistent.md'));
+    expect(result).toBeUndefined();
+  });
+
+  it('returns undefined when scope.md has no Intent section', () => {
+    const scopePath = path.join(tempDir, 'scope.md');
+    fs.writeFileSync(scopePath, '# Scope\n\n## Background\nSome background.\n');
+    const result = extractScopeSummary(scopePath);
+    expect(result).toBeUndefined();
+  });
+
+  it('returns undefined when Intent section is empty', () => {
+    const scopePath = path.join(tempDir, 'scope.md');
+    fs.writeFileSync(scopePath, '# Scope\n\n## Intent\n\n## Other section\n');
+    const result = extractScopeSummary(scopePath);
+    expect(result).toBeUndefined();
+  });
+});
+
+// @ana A025, A026, A027, A028
+describe('generateDashboard', () => {
+  it('contains summary line with run count and status counts', () => {
+    const entries = [{ slug: 'feat-1', feature: 'Feature 1', completed_at: '2026-04-01T00:00:00Z', findings: [] }];
+    const md = generateDashboard(entries, { runs: 1, active: 0, lessons: 0, promoted: 0, closed: 0 });
+    expect(md).toContain('# Proof Chain Dashboard');
+    expect(md).toContain('1 runs');
+    expect(md).toContain('0 active');
+  });
+
+  it('lists hot modules with 2+ entries', () => {
+    const entries = [
+      {
+        slug: 'feat-1', feature: 'Feature 1', completed_at: '2026-04-01T00:00:00Z',
+        findings: [{ id: 'c1', category: 'code', summary: 'Issue 1', file: 'src/foo.ts', anchor: null, status: 'active' }],
+      },
+      {
+        slug: 'feat-2', feature: 'Feature 2', completed_at: '2026-04-02T00:00:00Z',
+        findings: [{ id: 'c2', category: 'code', summary: 'Issue 2', file: 'src/foo.ts', anchor: null, status: 'active' }],
+      },
+    ];
+    const md = generateDashboard(entries, { runs: 2, active: 2, lessons: 0, promoted: 0, closed: 0 });
+    expect(md).toContain('## Hot Modules');
+    expect(md).toContain('src/foo.ts');
+  });
+
+  it('shows no hot modules when all files have only 1 entry', () => {
+    const entries = [{
+      slug: 'feat-1', feature: 'Feature 1', completed_at: '2026-04-01T00:00:00Z',
+      findings: [{ id: 'c1', category: 'code', summary: 'Issue', file: 'src/bar.ts', anchor: null, status: 'active' }],
+    }];
+    const md = generateDashboard(entries, { runs: 1, active: 1, lessons: 0, promoted: 0, closed: 0 });
+    expect(md).toContain('*No hot modules yet.*');
+  });
+
+  it('groups active findings by file with ### headings', () => {
+    const entries = [{
+      slug: 'feat-1', feature: 'Feature 1', completed_at: '2026-04-01T00:00:00Z',
+      findings: [
+        { id: 'c1', category: 'code', summary: 'Issue in foo', file: 'src/foo.ts', anchor: null, status: 'active' },
+        { id: 'c2', category: 'test', summary: 'Issue in bar', file: 'src/bar.ts', anchor: null, status: 'active' },
+      ],
+    }];
+    const md = generateDashboard(entries, { runs: 1, active: 2, lessons: 0, promoted: 0, closed: 0 });
+    expect(md).toContain('### src/bar.ts');
+    expect(md).toContain('### src/foo.ts');
+  });
+
+  it('caps active findings at 30', () => {
+    const findings = Array.from({ length: 35 }, (_, i) => ({
+      id: `c${i}`, category: 'code', summary: `Issue ${i}`, file: `file-${i}.ts`, anchor: null, status: 'active' as const,
+    }));
+    const entries = [{ slug: 'feat-1', feature: 'Feature 1', completed_at: '2026-04-01T00:00:00Z', findings }];
+    const md = generateDashboard(entries, { runs: 1, active: 35, lessons: 0, promoted: 0, closed: 0 });
+    expect(md).toContain('30 shown of 35 total');
+    const findingLines = md.split('\n').filter(l => l.startsWith('- **'));
+    expect(findingLines).toHaveLength(30);
+  });
+
+  it('contains promoted rules placeholder', () => {
+    const entries = [{ slug: 'f', feature: 'F', completed_at: '2026-04-01T00:00:00Z', findings: [] }];
+    const md = generateDashboard(entries, { runs: 1, active: 0, lessons: 0, promoted: 0, closed: 0 });
+    expect(md).toContain('## Promoted Rules');
+    expect(md).toContain('*No promoted rules yet.*');
+  });
+});
+
+// @ana A022
+describe('generateProofSummary scope_summary', () => {
+  let tempDir: string;
+  let slugDir: string;
+
+  beforeEach(async () => {
+    tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'proof-scope-test-'));
+    slugDir = path.join(tempDir, 'test-feature');
+    await fs.promises.mkdir(slugDir, { recursive: true });
+  });
+
+  afterEach(async () => {
+    await fs.promises.rm(tempDir, { recursive: true, force: true });
+  });
+
+  it('populates scope_summary from scope.md Intent section', () => {
+    fs.writeFileSync(path.join(slugDir, 'scope.md'), '# Scope\n\n## Intent\nIntent paragraph text.\n\n## Other\n');
+    fs.writeFileSync(path.join(slugDir, 'contract.yaml'), 'feature: "Test"\nassertions: []');
+    const summary = generateProofSummary(slugDir);
+    expect(summary.scope_summary).toBe('Intent paragraph text.');
+  });
+
+  it('returns undefined scope_summary when scope.md is missing', () => {
+    fs.writeFileSync(path.join(slugDir, 'contract.yaml'), 'feature: "Test"\nassertions: []');
+    const summary = generateProofSummary(slugDir);
+    expect(summary.scope_summary).toBeUndefined();
   });
 });
