@@ -1124,23 +1124,33 @@ Tests passed.
 });
 
 describe('resolveFindingPaths', () => {
+  let tempDir: string;
+
   const modules = [
     'packages/cli/src/engine/census.ts',
     'packages/cli/src/engine/scan-engine.ts',
     'packages/cli/src/utils/proofSummary.ts',
   ];
 
+  beforeEach(async () => {
+    tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'resolve-paths-test-'));
+  });
+
+  afterEach(async () => {
+    await fs.promises.rm(tempDir, { recursive: true, force: true });
+  });
+
   // @ana A001, A002, A007
   it('resolves single-match basename to full path', () => {
     const items = [{ file: 'census.ts' }];
-    resolveFindingPaths(items, modules);
+    resolveFindingPaths(items, modules, tempDir);
     expect(items[0]!.file).toBe('packages/cli/src/engine/census.ts');
   });
 
   // @ana A004
   it('keeps basename when no modules match', () => {
     const items = [{ file: 'unknown.ts' }];
-    resolveFindingPaths(items, modules);
+    resolveFindingPaths(items, modules, tempDir);
     expect(items[0]!.file).toBe('unknown.ts');
   });
 
@@ -1151,33 +1161,50 @@ describe('resolveFindingPaths', () => {
       'packages/cli/src/b/index.ts',
     ];
     const items = [{ file: 'index.ts' }];
-    resolveFindingPaths(items, dupeModules);
+    resolveFindingPaths(items, dupeModules, tempDir);
     expect(items[0]!.file).toBe('index.ts');
   });
 
-  // @ana A005
-  it('skips files already containing path separator', () => {
+  // @ana A013
+  it('skips resolution for files that exist at declared path', async () => {
+    await fs.promises.mkdir(path.join(tempDir, 'src', 'utils'), { recursive: true });
+    await fs.promises.writeFile(path.join(tempDir, 'src', 'utils', 'proofSummary.ts'), '');
+
     const items = [{ file: 'src/utils/proofSummary.ts' }];
-    resolveFindingPaths(items, modules);
+    resolveFindingPaths(items, modules, tempDir);
     expect(items[0]!.file).toBe('src/utils/proofSummary.ts');
+  });
+
+  // @ana A014
+  it('resolves files with slashes that do not exist at declared path', async () => {
+    // File has a slash but doesn't exist at the declared partial monorepo path
+    // It should enter resolution and match via modules_touched
+    const items = [{ file: 'src/utils/proofSummary.ts' }];
+    // tempDir has no such file, so existsSync fails → enters resolution
+    // But modules don't end with '/src/utils/proofSummary.ts' as a suffix match
+    // So it stays unresolved — the point is it ENTERS the chain
+    const modulesWith = ['packages/cli/src/utils/proofSummary.ts'];
+    resolveFindingPaths(items, modulesWith, tempDir);
+    // The suffix match: module.endsWith('/src/utils/proofSummary.ts') → true
+    expect(items[0]!.file).toBe('packages/cli/src/utils/proofSummary.ts');
   });
 
   it('skips null file fields', () => {
     const items = [{ file: null }];
-    resolveFindingPaths(items, modules);
+    resolveFindingPaths(items, modules, tempDir);
     expect(items[0]!.file).toBeNull();
   });
 
   // @ana A006
   it('resolves build concern file paths', () => {
     const concerns = [{ file: 'scan-engine.ts', summary: 'some concern' }];
-    resolveFindingPaths(concerns, modules);
+    resolveFindingPaths(concerns, modules, tempDir);
     expect(concerns[0]!.file).toBe('packages/cli/src/engine/scan-engine.ts');
   });
 
   it('handles empty modules_touched array', () => {
     const items = [{ file: 'census.ts' }];
-    resolveFindingPaths(items, []);
+    resolveFindingPaths(items, [], tempDir);
     expect(items[0]!.file).toBe('census.ts');
   });
 
@@ -1185,21 +1212,21 @@ describe('resolveFindingPaths', () => {
   it('uses path-boundary checking to prevent false matches', () => {
     const boundaryModules = ['packages/cli/src/subroute.ts'];
     const items = [{ file: 'route.ts' }];
-    resolveFindingPaths(items, boundaryModules);
+    resolveFindingPaths(items, boundaryModules, tempDir);
     expect(items[0]!.file).toBe('route.ts');
   });
 
+  // @ana A015
+  it('resolves single-match basename to full path via glob', async () => {
+    await fs.promises.mkdir(path.join(tempDir, 'packages', 'cli', 'src', 'engine'), { recursive: true });
+    await fs.promises.writeFile(path.join(tempDir, 'packages', 'cli', 'src', 'engine', 'census.ts'), '');
+
+    const items = [{ file: 'census.ts' }];
+    resolveFindingPaths(items, [], tempDir);
+    expect(items[0]!.file).toBe('packages/cli/src/engine/census.ts');
+  });
+
   describe('glob fallback', () => {
-    let tempDir: string;
-
-    beforeEach(async () => {
-      tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'finding-glob-test-'));
-    });
-
-    afterEach(async () => {
-      await fs.promises.rm(tempDir, { recursive: true, force: true });
-    });
-
     // @ana A014
     it('resolves basename via glob when modules_touched fails', async () => {
       await fs.promises.mkdir(path.join(tempDir, 'src', 'utils'), { recursive: true });
