@@ -18,7 +18,7 @@ assertions:
 
   # AC2 — Rename completeness
   - id: A003
-    says: "The old 'callouts' field name is completely removed from source code"
+    says: "The old 'callouts' field name is removed from TypeScript type definitions, variable names, and interface names. The parser regex matching ## Callouts in verify report markdown and test fixture strings containing that markdown heading are intentionally retained."
     block: "verifies complete rename"
     target: "source.callouts_references"
     matcher: "equals"
