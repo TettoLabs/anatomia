@@ -1,8 +1,4 @@
-# Active Issues (20 shown of 77 total)
-
-## .ana/PROOF_CHAIN.md
-
-- **upstream:** AC7 and AC8 are in tension: AC7 says "no agent definition references `.ana/PROOF_CHAIN.md` as a file to read" while AC8 requires a fallback that references it. The spec's gotcha resolves this ("exactly ONE `.ana/PROOF_CHAIN.md` literal string should... — *Replace PROOF_CHAIN.md reads with targeted proof context queries*
+# Active Issues (20 shown of 82 total)
 
 ## ana.json
 
@@ -14,16 +10,18 @@
 
 ## packages/cli/src/commands/work.ts
 
+- **code:** Defensive `|| []` on guaranteed field: `packages/cli/src/commands/work.ts:809` — `entry.build_concerns || []` is passed to `resolveCalloutPaths` even though `build_concerns` is set to `proof.build_concerns ?? []` two lines above (line 803). The `||... — *Clear the Deck Phase 2*
 - **code:** Inline return type instead of named interface: `work.ts:744` — `Promise<{ runs: number; callouts: number }>` is an anonymous object type. If other consumers ever need these counts (e.g., a JSON output mode for `work complete`), this shape would need... — *Proof chain health signal*
 - **test:** chalk.gray verified only by absence of failure: The spec requires `chalk.gray()` wrapping (constraint). The tests confirm the text content but not the styling — chalk strips ANSI in non-TTY. This is standard for CLI tests and not a gap per se, but... — *Proof chain health signal*
 
 ## packages/cli/src/utils/proofSummary.ts
 
-- **code:** Root-level module paths won't match: `proofSummary.ts:336` — `m.endsWith('/' + basename)` requires a `/` prefix. A module at the repository root (e.g., bare `census.ts` in `modules_touched`) wouldn't match. Dormant — `git diff` always produces paths... — *Proof context file query*
+- **code:** globSync has no performance guard: `packages/cli/src/utils/proofSummary.ts:345-349` — `globSync('/' + basename, { cwd: projectRoot, ... })` traverses the entire project tree synchronously for each unresolved basename. Called up to 4 times per... — *Clear the Deck Phase 2*
+- **code:** globSync exception if projectRoot is invalid: `packages/cli/src/utils/proofSummary.ts:345` — If `projectRoot` points to a non-existent directory, `globSync` will throw. The callers in `work.ts` pass `projectRoot` from `writeProofChain`'s parameter,... — *Clear the Deck Phase 2*
 
-## packages/cli/templates/.claude/agents/ana.md
+## packages/cli/templates/.claude/agents/ana-setup.md
 
-- **code:** Checkpoint wording deviates from spec prescription: `packages/cli/templates/.claude/agents/ana.md:119` — Spec said `"relevant proofs if asked"`, implementation says `"relevant proof chain findings if asked"`. The implementation wording is arguably... — *Replace PROOF_CHAIN.md reads with targeted proof context queries*
+- **upstream:** AC6 mentions "test patterns" but template omits them: The spec says "validation schemas and test patterns surfaced in Step 5 draft." The template at `packages/cli/templates/.claude/agents/ana-setup.md:261` says "Include validation patterns and auth... — *Clear the Deck Phase 2*
 
 ## packages/cli/tests/commands/artifact.test.ts
 
@@ -40,11 +38,6 @@
 ## packages/cli/tests/commands/work.test.ts
 
 - **code:** A008/A009 tag collision with prior feature: `work.test.ts:423` — Tags `@ana A008, A009` exist from a previous feature's contract (configurable branchPrefix). Pre-check tools that grep for `@ana A008` will find both. No functional impact today, but as... — *Proof chain health signal*
-
-## packages/cli/tests/templates/agent-proof-context.test.ts
-
-- **test:** A001/A004 use whole-file contains, weaker than section-specific extraction: `packages/cli/tests/templates/agent-proof-context.test.ts:14,43` — These tests would still pass if someone moved `ana proof context` to the wrong section of the file. The... — *Replace PROOF_CHAIN.md reads with targeted proof context queries*
-- **test:** A008 tests all 4 dogfood files in a single `it` block: `agent-proof-context.test.ts:67-75` — If the first file comparison fails, the loop short-circuits and the remaining 3 aren't checked. The error message includes the filename (`${file} dogfood... — *Replace PROOF_CHAIN.md reads with targeted proof context queries*
 
 ## src/commands/artifact.ts
 
@@ -64,11 +57,23 @@
 
 ## General
 
+- **test:** Template assertions rely on tag collision for coverage: Contract assertions A001-A007 target template content. Pre-check reports COVERED because `@ana A001` etc. tags exist in test files from OTHER features. No test in this build actually verifies... — *Clear the Deck Phase 2*
 - **upstream:** Pre-check tag collision across features: The `@ana` tag system uses non-unique IDs (A001, A002, ...) scoped per-contract. Pre-check searches ALL test files for matching IDs, meaning coverage from unrelated features can false-positive as COVERED. This... — *Clear the Deck — foundation fixes from proof chain audit*
 - **test:** No test exercises nonzero callout counts: Both test paths (single entry and existing chain) produce `0 callouts` because neither fixture includes callouts in the verify report or prior chain entry. A test with a fixture that has actual callouts would... — *Proof chain health signal*
 - **upstream:** Contract A008/A009 block names imply unit tests: Contract blocks "returns chain health counts" and "returns cumulative callout counts with existing chain" suggest direct unit assertions on the return value (`result.runs equals 1`). The builder used... — *Proof chain health signal*
 
 ---
+
+## Clear the Deck Phase 2 (2026-04-27)
+Result: PASS | 21/21 satisfied | 17/18 ACs | 0 deviations
+Pipeline: 31m (Think 8m, Plan 8m, Build 16m, Verify 7m)
+Modules: .claude/agents/ana-build.md, .claude/agents/ana-plan.md, .claude/agents/ana-setup.md, .claude/agents/ana-verify.md, .claude/agents/ana.md, packages/cli/src/commands/artifact.ts, packages/cli/src/commands/check.ts, packages/cli/src/commands/work.ts, packages/cli/src/types/proof.ts, packages/cli/src/utils/proofSummary.ts (+7 more)
+Callouts:
+- code: Defensive `|| []` on guaranteed field: `packages/cli/src/commands/work.ts:809` — `entry.build_concerns || []` is passed to `resolveCalloutPaths` even though `build_concerns` is set to `proof.build_concerns ?? []` two lines above (line 803). The `|| []` is dead code for the new entry path. For existing entries at line 814, `|| []` remains useful since chain data from JSON could theoretically lack the field despite backfill. Harmless but slightly misleading on line 809.
+- code: globSync has no performance guard: `packages/cli/src/utils/proofSummary.ts:345-349` — `globSync('/' + basename, { cwd: projectRoot, ... })` traverses the entire project tree synchronously for each unresolved basename. Called up to 4 times per `writeProofChain` invocation (2 for new entry, 2 for each existing entry). On large monorepos this could be slow. No timeout, no file count limit, no early termination. Currently harmless — callout counts are small — but worth noting if the proof chain grows to dozens of entries with unresolved basenames.
+- code: globSync exception if projectRoot is invalid: `packages/cli/src/utils/proofSummary.ts:345` — If `projectRoot` points to a non-existent directory, `globSync` will throw. The callers in `work.ts` pass `projectRoot` from `writeProofChain`'s parameter, which comes from `findProjectRoot()` — a validated path. But `resolveCalloutPaths` doesn't validate its own input. Consistent with the existing pattern (no defensive validation in utility functions), but worth knowing.
+- test: Template assertions rely on tag collision for coverage: Contract assertions A001-A007 target template content. Pre-check reports COVERED because `@ana A001` etc. tags exist in test files from OTHER features. No test in this build actually verifies template frontmatter values or template content. Templates are text-only, so manual verification (which I performed) is the correct approach, but the coverage signal is misleading.
+- upstream: AC6 mentions "test patterns" but template omits them: The spec says "validation schemas and test patterns surfaced in Step 5 draft." The template at `packages/cli/templates/.claude/agents/ana-setup.md:261` says "Include validation patterns and auth setup" — no mention of test patterns. The contract assertion (A006) only checks for "validation" so it passes, but the next spec for setup should consider whether test pattern surfacing belongs in the architecture draft.
 
 ## Clear the Deck — foundation fixes from proof chain audit (2026-04-27)
 Result: PASS | 28/28 satisfied | 16/16 ACs | 0 deviations
