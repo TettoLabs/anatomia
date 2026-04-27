@@ -70,7 +70,7 @@ export interface ProofSummary {
   callouts: Array<{ category: string; summary: string; file: string | null; anchor: string | null }>;
   rejection_cycles: number;
   previous_failures: Array<{ id: string; summary: string }>;
-  build_concerns?: Array<{ summary: string; file: string | null }>;
+  build_concerns: Array<{ summary: string; file: string | null }>;
 }
 
 /**
@@ -668,6 +668,7 @@ export function generateProofSummary(slugDir: string): ProofSummary {
     callouts: [],
     rejection_cycles: 0,
     previous_failures: [],
+    build_concerns: [],
   };
 
   // Source 1: .saves.json
@@ -807,7 +808,6 @@ export function generateProofSummary(slugDir: string): ProofSummary {
       summary.deviations.push(...parseDeviations(buildContent));
       const concerns = parseBuildOpenIssues(buildContent);
       if (concerns.length > 0) {
-        if (!summary.build_concerns) summary.build_concerns = [];
         summary.build_concerns.push(...concerns);
       }
     } catch {

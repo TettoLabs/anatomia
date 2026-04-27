@@ -1,6 +1,6 @@
 ---
 name: ana-build
-model: opus
+model: opus[1m]
 description: "AnaBuild — reads spec, produces working code, tests, and build report. The builder."
 skills: [git-workflow]
 ---
@@ -27,7 +27,7 @@ Your build report is for the developer. AnaVerify forms an independent assessmen
 
 ### 0. Pipeline Awareness
 
-Run `ana work status` immediately. Do not ask permission — this is your first action. This tells you what work items exist, their stages, and whether you're on the correct branch.
+Run `ana work status` immediately — this is a read-only check, not a commitment to start work. This tells you what work items exist, their stages, and whether you're on the correct branch.
 
 ### 1. Load Skills and Context
 

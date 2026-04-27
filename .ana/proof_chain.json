@@ -134,7 +134,8 @@
       },
       "seal_commit": "d9768360956896c440e3c69b5b9714832c291b03",
       "completed_at": "2026-04-06T02:01:46.601Z",
-      "callouts": []
+      "callouts": [],
+      "build_concerns": []
     },
     {
       "slug": "add-project-kind-detection",
@@ -419,7 +420,8 @@
         }
       ],
       "rejection_cycles": 0,
-      "previous_failures": []
+      "previous_failures": [],
+      "build_concerns": []
     },
     {
       "slug": "monorepo-primary-agents-md",
@@ -562,7 +564,8 @@
         }
       ],
       "rejection_cycles": 0,
-      "previous_failures": []
+      "previous_failures": [],
+      "build_concerns": []
     },
     {
       "slug": "find-project-root",
@@ -1124,7 +1127,8 @@
         }
       ],
       "rejection_cycles": 0,
-      "previous_failures": []
+      "previous_failures": [],
+      "build_concerns": []
     },
     {
       "slug": "add-readme-extraction",
@@ -2057,7 +2061,8 @@
       ],
       "callouts": [],
       "rejection_cycles": 0,
-      "previous_failures": []
+      "previous_failures": [],
+      "build_concerns": []
     },
     {
       "slug": "proof-context-query",
@@ -2441,7 +2446,8 @@
         }
       ],
       "rejection_cycles": 0,
-      "previous_failures": []
+      "previous_failures": [],
+      "build_concerns": []
     },
     {
       "slug": "proof-chain-health-signal",
@@ -2569,7 +2575,8 @@
         }
       ],
       "rejection_cycles": 0,
-      "previous_failures": []
+      "previous_failures": [],
+      "build_concerns": []
     },
     {
       "slug": "seal-hash-simplification",

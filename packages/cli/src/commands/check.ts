@@ -1312,7 +1312,8 @@ export async function validateSetupCompletion(cwd: string): Promise<SetupValidat
   // --- 4. Cross-reference (ana.json ↔ skill Detected) ---
   const anaJson = await readAnaJson(cwd);
   if (anaJson) {
-    const crossRefResults = await checkConsistency(cwd, anaJson, null);
+    const scanJson = await readScanJson(cwd);
+    const crossRefResults = await checkConsistency(cwd, anaJson, scanJson);
     for (const r of crossRefResults) {
       if (r.detail.startsWith('mismatch')) {
         warnings.push(`cross-reference: ${r.detail}`);

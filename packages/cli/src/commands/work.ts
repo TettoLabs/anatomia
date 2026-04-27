@@ -800,7 +800,7 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
     })),
     rejection_cycles: proof.rejection_cycles,
     previous_failures: proof.previous_failures,
-    ...(proof.build_concerns && proof.build_concerns.length > 0 ? { build_concerns: proof.build_concerns } : {}),
+    build_concerns: proof.build_concerns ?? [],
   };
 
   // Resolve callout/build_concern file fields from basenames to full paths.
