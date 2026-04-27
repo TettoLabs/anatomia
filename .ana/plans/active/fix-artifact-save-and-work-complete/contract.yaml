@@ -1,0 +1,148 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Fix artifact save bypass, cwd bug, and work complete crash recovery"
+
+assertions:
+  # INFRA-060: Save bypass
+  - id: A001
+    says: "Saving an artifact that was committed outside the pipeline still records its metadata"
+    block: "writes metadata when artifact was committed outside save"
+    target: "saves.build-report.saved_at"
+    matcher: "exists"
+
+  - id: A002
+    says: "Saving an artifact that was committed outside the pipeline captures which files were changed"
+    block: "writes metadata when artifact was committed outside save"
+    target: "saves.modules_touched"
+    matcher: "exists"
+
+  - id: A003
+    says: "Saving an artifact that was committed outside the pipeline produces a commit"
+    block: "writes metadata when artifact was committed outside save"
+    target: "commitCount"
+    matcher: "greater"
+    value: 0
+
+  - id: A004
+    says: "Saving the same artifact twice without changes does not create a spurious commit"
+    block: "exits with already up to date on unchanged re-save"
+    target: "commitCountAfterSecondSave"
+    matcher: "equals"
+    value: 0
+
+  - id: A005
+    says: "Metadata write is skipped when the artifact hash has not changed"
+    block: "writeSaveMetadata returns false when hash matches"
+    target: "writeResult"
+    matcher: "equals"
+    value: false
+
+  - id: A006
+    says: "Metadata timestamp is preserved when the artifact hash has not changed"
+    block: "writeSaveMetadata returns false when hash matches"
+    target: "savedAtUnchanged"
+    matcher: "truthy"
+
+  - id: A007
+    says: "Metadata write preserves existing entries like pre-check and modules_touched"
+    block: "writeSaveMetadata preserves existing entries"
+    target: "saves.pre-check"
+    matcher: "exists"
+
+  # INFRA-061: cwd
+  - id: A008
+    says: "Artifact save succeeds when run from a subdirectory"
+    block: "saveArtifact succeeds from subdirectory"
+    target: "success"
+    matcher: "truthy"
+
+  - id: A009
+    says: "Work complete succeeds when run from a subdirectory"
+    block: "completeWork succeeds from subdirectory"
+    target: "success"
+    matcher: "truthy"
+
+  # Completeness check
+  - id: A010
+    says: "Work complete blocks when build-report was never saved through the pipeline"
+    block: "blocks when build-report not saved"
+    target: "errorMessage"
+    matcher: "contains"
+    value: "build-report"
+
+  - id: A011
+    says: "Work complete blocks when verify-report was never saved through the pipeline"
+    block: "blocks when verify-report not saved"
+    target: "errorMessage"
+    matcher: "contains"
+    value: "verify-report"
+
+  - id: A012
+    says: "Work complete blocks when both reports are missing and names both"
+    block: "blocks when both reports not saved"
+    target: "errorMessage"
+    matcher: "contains"
+    value: "build-report"
+
+  - id: A013
+    says: "Work complete blocks when both reports are missing and names the verify-report too"
+    block: "blocks when both reports not saved"
+    target: "errorMessage"
+    matcher: "contains"
+    value: "verify-report"
+
+  - id: A014
+    says: "Work complete proceeds when both reports have valid save metadata"
+    block: "proceeds when saves metadata is complete"
+    target: "completed"
+    matcher: "truthy"
+
+  - id: A015
+    says: "The completeness check does not mutate any files when it fails"
+    block: "blocks when build-report not saved"
+    target: "activePathExists"
+    matcher: "truthy"
+
+  # INFRA-062: Recovery
+  - id: A016
+    says: "A failed work complete is automatically recovered on retry"
+    block: "recovers from failed completion"
+    target: "completed"
+    matcher: "truthy"
+
+  - id: A017
+    says: "Recovery commits the archived plan and proof chain"
+    block: "recovers from failed completion"
+    target: "commitIncludes"
+    matcher: "contains"
+    value: "Complete"
+
+  - id: A018
+    says: "A genuinely completed work item is reported as already completed"
+    block: "reports already completed when fully committed"
+    target: "alreadyCompleted"
+    matcher: "truthy"
+
+  - id: A019
+    says: "Double recovery works when the first recovery also fails"
+    block: "double recovery succeeds"
+    target: "completed"
+    matcher: "truthy"
+
+  # AC8: Error message includes retry guidance
+  - id: A020
+    says: "Main-path commit failure tells the user how to retry"
+    block: "commit failure error includes retry command"
+    target: "errorMessage"
+    matcher: "contains"
+    value: "ana work complete"
+
+file_changes:
+  - path: "packages/cli/src/commands/artifact.ts"
+    action: modify
+  - path: "packages/cli/src/commands/work.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/artifact.test.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/work.test.ts"
+    action: modify
