@@ -4,12 +4,12 @@ import * as path from 'node:path';
 import * as os from 'node:os';
 import {
   generateProofSummary,
-  parseCallouts,
+  parseFindings,
   parseRejectionCycles,
   extractFileRefs,
   generateActiveIssuesMarkdown,
   parseBuildOpenIssues,
-  resolveCalloutPaths,
+  resolveFindingPaths,
   getProofContext,
 } from '../../src/utils/proofSummary.js';
 
@@ -326,8 +326,8 @@ file_changes:
 });
 
 // @ana A010, A012
-describe('parseCallouts', () => {
-  it('parses bulleted callouts with em-dash format', () => {
+describe('parseFindings', () => {
+  it('parses bulleted findings with em-dash format', () => {
     const content = `## Callouts
 
 - **Code — Dead logic in full-stack check:** \`projectKind.ts:105\` — BROWSER_FRAMEWORKS.has(d) will never match because dep names are lowercase.
@@ -338,66 +338,66 @@ describe('parseCallouts', () => {
 
 ## Deployer Handoff
 `;
-    const callouts = parseCallouts(content);
-    expect(callouts).toHaveLength(3);
-    expect(callouts[0]!.category).toBe('code');
-    expect(callouts[0]!.summary).toContain('Dead logic in full-stack check');
-    expect(callouts[0]!.file).toBe('projectKind.ts');
-    expect(callouts[1]!.category).toBe('test');
-    expect(callouts[1]!.summary).toContain('A003 purity test');
-    expect(callouts[1]!.file).toBe('projectKind.test.ts');
-    expect(callouts[2]!.category).toBe('upstream');
-    expect(callouts[2]!.summary).toContain('Pre-check tag collision');
-    expect(callouts[2]!.file).toBe('proof.test.ts');
+    const findings = parseFindings(content);
+    expect(findings).toHaveLength(3);
+    expect(findings[0]!.category).toBe('code');
+    expect(findings[0]!.summary).toContain('Dead logic in full-stack check');
+    expect(findings[0]!.file).toBe('projectKind.ts');
+    expect(findings[1]!.category).toBe('test');
+    expect(findings[1]!.summary).toContain('A003 purity test');
+    expect(findings[1]!.file).toBe('projectKind.test.ts');
+    expect(findings[2]!.category).toBe('upstream');
+    expect(findings[2]!.summary).toContain('Pre-check tag collision');
+    expect(findings[2]!.file).toBe('proof.test.ts');
   });
 
-  it('parses numbered callouts', () => {
+  it('parses numbered findings', () => {
     const content = `## Callouts
 
 1. **Code — Unused export:** ProjectKindResult exported but never imported.
 
 2. **Test — Missing priority test:** No test for bin-over-framework priority.
 `;
-    const callouts = parseCallouts(content);
-    expect(callouts).toHaveLength(2);
-    expect(callouts[0]!.category).toBe('code');
-    expect(callouts[0]!.file).toBeNull();
-    expect(callouts[1]!.category).toBe('test');
-    expect(callouts[1]!.file).toBeNull();
+    const findings = parseFindings(content);
+    expect(findings).toHaveLength(2);
+    expect(findings[0]!.category).toBe('code');
+    expect(findings[0]!.file).toBeNull();
+    expect(findings[1]!.category).toBe('test');
+    expect(findings[1]!.file).toBeNull();
   });
 
-  it('parses callouts with colon-only format (no em-dash)', () => {
+  it('parses findings with colon-only format (no em-dash)', () => {
     const content = `## Callouts
 
 - **Code:** slug truncation at 24 chars misaligns table columns for long slugs.
 
 - **Test:** duplicate @ana tag IDs across list and detail test sections.
 `;
-    const callouts = parseCallouts(content);
-    expect(callouts).toHaveLength(2);
-    expect(callouts[0]!.category).toBe('code');
-    expect(callouts[0]!.summary).toContain('slug truncation');
-    expect(callouts[0]!.file).toBeNull();
-    expect(callouts[1]!.category).toBe('test');
-    expect(callouts[1]!.file).toBeNull();
+    const findings = parseFindings(content);
+    expect(findings).toHaveLength(2);
+    expect(findings[0]!.category).toBe('code');
+    expect(findings[0]!.summary).toContain('slug truncation');
+    expect(findings[0]!.file).toBeNull();
+    expect(findings[1]!.category).toBe('test');
+    expect(findings[1]!.file).toBeNull();
   });
 
-  it('returns empty array when no Callouts section', () => {
+  it('returns empty array when no Callouts section in verify report', () => {
     const content = `## Independent Findings
 Some findings here.
 
 ## AC Walkthrough
 Some ACs here.
 `;
-    expect(parseCallouts(content)).toHaveLength(0);
+    expect(parseFindings(content)).toHaveLength(0);
   });
 
-  it('returns empty array when Callouts section has no parseable entries', () => {
+  it('returns empty array when Callouts section in verify report has no parseable entries', () => {
     const content = `## Callouts
 
-Just some plain text with no structured callouts.
+Just some plain text with no structured findings.
 `;
-    expect(parseCallouts(content)).toHaveLength(0);
+    expect(parseFindings(content)).toHaveLength(0);
   });
 
   it('caps summary at 1000 characters', () => {
@@ -406,9 +406,9 @@ Just some plain text with no structured callouts.
 
 - **Code — Long one:** ${longDesc}
 `;
-    const callouts = parseCallouts(content);
-    expect(callouts).toHaveLength(1);
-    expect(callouts[0]!.summary.length).toBeLessThanOrEqual(1000);
+    const findings = parseFindings(content);
+    expect(findings).toHaveLength(1);
+    expect(findings[0]!.summary.length).toBeLessThanOrEqual(1000);
   });
 
   it('extracts code anchor from backtick-quoted construct', () => {
@@ -416,9 +416,9 @@ Just some plain text with no structured callouts.
 
 - **Code — Non-recursive check:** \`readdirSync(prismaDir)\` only checks top-level entries in the directory.
 `;
-    const callouts = parseCallouts(content);
-    expect(callouts).toHaveLength(1);
-    expect(callouts[0]!.anchor).toBe('readdirSync(prismaDir)');
+    const findings = parseFindings(content);
+    expect(findings).toHaveLength(1);
+    expect(findings[0]!.anchor).toBe('readdirSync(prismaDir)');
   });
 
   it('returns null anchor when no suitable backtick content', () => {
@@ -426,9 +426,9 @@ Just some plain text with no structured callouts.
 
 - **Upstream — Spec deviation:** The spec suggested a different approach but implementation is better.
 `;
-    const callouts = parseCallouts(content);
-    expect(callouts).toHaveLength(1);
-    expect(callouts[0]!.anchor).toBeNull();
+    const findings = parseFindings(content);
+    expect(findings).toHaveLength(1);
+    expect(findings[0]!.anchor).toBeNull();
   });
 
   it('skips file:line references as anchors', () => {
@@ -436,13 +436,13 @@ Just some plain text with no structured callouts.
 
 - **Code — Issue at location:** \`census.ts:219\` has a problem. The real code is \`readdirSync(prismaDir)\`.
 `;
-    const callouts = parseCallouts(content);
-    expect(callouts).toHaveLength(1);
+    const findings = parseFindings(content);
+    expect(findings).toHaveLength(1);
     // Should skip census.ts:219 (file:line ref) and use readdirSync(prismaDir)
-    expect(callouts[0]!.anchor).toBe('readdirSync(prismaDir)');
+    expect(findings[0]!.anchor).toBe('readdirSync(prismaDir)');
   });
 
-  it('handles multi-line callout descriptions', () => {
+  it('handles multi-line finding descriptions', () => {
     const content = `## Callouts
 
 - **Code — Multi-line issue:** First line of description
@@ -451,12 +451,12 @@ Just some plain text with no structured callouts.
 
 - **Test — Next entry:** Should be separate.
 `;
-    const callouts = parseCallouts(content);
-    expect(callouts).toHaveLength(2);
-    expect(callouts[0]!.summary).toContain('continues on second line');
-    expect(callouts[0]!.file).toBeNull();
-    expect(callouts[1]!.summary).toContain('Next entry');
-    expect(callouts[1]!.file).toBeNull();
+    const findings = parseFindings(content);
+    expect(findings).toHaveLength(2);
+    expect(findings[0]!.summary).toContain('continues on second line');
+    expect(findings[0]!.file).toBeNull();
+    expect(findings[1]!.summary).toContain('Next entry');
+    expect(findings[1]!.file).toBeNull();
   });
 
   it('parses category-header format with sub-bullets (add-hook-detection style)', () => {
@@ -475,19 +475,19 @@ Just some plain text with no structured callouts.
 
 ## Deployer Handoff
 `;
-    const callouts = parseCallouts(content);
-    expect(callouts.length).toBeGreaterThanOrEqual(4);
+    const findings = parseFindings(content);
+    expect(findings.length).toBeGreaterThanOrEqual(4);
 
-    const codeCallouts = callouts.filter(c => c.category === 'code');
-    expect(codeCallouts.length).toBeGreaterThanOrEqual(2);
-    expect(codeCallouts[0]!.summary).toContain('Component file heuristic');
-    expect(codeCallouts[0]!.file).toBe('confirmation.ts');
+    const codeFindings = findings.filter(c => c.category === 'code');
+    expect(codeFindings.length).toBeGreaterThanOrEqual(2);
+    expect(codeFindings[0]!.summary).toContain('Component file heuristic');
+    expect(codeFindings[0]!.file).toBe('confirmation.ts');
 
-    const testCallouts = callouts.filter(c => c.category === 'test');
-    expect(testCallouts.length).toBeGreaterThanOrEqual(1);
+    const testFindings = findings.filter(c => c.category === 'test');
+    expect(testFindings.length).toBeGreaterThanOrEqual(1);
 
-    const upstreamCallouts = callouts.filter(c => c.category === 'upstream');
-    expect(upstreamCallouts.length).toBeGreaterThanOrEqual(1);
+    const upstreamFindings = findings.filter(c => c.category === 'upstream');
+    expect(upstreamFindings.length).toBeGreaterThanOrEqual(1);
   });
 
   it('parses standalone paragraph format (fix-skill-template-gaps style)', () => {
@@ -501,15 +501,15 @@ Just some plain text with no structured callouts.
 
 ## Deployer Handoff
 `;
-    const callouts = parseCallouts(content);
-    expect(callouts).toHaveLength(3);
-    expect(callouts[0]!.category).toBe('upstream');
-    expect(callouts[0]!.summary).toContain('A007');
-    expect(callouts[0]!.file).toBeNull();
-    expect(callouts[1]!.category).toBe('code');
-    expect(callouts[1]!.file).toBeNull();
-    expect(callouts[2]!.category).toBe('test');
-    expect(callouts[2]!.file).toBeNull();
+    const findings = parseFindings(content);
+    expect(findings).toHaveLength(3);
+    expect(findings[0]!.category).toBe('upstream');
+    expect(findings[0]!.summary).toContain('A007');
+    expect(findings[0]!.file).toBeNull();
+    expect(findings[1]!.category).toBe('code');
+    expect(findings[1]!.file).toBeNull();
+    expect(findings[2]!.category).toBe('test');
+    expect(findings[2]!.file).toBeNull();
   });
 
   // @ana A001
@@ -518,9 +518,9 @@ Just some plain text with no structured callouts.
 
 - **Code — Dead logic in full-stack check:** \`projectKind.ts:105\` — BROWSER_FRAMEWORKS.has(d) will never match.
 `;
-    const callouts = parseCallouts(content);
-    expect(callouts).toHaveLength(1);
-    expect(callouts[0]!.file).toBe('projectKind.ts');
+    const findings = parseFindings(content);
+    expect(findings).toHaveLength(1);
+    expect(findings[0]!.file).toBe('projectKind.ts');
   });
 
   // @ana A002
@@ -529,9 +529,9 @@ Just some plain text with no structured callouts.
 
 - **Upstream — Contract assertion sealed with incorrect value:** The planner miscounted the total assertions.
 `;
-    const callouts = parseCallouts(content);
-    expect(callouts).toHaveLength(1);
-    expect(callouts[0]!.file).toBeNull();
+    const findings = parseFindings(content);
+    expect(findings).toHaveLength(1);
+    expect(findings[0]!.file).toBeNull();
   });
 
   // @ana A003
@@ -540,9 +540,9 @@ Just some plain text with no structured callouts.
 
 - **Code — Cross-file issue:** fileA.ts:10 and fileB.ts:20 both have the same problem.
 `;
-    const callouts = parseCallouts(content);
-    expect(callouts).toHaveLength(1);
-    expect(callouts[0]!.file).toBe('fileA.ts');
+    const findings = parseFindings(content);
+    expect(findings).toHaveLength(1);
+    expect(findings[0]!.file).toBe('fileA.ts');
   });
 
   it('accepts non-standard categories like Security or Performance', () => {
@@ -553,12 +553,12 @@ Just some plain text with no structured callouts.
 
 ## Deployer Handoff
 `;
-    const callouts = parseCallouts(content);
-    expect(callouts).toHaveLength(2);
-    expect(callouts[0]!.category).toBe('security');
-    expect(callouts[0]!.file).toBe('db/queries.ts');
-    expect(callouts[1]!.category).toBe('performance');
-    expect(callouts[1]!.file).toBe('api/users.ts');
+    const findings = parseFindings(content);
+    expect(findings).toHaveLength(2);
+    expect(findings[0]!.category).toBe('security');
+    expect(findings[0]!.file).toBe('db/queries.ts');
+    expect(findings[1]!.category).toBe('performance');
+    expect(findings[1]!.file).toBe('api/users.ts');
   });
 });
 
@@ -664,7 +664,7 @@ describe('extractFileRefs', () => {
 
   // @ana A005
   it('returns empty array when no refs found', () => {
-    const result = extractFileRefs('No file references in this callout');
+    const result = extractFileRefs('No file references in this finding');
     expect(result.length).toBe(0);
   });
 
@@ -741,15 +741,15 @@ describe('extractFileRefs', () => {
 // @ana A011
 describe('generateActiveIssuesMarkdown', () => {
   // @ana A007
-  it('generateActiveIssuesMarkdown uses callout.file not extractFileRefs', () => {
-    // Source-level verification: the renderer reads callout.file directly.
-    // If it still called extractFileRefs, a callout with file=null but a file ref
+  it('generateActiveIssuesMarkdown uses finding.file not extractFileRefs', () => {
+    // Source-level verification: the renderer reads finding.file directly.
+    // If it still called extractFileRefs, a finding with file=null but a file ref
     // in the summary would be grouped under the file, not General.
     const entries = [
       {
         feature: 'Test',
         completed_at: '2026-04-16T10:00:00Z',
-        callouts: [
+        findings: [
           { id: 'test-C1', category: 'code', summary: 'Issue mentions test.ts:42 in text', file: null, anchor: null },
         ],
       },
@@ -761,28 +761,28 @@ describe('generateActiveIssuesMarkdown', () => {
   });
 
   // @ana A004
-  it('callout type includes file field', () => {
+  it('finding type includes file field', () => {
     const entries = [
       {
         feature: 'Test',
         completed_at: '2026-04-16T10:00:00Z',
-        callouts: [
+        findings: [
           { id: 'test-C2', category: 'code', summary: 'Issue in test.ts', file: 'test.ts', anchor: null },
         ],
       },
     ];
     const output = generateActiveIssuesMarkdown(entries);
-    // The function accepts callouts with file — type-level proof
+    // The function accepts findings with file — type-level proof
     expect(output).toContain('test.ts');
   });
 
   // @ana A005, A007
-  it('groups callouts by extracted file ref', () => {
+  it('groups findings by extracted file ref', () => {
     const entries = [
       {
         feature: 'Project kind detection',
         completed_at: '2026-04-16T10:00:00Z',
-        callouts: [
+        findings: [
           { id: 'test-C3', category: 'code', summary: 'Dead logic in projectKind.ts:105', file: 'projectKind.ts', anchor: null },
         ],
       },
@@ -792,12 +792,12 @@ describe('generateActiveIssuesMarkdown', () => {
   });
 
   // @ana A006, A008
-  it('places callouts without refs under General', () => {
+  it('places findings without refs under General', () => {
     const entries = [
       {
         feature: 'Some feature',
         completed_at: '2026-04-16T10:00:00Z',
-        callouts: [
+        findings: [
           { id: 'test-C4', category: 'upstream', summary: 'Pre-check tag collision across features', file: null, anchor: null },
         ],
       },
@@ -807,30 +807,30 @@ describe('generateActiveIssuesMarkdown', () => {
   });
 
   // @ana A009, A013
-  it('respects 20-callout cap', () => {
-    // Create 25 callouts across entries
+  it('respects 20-finding cap', () => {
+    // Create 25 findings across entries
     const entries = [];
     for (let i = 0; i < 25; i++) {
       entries.push({
         feature: `Feature ${i}`,
         completed_at: `2026-04-${String(i + 1).padStart(2, '0')}T10:00:00Z`,
-        callouts: [{ id: `test-C${i}`, category: 'code', summary: `Issue ${i} in file${i}.ts`, file: `file${i}.ts`, anchor: null }],
+        findings: [{ id: `test-C${i}`, category: 'code', summary: `Issue ${i} in file${i}.ts`, file: `file${i}.ts`, anchor: null }],
       });
     }
     const output = generateActiveIssuesMarkdown(entries);
-    // Count unique callout entries (lines starting with "- **")
-    const calloutLines = output.split('\n').filter(line => line.startsWith('- **'));
-    const calloutCount = calloutLines.length;
-    expect(calloutCount).toBe(20);
+    // Count unique finding entries (lines starting with "- **")
+    const findingLines = output.split('\n').filter(line => line.startsWith('- **'));
+    const findingCount = findingLines.length;
+    expect(findingCount).toBe(20);
   });
 
   // @ana A010
-  it('returns empty-state message when no callouts', () => {
+  it('returns empty-state message when no findings', () => {
     const entries = [
       {
         feature: 'Clean feature',
         completed_at: '2026-04-16T10:00:00Z',
-        callouts: [],
+        findings: [],
       },
     ];
     const output = generateActiveIssuesMarkdown(entries);
@@ -843,7 +843,7 @@ describe('generateActiveIssuesMarkdown', () => {
       {
         feature: 'Project kind detection',
         completed_at: '2026-04-16T10:00:00Z',
-        callouts: [
+        findings: [
           { id: 'test-C6', category: 'code', summary: 'Some issue in test.ts', file: 'test.ts', anchor: null },
         ],
       },
@@ -858,7 +858,7 @@ describe('generateActiveIssuesMarkdown', () => {
       {
         feature: 'Test',
         completed_at: '2026-04-16T10:00:00Z',
-        callouts: [{ id: 'test-C7', category: 'code', summary: 'Issue in test.ts', file: 'test.ts', anchor: null }],
+        findings: [{ id: 'test-C7', category: 'code', summary: 'Issue in test.ts', file: 'test.ts', anchor: null }],
       },
     ];
     const output = generateActiveIssuesMarkdown(entries);
@@ -872,7 +872,7 @@ describe('generateActiveIssuesMarkdown', () => {
       {
         feature: 'Test',
         completed_at: '2026-04-16T10:00:00Z',
-        callouts: [{ id: 'test-C8', category: 'code', summary: 'Issue in test.ts', file: 'test.ts', anchor: null }],
+        findings: [{ id: 'test-C8', category: 'code', summary: 'Issue in test.ts', file: 'test.ts', anchor: null }],
       },
     ];
     const output = generateActiveIssuesMarkdown(entries);
@@ -880,33 +880,33 @@ describe('generateActiveIssuesMarkdown', () => {
   });
 
   // @ana A014
-  it('deduplicates callouts referencing multiple files — assigns to first file only', () => {
+  it('deduplicates findings referencing multiple files — assigns to first file only', () => {
     const entries = [
       {
         feature: 'Cross-file issue',
         completed_at: '2026-04-16T10:00:00Z',
-        callouts: [
+        findings: [
           { id: 'test-C9', category: 'code', summary: 'Issue spans fileA.ts:10 and fileB.ts:20', file: 'fileA.ts', anchor: null },
         ],
       },
     ];
     const output = generateActiveIssuesMarkdown(entries);
-    // Callout appears once under the first file (fileA.ts), not duplicated under fileB.ts
+    // Finding appears once under the first file (fileA.ts), not duplicated under fileB.ts
     const occurrences = (output.match(/Issue spans fileA\.ts/g) || []).length;
     expect(occurrences).toBe(1);
     // The heading for fileA.ts exists
     expect(output).toContain('## fileA.ts');
     // fileB.ts is mentioned in the summary text (cross-reference) but not as a separate heading
-    // unless other callouts specifically reference it
+    // unless other findings specifically reference it
   });
 
   // @ana A015
-  it('callout entry includes category', () => {
+  it('finding entry includes category', () => {
     const entries = [
       {
         feature: 'Test',
         completed_at: '2026-04-16T10:00:00Z',
-        callouts: [{ id: 'test-C10', category: 'code', summary: 'Issue in test.ts', file: 'test.ts', anchor: null }],
+        findings: [{ id: 'test-C10', category: 'code', summary: 'Issue in test.ts', file: 'test.ts', anchor: null }],
       },
     ];
     const output = generateActiveIssuesMarkdown(entries);
@@ -920,14 +920,14 @@ describe('generateActiveIssuesMarkdown', () => {
       {
         feature: 'Test',
         completed_at: '2026-04-16T10:00:00Z',
-        callouts: [{ id: 'test-C11', category: 'code', summary: longSummary, file: 'test.ts', anchor: null }],
+        findings: [{ id: 'test-C11', category: 'code', summary: longSummary, file: 'test.ts', anchor: null }],
       },
     ];
     const output = generateActiveIssuesMarkdown(entries);
-    const calloutLine = output.split('\n').find(line => line.startsWith('- **code:**'));
-    expect(calloutLine).toContain('...');
+    const findingLine = output.split('\n').find(line => line.startsWith('- **code:**'));
+    expect(findingLine).toContain('...');
     // No spaces in the x-repeat, so falls back to hard cut at 250 + ...
-    const summaryMatch = calloutLine?.match(/\*\*code:\*\* (.+?) — \*/);
+    const summaryMatch = findingLine?.match(/\*\*code:\*\* (.+?) — \*/);
     expect(summaryMatch?.[1]?.endsWith('...')).toBe(true);
   });
 
@@ -937,7 +937,7 @@ describe('generateActiveIssuesMarkdown', () => {
       {
         feature: 'Test',
         completed_at: '2026-04-16T10:00:00Z',
-        callouts: [
+        findings: [
           { id: 'test-C12', category: 'code', summary: 'Issue in zebra.ts', file: 'zebra.ts', anchor: null },
           { id: 'test-C13', category: 'code', summary: 'Issue in alpha.ts', file: 'alpha.ts', anchor: null },
           { id: 'test-C14', category: 'upstream', summary: 'General issue without file ref', file: null, anchor: null },
@@ -952,7 +952,7 @@ describe('generateActiveIssuesMarkdown', () => {
     expect(zebraPos).toBeLessThan(generalPos);
   });
 
-  it('takes most recent callouts when capping at 20', () => {
+  it('takes most recent findings when capping at 20', () => {
     // Create entries: older entries have "old" in summary, newer have "new"
     const entries = [];
     // Add 15 old entries first (these will be at start of array = oldest)
@@ -960,7 +960,7 @@ describe('generateActiveIssuesMarkdown', () => {
       entries.push({
         feature: `Old Feature ${i}`,
         completed_at: `2026-01-${String(i + 1).padStart(2, '0')}T10:00:00Z`,
-        callouts: [{ id: 'test-C15', category: 'code', summary: `old-issue-${i} in file.ts`, file: 'file.ts', anchor: null }],
+        findings: [{ id: 'test-C15', category: 'code', summary: `old-issue-${i} in file.ts`, file: 'file.ts', anchor: null }],
       });
     }
     // Add 10 new entries (at end of array = newest)
@@ -968,7 +968,7 @@ describe('generateActiveIssuesMarkdown', () => {
       entries.push({
         feature: `New Feature ${i}`,
         completed_at: `2026-04-${String(i + 1).padStart(2, '0')}T10:00:00Z`,
-        callouts: [{ id: 'test-C16', category: 'code', summary: `new-issue-${i} in file.ts`, file: 'file.ts', anchor: null }],
+        findings: [{ id: 'test-C16', category: 'code', summary: `new-issue-${i} in file.ts`, file: 'file.ts', anchor: null }],
       });
     }
     const output = generateActiveIssuesMarkdown(entries);
@@ -987,7 +987,7 @@ describe('generateActiveIssuesMarkdown', () => {
     const entries = [{
       feature: 'Test',
       completed_at: '2026-04-17T00:00:00Z',
-      callouts: [
+      findings: [
         { id: 'test-C17', category: 'code', summary: 'issue one in foo.ts', file: 'foo.ts', anchor: null },
         { id: 'test-C18', category: 'test', summary: 'issue two in bar.ts', file: 'bar.ts', anchor: null },
         { id: 'test-C19', category: 'code', summary: 'issue three in baz.ts', file: 'baz.ts', anchor: null },
@@ -998,32 +998,32 @@ describe('generateActiveIssuesMarkdown', () => {
     expect(md).not.toContain('shown of');
   });
 
-  it('heading shows cap info when over 20 callouts', () => {
-    const callouts = Array.from({ length: 25 }, (_, i) => ({ id: `test-C${i}`, category: 'code', summary: `issue number ${i + 1} in unique-file-${i}.ts`, file: `unique-file-${i}.ts`, anchor: null,
+  it('heading shows cap info when over 20 findings', () => {
+    const findings = Array.from({ length: 25 }, (_, i) => ({ id: `test-C${i}`, category: 'code', summary: `issue number ${i + 1} in unique-file-${i}.ts`, file: `unique-file-${i}.ts`, anchor: null,
     }));
     const entries = [{
       feature: 'Big Feature',
       completed_at: '2026-04-17T00:00:00Z',
-      callouts,
+      findings,
     }];
     const md = generateActiveIssuesMarkdown(entries);
     expect(md).toContain('20 shown of');
     expect(md).toContain('total)');
   });
 
-  it('heading has no count for zero callouts', () => {
+  it('heading has no count for zero findings', () => {
     const md = generateActiveIssuesMarkdown([]);
     expect(md).toContain('# Active Issues');
     expect(md).not.toMatch(/# Active Issues \(/);
   });
 
   it('heading shows exact count at cap boundary', () => {
-    const callouts = Array.from({ length: 20 }, (_, i) => ({ id: `test-C${i}`, category: 'code', summary: `issue ${i + 1} in file-${i}.ts`, file: `file-${i}.ts`, anchor: null,
+    const findings = Array.from({ length: 20 }, (_, i) => ({ id: `test-C${i}`, category: 'code', summary: `issue ${i + 1} in file-${i}.ts`, file: `file-${i}.ts`, anchor: null,
     }));
     const entries = [{
       feature: 'Feature',
       completed_at: '2026-04-17T00:00:00Z',
-      callouts,
+      findings,
     }];
     const md = generateActiveIssuesMarkdown(entries);
     expect(md).toMatch(/# Active Issues \(20\)/);
@@ -1031,19 +1031,19 @@ describe('generateActiveIssuesMarkdown', () => {
   });
 
   it('truncates at word boundary with ellipsis', () => {
-    const longSummary = 'This is a long callout summary that exceeds two hundred and fifty characters and should be truncated cleanly at a word boundary. The observation continues with more detail about the specific code pattern that was identified during verification. It mentions several files and concerns that the verifier noticed during the independent review somewhere around here';
+    const longSummary = 'This is a long finding summary that exceeds two hundred and fifty characters and should be truncated cleanly at a word boundary. The observation continues with more detail about the specific code pattern that was identified during verification. It mentions several files and concerns that the verifier noticed during the independent review somewhere around here';
     const entries = [{
       feature: 'Test',
       completed_at: '2026-04-17T00:00:00Z',
-      callouts: [{ id: 'test-C22', category: 'code', summary: longSummary, file: null, anchor: null }],
+      findings: [{ id: 'test-C22', category: 'code', summary: longSummary, file: null, anchor: null }],
     }];
     const md = generateActiveIssuesMarkdown(entries);
     expect(md).toContain('...');
     // The summary in the markdown should NOT contain the full text
     expect(md).not.toContain('somewhere around here');
     // Should cut at a space — the text before ... should end with a complete word
-    const calloutLine = md.split('\n').find(l => l.includes('...'))!;
-    const beforeEllipsis = calloutLine.split('...')[0]!;
+    const findingLine = md.split('\n').find(l => l.includes('...'))!;
+    const beforeEllipsis = findingLine.split('...')[0]!;
     expect(beforeEllipsis.endsWith(' ') || /\w$/.test(beforeEllipsis)).toBe(true);
   });
 
@@ -1052,13 +1052,13 @@ describe('generateActiveIssuesMarkdown', () => {
     const entries = [{
       feature: 'Test',
       completed_at: '2026-04-17T00:00:00Z',
-      callouts: [{ id: 'test-C23', category: 'code', summary: noSpaceSummary, file: 'packages/cli/src/engine/analyzers/patterns/confirmation.ts', anchor: null }],
+      findings: [{ id: 'test-C23', category: 'code', summary: noSpaceSummary, file: 'packages/cli/src/engine/analyzers/patterns/confirmation.ts', anchor: null }],
     }];
     const md = generateActiveIssuesMarkdown(entries);
     expect(md).toContain('...');
     // Should not be empty — falls back to 250 chars
-    const calloutLine = md.split('\n').find(l => l.includes('...'))!;
-    expect(calloutLine.length).toBeGreaterThan(10);
+    const findingLine = md.split('\n').find(l => l.includes('...'))!;
+    expect(findingLine.length).toBeGreaterThan(10);
   });
 });
 
@@ -1121,7 +1121,7 @@ Tests passed.
   });
 });
 
-describe('resolveCalloutPaths', () => {
+describe('resolveFindingPaths', () => {
   const modules = [
     'packages/cli/src/engine/census.ts',
     'packages/cli/src/engine/scan-engine.ts',
@@ -1131,14 +1131,14 @@ describe('resolveCalloutPaths', () => {
   // @ana A001, A002, A007
   it('resolves single-match basename to full path', () => {
     const items = [{ file: 'census.ts' }];
-    resolveCalloutPaths(items, modules);
+    resolveFindingPaths(items, modules);
     expect(items[0]!.file).toBe('packages/cli/src/engine/census.ts');
   });
 
   // @ana A004
   it('keeps basename when no modules match', () => {
     const items = [{ file: 'unknown.ts' }];
-    resolveCalloutPaths(items, modules);
+    resolveFindingPaths(items, modules);
     expect(items[0]!.file).toBe('unknown.ts');
   });
 
@@ -1149,33 +1149,33 @@ describe('resolveCalloutPaths', () => {
       'packages/cli/src/b/index.ts',
     ];
     const items = [{ file: 'index.ts' }];
-    resolveCalloutPaths(items, dupeModules);
+    resolveFindingPaths(items, dupeModules);
     expect(items[0]!.file).toBe('index.ts');
   });
 
   // @ana A005
   it('skips files already containing path separator', () => {
     const items = [{ file: 'src/utils/proofSummary.ts' }];
-    resolveCalloutPaths(items, modules);
+    resolveFindingPaths(items, modules);
     expect(items[0]!.file).toBe('src/utils/proofSummary.ts');
   });
 
   it('skips null file fields', () => {
     const items = [{ file: null }];
-    resolveCalloutPaths(items, modules);
+    resolveFindingPaths(items, modules);
     expect(items[0]!.file).toBeNull();
   });
 
   // @ana A006
   it('resolves build concern file paths', () => {
     const concerns = [{ file: 'scan-engine.ts', summary: 'some concern' }];
-    resolveCalloutPaths(concerns, modules);
+    resolveFindingPaths(concerns, modules);
     expect(concerns[0]!.file).toBe('packages/cli/src/engine/scan-engine.ts');
   });
 
   it('handles empty modules_touched array', () => {
     const items = [{ file: 'census.ts' }];
-    resolveCalloutPaths(items, []);
+    resolveFindingPaths(items, []);
     expect(items[0]!.file).toBe('census.ts');
   });
 
@@ -1183,7 +1183,7 @@ describe('resolveCalloutPaths', () => {
   it('uses path-boundary checking to prevent false matches', () => {
     const boundaryModules = ['packages/cli/src/subroute.ts'];
     const items = [{ file: 'route.ts' }];
-    resolveCalloutPaths(items, boundaryModules);
+    resolveFindingPaths(items, boundaryModules);
     expect(items[0]!.file).toBe('route.ts');
   });
 
@@ -1191,7 +1191,7 @@ describe('resolveCalloutPaths', () => {
     let tempDir: string;
 
     beforeEach(async () => {
-      tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'callout-glob-test-'));
+      tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'finding-glob-test-'));
     });
 
     afterEach(async () => {
@@ -1204,7 +1204,7 @@ describe('resolveCalloutPaths', () => {
       await fs.promises.writeFile(path.join(tempDir, 'src', 'utils', 'helper.ts'), '');
 
       const items = [{ file: 'helper.ts' }];
-      resolveCalloutPaths(items, [], tempDir);
+      resolveFindingPaths(items, [], tempDir);
       expect(items[0]!.file).toBe('src/utils/helper.ts');
     });
 
@@ -1216,7 +1216,7 @@ describe('resolveCalloutPaths', () => {
       await fs.promises.writeFile(path.join(tempDir, 'src', 'b', 'index.ts'), '');
 
       const items = [{ file: 'index.ts' }];
-      resolveCalloutPaths(items, [], tempDir);
+      resolveFindingPaths(items, [], tempDir);
       expect(items[0]!.file).toBe('index.ts');
     });
 
@@ -1226,7 +1226,7 @@ describe('resolveCalloutPaths', () => {
       await fs.promises.writeFile(path.join(tempDir, 'node_modules', 'pkg', 'helper.ts'), '');
 
       const items = [{ file: 'helper.ts' }];
-      resolveCalloutPaths(items, [], tempDir);
+      resolveFindingPaths(items, [], tempDir);
       expect(items[0]!.file).toBe('helper.ts');
     });
 
@@ -1236,7 +1236,7 @@ describe('resolveCalloutPaths', () => {
       await fs.promises.writeFile(path.join(tempDir, '.ana', 'plans', 'spec.md'), '');
 
       const items = [{ file: 'spec.md' }];
-      resolveCalloutPaths(items, [], tempDir);
+      resolveFindingPaths(items, [], tempDir);
       expect(items[0]!.file).toBe('spec.md');
     });
   });
@@ -1265,7 +1265,7 @@ describe('getProofContext', () => {
     feature: 'Fix Drizzle schema detection',
     completed_at: '2026-04-24T10:00:00Z',
     modules_touched: ['packages/cli/src/engine/census.ts', 'packages/cli/src/engine/scan-engine.ts'],
-    callouts: [
+    findings: [
       { id: 'drizzle-C1', category: 'code', summary: 'drizzle-dialect overloads SchemaFileEntry semantics', file: 'packages/cli/src/engine/census.ts', anchor: 'census.ts:267-274' },
       { id: 'drizzle-C2', category: 'code', summary: 'Config regex can match comments', file: 'packages/cli/src/engine/census.ts', anchor: 'census.ts:251' },
     ],
@@ -1275,74 +1275,74 @@ describe('getProofContext', () => {
   };
 
   // @ana A009, A010, A017
-  it('returns callouts for queried file (full path match)', () => {
+  it('returns findings for queried file (full path match)', () => {
     writeChain([baseEntry]);
     const results = getProofContext(['packages/cli/src/engine/census.ts'], tempDir);
     expect(results).toHaveLength(1);
-    expect(results[0]!.callouts.length).toBeGreaterThan(0);
-    expect(results[0]!.callouts[0]!.from).toBe('Fix Drizzle schema detection');
-    expect(results[0]!.callouts[0]!.category).toBe('code');
-    expect(results[0]!.callouts[0]!.summary).toContain('drizzle-dialect');
+    expect(results[0]!.findings.length).toBeGreaterThan(0);
+    expect(results[0]!.findings[0]!.from).toBe('Fix Drizzle schema detection');
+    expect(results[0]!.findings[0]!.category).toBe('code');
+    expect(results[0]!.findings[0]!.summary).toContain('drizzle-dialect');
   });
 
   // @ana A018
-  it('matches basename query to full-path callout (path suffix)', () => {
+  it('matches basename query to full-path finding (path suffix)', () => {
     writeChain([baseEntry]);
     const results = getProofContext(['census.ts'], tempDir);
-    expect(results[0]!.callouts.length).toBeGreaterThan(0);
-    expect(results[0]!.callouts[0]!.file).toBe('packages/cli/src/engine/census.ts');
+    expect(results[0]!.findings.length).toBeGreaterThan(0);
+    expect(results[0]!.findings[0]!.file).toBe('packages/cli/src/engine/census.ts');
   });
 
   // @ana A019
-  it('matches full-path query to basename callout (legacy)', () => {
+  it('matches full-path query to basename finding (legacy)', () => {
     const legacyEntry = {
       ...baseEntry,
-      callouts: [
+      findings: [
         { id: 'legacy-C1', category: 'code', summary: 'Old issue', file: 'census.ts', anchor: null },
       ],
     };
     writeChain([legacyEntry]);
     const results = getProofContext(['packages/cli/src/engine/census.ts'], tempDir);
-    expect(results[0]!.callouts.length).toBeGreaterThan(0);
-    expect(results[0]!.callouts[0]!.file).toBe('census.ts');
+    expect(results[0]!.findings.length).toBeGreaterThan(0);
+    expect(results[0]!.findings[0]!.file).toBe('census.ts');
   });
 
-  it('matches basename query to basename callout (legacy)', () => {
+  it('matches basename query to basename finding (legacy)', () => {
     const legacyEntry = {
       ...baseEntry,
-      callouts: [
+      findings: [
         { id: 'legacy-C2', category: 'test', summary: 'Legacy test issue', file: 'census.ts', anchor: null },
       ],
     };
     writeChain([legacyEntry]);
     const results = getProofContext(['census.ts'], tempDir);
-    expect(results[0]!.callouts.length).toBeGreaterThan(0);
+    expect(results[0]!.findings.length).toBeGreaterThan(0);
   });
 
   // @ana A020
   it('path-boundary prevents false positive matches', () => {
     const entry = {
       ...baseEntry,
-      callouts: [
+      findings: [
         { id: 'boundary-C1', category: 'code', summary: 'Issue in subroute', file: 'packages/cli/src/subroute.ts', anchor: null },
       ],
     };
     writeChain([entry]);
     const results = getProofContext(['route.ts'], tempDir);
-    expect(results[0]!.callouts.length).toBe(0);
+    expect(results[0]!.findings.length).toBe(0);
   });
 
   // @ana A023
-  it('does not match null-file callouts', () => {
+  it('does not match null-file findings', () => {
     const entry = {
       ...baseEntry,
-      callouts: [
+      findings: [
         { id: 'null-C1', category: 'upstream', summary: 'Ambient observation', file: null, anchor: null },
       ],
     };
     writeChain([entry]);
     const results = getProofContext(['anything.ts'], tempDir);
-    expect(results[0]!.callouts.length).toBe(0);
+    expect(results[0]!.findings.length).toBe(0);
   });
 
   it('includes build concerns in results', () => {
@@ -1353,10 +1353,10 @@ describe('getProofContext', () => {
     expect(results[0]!.build_concerns[0]!.from).toBe('Fix Drizzle schema detection');
   });
 
-  it('returns empty result for file with no callouts', () => {
+  it('returns empty result for file with no findings', () => {
     writeChain([baseEntry]);
     const results = getProofContext(['unknown-file.ts'], tempDir);
-    expect(results[0]!.callouts).toHaveLength(0);
+    expect(results[0]!.findings).toHaveLength(0);
     expect(results[0]!.build_concerns).toHaveLength(0);
     expect(results[0]!.touch_count).toBe(0);
     expect(results[0]!.last_touched).toBeNull();
@@ -1365,7 +1365,7 @@ describe('getProofContext', () => {
   it('returns empty results when proof_chain.json does not exist', () => {
     // Don't write chain file
     const results = getProofContext(['census.ts'], tempDir);
-    expect(results[0]!.callouts).toHaveLength(0);
+    expect(results[0]!.findings).toHaveLength(0);
     expect(results[0]!.touch_count).toBe(0);
     expect(results[0]!.last_touched).toBeNull();
   });
@@ -1377,7 +1377,7 @@ describe('getProofContext', () => {
     expect(results).toHaveLength(2);
     expect(results[0]!.query).toBe('census.ts');
     expect(results[1]!.query).toBe('scan-engine.ts');
-    expect(results[0]!.callouts.length).toBeGreaterThan(0);
+    expect(results[0]!.findings.length).toBeGreaterThan(0);
   });
 
   // @ana A021
@@ -1385,7 +1385,7 @@ describe('getProofContext', () => {
     const entry2 = {
       feature: 'Fix Prisma detection',
       completed_at: '2026-04-23T10:00:00Z',
-      callouts: [
+      findings: [
         { id: 'prisma-C1', category: 'code', summary: 'Non-recursive check', file: 'packages/cli/src/engine/census.ts', anchor: null },
       ],
     };
@@ -1400,7 +1400,7 @@ describe('getProofContext', () => {
     const entry2 = {
       feature: 'Fix Prisma detection',
       completed_at: '2026-04-23T10:00:00Z',
-      callouts: [
+      findings: [
         { id: 'prisma-C1', category: 'code', summary: 'Non-recursive check', file: 'packages/cli/src/engine/census.ts', anchor: null },
       ],
     };
@@ -1423,13 +1423,13 @@ describe('getProofContext', () => {
   it('handles entries without completed_at gracefully', () => {
     const undatedEntry = {
       feature: 'Old feature',
-      callouts: [
+      findings: [
         { id: 'old-C1', category: 'code', summary: 'Old issue', file: 'census.ts', anchor: null },
       ],
     };
     writeChain([undatedEntry]);
     const results = getProofContext(['census.ts'], tempDir);
-    expect(results[0]!.callouts.length).toBeGreaterThan(0);
+    expect(results[0]!.findings.length).toBeGreaterThan(0);
     // Undated entries don't contribute to touch_count
     expect(results[0]!.touch_count).toBe(0);
     expect(results[0]!.last_touched).toBeNull();

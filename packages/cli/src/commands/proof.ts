@@ -338,7 +338,7 @@ export function registerProofCommand(program: Command): void {
  * @returns Formatted string
  */
 function formatContextResult(result: ProofContextResult): string {
-  const hasData = result.callouts.length > 0 || result.build_concerns.length > 0;
+  const hasData = result.findings.length > 0 || result.build_concerns.length > 0;
 
   if (!hasData) {
     return `No proof context found for ${result.query}`;
@@ -354,20 +354,19 @@ function formatContextResult(result: ProofContextResult): string {
   }
   lines.push('');
 
-  // Callouts
-  if (result.callouts.length > 0) {
-    lines.push('Callouts:');
-    for (const callout of result.callouts) {
-      const anchor = callout.anchor ? ` ${callout.anchor} —` : '';
-      // @ana A020, A021
-      let truncatedSummary = callout.summary;
+  // Findings
+  if (result.findings.length > 0) {
+    lines.push('Findings:');
+    for (const finding of result.findings) {
+      const anchor = finding.anchor ? ` ${finding.anchor} —` : '';
+      let truncatedSummary = finding.summary;
       if (truncatedSummary.length > 250) {
         const lastSpace = truncatedSummary.lastIndexOf(' ', 250);
         const cutPoint = lastSpace > 0 ? lastSpace : 250;
         truncatedSummary = truncatedSummary.substring(0, cutPoint) + '...';
       }
-      lines.push(`  ${chalk.dim(`[${callout.category}]`)}${anchor} ${truncatedSummary}`);
-      lines.push(`         ${chalk.gray(`From: ${callout.from}`)}`);
+      lines.push(`  ${chalk.dim(`[${finding.category}]`)}${anchor} ${truncatedSummary}`);
+      lines.push(`         ${chalk.gray(`From: ${finding.from}`)}`);
       lines.push('');
     }
   }
@@ -380,7 +379,7 @@ function formatContextResult(result: ProofContextResult): string {
       lines.push(`         ${chalk.gray(`From: ${concern.from}`)}`);
       lines.push('');
     }
-  } else if (result.callouts.length > 0) {
+  } else if (result.findings.length > 0) {
     lines.push('No build concerns for this file.');
     lines.push('');
   }

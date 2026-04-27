@@ -17,7 +17,7 @@ import * as fs from 'node:fs';
 import * as fsPromises from 'node:fs/promises';
 import * as path from 'node:path';
 import { readArtifactBranch, readBranchPrefix, getCurrentBranch } from '../utils/git-operations.js';
-import { generateProofSummary, generateActiveIssuesMarkdown, resolveCalloutPaths, type ProofSummary } from '../utils/proofSummary.js';
+import { generateProofSummary, generateActiveIssuesMarkdown, resolveFindingPaths, type ProofSummary } from '../utils/proofSummary.js';
 import { findProjectRoot } from '../utils/validators.js';
 import type { ProofChainEntry, ProofChain, ProofChainStats } from '../types/proof.js';
 
@@ -734,7 +734,7 @@ export function getWorkStatus(options: { json?: boolean }): void {
  * @param slug - Work item slug
  * @param proof - Proof summary data
  * @param projectRoot - Project root directory
- * @returns Chain health counts: total runs and cumulative callouts
+ * @returns Chain health counts: total runs and cumulative findings
  */
 async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: string): Promise<ProofChainStats> {
   const anaDir = path.join(projectRoot, '.ana');
@@ -794,7 +794,7 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
     seal_commit: proof.seal_commit,
     completed_at: new Date().toISOString(),
     modules_touched: modulesTouched,
-    callouts: proof.callouts.map((c, i) => ({
+    findings: proof.findings.map((c, i) => ({
       ...c,
       id: `${slug}-C${i + 1}`,
     })),
@@ -803,15 +803,15 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
     build_concerns: proof.build_concerns ?? [],
   };
 
-  // Resolve callout/build_concern file fields from basenames to full paths.
+  // Resolve finding/build_concern file fields from basenames to full paths.
   // New entry: resolve against its own modules_touched
-  resolveCalloutPaths(entry.callouts, entry.modules_touched || [], projectRoot);
-  resolveCalloutPaths(entry.build_concerns || [], entry.modules_touched || [], projectRoot);
+  resolveFindingPaths(entry.findings, entry.modules_touched || [], projectRoot);
+  resolveFindingPaths(entry.build_concerns || [], entry.modules_touched || [], projectRoot);
 
   // Existing entries: backfill (idempotent — already-resolved files are skipped)
   for (const existing of chain.entries) {
-    resolveCalloutPaths(existing.callouts || [], existing.modules_touched || [], projectRoot);
-    resolveCalloutPaths(existing.build_concerns || [], existing.modules_touched || [], projectRoot);
+    resolveFindingPaths(existing.findings || [], existing.modules_touched || [], projectRoot);
+    resolveFindingPaths(existing.build_concerns || [], existing.modules_touched || [], projectRoot);
   }
 
   chain.entries.push(entry);
@@ -838,7 +838,7 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
     const modulesTouched = historyEntry.modules_touched || [];
     const rejectionCycles = historyEntry.rejection_cycles || 0;
     const previousFailures = historyEntry.previous_failures || [];
-    const callouts = historyEntry.callouts || [];
+    const findings = historyEntry.findings || [];
 
     const deviationCount = assertions.filter(a => a.status === 'DEVIATED').length;
     const deviationSummary = deviationCount > 0
@@ -860,18 +860,18 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
       ? `\nRejection cycles: ${rejectionCycles} (${previousFailures.map(f => `${f.id} ${f.summary}`).join(', ')})`
       : '';
 
-    // Callout digest — top 5 in markdown. Priority: code > test > upstream
+    // Finding digest — top 5 in markdown. Priority: code > test > upstream
     const categoryOrder: Record<string, number> = { code: 0, test: 1, upstream: 2 };
-    const sortedCallouts = [...callouts].sort((a, b) =>
+    const sortedFindings = [...findings].sort((a, b) =>
       (categoryOrder[a.category] ?? 3) - (categoryOrder[b.category] ?? 3)
     );
-    const calloutLines = sortedCallouts.length > 0
-      ? '\nCallouts:\n' + sortedCallouts.slice(0, 5).map(c => `- ${c.category}: ${c.summary}`).join('\n')
+    const findingLines = sortedFindings.length > 0
+      ? '\nFindings:\n' + sortedFindings.slice(0, 5).map(c => `- ${c.category}: ${c.summary}`).join('\n')
       : '';
 
     const mdEntryText = `## ${historyEntry.feature} (${entryDate})
 Result: ${historyEntry.result} | ${contract.satisfied}/${contract.total} satisfied | ${acceptanceCriteria.met}/${acceptanceCriteria.total} ACs | ${deviationCount} deviation${deviationCount !== 1 ? 's' : ''}
-Pipeline: ${timing.total_minutes}m${timingDetails}${deviationSummary}${modulesLine}${rejectionLine}${calloutLines}
+Pipeline: ${timing.total_minutes}m${timingDetails}${deviationSummary}${modulesLine}${rejectionLine}${findingLines}
 `;
 
     historyEntries.push(mdEntryText);
@@ -883,8 +883,8 @@ Pipeline: ${timing.total_minutes}m${timingDetails}${deviationSummary}${modulesLi
 
   // Compute chain health counts
   const runs = chain.entries.length;
-  const callouts = chain.entries.reduce((sum, e) => sum + (e.callouts || []).length, 0);
-  return { runs, callouts };
+  const findings = chain.entries.reduce((sum, e) => sum + (e.findings || []).length, 0);
+  return { runs, findings };
 }
 
 /**
@@ -1054,7 +1054,7 @@ export async function completeWork(slug: string): Promise<void> {
 
   // 9a. Generate proof summary and write proof chain
   const proof = generateProofSummary(completedPath);
-  const { runs, callouts } = await writeProofChain(slug, proof, projectRoot);
+  const { runs, findings } = await writeProofChain(slug, proof, projectRoot);
 
   // 10. Stage and commit
   try {
@@ -1099,7 +1099,7 @@ export async function completeWork(slug: string): Promise<void> {
   const statusIcon = proof.result === 'PASS' ? '✓' : '✗';
   console.log(`\n${statusIcon} ${proof.result} — ${proof.feature}`);
   console.log(`  ${proof.contract.covered}/${proof.contract.total} covered · ${proof.contract.satisfied}/${proof.contract.total} satisfied · ${proof.deviations.length} deviation${proof.deviations.length !== 1 ? 's' : ''}`);
-  console.log(chalk.gray(`  Chain: ${runs} ${runs !== 1 ? 'runs' : 'run'} · ${callouts} ${callouts !== 1 ? 'callouts' : 'callout'}`));
+  console.log(chalk.gray(`  Chain: ${runs} ${runs !== 1 ? 'runs' : 'run'} · ${findings} ${findings !== 1 ? 'findings' : 'finding'}`));
 }
 
 /**

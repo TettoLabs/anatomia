@@ -32,7 +32,7 @@ export interface ProofChain {
  */
 export interface ProofChainStats {
   runs: number;
-  callouts: number;
+  findings: number;
 }
 
 export interface ProofChainEntry {
@@ -54,7 +54,7 @@ export interface ProofChainEntry {
   completed_at: string;
   // S23 pipeline hardening — intelligence capture
   modules_touched: string[];
-  callouts: Array<{ id: string; category: string; summary: string; file: string | null; anchor: string | null }>;
+  findings: Array<{ id: string; category: string; summary: string; file: string | null; anchor: string | null }>;
   rejection_cycles: number;
   previous_failures: Array<{ id: string; summary: string }>;
   build_concerns: Array<{ summary: string; file: string | null }>;

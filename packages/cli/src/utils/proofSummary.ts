@@ -68,7 +68,7 @@ export interface ProofSummary {
   seal_commit: string | null;
   completed_at: string;
   // S23 pipeline hardening — intelligence capture
-  callouts: Array<{ category: string; summary: string; file: string | null; anchor: string | null }>;
+  findings: Array<{ category: string; summary: string; file: string | null; anchor: string | null }>;
   rejection_cycles: number;
   previous_failures: Array<{ id: string; summary: string }>;
   build_concerns: Array<{ summary: string; file: string | null }>;
@@ -282,7 +282,7 @@ export function parseBuildOpenIssues(content: string): Array<{ summary: string; 
 }
 
 /**
- * Extract file references from callout summary text.
+ * Extract file references from finding summary text.
  *
  * Matches patterns like:
  *   - filename.ts:123 (with line number)
@@ -291,7 +291,7 @@ export function parseBuildOpenIssues(content: string): Array<{ summary: string; 
  *
  * Supports extensions: .ts, .tsx, .js, .jsx, .json, .yaml, .yml, .md
  *
- * @param summary - Callout summary text
+ * @param summary - Finding summary text
  * @returns Array of unique filenames (without line numbers)
  */
 export function extractFileRefs(summary: string): string[] {
@@ -304,7 +304,7 @@ export function extractFileRefs(summary: string): string[] {
   const refs = new Set<string>();
   for (const match of matches) {
     if (match[1]) {
-      // Skip URL-like paths (from links in callout text)
+      // Skip URL-like paths (from links in finding text)
       if (match[1].startsWith('//') || match[1].includes('://')) continue;
       refs.add(match[1]);
     }
@@ -313,7 +313,7 @@ export function extractFileRefs(summary: string): string[] {
 }
 
 /**
- * Resolve callout/build-concern file fields from basenames to full paths.
+ * Resolve finding/build-concern file fields from basenames to full paths.
  *
  * For each item where `file` is non-null and contains no `/`, finds matching
  * modules using path-boundary check (`module.endsWith('/' + file)`). If exactly
@@ -321,12 +321,12 @@ export function extractFileRefs(summary: string): string[] {
  *
  * Idempotent — files already containing `/` are skipped.
  *
- * @param items - Array of objects with a `file` field (callouts or build_concerns)
+ * @param items - Array of objects with a `file` field (findings or build_concerns)
  * @param modules - Array of full relative paths from modules_touched
  * @param projectRoot - Optional project root for glob fallback when modules_touched matching fails
  * @returns void (mutates items in place)
  */
-export function resolveCalloutPaths(
+export function resolveFindingPaths(
   items: Array<{ file: string | null }>,
   modules: string[],
   projectRoot?: string,
@@ -354,9 +354,9 @@ export function resolveCalloutPaths(
 }
 
 /**
- * Callout with feature context for Active Issues index
+ * Finding with feature context for Active Issues index
  */
-interface CalloutWithFeature {
+interface FindingWithFeature {
   category: string;
   summary: string;
   file: string | null;
@@ -369,33 +369,33 @@ interface CalloutWithFeature {
 interface ProofChainEntryForIndex {
   feature: string;
   completed_at: string;
-  callouts?: Array<{ id: string; category: string; summary: string; file: string | null; anchor: string | null }>;
+  findings?: Array<{ id: string; category: string; summary: string; file: string | null; anchor: string | null }>;
 }
 
 /**
  * Generate Active Issues markdown section from proof chain entries.
  *
- * Groups callouts by file reference, caps at 20 total callouts (FIFO — oldest dropped),
- * and returns markdown with file headings. Callouts without file refs go under "General".
+ * Groups findings by file reference, caps at 30 total findings (FIFO — oldest dropped),
+ * and returns markdown with file headings. Findings without file refs go under "General".
  *
  * @param entries - Proof chain entries (oldest first, as stored in JSON)
  * @returns Markdown string starting with "# Active Issues"
  */
 export function generateActiveIssuesMarkdown(entries: ProofChainEntryForIndex[]): string {
-  // Collect all callouts with feature context, newest entries first
-  const allCallouts: Array<CalloutWithFeature & { entryDate: string }> = [];
+  // Collect all findings with feature context, newest entries first
+  const allFindings: Array<FindingWithFeature & { entryDate: string }> = [];
 
   // Reverse to get newest first
   const reversedEntries = [...entries].reverse();
 
   for (const entry of reversedEntries) {
-    // Handle entries without callouts (older entries may not have this field)
-    const callouts = entry.callouts || [];
-    for (const callout of callouts) {
-      allCallouts.push({
-        category: callout.category,
-        summary: callout.summary,
-        file: callout.file,
+    // Handle entries without findings (older entries may not have this field)
+    const findings = entry.findings || [];
+    for (const finding of findings) {
+      allFindings.push({
+        category: finding.category,
+        summary: finding.summary,
+        file: finding.file,
         feature: entry.feature,
         entryDate: entry.completed_at,
       });
@@ -404,8 +404,8 @@ export function generateActiveIssuesMarkdown(entries: ProofChainEntryForIndex[])
 
   // Cap at MAX_ACTIVE_ISSUES (take from start = most recent)
   const MAX_ACTIVE_ISSUES = 20;
-  const totalCount = allCallouts.length;
-  const cappedCallouts = allCallouts.slice(0, MAX_ACTIVE_ISSUES);
+  const totalCount = allFindings.length;
+  const cappedFindings = allFindings.slice(0, MAX_ACTIVE_ISSUES);
 
   // Heading with count
   let heading: string;
@@ -418,7 +418,7 @@ export function generateActiveIssuesMarkdown(entries: ProofChainEntryForIndex[])
   }
 
   // Empty state
-  if (cappedCallouts.length === 0) {
+  if (cappedFindings.length === 0) {
     return `${heading}
 
 *No active issues.*
@@ -428,12 +428,12 @@ export function generateActiveIssuesMarkdown(entries: ProofChainEntryForIndex[])
   }
 
   // Group by file reference
-  const fileGroups = new Map<string, CalloutWithFeature[]>();
+  const fileGroups = new Map<string, FindingWithFeature[]>();
 
-  for (const callout of cappedCallouts) {
-    const key = callout.file ?? 'General';
+  for (const finding of cappedFindings) {
+    const key = finding.file ?? 'General';
     const existing = fileGroups.get(key) || [];
-    existing.push(callout);
+    existing.push(finding);
     fileGroups.set(key, existing);
   }
 
@@ -448,18 +448,18 @@ export function generateActiveIssuesMarkdown(entries: ProofChainEntryForIndex[])
   });
 
   for (const fileName of fileNames) {
-    const callouts = fileGroups.get(fileName) || [];
+    const findings = fileGroups.get(fileName) || [];
     md += `## ${fileName}\n\n`;
 
-    for (const callout of callouts) {
+    for (const finding of findings) {
       // Truncate summary for index display (JSON keeps full text up to 1000 chars)
-      let truncatedSummary = callout.summary;
+      let truncatedSummary = finding.summary;
       if (truncatedSummary.length > 250) {
         const lastSpace = truncatedSummary.lastIndexOf(' ', 250);
         const cutPoint = lastSpace > 0 ? lastSpace : 250;
         truncatedSummary = truncatedSummary.substring(0, cutPoint) + '...';
       }
-      md += `- **${callout.category}:** ${truncatedSummary} — *${callout.feature}*\n`;
+      md += `- **${finding.category}:** ${truncatedSummary} — *${finding.feature}*\n`;
     }
     md += '\n';
   }
@@ -470,7 +470,7 @@ export function generateActiveIssuesMarkdown(entries: ProofChainEntryForIndex[])
 }
 
 /**
- * Parse callouts from verify report's ## Callouts section.
+ * Parse findings from verify report's ## Callouts section.
  *
  * Format-agnostic: finds bold category keywords (Code, Test, Upstream, Security,
  * Performance, etc.) and captures summaries. Handles all observed formats:
@@ -483,20 +483,20 @@ export function generateActiveIssuesMarkdown(entries: ProofChainEntryForIndex[])
  * @param content - Verify report content
  * @returns Array of { category, summary, file, anchor } (id assigned later by writeProofChain)
  */
-export function parseCallouts(content: string): Array<{ category: string; summary: string; file: string | null; anchor: string | null }> {
+export function parseFindings(content: string): Array<{ category: string; summary: string; file: string | null; anchor: string | null }> {
   const results: Array<{ category: string; summary: string; file: string | null; anchor: string | null }> = [];
 
   // Find ## Callouts section
-  const calloutsMatch = content.match(/## Callouts\n([\s\S]*?)(?=\n## |$)/);
-  if (!calloutsMatch || !calloutsMatch[1]) return results;
+  const findingsMatch = content.match(/## Callouts\n([\s\S]*?)(?=\n## |$)/);
+  if (!findingsMatch || !findingsMatch[1]) return results;
 
-  const section = calloutsMatch[1];
+  const section = findingsMatch[1];
   const lines = section.split('\n');
 
   let currentCategory: string | null = null;
   let currentSummary: string[] = [];
 
-  const flushCallout = () => {
+  const flushFinding = () => {
     if (currentCategory && currentSummary.length > 0) {
       const summary = currentSummary.join(' ').trim().substring(0, 1000).trim();
       if (summary) {
@@ -517,7 +517,7 @@ export function parseCallouts(content: string): Array<{ category: string; summar
     const categoryMatch = line.match(/\*\*(\w+)\s*(?:[—–:-]|:\*\*|\*\*\s*[—–:-])/i);
 
     if (categoryMatch && categoryMatch[1]) {
-      flushCallout();
+      flushFinding();
       currentCategory = categoryMatch[1].toLowerCase();
 
       // Extract summary: everything after the category keyword.
@@ -536,20 +536,20 @@ export function parseCallouts(content: string): Array<{ category: string; summar
     } else if (currentCategory && line.trim()) {
       const trimmed = line.replace(/^\s*[-*]\s*/, '').trim();
       if (trimmed.match(/^\*\*[^*]+\*\*/)) {
-        // Sub-bullet with bold text — new callout under same category
-        flushCallout();
+        // Sub-bullet with bold text — new finding under same category
+        flushFinding();
         const cleaned = trimmed.replace(/\*\*/g, '').replace(/^\s*[-:]\s*/, '').trim();
         currentSummary = cleaned ? [cleaned] : [];
       } else if (trimmed) {
         currentSummary.push(trimmed);
       }
     } else if (!line.trim() && currentCategory && currentSummary.length > 0) {
-      // Empty line — flush current callout, keep category for next sub-bullet
-      flushCallout();
+      // Empty line — flush current finding, keep category for next sub-bullet
+      flushFinding();
     }
   }
 
-  flushCallout();
+  flushFinding();
   return results;
 }
 
@@ -677,7 +677,7 @@ export function generateProofSummary(slugDir: string): ProofSummary {
     hashes: {},
     seal_commit: null,
     completed_at: new Date().toISOString(),
-    callouts: [],
+    findings: [],
     rejection_cycles: 0,
     previous_failures: [],
     build_concerns: [],
@@ -756,14 +756,14 @@ export function generateProofSummary(slugDir: string): ProofSummary {
   }
 
   // Source 3: verify reports (single-spec: verify_report.md, multi-spec: verify_report_N.md)
-  // Read ALL verify reports and aggregate compliance, callouts, and results.
+  // Read ALL verify reports and aggregate compliance, findings, and results.
   const dirFiles = fs.readdirSync(slugDir);
   const verifyFiles = dirFiles
     .filter(f => f.match(/^verify_report(_\d+)?\.md$/))
     .sort();
 
   let lastResult: string | null = null;
-  const allCallouts: Array<{ category: string; summary: string; file: string | null; anchor: string | null }> = [];
+  const allFindings: Array<{ category: string; summary: string; file: string | null; anchor: string | null }> = [];
 
   for (const verifyFile of verifyFiles) {
     const verifyPath = path.join(slugDir, verifyFile);
@@ -787,8 +787,8 @@ export function generateProofSummary(slugDir: string): ProofSummary {
         }
       }
 
-      // Aggregate callouts from all phases
-      allCallouts.push(...parseCallouts(verifyContent));
+      // Aggregate findings from all phases
+      allFindings.push(...parseFindings(verifyContent));
 
       // Parse rejection cycles from each phase
       const rejectionData = parseRejectionCycles(verifyContent);
@@ -800,7 +800,7 @@ export function generateProofSummary(slugDir: string): ProofSummary {
   }
 
   if (lastResult) summary.result = lastResult;
-  summary.callouts = allCallouts;
+  summary.findings = allFindings;
 
   // Update contract counts from verify statuses (aggregated across all phases)
   summary.contract.satisfied = summary.assertions.filter(a => a.verifyStatus === 'SATISFIED').length;
@@ -835,7 +835,7 @@ export function generateProofSummary(slugDir: string): ProofSummary {
  */
 export interface ProofContextResult {
   query: string;
-  callouts: Array<{
+  findings: Array<{
     id: string;
     category: string;
     summary: string;
@@ -861,7 +861,7 @@ interface ProofChainEntryForContext {
   feature: string;
   completed_at?: string;
   modules_touched?: string[];
-  callouts?: Array<{ id: string; category: string; summary: string; file: string | null; anchor: string | null }>;
+  findings?: Array<{ id: string; category: string; summary: string; file: string | null; anchor: string | null }>;
   build_concerns?: Array<{ summary: string; file: string | null }>;
 }
 
@@ -875,7 +875,7 @@ interface ProofChainEntryForContext {
  *
  * Path-boundary checks ('/' prefix) prevent false positives from partial names.
  *
- * @param stored - File path from proof chain callout/concern
+ * @param stored - File path from proof chain finding/concern
  * @param queried - File path from user query
  * @returns Whether the files match
  */
@@ -904,7 +904,7 @@ function fileMatches(stored: string, queried: string): boolean {
 /**
  * Query proof chain for context about specific files.
  *
- * Reads proof_chain.json, matches callouts and build concerns against
+ * Reads proof_chain.json, matches findings and build concerns against
  * queried file paths using three-tier matching (exact, path-suffix, basename).
  * Returns structured results per queried file.
  *
@@ -918,7 +918,7 @@ export function getProofContext(queries: string[], projectRoot: string): ProofCo
   if (!fs.existsSync(chainPath)) {
     return queries.map(q => ({
       query: q,
-      callouts: [],
+      findings: [],
       build_concerns: [],
       touch_count: 0,
       last_touched: null,
@@ -935,7 +935,7 @@ export function getProofContext(queries: string[], projectRoot: string): ProofCo
   }
 
   return queries.map(query => {
-    const matchedCallouts: ProofContextResult['callouts'] = [];
+    const matchedFindings: ProofContextResult['findings'] = [];
     const matchedConcerns: ProofContextResult['build_concerns'] = [];
     const touchDates: string[] = [];
 
@@ -943,16 +943,16 @@ export function getProofContext(queries: string[], projectRoot: string): ProofCo
       let entryTouches = false;
       const entryDate = entry.completed_at ?? '';
 
-      // Match callouts
-      for (const callout of entry.callouts ?? []) {
-        if (!callout.file) continue;
-        if (fileMatches(callout.file, query)) {
-          matchedCallouts.push({
-            id: callout.id,
-            category: callout.category,
-            summary: callout.summary,
-            file: callout.file,
-            anchor: callout.anchor,
+      // Match findings
+      for (const finding of entry.findings ?? []) {
+        if (!finding.file) continue;
+        if (fileMatches(finding.file, query)) {
+          matchedFindings.push({
+            id: finding.id,
+            category: finding.category,
+            summary: finding.summary,
+            file: finding.file,
+            anchor: finding.anchor,
             from: entry.feature,
             date: entryDate,
           });
@@ -984,7 +984,7 @@ export function getProofContext(queries: string[], projectRoot: string): ProofCo
 
     return {
       query,
-      callouts: matchedCallouts,
+      findings: matchedFindings,
       build_concerns: matchedConcerns,
       touch_count: touchDates.length,
       last_touched: touchDates[0] ?? null,

@@ -1091,14 +1091,14 @@ Tests: 5 passed
         expect(output).toContain('Test Feature');
         expect(output).toContain('2/2 covered');
         expect(output).not.toContain('Proof saved to chain');
-        expect(output).toContain('Chain: 1 run · 0 callouts');
+        expect(output).toContain('Chain: 1 run · 0 findings');
       });
 
       // @ana A019
-      it('prints nonzero callout count when verify report has callouts', async () => {
+      it('prints nonzero finding count when verify report has findings', async () => {
         await createProofProject('test-feature');
 
-        // Patch the verify report to include callouts
+        // Patch the verify report to include findings
         const slugPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-feature');
         const verifyPath = path.join(slugPath, 'verify_report.md');
         const verifyContent = fsSync.readFileSync(verifyPath, 'utf-8');
@@ -1112,9 +1112,9 @@ Tests: 5 passed
 ## Verdict`,
         );
         fsSync.writeFileSync(verifyPath, patchedContent);
-        execSync('git add -A && git commit -m "add callouts"', { cwd: tempDir, stdio: 'ignore' });
+        execSync('git add -A && git commit -m "add findings"', { cwd: tempDir, stdio: 'ignore' });
         execSync('git checkout main', { cwd: tempDir, stdio: 'ignore' });
-        execSync('git merge --no-ff feature/test-feature -m "merge callouts"', { cwd: tempDir, stdio: 'ignore' });
+        execSync('git merge --no-ff feature/test-feature -m "merge findings"', { cwd: tempDir, stdio: 'ignore' });
 
         const originalLog = console.log;
         const logs: string[] = [];
@@ -1127,7 +1127,7 @@ Tests: 5 passed
         console.log = originalLog;
         const output = logs.join('\n');
 
-        expect(output).toContain('Chain: 1 run · 3 callouts');
+        expect(output).toContain('Chain: 1 run · 3 findings');
       });
 
       // @ana A005, A006, A009
@@ -1146,7 +1146,7 @@ Tests: 5 passed
         console.log = originalLog;
         const output = logs.join('\n');
 
-        expect(output).toContain('Chain: 2 runs · 0 callouts');
+        expect(output).toContain('Chain: 2 runs · 0 findings');
       });
     });
   });
