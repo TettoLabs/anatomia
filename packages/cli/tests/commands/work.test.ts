@@ -566,6 +566,11 @@ describe('ana work status', () => {
         '# Verify Report\n\n**Result:** PASS',
         'utf-8'
       );
+      // Write .saves.json for completeness check
+      await fs.writeFile(path.join(slugPath, '.saves.json'), JSON.stringify({
+        'build-report': { saved_at: new Date().toISOString(), hash: 'sha256:' + '0'.repeat(64) },
+        'verify-report': { saved_at: new Date().toISOString(), hash: 'sha256:' + '0'.repeat(64) },
+      }), 'utf-8');
       execSync('git add -A && git commit -m "add reports"', { cwd: tempDir, stdio: 'ignore' });
 
       // Merge to main
@@ -650,6 +655,18 @@ describe('ana work status', () => {
           'utf-8'
         );
       }
+
+      // Write .saves.json with required entries for completeness check
+      const savesEntries: Record<string, { saved_at: string; hash: string }> = {};
+      savesEntries['build-report'] = {
+        saved_at: new Date().toISOString(),
+        hash: 'sha256:' + '0'.repeat(64),
+      };
+      savesEntries['verify-report'] = {
+        saved_at: new Date().toISOString(),
+        hash: 'sha256:' + '0'.repeat(64),
+      };
+      await fs.writeFile(path.join(slugPath, '.saves.json'), JSON.stringify(savesEntries), 'utf-8');
 
       execSync('git add -A && git commit -m "add reports"', { cwd: tempDir, stdio: 'ignore' });
 
@@ -1418,6 +1435,329 @@ Tests: 5 passed
         const upstreamFinding = lastEntry.findings.find((f: { category: string }) => f.category === 'upstream');
         expect(codeFinding.status).toBe('active');
         expect(upstreamFinding.status).toBe('lesson');
+      });
+    });
+
+    describe('completeness check', () => {
+      /**
+       * Helper to create a merged project for completeness check tests.
+       * Does NOT write .saves.json by default — tests control that.
+       */
+      async function createCompletenessProject(options: {
+        slug: string;
+        savesJson?: Record<string, unknown> | null;
+      }): Promise<void> {
+        const slug = options.slug;
+
+        execSync('git init', { cwd: tempDir, stdio: 'ignore' });
+        execSync('git config user.email "test@test.com"', { cwd: tempDir, stdio: 'ignore' });
+        execSync('git config user.name "Test"', { cwd: tempDir, stdio: 'ignore' });
+
+        const anaDir = path.join(tempDir, '.ana');
+        await fs.mkdir(anaDir, { recursive: true });
+        await fs.writeFile(
+          path.join(anaDir, 'ana.json'),
+          JSON.stringify({ artifactBranch: 'main' }),
+          'utf-8'
+        );
+
+        execSync('git add -A && git commit -m "init"', { cwd: tempDir, stdio: 'ignore' });
+        execSync('git branch -M main', { cwd: tempDir, stdio: 'ignore' });
+
+        const slugPath = path.join(tempDir, '.ana', 'plans', 'active', slug);
+        await fs.mkdir(slugPath, { recursive: true });
+
+        await fs.writeFile(path.join(slugPath, 'scope.md'), '# Scope', 'utf-8');
+        await fs.writeFile(
+          path.join(slugPath, 'plan.md'),
+          '# Plan\n## Phases\n- [ ] Phase 1\n  Spec: spec.md',
+          'utf-8'
+        );
+        await fs.writeFile(path.join(slugPath, 'spec.md'), '# Spec', 'utf-8');
+
+        execSync('git add -A && git commit -m "add planning"', { cwd: tempDir, stdio: 'ignore' });
+
+        execSync(`git checkout -b feature/${slug}`, { cwd: tempDir, stdio: 'ignore' });
+
+        await fs.writeFile(path.join(slugPath, 'build_report.md'), '# Build Report', 'utf-8');
+        await fs.writeFile(
+          path.join(slugPath, 'verify_report.md'),
+          '# Verify Report\n\n**Result:** PASS',
+          'utf-8'
+        );
+
+        if (options.savesJson !== null) {
+          const savesContent = options.savesJson || {};
+          await fs.writeFile(
+            path.join(slugPath, '.saves.json'),
+            JSON.stringify(savesContent),
+            'utf-8'
+          );
+        }
+
+        execSync('git add -A && git commit -m "add reports"', { cwd: tempDir, stdio: 'ignore' });
+        execSync('git checkout main', { cwd: tempDir, stdio: 'ignore' });
+        execSync(`git merge --no-ff feature/${slug} -m "merge"`, { cwd: tempDir, stdio: 'ignore' });
+      }
+
+      /**
+       * Helper to capture errors from async functions that call process.exit
+       */
+      async function captureAsyncError(fn: () => Promise<void>): Promise<string> {
+        const originalExit = process.exit;
+        const originalError = console.error;
+        const errors: string[] = [];
+
+        console.error = (...args: unknown[]) => {
+          errors.push(args.map(String).join(' '));
+        };
+
+        process.exit = ((code?: number) => {
+          throw new Error(`process.exit(${code})`);
+        }) as typeof process.exit;
+
+        try {
+          await fn();
+          return errors.join('\n');
+        } catch (error) {
+          if (error instanceof Error && error.message.startsWith('process.exit')) {
+            return errors.join('\n');
+          }
+          throw error;
+        } finally {
+          console.error = originalError;
+          process.exit = originalExit;
+        }
+      }
+
+      // @ana A010, A015
+      it('blocks when build-report not saved', async () => {
+        await createCompletenessProject({
+          slug: 'test-slug',
+          savesJson: {
+            'verify-report': { saved_at: '2026-04-27T00:00:00Z', hash: 'sha256:' + 'a'.repeat(64) },
+          },
+        });
+
+        const error = await captureAsyncError(() => completeWork('test-slug'));
+        expect(error).toContain('build-report');
+
+        // Verify nothing was mutated — active path still exists
+        const activePath = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug');
+        expect(fsSync.existsSync(activePath)).toBe(true);
+      });
+
+      // @ana A011
+      it('blocks when verify-report not saved', async () => {
+        await createCompletenessProject({
+          slug: 'test-slug',
+          savesJson: {
+            'build-report': { saved_at: '2026-04-27T00:00:00Z', hash: 'sha256:' + 'a'.repeat(64) },
+          },
+        });
+
+        const error = await captureAsyncError(() => completeWork('test-slug'));
+        expect(error).toContain('verify-report');
+      });
+
+      // @ana A012, A013
+      it('blocks when both reports not saved', async () => {
+        await createCompletenessProject({
+          slug: 'test-slug',
+          savesJson: null,
+        });
+
+        const error = await captureAsyncError(() => completeWork('test-slug'));
+        expect(error).toContain('build-report');
+        expect(error).toContain('verify-report');
+      });
+
+      // @ana A014
+      it('proceeds when saves metadata is complete', async () => {
+        await createCompletenessProject({
+          slug: 'test-slug',
+          savesJson: {
+            'build-report': { saved_at: '2026-04-27T00:00:00Z', hash: 'sha256:' + 'a'.repeat(64) },
+            'verify-report': { saved_at: '2026-04-27T00:00:00Z', hash: 'sha256:' + 'b'.repeat(64) },
+          },
+        });
+
+        await completeWork('test-slug');
+
+        // Verify directory was moved (completion proceeded)
+        const completedPath = path.join(tempDir, '.ana', 'plans', 'completed', 'test-slug');
+        expect(fsSync.existsSync(completedPath)).toBe(true);
+      });
+    });
+
+    describe('crash recovery', () => {
+      /**
+       * Helper to simulate a failed completion
+       */
+      async function createFailedCompletion(slug: string): Promise<void> {
+        execSync('git init', { cwd: tempDir, stdio: 'ignore' });
+        execSync('git config user.email "test@test.com"', { cwd: tempDir, stdio: 'ignore' });
+        execSync('git config user.name "Test"', { cwd: tempDir, stdio: 'ignore' });
+
+        const anaDir = path.join(tempDir, '.ana');
+        await fs.mkdir(anaDir, { recursive: true });
+        await fs.writeFile(
+          path.join(anaDir, 'ana.json'),
+          JSON.stringify({ artifactBranch: 'main' }),
+          'utf-8'
+        );
+
+        execSync('git add -A && git commit -m "init"', { cwd: tempDir, stdio: 'ignore' });
+        execSync('git branch -M main', { cwd: tempDir, stdio: 'ignore' });
+
+        // Create completed directory (simulating the directory move)
+        const completedPath = path.join(anaDir, 'plans', 'completed', slug);
+        await fs.mkdir(completedPath, { recursive: true });
+
+        // Write minimal artifacts in completed (as if moved)
+        await fs.writeFile(path.join(completedPath, 'scope.md'), '# Scope', 'utf-8');
+        await fs.writeFile(
+          path.join(completedPath, 'plan.md'),
+          '# Plan\n## Phases\n- [ ] Phase 1\n  Spec: spec.md',
+          'utf-8'
+        );
+        await fs.writeFile(path.join(completedPath, 'spec.md'), '# Spec', 'utf-8');
+        await fs.writeFile(path.join(completedPath, 'build_report.md'), '# Build Report', 'utf-8');
+        await fs.writeFile(
+          path.join(completedPath, 'verify_report.md'),
+          '# Verify Report\n\n**Result:** PASS',
+          'utf-8'
+        );
+        await fs.writeFile(path.join(completedPath, 'contract.yaml'),
+          `version: "1.0"\nsealed_by: "AnaPlan"\nfeature: "Test"\n\nassertions:\n  - id: A001\n    says: "Test"\n    block: "test"\n    target: "r"\n    matcher: "truthy"\n\nfile_changes:\n  - path: "src/t.ts"\n    action: create`,
+          'utf-8'
+        );
+        await fs.writeFile(path.join(completedPath, '.saves.json'), JSON.stringify({
+          'build-report': { saved_at: '2026-04-27T00:00:00Z', hash: 'sha256:' + 'a'.repeat(64) },
+          'verify-report': { saved_at: '2026-04-27T00:00:00Z', hash: 'sha256:' + 'b'.repeat(64) },
+          'pre-check': { seal: 'INTACT', assertions: [{ id: 'A001', says: 'Test', status: 'COVERED' }], covered: 1, uncovered: 0 },
+        }), 'utf-8');
+
+        // Write proof chain (as if generated but not committed)
+        await fs.writeFile(path.join(anaDir, 'proof_chain.json'), JSON.stringify({
+          entries: [{
+            slug,
+            feature: 'Test',
+            result: 'PASS',
+            author: 'AnaBuild',
+            contract: { covered: 1, total: 1, satisfied: 1 },
+            assertions: [{ id: 'A001', says: 'Test', status: 'SATISFIED' }],
+            acceptance_criteria: [],
+            timing: {},
+            hashes: {},
+            completed_at: new Date().toISOString(),
+            modules_touched: [],
+            findings: [],
+            deviations: [],
+          }],
+        }), 'utf-8');
+        await fs.writeFile(path.join(anaDir, 'PROOF_CHAIN.md'), '# Proof Chain Dashboard\n', 'utf-8');
+
+        // active path does NOT exist (it was removed)
+        // But all .ana/ changes are uncommitted — this simulates the crash
+      }
+
+      // @ana A016, A017
+      it('recovers from failed completion', async () => {
+        await createFailedCompletion('test-slug');
+
+        const originalLog = console.log;
+        const logs: string[] = [];
+        console.log = (...args: unknown[]) => { logs.push(args.map(String).join(' ')); };
+
+        await completeWork('test-slug');
+
+        console.log = originalLog;
+        const output = logs.join('\n');
+
+        // Verify recovery happened
+        expect(output).toContain('Recovering');
+        expect(output).toContain('PASS');
+
+        // Verify a commit was created
+        const lastMessage = execSync('git log -1 --pretty=%B', { cwd: tempDir, encoding: 'utf-8' }).trim();
+        expect(lastMessage).toContain('Complete');
+      });
+
+      // @ana A018
+      it('reports already completed when fully committed', async () => {
+        await createFailedCompletion('test-slug');
+
+        // Commit everything so it's genuinely completed
+        execSync('git add -A && git commit -m "complete"', { cwd: tempDir, stdio: 'ignore' });
+
+        const originalLog = console.log;
+        const logs: string[] = [];
+        console.log = (...args: unknown[]) => { logs.push(args.map(String).join(' ')); };
+
+        try {
+          await completeWork('test-slug');
+        } catch { /* exit(0) throws in test */ }
+
+        console.log = originalLog;
+        const output = logs.join('\n');
+        expect(output).toContain('already completed');
+      });
+
+      // @ana A019
+      it('double recovery succeeds', async () => {
+        await createFailedCompletion('test-slug');
+
+        // First recovery succeeds
+        await completeWork('test-slug');
+
+        // Simulate another failed state: modify an .ana/plans/ file to appear uncommitted
+        const completedPath = path.join(tempDir, '.ana', 'plans', 'completed', 'test-slug');
+        await fs.writeFile(
+          path.join(completedPath, 'extra_note.md'),
+          '# Extra note added after first recovery',
+          'utf-8'
+        );
+
+        const originalLog = console.log;
+        const logs: string[] = [];
+        console.log = (...args: unknown[]) => { logs.push(args.map(String).join(' ')); };
+
+        await completeWork('test-slug');
+
+        console.log = originalLog;
+        const output = logs.join('\n');
+        expect(output).toContain('Recovering');
+      });
+    });
+
+    describe('commit failure error message', () => {
+      // @ana A020
+      it('commit failure error includes retry command', async () => {
+        // Verify the source code contains the retry guidance pattern
+        const source = fsSync.readFileSync(
+          path.resolve(__dirname, '../../src/commands/work.ts'),
+          'utf-8'
+        );
+        expect(source).toContain('ana work complete ${slug}');
+        expect(source).toContain('to retry');
+      });
+    });
+
+    describe('subdirectory cwd', () => {
+      // @ana A009
+      it('completeWork succeeds from subdirectory', async () => {
+        await createMergedProject({ slug: 'cwd-test', phases: 1 });
+
+        // chdir into subdirectory
+        const subDir = path.join(tempDir, 'packages', 'cli');
+        await fs.mkdir(subDir, { recursive: true });
+        process.chdir(subDir);
+
+        await completeWork('cwd-test');
+
+        const completedPath = path.join(tempDir, '.ana', 'plans', 'completed', 'cwd-test');
+        expect(fsSync.existsSync(completedPath)).toBe(true);
       });
     });
   });
