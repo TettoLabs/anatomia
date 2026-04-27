@@ -2384,7 +2384,10 @@
           "file": "packages/cli/src/utils/proofSummary.ts",
           "anchor": "m.endsWith('/' + basename)",
           "id": "proof-context-query-C1",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "superseded by findings-lifecycle-foundation-C2",
+          "closed_at": "2026-04-27T22:03:13.660Z",
+          "closed_by": "mechanical"
         },
         {
           "category": "test",
@@ -2586,7 +2589,10 @@
           "file": ".ana/PROOF_CHAIN.md",
           "anchor": ".ana/PROOF_CHAIN.md",
           "id": "proof-chain-targeted-queries-C4",
-          "status": "lesson"
+          "status": "closed",
+          "closed_reason": "code changed, anchor absent",
+          "closed_at": "2026-04-27T22:03:13.659Z",
+          "closed_by": "mechanical"
         }
       ],
       "scope_summary": "Pipeline agents currently read all of PROOF_CHAIN.md (170+ lines, 58 active issues) and manually filter to relevant modules. This is the exact task agents do poorly. The `ana proof context {files}` command already exists and solves the filtering problem mechanically. Replace the full-file reads with targeted queries in the two agents that are primary proof chain consumers (Ana and Verify), and remove the reads entirely from the two agents that receive proof context through document flow (Plan and Build)."
@@ -3613,7 +3619,10 @@
           "file": "packages/cli/src/commands/work.ts",
           "anchor": "(c as { category: string }).category === 'upstream' ? 'active' : 'active' as const",
           "id": "findings-lifecycle-foundation-C1",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "superseded by fix-artifact-save-and-work-complete-C2",
+          "closed_at": "2026-04-27T22:03:13.660Z",
+          "closed_by": "mechanical"
         },
         {
           "category": "code",
@@ -3645,7 +3654,10 @@
           "file": "packages/cli/tests/commands/work.test.ts",
           "anchor": "@ana A024",
           "id": "findings-lifecycle-foundation-C5",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "superseded by fix-artifact-save-and-work-complete-C1",
+          "closed_at": "2026-04-27T22:03:13.660Z",
+          "closed_by": "mechanical"
         },
         {
           "category": "upstream",
@@ -3672,6 +3684,201 @@
           "file": "src/shared.ts"
         }
       ]
+    },
+    {
+      "slug": "fix-artifact-save-and-work-complete",
+      "feature": "Fix artifact save bypass, cwd bug, and work complete crash recovery",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 20,
+        "covered": 20,
+        "uncovered": 0,
+        "satisfied": 20,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Saving an artifact that was committed outside the pipeline still records its metadata",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "Saving an artifact that was committed outside the pipeline captures which files were changed",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Saving an artifact that was committed outside the pipeline produces a commit",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "Saving the same artifact twice without changes does not create a spurious commit",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "Metadata write is skipped when the artifact hash has not changed",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "Metadata timestamp is preserved when the artifact hash has not changed",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "Metadata write preserves existing entries like pre-check and modules_touched",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "Artifact save succeeds when run from a subdirectory",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "Work complete succeeds when run from a subdirectory",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "Work complete blocks when build-report was never saved through the pipeline",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "Work complete blocks when verify-report was never saved through the pipeline",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "Work complete blocks when both reports are missing and names both",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "Work complete blocks when both reports are missing and names the verify-report too",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "Work complete proceeds when both reports have valid save metadata",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "The completeness check does not mutate any files when it fails",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "A failed work complete is automatically recovered on retry",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A017",
+          "says": "Recovery commits the archived plan and proof chain",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A018",
+          "says": "A genuinely completed work item is reported as already completed",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A019",
+          "says": "Double recovery works when the first recovery also fails",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A020",
+          "says": "Main-path commit failure tells the user how to retry",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 11,
+        "met": 11
+      },
+      "timing": {
+        "total_minutes": 36,
+        "think": 14,
+        "plan": 14,
+        "build": 13,
+        "verify": 8
+      },
+      "hashes": {
+        "scope": "sha256:006bf8155f657c47658326a3d3138e9d2c8d85f55c60585b3ed701b654d38574",
+        "contract": "sha256:70764936b97974cfe7af1f0766f73ac4d8129eb21cd01ea3a55dd1ed25114501",
+        "plan": "sha256:b6d0c7afade0b88bfcc4a6164d1dfad85ce3f81e0f2778ed7bb9eef06bc19f70",
+        "spec": "sha256:f782569a45f58bec2b0978d3ae692a6cfa3dfddb832d4f23e1e1408eb26c606e",
+        "build-report": "sha256:10ce5e47ff24db82029d7ce16d9004188c50755baa67319e50c263375a143a38",
+        "verify-report": "sha256:86fbacf24fed913913328c77b9fa1fbc8187feedce89cbb57ad781b1a7418661"
+      },
+      "seal_commit": null,
+      "completed_at": "2026-04-27T22:03:13.633Z",
+      "modules_touched": [
+        "packages/cli/src/commands/artifact.ts",
+        "packages/cli/src/commands/work.ts",
+        "packages/cli/tests/commands/artifact.test.ts",
+        "packages/cli/tests/commands/work.test.ts"
+      ],
+      "scope_summary": "Three interrelated bugs surfaced during the findings-lifecycle-foundation completion (2026-04-27). Build manually committed `build_report.md` via `git add && git commit`, bypassing `ana artifact save`. Save reported \"already up to date\" and skipped its entire metadata pipeline. Then `work complete` ran from `packages/cli/` (a subdirectory), causing `git add .ana/plans/` to fail on a relative path. `process.exit(1)` fired after the plan directory was already moved and proof chain already written. A second `work complete` said \"already completed\" because `active/` was empty.",
+      "findings": [
+        {
+          "category": "test",
+          "summary": "A020 uses source-code reading instead of behavioral test: `packages/cli/tests/commands/work.test.ts:1736` — reads `work.ts` source and asserts the retry string exists. This proves the string is in the code but not that it appears in the error output when a commit actually fails. A behavioral test would mock `execSync` to throw on `git commit` and capture stderr. Low risk — the error path is straightforward (`catch` → `console.error` → `process.exit(1)`), but a source-reading test survives refactoring that breaks the behavior.",
+          "file": "packages/cli/tests/commands/work.test.ts",
+          "anchor": "work.ts",
+          "id": "fix-artifact-save-and-work-complete-C1",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Dead ternary on finding status: `packages/cli/src/commands/work.ts:810` — `(c as { category: string }).category === 'upstream' ? 'active' : 'active' as const` — both branches evaluate to `'active'`. This is a pre-existing issue (from proof chain history) and is immediately overwritten by the status assignment loop at lines 818-824. Not introduced by this build; dormant dead code.",
+          "file": "packages/cli/src/commands/work.ts",
+          "anchor": "(c as { category: string }).category === 'upstream' ? 'active' : 'active' as const",
+          "id": "fix-artifact-save-and-work-complete-C2",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Recovery catch swallows git status failure: `packages/cli/src/commands/work.ts:1080` — if `git status --porcelain .ana/` throws (e.g., corrupt `.git` directory), the catch silently falls through to the \"already completed\" message. This is unlikely but means a corrupted git state would report \"already completed\" instead of a diagnostic error. The spec doesn't cover this edge case, so it's not a FAIL — but it's a sharp edge.",
+          "file": "packages/cli/src/commands/work.ts",
+          "anchor": "git status --porcelain .ana/",
+          "id": "fix-artifact-save-and-work-complete-C3",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "A019 double recovery simulates failure via untracked file, not real commit failure: `packages/cli/tests/commands/work.test.ts:1714-1720` — the \"second failure\" is simulated by writing a new file to the completed directory, making `git status --porcelain .ana/` return non-empty. This is a valid test of the recovery detection path, but it doesn't prove the system recovers from two sequential real commit failures. Given the recovery code is identical to the initial commit path, this is acceptable.",
+          "file": "packages/cli/tests/commands/work.test.ts",
+          "anchor": "git status --porcelain .ana/",
+          "id": "fix-artifact-save-and-work-complete-C4",
+          "status": "closed",
+          "closed_reason": "code changed, anchor absent",
+          "closed_at": "2026-04-27T22:03:13.660Z",
+          "closed_by": "mechanical"
+        },
+        {
+          "category": "upstream",
+          "summary": "Contract A005 tests effect rather than literal return value: Contract specifies `target: \"writeResult\"` / `matcher: \"equals\"` / `value: false`, implying the test should capture and assert the return value of `writeSaveMetadata`. The test instead verifies the consequence (hash unchanged after idempotent skip). The verification is equivalent in practice — if `writeSaveMetadata` returned `true`, it would write a new timestamp, and the hash comparison would still pass but `saved_at` would change. The A006 test covers the timestamp preservation separately. Consider aligning the contract target with the actual test approach on next seal.",
+          "file": null,
+          "anchor": "target: \"writeResult\"",
+          "id": "fix-artifact-save-and-work-complete-C5",
+          "status": "lesson"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": []
     }
   ]
 }

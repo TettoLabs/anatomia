@@ -1,14 +1,13 @@
 # Proof Chain Dashboard
 
-19 runs · 40 active · 16 lessons · 0 promoted · 32 closed
+20 runs · 40 active · 16 lessons · 0 promoted · 37 closed
 
 ## Hot Modules
 
 | File | Active | Entries |
 |------|--------|--------|
 | packages/cli/tests/utils/proofSummary.test.ts | 4 | 2 |
-| packages/cli/src/utils/proofSummary.ts | 3 | 2 |
-| packages/cli/tests/commands/work.test.ts | 3 | 2 |
+| packages/cli/tests/commands/work.test.ts | 3 | 3 |
 
 ## Promoted Rules
 
@@ -34,7 +33,8 @@
 
 ### packages/cli/src/commands/work.ts
 
-- **code:** Dead ternary on new finding status: `packages/cli/src/commands/work.ts:810` — `(c as { category: string }).category === 'upstream' ? 'active' : 'active' as const` — both branches evaluate to `'active'`, making the expression a no-op. The correct assignment happens at lines 818-824. This is dead logic that should either be removed (let lines 818-824 handle it alone) or corrected to `'lesson' : 'active'` and the redundant loop removed. — *Findings Lifecycle Foundation*
+- **code:** Dead ternary on finding status: `packages/cli/src/commands/work.ts:810` — `(c as { category: string }).category === 'upstream' ? 'active' : 'active' as const` — both branches evaluate to `'active'`. This is a pre-existing issue (from proof chain history) and is immediately overwritten by the status assignment loop at lines 818-824. Not introduced by this build; dormant dead code. — *Fix artifact save bypass, cwd bug, and work complete crash recovery*
+- **code:** Recovery catch swallows git status failure: `packages/cli/src/commands/work.ts:1080` — if `git status --porcelain .ana/` throws (e.g., corrupt `.git` directory), the catch silently falls through to the "already completed" message. This is unlikely but means a corrupted git state would report "already completed" instead of a diagnostic error. The spec doesn't cover this edge case, so it's not a FAIL — but it's a sharp edge. — *Fix artifact save bypass, cwd bug, and work complete crash recovery*
 
 ### packages/cli/src/engine/analyzers/patterns/confirmation.ts
 
@@ -60,7 +60,6 @@
 
 - **code:** Redundant status filter in Hot Modules: `packages/cli/src/utils/proofSummary.ts:535-536` — double-checks `finding.status` both as truthy and not-undefined, then re-checks on the next line. A single `if (finding.status !== 'active' && finding.status !== undefined) continue;` would be clearer. — *Findings Lifecycle Foundation*
 - **code:** Dashboard duplicates Active Issues logic: `packages/cli/src/utils/proofSummary.ts:566-616` — reimplements the collection, filtering, capping, and file-grouping from `generateActiveIssuesMarkdown` (lines 385-473). The format differs (### vs ## headings, no truncation), but extracting shared helpers for the filtering and grouping would reduce the ~50 lines of duplication. — *Findings Lifecycle Foundation*
-- **code:** Root-level module paths won't match: `proofSummary.ts:336` — `m.endsWith('/' + basename)` requires a `/` prefix. A module at the repository root (e.g., bare `census.ts` in `modules_touched`) wouldn't match. Dormant — `git diff` always produces paths with directory segments. If `modules_touched` ever comes from a source that produces bare filenames, resolution silently skips them. — *Proof context file query*
 
 ### packages/cli/src/utils/validators.ts
 
@@ -72,8 +71,8 @@
 
 ### packages/cli/tests/commands/work.test.ts
 
+- **test:** A020 uses source-code reading instead of behavioral test: `packages/cli/tests/commands/work.test.ts:1736` — reads `work.ts` source and asserts the retry string exists. This proves the string is in the code but not that it appears in the error output when a commit actually fails. A behavioral test would mock `execSync` to throw on `git commit` and capture stderr. Low risk — the error path is straightforward (`catch` → `console.error` → `process.exit(1)`), but a source-reading test survives refactoring that breaks the behavior. — *Fix artifact save bypass, cwd bug, and work complete crash recovery*
 - **test:** A015/A016 edge cases not behaviorally exercised: `packages/cli/tests/commands/work.test.ts:1278` — the supersession test proves the core mechanism but doesn't include an unresolved-basename finding (to prove A015's skip) or two same-entry findings with matching file+category (to prove A016's guard). The code guards are trivial and correct by inspection, but the test coverage gap means a regression in those guards wouldn't be caught. — *Findings Lifecycle Foundation*
-- **test:** A024 warning test doesn't trigger the warning: `packages/cli/tests/commands/work.test.ts:1372` — the test is tagged `@ana A024` but only asserts the entry has `result === 'PASS'`. The UNKNOWN warning path is unreachable through `completeWork` because of pre-validation. A direct `writeProofChain` test with an UNKNOWN-result proof object would exercise the actual warning. — *Findings Lifecycle Foundation*
 - **code:** A008/A009 tag collision with prior feature: `work.test.ts:423` — Tags `@ana A008, A009` exist from a previous feature's contract (configurable branchPrefix). Pre-check tools that grep for `@ana A008` will find both. No functional impact today, but as tag density grows, disambiguation may be needed (e.g., feature-scoped tag namespaces). — *Proof chain health signal*
 
 ### packages/cli/tests/engine/detectors/readme.test.ts
