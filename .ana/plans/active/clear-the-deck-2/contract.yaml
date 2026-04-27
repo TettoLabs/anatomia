@@ -1,0 +1,182 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Clear the Deck Phase 2"
+
+assertions:
+  # --- Templates (AC1-AC7) ---
+  - id: A001
+    says: "Every agent session gets the full 1M context window"
+    block: "agent templates specify opus[1m]"
+    target: "template.frontmatter.model"
+    matcher: "equals"
+    value: "opus[1m]"
+
+  - id: A002
+    says: "Verify asks the developer before starting verification"
+    block: "verify template has confirmation step"
+    target: "template.verify.confirmation_step"
+    matcher: "exists"
+
+  - id: A003
+    says: "Build no longer tells agents to skip asking permission"
+    block: "build template step 0 reworded"
+    target: "template.build.step0"
+    matcher: "not_contains"
+    value: "Do not ask permission"
+
+  - id: A004
+    says: "Verify callouts use project-relative paths for better data quality"
+    block: "verify template callout path instruction"
+    target: "template.verify.callout_section"
+    matcher: "contains"
+    value: "project-relative"
+
+  - id: A005
+    says: "Setup reads validation schema files to understand project patterns"
+    block: "setup template reads validation files"
+    target: "template.setup.step4"
+    matcher: "contains"
+    value: "validation"
+
+  - id: A006
+    says: "Setup surfaces validation and test findings in the context draft"
+    block: "setup template surfaces findings in step 5"
+    target: "template.setup.step5"
+    matcher: "contains"
+    value: "validation"
+
+  - id: A007
+    says: "Setup reads auth config when the project has authentication"
+    block: "setup template reads auth config"
+    target: "template.setup.step4"
+    matcher: "contains"
+    value: "auth"
+
+  # --- Code corrections (AC8-AC12) ---
+  - id: A008
+    says: "The confusing slugDir2 variable name is cleaned up"
+    block: "artifact.ts slugDir rename"
+    target: "artifact.ts.post_validation_var"
+    matcher: "not_contains"
+    value: "slugDir2"
+
+  - id: A009
+    says: "Setup validation checks use real scan data instead of null"
+    block: "validateSetupCompletion passes scan.json"
+    target: "check.ts.validateSetupCompletion.scanJson_arg"
+    matcher: "not_equals"
+    value: "null"
+
+  - id: A010
+    says: "Build concerns are always present on proof chain entries"
+    block: "ProofChainEntry build_concerns non-optional"
+    target: "ProofChainEntry.build_concerns"
+    matcher: "not_contains"
+    value: "?"
+
+  - id: A011
+    says: "ProofSummary build concerns are always present"
+    block: "ProofSummary build_concerns non-optional"
+    target: "ProofSummary.build_concerns"
+    matcher: "not_contains"
+    value: "?"
+
+  - id: A012
+    says: "Completed work always records build concerns, even when empty"
+    block: "writeProofChain always writes build_concerns"
+    target: "work.ts.entry.build_concerns"
+    matcher: "exists"
+
+  - id: A013
+    says: "All historical proof chain entries have consistent data"
+    block: "proof_chain.json backfill"
+    target: "proof_chain.entries_without_build_concerns"
+    matcher: "equals"
+    value: 0
+
+  # --- Glob fallback (AC13-AC15) ---
+  - id: A014
+    says: "File references resolve even when the file wasn't modified in the build"
+    block: "resolveCalloutPaths glob fallback resolves single match"
+    target: "item.file"
+    matcher: "contains"
+    value: "/"
+
+  - id: A015
+    says: "Ambiguous file references stay unresolved rather than guessing wrong"
+    block: "resolveCalloutPaths glob fallback skips ambiguous"
+    target: "item.file"
+    matcher: "not_contains"
+    value: "/"
+
+  - id: A016
+    says: "File resolution ignores dependency folders to avoid false matches"
+    block: "resolveCalloutPaths glob excludes node_modules"
+    target: "item.file"
+    matcher: "not_contains"
+    value: "/"
+
+  - id: A017
+    says: "File resolution ignores Anatomia's own data to avoid self-matching"
+    block: "resolveCalloutPaths glob excludes .ana"
+    target: "item.file"
+    matcher: "not_contains"
+    value: "/"
+
+  - id: A018
+    says: "All proof chain write paths pass project root for file resolution"
+    block: "resolveCalloutPaths call sites pass projectRoot"
+    target: "work.ts.resolveCalloutPaths.args"
+    matcher: "contains"
+    value: "projectRoot"
+
+  # --- Nonzero callout test (AC16) ---
+  - id: A019
+    says: "Proof chain accumulation correctly counts callouts across pipeline runs"
+    block: "nonzero callout accumulation"
+    target: "output"
+    matcher: "contains"
+    value: "callouts"
+
+  # --- Suite health (AC17-AC18) ---
+  - id: A020
+    says: "All existing tests continue to pass after the changes"
+    block: "full test suite passes"
+    target: "test.exitCode"
+    matcher: "equals"
+    value: 0
+
+  - id: A021
+    says: "Code meets lint standards with no new violations"
+    block: "lint passes"
+    target: "lint.exitCode"
+    matcher: "equals"
+    value: 0
+
+file_changes:
+  - path: "packages/cli/templates/.claude/agents/ana.md"
+    action: modify
+  - path: "packages/cli/templates/.claude/agents/ana-build.md"
+    action: modify
+  - path: "packages/cli/templates/.claude/agents/ana-plan.md"
+    action: modify
+  - path: "packages/cli/templates/.claude/agents/ana-verify.md"
+    action: modify
+  - path: "packages/cli/templates/.claude/agents/ana-setup.md"
+    action: modify
+  - path: "packages/cli/src/commands/artifact.ts"
+    action: modify
+  - path: "packages/cli/src/commands/check.ts"
+    action: modify
+  - path: "packages/cli/src/types/proof.ts"
+    action: modify
+  - path: "packages/cli/src/utils/proofSummary.ts"
+    action: modify
+  - path: "packages/cli/src/commands/work.ts"
+    action: modify
+  - path: ".ana/proof_chain.json"
+    action: modify
+  - path: "packages/cli/tests/utils/proofSummary.test.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/work.test.ts"
+    action: modify
