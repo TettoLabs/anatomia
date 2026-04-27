@@ -14,5 +14,9 @@
   "spec": {
     "saved_at": "2026-04-27T00:47:01.888Z",
     "hash": "sha256:39b013a6aecba00e7212e1af519e6a1f071b48c1d3c7148709b0dc0c7d3ebafc"
+  },
+  "build-report": {
+    "saved_at": "2026-04-27T01:09:04.015Z",
+    "hash": "sha256:469683e462152c4d6264ac614c358920efaa9685a46bd993c8d5c47de01a3696"
   }
 }
