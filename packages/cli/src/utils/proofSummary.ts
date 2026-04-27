@@ -67,6 +67,7 @@ export interface ProofSummary {
   hashes: Record<string, string>;
   seal_commit: string | null;
   completed_at: string;
+  scope_summary?: string | undefined;
   // S23 pipeline hardening — intelligence capture
   findings: Array<{ category: string; summary: string; file: string | null; anchor: string | null }>;
   rejection_cycles: number;
@@ -369,7 +370,7 @@ interface FindingWithFeature {
 interface ProofChainEntryForIndex {
   feature: string;
   completed_at: string;
-  findings?: Array<{ id: string; category: string; summary: string; file: string | null; anchor: string | null }>;
+  findings?: Array<{ id: string; category: string; summary: string; file: string | null; anchor: string | null; status?: string }>;
 }
 
 /**
@@ -392,6 +393,8 @@ export function generateActiveIssuesMarkdown(entries: ProofChainEntryForIndex[])
     // Handle entries without findings (older entries may not have this field)
     const findings = entry.findings || [];
     for (const finding of findings) {
+      // Filter to active findings only (status === 'active' or undefined for backward compat)
+      if (finding.status && finding.status !== 'active') continue;
       allFindings.push({
         category: finding.category,
         summary: finding.summary,
@@ -403,7 +406,7 @@ export function generateActiveIssuesMarkdown(entries: ProofChainEntryForIndex[])
   }
 
   // Cap at MAX_ACTIVE_ISSUES (take from start = most recent)
-  const MAX_ACTIVE_ISSUES = 20;
+  const MAX_ACTIVE_ISSUES = 30;
   const totalCount = allFindings.length;
   const cappedFindings = allFindings.slice(0, MAX_ACTIVE_ISSUES);
 
@@ -465,6 +468,153 @@ export function generateActiveIssuesMarkdown(entries: ProofChainEntryForIndex[])
   }
 
   md += '---\n';
+
+  return md;
+}
+
+/**
+ * Extract the first paragraph of the ## Intent section from a scope.md file.
+ *
+ * "First paragraph" = text between `## Intent\n` and the next blank line or `##` heading.
+ * Returns undefined if scope.md doesn't exist or has no Intent section.
+ *
+ * @param scopePath - Absolute path to scope.md
+ * @returns First paragraph text, or undefined
+ */
+export function extractScopeSummary(scopePath: string): string | undefined {
+  if (!fs.existsSync(scopePath)) return undefined;
+  try {
+    const content = fs.readFileSync(scopePath, 'utf-8');
+    const intentMatch = content.match(/## Intent\n([\s\S]*?)(?=\n## |\n\n|$)/);
+    if (!intentMatch || !intentMatch[1]) return undefined;
+    const paragraph = intentMatch[1].trim();
+    return paragraph || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Dashboard entry type for generateDashboard
+ */
+interface DashboardEntry {
+  slug: string;
+  feature: string;
+  completed_at: string;
+  findings?: Array<{ id: string; category: string; summary: string; file: string | null; anchor: string | null; status?: string }>;
+}
+
+/**
+ * Generate a quality dashboard from proof chain entries.
+ *
+ * Contains: summary line, Hot Modules section, Promoted Rules placeholder,
+ * and Active Findings section (via generateActiveIssuesMarkdown logic, grouped by file).
+ *
+ * @param entries - Proof chain entries (oldest first)
+ * @param stats - Chain health stats
+ * @param stats.runs - Total pipeline runs
+ * @param stats.active - Active finding count
+ * @param stats.lessons - Lesson finding count
+ * @param stats.promoted - Promoted finding count
+ * @param stats.closed - Closed finding count
+ * @returns Markdown string for PROOF_CHAIN.md
+ */
+export function generateDashboard(entries: DashboardEntry[], stats: { runs: number; active: number; lessons: number; promoted: number; closed: number }): string {
+  let md = '# Proof Chain Dashboard\n\n';
+
+  // Summary line
+  md += `${stats.runs} runs · ${stats.active} active · ${stats.lessons} lessons · ${stats.promoted} promoted · ${stats.closed} closed\n\n`;
+
+  // Hot Modules: files with active findings from 2+ distinct entries
+  const fileEntryMap = new Map<string, Set<string>>();
+  const fileActiveCount = new Map<string, number>();
+
+  for (const entry of entries) {
+    for (const finding of entry.findings ?? []) {
+      if (!finding.file) continue;
+      if (finding.status && finding.status !== 'active' && finding.status !== undefined) continue;
+      if (!finding.status || finding.status === 'active') {
+        const entrySet = fileEntryMap.get(finding.file) || new Set();
+        entrySet.add(entry.slug);
+        fileEntryMap.set(finding.file, entrySet);
+        fileActiveCount.set(finding.file, (fileActiveCount.get(finding.file) || 0) + 1);
+      }
+    }
+  }
+
+  md += '## Hot Modules\n\n';
+  const hotModules = Array.from(fileEntryMap.entries())
+    .filter(([, entrySet]) => entrySet.size >= 2)
+    .map(([file, entrySet]) => ({ file, active: fileActiveCount.get(file) || 0, entries: entrySet.size }))
+    .sort((a, b) => b.active - a.active)
+    .slice(0, 5);
+
+  if (hotModules.length > 0) {
+    md += '| File | Active | Entries |\n';
+    md += '|------|--------|--------|\n';
+    for (const mod of hotModules) {
+      md += `| ${mod.file} | ${mod.active} | ${mod.entries} |\n`;
+    }
+  } else {
+    md += '*No hot modules yet.*\n';
+  }
+
+  md += '\n## Promoted Rules\n\n*No promoted rules yet.*\n\n';
+
+  // Active Findings section (reuse generateActiveIssuesMarkdown logic)
+  // Collect active findings
+  const allActive: Array<FindingWithFeature & { entryDate: string }> = [];
+  const reversedEntries = [...entries].reverse();
+  for (const entry of reversedEntries) {
+    for (const finding of entry.findings ?? []) {
+      if (finding.status && finding.status !== 'active') continue;
+      allActive.push({
+        category: finding.category,
+        summary: finding.summary,
+        file: finding.file,
+        feature: entry.feature,
+        entryDate: entry.completed_at,
+      });
+    }
+  }
+
+  const MAX_ACTIVE = 30;
+  const totalActive = allActive.length;
+  const capped = allActive.slice(0, MAX_ACTIVE);
+
+  if (totalActive === 0) {
+    md += '## Active Findings\n\n*No active findings.*\n';
+  } else {
+    if (totalActive <= MAX_ACTIVE) {
+      md += `## Active Findings (${totalActive})\n\n`;
+    } else {
+      md += `## Active Findings (${MAX_ACTIVE} shown of ${totalActive} total)\n\n`;
+    }
+
+    // Group by file
+    const fileGroups = new Map<string, Array<FindingWithFeature & { entryDate: string }>>();
+    for (const finding of capped) {
+      const key = finding.file ?? 'General';
+      const existing = fileGroups.get(key) || [];
+      existing.push(finding);
+      fileGroups.set(key, existing);
+    }
+
+    const fileNames = Array.from(fileGroups.keys()).sort((a, b) => {
+      if (a === 'General') return 1;
+      if (b === 'General') return -1;
+      return a.localeCompare(b);
+    });
+
+    for (const fileName of fileNames) {
+      const findings = fileGroups.get(fileName) || [];
+      md += `### ${fileName}\n\n`;
+      for (const finding of findings) {
+        md += `- **${finding.category}:** ${finding.summary} — *${finding.feature}*\n`;
+      }
+      md += '\n';
+    }
+  }
 
   return md;
 }
@@ -827,6 +977,10 @@ export function generateProofSummary(slugDir: string): ProofSummary {
     }
   }
 
+  // Source 5: scope.md (for scope_summary)
+  const scopePath = path.join(slugDir, 'scope.md');
+  summary.scope_summary = extractScopeSummary(scopePath);
+
   return summary;
 }
 
@@ -843,6 +997,7 @@ export interface ProofContextResult {
     anchor: string | null;
     from: string;
     date: string;
+    status?: string | undefined;
   }>;
   build_concerns: Array<{
     summary: string;
@@ -861,7 +1016,7 @@ interface ProofChainEntryForContext {
   feature: string;
   completed_at?: string;
   modules_touched?: string[];
-  findings?: Array<{ id: string; category: string; summary: string; file: string | null; anchor: string | null }>;
+  findings?: Array<{ id: string; category: string; summary: string; file: string | null; anchor: string | null; status?: string }>;
   build_concerns?: Array<{ summary: string; file: string | null }>;
 }
 
@@ -910,9 +1065,11 @@ function fileMatches(stored: string, queried: string): boolean {
  *
  * @param queries - Array of file paths to query
  * @param projectRoot - Project root directory (where .ana/ lives)
+ * @param options - Optional configuration
+ * @param options.includeAll - When true, returns all findings regardless of status
  * @returns Array of ProofContextResult, one per queried file
  */
-export function getProofContext(queries: string[], projectRoot: string): ProofContextResult[] {
+export function getProofContext(queries: string[], projectRoot: string, options?: { includeAll?: boolean }): ProofContextResult[] {
   const chainPath = path.join(projectRoot, '.ana', 'proof_chain.json');
 
   if (!fs.existsSync(chainPath)) {
@@ -946,6 +1103,8 @@ export function getProofContext(queries: string[], projectRoot: string): ProofCo
       // Match findings
       for (const finding of entry.findings ?? []) {
         if (!finding.file) continue;
+        // Filter by status: default excludes closed/lesson/promoted, includeAll returns everything
+        if (!options?.includeAll && finding.status && finding.status !== 'active') continue;
         if (fileMatches(finding.file, query)) {
           matchedFindings.push({
             id: finding.id,
@@ -955,6 +1114,7 @@ export function getProofContext(queries: string[], projectRoot: string): ProofCo
             anchor: finding.anchor,
             from: entry.feature,
             date: entryDate,
+            status: finding.status,
           });
           entryTouches = true;
         }

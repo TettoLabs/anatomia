@@ -807,10 +807,10 @@ describe('generateActiveIssuesMarkdown', () => {
   });
 
   // @ana A009, A013
-  it('respects 20-finding cap', () => {
-    // Create 25 findings across entries
+  it('respects 30-finding cap', () => {
+    // Create 35 findings across entries
     const entries = [];
-    for (let i = 0; i < 25; i++) {
+    for (let i = 0; i < 35; i++) {
       entries.push({
         feature: `Feature ${i}`,
         completed_at: `2026-04-${String(i + 1).padStart(2, '0')}T10:00:00Z`,
@@ -821,7 +821,7 @@ describe('generateActiveIssuesMarkdown', () => {
     // Count unique finding entries (lines starting with "- **")
     const findingLines = output.split('\n').filter(line => line.startsWith('- **'));
     const findingCount = findingLines.length;
-    expect(findingCount).toBe(20);
+    expect(findingCount).toBe(30);
   });
 
   // @ana A010
@@ -952,11 +952,11 @@ describe('generateActiveIssuesMarkdown', () => {
     expect(zebraPos).toBeLessThan(generalPos);
   });
 
-  it('takes most recent findings when capping at 20', () => {
+  it('takes most recent findings when capping at 30', () => {
     // Create entries: older entries have "old" in summary, newer have "new"
     const entries = [];
-    // Add 15 old entries first (these will be at start of array = oldest)
-    for (let i = 0; i < 15; i++) {
+    // Add 25 old entries first (these will be at start of array = oldest)
+    for (let i = 0; i < 25; i++) {
       entries.push({
         feature: `Old Feature ${i}`,
         completed_at: `2026-01-${String(i + 1).padStart(2, '0')}T10:00:00Z`,
@@ -972,11 +972,11 @@ describe('generateActiveIssuesMarkdown', () => {
       });
     }
     const output = generateActiveIssuesMarkdown(entries);
-    // Should have all 10 new issues (indices 0-9)
+    // Should have all 10 new issues
     for (let i = 0; i < 10; i++) {
       expect(output).toContain(`new-issue-${i}`);
     }
-    // Should have 10 old issues (most recent ones: indices 5-14)
+    // Should have 20 old issues (most recent: indices 5-24)
     // Old issues 0-4 should be dropped
     expect(output).not.toContain('old-issue-0');
     expect(output).not.toContain('old-issue-4');
@@ -998,8 +998,8 @@ describe('generateActiveIssuesMarkdown', () => {
     expect(md).not.toContain('shown of');
   });
 
-  it('heading shows cap info when over 20 findings', () => {
-    const findings = Array.from({ length: 25 }, (_, i) => ({ id: `test-C${i}`, category: 'code', summary: `issue number ${i + 1} in unique-file-${i}.ts`, file: `unique-file-${i}.ts`, anchor: null,
+  it('heading shows cap info when over 30 findings', () => {
+    const findings = Array.from({ length: 35 }, (_, i) => ({ id: `test-C${i}`, category: 'code', summary: `issue number ${i + 1} in unique-file-${i}.ts`, file: `unique-file-${i}.ts`, anchor: null,
     }));
     const entries = [{
       feature: 'Big Feature',
@@ -1007,7 +1007,7 @@ describe('generateActiveIssuesMarkdown', () => {
       findings,
     }];
     const md = generateActiveIssuesMarkdown(entries);
-    expect(md).toContain('20 shown of');
+    expect(md).toContain('30 shown of');
     expect(md).toContain('total)');
   });
 
@@ -1018,7 +1018,7 @@ describe('generateActiveIssuesMarkdown', () => {
   });
 
   it('heading shows exact count at cap boundary', () => {
-    const findings = Array.from({ length: 20 }, (_, i) => ({ id: `test-C${i}`, category: 'code', summary: `issue ${i + 1} in file-${i}.ts`, file: `file-${i}.ts`, anchor: null,
+    const findings = Array.from({ length: 30 }, (_, i) => ({ id: `test-C${i}`, category: 'code', summary: `issue ${i + 1} in file-${i}.ts`, file: `file-${i}.ts`, anchor: null,
     }));
     const entries = [{
       feature: 'Feature',
@@ -1026,7 +1026,7 @@ describe('generateActiveIssuesMarkdown', () => {
       findings,
     }];
     const md = generateActiveIssuesMarkdown(entries);
-    expect(md).toMatch(/# Active Issues \(20\)/);
+    expect(md).toMatch(/# Active Issues \(30\)/);
     expect(md).not.toContain('shown of');
   });
 

@@ -1057,7 +1057,7 @@ Tests: 5 passed
         expect(chain.entries[1].slug).toBe('test-feature');
       });
 
-      it('writes PROOF_CHAIN.md', async () => {
+      it('writes PROOF_CHAIN.md as quality dashboard', async () => {
         await createProofProject('test-feature');
 
         await completeWork('test-feature');
@@ -1066,9 +1066,10 @@ Tests: 5 passed
         expect(fsSync.existsSync(chainMdPath)).toBe(true);
 
         const content = fsSync.readFileSync(chainMdPath, 'utf-8');
-        expect(content).toContain('## Test Feature');
-        expect(content).toContain('Result: PASS');
-        expect(content).toContain('2/2 satisfied');
+        expect(content).toContain('# Proof Chain Dashboard');
+        expect(content).toContain('runs');
+        expect(content).toContain('## Hot Modules');
+        expect(content).toContain('## Promoted Rules');
       });
 
       it('prints proof summary line', async () => {
@@ -1091,7 +1092,7 @@ Tests: 5 passed
         expect(output).toContain('Test Feature');
         expect(output).toContain('2/2 covered');
         expect(output).not.toContain('Proof saved to chain');
-        expect(output).toContain('Chain: 1 run · 0 findings');
+        expect(output).toContain('Chain: 1 run · 0 active findings');
       });
 
       // @ana A019
@@ -1102,6 +1103,15 @@ Tests: 5 passed
         const slugPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-feature');
         const verifyPath = path.join(slugPath, 'verify_report.md');
         const verifyContent = fsSync.readFileSync(verifyPath, 'utf-8');
+        // Create referenced files so staleness checks don't close the findings
+        const srcDir = path.join(tempDir, 'src');
+        const testsDir = path.join(tempDir, 'tests');
+        fsSync.mkdirSync(srcDir, { recursive: true });
+        fsSync.mkdirSync(testsDir, { recursive: true });
+        fsSync.writeFileSync(path.join(srcDir, 'client.ts'), 'export const TIMEOUT = 5000;');
+        fsSync.writeFileSync(path.join(testsDir, 'auth.test.ts'), 'test("auth", () => {});');
+        fsSync.writeFileSync(path.join(srcDir, 'api.ts'), 'try {} catch {}');
+
         const patchedContent = verifyContent.replace(
           '## Verdict',
           `## Callouts
@@ -1127,7 +1137,7 @@ Tests: 5 passed
         console.log = originalLog;
         const output = logs.join('\n');
 
-        expect(output).toContain('Chain: 1 run · 3 findings');
+        expect(output).toContain('Chain: 1 run · 3 active findings');
       });
 
       // @ana A005, A006, A009
@@ -1146,7 +1156,7 @@ Tests: 5 passed
         console.log = originalLog;
         const output = logs.join('\n');
 
-        expect(output).toContain('Chain: 2 runs · 0 findings');
+        expect(output).toContain('Chain: 2 runs · 0 active findings');
       });
     });
   });

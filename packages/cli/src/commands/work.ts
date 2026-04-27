@@ -17,7 +17,7 @@ import * as fs from 'node:fs';
 import * as fsPromises from 'node:fs/promises';
 import * as path from 'node:path';
 import { readArtifactBranch, readBranchPrefix, getCurrentBranch } from '../utils/git-operations.js';
-import { generateProofSummary, generateActiveIssuesMarkdown, resolveFindingPaths, type ProofSummary } from '../utils/proofSummary.js';
+import { generateProofSummary, resolveFindingPaths, extractScopeSummary, generateDashboard, type ProofSummary } from '../utils/proofSummary.js';
 import { findProjectRoot } from '../utils/validators.js';
 import type { ProofChainEntry, ProofChain, ProofChainStats } from '../types/proof.js';
 
@@ -770,6 +770,15 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
     }
   } catch { /* fall back to empty */ }
 
+  // UNKNOWN result warning (AC12)
+  const completedPlanDir = path.join(anaDir, 'plans', 'completed', slug);
+  if (proof.result === 'UNKNOWN') {
+    const verifyReportPath = path.join(completedPlanDir, 'verify_report.md');
+    if (fs.existsSync(verifyReportPath)) {
+      console.error(`Warning: Entry '${slug}' has result UNKNOWN but a verify report exists. Check verify_report.md for a Result line.`);
+    }
+  }
+
   const entry: ProofChainEntry = {
     slug,
     feature: proof.feature,
@@ -794,97 +803,181 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
     seal_commit: proof.seal_commit,
     completed_at: new Date().toISOString(),
     modules_touched: modulesTouched,
+    scope_summary: proof.scope_summary,
     findings: proof.findings.map((c, i) => ({
       ...c,
       id: `${slug}-C${i + 1}`,
+      status: (c as { category: string }).category === 'upstream' ? 'active' : 'active' as const,
     })),
     rejection_cycles: proof.rejection_cycles,
     previous_failures: proof.previous_failures,
     build_concerns: proof.build_concerns ?? [],
   };
 
+  // Assign status to new findings (AC5)
+  for (const finding of entry.findings) {
+    if (finding.category === 'upstream') {
+      finding.status = 'lesson';
+    } else {
+      finding.status = 'active';
+    }
+  }
+
   // Resolve finding/build_concern file fields from basenames to full paths.
   // New entry: resolve against its own modules_touched
   resolveFindingPaths(entry.findings, entry.modules_touched || [], projectRoot);
   resolveFindingPaths(entry.build_concerns || [], entry.modules_touched || [], projectRoot);
 
+  // Maintenance counters
+  let autoClosed = 0;
+  let lessonsClassified = 0;
+
   // Existing entries: backfill (idempotent — already-resolved files are skipped)
   for (const existing of chain.entries) {
+    // Migration: rename callouts → findings field (AC16)
+    const existingAny = existing as unknown as Record<string, unknown>;
+    if (existingAny['callouts'] && !existing.findings) {
+      existing.findings = existingAny['callouts'] as ProofChainEntry['findings'];
+      delete existingAny['callouts'];
+    }
+
     resolveFindingPaths(existing.findings || [], existing.modules_touched || [], projectRoot);
     resolveFindingPaths(existing.build_concerns || [], existing.modules_touched || [], projectRoot);
+
+    // Backfill status (AC4) — idempotent
+    for (const finding of existing.findings || []) {
+      if (!finding.status) {
+        if (finding.category === 'upstream') {
+          finding.status = 'lesson';
+          lessonsClassified++;
+        } else {
+          finding.status = 'active';
+        }
+      }
+    }
+
+    // Backfill scope_summary (AC11)
+    if (!existing.scope_summary) {
+      const scopePath = path.join(anaDir, 'plans', 'completed', existing.slug, 'scope.md');
+      existing.scope_summary = extractScopeSummary(scopePath);
+    }
+  }
+
+  // Staleness checks — run after path resolution and status assignment
+  // Process all entries (existing + new)
+  const allEntries = [...chain.entries, entry];
+  const fileContentCache = new Map<string, string | null>();
+
+  const readFileContent = (filePath: string): string | null => {
+    if (fileContentCache.has(filePath)) return fileContentCache.get(filePath)!;
+    try {
+      const content = fs.readFileSync(filePath, 'utf-8');
+      fileContentCache.set(filePath, content);
+      return content;
+    } catch {
+      fileContentCache.set(filePath, null);
+      return null;
+    }
+  };
+
+  for (const chainEntry of allEntries) {
+    for (const finding of chainEntry.findings || []) {
+      // Skip already-closed findings
+      if (finding.status === 'closed') continue;
+
+      // AC6: File-deleted check
+      if (finding.file && finding.file.includes('/')) {
+        const fullPath = path.join(projectRoot, finding.file);
+        if (!fs.existsSync(fullPath)) {
+          finding.status = 'closed';
+          finding.closed_reason = 'file removed';
+          finding.closed_at = new Date().toISOString();
+          finding.closed_by = 'mechanical';
+          autoClosed++;
+          continue;
+        }
+
+        // AC7: Anchor-absent check
+        if (finding.anchor) {
+          const content = readFileContent(fullPath);
+          if (content !== null && !content.includes(finding.anchor)) {
+            finding.status = 'closed';
+            finding.closed_reason = 'code changed, anchor absent';
+            finding.closed_at = new Date().toISOString();
+            finding.closed_by = 'mechanical';
+            autoClosed++;
+          }
+        }
+      }
+    }
+  }
+
+  // AC8: Supersession — newer finding on same file+category closes older ones
+  const supersessionMap = new Map<string, { finding: ProofChainEntry['findings'][0]; entryIndex: number }>();
+  for (let entryIdx = 0; entryIdx < allEntries.length; entryIdx++) {
+    const chainEntry = allEntries[entryIdx]!;
+    for (const finding of chainEntry.findings || []) {
+      if (finding.status === 'closed' || finding.status === 'lesson') continue;
+      if (!finding.file || !finding.file.includes('/')) continue;
+
+      const key = `${finding.file}:${finding.category}`;
+      const existing = supersessionMap.get(key);
+      if (existing && existing.entryIndex !== entryIdx) {
+        // Older finding superseded by newer
+        existing.finding.status = 'closed';
+        existing.finding.closed_reason = `superseded by ${finding.id}`;
+        existing.finding.closed_at = new Date().toISOString();
+        existing.finding.closed_by = 'mechanical';
+        autoClosed++;
+      }
+      supersessionMap.set(key, { finding, entryIndex: entryIdx });
+    }
   }
 
   chain.entries.push(entry);
   await fsPromises.writeFile(chainPath, JSON.stringify(chain, null, 2));
 
-  // 2. Regenerate PROOF_CHAIN.md entirely from proof_chain.json
+  // 2. Regenerate PROOF_CHAIN.md as quality dashboard
   const chainMdPath = path.join(anaDir, 'PROOF_CHAIN.md');
-
-  // Generate Active Issues section from all entries
-  const activeIssuesMd = generateActiveIssuesMarkdown(chain.entries);
-
-  // Generate chronological history (newest first)
-  const reversedEntries = [...chain.entries].reverse();
-  const historyEntries: string[] = [];
-
-  for (const historyEntry of reversedEntries) {
-    const entryDate = historyEntry.completed_at.split('T')[0];
-
-    // Handle optional fields for older entries
-    const assertions = historyEntry.assertions || [];
-    const contract = historyEntry.contract || { satisfied: 0, total: 0 };
-    const acceptanceCriteria = historyEntry.acceptance_criteria || { met: 0, total: 0 };
-    const timing = historyEntry.timing || { total_minutes: 0 };
-    const modulesTouched = historyEntry.modules_touched || [];
-    const rejectionCycles = historyEntry.rejection_cycles || 0;
-    const previousFailures = historyEntry.previous_failures || [];
-    const findings = historyEntry.findings || [];
-
-    const deviationCount = assertions.filter(a => a.status === 'DEVIATED').length;
-    const deviationSummary = deviationCount > 0
-      ? `\nDeviations: ${assertions
-          .filter(a => a.status === 'DEVIATED' && a.deviation)
-          .map(a => `${a.id} — ${a.deviation}`)
-          .join('; ')}`
-      : '';
-
-    const timingDetails = (timing.think != null && timing.verify != null)
-      ? ` (Think ${timing.think}m, Plan ${timing.plan}m, Build ${timing.build}m, Verify ${timing.verify}m)`
-      : '';
-
-    const modulesLine = modulesTouched.length > 0
-      ? `\nModules: ${modulesTouched.slice(0, 10).join(', ')}${modulesTouched.length > 10 ? ` (+${modulesTouched.length - 10} more)` : ''}`
-      : '';
-
-    const rejectionLine = rejectionCycles > 0
-      ? `\nRejection cycles: ${rejectionCycles} (${previousFailures.map(f => `${f.id} ${f.summary}`).join(', ')})`
-      : '';
-
-    // Finding digest — top 5 in markdown. Priority: code > test > upstream
-    const categoryOrder: Record<string, number> = { code: 0, test: 1, upstream: 2 };
-    const sortedFindings = [...findings].sort((a, b) =>
-      (categoryOrder[a.category] ?? 3) - (categoryOrder[b.category] ?? 3)
-    );
-    const findingLines = sortedFindings.length > 0
-      ? '\nFindings:\n' + sortedFindings.slice(0, 5).map(c => `- ${c.category}: ${c.summary}`).join('\n')
-      : '';
-
-    const mdEntryText = `## ${historyEntry.feature} (${entryDate})
-Result: ${historyEntry.result} | ${contract.satisfied}/${contract.total} satisfied | ${acceptanceCriteria.met}/${acceptanceCriteria.total} ACs | ${deviationCount} deviation${deviationCount !== 1 ? 's' : ''}
-Pipeline: ${timing.total_minutes}m${timingDetails}${deviationSummary}${modulesLine}${rejectionLine}${findingLines}
-`;
-
-    historyEntries.push(mdEntryText);
-  }
-
-  // Combine Active Issues + history
-  const fullMd = activeIssuesMd + '\n' + historyEntries.join('\n');
-  await fsPromises.writeFile(chainMdPath, fullMd);
 
   // Compute chain health counts
   const runs = chain.entries.length;
-  const findings = chain.entries.reduce((sum, e) => sum + (e.findings || []).length, 0);
-  return { runs, findings };
+  let totalFindings = 0;
+  let activeCount = 0;
+  let lessonsCount = 0;
+  let promotedCount = 0;
+  let closedCount = 0;
+
+  for (const e of chain.entries) {
+    for (const f of e.findings || []) {
+      totalFindings++;
+      switch (f.status) {
+        case 'active': activeCount++; break;
+        case 'lesson': lessonsCount++; break;
+        case 'promoted': promotedCount++; break;
+        case 'closed': closedCount++; break;
+        default: activeCount++; break; // undefined = active
+      }
+    }
+  }
+
+  const dashboardMd = generateDashboard(chain.entries, { runs, active: activeCount, lessons: lessonsCount, promoted: promotedCount, closed: closedCount });
+  await fsPromises.writeFile(chainMdPath, dashboardMd);
+
+  const stats: ProofChainStats = {
+    runs,
+    findings: totalFindings,
+    active: activeCount,
+    lessons: lessonsCount,
+    promoted: promotedCount,
+    closed: closedCount,
+  };
+
+  if (autoClosed > 0 || lessonsClassified > 0) {
+    stats.maintenance = { auto_closed: autoClosed, lessons_classified: lessonsClassified };
+  }
+
+  return stats;
 }
 
 /**
@@ -1054,7 +1147,7 @@ export async function completeWork(slug: string): Promise<void> {
 
   // 9a. Generate proof summary and write proof chain
   const proof = generateProofSummary(completedPath);
-  const { runs, findings } = await writeProofChain(slug, proof, projectRoot);
+  const stats = await writeProofChain(slug, proof, projectRoot);
 
   // 10. Stage and commit
   try {
@@ -1095,11 +1188,14 @@ export async function completeWork(slug: string): Promise<void> {
     // Silently continue if remote branch doesn't exist or was already deleted
   }
 
-  // 13. Print summary (3-line proof summary)
+  // 13. Print summary (3-line proof summary + optional maintenance)
   const statusIcon = proof.result === 'PASS' ? '✓' : '✗';
   console.log(`\n${statusIcon} ${proof.result} — ${proof.feature}`);
   console.log(`  ${proof.contract.covered}/${proof.contract.total} covered · ${proof.contract.satisfied}/${proof.contract.total} satisfied · ${proof.deviations.length} deviation${proof.deviations.length !== 1 ? 's' : ''}`);
-  console.log(chalk.gray(`  Chain: ${runs} ${runs !== 1 ? 'runs' : 'run'} · ${findings} ${findings !== 1 ? 'findings' : 'finding'}`));
+  console.log(chalk.gray(`  Chain: ${stats.runs} ${stats.runs !== 1 ? 'runs' : 'run'} · ${stats.active} active finding${stats.active !== 1 ? 's' : ''}`));
+  if (stats.maintenance) {
+    console.log(chalk.gray(`  Maintenance: ${stats.maintenance.auto_closed} auto-closed, ${stats.maintenance.lessons_classified} classified as lessons`));
+  }
 }
 
 /**
