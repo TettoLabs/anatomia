@@ -499,6 +499,177 @@ function validateContractFormat(filePath: string): string[] {
 }
 
 /**
+ * Companion YAML schema for verify_data.yaml
+ */
+interface VerifyDataSchema {
+  schema?: unknown;
+  findings?: unknown;
+  [key: string]: unknown;
+}
+
+/**
+ * Companion YAML schema for build_data.yaml
+ */
+interface BuildDataSchema {
+  schema?: unknown;
+  concerns?: unknown;
+  [key: string]: unknown;
+}
+
+/**
+ * Valid finding categories for verify_data.yaml
+ */
+const VALID_FINDING_CATEGORIES = ['code', 'test', 'upstream'];
+const VALID_FINDING_SEVERITIES = ['blocker', 'observation', 'note'];
+
+/**
+ * Validate verify_data.yaml companion format.
+ *
+ * Follows the validateContractFormat error-accumulation pattern:
+ * YAML parse → required field checks → enum validation → error array return.
+ * Warnings (file existence, missing file on non-upstream) are emitted via
+ * the returned warnings array but do not block the save.
+ *
+ * @param filePath - Path to verify_data.yaml
+ * @param projectRoot - Project root for file existence checks
+ * @returns Object with errors (block save) and warnings (emit but proceed)
+ */
+export function validateVerifyDataFormat(filePath: string, projectRoot?: string): { errors: string[]; warnings: string[] } {
+  const content = fs.readFileSync(filePath, 'utf-8');
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  let data: VerifyDataSchema;
+  try {
+    data = yaml.parse(content);
+  } catch (e) {
+    return { errors: [`YAML parse error: ${e instanceof Error ? e.message : 'Invalid YAML'}`], warnings: [] };
+  }
+
+  if (!data || typeof data !== 'object') {
+    return { errors: ['verify_data.yaml must be a YAML object'], warnings: [] };
+  }
+
+  // schema field must equal 1
+  if (data.schema === undefined || data.schema === null) {
+    errors.push('Missing "schema" field');
+  } else if (data.schema !== 1) {
+    errors.push(`Invalid "schema" value: ${data.schema} (expected: 1)`);
+  }
+
+  // findings must be an array
+  if (!data.findings) {
+    errors.push('Missing "findings" field');
+  } else if (!Array.isArray(data.findings)) {
+    errors.push('"findings" must be an array');
+  } else {
+    for (let i = 0; i < data.findings.length; i++) {
+      const finding = data.findings[i] as Record<string, unknown> | undefined;
+      if (!finding) continue;
+      const prefix = `Finding ${i + 1}`;
+
+      const cat = finding['category'];
+      const summary = finding['summary'];
+      const sev = finding['severity'];
+      const ra = finding['related_assertions'];
+      const file = finding['file'];
+
+      // category required, must be one of known values
+      if (!cat || typeof cat !== 'string') {
+        errors.push(`${prefix}: missing "category" field`);
+      } else if (!VALID_FINDING_CATEGORIES.includes(cat)) {
+        errors.push(`${prefix}: invalid category "${cat}" (valid: ${VALID_FINDING_CATEGORIES.join(', ')})`);
+      }
+
+      // summary required, non-empty string
+      if (!summary || typeof summary !== 'string' || !summary.trim()) {
+        errors.push(`${prefix}: missing "summary" field`);
+      }
+
+      // severity optional, but if present must be valid
+      if (sev !== undefined) {
+        if (typeof sev !== 'string' || !VALID_FINDING_SEVERITIES.includes(sev)) {
+          errors.push(`${prefix}: invalid severity "${sev}" (valid: ${VALID_FINDING_SEVERITIES.join(', ')})`);
+        }
+      }
+
+      // related_assertions optional, but if present must be array of strings
+      if (ra !== undefined) {
+        if (!Array.isArray(ra)) {
+          errors.push(`${prefix}: "related_assertions" must be an array`);
+        } else {
+          for (const item of ra) {
+            if (typeof item !== 'string') {
+              errors.push(`${prefix}: "related_assertions" elements must be strings`);
+              break;
+            }
+          }
+        }
+      }
+
+      // file warnings (non-blocking)
+      if (file && typeof file === 'string' && projectRoot) {
+        if (!fs.existsSync(path.join(projectRoot, file))) {
+          warnings.push(`Finding ${i + 1} references "${file}" which does not exist.`);
+        }
+      } else if (!file && cat !== 'upstream' && typeof cat === 'string') {
+        warnings.push(`Finding ${i + 1} (category: ${cat}) has no file reference.`);
+      }
+    }
+  }
+
+  return { errors, warnings };
+}
+
+/**
+ * Validate build_data.yaml companion format.
+ *
+ * @param filePath - Path to build_data.yaml
+ * @returns Object with errors (block save) and warnings (emit but proceed)
+ */
+export function validateBuildDataFormat(filePath: string): { errors: string[]; warnings: string[] } {
+  const content = fs.readFileSync(filePath, 'utf-8');
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  let data: BuildDataSchema;
+  try {
+    data = yaml.parse(content);
+  } catch (e) {
+    return { errors: [`YAML parse error: ${e instanceof Error ? e.message : 'Invalid YAML'}`], warnings: [] };
+  }
+
+  if (!data || typeof data !== 'object') {
+    return { errors: ['build_data.yaml must be a YAML object'], warnings: [] };
+  }
+
+  if (data.schema === undefined || data.schema === null) {
+    errors.push('Missing "schema" field');
+  } else if (data.schema !== 1) {
+    errors.push(`Invalid "schema" value: ${data.schema} (expected: 1)`);
+  }
+
+  if (!data.concerns) {
+    errors.push('Missing "concerns" field');
+  } else if (!Array.isArray(data.concerns)) {
+    errors.push('"concerns" must be an array');
+  } else {
+    for (let i = 0; i < data.concerns.length; i++) {
+      const concern = data.concerns[i] as Record<string, unknown> | undefined;
+      if (!concern) continue;
+      const prefix = `Concern ${i + 1}`;
+      const summary = concern['summary'];
+
+      if (!summary || typeof summary !== 'string' || !summary.trim()) {
+        errors.push(`${prefix}: missing "summary" field`);
+      }
+    }
+  }
+
+  return { errors, warnings };
+}
+
+/**
  * Validate build report format
  *
  * @param filePath - Path to build_report.md or build_report_N.md
