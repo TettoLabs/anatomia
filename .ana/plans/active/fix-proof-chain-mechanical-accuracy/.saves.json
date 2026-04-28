@@ -26,5 +26,118 @@
     "packages/cli/templates/.claude/agents/ana-verify.md",
     "packages/cli/tests/commands/work.test.ts",
     "packages/cli/tests/utils/proofSummary.test.ts"
-  ]
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:088cc1091362cbb524f0d485420928b275231e8d3581ec08d436a8e808a1c407",
+    "assertions": [
+      {
+        "id": "A001",
+        "says": "A finding referencing a file by partial monorepo path is not closed when the file exists elsewhere in the project",
+        "status": "COVERED"
+      },
+      {
+        "id": "A002",
+        "says": "A partial monorepo path finding stays active after staleness checks",
+        "status": "COVERED"
+      },
+      {
+        "id": "A003",
+        "says": "A finding referencing a genuinely deleted file is closed by the mechanical layer",
+        "status": "COVERED"
+      },
+      {
+        "id": "A004",
+        "says": "Deleted file closures record the reason as file removed",
+        "status": "COVERED"
+      },
+      {
+        "id": "A005",
+        "says": "A finding with an ambiguous basename matching many files is not closed",
+        "status": "COVERED"
+      },
+      {
+        "id": "A006",
+        "says": "Upstream findings are never subject to staleness checks",
+        "status": "COVERED"
+      },
+      {
+        "id": "A007",
+        "says": "An upstream finding with a missing file stays as a lesson",
+        "status": "COVERED"
+      },
+      {
+        "id": "A008",
+        "says": "Older findings on the same file are not superseded by newer ones",
+        "status": "COVERED"
+      },
+      {
+        "id": "A009",
+        "says": "Both old and new findings on the same file stay active",
+        "status": "COVERED"
+      },
+      {
+        "id": "A010",
+        "says": "Previously superseded findings are reopened",
+        "status": "COVERED"
+      },
+      {
+        "id": "A011",
+        "says": "Reopened findings have their closure metadata cleared",
+        "status": "COVERED"
+      },
+      {
+        "id": "A012",
+        "says": "Wrongly-closed upstream findings are reopened as lessons",
+        "status": "COVERED"
+      },
+      {
+        "id": "A013",
+        "says": "Files that exist at their declared path are skipped during resolution",
+        "status": "COVERED"
+      },
+      {
+        "id": "A014",
+        "says": "Files with slashes that do not exist at declared path enter resolution",
+        "status": "COVERED"
+      },
+      {
+        "id": "A015",
+        "says": "Bare basenames still enter the resolution chain",
+        "status": "COVERED"
+      },
+      {
+        "id": "A016",
+        "says": "Anchor checks run on files verified to exist and close when anchor is absent",
+        "status": "COVERED"
+      },
+      {
+        "id": "A017",
+        "says": "Anchor checks do not run on files that do not exist at the declared path",
+        "status": "COVERED"
+      },
+      {
+        "id": "A018",
+        "says": "The verify template uses repo-relative paths in its example",
+        "status": "COVERED"
+      },
+      {
+        "id": "A019",
+        "says": "The verify template includes guidance to reference existing findings",
+        "status": "COVERED"
+      },
+      {
+        "id": "A020",
+        "says": "The template and dogfood copies are identical",
+        "status": "COVERED"
+      }
+    ],
+    "covered": 20,
+    "uncovered": 0,
+    "run_at": "2026-04-28T00:03:54.904Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-04-28T00:03:54.922Z",
+    "hash": "sha256:42693378ada66bca4341e738eb9ae8bb5f26ff4c588bdc7f3792d9bcd6cd0936"
+  }
 }
