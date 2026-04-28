@@ -1240,7 +1240,6 @@ file_changes:
       const saves = JSON.parse(await fs.readFile(savesPath, 'utf-8'));
       expect(saves.scope).toBeDefined();
       expect(saves.scope.saved_at).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
-      expect(saves.scope.commit).toBeUndefined();
       expect(saves.scope.hash).toMatch(/^sha256:[a-f0-9]{64}$/);
     });
 
@@ -1704,7 +1703,6 @@ Rules.`;
     // Each should have proper metadata
     for (const type of ['plan', 'spec']) {
       expect(saves[type].saved_at).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
-      expect(saves[type].commit).toBeUndefined();
       expect(saves[type].hash).toMatch(/^sha256:[a-f0-9]{64}$/);
     }
   });

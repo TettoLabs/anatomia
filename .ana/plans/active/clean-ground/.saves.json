@@ -14,5 +14,96 @@
   "spec": {
     "saved_at": "2026-04-28T17:15:29.062Z",
     "hash": "sha256:9c2a3c837606a1c8a4db2c681c2039590e22f7169232a8ce636d9062451c4071"
+  },
+  "build-report": {
+    "saved_at": "2026-04-28T17:35:07.549Z",
+    "hash": "sha256:09bf277f3459db11ea661671e2ccfb7c14703ca52e64ebac66ec1db6e064aec3"
+  },
+  "build-data": {
+    "saved_at": "2026-04-28T17:35:07.549Z",
+    "hash": "sha256:b90994a72bb0851b5feb828cf09ac9403da16f64b3e78efb13a30324bced7dcf"
+  },
+  "modules_touched": [
+    "packages/cli/src/commands/work.ts",
+    "packages/cli/src/utils/proofSummary.ts",
+    "packages/cli/tests/commands/artifact.test.ts",
+    "packages/cli/tests/utils/proofSummary.test.ts"
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:95003ecb75f0dfb3ef2ffa3de1d5a7a1c84c6ff8da50a3f609b71fc3370e5adb",
+    "assertions": [
+      {
+        "id": "A001",
+        "says": "Dead fallback removed from findings resolution on new entry",
+        "status": "COVERED"
+      },
+      {
+        "id": "A002",
+        "says": "Dead fallback removed from build concerns resolution on new entry",
+        "status": "COVERED"
+      },
+      {
+        "id": "A003",
+        "says": "Backfill loop still guards against missing fields in historical entries",
+        "status": "COVERED"
+      },
+      {
+        "id": "A004",
+        "says": "Both stale commit assertions are removed from artifact tests",
+        "status": "COVERED"
+      },
+      {
+        "id": "A005",
+        "says": "Path resolver accepts an optional cache to avoid redundant filesystem scans",
+        "status": "COVERED"
+      },
+      {
+        "id": "A006",
+        "says": "Cache defaults to a new Map so existing callers work unchanged",
+        "status": "COVERED"
+      },
+      {
+        "id": "A007",
+        "says": "Cached basenames skip the filesystem glob on subsequent lookups",
+        "status": "COVERED"
+      },
+      {
+        "id": "A008",
+        "says": "Glob results are stored in cache after first lookup",
+        "status": "COVERED"
+      },
+      {
+        "id": "A009",
+        "says": "Proof chain writer shares one cache across all path resolution calls",
+        "status": "COVERED"
+      },
+      {
+        "id": "A010",
+        "says": "Repeated lookups for the same file hit the cache instead of re-scanning",
+        "status": "COVERED"
+      },
+      {
+        "id": "A011",
+        "says": "Calling the resolver without a cache still resolves files correctly",
+        "status": "COVERED"
+      },
+      {
+        "id": "A012",
+        "says": "All pre-existing tests continue to pass after the changes",
+        "status": "COVERED"
+      }
+    ],
+    "covered": 12,
+    "uncovered": 0,
+    "run_at": "2026-04-28T17:40:58.658Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-04-28T17:40:58.691Z",
+    "hash": "sha256:503d9c3d8a660303ce97ebef3fbdec3577de8bcd43a40aa3c3562f2e174a0015"
+  },
+  "verify-data": {
+    "saved_at": "2026-04-28T17:40:58.691Z",
+    "hash": "sha256:df2c1b52eda59070c19cc8ded36f71efadb67a00fc04d6f2c5d00d07e83e00c6"
   }
 }

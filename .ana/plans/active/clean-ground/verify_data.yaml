@@ -1,0 +1,24 @@
+schema: 1
+findings:
+  - category: test
+    summary: "Pre-check tag collision — A001-A009 COVERED via tags from prior contracts, not new tags"
+    file: "packages/cli/tests/utils/proofSummary.test.ts"
+    severity: note
+    related_assertions: ["A001", "A002", "A003", "A004", "A005", "A006", "A007", "A008", "A009"]
+  - category: code
+    summary: "globCache parameter widens the public API surface of an exported function"
+    file: "packages/cli/src/utils/proofSummary.ts"
+    line: 344
+    severity: observation
+    related_assertions: ["A005"]
+  - category: code
+    summary: "Cache never invalidated — stale if files created between resolveFindingPaths calls within one writeProofChain invocation"
+    file: "packages/cli/src/utils/proofSummary.ts"
+    line: 357
+    severity: observation
+  - category: test
+    summary: "vi.mock('glob') adds file-level module mock — correct for spying but implicit coupling to all glob-using tests"
+    file: "packages/cli/tests/utils/proofSummary.test.ts"
+    line: 6
+    severity: observation
+    related_assertions: ["A010"]

@@ -1,7 +1,13 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
+
+vi.mock('glob', async (importOriginal) => {
+  const original = await importOriginal<typeof import('glob')>();
+  return { ...original };
+});
+import * as glob from 'glob';
 import {
   generateProofSummary,
   parseFindings,
@@ -1267,6 +1273,42 @@ describe('resolveFindingPaths', () => {
       const items = [{ file: 'spec.md' }];
       resolveFindingPaths(items, [], tempDir);
       expect(items[0]!.file).toBe('spec.md');
+    });
+  });
+
+  describe('glob cache', () => {
+    // @ana A010
+    it('reuses cached glob results across multiple calls', async () => {
+      await fs.promises.mkdir(path.join(tempDir, 'src', 'utils'), { recursive: true });
+      await fs.promises.writeFile(path.join(tempDir, 'src', 'utils', 'helper.ts'), '');
+
+      const spy = vi.spyOn(glob, 'globSync');
+
+      const sharedCache = new Map<string, string[]>();
+      const items1 = [{ file: 'helper.ts' }];
+      const items2 = [{ file: 'helper.ts' }];
+
+      resolveFindingPaths(items1, [], tempDir, sharedCache);
+      resolveFindingPaths(items2, [], tempDir, sharedCache);
+
+      expect(items1[0]!.file).toBe('src/utils/helper.ts');
+      expect(items2[0]!.file).toBe('src/utils/helper.ts');
+      // Cache should have stored the result from the first call
+      expect(sharedCache.get('helper.ts')).toEqual(['src/utils/helper.ts']);
+      // globSync called once for first lookup, second lookup hits cache
+      expect(spy).toHaveBeenCalledTimes(1);
+
+      spy.mockRestore();
+    });
+
+    // @ana A011
+    it('resolves paths correctly without explicit cache parameter', async () => {
+      await fs.promises.mkdir(path.join(tempDir, 'src', 'utils'), { recursive: true });
+      await fs.promises.writeFile(path.join(tempDir, 'src', 'utils', 'helper.ts'), '');
+
+      const items = [{ file: 'helper.ts' }];
+      resolveFindingPaths(items, [], tempDir);
+      expect(items[0]!.file).toBe('src/utils/helper.ts');
     });
   });
 });

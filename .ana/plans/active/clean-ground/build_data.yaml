@@ -1,0 +1,5 @@
+schema: 1
+concerns:
+  - summary: "vi.mock('glob') scope covers entire proofSummary.test.ts file, not just glob cache tests"
+    file: "packages/cli/tests/utils/proofSummary.test.ts"
+  - summary: "14 pre-existing lint warnings in unrelated test files (no-explicit-any)"
