@@ -1269,6 +1269,41 @@ describe('resolveFindingPaths', () => {
       expect(items[0]!.file).toBe('spec.md');
     });
   });
+
+  describe('glob cache', () => {
+    // @ana A010
+    it('reuses cached glob results across multiple calls', async () => {
+      const { globSync } = await import('glob');
+      const spy = vi.spyOn({ globSync }, 'globSync').mockImplementation(globSync);
+
+      await fs.promises.mkdir(path.join(tempDir, 'src', 'utils'), { recursive: true });
+      await fs.promises.writeFile(path.join(tempDir, 'src', 'utils', 'helper.ts'), '');
+
+      const sharedCache = new Map<string, string[]>();
+      const items1 = [{ file: 'helper.ts' }];
+      const items2 = [{ file: 'helper.ts' }];
+
+      resolveFindingPaths(items1, [], tempDir, sharedCache);
+      resolveFindingPaths(items2, [], tempDir, sharedCache);
+
+      expect(items1[0]!.file).toBe('src/utils/helper.ts');
+      expect(items2[0]!.file).toBe('src/utils/helper.ts');
+      // Cache should have stored the result from the first call
+      expect(sharedCache.get('helper.ts')).toEqual(['src/utils/helper.ts']);
+
+      spy.mockRestore();
+    });
+
+    // @ana A011
+    it('resolves paths correctly without explicit cache parameter', async () => {
+      await fs.promises.mkdir(path.join(tempDir, 'src', 'utils'), { recursive: true });
+      await fs.promises.writeFile(path.join(tempDir, 'src', 'utils', 'helper.ts'), '');
+
+      const items = [{ file: 'helper.ts' }];
+      resolveFindingPaths(items, [], tempDir);
+      expect(items[0]!.file).toBe('src/utils/helper.ts');
+    });
+  });
 });
 
 describe('getProofContext', () => {
