@@ -274,7 +274,7 @@
           "anchor": "BROWSER_FRAMEWORKS.has(d)",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-28T07:14:32.605Z",
+          "closed_at": "2026-04-28T17:46:04.776Z",
           "closed_by": "mechanical"
         },
         {
@@ -285,7 +285,7 @@
           "anchor": "getFrameworkDisplayName()",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-28T07:14:32.605Z",
+          "closed_at": "2026-04-28T17:46:04.776Z",
           "closed_by": "mechanical"
         },
         {
@@ -296,7 +296,7 @@
           "anchor": "ProjectKindResult",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-28T07:14:32.605Z",
+          "closed_at": "2026-04-28T17:46:04.776Z",
           "closed_by": "mechanical"
         },
         {
@@ -315,7 +315,7 @@
           "anchor": "not.toContain('node:fs')",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-28T07:14:32.606Z",
+          "closed_at": "2026-04-28T17:46:04.778Z",
           "closed_by": "mechanical"
         },
         {
@@ -2840,7 +2840,10 @@
           "file": "packages/cli/tests/commands/artifact.test.ts",
           "anchor": "scope.commit",
           "id": "seal-hash-simplification-C1",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "code changed, anchor absent",
+          "closed_at": "2026-04-28T17:46:04.780Z",
+          "closed_by": "mechanical"
         },
         {
           "category": "code",
@@ -2858,7 +2861,7 @@
           "id": "seal-hash-simplification-C3",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-28T07:14:32.608Z",
+          "closed_at": "2026-04-28T17:46:04.782Z",
           "closed_by": "mechanical"
         },
         {
@@ -3331,7 +3334,10 @@
           "file": "packages/cli/src/commands/work.ts",
           "anchor": "entry.build_concerns || []",
           "id": "clear-the-deck-2-C1",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "code changed, anchor absent",
+          "closed_at": "2026-04-28T17:46:04.782Z",
+          "closed_by": "mechanical"
         },
         {
           "category": "code",
@@ -4381,6 +4387,189 @@
         },
         {
           "summary": "saveAllArtifacts build companion discovery (AC9) not directly tested — uses identical code path as verify companion which is tested",
+          "file": null
+        }
+      ]
+    },
+    {
+      "slug": "clean-ground",
+      "feature": "Clean Ground for Foundation 3",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 12,
+        "covered": 12,
+        "uncovered": 0,
+        "satisfied": 12,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Dead fallback removed from findings resolution on new entry",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "Dead fallback removed from build concerns resolution on new entry",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Backfill loop still guards against missing fields in historical entries",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "Both stale commit assertions are removed from artifact tests",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "Path resolver accepts an optional cache to avoid redundant filesystem scans",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "Cache defaults to a new Map so existing callers work unchanged",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "Cached basenames skip the filesystem glob on subsequent lookups",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "Glob results are stored in cache after first lookup",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "Proof chain writer shares one cache across all path resolution calls",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "Repeated lookups for the same file hit the cache instead of re-scanning",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "Calling the resolver without a cache still resolves files correctly",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "All pre-existing tests continue to pass after the changes",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 12,
+        "met": 12
+      },
+      "timing": {
+        "total_minutes": 46,
+        "think": 20,
+        "plan": 20,
+        "build": 20,
+        "verify": 6
+      },
+      "hashes": {
+        "scope": "sha256:1265cd9cea1eaea5580300f219bdeb52ea1b6f569a3745c913b1978d316f71e1",
+        "contract": "sha256:95003ecb75f0dfb3ef2ffa3de1d5a7a1c84c6ff8da50a3f609b71fc3370e5adb",
+        "plan": "sha256:4d31f2bc3505fd26c5bdd91df11df581121d70e2b86ef7151533dd175d07501f",
+        "spec": "sha256:9c2a3c837606a1c8a4db2c681c2039590e22f7169232a8ce636d9062451c4071",
+        "build-report": "sha256:09bf277f3459db11ea661671e2ccfb7c14703ca52e64ebac66ec1db6e064aec3",
+        "build-data": "sha256:b90994a72bb0851b5feb828cf09ac9403da16f64b3e78efb13a30324bced7dcf",
+        "verify-report": "sha256:503d9c3d8a660303ce97ebef3fbdec3577de8bcd43a40aa3c3562f2e174a0015",
+        "verify-data": "sha256:df2c1b52eda59070c19cc8ded36f71efadb67a00fc04d6f2c5d00d07e83e00c6"
+      },
+      "completed_at": "2026-04-28T17:46:04.751Z",
+      "modules_touched": [
+        "packages/cli/src/commands/work.ts",
+        "packages/cli/src/utils/proofSummary.ts",
+        "packages/cli/tests/commands/artifact.test.ts",
+        "packages/cli/tests/utils/proofSummary.test.ts"
+      ],
+      "scope_summary": "Three small code fixes before Foundation 3 builds the developer-facing CLI surface on top of `writeProofChain` and `resolveFindingPaths`. Remove dead fallbacks, delete a stale test assertion, and add a glob result cache to `resolveFindingPaths`. The pipeline run doubles as Foundation 2's first non-meta verification — entry #23 is the first time a different scope's Verify agent produces companion YAML using the Foundation 2 template. After `work complete`, audit entry #23 against the Foundation 2 verification checklist.",
+      "findings": [
+        {
+          "category": "test",
+          "summary": "Pre-check tag collision — A001-A009 COVERED via tags from prior contracts, not new tags",
+          "file": "packages/cli/tests/utils/proofSummary.test.ts",
+          "anchor": null,
+          "severity": "note",
+          "related_assertions": [
+            "A001",
+            "A002",
+            "A003",
+            "A004",
+            "A005",
+            "A006",
+            "A007",
+            "A008",
+            "A009"
+          ],
+          "id": "clean-ground-C1",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "globCache parameter widens the public API surface of an exported function",
+          "file": "packages/cli/src/utils/proofSummary.ts",
+          "anchor": null,
+          "line": 344,
+          "severity": "observation",
+          "related_assertions": [
+            "A005"
+          ],
+          "id": "clean-ground-C2",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Cache never invalidated — stale if files created between resolveFindingPaths calls within one writeProofChain invocation",
+          "file": "packages/cli/src/utils/proofSummary.ts",
+          "anchor": null,
+          "line": 357,
+          "severity": "observation",
+          "id": "clean-ground-C3",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "vi.mock('glob') adds file-level module mock — correct for spying but implicit coupling to all glob-using tests",
+          "file": "packages/cli/tests/utils/proofSummary.test.ts",
+          "anchor": null,
+          "line": 6,
+          "severity": "observation",
+          "related_assertions": [
+            "A010"
+          ],
+          "id": "clean-ground-C4",
+          "status": "active"
+        }
+      ],
+      "rejection_cycles": 1,
+      "previous_failures": [
+        {
+          "id": "A010",
+          "summary": "Spy on detached object, no call-count assertion"
+        }
+      ],
+      "build_concerns": [
+        {
+          "summary": "vi.mock('glob') scope covers entire proofSummary.test.ts file, not just glob cache tests",
+          "file": "packages/cli/tests/utils/proofSummary.test.ts"
+        },
+        {
+          "summary": "14 pre-existing lint warnings in unrelated test files (no-explicit-any)",
           "file": null
         }
       ]
