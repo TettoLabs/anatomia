@@ -274,7 +274,10 @@
           "summary": "Dead logic in full-stack browser-dep check: `projectKind.ts:105` — `BROWSER_FRAMEWORKS.has(d)` will never match because dep names are npm packages (lowercase: `'react'`, `'vue'`) while the set contains PascalCase display names (`'React'`, `'Vue'`). The adjacent inline array on lines 106-107 handles the actual matching with lowercase package names. Harmless now, but if someone removes the fallback array trusting the Set, full-stack detection silently breaks. Consider removing `BROWSER_FRAMEWORKS.has(d) ||` from the expression, or normalizing to one casing.",
           "file": "projectKind.ts",
           "anchor": "BROWSER_FRAMEWORKS.has(d)",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "file removed",
+          "closed_at": "2026-04-28T00:07:41.109Z",
+          "closed_by": "mechanical"
         },
         {
           "id": "add-project-kind-detection-C2",
@@ -282,7 +285,10 @@
           "summary": "Framework display-name coupling creates latent misclassification: `projectKind.ts:43-64` sets contain PascalCase display names, but the input comes from `getFrameworkDisplayName()` which falls back to raw lowercase keys for unmapped frameworks. Two currently-detectable frameworks would misclassify: Koa (`'koa'` ≠ `'Koa'` → would be library/unknown instead of api-server) and React Router (`'React Router'` not in BROWSER_FRAMEWORKS → would be unknown instead of web-app). Fix: either lowercase-normalize the sets and input, or add missing entries to `FRAMEWORK_DISPLAY_NAMES` in displayNames.ts.",
           "file": "projectKind.ts",
           "anchor": "getFrameworkDisplayName()",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "file removed",
+          "closed_at": "2026-04-28T00:07:41.109Z",
+          "closed_by": "mechanical"
         },
         {
           "id": "add-project-kind-detection-C3",
@@ -290,7 +296,10 @@
           "summary": "Unused export `ProjectKindResult`: Exported from projectKind.ts:22-24 but never imported outside the file. `detectProjectKind` returns it, but scan-engine.ts accesses `.kind` directly without typing the intermediate. Minor — not harmful, but if the intent was a typed contract for consumers, nobody is consuming the type.",
           "file": "projectKind.ts",
           "anchor": "ProjectKindResult",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "file removed",
+          "closed_at": "2026-04-28T00:07:41.109Z",
+          "closed_by": "mechanical"
         },
         {
           "id": "add-project-kind-detection-C4",
@@ -298,10 +307,7 @@
           "summary": "`hasMain` covers `main` AND `module`: scan-engine.ts:555 sets `hasMain = !!pkgRaw['main'] || !!pkgRaw['module']`. The variable name suggests only `main`. Consider `hasMainOrModule` for clarity, or split into separate booleans matching the spec's language (\"main, module, or exports\").",
           "file": "packages/cli/src/engine/scan-engine.ts",
           "anchor": "hasMain",
-          "status": "closed",
-          "closed_reason": "superseded by fix-prisma-schema-detection-C1",
-          "closed_at": "2026-04-27T20:36:18.665Z",
-          "closed_by": "mechanical"
+          "status": "active"
         },
         {
           "id": "add-project-kind-detection-C5",
@@ -309,7 +315,10 @@
           "summary": "A003 purity test is comment-fragile: projectKind.test.ts:187-193 reads the source file and asserts `not.toContain('node:fs')`. A future comment mentioning `node:fs` would cause a false failure. A regex-based import check (`/import.*from\\s+['\"]node:fs/`) would be more precise. Not broken, not urgent.",
           "file": "projectKind.test.ts",
           "anchor": "not.toContain('node:fs')",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "file removed",
+          "closed_at": "2026-04-28T00:07:41.110Z",
+          "closed_by": "mechanical"
         },
         {
           "id": "add-project-kind-detection-C6",
@@ -576,7 +585,10 @@
           "summary": "A006 assertion is weak for its contract — The contract says the file \"points readers to the root AGENTS.md.\" The test checks `toContain('AGENTS.md')` and `toContain('Full Project Context')` separately, but doesn't verify they appear together as a markdown link. The implementation does produce a proper link, but the test would pass even if the function just mentioned \"AGENTS.md\" in a comment. Minor — the A007/A008 tests for relative paths provide stronger evidence.",
           "file": "AGENTS.md",
           "anchor": "toContain('AGENTS.md')",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "code changed, anchor absent",
+          "closed_at": "2026-04-28T00:07:41.110Z",
+          "closed_by": "mechanical"
         },
         {
           "id": "monorepo-primary-agents-md-C5",
@@ -1166,10 +1178,7 @@
           "summary": "A009 cap test doesn't verify WHICH callouts were dropped — proofSummary.test.ts:550-564 creates 25 identical-structure callouts and asserts count is 20, but doesn't verify the 5 dropped are the oldest. The separate \"takes most recent callouts when capping at 20\" test (line 691) does verify this. Together they provide full coverage, but A009 alone would pass even if the implementation kept the oldest instead of the newest.",
           "file": "packages/cli/tests/utils/proofSummary.test.ts",
           "anchor": null,
-          "status": "closed",
-          "closed_reason": "superseded by add-callout-file-field-C3",
-          "closed_at": "2026-04-27T20:36:18.665Z",
-          "closed_by": "mechanical"
+          "status": "active"
         },
         {
           "id": "proof-chain-active-issues-C5",
@@ -1576,10 +1585,7 @@
           "summary": "File extraction runs on truncated summary: `proofSummary.ts:412-415` — `extractFileRefs` is called on `summary` after `substring(0, 200).trim()`. If a callout's only file reference appears after character 200, `file` will be null. Practically unlikely (AnaVerify format puts file refs in the first ~80 chars), but the stored `file` is permanently null for those cases — unlike the old re-derivation approach where fixing the regex would fix all callouts. Design trade-off the spec intended, but worth knowing.",
           "file": "packages/cli/src/utils/proofSummary.ts",
           "anchor": "extractFileRefs",
-          "status": "closed",
-          "closed_reason": "superseded by proof-context-query-C1",
-          "closed_at": "2026-04-27T20:36:18.665Z",
-          "closed_by": "mechanical"
+          "status": "active"
         },
         {
           "id": "add-callout-file-field-C2",
@@ -1595,10 +1601,7 @@
           "summary": "A009 backfill verification is indirect: `proofSummary.test.ts:748-763` — The `@ana A009` tag is on the \"respects 20-callout cap\" test, which exercises `file` fields in the cap logic. It doesn't directly verify that proof_chain.json was backfilled. The backfill was verified manually by reading the diff. A direct test (e.g., reading proof_chain.json and asserting every callout has `file`) would be more robust, but the migration is a one-time operation and the backfill is already committed.",
           "file": "packages/cli/tests/utils/proofSummary.test.ts",
           "anchor": "@ana A009",
-          "status": "closed",
-          "closed_reason": "superseded by proof-context-query-C2",
-          "closed_at": "2026-04-27T20:36:18.665Z",
-          "closed_by": "mechanical"
+          "status": "active"
         },
         {
           "id": "add-callout-file-field-C4",
@@ -1606,10 +1609,7 @@
           "summary": "Known extractFileRefs limitation propagated to stored data: The existing regex limitation where `findProjectRoot.test.ts` extracts as `test.ts` (dotted filenames lose their prefix) is now permanently stored in proof_chain.json `file` fields. Previously, a regex fix in `extractFileRefs` would retroactively fix all groupings. Now the incorrect `file: \"test.ts\"` values are baked into the data. If `extractFileRefs` is ever fixed, a second backfill of proof_chain.json would be needed. This was already flagged in the proof chain active issues index cycle.",
           "file": "packages/cli/tests/utils/findProjectRoot.test.ts",
           "anchor": "findProjectRoot.test.ts",
-          "status": "closed",
-          "closed_reason": "code changed, anchor absent",
-          "closed_at": "2026-04-27T20:36:18.663Z",
-          "closed_by": "mechanical"
+          "status": "lesson"
         }
       ],
       "scope_summary": "File association for callouts is derived from summary text via regex (`extractFileRefs`) every time the renderer groups callouts for Active Issues. The parser sees the full callout context but throws away file information. The renderer re-derives it. Downstream features (proof file queries, proof learn matching, resolution detection) would all need the same regex inference."
@@ -1750,10 +1750,7 @@
           "summary": "Census directory check is non-recursive: `census.ts:219` — `readdirSync(prismaDir)` only checks top-level entries. The second fallback glob `/prisma/*.prisma` in `scan-engine.ts:289` is also one level deep. A `prisma/subdir/models.prisma` layout would be missed by both paths. No known Prisma project uses nested subdirectories within the Prisma folder, but this is a documented gap.",
           "file": "packages/cli/src/engine/census.ts",
           "anchor": "readdirSync(prismaDir)",
-          "status": "closed",
-          "closed_reason": "superseded by fix-drizzle-schema-detection-C3",
-          "closed_at": "2026-04-27T20:36:18.665Z",
-          "closed_by": "mechanical"
+          "status": "active"
         },
         {
           "id": "fix-prisma-schema-detection-C3",
@@ -2003,10 +2000,7 @@
           "summary": "A004/A013 test fixture imports sqliteTable but claims \"no table helpers\": `scanProject.test.ts:331-332` — The schema file has `import { sqliteTable } from 'drizzle-orm/sqlite-core'` but the comment says \"Intentionally no pgTable/mysqlTable — dialect should be the fallback.\" The regex looks for `sqliteTable\\s*\\(` (with paren), so the import alone doesn't count. Technically correct, but the import line misleads the next reader.",
           "file": "packages/cli/tests/engine/scanProject.test.ts",
           "anchor": "import { sqliteTable } from 'drizzle-orm/sqlite-core'",
-          "status": "closed",
-          "closed_reason": "code changed, anchor absent",
-          "closed_at": "2026-04-27T20:36:18.664Z",
-          "closed_by": "mechanical"
+          "status": "lesson"
         }
       ],
       "scope_summary": "Drizzle schema detection is a stub — census checks the migrations directory, scan-engine globs inside it, model counting and provider detection are absent, no blind spot fires, and census results are ignored by the scorer. A project using Drizzle gets no model count, no provider, wrong schema path, and no warning when the schema is missing. This is the same class of disease that was just fixed for Prisma (see proof chain: \"Fix Prisma schema detection bugs\"), applied to the second most popular TypeScript ORM."
@@ -2374,7 +2368,7 @@
         },
         {
           "summary": "`ProofChainEntryForContext` duplicates type knowledge: The interface duplicates field types from `ProofChainEntry` in `types/proof.ts`. This is intentional (same pattern as `ProofChainEntryForIndex` in the same file) to avoid importing command-layer types into utils, but means field additions need updating in both places. Verified complete by second pass.",
-          "file": "types/proof.ts"
+          "file": "packages/cli/src/types/proof.ts"
         }
       ],
       "findings": [
@@ -2384,10 +2378,7 @@
           "file": "packages/cli/src/utils/proofSummary.ts",
           "anchor": "m.endsWith('/' + basename)",
           "id": "proof-context-query-C1",
-          "status": "closed",
-          "closed_reason": "superseded by findings-lifecycle-foundation-C2",
-          "closed_at": "2026-04-27T22:03:13.660Z",
-          "closed_by": "mechanical"
+          "status": "active"
         },
         {
           "category": "test",
@@ -2419,10 +2410,7 @@
           "file": "packages/cli/src/utils/proofSummary.ts",
           "anchor": "fileMatches",
           "id": "proof-context-query-C5",
-          "status": "closed",
-          "closed_reason": "superseded by clear-the-deck-2-C5",
-          "closed_at": "2026-04-27T20:36:18.665Z",
-          "closed_by": "mechanical"
+          "status": "active"
         },
         {
           "category": "code",
@@ -2589,10 +2577,7 @@
           "file": ".ana/PROOF_CHAIN.md",
           "anchor": ".ana/PROOF_CHAIN.md",
           "id": "proof-chain-targeted-queries-C4",
-          "status": "closed",
-          "closed_reason": "code changed, anchor absent",
-          "closed_at": "2026-04-27T22:03:13.659Z",
-          "closed_by": "mechanical"
+          "status": "lesson"
         }
       ],
       "scope_summary": "Pipeline agents currently read all of PROOF_CHAIN.md (170+ lines, 58 active issues) and manually filter to relevant modules. This is the exact task agents do poorly. The `ana proof context {files}` command already exists and solves the filtering problem mechanically. Replace the full-file reads with targeted queries in the two agents that are primary proof chain consumers (Ana and Verify), and remove the reads entirely from the two agents that receive proof context through document flow (Plan and Build)."
@@ -2887,7 +2872,10 @@
           "file": "ana.json",
           "anchor": "readArtifactBranch",
           "id": "seal-hash-simplification-C3",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "file removed",
+          "closed_at": "2026-04-28T00:07:41.112Z",
+          "closed_by": "mechanical"
         },
         {
           "category": "upstream",
@@ -3124,46 +3112,34 @@
         {
           "category": "code",
           "summary": "`ContractAssertion` and `ContractFileChange` exported but never directly imported: `src/types/contract.ts:14,26` — Both interfaces are exported but no consumer imports them directly. They're accessed structurally through `ContractSchema.assertions` and `ContractSchema.file_changes`. The exports are forward-looking — a future consumer (e.g., a contract linter) would import them. Not a problem today, but if the interfaces drift from what `ContractSchema` uses, the exported types become misleading.",
-          "file": "src/types/contract.ts",
+          "file": "packages/cli/src/types/contract.ts",
           "anchor": "ContractAssertion",
           "id": "clear-the-deck-C1",
-          "status": "closed",
-          "closed_reason": "file removed",
-          "closed_at": "2026-04-27T20:36:18.665Z",
-          "closed_by": "mechanical"
+          "status": "active"
         },
         {
           "category": "test",
           "summary": "No dedicated test for `formatContextResult` truncation: `src/commands/proof.ts:362-367` — The truncation logic is tagged `@ana A020, A021` in source code, but no test file exercises this code path. Pre-check reports COVERED due to tag collision with other features' A020/A021 tags. The behavior is correct (verified by code review and live `ana proof context` output), but a regression in this function would not be caught by automated tests. A test in `proof.test.ts` that creates a proof chain entry with a >250-char callout summary and asserts the `proof context` output is truncated would close this gap.",
-          "file": "src/commands/proof.ts",
+          "file": "packages/cli/src/commands/proof.ts",
           "anchor": "formatContextResult",
           "id": "clear-the-deck-C2",
-          "status": "closed",
-          "closed_reason": "file removed",
-          "closed_at": "2026-04-27T20:36:18.665Z",
-          "closed_by": "mechanical"
+          "status": "active"
         },
         {
           "category": "test",
           "summary": "A024 weak assertion on coverage count: `tests/commands/artifact.test.ts:1650` — `expect(saves['pre-check'].covered).toBeGreaterThanOrEqual(0)` passes even if coverage is 0. The test sets up one tagged assertion that should be covered, so `toBeGreaterThanOrEqual(1)` or `toBe(1)` would be more specific. Not a false positive today (the setup ensures coverage), but the assertion is weaker than it needs to be.",
-          "file": "tests/commands/artifact.test.ts",
+          "file": "packages/cli/tests/commands/artifact.test.ts",
           "anchor": "expect(saves['pre-check'].covered).toBeGreaterThanOrEqual(0)",
           "id": "clear-the-deck-C3",
-          "status": "closed",
-          "closed_reason": "file removed",
-          "closed_at": "2026-04-27T20:36:18.665Z",
-          "closed_by": "mechanical"
+          "status": "active"
         },
         {
           "category": "code",
           "summary": "`captureModulesTouched` silent catch: `src/commands/artifact.ts:161` — The outer try/catch swallows all errors silently. If `readArtifactBranch` fails (missing ana.json), `git merge-base` fails (detached HEAD), or `git diff` fails (corrupt index), `modules_touched` simply isn't written. This is acceptable graceful degradation for a metadata-capture function, but it means a misconfigured environment silently produces incomplete proof chain data. A `console.warn` on failure would make debugging easier without breaking the pipeline.",
-          "file": "src/commands/artifact.ts",
+          "file": "packages/cli/src/commands/artifact.ts",
           "anchor": "captureModulesTouched",
           "id": "clear-the-deck-C4",
-          "status": "closed",
-          "closed_reason": "file removed",
-          "closed_at": "2026-04-27T20:36:18.665Z",
-          "closed_by": "mechanical"
+          "status": "active"
         },
         {
           "category": "upstream",
@@ -3373,10 +3349,7 @@
           "file": "packages/cli/src/commands/work.ts",
           "anchor": "entry.build_concerns || []",
           "id": "clear-the-deck-2-C1",
-          "status": "closed",
-          "closed_reason": "superseded by findings-lifecycle-foundation-C1",
-          "closed_at": "2026-04-27T20:36:18.665Z",
-          "closed_by": "mechanical"
+          "status": "active"
         },
         {
           "category": "code",
@@ -3411,10 +3384,7 @@
           "file": "packages/cli/src/utils/proofSummary.ts",
           "anchor": "projectRoot",
           "id": "clear-the-deck-2-C5",
-          "status": "closed",
-          "closed_reason": "superseded by findings-lifecycle-foundation-C2",
-          "closed_at": "2026-04-27T20:36:18.665Z",
-          "closed_by": "mechanical"
+          "status": "active"
         }
       ],
       "scope_summary": "Continuation of Clear the Deck. Phase 1 fixed 7 items identified by the proof chain — types, ESLint, dead tests, save-all parity, custom namespace. Phase 2 cleans the next layer: agent templates running at 20% context capacity, a callout file resolution gap that affects customer repos, missing test coverage for proof chain accumulation, and small corrections across the pipeline."
@@ -3619,10 +3589,7 @@
           "file": "packages/cli/src/commands/work.ts",
           "anchor": "(c as { category: string }).category === 'upstream' ? 'active' : 'active' as const",
           "id": "findings-lifecycle-foundation-C1",
-          "status": "closed",
-          "closed_reason": "superseded by fix-artifact-save-and-work-complete-C2",
-          "closed_at": "2026-04-27T22:03:13.660Z",
-          "closed_by": "mechanical"
+          "status": "active"
         },
         {
           "category": "code",
@@ -3654,10 +3621,7 @@
           "file": "packages/cli/tests/commands/work.test.ts",
           "anchor": "@ana A024",
           "id": "findings-lifecycle-foundation-C5",
-          "status": "closed",
-          "closed_reason": "superseded by fix-artifact-save-and-work-complete-C1",
-          "closed_at": "2026-04-27T22:03:13.660Z",
-          "closed_by": "mechanical"
+          "status": "active"
         },
         {
           "category": "upstream",
@@ -3879,6 +3843,217 @@
       "rejection_cycles": 0,
       "previous_failures": [],
       "build_concerns": []
+    },
+    {
+      "slug": "fix-proof-chain-mechanical-accuracy",
+      "feature": "Fix Proof Chain Mechanical Accuracy",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 20,
+        "covered": 20,
+        "uncovered": 0,
+        "satisfied": 20,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "A finding referencing a file by partial monorepo path is not closed when the file exists elsewhere in the project",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "A partial monorepo path finding stays active after staleness checks",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "A finding referencing a genuinely deleted file is closed by the mechanical layer",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "Deleted file closures record the reason as file removed",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "A finding with an ambiguous basename matching many files is not closed",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "Upstream findings are never subject to staleness checks",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "An upstream finding with a missing file stays as a lesson",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "Older findings on the same file are not superseded by newer ones",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "Both old and new findings on the same file stay active",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "Previously superseded findings are reopened",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "Reopened findings have their closure metadata cleared",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "Wrongly-closed upstream findings are reopened as lessons",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "Files that exist at their declared path are skipped during resolution",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "Files with slashes that do not exist at declared path enter resolution",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "Bare basenames still enter the resolution chain",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "Anchor checks run on files verified to exist and close when anchor is absent",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A017",
+          "says": "Anchor checks do not run on files that do not exist at the declared path",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A018",
+          "says": "The verify template uses repo-relative paths in its example",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A019",
+          "says": "The verify template includes guidance to reference existing findings",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A020",
+          "says": "The template and dogfood copies are identical",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 14,
+        "met": 14
+      },
+      "timing": {
+        "total_minutes": 32,
+        "think": 6,
+        "plan": 6,
+        "build": 19,
+        "verify": 7
+      },
+      "hashes": {
+        "scope": "sha256:422e3e9b53292347340dabaeb3ab9e74c5766a1b5337ccde6e9bb26453781c97",
+        "contract": "sha256:088cc1091362cbb524f0d485420928b275231e8d3581ec08d436a8e808a1c407",
+        "plan": "sha256:39ea5bb04fcf9bee5a8b76fed3458e900ab7bb1d7130620d956ba49d7be718e1",
+        "spec": "sha256:264a837100c107ccaf84eb386dddc91e12e35a8cb3381a7b710c333236835752",
+        "build-report": "sha256:e387f173c6c8d879b8b13b883d28efabed2ad55c5fda2546fad90b0c8468a3c8",
+        "verify-report": "sha256:42693378ada66bca4341e738eb9ae8bb5f26ff4c588bdc7f3792d9bcd6cd0936"
+      },
+      "seal_commit": null,
+      "completed_at": "2026-04-28T00:07:41.079Z",
+      "modules_touched": [
+        ".claude/agents/ana-verify.md",
+        "packages/cli/src/commands/work.ts",
+        "packages/cli/src/utils/proofSummary.ts",
+        "packages/cli/templates/.claude/agents/ana-verify.md",
+        "packages/cli/tests/commands/work.test.ts",
+        "packages/cli/tests/utils/proofSummary.test.ts"
+      ],
+      "scope_summary": "The proof chain's mechanical maintenance layer shipped with 57% closure accuracy. 16 of 37 closures destroyed valid observations. Three bugs: path resolution closed 4 files that exist at different monorepo paths, staleness checks overwrote 3 upstream lessons, and supersession destroyed 9 independent observations using a heuristic too coarse to distinguish same-issue from different-issue-on-same-file. Additionally, 6 findings with bare basenames (no `/`) escape staleness entirely because the syntactic gate skips them — 4 of these reference genuinely deleted files (`projectKind.ts` renamed to `applicationShape.ts` months ago).",
+      "findings": [
+        {
+          "category": "code",
+          "summary": "Dead truthiness guard after parameter change: `packages/cli/src/utils/proofSummary.ts:346` — `else if (projectRoot)` was meaningful when `projectRoot` was optional; now it's always truthy since the parameter is required `string`. Remove the guard and outdent the glob fallback block.",
+          "file": "packages/cli/src/utils/proofSummary.ts",
+          "anchor": "else if (projectRoot)",
+          "id": "fix-proof-chain-mechanical-accuracy-C1",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "`delete` instead of explicit `undefined` in reopen loop: `packages/cli/src/commands/work.ts:887-889` — Spec says \"Don't use `delete` — set explicitly so the JSON serialization is clean.\" Builder used `delete`. Functionally identical for `JSON.stringify` output (both omit the property), but deviates from spec guidance. Not a blocker — the behavior is correct.",
+          "file": "packages/cli/src/commands/work.ts",
+          "anchor": "delete",
+          "id": "fix-proof-chain-mechanical-accuracy-C2",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Dead ternary on finding status: `packages/cli/src/commands/work.ts:811` ��� `category === 'upstream' ? 'active' : 'active'` — both branches identical. Pre-existing issue, not introduced by this build. Still present — see proof chain finding from \"Fix artifact save bypass, cwd bug, and work complete crash recovery.\"",
+          "file": "packages/cli/src/commands/work.ts",
+          "anchor": "category === 'upstream' ? 'active' : 'active'",
+          "id": "fix-proof-chain-mechanical-accuracy-C3",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "A018/A019/A020 tag collision with other contracts: The pre-check reports these as COVERED, but the matched tags belong to tests from other features (readme.test.ts, confirmation.test.ts, scanProject.test.ts, proof.test.ts). No NEW tagged tests were written for this contract's template assertions. The existing `agent-proof-context.test.ts:66-75` (`@ana A008`) does verify template-dogfood sync byte-for-byte, and the template content was verified directly. Functional coverage exists; formal tag coverage for this contract does not.",
+          "file": "packages/cli/tests/engine/detectors/readme.test.ts",
+          "anchor": "@ana A008",
+          "id": "fix-proof-chain-mechanical-accuracy-C4",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "A011 assertion checks one value not cleared state: `packages/cli/tests/commands/work.test.ts:1447` — asserts `closed_reason` is not `'superseded by new-C1'` but doesn't assert `closed_at` or `closed_by` are also cleared. The test proves the specific contract assertion (matcher: `not_equals`, value: `'superseded by new-C1'`) but a stronger test would verify all three closure fields are absent.",
+          "file": "packages/cli/tests/commands/work.test.ts",
+          "anchor": "closed_reason",
+          "id": "fix-proof-chain-mechanical-accuracy-C5",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "Contract A011 matcher is weak: The contract specifies `not_equals` / `\"superseded by new-C1\"` which only proves one field changed. A stronger contract assertion would check `closed_reason` is `undefined`/absent, confirming full metadata clearance rather than just \"not the old value.\"",
+          "file": null,
+          "anchor": "not_equals",
+          "id": "fix-proof-chain-mechanical-accuracy-C6",
+          "status": "lesson"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "`delete` vs `undefined` for reopen cleanup: Spec explicitly says \"Don't use `delete` — set explicitly so the JSON serialization is clean.\" Implementation uses `delete` because `exactOptionalPropertyTypes` prevents `undefined` assignment. Both approaches produce identical JSON output (property omitted). Deviation is mechanical, not semantic.",
+          "file": null
+        },
+        {
+          "summary": "Glob performance on large projects. The `globResultCache` prevents repeated glob calls for the same basename, but the first glob for each unique basename traverses the filesystem. For projects with many findings referencing different basenames, this could add latency. The existing `resolveFindingPaths` already does glob calls, so this is consistent with existing performance characteristics. Verified complete by second pass.",
+          "file": null
+        }
+      ]
     }
   ]
 }
