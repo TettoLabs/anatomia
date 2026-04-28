@@ -14,5 +14,19 @@
   "spec": {
     "saved_at": "2026-04-28T17:15:29.062Z",
     "hash": "sha256:9c2a3c837606a1c8a4db2c681c2039590e22f7169232a8ce636d9062451c4071"
-  }
+  },
+  "build-report": {
+    "saved_at": "2026-04-28T17:22:56.060Z",
+    "hash": "sha256:5fadd7a394bf91fbbcac4df609dbd4fe88a3619a3699d909024657d58a7f3292"
+  },
+  "build-data": {
+    "saved_at": "2026-04-28T17:22:56.061Z",
+    "hash": "sha256:3c7d33633d9621962331a9d25d92669eec03cf5f033f96fa1b4c3039cc5eb831"
+  },
+  "modules_touched": [
+    "packages/cli/src/commands/work.ts",
+    "packages/cli/src/utils/proofSummary.ts",
+    "packages/cli/tests/commands/artifact.test.ts",
+    "packages/cli/tests/utils/proofSummary.test.ts"
+  ]
 }

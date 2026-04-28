@@ -1,0 +1,5 @@
+schema: 1
+concerns:
+  - summary: "A010 cache test verifies Map contents not globSync call count — contract specifies spy-based assertion"
+    file: "packages/cli/tests/utils/proofSummary.test.ts"
+  - summary: "14 pre-existing lint warnings in unrelated test files (no-explicit-any)"
