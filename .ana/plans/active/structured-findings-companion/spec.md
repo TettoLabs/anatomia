@@ -6,13 +6,13 @@
 
 ## Prerequisites
 
-Before creating the feature branch, verify that the following three one-line fixes are committed to main. These are pre-existing verify findings flagged in 3 consecutive verify reports. If they are not committed, commit them first as a separate cleanup — they are not part of this build.
+✅ Prerequisites completed. The following three fixes were committed to main at 39df6ba on 2026-04-28:
 
 1. **Dead ternary at `packages/cli/src/commands/work.ts:810`** — `(c as { category: string }).category === 'upstream' ? 'active' : 'active' as const` — both branches return `'active'`. The ternary is dead. The status assignment happens in the loop at lines 819-825 anyway. Replace with just `'active' as const`.
 2. **Dead truthiness guard at `packages/cli/src/utils/proofSummary.ts:346`** — `} else if (projectRoot)` — `projectRoot` is always truthy at this point (it's the function parameter, and callers pass resolved paths). Remove the condition, keep the else block.
 3. **Redundant status filter at `packages/cli/src/utils/proofSummary.ts:535-536`** — `if (finding.status && finding.status !== 'active' && finding.status !== undefined) continue` — the `!== undefined` check is redundant after the truthiness check. Simplify to `if (finding.status && finding.status !== 'active') continue`.
 
-These are developer actions. Do not start the build until they are confirmed on main.
+These are done. The feature branch should be created from main after this commit.
 
 ## Approach
 
@@ -338,7 +338,7 @@ matchedFindings.push({
 findings: proof.findings.map((c, i) => ({
   ...c,
   id: `${slug}-C${i + 1}`,
-  status: (c as { category: string }).category === 'upstream' ? 'active' : 'active' as const,
+  status: 'active' as const,
 })),
 ```
 
