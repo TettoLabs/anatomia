@@ -127,7 +127,7 @@ file_changes:
     expect(summary.deviations).toHaveLength(1);
     expect(summary.deviations[0]!.contract_id).toBe('A003');
     expect(summary.deviations[0]!.instead).toBe('Event mock verification');
-    expect(summary.seal_commit).toBeNull();
+    expect((summary as unknown as Record<string, unknown>)['seal_commit']).toBeUndefined();
     expect(summary.hashes['scope']).toBe('sha256:scope123');
     expect(summary.acceptance_criteria.total).toBe(2);
     expect(summary.acceptance_criteria.met).toBe(2);
@@ -291,7 +291,7 @@ file_changes:
   });
 
   // @ana A007
-  it('seal_commit is null even when contract.commit exists in saves', () => {
+  it('seal_commit is removed from ProofSummary', () => {
     const saves = {
       scope: { saved_at: '2026-04-01T10:00:00Z', commit: 'aaa111', hash: 'sha256:scope' },
       contract: { saved_at: '2026-04-01T10:30:00Z', commit: 'bbb222', hash: 'sha256:contract' },
@@ -301,10 +301,10 @@ file_changes:
     fs.writeFileSync(path.join(slugDir, 'contract.yaml'), 'feature: "Test"\nassertions: []');
 
     const summary = generateProofSummary(slugDir);
-    expect(summary.seal_commit).toBeNull();
+    expect((summary as unknown as Record<string, unknown>)['seal_commit']).toBeUndefined();
   });
 
-  it('seal_commit is null even when pre-check also has seal_commit', () => {
+  it('seal_commit not present even when pre-check also has seal_commit', () => {
     const saves = {
       scope: { saved_at: '2026-04-01T10:00:00Z', commit: 'aaa111', hash: 'sha256:scope' },
       contract: { saved_at: '2026-04-01T10:30:00Z', commit: 'same123', hash: 'sha256:contract' },
@@ -314,7 +314,7 @@ file_changes:
     fs.writeFileSync(path.join(slugDir, 'contract.yaml'), 'feature: "Test"\nassertions: []');
 
     const summary = generateProofSummary(slugDir);
-    expect(summary.seal_commit).toBeNull();
+    expect((summary as unknown as Record<string, unknown>)['seal_commit']).toBeUndefined();
   });
 
   it('returns slug as feature name when contract missing', async () => {
@@ -1673,5 +1673,221 @@ describe('generateProofSummary scope_summary', () => {
     fs.writeFileSync(path.join(slugDir, 'contract.yaml'), 'feature: "Test"\nassertions: []');
     const summary = generateProofSummary(slugDir);
     expect(summary.scope_summary).toBeUndefined();
+  });
+});
+
+// @ana A015, A016
+describe('generateProofSummary YAML reader', () => {
+  let tempDir: string;
+  let slugDir: string;
+
+  beforeEach(async () => {
+    tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'yaml-reader-test-'));
+    slugDir = path.join(tempDir, 'test-feature');
+    await fs.promises.mkdir(slugDir, { recursive: true });
+  });
+
+  afterEach(async () => {
+    await fs.promises.rm(tempDir, { recursive: true, force: true });
+  });
+
+  // @ana A015, A016
+  it('reads findings from verify_data.yaml with new fields', () => {
+    fs.writeFileSync(path.join(slugDir, 'verify_report.md'), `# Verify Report
+
+**Result:** PASS
+
+## Findings
+
+- **Code — Some issue:** details
+`);
+    fs.writeFileSync(path.join(slugDir, 'verify_data.yaml'), `schema: 1
+findings:
+  - category: code
+    summary: "Structured finding from YAML"
+    file: "src/test.ts"
+    line: 42
+    severity: observation
+    related_assertions: ["A001", "A002"]
+`);
+
+    const summary = generateProofSummary(slugDir);
+    expect(summary.findings.length).toBeGreaterThan(0);
+    expect(summary.findings[0]!.summary).toBe('Structured finding from YAML');
+    expect(summary.findings[0]!.severity).toBe('observation');
+    expect(summary.findings[0]!.line).toBe(42);
+    expect(summary.findings[0]!.related_assertions).toEqual(['A001', 'A002']);
+  });
+
+  // @ana A017, A018
+  it('falls back to parseFindings when verify_data.yaml absent', () => {
+    fs.writeFileSync(path.join(slugDir, 'verify_report.md'), `# Verify Report
+
+**Result:** PASS
+
+## Findings
+
+- **Code — Regex-parsed finding:** Description of the finding.
+`);
+    // No verify_data.yaml
+
+    const summary = generateProofSummary(slugDir);
+    expect(summary.findings.length).toBeGreaterThan(0);
+    expect(summary.findings[0]!.summary).toContain('Regex-parsed finding');
+    expect(summary.findings[0]!.severity).toBeUndefined();
+    expect(summary.findings[0]!.line).toBeUndefined();
+    expect(summary.findings[0]!.related_assertions).toBeUndefined();
+  });
+
+  // @ana A019
+  it('reads concerns from build_data.yaml', () => {
+    fs.writeFileSync(path.join(slugDir, 'build_report.md'), `# Build Report
+
+## Deviations
+None.
+
+## Open Issues
+1. **Some issue:** Details.
+`);
+    fs.writeFileSync(path.join(slugDir, 'build_data.yaml'), `schema: 1
+concerns:
+  - summary: "Structured concern from YAML"
+    file: "src/test.ts"
+`);
+
+    const summary = generateProofSummary(slugDir);
+    expect(summary.build_concerns.length).toBeGreaterThan(0);
+    expect(summary.build_concerns[0]!.summary).toBe('Structured concern from YAML');
+    expect(summary.build_concerns[0]!.file).toBe('src/test.ts');
+  });
+
+  it('falls back to parseBuildOpenIssues when build_data.yaml absent', () => {
+    fs.writeFileSync(path.join(slugDir, 'build_report.md'), `# Build Report
+
+## Deviations
+None.
+
+## Open Issues
+1. **Regex-parsed issue:** Details here.
+`);
+    // No build_data.yaml
+
+    const summary = generateProofSummary(slugDir);
+    expect(summary.build_concerns.length).toBeGreaterThan(0);
+    expect(summary.build_concerns[0]!.summary).toContain('Regex-parsed issue');
+  });
+
+  it('discovers numbered verify_data_1.yaml alongside verify_report_1.md', () => {
+    fs.writeFileSync(path.join(slugDir, 'verify_report_1.md'), `# Verify Report
+
+**Result:** PASS
+
+## Findings
+
+- **Code — Fallback:** Should not appear
+`);
+    fs.writeFileSync(path.join(slugDir, 'verify_data_1.yaml'), `schema: 1
+findings:
+  - category: code
+    summary: "Numbered companion finding"
+`);
+
+    const summary = generateProofSummary(slugDir);
+    expect(summary.findings.length).toBeGreaterThan(0);
+    expect(summary.findings[0]!.summary).toBe('Numbered companion finding');
+  });
+});
+
+// @ana A026, A027
+describe('parseFindings backward compat', () => {
+  it('parses findings with ## Findings heading', () => {
+    const content = `## Findings
+
+- **Code — New heading test:** This uses the new heading.
+`;
+    const findings = parseFindings(content);
+    expect(findings.length).toBeGreaterThan(0);
+    expect(findings[0]!.summary).toContain('New heading test');
+  });
+
+  it('still parses findings with ## Callouts heading', () => {
+    const content = `## Callouts
+
+- **Code — Old heading test:** This uses the old heading.
+`;
+    const findings = parseFindings(content);
+    expect(findings.length).toBeGreaterThan(0);
+    expect(findings[0]!.summary).toContain('Old heading test');
+  });
+});
+
+// @ana A020, A021
+describe('getProofContext new fields', () => {
+  let tempDir: string;
+
+  beforeEach(async () => {
+    tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'context-fields-test-'));
+    await fs.promises.mkdir(path.join(tempDir, '.ana'), { recursive: true });
+  });
+
+  afterEach(async () => {
+    await fs.promises.rm(tempDir, { recursive: true, force: true });
+  });
+
+  it('getProofContext returns line, severity, related_assertions', () => {
+    const chain = {
+      entries: [{
+        feature: 'Test Feature',
+        completed_at: '2026-04-28T10:00:00Z',
+        findings: [{
+          id: 'test-C1',
+          category: 'code',
+          summary: 'Issue with new fields',
+          file: 'packages/cli/src/test.ts',
+          anchor: null,
+          line: 42,
+          severity: 'observation',
+          related_assertions: ['A001', 'A003'],
+          status: 'active',
+        }],
+      }],
+    };
+    fs.writeFileSync(
+      path.join(tempDir, '.ana', 'proof_chain.json'),
+      JSON.stringify(chain, null, 2),
+    );
+
+    const results = getProofContext(['packages/cli/src/test.ts'], tempDir);
+    expect(results[0]!.findings.length).toBe(1);
+    expect(results[0]!.findings[0]!.severity).toBe('observation');
+    expect(results[0]!.findings[0]!.line).toBe(42);
+    expect(results[0]!.findings[0]!.related_assertions).toEqual(['A001', 'A003']);
+  });
+
+  it('getProofContext omits new fields when not present in chain', () => {
+    const chain = {
+      entries: [{
+        feature: 'Old Feature',
+        completed_at: '2026-04-28T10:00:00Z',
+        findings: [{
+          id: 'old-C1',
+          category: 'code',
+          summary: 'Old-style finding',
+          file: 'packages/cli/src/test.ts',
+          anchor: null,
+          status: 'active',
+        }],
+      }],
+    };
+    fs.writeFileSync(
+      path.join(tempDir, '.ana', 'proof_chain.json'),
+      JSON.stringify(chain, null, 2),
+    );
+
+    const results = getProofContext(['packages/cli/src/test.ts'], tempDir);
+    expect(results[0]!.findings.length).toBe(1);
+    expect(results[0]!.findings[0]!.severity).toBeUndefined();
+    expect(results[0]!.findings[0]!.line).toBeUndefined();
+    expect(results[0]!.findings[0]!.related_assertions).toBeUndefined();
   });
 });

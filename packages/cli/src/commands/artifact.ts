@@ -499,6 +499,177 @@ function validateContractFormat(filePath: string): string[] {
 }
 
 /**
+ * Companion YAML schema for verify_data.yaml
+ */
+interface VerifyDataSchema {
+  schema?: unknown;
+  findings?: unknown;
+  [key: string]: unknown;
+}
+
+/**
+ * Companion YAML schema for build_data.yaml
+ */
+interface BuildDataSchema {
+  schema?: unknown;
+  concerns?: unknown;
+  [key: string]: unknown;
+}
+
+/**
+ * Valid finding categories for verify_data.yaml
+ */
+const VALID_FINDING_CATEGORIES = ['code', 'test', 'upstream'];
+const VALID_FINDING_SEVERITIES = ['blocker', 'observation', 'note'];
+
+/**
+ * Validate verify_data.yaml companion format.
+ *
+ * Follows the validateContractFormat error-accumulation pattern:
+ * YAML parse → required field checks → enum validation → error array return.
+ * Warnings (file existence, missing file on non-upstream) are emitted via
+ * the returned warnings array but do not block the save.
+ *
+ * @param filePath - Path to verify_data.yaml
+ * @param projectRoot - Project root for file existence checks
+ * @returns Object with errors (block save) and warnings (emit but proceed)
+ */
+export function validateVerifyDataFormat(filePath: string, projectRoot?: string): { errors: string[]; warnings: string[] } {
+  const content = fs.readFileSync(filePath, 'utf-8');
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  let data: VerifyDataSchema;
+  try {
+    data = yaml.parse(content);
+  } catch (e) {
+    return { errors: [`YAML parse error: ${e instanceof Error ? e.message : 'Invalid YAML'}`], warnings: [] };
+  }
+
+  if (!data || typeof data !== 'object') {
+    return { errors: ['verify_data.yaml must be a YAML object'], warnings: [] };
+  }
+
+  // schema field must equal 1
+  if (data.schema === undefined || data.schema === null) {
+    errors.push('Missing "schema" field');
+  } else if (data.schema !== 1) {
+    errors.push(`Invalid "schema" value: ${data.schema} (expected: 1)`);
+  }
+
+  // findings must be an array
+  if (!data.findings) {
+    errors.push('Missing "findings" field');
+  } else if (!Array.isArray(data.findings)) {
+    errors.push('"findings" must be an array');
+  } else {
+    for (let i = 0; i < data.findings.length; i++) {
+      const finding = data.findings[i] as Record<string, unknown> | undefined;
+      if (!finding) continue;
+      const prefix = `Finding ${i + 1}`;
+
+      const cat = finding['category'];
+      const summary = finding['summary'];
+      const sev = finding['severity'];
+      const ra = finding['related_assertions'];
+      const file = finding['file'];
+
+      // category required, must be one of known values
+      if (!cat || typeof cat !== 'string') {
+        errors.push(`${prefix}: missing "category" field`);
+      } else if (!VALID_FINDING_CATEGORIES.includes(cat)) {
+        errors.push(`${prefix}: invalid category "${cat}" (valid: ${VALID_FINDING_CATEGORIES.join(', ')})`);
+      }
+
+      // summary required, non-empty string
+      if (!summary || typeof summary !== 'string' || !summary.trim()) {
+        errors.push(`${prefix}: missing "summary" field`);
+      }
+
+      // severity optional, but if present must be valid
+      if (sev !== undefined) {
+        if (typeof sev !== 'string' || !VALID_FINDING_SEVERITIES.includes(sev)) {
+          errors.push(`${prefix}: invalid severity "${sev}" (valid: ${VALID_FINDING_SEVERITIES.join(', ')})`);
+        }
+      }
+
+      // related_assertions optional, but if present must be array of strings
+      if (ra !== undefined) {
+        if (!Array.isArray(ra)) {
+          errors.push(`${prefix}: "related_assertions" must be an array`);
+        } else {
+          for (const item of ra) {
+            if (typeof item !== 'string') {
+              errors.push(`${prefix}: "related_assertions" elements must be strings`);
+              break;
+            }
+          }
+        }
+      }
+
+      // file warnings (non-blocking)
+      if (file && typeof file === 'string' && projectRoot) {
+        if (!fs.existsSync(path.join(projectRoot, file))) {
+          warnings.push(`Finding ${i + 1} references "${file}" which does not exist.`);
+        }
+      } else if (!file && cat !== 'upstream' && typeof cat === 'string') {
+        warnings.push(`Finding ${i + 1} (category: ${cat}) has no file reference.`);
+      }
+    }
+  }
+
+  return { errors, warnings };
+}
+
+/**
+ * Validate build_data.yaml companion format.
+ *
+ * @param filePath - Path to build_data.yaml
+ * @returns Object with errors (block save) and warnings (emit but proceed)
+ */
+export function validateBuildDataFormat(filePath: string): { errors: string[]; warnings: string[] } {
+  const content = fs.readFileSync(filePath, 'utf-8');
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  let data: BuildDataSchema;
+  try {
+    data = yaml.parse(content);
+  } catch (e) {
+    return { errors: [`YAML parse error: ${e instanceof Error ? e.message : 'Invalid YAML'}`], warnings: [] };
+  }
+
+  if (!data || typeof data !== 'object') {
+    return { errors: ['build_data.yaml must be a YAML object'], warnings: [] };
+  }
+
+  if (data.schema === undefined || data.schema === null) {
+    errors.push('Missing "schema" field');
+  } else if (data.schema !== 1) {
+    errors.push(`Invalid "schema" value: ${data.schema} (expected: 1)`);
+  }
+
+  if (!data.concerns) {
+    errors.push('Missing "concerns" field');
+  } else if (!Array.isArray(data.concerns)) {
+    errors.push('"concerns" must be an array');
+  } else {
+    for (let i = 0; i < data.concerns.length; i++) {
+      const concern = data.concerns[i] as Record<string, unknown> | undefined;
+      if (!concern) continue;
+      const prefix = `Concern ${i + 1}`;
+      const summary = concern['summary'];
+
+      if (!summary || typeof summary !== 'string' || !summary.trim()) {
+        errors.push(`${prefix}: missing "summary" field`);
+      }
+    }
+  }
+
+  return { errors, warnings };
+}
+
+/**
  * Validate build report format
  *
  * @param filePath - Path to build_report.md or build_report_N.md
@@ -522,6 +693,37 @@ function validateBuildReportFormat(filePath: string): string | null {
   }
 
   return null; // valid
+}
+
+/**
+ * Derive companion YAML filename from a report filename.
+ *
+ * verify_report.md → verify_data.yaml
+ * verify_report_1.md → verify_data_1.yaml
+ * build_report.md → build_data.yaml
+ * build_report_2.md → build_data_2.yaml
+ *
+ * @param reportFileName - The report filename (e.g., "verify_report.md")
+ * @returns Companion filename, or null if not a report
+ */
+function deriveCompanionFileName(reportFileName: string): string | null {
+  const match = reportFileName.match(/^(verify|build)_report(_\d+)?\.md$/);
+  if (!match) return null;
+  const prefix = match[1];
+  const number = match[2] ?? '';
+  return `${prefix}_data${number}.yaml`;
+}
+
+/**
+ * Derive the companion artifact key for .saves.json from the report baseType.
+ *
+ * @param baseType - "verify-report" or "build-report"
+ * @returns "verify-data" or "build-data", or null
+ */
+function deriveCompanionKey(baseType: string): string | null {
+  if (baseType === 'verify-report') return 'verify-data';
+  if (baseType === 'build-report') return 'build-data';
+  return null;
 }
 
 /**
@@ -676,6 +878,63 @@ export function saveArtifact(type: string, slug: string): void {
     }
   }
 
+  // 6b. Companion YAML discovery and validation (verify-report / build-report)
+  const companionFileName = deriveCompanionFileName(typeInfo.fileName);
+  const companionKey = deriveCompanionKey(typeInfo.baseType);
+  let companionPath: string | null = null;
+  let relCompanionPath: string | null = null;
+
+  if (companionFileName && companionKey) {
+    const slugDir = path.join(projectRoot, '.ana', 'plans', 'active', slug);
+    companionPath = path.join(slugDir, companionFileName);
+    relCompanionPath = path.join('.ana', 'plans', 'active', slug, companionFileName);
+
+    if (!fs.existsSync(companionPath)) {
+      console.error(chalk.red(`Error: ${companionFileName} not found alongside ${typeInfo.fileName}.`));
+      console.error('');
+      console.error(`Foundation 2 requires a structured data companion for ${typeInfo.baseType === 'verify-report' ? 'verify' : 'build'} reports.`);
+      console.error(`Create ${companionFileName} in .ana/plans/active/${slug}/ with this schema:`);
+      console.error('');
+      if (typeInfo.baseType === 'verify-report') {
+        console.error('  schema: 1');
+        console.error('  findings:');
+        console.error('    - category: code');
+        console.error('      summary: "Description of the finding"');
+        console.error('      file: "packages/cli/src/path/to/file.ts"');
+      } else {
+        console.error('  schema: 1');
+        console.error('  concerns:');
+        console.error('    - summary: "Description of the concern"');
+      }
+      console.error('');
+      console.error(chalk.gray('See packages/cli/templates/.claude/agents/ana-verify.md for the full schema.'));
+      process.exit(1);
+    }
+
+    // Validate companion
+    const result = typeInfo.baseType === 'verify-report'
+      ? validateVerifyDataFormat(companionPath, projectRoot)
+      : validateBuildDataFormat(companionPath);
+    if (result.errors.length > 0) {
+      console.error(chalk.red(`Error: ${companionFileName} validation failed:`));
+      for (const error of result.errors) {
+        console.error(chalk.red(`  - ${error}`));
+      }
+      process.exit(1);
+    }
+
+    // Emit warnings (non-blocking)
+    for (const warning of result.warnings) {
+      console.warn(chalk.yellow(`Warning: ${companionFileName} ${warning}`));
+    }
+
+    const findingCount = typeInfo.baseType === 'verify-report'
+      ? (yaml.parse(fs.readFileSync(companionPath, 'utf-8')).findings?.length ?? 0)
+      : (yaml.parse(fs.readFileSync(companionPath, 'utf-8')).concerns?.length ?? 0);
+    const warningInfo = result.warnings.length > 0 ? `, ${result.warnings.length} warnings` : '';
+    console.log(chalk.green(`✓ ${companionFileName} validated (${findingCount} ${typeInfo.baseType === 'verify-report' ? 'findings' : 'concerns'}${warningInfo})`));
+  }
+
   // 7b. Check if file is tracked (before staging, for create vs update message)
   const isTracked = spawnSync('git', ['ls-files', '--error-unmatch', relFilePath], {
     cwd: projectRoot,
@@ -706,6 +965,11 @@ export function saveArtifact(type: string, slug: string): void {
   try {
     execSync(`git add ${relFilePath}`, { stdio: 'pipe', cwd: projectRoot });
 
+    // Stage companion YAML alongside report
+    if (relCompanionPath && companionPath && fs.existsSync(companionPath)) {
+      execSync(`git add ${relCompanionPath}`, { stdio: 'pipe', cwd: projectRoot });
+    }
+
     // Special case: verify-report also stages plan.md if it exists
     if (type.startsWith('verify-report')) {
       const relPlanPath = path.join('.ana', 'plans', 'active', slug, 'plan.md');
@@ -724,6 +988,12 @@ export function saveArtifact(type: string, slug: string): void {
   const slugDir = path.join(projectRoot, '.ana', 'plans', 'active', slug);
   const artifactContent = fs.readFileSync(filePath, 'utf-8');
   writeSaveMetadata(slugDir, typeInfo.baseType, artifactContent);
+
+  // Write companion hash alongside report hash
+  if (companionPath && companionKey && fs.existsSync(companionPath)) {
+    const companionContent = fs.readFileSync(companionPath, 'utf-8');
+    writeSaveMetadata(slugDir, companionKey, companionContent);
+  }
 
   // Capture modules_touched at build-report time (when the feature branch
   // definitely exists and all code is committed).
@@ -953,6 +1223,40 @@ export function saveAllArtifacts(slug: string): void {
     }
   }
 
+  // 3a. Companion YAML discovery and validation for report artifacts
+  const companions: Array<{ fileName: string; key: string; absPath: string; relPath: string }> = [];
+  for (const artifact of artifacts) {
+    const companionName = deriveCompanionFileName(artifact.typeInfo.fileName);
+    const cKey = deriveCompanionKey(artifact.typeInfo.baseType);
+    if (!companionName || !cKey) continue;
+
+    const cAbsPath = path.join(planDir, companionName);
+    const cRelPath = path.relative(projectRoot, cAbsPath);
+
+    if (!fs.existsSync(cAbsPath)) {
+      console.error(chalk.red(`Error: ${companionName} not found alongside ${artifact.file}.`));
+      console.error(`Foundation 2 requires a structured data companion for ${artifact.typeInfo.baseType === 'verify-report' ? 'verify' : 'build'} reports.`);
+      console.error(`Create ${companionName} in .ana/plans/active/${slug}/`);
+      process.exit(1);
+    }
+
+    const result = artifact.typeInfo.baseType === 'verify-report'
+      ? validateVerifyDataFormat(cAbsPath, projectRoot)
+      : validateBuildDataFormat(cAbsPath);
+    if (result.errors.length > 0) {
+      console.error(chalk.red(`Error: ${companionName} validation failed:`));
+      for (const error of result.errors) {
+        console.error(chalk.red(`  - ${error}`));
+      }
+      process.exit(1);
+    }
+    for (const warning of result.warnings) {
+      console.warn(chalk.yellow(`Warning: ${companionName} ${warning}`));
+    }
+
+    companions.push({ fileName: companionName, key: cKey, absPath: cAbsPath, relPath: cRelPath });
+  }
+
   // 3b. Pre-check for verify-report (contract integrity) — blocks on TAMPERED
   if (artifacts.some(a => a.typeInfo.baseType === 'verify-report')) {
     runPreCheckAndStore(slug, planDir, projectRoot);
@@ -1000,6 +1304,11 @@ export function saveAllArtifacts(slug: string): void {
       execSync(`git add ${artifactPath}`, { stdio: 'pipe', cwd: projectRoot });
     }
 
+    // Stage companion YAMLs alongside their reports
+    for (const companion of companions) {
+      execSync(`git add ${companion.relPath}`, { stdio: 'pipe', cwd: projectRoot });
+    }
+
     // Special case: if verify-report exists, also stage plan.md
     if (artifacts.some(a => a.typeInfo.baseType === 'verify-report')) {
       const planPath = path.join(planDir, 'plan.md');
@@ -1017,6 +1326,12 @@ export function saveAllArtifacts(slug: string): void {
   for (const artifact of artifacts) {
     const content = fs.readFileSync(artifact.path, 'utf-8');
     writeSaveMetadata(planDir, artifact.typeInfo.baseType, content);
+  }
+
+  // Write companion hashes alongside report hashes
+  for (const companion of companions) {
+    const content = fs.readFileSync(companion.absPath, 'utf-8');
+    writeSaveMetadata(planDir, companion.key, content);
   }
   const savesPathAll = path.join(planDir, '.saves.json');
   if (fs.existsSync(savesPathAll)) {

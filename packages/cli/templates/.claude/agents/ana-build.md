@@ -384,6 +384,22 @@ Commands AnaVerify should run to independently verify:
 {actual output from: git log --oneline {artifactBranch}..HEAD}
 
 ## Open Issues
+
+Before writing this section, create `build_data.yaml` alongside the build report in `.ana/plans/active/{slug}/`. This is the structured companion — it captures open issues as machine-readable data for the proof chain.
+
+```yaml
+schema: 1
+concerns:
+  - summary: "extractFileRefs cannot parse dotted test filenames"
+    file: "packages/cli/src/utils/proofSummary.ts"
+  - summary: "Census dialect as sentinel entry is a workaround"
+```
+
+**Required fields:** `summary` (non-empty string)
+**Optional fields:** `file` (repo-relative path)
+
+If there are genuinely zero open issues, create the file with an empty array: `schema: 1\nconcerns: []`
+
 Anything unfinished, concerning, or needing human review.
 
 If you weakened a test assertion, that's an Open Issue. If you adapted around a spec inaccuracy, that's an Open Issue. If you skipped something intentional, that's an Open Issue. "None" means every line of code is solid and every test meaningfully verifies the behavior it claims to test — not just that tests pass.

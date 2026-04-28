@@ -1,0 +1,35 @@
+schema: 1
+findings:
+  - category: code
+    summary: "Double YAML parse in companion success message — validateVerifyDataFormat/validateBuildDataFormat parses the file, then saveArtifact re-parses at lines 932-933 to count findings for the console message. Validation function could return the parsed count."
+    file: "packages/cli/src/commands/artifact.ts"
+    line: 932
+    severity: observation
+    related_assertions: ["A008"]
+  - category: code
+    summary: "PreCheckData interface retains seal_commit field despite seal_commit removal from ProofChainEntry and ProofSummary. Intentional — reads old .saves.json — but inconsistent with the removal theme."
+    file: "packages/cli/src/utils/proofSummary.ts"
+    line: 108
+    severity: observation
+    related_assertions: ["A024"]
+  - category: code
+    summary: "getProofContext uses conditional property assignment (if finding.line !== undefined) rather than always-present optional fields. Result object shape varies — fine for TypeScript consumers but JSON shape is polymorphic."
+    file: "packages/cli/src/utils/proofSummary.ts"
+    line: 1187
+    severity: observation
+    related_assertions: ["A020", "A021"]
+  - category: test
+    summary: "Pre-check tag collision: A022-A025 and A029 reported COVERED because @ana tags from OTHER features' contracts share the same IDs. The 'covering' tests (readme.test.ts, confirmation.test.ts) don't test this feature's assertions. No dedicated tests for writeProofChain spread, seal_commit removal, or template content."
+    file: "packages/cli/tests/commands/artifact.test.ts"
+    severity: observation
+    related_assertions: ["A022", "A023", "A024", "A025", "A029"]
+  - category: test
+    summary: "blocks-save tests (A006, A007) use toThrow() without checking exit code or error message content. saveArtifact calls process.exit(1), which throws in test — the assertion confirms the throw but not the exit code value or the descriptive error message."
+    file: "packages/cli/tests/commands/artifact.test.ts"
+    line: 2216
+    severity: observation
+    related_assertions: ["A006", "A007"]
+  - category: upstream
+    summary: "Contract IDs A022-A037 collide with pre-existing @ana tags from other features' contracts. Pre-check cannot distinguish — it reports COVERED for any matching tag regardless of feature. This makes pre-check unreliable for projects with 10+ pipeline cycles."
+    severity: observation
+    related_assertions: ["A022", "A023", "A024", "A025", "A029"]

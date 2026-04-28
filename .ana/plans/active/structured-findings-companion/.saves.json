@@ -14,5 +14,227 @@
   "spec": {
     "saved_at": "2026-04-28T06:30:17.859Z",
     "hash": "sha256:5ba3a7e625947a380f5cec02f148e33a21b16dfad0458141f6117cdf44439245"
+  },
+  "build-report": {
+    "saved_at": "2026-04-28T06:54:34.749Z",
+    "hash": "sha256:f4d327a1f516e5ad054b3738b42c313a93ba7508613cefe6f89e7aebf76ff62f"
+  },
+  "build-data": {
+    "saved_at": "2026-04-28T06:54:34.750Z",
+    "hash": "sha256:baebfd7240ab0b459184ab0362eb031387834a70eea50e3a5f8dcbfc73403fd1"
+  },
+  "modules_touched": [
+    ".claude/agents/ana-build.md",
+    ".claude/agents/ana-verify.md",
+    "packages/cli/src/commands/artifact.ts",
+    "packages/cli/src/commands/work.ts",
+    "packages/cli/src/types/proof.ts",
+    "packages/cli/src/utils/proofSummary.ts",
+    "packages/cli/templates/.claude/agents/ana-build.md",
+    "packages/cli/templates/.claude/agents/ana-verify.md",
+    "packages/cli/tests/commands/artifact.test.ts",
+    "packages/cli/tests/utils/proofSummary.test.ts"
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:111e5f5a4b103bd704b297a0cbc1a99fab127e6ef0b94fb86fdf28a84b2b473a",
+    "assertions": [
+      {
+        "id": "A001",
+        "says": "Valid verify companion YAML passes validation",
+        "status": "COVERED"
+      },
+      {
+        "id": "A002",
+        "says": "Verify companion missing schema field is rejected",
+        "status": "COVERED"
+      },
+      {
+        "id": "A003",
+        "says": "Verify companion with invalid category is rejected",
+        "status": "COVERED"
+      },
+      {
+        "id": "A004",
+        "says": "Verify companion with invalid severity is rejected",
+        "status": "COVERED"
+      },
+      {
+        "id": "A005",
+        "says": "Verify companion with invalid related_assertions is rejected",
+        "status": "COVERED"
+      },
+      {
+        "id": "A006",
+        "says": "Saving a verify report without its companion YAML is blocked",
+        "status": "COVERED"
+      },
+      {
+        "id": "A007",
+        "says": "Saving a build report without its companion YAML is blocked",
+        "status": "COVERED"
+      },
+      {
+        "id": "A008",
+        "says": "Verify report saves successfully with valid companion",
+        "status": "COVERED"
+      },
+      {
+        "id": "A009",
+        "says": "Verify companion gets its own integrity hash",
+        "status": "COVERED"
+      },
+      {
+        "id": "A010",
+        "says": "Valid build companion YAML passes validation",
+        "status": "COVERED"
+      },
+      {
+        "id": "A011",
+        "says": "Build companion with missing summary is rejected",
+        "status": "COVERED"
+      },
+      {
+        "id": "A012",
+        "says": "Build companion gets its own integrity hash",
+        "status": "COVERED"
+      },
+      {
+        "id": "A013",
+        "says": "Save-all discovers and saves verify companion alongside report",
+        "status": "COVERED"
+      },
+      {
+        "id": "A014",
+        "says": "Save-all discovers numbered companion alongside numbered report",
+        "status": "COVERED"
+      },
+      {
+        "id": "A015",
+        "says": "Proof summary reads findings from structured YAML when available",
+        "status": "COVERED"
+      },
+      {
+        "id": "A016",
+        "says": "Proof summary includes new intelligence fields from YAML",
+        "status": "COVERED"
+      },
+      {
+        "id": "A017",
+        "says": "Proof summary falls back to regex parsing when no YAML exists",
+        "status": "COVERED"
+      },
+      {
+        "id": "A018",
+        "says": "Fallback findings lack the new intelligence fields",
+        "status": "COVERED"
+      },
+      {
+        "id": "A019",
+        "says": "Proof summary reads build concerns from structured YAML when available",
+        "status": "COVERED"
+      },
+      {
+        "id": "A020",
+        "says": "Proof context queries return the new intelligence fields",
+        "status": "COVERED"
+      },
+      {
+        "id": "A021",
+        "says": "Proof context queries return related assertions",
+        "status": "COVERED"
+      },
+      {
+        "id": "A022",
+        "says": "Code compiles with new finding fields on all four types",
+        "status": "COVERED"
+      },
+      {
+        "id": "A023",
+        "says": "New finding fields flow from proof summary through to proof chain entry",
+        "status": "COVERED"
+      },
+      {
+        "id": "A024",
+        "says": "New proof chain entries have no seal_commit field",
+        "status": "COVERED"
+      },
+      {
+        "id": "A025",
+        "says": "Existing entries have seal_commit cleaned up during backfill",
+        "status": "COVERED"
+      },
+      {
+        "id": "A026",
+        "says": "Parser handles both old and new section headings",
+        "status": "COVERED"
+      },
+      {
+        "id": "A027",
+        "says": "Parser handles the new Findings heading",
+        "status": "COVERED"
+      },
+      {
+        "id": "A028",
+        "says": "Non-existent file reference produces a warning, not an error",
+        "status": "COVERED"
+      },
+      {
+        "id": "A029",
+        "says": "Verify template uses Findings heading instead of Callouts",
+        "status": "COVERED"
+      },
+      {
+        "id": "A030",
+        "says": "Verify template no longer contains Callouts heading",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A031",
+        "says": "Verify template instructs creating YAML before narrative",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A032",
+        "says": "Verify template explains YAML is authoritative for machines",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A033",
+        "says": "Build template instructs creating build_data.yaml",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A034",
+        "says": "Package template and dogfood copy are identical for verify",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A035",
+        "says": "Package template and dogfood copy are identical for build",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A036",
+        "says": "All tests pass after the changes",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A037",
+        "says": "Lint passes after the changes",
+        "status": "UNCOVERED"
+      }
+    ],
+    "covered": 29,
+    "uncovered": 8,
+    "run_at": "2026-04-28T07:07:08.727Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-04-28T07:07:08.754Z",
+    "hash": "sha256:ad19447ffa5fb08aed63e3e367670742dde1e04f84bfca8e38b4b6c7c1d10b2e"
+  },
+  "verify-data": {
+    "saved_at": "2026-04-28T07:07:08.754Z",
+    "hash": "sha256:6c8445cf07f783d92f09de1cc64251ca96d487bdcaca1e81d1a7cfe3128c5e9d"
   }
 }

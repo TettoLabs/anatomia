@@ -58,7 +58,6 @@ export interface ProofChainEntry {
   acceptance_criteria: ProofSummary['acceptance_criteria'];
   timing: ProofSummary['timing'];
   hashes: Record<string, string>;
-  seal_commit: string | null;
   completed_at: string;
   // S23 pipeline hardening — intelligence capture
   modules_touched: string[];
@@ -69,6 +68,9 @@ export interface ProofChainEntry {
     summary: string;
     file: string | null;
     anchor: string | null;
+    line?: number; // Display only. NOT used for matching or staleness.
+    severity?: 'blocker' | 'observation' | 'note';
+    related_assertions?: string[];
     status?: 'active' | 'lesson' | 'promoted' | 'closed';
     closed_reason?: string;
     closed_at?: string;
