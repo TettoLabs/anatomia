@@ -1,0 +1,292 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Structured Findings Companion"
+
+assertions:
+  # Verify companion validation (AC1)
+  - id: A001
+    says: "Valid verify companion YAML passes validation"
+    block: "validates verify_data.yaml with all required fields"
+    target: "validationErrors.length"
+    matcher: "equals"
+    value: 0
+
+  - id: A002
+    says: "Verify companion missing schema field is rejected"
+    block: "rejects verify_data.yaml without schema field"
+    target: "validationErrors"
+    matcher: "contains"
+    value: "schema"
+
+  - id: A003
+    says: "Verify companion with invalid category is rejected"
+    block: "rejects verify_data.yaml finding with invalid category"
+    target: "validationErrors"
+    matcher: "contains"
+    value: "category"
+
+  - id: A004
+    says: "Verify companion with invalid severity is rejected"
+    block: "rejects verify_data.yaml finding with invalid severity"
+    target: "validationErrors"
+    matcher: "contains"
+    value: "severity"
+
+  - id: A005
+    says: "Verify companion with invalid related_assertions is rejected"
+    block: "rejects verify_data.yaml finding with non-array related_assertions"
+    target: "validationErrors"
+    matcher: "contains"
+    value: "related_assertions"
+
+  # Save blocks on missing companion (AC2, AC7)
+  - id: A006
+    says: "Saving a verify report without its companion YAML is blocked"
+    block: "blocks save when verify_data.yaml is missing"
+    target: "exitCode"
+    matcher: "equals"
+    value: 1
+
+  - id: A007
+    says: "Saving a build report without its companion YAML is blocked"
+    block: "blocks save when build_data.yaml is missing"
+    target: "exitCode"
+    matcher: "equals"
+    value: 1
+
+  # Successful companion save (AC3, AC4)
+  - id: A008
+    says: "Verify report saves successfully with valid companion"
+    block: "saves verify-report with valid verify_data.yaml"
+    target: "commitCreated"
+    matcher: "truthy"
+
+  - id: A009
+    says: "Verify companion gets its own integrity hash"
+    block: "saves verify-report with valid verify_data.yaml"
+    target: "saves.verify-data.hash"
+    matcher: "contains"
+    value: "sha256:"
+
+  # Build companion validation (AC6)
+  - id: A010
+    says: "Valid build companion YAML passes validation"
+    block: "validates build_data.yaml with all required fields"
+    target: "validationErrors.length"
+    matcher: "equals"
+    value: 0
+
+  - id: A011
+    says: "Build companion with missing summary is rejected"
+    block: "rejects build_data.yaml concern with missing summary"
+    target: "validationErrors"
+    matcher: "contains"
+    value: "summary"
+
+  # Build companion hash (AC8)
+  - id: A012
+    says: "Build companion gets its own integrity hash"
+    block: "saves build-report with valid build_data.yaml"
+    target: "saves.build-data.hash"
+    matcher: "contains"
+    value: "sha256:"
+
+  # saveAllArtifacts companion discovery (AC5, AC9)
+  - id: A013
+    says: "Save-all discovers and saves verify companion alongside report"
+    block: "saveAllArtifacts discovers verify_data.yaml alongside verify_report.md"
+    target: "saves.verify-data"
+    matcher: "exists"
+
+  - id: A014
+    says: "Save-all discovers numbered companion alongside numbered report"
+    block: "saveAllArtifacts discovers verify_data_1.yaml alongside verify_report_1.md"
+    target: "saves.verify-data"
+    matcher: "exists"
+
+  # YAML reader in generateProofSummary (AC10, AC11, AC12)
+  - id: A015
+    says: "Proof summary reads findings from structured YAML when available"
+    block: "reads findings from verify_data.yaml"
+    target: "summary.findings[0].severity"
+    matcher: "exists"
+
+  - id: A016
+    says: "Proof summary includes new intelligence fields from YAML"
+    block: "reads findings from verify_data.yaml"
+    target: "summary.findings[0].related_assertions"
+    matcher: "exists"
+
+  - id: A017
+    says: "Proof summary falls back to regex parsing when no YAML exists"
+    block: "falls back to parseFindings when verify_data.yaml absent"
+    target: "summary.findings.length"
+    matcher: "greater"
+    value: 0
+
+  - id: A018
+    says: "Fallback findings lack the new intelligence fields"
+    block: "falls back to parseFindings when verify_data.yaml absent"
+    target: "summary.findings[0].severity"
+    matcher: "equals"
+    value: undefined
+
+  - id: A019
+    says: "Proof summary reads build concerns from structured YAML when available"
+    block: "reads concerns from build_data.yaml"
+    target: "summary.build_concerns.length"
+    matcher: "greater"
+    value: 0
+
+  # getProofContext field propagation (AC13)
+  - id: A020
+    says: "Proof context queries return the new intelligence fields"
+    block: "getProofContext returns line, severity, related_assertions"
+    target: "result.findings[0].severity"
+    matcher: "exists"
+
+  - id: A021
+    says: "Proof context queries return related assertions"
+    block: "getProofContext returns line, severity, related_assertions"
+    target: "result.findings[0].related_assertions"
+    matcher: "exists"
+
+  # Type changes (AC14, AC15, AC16)
+  - id: A022
+    says: "Code compiles with new finding fields on all four types"
+    block: "TypeScript compilation succeeds"
+    target: "tscExitCode"
+    matcher: "equals"
+    value: 0
+
+  # writeProofChain spread (AC17)
+  - id: A023
+    says: "New finding fields flow from proof summary through to proof chain entry"
+    block: "writeProofChain preserves new fields via spread"
+    target: "entry.findings[0].severity"
+    matcher: "exists"
+
+  # seal_commit removal (AC18)
+  - id: A024
+    says: "New proof chain entries have no seal_commit field"
+    block: "seal_commit is removed from new entries"
+    target: "entry.seal_commit"
+    matcher: "equals"
+    value: undefined
+
+  - id: A025
+    says: "Existing entries have seal_commit cleaned up during backfill"
+    block: "backfill loop deletes seal_commit from existing entries"
+    target: "existingEntry.seal_commit"
+    matcher: "equals"
+    value: undefined
+
+  # parseFindings backward compat (AC19)
+  - id: A026
+    says: "Parser handles both old and new section headings"
+    block: "parseFindings matches both Callouts and Findings headings"
+    target: "findingsFromOldHeading.length"
+    matcher: "greater"
+    value: 0
+
+  - id: A027
+    says: "Parser handles the new Findings heading"
+    block: "parseFindings matches both Callouts and Findings headings"
+    target: "findingsFromNewHeading.length"
+    matcher: "greater"
+    value: 0
+
+  # File existence warnings (AC20, AC21)
+  - id: A028
+    says: "Non-existent file reference produces a warning, not an error"
+    block: "warns when finding references non-existent file"
+    target: "validationErrors.length"
+    matcher: "equals"
+    value: 0
+
+  # Template changes (AC22, AC23, AC24, AC25, AC26)
+  - id: A029
+    says: "Verify template uses Findings heading instead of Callouts"
+    block: "verify template heading renamed"
+    target: "templateContent"
+    matcher: "contains"
+    value: "## Findings"
+
+  - id: A030
+    says: "Verify template no longer contains Callouts heading"
+    block: "verify template heading renamed"
+    target: "templateContent"
+    matcher: "not_contains"
+    value: "## Callouts"
+
+  - id: A031
+    says: "Verify template instructs creating YAML before narrative"
+    block: "verify template includes YAML-first workflow step"
+    target: "templateContent"
+    matcher: "contains"
+    value: "verify_data.yaml"
+
+  - id: A032
+    says: "Verify template explains YAML is authoritative for machines"
+    block: "verify template includes relationship statement"
+    target: "templateContent"
+    matcher: "contains"
+    value: "authoritative"
+
+  - id: A033
+    says: "Build template instructs creating build_data.yaml"
+    block: "build template includes YAML companion instruction"
+    target: "templateContent"
+    matcher: "contains"
+    value: "build_data.yaml"
+
+  - id: A034
+    says: "Package template and dogfood copy are identical for verify"
+    block: "dogfood sync verify template"
+    target: "diffOutput"
+    matcher: "equals"
+    value: ""
+
+  - id: A035
+    says: "Package template and dogfood copy are identical for build"
+    block: "dogfood sync build template"
+    target: "diffOutput"
+    matcher: "equals"
+    value: ""
+
+  # Full test suite (AC27, AC28)
+  - id: A036
+    says: "All tests pass after the changes"
+    block: "full test suite passes"
+    target: "testExitCode"
+    matcher: "equals"
+    value: 0
+
+  - id: A037
+    says: "Lint passes after the changes"
+    block: "lint passes"
+    target: "lintExitCode"
+    matcher: "equals"
+    value: 0
+
+file_changes:
+  - path: "packages/cli/src/types/proof.ts"
+    action: modify
+  - path: "packages/cli/src/utils/proofSummary.ts"
+    action: modify
+  - path: "packages/cli/src/commands/artifact.ts"
+    action: modify
+  - path: "packages/cli/src/commands/work.ts"
+    action: modify
+  - path: "packages/cli/templates/.claude/agents/ana-verify.md"
+    action: modify
+  - path: "packages/cli/templates/.claude/agents/ana-build.md"
+    action: modify
+  - path: ".claude/agents/ana-verify.md"
+    action: modify
+  - path: ".claude/agents/ana-build.md"
+    action: modify
+  - path: "packages/cli/tests/commands/artifact.test.ts"
+    action: modify
+  - path: "packages/cli/tests/utils/proofSummary.test.ts"
+    action: modify
