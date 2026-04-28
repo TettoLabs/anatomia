@@ -9,6 +9,10 @@ The proof chain's highest-value data — findings and build concerns — enters 
 
 This is Foundation 2 of the Learning Loop. Foundation 1 made the data honest (lifecycle status, mechanical maintenance). Foundation 1.5 made the honesty verified (57% → 100% closure accuracy). Foundation 2 makes the data complete — structured input replaces regex extraction, new intelligence dimensions become possible, and every downstream consumer (Foundation 3 delivery, Ana Learn, health metrics, compliance dashboards) operates on validated structured data instead of parser output.
 
+## Prerequisites
+
+The dead ternary at work.ts:810, the dead truthiness guard at proofSummary.ts:346, and the redundant status filter at proofSummary.ts:535-536 must be committed as one-line fixes BEFORE this scope's branch is created. These are pre-existing verify findings flagged in 3 consecutive pipeline runs. A system preaching code quality ships Foundation 2 from clean code.
+
 ## Complexity Assessment
 
 - **Size:** medium
@@ -61,7 +65,7 @@ Design principles: *"Verified over trusted"* — save-time validation verifies Y
 - AC14: `ProofChainEntry` finding type includes optional fields: `line?: number`, `severity?: 'blocker' | 'observation' | 'note'`, `related_assertions?: string[]`. All optional for backward compatibility.
 - AC15: `ProofSummary` finding type includes the same optional fields as AC14.
 - AC16: `ProofChainEntryForContext` and `ProofContextResult` finding types include the same optional fields.
-- AC17: The `writeProofChain` finding construction preserves the new fields from `ProofSummary` to `ProofChainEntry` (spread with type assertion or explicit mapping — the mechanism must be type-safe, not reliant on accidental spread).
+- AC17: The `writeProofChain` finding construction preserves the new fields from `ProofSummary` to `ProofChainEntry` (spread with type assertion or explicit mapping — the mechanism must be type-safe. Lean: spread with type assertion (`as ProofChainEntry['findings'][0]`) rather than explicit field construction — the findings type has 12+ fields and explicit construction is brittle. The spread preserves new fields automatically; the assertion catches type mismatches at compile time).
 - AC18: `seal_commit` is removed from `ProofChainEntry`, `ProofSummary`, `generateProofSummary`, and `writeProofChain`. Existing entries have `seal_commit` deleted in the backfill loop.
 - AC19: `parseFindings` regex matches both `## Callouts` and `## Findings` headings.
 - AC20: When `file` is provided on a finding and does not exist at `path.join(projectRoot, file)`, save emits a warning (does not block).
