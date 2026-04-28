@@ -1,7 +1,13 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
+
+vi.mock('glob', async (importOriginal) => {
+  const original = await importOriginal<typeof import('glob')>();
+  return { ...original };
+});
+import * as glob from 'glob';
 import {
   generateProofSummary,
   parseFindings,
@@ -1273,11 +1279,10 @@ describe('resolveFindingPaths', () => {
   describe('glob cache', () => {
     // @ana A010
     it('reuses cached glob results across multiple calls', async () => {
-      const { globSync } = await import('glob');
-      const spy = vi.spyOn({ globSync }, 'globSync').mockImplementation(globSync);
-
       await fs.promises.mkdir(path.join(tempDir, 'src', 'utils'), { recursive: true });
       await fs.promises.writeFile(path.join(tempDir, 'src', 'utils', 'helper.ts'), '');
+
+      const spy = vi.spyOn(glob, 'globSync');
 
       const sharedCache = new Map<string, string[]>();
       const items1 = [{ file: 'helper.ts' }];
@@ -1290,6 +1295,8 @@ describe('resolveFindingPaths', () => {
       expect(items2[0]!.file).toBe('src/utils/helper.ts');
       // Cache should have stored the result from the first call
       expect(sharedCache.get('helper.ts')).toEqual(['src/utils/helper.ts']);
+      // globSync called once for first lookup, second lookup hits cache
+      expect(spy).toHaveBeenCalledTimes(1);
 
       spy.mockRestore();
     });
