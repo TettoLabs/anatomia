@@ -1291,8 +1291,8 @@ Tests: 5 passed
         expect(updated.entries[0].findings[0].status).not.toBe('closed');
       });
 
-      // @ana A014, A015, A016
-      it('supersedes older findings on same file+category', async () => {
+      // @ana A008, A009
+      it('does not supersede findings on same file+category', async () => {
         await createProofProject('test-feature', { existingChain: true });
 
         const srcDir = path.join(tempDir, 'src');
@@ -1326,13 +1326,196 @@ Tests: 5 passed
         await completeWork('test-feature');
 
         const updated = JSON.parse(fsSync.readFileSync(chainPath, 'utf-8'));
-        // Older finding should be closed
-        expect(updated.entries[0].findings[0].status).toBe('closed');
-        expect(updated.entries[0].findings[0].closed_reason).toContain('superseded');
-        // Newer finding should be active
+        // Older finding should remain active — supersession removed
+        expect(updated.entries[0].findings[0].status).not.toBe('closed');
+        expect(updated.entries[0].findings[0].status).toBe('active');
+        // Newer finding should also be active
         const newEntry = updated.entries[updated.entries.length - 1];
         const activeFindings = newEntry.findings.filter((f: { status: string }) => f.status === 'active');
         expect(activeFindings.length).toBeGreaterThan(0);
+      });
+
+      // @ana A001, A002
+      it('does not close findings with partial monorepo paths', async () => {
+        await createProofProject('test-feature', { existingChain: true });
+
+        // Create the file at the full monorepo path but NOT at the partial path
+        const fullDir = path.join(tempDir, 'packages', 'cli', 'src', 'types');
+        fsSync.mkdirSync(fullDir, { recursive: true });
+        fsSync.writeFileSync(path.join(fullDir, 'contract.ts'), 'export type Contract = {};');
+
+        const chainPath = path.join(tempDir, '.ana', 'proof_chain.json');
+        const chain = JSON.parse(fsSync.readFileSync(chainPath, 'utf-8'));
+        chain.entries[0].findings = [
+          { id: 'old-C1', category: 'code', summary: 'Partial path', file: 'src/types/contract.ts', anchor: null },
+        ];
+        fsSync.writeFileSync(chainPath, JSON.stringify(chain));
+
+        await completeWork('test-feature');
+
+        const updated = JSON.parse(fsSync.readFileSync(chainPath, 'utf-8'));
+        expect(updated.entries[0].findings[0].status).not.toBe('closed');
+        expect(updated.entries[0].findings[0].status).toBe('active');
+      });
+
+      // @ana A003, A004
+      it('closes findings for genuinely deleted basenames', async () => {
+        await createProofProject('test-feature', { existingChain: true });
+
+        // Don't create deleted-basename.ts anywhere — it's genuinely gone
+        const chainPath = path.join(tempDir, '.ana', 'proof_chain.json');
+        const chain = JSON.parse(fsSync.readFileSync(chainPath, 'utf-8'));
+        chain.entries[0].findings = [
+          { id: 'old-C1', category: 'code', summary: 'Gone file', file: 'deleted-basename.ts', anchor: null },
+        ];
+        fsSync.writeFileSync(chainPath, JSON.stringify(chain));
+
+        await completeWork('test-feature');
+
+        const updated = JSON.parse(fsSync.readFileSync(chainPath, 'utf-8'));
+        expect(updated.entries[0].findings[0].status).toBe('closed');
+        expect(updated.entries[0].findings[0].closed_reason).toBe('file removed');
+      });
+
+      // @ana A005
+      it('does not close findings with ambiguous basenames', async () => {
+        await createProofProject('test-feature', { existingChain: true });
+
+        // Create 5+ files named index.ts to simulate ambiguity
+        for (let i = 0; i < 5; i++) {
+          const dir = path.join(tempDir, 'src', `mod${i}`);
+          fsSync.mkdirSync(dir, { recursive: true });
+          fsSync.writeFileSync(path.join(dir, 'index.ts'), `export const m${i} = ${i};`);
+        }
+
+        const chainPath = path.join(tempDir, '.ana', 'proof_chain.json');
+        const chain = JSON.parse(fsSync.readFileSync(chainPath, 'utf-8'));
+        chain.entries[0].findings = [
+          { id: 'old-C1', category: 'code', summary: 'Ambiguous', file: 'index.ts', anchor: null },
+        ];
+        fsSync.writeFileSync(chainPath, JSON.stringify(chain));
+
+        await completeWork('test-feature');
+
+        const updated = JSON.parse(fsSync.readFileSync(chainPath, 'utf-8'));
+        expect(updated.entries[0].findings[0].status).not.toBe('closed');
+      });
+
+      // @ana A006, A007
+      it('exempts upstream findings from staleness', async () => {
+        await createProofProject('test-feature', { existingChain: true });
+
+        // Don't create the referenced file — upstream should skip staleness entirely
+        const chainPath = path.join(tempDir, '.ana', 'proof_chain.json');
+        const chain = JSON.parse(fsSync.readFileSync(chainPath, 'utf-8'));
+        chain.entries[0].findings = [
+          { id: 'old-C1', category: 'upstream', summary: 'Upstream obs', file: 'nonexistent.ts', anchor: null, status: 'lesson' },
+        ];
+        fsSync.writeFileSync(chainPath, JSON.stringify(chain));
+
+        await completeWork('test-feature');
+
+        const updated = JSON.parse(fsSync.readFileSync(chainPath, 'utf-8'));
+        expect(updated.entries[0].findings[0].status).toBe('lesson');
+        expect(updated.entries[0].findings[0].closed_reason).not.toBe('file removed');
+      });
+
+      // @ana A010, A011
+      it('reopens wrongly-closed superseded findings', async () => {
+        await createProofProject('test-feature', { existingChain: true });
+
+        const srcDir = path.join(tempDir, 'src');
+        fsSync.mkdirSync(srcDir, { recursive: true });
+        fsSync.writeFileSync(path.join(srcDir, 'shared.ts'), 'export const x = 1;');
+
+        const chainPath = path.join(tempDir, '.ana', 'proof_chain.json');
+        const chain = JSON.parse(fsSync.readFileSync(chainPath, 'utf-8'));
+        chain.entries[0].findings = [
+          {
+            id: 'old-C1', category: 'code', summary: 'Was superseded',
+            file: 'src/shared.ts', anchor: null,
+            status: 'closed', closed_reason: 'superseded by new-C1',
+            closed_at: '2026-04-20T00:00:00Z', closed_by: 'mechanical',
+          },
+        ];
+        fsSync.writeFileSync(chainPath, JSON.stringify(chain));
+
+        await completeWork('test-feature');
+
+        const updated = JSON.parse(fsSync.readFileSync(chainPath, 'utf-8'));
+        expect(updated.entries[0].findings[0].status).toBe('active');
+        expect(updated.entries[0].findings[0].closed_reason).not.toBe('superseded by new-C1');
+      });
+
+      // @ana A012
+      it('reopens wrongly-closed upstream findings as lessons', async () => {
+        await createProofProject('test-feature', { existingChain: true });
+
+        const chainPath = path.join(tempDir, '.ana', 'proof_chain.json');
+        const chain = JSON.parse(fsSync.readFileSync(chainPath, 'utf-8'));
+        chain.entries[0].findings = [
+          {
+            id: 'old-C1', category: 'upstream', summary: 'Upstream wrongly closed',
+            file: 'nonexistent.ts', anchor: null,
+            status: 'closed', closed_reason: 'code changed, anchor absent',
+            closed_at: '2026-04-20T00:00:00Z', closed_by: 'mechanical',
+          },
+        ];
+        fsSync.writeFileSync(chainPath, JSON.stringify(chain));
+
+        await completeWork('test-feature');
+
+        const updated = JSON.parse(fsSync.readFileSync(chainPath, 'utf-8'));
+        expect(updated.entries[0].findings[0].status).toBe('lesson');
+      });
+
+      // @ana A016
+      it('closes findings whose anchor is absent from existing file', async () => {
+        await createProofProject('test-feature', { existingChain: true });
+
+        const srcDir = path.join(tempDir, 'src');
+        fsSync.mkdirSync(srcDir, { recursive: true });
+        fsSync.writeFileSync(path.join(srcDir, 'target.ts'), 'export function other() {}');
+
+        const chainPath = path.join(tempDir, '.ana', 'proof_chain.json');
+        const chain = JSON.parse(fsSync.readFileSync(chainPath, 'utf-8'));
+        chain.entries[0].findings = [
+          { id: 'old-C1', category: 'code', summary: 'Anchor gone', file: 'src/target.ts', anchor: 'missingAnchorText' },
+        ];
+        fsSync.writeFileSync(chainPath, JSON.stringify(chain));
+
+        await completeWork('test-feature');
+
+        const updated = JSON.parse(fsSync.readFileSync(chainPath, 'utf-8'));
+        expect(updated.entries[0].findings[0].status).toBe('closed');
+        expect(updated.entries[0].findings[0].closed_reason).toBe('code changed, anchor absent');
+      });
+
+      // @ana A017
+      it('skips anchor check when file does not exist at declared path', async () => {
+        await createProofProject('test-feature', { existingChain: true });
+
+        // Create 2 files with the same basename to make resolution ambiguous.
+        // File doesn't exist at declared path → resolution tries glob → 2 matches → ambiguous → stays unresolved.
+        // Staleness sees file doesn't exist → globs basename → 2 matches → conservative skip (no anchor check).
+        const dir1 = path.join(tempDir, 'packages', 'a', 'src');
+        const dir2 = path.join(tempDir, 'packages', 'b', 'src');
+        fsSync.mkdirSync(dir1, { recursive: true });
+        fsSync.mkdirSync(dir2, { recursive: true });
+        fsSync.writeFileSync(path.join(dir1, 'target.ts'), 'no anchor here');
+        fsSync.writeFileSync(path.join(dir2, 'target.ts'), 'also no anchor here');
+
+        const chainPath = path.join(tempDir, '.ana', 'proof_chain.json');
+        const chain = JSON.parse(fsSync.readFileSync(chainPath, 'utf-8'));
+        chain.entries[0].findings = [
+          { id: 'old-C1', category: 'code', summary: 'Anchor on missing file', file: 'src/target.ts', anchor: 'missingAnchorText' },
+        ];
+        fsSync.writeFileSync(chainPath, JSON.stringify(chain));
+
+        await completeWork('test-feature');
+
+        const updated = JSON.parse(fsSync.readFileSync(chainPath, 'utf-8'));
+        expect(updated.entries[0].findings[0].closed_reason).not.toBe('code changed, anchor absent');
       });
 
       // @ana A031

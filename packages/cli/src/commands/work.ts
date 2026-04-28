@@ -16,6 +16,7 @@ import { execSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as fsPromises from 'node:fs/promises';
 import * as path from 'node:path';
+import { globSync } from 'glob';
 import { readArtifactBranch, readBranchPrefix, getCurrentBranch } from '../utils/git-operations.js';
 import { generateProofSummary, resolveFindingPaths, extractScopeSummary, generateDashboard, type ProofSummary } from '../utils/proofSummary.js';
 import { findProjectRoot } from '../utils/validators.js';
@@ -863,10 +864,38 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
     }
   }
 
-  // Staleness checks — run after path resolution and status assignment
+  // Phase ordering is load-bearing: backfill → reopen → resolve → stale.
+  // Reopen MUST happen before resolveFindingPaths and before staleness.
+  // If staleness ran first on still-closed findings, it would skip them.
+  // Then reopens would activate them — but they'd never get checked by
+  // corrected staleness logic. The phases ensure every finding passes
+  // through the corrected checks exactly once.
+
+  // Reopen wrongly-closed findings — reverse broken mechanical closures
+  for (const existing of chain.entries) {
+    for (const finding of existing.findings || []) {
+      if (finding.closed_by !== 'mechanical') continue;
+
+      const reason = finding.closed_reason;
+      const shouldReopen =
+        (typeof reason === 'string' && reason.startsWith('superseded by')) ||
+        reason === 'file removed' ||
+        (reason === 'code changed, anchor absent' && finding.category === 'upstream');
+
+      if (shouldReopen) {
+        finding.status = finding.category === 'upstream' ? 'lesson' : 'active';
+        delete finding.closed_reason;
+        delete finding.closed_at;
+        delete finding.closed_by;
+      }
+    }
+  }
+
+  // Staleness checks — run after path resolution, reopen, and status assignment
   // Process all entries (existing + new)
   const allEntries = [...chain.entries, entry];
   const fileContentCache = new Map<string, string | null>();
+  const globResultCache = new Map<string, string[]>();
 
   const readFileContent = (filePath: string): string | null => {
     if (fileContentCache.has(filePath)) return fileContentCache.get(filePath)!;
@@ -885,19 +914,16 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
       // Skip already-closed findings
       if (finding.status === 'closed') continue;
 
-      // AC6: File-deleted check
-      if (finding.file && finding.file.includes('/')) {
-        const fullPath = path.join(projectRoot, finding.file);
-        if (!fs.existsSync(fullPath)) {
-          finding.status = 'closed';
-          finding.closed_reason = 'file removed';
-          finding.closed_at = new Date().toISOString();
-          finding.closed_by = 'mechanical';
-          autoClosed++;
-          continue;
-        }
+      // Upstream findings are institutional memory — not subject to staleness
+      if (finding.category === 'upstream') continue;
 
-        // AC7: Anchor-absent check
+      // Skip findings without file reference
+      if (!finding.file) continue;
+
+      const fullPath = path.join(projectRoot, finding.file);
+
+      if (fs.existsSync(fullPath)) {
+        // File exists — run anchor-absent check
         if (finding.anchor) {
           const content = readFileContent(fullPath);
           if (content !== null && !content.includes(finding.anchor)) {
@@ -908,31 +934,33 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
             autoClosed++;
           }
         }
+      } else {
+        // File does NOT exist at declared path — glob for the basename
+        const basename = path.basename(finding.file);
+        let matches = globResultCache.get(basename);
+        if (matches === undefined) {
+          matches = globSync('**/' + basename, {
+            cwd: projectRoot,
+            ignore: ['**/node_modules/**', '**/.ana/**'],
+          });
+          globResultCache.set(basename, matches);
+        }
+
+        if (matches.length === 0) {
+          // Genuinely deleted — no file with this name exists anywhere
+          finding.status = 'closed';
+          finding.closed_reason = 'file removed';
+          finding.closed_at = new Date().toISOString();
+          finding.closed_by = 'mechanical';
+          autoClosed++;
+        }
+        // 1+ matches → file exists elsewhere, conservative — skip
       }
     }
   }
 
-  // AC8: Supersession — newer finding on same file+category closes older ones
-  const supersessionMap = new Map<string, { finding: ProofChainEntry['findings'][0]; entryIndex: number }>();
-  for (let entryIdx = 0; entryIdx < allEntries.length; entryIdx++) {
-    const chainEntry = allEntries[entryIdx]!;
-    for (const finding of chainEntry.findings || []) {
-      if (finding.status === 'closed' || finding.status === 'lesson') continue;
-      if (!finding.file || !finding.file.includes('/')) continue;
-
-      const key = `${finding.file}:${finding.category}`;
-      const existing = supersessionMap.get(key);
-      if (existing && existing.entryIndex !== entryIdx) {
-        // Older finding superseded by newer
-        existing.finding.status = 'closed';
-        existing.finding.closed_reason = `superseded by ${finding.id}`;
-        existing.finding.closed_at = new Date().toISOString();
-        existing.finding.closed_by = 'mechanical';
-        autoClosed++;
-      }
-      supersessionMap.set(key, { finding, entryIndex: entryIdx });
-    }
-  }
+  // Supersession removed — same-file + same-category heuristic can't
+  // distinguish same-issue from different-issue without semantic judgment.
 
   chain.entries.push(entry);
   await fsPromises.writeFile(chainPath, JSON.stringify(chain, null, 2));

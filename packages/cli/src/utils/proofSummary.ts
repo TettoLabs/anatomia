@@ -320,21 +320,23 @@ export function extractFileRefs(summary: string): string[] {
  * modules using path-boundary check (`module.endsWith('/' + file)`). If exactly
  * one match, replaces `file` with the full path. Mutates in place.
  *
- * Idempotent — files already containing `/` are skipped.
+ * Idempotent — files that already exist at their declared path (relative to
+ * `projectRoot`) are skipped. Files that don't exist — whether bare basenames
+ * or partial monorepo paths — enter the resolution chain.
  *
  * @param items - Array of objects with a `file` field (findings or build_concerns)
  * @param modules - Array of full relative paths from modules_touched
- * @param projectRoot - Optional project root for glob fallback when modules_touched matching fails
+ * @param projectRoot - Project root for existence checks and glob fallback
  * @returns void (mutates items in place)
  */
 export function resolveFindingPaths(
   items: Array<{ file: string | null }>,
   modules: string[],
-  projectRoot?: string,
+  projectRoot: string,
 ): void {
   for (const item of items) {
     if (!item.file) continue;
-    if (item.file.includes('/')) continue;
+    if (fs.existsSync(path.join(projectRoot, item.file))) continue;
 
     const basename = item.file;
     const matches = modules.filter(m => m.endsWith('/' + basename));
