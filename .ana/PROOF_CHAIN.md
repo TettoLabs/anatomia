@@ -1,25 +1,26 @@
 # Proof Chain Dashboard
 
-21 runs · 54 active · 20 lessons · 0 promoted · 25 closed
+22 runs · 55 active · 21 lessons · 0 promoted · 29 closed
 
 ## Hot Modules
 
 | File | Active | Entries |
 |------|--------|--------|
-| packages/cli/src/utils/proofSummary.ts | 7 | 5 |
+| packages/cli/src/utils/proofSummary.ts | 8 | 5 |
 | packages/cli/tests/utils/proofSummary.test.ts | 6 | 3 |
-| packages/cli/src/commands/work.ts | 6 | 4 |
 | packages/cli/tests/commands/work.test.ts | 5 | 4 |
-| packages/cli/src/engine/scan-engine.ts | 2 | 2 |
+| packages/cli/tests/commands/artifact.test.ts | 4 | 3 |
+| packages/cli/src/commands/work.ts | 3 | 3 |
 
 ## Promoted Rules
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 54 total)
+## Active Findings (30 shown of 55 total)
 
 ### packages/cli/src/commands/artifact.ts
 
+- **code:** Double YAML parse in companion success message — validateVerifyDataFormat/validateBuildDataFormat parses the file, then saveArtifact re-parses at lines 932-933 to count findings for the console message. Validation function could return the parsed count. — *Structured Findings Companion*
 - **code:** `captureModulesTouched` silent catch: `src/commands/artifact.ts:161` — The outer try/catch swallows all errors silently. If `readArtifactBranch` fails (missing ana.json), `git merge-base` fails (detached HEAD), or `git diff` fails (corrupt index), `modules_touched` simply isn't written. This is acceptable graceful degradation for a metadata-capture function, but it means a misconfigured environment silently produces incomplete proof chain data. A `console.warn` on failure would make debugging easier without breaking the pipeline. — *Clear the Deck — foundation fixes from proof chain audit*
 
 ### packages/cli/src/commands/proof.ts
@@ -33,10 +34,7 @@
 ### packages/cli/src/commands/work.ts
 
 - **code:** `delete` instead of explicit `undefined` in reopen loop: `packages/cli/src/commands/work.ts:887-889` — Spec says "Don't use `delete` — set explicitly so the JSON serialization is clean." Builder used `delete`. Functionally identical for `JSON.stringify` output (both omit the property), but deviates from spec guidance. Not a blocker — the behavior is correct. — *Fix Proof Chain Mechanical Accuracy*
-- **code:** Dead ternary on finding status: `packages/cli/src/commands/work.ts:811` ��� `category === 'upstream' ? 'active' : 'active'` — both branches identical. Pre-existing issue, not introduced by this build. Still present — see proof chain finding from "Fix artifact save bypass, cwd bug, and work complete crash recovery." — *Fix Proof Chain Mechanical Accuracy*
-- **code:** Dead ternary on finding status: `packages/cli/src/commands/work.ts:810` — `(c as { category: string }).category === 'upstream' ? 'active' : 'active' as const` — both branches evaluate to `'active'`. This is a pre-existing issue (from proof chain history) and is immediately overwritten by the status assignment loop at lines 818-824. Not introduced by this build; dormant dead code. — *Fix artifact save bypass, cwd bug, and work complete crash recovery*
 - **code:** Recovery catch swallows git status failure: `packages/cli/src/commands/work.ts:1080` — if `git status --porcelain .ana/` throws (e.g., corrupt `.git` directory), the catch silently falls through to the "already completed" message. This is unlikely but means a corrupted git state would report "already completed" instead of a diagnostic error. The spec doesn't cover this edge case, so it's not a FAIL — but it's a sharp edge. — *Fix artifact save bypass, cwd bug, and work complete crash recovery*
-- **code:** Dead ternary on new finding status: `packages/cli/src/commands/work.ts:810` — `(c as { category: string }).category === 'upstream' ? 'active' : 'active' as const` — both branches evaluate to `'active'`, making the expression a no-op. The correct assignment happens at lines 818-824. This is dead logic that should either be removed (let lines 818-824 handle it alone) or corrected to `'lesson' : 'active'` and the redundant loop removed. — *Findings Lifecycle Foundation*
 - **code:** Defensive `|| []` on guaranteed field: `packages/cli/src/commands/work.ts:809` — `entry.build_concerns || []` is passed to `resolveCalloutPaths` even though `build_concerns` is set to `proof.build_concerns ?? []` two lines above (line 803). The `|| []` is dead code for the new entry path. For existing entries at line 814, `|| []` remains useful since chain data from JSON could theoretically lack the field despite backfill. Harmless but slightly misleading on line 809. — *Clear the Deck Phase 2*
 
 ### packages/cli/src/types/contract.ts
@@ -45,15 +43,17 @@
 
 ### packages/cli/src/utils/proofSummary.ts
 
-- **code:** Dead truthiness guard after parameter change: `packages/cli/src/utils/proofSummary.ts:346` — `else if (projectRoot)` was meaningful when `projectRoot` was optional; now it's always truthy since the parameter is required `string`. Remove the guard and outdent the glob fallback block. — *Fix Proof Chain Mechanical Accuracy*
+- **code:** PreCheckData interface retains seal_commit field despite seal_commit removal from ProofChainEntry and ProofSummary. Intentional — reads old .saves.json — but inconsistent with the removal theme. — *Structured Findings Companion*
+- **code:** getProofContext uses conditional property assignment (if finding.line !== undefined) rather than always-present optional fields. Result object shape varies — fine for TypeScript consumers but JSON shape is polymorphic. — *Structured Findings Companion*
 - **code:** Redundant status filter in Hot Modules: `packages/cli/src/utils/proofSummary.ts:535-536` — double-checks `finding.status` both as truthy and not-undefined, then re-checks on the next line. A single `if (finding.status !== 'active' && finding.status !== undefined) continue;` would be clearer. — *Findings Lifecycle Foundation*
 - **code:** Dashboard duplicates Active Issues logic: `packages/cli/src/utils/proofSummary.ts:566-616` — reimplements the collection, filtering, capping, and file-grouping from `generateActiveIssuesMarkdown` (lines 385-473). The format differs (### vs ## headings, no truncation), but extracting shared helpers for the filtering and grouping would reduce the ~50 lines of duplication. — *Findings Lifecycle Foundation*
 - **code:** globSync exception if projectRoot is invalid: `packages/cli/src/utils/proofSummary.ts:345` — If `projectRoot` points to a non-existent directory, `globSync` will throw. The callers in `work.ts` pass `projectRoot` from `writeProofChain`'s parameter, which comes from `findProjectRoot()` — a validated path. But `resolveCalloutPaths` doesn't validate its own input. Consistent with the existing pattern (no defensive validation in utility functions), but worth knowing. — *Clear the Deck Phase 2*
 - **code:** Root-level module paths won't match: `proofSummary.ts:336` — `m.endsWith('/' + basename)` requires a `/` prefix. A module at the repository root (e.g., bare `census.ts` in `modules_touched`) wouldn't match. Dormant — `git diff` always produces paths with directory segments. If `modules_touched` ever comes from a source that produces bare filenames, resolution silently skips them. — *Proof context file query*
-- **code:** `fileMatches` overmatch on same-basename different-directory paths: `proofSummary.ts:883` — If stored=`packages/a/census.ts` and queried=`packages/b/census.ts`, the function returns true because both paths end with `/census.ts`. The spec's three-tier matching intentionally prioritizes recall over precision, so this is by design. In practice, proof chain callouts rarely have duplicate basenames across different directories. If this becomes noisy, a future cycle could add exact-path-prefix matching as tier 1.5. — *Proof context file query*
 
 ### packages/cli/tests/commands/artifact.test.ts
 
+- **test:** Pre-check tag collision: A022-A025 and A029 reported COVERED because @ana tags from OTHER features' contracts share the same IDs. The 'covering' tests (readme.test.ts, confirmation.test.ts) don't test this feature's assertions. No dedicated tests for writeProofChain spread, seal_commit removal, or template content. — *Structured Findings Companion*
+- **test:** blocks-save tests (A006, A007) use toThrow() without checking exit code or error message content. saveArtifact calls process.exit(1), which throws in test — the assertion confirms the throw but not the exit code value or the descriptive error message. — *Structured Findings Companion*
 - **test:** A024 weak assertion on coverage count: `tests/commands/artifact.test.ts:1650` — `expect(saves['pre-check'].covered).toBeGreaterThanOrEqual(0)` passes even if coverage is 0. The test sets up one tagged assertion that should be covered, so `toBeGreaterThanOrEqual(1)` or `toBe(1)` would be more specific. Not a false positive today (the setup ensures coverage), but the assertion is weaker than it needs to be. — *Clear the Deck — foundation fixes from proof chain audit*
 - **test:** Stale commit assertion passes trivially: `artifact.test.ts:1233,1242` — the "appends to existing .saves.json" test saves `scope.commit` and later asserts it's unchanged. Since `writeSaveMetadata` no longer writes `commit`, both values are `undefined`, so `expect(undefined).toBe(undefined)` passes without testing anything. The test still verifies scope entry survives a spec save via `toBeDefined()` at line 1239, but the commit-specific line is dead weight. Next cycle touching this test should remove lines 1233 and 1242. — *Seal hash simplification*
 

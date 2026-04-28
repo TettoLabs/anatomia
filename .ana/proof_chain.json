@@ -132,7 +132,6 @@
         "build-report": "sha256:6dda3196e08e421340f97df6ff21d38a40a296325fa31f1fbe8e34d754902316",
         "verify-report": "sha256:10fed1db08ac629b7ffe1b4aa40d522f7efcba7841033bf070138287af94e9ea"
       },
-      "seal_commit": "d9768360956896c440e3c69b5b9714832c291b03",
       "completed_at": "2026-04-06T02:01:46.601Z",
       "build_concerns": [],
       "findings": [],
@@ -255,7 +254,6 @@
         "build-report": "sha256:0e6bdff5da82bcceb285960fe7de8398a5b2f9d92fa4a1405d6fe40307847ee4",
         "verify-report": "sha256:063a80e9be00b41bbd645344e4ac2bcc0447685f26bdad533d1b182e46622bdc"
       },
-      "seal_commit": "c86a2a27307a5096cae61e49fd6c28f6bcce9d66",
       "completed_at": "2026-04-16T01:24:02.438Z",
       "build_concerns": [
         {
@@ -276,7 +274,7 @@
           "anchor": "BROWSER_FRAMEWORKS.has(d)",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-28T00:07:41.109Z",
+          "closed_at": "2026-04-28T07:14:32.605Z",
           "closed_by": "mechanical"
         },
         {
@@ -287,7 +285,7 @@
           "anchor": "getFrameworkDisplayName()",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-28T00:07:41.109Z",
+          "closed_at": "2026-04-28T07:14:32.605Z",
           "closed_by": "mechanical"
         },
         {
@@ -298,7 +296,7 @@
           "anchor": "ProjectKindResult",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-28T00:07:41.109Z",
+          "closed_at": "2026-04-28T07:14:32.605Z",
           "closed_by": "mechanical"
         },
         {
@@ -317,7 +315,7 @@
           "anchor": "not.toContain('node:fs')",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-28T00:07:41.110Z",
+          "closed_at": "2026-04-28T07:14:32.606Z",
           "closed_by": "mechanical"
         },
         {
@@ -414,7 +412,6 @@
         "spec": "sha256:835c5794871a141f1faa63b2fc98b3b76131c316dcbaa812c538a7cfd4872213",
         "build-report": "sha256:659994144d5b1319a3fe097ea6f5e7c72c642a8201754890d9d3023a83c440d9"
       },
-      "seal_commit": null,
       "completed_at": "2026-04-16T22:36:55.334Z",
       "modules_touched": [],
       "rejection_cycles": 0,
@@ -548,7 +545,6 @@
         "spec": "sha256:cb110287dabed90c90493248c2c512906aa88ba5e27572e1d1fc21497efe1880",
         "build-report": "sha256:0d15c9c5f330b16227e5fa1ab7bd555ddec5ec7c3982040ca77ff07f8be7f9e9"
       },
-      "seal_commit": null,
       "completed_at": "2026-04-16T22:37:12.315Z",
       "modules_touched": [],
       "rejection_cycles": 0,
@@ -683,7 +679,6 @@
         "build-report": "sha256:13cbf4313c3e6f7fe49a65aace0d9d0c8811c82df06a4ca1a73d950977ce75e2",
         "verify-report": "sha256:b08175794d24eaf6fb6b32712197e6aedf00ef9ad6bc7e6f3ff91bf958cb5a9c"
       },
-      "seal_commit": "3f9ddfa19edabb3866d835c49c1b55f783f713f7",
       "completed_at": "2026-04-16T23:38:02.725Z",
       "modules_touched": [],
       "rejection_cycles": 1,
@@ -970,7 +965,6 @@
         "spec": "sha256:1908108cca3da4ce7a2e69dfeef6265b7f9190d169031b8587e132f157d73ab9",
         "build-report": "sha256:134be779809218841eb85f4ffdf9c1226c3e592803c63f402e285472cf4232da"
       },
-      "seal_commit": null,
       "completed_at": "2026-04-16T23:57:17.961Z",
       "modules_touched": [],
       "rejection_cycles": 0,
@@ -1132,7 +1126,6 @@
         "spec": "sha256:86dfda47c216e9c8db00cee52589b512186df3886ffab9ec725bdcb736f2f3de",
         "build-report": "sha256:05aecb38510687cf536a588d1005e36288e6c0c14c51fe8ddf32e2657145a047"
       },
-      "seal_commit": null,
       "completed_at": "2026-04-17T00:27:28.906Z",
       "modules_touched": [],
       "rejection_cycles": 0,
@@ -1382,7 +1375,6 @@
         "spec": "sha256:bec6fcb88edd2f791680353f6609b89287614901eef789bd577f0733134b5f88",
         "build-report": "sha256:e4d073ffec56439d61a1e7d38db2b324311d802dc4e6d8d66415f4ceaecb2869"
       },
-      "seal_commit": null,
       "completed_at": "2026-04-17T00:38:39.444Z",
       "modules_touched": [],
       "rejection_cycles": 1,
@@ -1562,7 +1554,6 @@
         "build-report": "sha256:b1e3de41d2e714f568d08e4104766510a291c401fe4d2ccd1f4cb61ec5e3d1cd",
         "verify-report": "sha256:7b456425b13e61d7e829c50438c21a424985b3ce7f84cdada82da35bc98f2e94"
       },
-      "seal_commit": "b57982989133a5deae97d53ba575573d849756c7",
       "completed_at": "2026-04-24T00:10:33.977Z",
       "modules_touched": [
         ".claude/agents/ana.md",
@@ -1716,7 +1707,6 @@
         "build-report": "sha256:a43dffe54a3363c2e7b9783eaf28c7dcf43378ebee886f8240566ae8a82d41fd",
         "verify-report": "sha256:fe777fda9bb27d81864b74e3f53a2a3059852d441dbc1b4baaff11ab223d78c4"
       },
-      "seal_commit": "15acf4b05a1a8fb56e3981d2fb04fd1009e49ed9",
       "completed_at": "2026-04-24T04:32:53.640Z",
       "modules_touched": [
         "packages/cli/src/engine/census.ts",
@@ -1916,7 +1906,6 @@
         "build-report": "sha256:517bc2c0a84c360e8934b37e505e2c7f155ad9971dcd6380149fbc081152ba21",
         "verify-report": "sha256:0f51d48954db79bd31f2777fdbd1f5c9ae107389b7758178dc009c4d332f884a"
       },
-      "seal_commit": "7c746c65bc754e893cd1057b1afe78331de35d04",
       "completed_at": "2026-04-24T05:59:11.072Z",
       "modules_touched": [
         "packages/cli/src/commands/scan.ts",
@@ -2152,7 +2141,6 @@
         "build-report": "sha256:dce786d2ad7379c44b5cc282e4dab6f4ddf5de8069637e9039e3622b23a5056a",
         "verify-report": "sha256:736f143ab0630e1e7bae3aec36749a4119af3a5926ddf0d6a10a252b3ad2a660"
       },
-      "seal_commit": "0ba7752a2e48b9a22a9fcc0247c4b285895842db",
       "completed_at": "2026-04-24T23:06:10.851Z",
       "modules_touched": [
         "packages/cli/src/commands/artifact.ts",
@@ -2333,7 +2321,6 @@
         "build-report": "sha256:71aab35b16dfc3786c394924971f8e8d0f6687ee6212789d3d289cba5b3f021d",
         "verify-report": "sha256:43324a6b96cda5b0dbbd5456f6a3debab63890ef0602771e4ac47822ee033436"
       },
-      "seal_commit": "e8090ba2e93134856621289cec3dfa5cc052d73f",
       "completed_at": "2026-04-25T01:05:28.608Z",
       "modules_touched": [
         "packages/cli/src/commands/proof.ts",
@@ -2527,7 +2514,6 @@
         "build-report": "sha256:557de239ac4d3e7eb4b17accc4f57c75ee70905ade90a1df88db2a72e0aacdc2",
         "verify-report": "sha256:89a85e043c72615000f56b3b0e9a77dc52df6acaf2f209afc0376097f5026249"
       },
-      "seal_commit": "ff6bd5fa7c0942e711e2897254e321e06a0b9079",
       "completed_at": "2026-04-25T06:29:26.320Z",
       "modules_touched": [
         ".claude/agents/ana-build.md",
@@ -2664,7 +2650,6 @@
         "build-report": "sha256:e5d147bbcee2d0f6807326c357e28acbce5e51b52e795c4740801c6313701044",
         "verify-report": "sha256:b18445cc536412d02bee5e7aedde6b330162756e0e36846feb8f75dde997fe59"
       },
-      "seal_commit": "d7bc52118d47afe7501e0e433657542850a6374c",
       "completed_at": "2026-04-26T03:10:57.958Z",
       "modules_touched": [
         "packages/cli/src/commands/work.ts",
@@ -2825,7 +2810,6 @@
         "build-report": "sha256:6d369a73eb8dd0a6b77291abd5b39a8dfa75e965c929797e5dffda50111216ab",
         "verify-report": "sha256:21a60d89904c6585819ceac64a119f99bf6758aa63b5ca2d3e01a7fd3bc30eef"
       },
-      "seal_commit": null,
       "completed_at": "2026-04-26T04:29:13.409Z",
       "modules_touched": [
         "packages/cli/src/commands/artifact.ts",
@@ -2874,7 +2858,7 @@
           "id": "seal-hash-simplification-C3",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-28T00:07:41.112Z",
+          "closed_at": "2026-04-28T07:14:32.608Z",
           "closed_by": "mechanical"
         },
         {
@@ -3065,7 +3049,6 @@
         "build-report": "sha256:469683e462152c4d6264ac614c358920efaa9685a46bd993c8d5c47de01a3696",
         "verify-report": "sha256:e1b365ad1fd19bc3d5caebf2921f4d439dd913db66c5a6c85afa9c2040af05c1"
       },
-      "seal_commit": null,
       "completed_at": "2026-04-27T02:44:09.803Z",
       "modules_touched": [
         "packages/cli/eslint.config.js",
@@ -3305,7 +3288,6 @@
         "build-report": "sha256:2ff4cc55a9a77881cfd6f9a78caaa2d45efe1aed5eac5f7906419d1d23d9e53d",
         "verify-report": "sha256:547440cc887e120e61c93ab8293546f5a506514865d8076ae1141bd4bfab5d68"
       },
-      "seal_commit": null,
       "completed_at": "2026-04-27T04:06:22.985Z",
       "modules_touched": [
         ".claude/agents/ana-build.md",
@@ -3578,7 +3560,6 @@
         "spec": "sha256:3587d5e411c0181e5aed291d2f23e36cff9c65b221aa727372771bdc059ec9bc",
         "verify-report": "sha256:195c7c1fb835c840da5f811e0ed0119eaeacd2998c9845655ba8c7935f4f199b"
       },
-      "seal_commit": null,
       "completed_at": "2026-04-27T20:36:18.633Z",
       "modules_touched": [],
       "scope_summary": "The proof chain records intelligence but can't act on it. Verify produces findings every pipeline run. Those findings sit in a flat list with no lifecycle state — no way to distinguish \"needs attention\" from \"already handled,\" no way to mark stale observations, no way to classify informational upstream findings separately from actionable code/test findings. Agents consuming `ana proof context` receive 82 undifferentiated findings including observations about deleted files, absent code anchors, and superseded older observations alongside genuine active findings.",
@@ -3589,7 +3570,10 @@
           "file": "packages/cli/src/commands/work.ts",
           "anchor": "(c as { category: string }).category === 'upstream' ? 'active' : 'active' as const",
           "id": "findings-lifecycle-foundation-C1",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "code changed, anchor absent",
+          "closed_at": "2026-04-28T07:14:32.609Z",
+          "closed_by": "mechanical"
         },
         {
           "category": "code",
@@ -3786,7 +3770,6 @@
         "build-report": "sha256:10ce5e47ff24db82029d7ce16d9004188c50755baa67319e50c263375a143a38",
         "verify-report": "sha256:86fbacf24fed913913328c77b9fa1fbc8187feedce89cbb57ad781b1a7418661"
       },
-      "seal_commit": null,
       "completed_at": "2026-04-27T22:03:13.633Z",
       "modules_touched": [
         "packages/cli/src/commands/artifact.ts",
@@ -3810,7 +3793,10 @@
           "file": "packages/cli/src/commands/work.ts",
           "anchor": "(c as { category: string }).category === 'upstream' ? 'active' : 'active' as const",
           "id": "fix-artifact-save-and-work-complete-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "code changed, anchor absent",
+          "closed_at": "2026-04-28T07:14:32.609Z",
+          "closed_by": "mechanical"
         },
         {
           "category": "code",
@@ -3981,7 +3967,6 @@
         "build-report": "sha256:e387f173c6c8d879b8b13b883d28efabed2ad55c5fda2546fad90b0c8468a3c8",
         "verify-report": "sha256:42693378ada66bca4341e738eb9ae8bb5f26ff4c588bdc7f3792d9bcd6cd0936"
       },
-      "seal_commit": null,
       "completed_at": "2026-04-28T00:07:41.079Z",
       "modules_touched": [
         ".claude/agents/ana-verify.md",
@@ -3999,7 +3984,10 @@
           "file": "packages/cli/src/utils/proofSummary.ts",
           "anchor": "else if (projectRoot)",
           "id": "fix-proof-chain-mechanical-accuracy-C1",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "code changed, anchor absent",
+          "closed_at": "2026-04-28T07:14:32.609Z",
+          "closed_by": "mechanical"
         },
         {
           "category": "code",
@@ -4015,7 +4003,10 @@
           "file": "packages/cli/src/commands/work.ts",
           "anchor": "category === 'upstream' ? 'active' : 'active'",
           "id": "fix-proof-chain-mechanical-accuracy-C3",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "code changed, anchor absent",
+          "closed_at": "2026-04-28T07:14:32.609Z",
+          "closed_by": "mechanical"
         },
         {
           "category": "test",
@@ -4051,6 +4042,345 @@
         },
         {
           "summary": "Glob performance on large projects. The `globResultCache` prevents repeated glob calls for the same basename, but the first glob for each unique basename traverses the filesystem. For projects with many findings referencing different basenames, this could add latency. The existing `resolveFindingPaths` already does glob calls, so this is consistent with existing performance characteristics. Verified complete by second pass.",
+          "file": null
+        }
+      ]
+    },
+    {
+      "slug": "structured-findings-companion",
+      "feature": "Structured Findings Companion",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 37,
+        "covered": 29,
+        "uncovered": 8,
+        "satisfied": 29,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Valid verify companion YAML passes validation",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "Verify companion missing schema field is rejected",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Verify companion with invalid category is rejected",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "Verify companion with invalid severity is rejected",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "Verify companion with invalid related_assertions is rejected",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "Saving a verify report without its companion YAML is blocked",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "Saving a build report without its companion YAML is blocked",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "Verify report saves successfully with valid companion",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "Verify companion gets its own integrity hash",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "Valid build companion YAML passes validation",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "Build companion with missing summary is rejected",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "Build companion gets its own integrity hash",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "Save-all discovers and saves verify companion alongside report",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "Save-all discovers numbered companion alongside numbered report",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "Proof summary reads findings from structured YAML when available",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "Proof summary includes new intelligence fields from YAML",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A017",
+          "says": "Proof summary falls back to regex parsing when no YAML exists",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A018",
+          "says": "Fallback findings lack the new intelligence fields",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A019",
+          "says": "Proof summary reads build concerns from structured YAML when available",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A020",
+          "says": "Proof context queries return the new intelligence fields",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A021",
+          "says": "Proof context queries return related assertions",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A022",
+          "says": "Code compiles with new finding fields on all four types",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A023",
+          "says": "New finding fields flow from proof summary through to proof chain entry",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A024",
+          "says": "New proof chain entries have no seal_commit field",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A025",
+          "says": "Existing entries have seal_commit cleaned up during backfill",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A026",
+          "says": "Parser handles both old and new section headings",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A027",
+          "says": "Parser handles the new Findings heading",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A028",
+          "says": "Non-existent file reference produces a warning, not an error",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A029",
+          "says": "Verify template uses Findings heading instead of Callouts",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A030",
+          "says": "Verify template no longer contains Callouts heading",
+          "status": "UNCOVERED"
+        },
+        {
+          "id": "A031",
+          "says": "Verify template instructs creating YAML before narrative",
+          "status": "UNCOVERED"
+        },
+        {
+          "id": "A032",
+          "says": "Verify template explains YAML is authoritative for machines",
+          "status": "UNCOVERED"
+        },
+        {
+          "id": "A033",
+          "says": "Build template instructs creating build_data.yaml",
+          "status": "UNCOVERED"
+        },
+        {
+          "id": "A034",
+          "says": "Package template and dogfood copy are identical for verify",
+          "status": "UNCOVERED"
+        },
+        {
+          "id": "A035",
+          "says": "Package template and dogfood copy are identical for build",
+          "status": "UNCOVERED"
+        },
+        {
+          "id": "A036",
+          "says": "All tests pass after the changes",
+          "status": "UNCOVERED"
+        },
+        {
+          "id": "A037",
+          "says": "Lint passes after the changes",
+          "status": "UNCOVERED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 28,
+        "met": 28
+      },
+      "timing": {
+        "total_minutes": 53,
+        "think": 10,
+        "plan": 10,
+        "build": 30,
+        "verify": 13
+      },
+      "hashes": {
+        "scope": "sha256:9d672a19f87004ca0480d020aad00be96cf6c41986a260c79e8fe09ac5e4e578",
+        "contract": "sha256:111e5f5a4b103bd704b297a0cbc1a99fab127e6ef0b94fb86fdf28a84b2b473a",
+        "plan": "sha256:70e27568f737108187d46aa85a2fe4664a1505a2b94d4bb010e775f231499bf4",
+        "spec": "sha256:5ba3a7e625947a380f5cec02f148e33a21b16dfad0458141f6117cdf44439245",
+        "build-report": "sha256:f4d327a1f516e5ad054b3738b42c313a93ba7508613cefe6f89e7aebf76ff62f",
+        "build-data": "sha256:baebfd7240ab0b459184ab0362eb031387834a70eea50e3a5f8dcbfc73403fd1",
+        "verify-report": "sha256:ad19447ffa5fb08aed63e3e367670742dde1e04f84bfca8e38b4b6c7c1d10b2e",
+        "verify-data": "sha256:6c8445cf07f783d92f09de1cc64251ca96d487bdcaca1e81d1a7cfe3128c5e9d"
+      },
+      "completed_at": "2026-04-28T07:14:32.579Z",
+      "modules_touched": [
+        ".claude/agents/ana-build.md",
+        ".claude/agents/ana-verify.md",
+        "packages/cli/src/commands/artifact.ts",
+        "packages/cli/src/commands/work.ts",
+        "packages/cli/src/types/proof.ts",
+        "packages/cli/src/utils/proofSummary.ts",
+        "packages/cli/templates/.claude/agents/ana-build.md",
+        "packages/cli/templates/.claude/agents/ana-verify.md",
+        "packages/cli/tests/commands/artifact.test.ts",
+        "packages/cli/tests/utils/proofSummary.test.ts"
+      ],
+      "scope_summary": "The proof chain's highest-value data — findings and build concerns — enters through 216 lines of regex parsing free-text LLM markdown. Every other data type (assertions, timing, hashes, modules) enters through structured sources at 100% reliability. The parser is adequate for what it captures (89% file resolution, 92% anchor accuracy post-F1.5). But two fields that would make the learning loop genuinely intelligent — `related_assertions` (which contract assertion a finding relates to) and `severity` (blocker vs observation vs note) — can't be parser-extracted. The agent knows which assertion it was checking when it found the issue. It just has no structured place to write it.",
+      "findings": [
+        {
+          "category": "code",
+          "summary": "Double YAML parse in companion success message — validateVerifyDataFormat/validateBuildDataFormat parses the file, then saveArtifact re-parses at lines 932-933 to count findings for the console message. Validation function could return the parsed count.",
+          "file": "packages/cli/src/commands/artifact.ts",
+          "anchor": null,
+          "line": 932,
+          "severity": "observation",
+          "related_assertions": [
+            "A008"
+          ],
+          "id": "structured-findings-companion-C1",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "PreCheckData interface retains seal_commit field despite seal_commit removal from ProofChainEntry and ProofSummary. Intentional — reads old .saves.json — but inconsistent with the removal theme.",
+          "file": "packages/cli/src/utils/proofSummary.ts",
+          "anchor": null,
+          "line": 108,
+          "severity": "observation",
+          "related_assertions": [
+            "A024"
+          ],
+          "id": "structured-findings-companion-C2",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "getProofContext uses conditional property assignment (if finding.line !== undefined) rather than always-present optional fields. Result object shape varies — fine for TypeScript consumers but JSON shape is polymorphic.",
+          "file": "packages/cli/src/utils/proofSummary.ts",
+          "anchor": null,
+          "line": 1187,
+          "severity": "observation",
+          "related_assertions": [
+            "A020",
+            "A021"
+          ],
+          "id": "structured-findings-companion-C3",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "Pre-check tag collision: A022-A025 and A029 reported COVERED because @ana tags from OTHER features' contracts share the same IDs. The 'covering' tests (readme.test.ts, confirmation.test.ts) don't test this feature's assertions. No dedicated tests for writeProofChain spread, seal_commit removal, or template content.",
+          "file": "packages/cli/tests/commands/artifact.test.ts",
+          "anchor": null,
+          "severity": "observation",
+          "related_assertions": [
+            "A022",
+            "A023",
+            "A024",
+            "A025",
+            "A029"
+          ],
+          "id": "structured-findings-companion-C4",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "blocks-save tests (A006, A007) use toThrow() without checking exit code or error message content. saveArtifact calls process.exit(1), which throws in test — the assertion confirms the throw but not the exit code value or the descriptive error message.",
+          "file": "packages/cli/tests/commands/artifact.test.ts",
+          "anchor": null,
+          "line": 2216,
+          "severity": "observation",
+          "related_assertions": [
+            "A006",
+            "A007"
+          ],
+          "id": "structured-findings-companion-C5",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "Contract IDs A022-A037 collide with pre-existing @ana tags from other features' contracts. Pre-check cannot distinguish — it reports COVERED for any matching tag regardless of feature. This makes pre-check unreliable for projects with 10+ pipeline cycles.",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "related_assertions": [
+            "A022",
+            "A023",
+            "A024",
+            "A025",
+            "A029"
+          ],
+          "id": "structured-findings-companion-C6",
+          "status": "lesson"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "9 contract assertions (A029-A037) show UNCOVERED in pre-check — they verify template content and build output, not code behavior, so they lack @ana tags",
+          "file": null
+        },
+        {
+          "summary": "saveAllArtifacts build companion discovery (AC9) not directly tested — uses identical code path as verify companion which is tested",
           "file": null
         }
       ]
