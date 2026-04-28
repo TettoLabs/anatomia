@@ -127,7 +127,7 @@ file_changes:
     expect(summary.deviations).toHaveLength(1);
     expect(summary.deviations[0]!.contract_id).toBe('A003');
     expect(summary.deviations[0]!.instead).toBe('Event mock verification');
-    expect(summary.seal_commit).toBeNull();
+    expect((summary as unknown as Record<string, unknown>)['seal_commit']).toBeUndefined();
     expect(summary.hashes['scope']).toBe('sha256:scope123');
     expect(summary.acceptance_criteria.total).toBe(2);
     expect(summary.acceptance_criteria.met).toBe(2);
@@ -291,7 +291,7 @@ file_changes:
   });
 
   // @ana A007
-  it('seal_commit is null even when contract.commit exists in saves', () => {
+  it('seal_commit is removed from ProofSummary', () => {
     const saves = {
       scope: { saved_at: '2026-04-01T10:00:00Z', commit: 'aaa111', hash: 'sha256:scope' },
       contract: { saved_at: '2026-04-01T10:30:00Z', commit: 'bbb222', hash: 'sha256:contract' },
@@ -301,10 +301,10 @@ file_changes:
     fs.writeFileSync(path.join(slugDir, 'contract.yaml'), 'feature: "Test"\nassertions: []');
 
     const summary = generateProofSummary(slugDir);
-    expect(summary.seal_commit).toBeNull();
+    expect((summary as unknown as Record<string, unknown>)['seal_commit']).toBeUndefined();
   });
 
-  it('seal_commit is null even when pre-check also has seal_commit', () => {
+  it('seal_commit not present even when pre-check also has seal_commit', () => {
     const saves = {
       scope: { saved_at: '2026-04-01T10:00:00Z', commit: 'aaa111', hash: 'sha256:scope' },
       contract: { saved_at: '2026-04-01T10:30:00Z', commit: 'same123', hash: 'sha256:contract' },
@@ -314,7 +314,7 @@ file_changes:
     fs.writeFileSync(path.join(slugDir, 'contract.yaml'), 'feature: "Test"\nassertions: []');
 
     const summary = generateProofSummary(slugDir);
-    expect(summary.seal_commit).toBeNull();
+    expect((summary as unknown as Record<string, unknown>)['seal_commit']).toBeUndefined();
   });
 
   it('returns slug as feature name when contract missing', async () => {

@@ -801,7 +801,6 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
     acceptance_criteria: proof.acceptance_criteria,
     timing: proof.timing,
     hashes: proof.hashes,
-    seal_commit: proof.seal_commit,
     completed_at: new Date().toISOString(),
     modules_touched: modulesTouched,
     scope_summary: proof.scope_summary,
@@ -809,7 +808,7 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
       ...c,
       id: `${slug}-C${i + 1}`,
       status: 'active' as const,
-    })),
+    } as ProofChainEntry['findings'][0])),
     rejection_cycles: proof.rejection_cycles,
     previous_failures: proof.previous_failures,
     build_concerns: proof.build_concerns ?? [],
@@ -862,6 +861,9 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
       const scopePath = path.join(anaDir, 'plans', 'completed', existing.slug, 'scope.md');
       existing.scope_summary = extractScopeSummary(scopePath);
     }
+
+    // Remove dead seal_commit field from existing entries (idempotent)
+    delete (existing as unknown as Record<string, unknown>)['seal_commit'];
   }
 
   // Phase ordering is load-bearing: backfill → reopen → resolve → stale.
