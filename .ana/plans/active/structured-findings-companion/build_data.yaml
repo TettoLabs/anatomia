@@ -1,0 +1,4 @@
+schema: 1
+concerns:
+  - summary: "9 contract assertions (A029-A037) show UNCOVERED in pre-check — they verify template content and build output, not code behavior, so they lack @ana tags"
+  - summary: "saveAllArtifacts build companion discovery (AC9) not directly tested — uses identical code path as verify companion which is tested"
