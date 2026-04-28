@@ -122,6 +122,26 @@ All met.
 Ready to review.`;
   }
 
+  /**
+   * Create valid verify_data.yaml companion
+   */
+  function getValidVerifyDataContent(): string {
+    return `schema: 1
+findings:
+  - category: code
+    summary: "Test finding"
+    file: "src/test.ts"`;
+  }
+
+  /**
+   * Create valid build_data.yaml companion
+   */
+  function getValidBuildDataContent(): string {
+    return `schema: 1
+concerns:
+  - summary: "Test concern"`;
+  }
+
   async function createArtifact(slug: string, fileName: string, content?: string): Promise<void> {
     const artifactPath = path.join(tempDir, '.ana', 'plans', 'active', slug);
     await fs.mkdir(artifactPath, { recursive: true });
@@ -141,6 +161,21 @@ Ready to review.`;
     }
 
     await fs.writeFile(path.join(artifactPath, fileName), fileContent, 'utf-8');
+
+    // Auto-create companion YAML for report artifacts (required by Foundation 2)
+    if (fileName.match(/^verify_report(_\d+)?\.md$/)) {
+      const companionName = fileName.replace(/_report/, '_data').replace(/\.md$/, '.yaml');
+      const companionPath = path.join(artifactPath, companionName);
+      if (!(await fs.stat(companionPath).catch(() => null))) {
+        await fs.writeFile(companionPath, getValidVerifyDataContent(), 'utf-8');
+      }
+    } else if (fileName.match(/^build_report(_\d+)?\.md$/)) {
+      const companionName = fileName.replace(/_report/, '_data').replace(/\.md$/, '.yaml');
+      const companionPath = path.join(artifactPath, companionName);
+      if (!(await fs.stat(companionPath).catch(() => null))) {
+        await fs.writeFile(companionPath, getValidBuildDataContent(), 'utf-8');
+      }
+    }
   }
 
   /**
@@ -1465,6 +1500,21 @@ describe('ana artifact save-all', () => {
     const artifactPath = path.join(tempDir, '.ana', 'plans', 'active', slug);
     await fs.mkdir(artifactPath, { recursive: true });
     await fs.writeFile(path.join(artifactPath, fileName), content, 'utf-8');
+
+    // Auto-create companion YAML for report artifacts (required by Foundation 2)
+    if (fileName.match(/^verify_report(_\d+)?\.md$/)) {
+      const companionName = fileName.replace(/_report/, '_data').replace(/\.md$/, '.yaml');
+      const companionPath = path.join(artifactPath, companionName);
+      if (!(await fs.stat(companionPath).catch(() => null))) {
+        await fs.writeFile(companionPath, 'schema: 1\nfindings:\n  - category: code\n    summary: "Test finding"\n    file: "src/test.ts"', 'utf-8');
+      }
+    } else if (fileName.match(/^build_report(_\d+)?\.md$/)) {
+      const companionName = fileName.replace(/_report/, '_data').replace(/\.md$/, '.yaml');
+      const companionPath = path.join(artifactPath, companionName);
+      if (!(await fs.stat(companionPath).catch(() => null))) {
+        await fs.writeFile(companionPath, 'schema: 1\nconcerns:\n  - summary: "Test concern"', 'utf-8');
+      }
+    }
   }
 
   function getLastCommitMessage(): string {
