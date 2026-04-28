@@ -808,7 +808,7 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
     findings: proof.findings.map((c, i) => ({
       ...c,
       id: `${slug}-C${i + 1}`,
-      status: (c as { category: string }).category === 'upstream' ? 'active' : 'active' as const,
+      status: 'active' as const,
     })),
     rejection_cycles: proof.rejection_cycles,
     previous_failures: proof.previous_failures,

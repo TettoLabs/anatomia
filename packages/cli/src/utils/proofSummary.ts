@@ -343,7 +343,7 @@ export function resolveFindingPaths(
 
     if (matches.length === 1) {
       item.file = matches[0]!;
-    } else if (projectRoot) {
+    } else {
       // Glob fallback: search the project filesystem for an unambiguous match
       const globMatches = globSync('**/' + basename, {
         cwd: projectRoot,
@@ -534,13 +534,11 @@ export function generateDashboard(entries: DashboardEntry[], stats: { runs: numb
   for (const entry of entries) {
     for (const finding of entry.findings ?? []) {
       if (!finding.file) continue;
-      if (finding.status && finding.status !== 'active' && finding.status !== undefined) continue;
-      if (!finding.status || finding.status === 'active') {
-        const entrySet = fileEntryMap.get(finding.file) || new Set();
-        entrySet.add(entry.slug);
-        fileEntryMap.set(finding.file, entrySet);
-        fileActiveCount.set(finding.file, (fileActiveCount.get(finding.file) || 0) + 1);
-      }
+      if (finding.status && finding.status !== 'active') continue;
+      const entrySet = fileEntryMap.get(finding.file) || new Set();
+      entrySet.add(entry.slug);
+      fileEntryMap.set(finding.file, entrySet);
+      fileActiveCount.set(finding.file, (fileActiveCount.get(finding.file) || 0) + 1);
     }
   }
 
