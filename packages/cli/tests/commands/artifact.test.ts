@@ -4,7 +4,7 @@ import * as path from 'node:path';
 import * as os from 'node:os';
 import { execSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { saveArtifact, saveAllArtifacts } from '../../src/commands/artifact.js';
+import { saveArtifact, saveAllArtifacts, validateVerifyDataFormat, validateBuildDataFormat } from '../../src/commands/artifact.js';
 
 /**
  * Tests for `ana artifact save` command
@@ -1909,5 +1909,458 @@ None`;
     const saves = JSON.parse(await fs.readFile(savesPath, 'utf-8'));
     expect(saves['modules_touched']).toBeDefined();
     expect(saves['modules_touched']).toContain('src/index.ts');
+  });
+});
+
+describe('validateVerifyDataFormat', () => {
+  let tempDir: string;
+
+  beforeEach(async () => {
+    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'verify-data-test-'));
+  });
+
+  afterEach(async () => {
+    await fs.rm(tempDir, { recursive: true, force: true });
+  });
+
+  // @ana A001
+  it('validates verify_data.yaml with all required fields', async () => {
+    const filePath = path.join(tempDir, 'verify_data.yaml');
+    await fs.writeFile(filePath, `schema: 1
+findings:
+  - category: code
+    summary: "Test finding"
+    file: "src/test.ts"
+    severity: observation
+    related_assertions: ["A001"]
+  - category: test
+    summary: "Another finding"
+    severity: blocker
+  - category: upstream
+    summary: "Upstream issue"
+`, 'utf-8');
+
+    const result = validateVerifyDataFormat(filePath, tempDir);
+    expect(result.errors.length).toBe(0);
+  });
+
+  // @ana A002
+  it('rejects verify_data.yaml without schema field', async () => {
+    const filePath = path.join(tempDir, 'verify_data.yaml');
+    await fs.writeFile(filePath, `findings:
+  - category: code
+    summary: "Test"
+`, 'utf-8');
+
+    const result = validateVerifyDataFormat(filePath);
+    expect(result.errors.some(e => e.includes('schema'))).toBe(true);
+  });
+
+  it('rejects verify_data.yaml with wrong schema value', async () => {
+    const filePath = path.join(tempDir, 'verify_data.yaml');
+    await fs.writeFile(filePath, `schema: 2
+findings:
+  - category: code
+    summary: "Test"
+`, 'utf-8');
+
+    const result = validateVerifyDataFormat(filePath);
+    expect(result.errors.some(e => e.includes('schema'))).toBe(true);
+  });
+
+  // @ana A003
+  it('rejects verify_data.yaml finding with invalid category', async () => {
+    const filePath = path.join(tempDir, 'verify_data.yaml');
+    await fs.writeFile(filePath, `schema: 1
+findings:
+  - category: security
+    summary: "Test"
+`, 'utf-8');
+
+    const result = validateVerifyDataFormat(filePath);
+    expect(result.errors.some(e => e.includes('category'))).toBe(true);
+  });
+
+  it('rejects verify_data.yaml finding missing category', async () => {
+    const filePath = path.join(tempDir, 'verify_data.yaml');
+    await fs.writeFile(filePath, `schema: 1
+findings:
+  - summary: "Test"
+`, 'utf-8');
+
+    const result = validateVerifyDataFormat(filePath);
+    expect(result.errors.some(e => e.includes('category'))).toBe(true);
+  });
+
+  it('rejects verify_data.yaml finding missing summary', async () => {
+    const filePath = path.join(tempDir, 'verify_data.yaml');
+    await fs.writeFile(filePath, `schema: 1
+findings:
+  - category: code
+`, 'utf-8');
+
+    const result = validateVerifyDataFormat(filePath);
+    expect(result.errors.some(e => e.includes('summary'))).toBe(true);
+  });
+
+  // @ana A004
+  it('rejects verify_data.yaml finding with invalid severity', async () => {
+    const filePath = path.join(tempDir, 'verify_data.yaml');
+    await fs.writeFile(filePath, `schema: 1
+findings:
+  - category: code
+    summary: "Test"
+    severity: high
+`, 'utf-8');
+
+    const result = validateVerifyDataFormat(filePath);
+    expect(result.errors.some(e => e.includes('severity'))).toBe(true);
+  });
+
+  it('accepts verify_data.yaml finding with valid severity', async () => {
+    const filePath = path.join(tempDir, 'verify_data.yaml');
+    await fs.writeFile(filePath, `schema: 1
+findings:
+  - category: code
+    summary: "Test"
+    severity: blocker
+`, 'utf-8');
+
+    const result = validateVerifyDataFormat(filePath);
+    expect(result.errors.length).toBe(0);
+  });
+
+  // @ana A005
+  it('rejects verify_data.yaml finding with non-array related_assertions', async () => {
+    const filePath = path.join(tempDir, 'verify_data.yaml');
+    await fs.writeFile(filePath, `schema: 1
+findings:
+  - category: code
+    summary: "Test"
+    related_assertions: "A001"
+`, 'utf-8');
+
+    const result = validateVerifyDataFormat(filePath);
+    expect(result.errors.some(e => e.includes('related_assertions'))).toBe(true);
+  });
+
+  it('accepts empty findings array', async () => {
+    const filePath = path.join(tempDir, 'verify_data.yaml');
+    await fs.writeFile(filePath, `schema: 1
+findings: []
+`, 'utf-8');
+
+    const result = validateVerifyDataFormat(filePath);
+    expect(result.errors.length).toBe(0);
+  });
+
+  // @ana A028
+  it('warns when finding references non-existent file', async () => {
+    const filePath = path.join(tempDir, 'verify_data.yaml');
+    await fs.writeFile(filePath, `schema: 1
+findings:
+  - category: code
+    summary: "Test"
+    file: "src/nonexistent.ts"
+`, 'utf-8');
+
+    const result = validateVerifyDataFormat(filePath, tempDir);
+    expect(result.errors.length).toBe(0);
+    expect(result.warnings.some(w => w.includes('nonexistent.ts'))).toBe(true);
+  });
+
+  it('warns when non-upstream finding has no file', async () => {
+    const filePath = path.join(tempDir, 'verify_data.yaml');
+    await fs.writeFile(filePath, `schema: 1
+findings:
+  - category: code
+    summary: "Test without file"
+`, 'utf-8');
+
+    const result = validateVerifyDataFormat(filePath, tempDir);
+    expect(result.errors.length).toBe(0);
+    expect(result.warnings.some(w => w.includes('no file reference'))).toBe(true);
+  });
+
+  it('does not warn when upstream finding has no file', async () => {
+    const filePath = path.join(tempDir, 'verify_data.yaml');
+    await fs.writeFile(filePath, `schema: 1
+findings:
+  - category: upstream
+    summary: "Upstream issue without file"
+`, 'utf-8');
+
+    const result = validateVerifyDataFormat(filePath, tempDir);
+    expect(result.errors.length).toBe(0);
+    expect(result.warnings.length).toBe(0);
+  });
+
+  it('passes with extra unrecognized fields (forward compat)', async () => {
+    const filePath = path.join(tempDir, 'verify_data.yaml');
+    await fs.writeFile(filePath, `schema: 1
+findings:
+  - category: code
+    summary: "Test"
+    custom_field: "extra data"
+`, 'utf-8');
+
+    const result = validateVerifyDataFormat(filePath);
+    expect(result.errors.length).toBe(0);
+  });
+});
+
+// @ana A010
+describe('validateBuildDataFormat', () => {
+  let tempDir: string;
+
+  beforeEach(async () => {
+    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'build-data-test-'));
+  });
+
+  afterEach(async () => {
+    await fs.rm(tempDir, { recursive: true, force: true });
+  });
+
+  it('validates build_data.yaml with all required fields', async () => {
+    const filePath = path.join(tempDir, 'build_data.yaml');
+    await fs.writeFile(filePath, `schema: 1
+concerns:
+  - summary: "Test concern"
+    file: "src/test.ts"
+  - summary: "Another concern"
+`, 'utf-8');
+
+    const result = validateBuildDataFormat(filePath);
+    expect(result.errors.length).toBe(0);
+  });
+
+  // @ana A011
+  it('rejects build_data.yaml concern with missing summary', async () => {
+    const filePath = path.join(tempDir, 'build_data.yaml');
+    await fs.writeFile(filePath, `schema: 1
+concerns:
+  - file: "src/test.ts"
+`, 'utf-8');
+
+    const result = validateBuildDataFormat(filePath);
+    expect(result.errors.some(e => e.includes('summary'))).toBe(true);
+  });
+
+  it('rejects build_data.yaml without schema', async () => {
+    const filePath = path.join(tempDir, 'build_data.yaml');
+    await fs.writeFile(filePath, `concerns:
+  - summary: "Test"
+`, 'utf-8');
+
+    const result = validateBuildDataFormat(filePath);
+    expect(result.errors.some(e => e.includes('schema'))).toBe(true);
+  });
+
+  it('accepts empty concerns array', async () => {
+    const filePath = path.join(tempDir, 'build_data.yaml');
+    await fs.writeFile(filePath, `schema: 1
+concerns: []
+`, 'utf-8');
+
+    const result = validateBuildDataFormat(filePath);
+    expect(result.errors.length).toBe(0);
+  });
+});
+
+describe('companion save behavior', () => {
+  let tempDir: string;
+  let originalCwd: string;
+
+  beforeEach(async () => {
+    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'companion-save-test-'));
+    originalCwd = process.cwd();
+    process.chdir(tempDir);
+  });
+
+  afterEach(async () => {
+    process.chdir(originalCwd);
+    await fs.rm(tempDir, { recursive: true, force: true });
+  });
+
+  async function createTestProject(): Promise<void> {
+    execSync('git init', { cwd: tempDir, stdio: 'ignore' });
+    execSync('git config user.email "test@test.com"', { cwd: tempDir, stdio: 'ignore' });
+    execSync('git config user.name "Test"', { cwd: tempDir, stdio: 'ignore' });
+
+    const anaDir = path.join(tempDir, '.ana');
+    await fs.mkdir(anaDir, { recursive: true });
+    await fs.writeFile(
+      path.join(anaDir, 'ana.json'),
+      JSON.stringify({ artifactBranch: 'main', coAuthor: 'Ana <build@anatomia.dev>' }),
+      'utf-8'
+    );
+
+    execSync('git add -A && git commit -m "init"', { cwd: tempDir, stdio: 'ignore' });
+    execSync('git branch -M main', { cwd: tempDir, stdio: 'ignore' });
+    execSync('git checkout -b feature/test-slug', { cwd: tempDir, stdio: 'ignore' });
+  }
+
+  async function createSlugDir(slug: string): Promise<string> {
+    const slugDir = path.join(tempDir, '.ana', 'plans', 'active', slug);
+    await fs.mkdir(slugDir, { recursive: true });
+    return slugDir;
+  }
+
+  // @ana A006
+  it('blocks save when verify_data.yaml is missing', async () => {
+    await createTestProject();
+    const slugDir = await createSlugDir('test-slug');
+    await fs.writeFile(path.join(slugDir, 'verify_report.md'), '# Verify Report\n\n**Result:** PASS\n', 'utf-8');
+    // Deliberately do NOT create verify_data.yaml
+
+    expect(() => saveArtifact('verify-report', 'test-slug')).toThrow();
+  });
+
+  // @ana A007
+  it('blocks save when build_data.yaml is missing', async () => {
+    await createTestProject();
+    const slugDir = await createSlugDir('test-slug');
+    await fs.writeFile(path.join(slugDir, 'build_report.md'), `# Build Report
+
+## Deviations
+None.
+
+## Open Issues
+None.
+
+## Acceptance Criteria
+All met.
+
+## PR Summary
+Done.`, 'utf-8');
+    // Deliberately do NOT create build_data.yaml
+
+    expect(() => saveArtifact('build-report', 'test-slug')).toThrow();
+  });
+
+  // @ana A008, A009
+  it('saves verify-report with valid verify_data.yaml', async () => {
+    await createTestProject();
+    const slugDir = await createSlugDir('test-slug');
+    await fs.writeFile(path.join(slugDir, 'verify_report.md'), '# Verify Report\n\n**Result:** PASS\n', 'utf-8');
+    await fs.writeFile(path.join(slugDir, 'verify_data.yaml'), `schema: 1
+findings:
+  - category: code
+    summary: "Test finding"
+    file: "src/test.ts"
+`, 'utf-8');
+
+    saveArtifact('verify-report', 'test-slug');
+
+    // Verify companion was committed
+    const committed = execSync('git ls-files .ana/plans/active/test-slug/verify_data.yaml', {
+      cwd: tempDir, encoding: 'utf-8'
+    }).trim();
+    expect(committed).toContain('verify_data.yaml');
+
+    // Verify .saves.json has verify-data hash
+    const savesPath = path.join(slugDir, '.saves.json');
+    const saves = JSON.parse(await fs.readFile(savesPath, 'utf-8'));
+    expect(saves['verify-data']).toBeDefined();
+    expect(saves['verify-data'].hash).toMatch(/^sha256:[a-f0-9]{64}$/);
+  });
+
+  // @ana A012
+  it('saves build-report with valid build_data.yaml and hashes companion', async () => {
+    await createTestProject();
+    const slugDir = await createSlugDir('test-slug');
+    await fs.writeFile(path.join(slugDir, 'build_report.md'), `# Build Report
+
+## Deviations
+None.
+
+## Open Issues
+None.
+
+## Acceptance Criteria
+All met.
+
+## PR Summary
+Done.`, 'utf-8');
+    await fs.writeFile(path.join(slugDir, 'build_data.yaml'), `schema: 1
+concerns:
+  - summary: "Test concern"
+`, 'utf-8');
+
+    saveArtifact('build-report', 'test-slug');
+
+    const savesPath = path.join(slugDir, '.saves.json');
+    const saves = JSON.parse(await fs.readFile(savesPath, 'utf-8'));
+    expect(saves['build-data']).toBeDefined();
+    expect(saves['build-data'].hash).toMatch(/^sha256:[a-f0-9]{64}$/);
+  });
+
+  // @ana A013
+  it('saveAllArtifacts discovers verify_data.yaml alongside verify_report.md', async () => {
+    await createTestProject();
+    // Need to go back to main for save-all with planning artifacts
+    execSync('git checkout main', { cwd: tempDir, stdio: 'ignore' });
+
+    const slugDir = await createSlugDir('test-slug');
+    await fs.writeFile(path.join(slugDir, 'verify_report.md'), '# Verify Report\n\n**Result:** PASS\n', 'utf-8');
+    await fs.writeFile(path.join(slugDir, 'verify_data.yaml'), `schema: 1
+findings:
+  - category: code
+    summary: "Test"
+`, 'utf-8');
+
+    saveAllArtifacts('test-slug');
+
+    const savesPath = path.join(slugDir, '.saves.json');
+    const saves = JSON.parse(await fs.readFile(savesPath, 'utf-8'));
+    expect(saves['verify-data']).toBeDefined();
+  });
+
+  // @ana A014
+  it('saveAllArtifacts discovers verify_data_1.yaml alongside verify_report_1.md', async () => {
+    await createTestProject();
+    execSync('git checkout main', { cwd: tempDir, stdio: 'ignore' });
+
+    const slugDir = await createSlugDir('test-slug');
+    await fs.writeFile(path.join(slugDir, 'verify_report_1.md'), '# Verify Report\n\n**Result:** PASS\n', 'utf-8');
+    await fs.writeFile(path.join(slugDir, 'verify_data_1.yaml'), `schema: 1
+findings:
+  - category: test
+    summary: "Numbered test"
+`, 'utf-8');
+
+    saveAllArtifacts('test-slug');
+
+    const savesPath = path.join(slugDir, '.saves.json');
+    const saves = JSON.parse(await fs.readFile(savesPath, 'utf-8'));
+    expect(saves['verify-data']).toBeDefined();
+  });
+
+  it('save with companion file warnings succeeds', async () => {
+    await createTestProject();
+    const slugDir = await createSlugDir('test-slug');
+    await fs.writeFile(path.join(slugDir, 'verify_report.md'), '# Verify Report\n\n**Result:** PASS\n', 'utf-8');
+    await fs.writeFile(path.join(slugDir, 'verify_data.yaml'), `schema: 1
+findings:
+  - category: code
+    summary: "Test"
+    file: "src/nonexistent.ts"
+`, 'utf-8');
+
+    const originalWarn = console.warn;
+    const warnings: string[] = [];
+    console.warn = (...args: unknown[]) => { warnings.push(args.map(String).join(' ')); };
+
+    try {
+      saveArtifact('verify-report', 'test-slug');
+    } finally {
+      console.warn = originalWarn;
+    }
+
+    expect(warnings.some(w => w.includes('nonexistent.ts'))).toBe(true);
+    // Save still succeeded
+    const savesPath = path.join(slugDir, '.saves.json');
+    const saves = JSON.parse(await fs.readFile(savesPath, 'utf-8'));
+    expect(saves['verify-data']).toBeDefined();
   });
 });
