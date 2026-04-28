@@ -1,0 +1,98 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Clean Ground for Foundation 3"
+
+assertions:
+  - id: A001
+    says: "Dead fallback removed from findings resolution on new entry"
+    block: "new entry resolveFindingPaths calls have no || [] fallback"
+    target: "work.ts:828"
+    matcher: "not_contains"
+    value: "|| []"
+
+  - id: A002
+    says: "Dead fallback removed from build concerns resolution on new entry"
+    block: "new entry resolveFindingPaths calls have no || [] fallback"
+    target: "work.ts:829"
+    matcher: "not_contains"
+    value: "|| []"
+
+  - id: A003
+    says: "Backfill loop still guards against missing fields in historical entries"
+    block: "backfill resolveFindingPaths calls retain || [] fallback"
+    target: "work.ts:844-845"
+    matcher: "contains"
+    value: "|| []"
+
+  - id: A004
+    says: "Stale assertion about commit field no longer exists in test"
+    block: "stale scope.commit assertion removed"
+    target: "artifact.test.ts"
+    matcher: "not_contains"
+    value: "saves.scope.commit"
+
+  - id: A005
+    says: "Path resolver accepts an optional cache to avoid redundant filesystem scans"
+    block: "resolveFindingPaths accepts optional globCache parameter"
+    target: "resolveFindingPaths.signature"
+    matcher: "contains"
+    value: "globCache"
+
+  - id: A006
+    says: "Cache defaults to a new Map so existing callers work unchanged"
+    block: "resolveFindingPaths accepts optional globCache parameter"
+    target: "resolveFindingPaths.signature"
+    matcher: "contains"
+    value: "= new Map()"
+
+  - id: A007
+    says: "Cached basenames skip the filesystem glob on subsequent lookups"
+    block: "resolveFindingPaths checks cache before globSync"
+    target: "resolveFindingPaths.body"
+    matcher: "contains"
+    value: "globCache.get"
+
+  - id: A008
+    says: "Glob results are stored in cache after first lookup"
+    block: "resolveFindingPaths stores results in cache after globSync"
+    target: "resolveFindingPaths.body"
+    matcher: "contains"
+    value: "globCache.set"
+
+  - id: A009
+    says: "Proof chain writer shares one cache across all path resolution calls"
+    block: "writeProofChain creates shared globCache"
+    target: "writeProofChain.body"
+    matcher: "contains"
+    value: "globCache"
+
+  - id: A010
+    says: "Repeated lookups for the same file hit the cache instead of re-scanning"
+    block: "shared cache reuses glob results across calls"
+    target: "test.globSpy.callCount"
+    matcher: "equals"
+    value: 1
+
+  - id: A011
+    says: "Calling the resolver without a cache still resolves files correctly"
+    block: "default cache preserves existing resolution behavior"
+    target: "item.file"
+    matcher: "equals"
+    value: "src/utils/helper.ts"
+
+  - id: A012
+    says: "All pre-existing tests continue to pass after the changes"
+    block: "existing test suite passes"
+    target: "vitest.exitCode"
+    matcher: "equals"
+    value: 0
+
+file_changes:
+  - path: "packages/cli/src/commands/work.ts"
+    action: modify
+  - path: "packages/cli/src/utils/proofSummary.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/artifact.test.ts"
+    action: modify
+  - path: "packages/cli/tests/utils/proofSummary.test.ts"
+    action: modify
