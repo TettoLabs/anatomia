@@ -1,6 +1,6 @@
 # Verify Report: Clean Ground for Foundation 3
 
-**Result:** FAIL
+**Result:** PASS
 **Created by:** AnaVerify
 **Date:** 2026-04-28
 **Spec:** .ana/plans/active/clean-ground/spec.md
@@ -31,45 +31,57 @@
 Tests: 1575 passed, 2 skipped (1577 total). Build: clean. Lint: 0 errors (14 pre-existing warnings in ai-sdk-detection.test.ts).
 
 ## Contract Compliance
-
 | ID | Says | Status | Evidence |
 |----|------|--------|----------|
-| A001 | Dead fallback removed from findings resolution on new entry | ✅ SATISFIED | work.ts diff: `entry.modules_touched || []` removed → now `entry.modules_touched` directly at line 831 |
-| A002 | Dead fallback removed from build concerns resolution on new entry | ✅ SATISFIED | work.ts diff: `entry.build_concerns || []` removed → now `entry.build_concerns` directly at line 832 |
-| A003 | Backfill loop still guards against missing fields in historical entries | ✅ SATISFIED | work.ts lines 847-848: `existing.findings || []` and `existing.modules_touched || []` retained |
-| A004 | Both stale commit assertions are removed from artifact tests | ✅ SATISFIED | artifact.test.ts diff: two `.commit).toBeUndefined()` lines deleted (former lines 1243, 1707). Grep confirms zero remaining matches. |
+| A001 | Dead fallback removed from findings resolution on new entry | ✅ SATISFIED | work.ts:831 — `entry.findings, entry.modules_touched` passed directly, no `\|\| []` |
+| A002 | Dead fallback removed from build concerns resolution on new entry | ✅ SATISFIED | work.ts:832 — `entry.build_concerns, entry.modules_touched` passed directly, no `\|\| []` |
+| A003 | Backfill loop still guards against missing fields in historical entries | ✅ SATISFIED | work.ts:847-848 — `existing.findings \|\| []` and `existing.modules_touched \|\| []` retained |
+| A004 | Both stale commit assertions are removed from artifact tests | ✅ SATISFIED | Grep for `.commit).toBeUndefined()` in artifact.test.ts: zero matches |
 | A005 | Path resolver accepts an optional cache to avoid redundant filesystem scans | ✅ SATISFIED | proofSummary.ts:344 — `globCache: Map<string, string[]> = new Map()` as 4th param |
-| A006 | Cache defaults to a new Map so existing callers work unchanged | ✅ SATISFIED | proofSummary.ts:344 — `= new Map()` default; test at line 1298 calls with 3 args and resolves correctly |
+| A006 | Cache defaults to a new Map so existing callers work unchanged | ✅ SATISFIED | proofSummary.ts:344 — `= new Map()` default; test at line 1310 calls with 3 args, resolves correctly |
 | A007 | Cached basenames skip the filesystem glob on subsequent lookups | ✅ SATISFIED | proofSummary.ts:357 — `globCache.get(basename)` checked before globSync |
 | A008 | Glob results are stored in cache after first lookup | ✅ SATISFIED | proofSummary.ts:363 — `globCache.set(basename, globMatches)` after globSync |
-| A009 | Proof chain writer shares one cache across all path resolution calls | ✅ SATISFIED | work.ts:828 — `const globCache = new Map<string, string[]>()` declared once, passed to all 4 `resolveFindingPaths` calls (lines 831, 832, 847, 848) |
-| A010 | Repeated lookups for the same file hit the cache instead of re-scanning | ❌ UNSATISFIED | Test at proofSummary.test.ts:1275 is tagged `@ana A010` but does not assert call count. Contract requires `test.globSpy.callCount equals 1`. The spy is also non-functional — `vi.spyOn({ globSync }, 'globSync')` targets a fresh anonymous object, not the module import used by `resolveFindingPaths`. See Findings. |
-| A011 | Calling the resolver without a cache still resolves files correctly | ✅ SATISFIED | proofSummary.test.ts:1298 — calls `resolveFindingPaths(items, [], tempDir)` with 3 args; asserts `items[0]!.file === 'src/utils/helper.ts'` |
+| A009 | Proof chain writer shares one cache across all path resolution calls | ✅ SATISFIED | work.ts:828 — `const globCache = new Map<string, string[]>()` declared once, passed to all 4 `resolveFindingPaths` calls at lines 831, 832, 847, 848 |
+| A010 | Repeated lookups for the same file hit the cache instead of re-scanning | ✅ SATISFIED | proofSummary.test.ts:1285 — `vi.spyOn(glob, 'globSync')` on the mocked module; line 1299 — `expect(spy).toHaveBeenCalledTimes(1)`. Spy intercepts real calls via `vi.mock('glob')` at file top (line 6). Both items resolve to `src/utils/helper.ts` but globSync fires once. |
+| A011 | Calling the resolver without a cache still resolves files correctly | ✅ SATISFIED | proofSummary.test.ts:1310 — calls `resolveFindingPaths(items, [], tempDir)` with 3 args; asserts `items[0]!.file === 'src/utils/helper.ts'` |
 | A012 | All pre-existing tests continue to pass after the changes | ✅ SATISFIED | `pnpm vitest run`: 1575 passed, 2 skipped. No regressions. |
 
 ## Independent Findings
 
-The three code changes (dead fallback removal, stale assertion deletion, glob cache) are clean and well-structured. The implementation closely follows the spec's pattern references and the existing `globResultCache` in the staleness loop. The diff is surgical — no scope creep, no over-building, no YAGNI violations.
+The three code changes remain clean and surgical — no scope creep, no over-building. The diff since the last verification is confined to the test file: the builder added `vi.mock('glob')` at the module level and changed the spy from `vi.spyOn({ globSync }, 'globSync')` (detached object) to `vi.spyOn(glob, 'globSync')` (mocked module namespace). The call-count assertion `expect(spy).toHaveBeenCalledTimes(1)` is now present.
 
-The A010 test is the one problem. It has the right structure and intent but the spy mechanism is broken and the critical assertion is missing. The test currently proves the cache *stores* values (via `sharedCache.get('helper.ts')` assertion) and that both items resolve correctly — but it cannot prove the second call *reads* from the cache instead of re-globbing, because:
+I verified the spy actually intercepts by tracing the chain: `vi.mock('glob', async (importOriginal) => { ...original })` replaces the `glob` module with a spread of originals (line 6-9), making all exports spyable. The test's `import * as glob from 'glob'` (line 10) gets the mocked namespace. `resolveFindingPaths` imports `{ globSync } from 'glob'` (proofSummary.ts:11) — same module, so the spy intercepts. The `spy.mockRestore()` at line 1301 cleans up after.
 
-1. The spy `vi.spyOn({ globSync }, 'globSync')` creates a spy on a throwaway object literal. This spy never intercepts calls to the actual `globSync` imported by `proofSummary.ts`. It's dead code.
-2. Even if the spy worked, there's no `expect(spy).toHaveBeenCalledTimes(1)` or equivalent assertion. The contract specifies `test.globSpy.callCount equals 1`.
+The mock approach is the standard Vitest pattern for ESM modules. Since `vi.mock` is hoisted before imports, and the factory spreads all original exports, existing tests that use `globSync` (e.g., the glob fallback tests at lines 1229-1276) still call the real implementation — the spy is scoped to the one test via `spyOn`/`mockRestore`.
 
-The test as written would pass identically if the cache logic were removed entirely (both calls would just re-glob and resolve the same file). The `sharedCache.get` assertion catches cache-store but not cache-read.
+**Proof chain context integration:** The prior finding about `entry.build_concerns || []` on a guaranteed field (from "Clear the Deck Phase 2") is directly addressed — the `|| []` is removed at line 832. The known `globSync` exception on invalid `projectRoot` (proofSummary.ts:345) remains unchanged and out of scope.
 
-**Proof chain context integration:** The proof chain records a prior finding about `entry.build_concerns || []` being a defensive fallback on a guaranteed field (from "Clear the Deck Phase 2"). This build directly addresses that finding — the `|| []` is removed at line 832. The known issue about `globSync` throwing on invalid `projectRoot` (proofSummary.ts:345) remains — this build doesn't change that path and it's out of scope.
+## Previous Findings Resolution
+
+### Previously UNSATISFIED Assertions
+| ID | Previous Issue | Current Status | Resolution |
+|----|----------------|----------------|------------|
+| A010 | Spy on detached object, no call-count assertion | ✅ SATISFIED | Builder added `vi.mock('glob')` for module-level mock, changed spy to `vi.spyOn(glob, 'globSync')`, added `expect(spy).toHaveBeenCalledTimes(1)` |
+
+### Previous Findings
+| Finding | Status | Notes |
+|---------|--------|-------|
+| Dead spy on detached object (proofSummary.test.ts:1277) | Fixed | Now uses `vi.spyOn(glob, 'globSync')` on mocked module namespace |
+| Missing call-count assertion (proofSummary.test.ts:1275) | Fixed | `expect(spy).toHaveBeenCalledTimes(1)` added at line 1299 |
+| Pre-check tag collision for A001-A009 | Still present | Systemic limitation — tags from prior contracts match this contract's IDs |
+| Cache parameter widens exported function API | Still present | Low risk — single caller, optional param with default |
+| Cache never invalidated within session | Still present | Architecturally notable, practically impossible to trigger |
 
 ## AC Walkthrough
 
-- **AC1:** `resolveFindingPaths` call at work.ts:831 passes `entry.modules_touched` directly without `|| []` — ✅ PASS (verified via diff)
-- **AC2:** `resolveFindingPaths` call at work.ts:832 passes `entry.build_concerns` and `entry.modules_touched` directly without `|| []` — ✅ PASS (verified via diff)
+- **AC1:** `resolveFindingPaths` call at work.ts:831 passes `entry.modules_touched` directly without `|| []` — ✅ PASS
+- **AC2:** `resolveFindingPaths` call at work.ts:832 passes `entry.build_concerns` and `entry.modules_touched` directly without `|| []` — ✅ PASS
 - **AC3:** Both stale commit assertions removed from artifact.test.ts — ✅ PASS (grep confirms zero `.commit).toBeUndefined()` matches)
 - **AC4:** `resolveFindingPaths` accepts optional `globCache` parameter defaulting to `new Map<string, string[]>` — ✅ PASS (proofSummary.ts:344)
 - **AC5:** `resolveFindingPaths` checks cache before `globSync` and stores after — ✅ PASS (proofSummary.ts:357-363)
-- **AC6:** `writeProofChain` creates one shared Map and passes to all calls — ✅ PASS (work.ts:828, passed to lines 831, 832, 847, 848)
-- **AC7:** Test verifies repeated calls with same cache reuse glob results — ❌ FAIL — Test at proofSummary.test.ts:1275 does not assert glob call count. The spy is non-functional and no call-count assertion exists. The test proves cache-store but not cache-read.
-- **AC8:** Test verifies default behavior without cache parameter — ✅ PASS (proofSummary.test.ts:1298, calls with 3 args, resolves correctly)
+- **AC6:** `writeProofChain` creates one shared `Map<string, string[]>` and passes to all calls — ✅ PASS (work.ts:828, passed to lines 831, 832, 847, 848)
+- **AC7:** Test verifies repeated calls with same cache reuse glob results — ✅ PASS — `vi.spyOn(glob, 'globSync')` intercepts real calls; `expect(spy).toHaveBeenCalledTimes(1)` confirms second call hits cache (proofSummary.test.ts:1285-1299)
+- **AC8:** Test verifies default behavior without cache parameter — ✅ PASS (proofSummary.test.ts:1310, calls with 3 args, resolves correctly)
 - **AC9:** All existing tests pass — ✅ PASS (1575 passed, 2 skipped, no regressions)
 - **Tests pass:** ✅ PASS — `cd packages/cli && pnpm vitest run`: 1577 total, 1575 passed, 2 skipped
 - **No build errors:** ✅ PASS — `pnpm run build` clean
@@ -77,24 +89,22 @@ The test as written would pass identically if the cache logic were removed entir
 
 ## Blockers
 
-A010 UNSATISFIED — the cache-reuse test does not assert `globSync` call count. The contract requires `test.globSpy.callCount equals 1`. The test has a spy that never intercepts calls (attached to a throwaway object) and no call-count assertion. Fix: spy on the actual `glob` module import and add `expect(spy).toHaveBeenCalledTimes(1)`.
+No blockers. All 12 contract assertions satisfied, all 12 ACs pass, no regressions. Checked for: unused exports in new code (globCache param is used by writeProofChain — the only intended caller), sentinel test patterns (A010 test now has real spy + real assertion), error paths that swallow silently (cache miss falls through to globSync — same behavior as before, just cached), unused parameters (globCache consumed in function body at lines 357-363).
 
 ## Findings
 
-- **Test — Dead spy on detached object:** `packages/cli/tests/utils/proofSummary.test.ts:1277` — `vi.spyOn({ globSync }, 'globSync')` creates a spy on a fresh object literal, not on the `glob` module that `resolveFindingPaths` imports. The spy never intercepts any calls. To spy on ESM module exports, the builder needs to spy on the module object itself (e.g., `const glob = await import('glob'); vi.spyOn(glob, 'globSync')`).
+- **Test — Pre-check tag collision for A001-A009:** `packages/cli/tests/utils/proofSummary.test.ts` — Tags `@ana A001`–`@ana A009` in this file belong to prior contracts (parseFindings, extractFileRefs, generateActiveIssuesMarkdown). Pre-check reports COVERED for this contract's A001-A009 by coincidence. The actual code changes for those assertions are in `work.ts` and `artifact.test.ts` and are exercised by integration tests — but the tag linkage is accidental. Systemic limitation, noted in prior verification.
 
-- **Test — Missing call-count assertion:** `packages/cli/tests/utils/proofSummary.test.ts:1275` — The contract requires `test.globSpy.callCount equals 1`. No such assertion exists. The test proves cache-store (line 1292 asserts `sharedCache.get`) but not cache-read. Without a call-count check, the test passes even if the cache logic is deleted.
+- **Code — Cache parameter widens exported function API:** `packages/cli/src/utils/proofSummary.ts:344` — `globCache` is optional with a default, so backward-compatible. But it exposes `Map<string, string[]>` as part of the public signature. Single caller today (`writeProofChain`), but worth noting if this function gains external consumers.
 
-- **Test — Pre-check tag collision for A001-A009:** `packages/cli/tests/utils/proofSummary.test.ts` — Pre-check reports A001-A009 as COVERED, but the matching `@ana` tags are from prior contracts (parseFindings, extractFileRefs, generateActiveIssuesMarkdown). The builder didn't add new tags for this contract's A001-A009 assertions. The code changes themselves are correct and exercised by existing writeProofChain integration tests, but the tag linkage is coincidental. Systemic limitation — see prior proof chain note about tag collisions.
+- **Code — Cache never invalidated within session:** `packages/cli/src/utils/proofSummary.ts:357-363` — Cache assumes glob results are stable for the lifetime of one `writeProofChain` call. If files were created between resolution calls, stale results would be served. Practically impossible — `writeProofChain` doesn't create files between resolution passes — but architecturally notable if usage patterns change.
 
-- **Code — Cache parameter widens exported function API:** `packages/cli/src/utils/proofSummary.ts:344` — `globCache` is an optional parameter with a default, so backward-compatible. But it exposes `Map<string, string[]>` as part of the public API of an exported function. Callers could pass unexpected Map implementations. Low risk — the only caller is `writeProofChain` — but worth noting for future API surface audits.
-
-- **Code — Cache never invalidated within session:** `packages/cli/src/utils/proofSummary.ts:357-363` — The cache assumes glob results are stable for the lifetime of one `writeProofChain` call. If a file is created or deleted between `resolveFindingPaths` calls within the same invocation, stale results would be used. Practically impossible (writeProofChain doesn't create files between resolution calls) but architecturally notable as the cache grows if this function is ever called in a loop with changing filesystem state.
+- **Test — File-level vi.mock adds implicit coupling:** `packages/cli/tests/utils/proofSummary.test.ts:6-9` — `vi.mock('glob', ...)` at file scope means every test in this file uses the mocked (though real-behavior) glob module. The spread of originals makes this transparent today, but a future test that adds `.mockImplementation()` without cleanup could leak. The builder's `spy.mockRestore()` is correct practice.
 
 ## Deployer Handoff
 
-Three independent fixes. The dead fallback removal (A001-A002) and stale assertion deletion (A004) are pure cleanup — no behavioral change. The glob cache (A005-A009) is an optimization that reduces redundant filesystem scans during proof chain writes. All existing tests pass. The only issue is the A010 test which needs a working spy and call-count assertion before this ships. After that fix, this is ready to merge to main.
+Three independent fixes: dead fallback removal (work.ts lines 831-832), stale assertion deletion (artifact.test.ts), and glob cache optimization (proofSummary.ts + work.ts). No behavioral changes visible to users. The glob cache reduces redundant filesystem scans during proof chain writes — performance improvement on projects with many findings. The `vi.mock('glob')` in the test file is a standard Vitest ESM spy pattern; it spreads originals so all existing tests still use real globSync.
 
 ## Verdict
-**Shippable:** NO
-One contract assertion (A010) is UNSATISFIED. The glob cache implementation is correct — the test just doesn't prove it. The builder needs to fix the spy mechanism (spy on the actual module, not a detached object) and add a call-count assertion (`expect(spy).toHaveBeenCalledTimes(1)`). The remaining 11 assertions are satisfied and all other acceptance criteria pass.
+**Shippable:** YES
+All 12 contract assertions satisfied. The previous FAIL (A010 — broken spy, missing call-count assertion) is fully resolved. The builder added the correct ESM mock pattern (`vi.mock` + spread originals + `vi.spyOn` on module namespace) and the required `toHaveBeenCalledTimes(1)` assertion. Tests pass, build clean, lint clean, no regressions.
