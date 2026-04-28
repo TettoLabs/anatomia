@@ -915,7 +915,7 @@ export function generateProofSummary(slugDir: string): ProofSummary {
     .sort();
 
   let lastResult: string | null = null;
-  const allFindings: Array<{ category: string; summary: string; file: string | null; anchor: string | null }> = [];
+  const allFindings: ProofSummary['findings'] = [];
 
   for (const verifyFile of verifyFiles) {
     const verifyPath = path.join(slugDir, verifyFile);
@@ -939,8 +939,35 @@ export function generateProofSummary(slugDir: string): ProofSummary {
         }
       }
 
-      // Aggregate findings from all phases
-      allFindings.push(...parseFindings(verifyContent));
+      // YAML-first findings reader: derive companion path, read if exists, fall back to regex
+      const companionName = verifyFile.replace(/_report/, '_data').replace(/\.md$/, '.yaml');
+      const companionPath = path.join(slugDir, companionName);
+
+      if (fs.existsSync(companionPath)) {
+        try {
+          const yamlContent = yaml.parse(fs.readFileSync(companionPath, 'utf-8'));
+          if (yamlContent && Array.isArray(yamlContent.findings)) {
+            for (const f of yamlContent.findings as Array<Record<string, unknown>>) {
+              const finding: ProofSummary['findings'][0] = {
+                category: String(f['category'] ?? 'code'),
+                summary: String(f['summary'] ?? ''),
+                file: typeof f['file'] === 'string' ? f['file'] : null,
+                anchor: typeof f['anchor'] === 'string' ? f['anchor'] : null,
+              };
+              if (typeof f['line'] === 'number') finding.line = f['line'];
+              if (typeof f['severity'] === 'string') finding.severity = f['severity'] as 'blocker' | 'observation' | 'note';
+              if (Array.isArray(f['related_assertions'])) finding.related_assertions = f['related_assertions'] as string[];
+              allFindings.push(finding);
+            }
+          }
+        } catch {
+          // YAML parse failed — fall back to regex
+          allFindings.push(...parseFindings(verifyContent));
+        }
+      } else {
+        // No companion — fall back to regex extraction
+        allFindings.push(...parseFindings(verifyContent));
+      }
 
       // Parse rejection cycles from each phase
       const rejectionData = parseRejectionCycles(verifyContent);
@@ -970,9 +997,35 @@ export function generateProofSummary(slugDir: string): ProofSummary {
     try {
       const buildContent = fs.readFileSync(buildPath, 'utf-8');
       summary.deviations.push(...parseDeviations(buildContent));
-      const concerns = parseBuildOpenIssues(buildContent);
-      if (concerns.length > 0) {
-        summary.build_concerns.push(...concerns);
+
+      // YAML-first build concerns reader: derive companion, read if exists, fall back to regex
+      const buildCompanionName = buildFile.replace(/_report/, '_data').replace(/\.md$/, '.yaml');
+      const buildCompanionPath = path.join(slugDir, buildCompanionName);
+
+      if (fs.existsSync(buildCompanionPath)) {
+        try {
+          const yamlContent = yaml.parse(fs.readFileSync(buildCompanionPath, 'utf-8'));
+          if (yamlContent && Array.isArray(yamlContent.concerns)) {
+            for (const c of yamlContent.concerns as Array<Record<string, unknown>>) {
+              summary.build_concerns.push({
+                summary: String(c['summary'] ?? ''),
+                file: typeof c['file'] === 'string' ? c['file'] : null,
+              });
+            }
+          }
+        } catch {
+          // YAML parse failed — fall back to regex
+          const concerns = parseBuildOpenIssues(buildContent);
+          if (concerns.length > 0) {
+            summary.build_concerns.push(...concerns);
+          }
+        }
+      } else {
+        // No companion — fall back to regex extraction
+        const concerns = parseBuildOpenIssues(buildContent);
+        if (concerns.length > 0) {
+          summary.build_concerns.push(...concerns);
+        }
       }
     } catch {
       // Continue with defaults
