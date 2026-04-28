@@ -16,12 +16,12 @@
     "hash": "sha256:9c2a3c837606a1c8a4db2c681c2039590e22f7169232a8ce636d9062451c4071"
   },
   "build-report": {
-    "saved_at": "2026-04-28T17:22:56.060Z",
-    "hash": "sha256:5fadd7a394bf91fbbcac4df609dbd4fe88a3619a3699d909024657d58a7f3292"
+    "saved_at": "2026-04-28T17:35:07.549Z",
+    "hash": "sha256:09bf277f3459db11ea661671e2ccfb7c14703ca52e64ebac66ec1db6e064aec3"
   },
   "build-data": {
-    "saved_at": "2026-04-28T17:22:56.061Z",
-    "hash": "sha256:3c7d33633d9621962331a9d25d92669eec03cf5f033f96fa1b4c3039cc5eb831"
+    "saved_at": "2026-04-28T17:35:07.549Z",
+    "hash": "sha256:b90994a72bb0851b5feb828cf09ac9403da16f64b3e78efb13a30324bced7dcf"
   },
   "modules_touched": [
     "packages/cli/src/commands/work.ts",
