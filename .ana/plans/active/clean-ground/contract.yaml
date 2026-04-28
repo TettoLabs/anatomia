@@ -25,11 +25,11 @@ assertions:
     value: "|| []"
 
   - id: A004
-    says: "Stale assertion about commit field no longer exists in test"
-    block: "stale scope.commit assertion removed"
+    says: "Both stale commit assertions are removed from artifact tests"
+    block: "stale commit assertions removed"
     target: "artifact.test.ts"
     matcher: "not_contains"
-    value: "saves.scope.commit"
+    value: ".commit).toBeUndefined()"
 
   - id: A005
     says: "Path resolver accepts an optional cache to avoid redundant filesystem scans"

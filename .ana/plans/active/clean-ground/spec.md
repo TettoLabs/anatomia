@@ -10,7 +10,7 @@ Three independent fixes shipped in one commit. All changes are internal to `writ
 
 1. **Dead fallback removal (work.ts lines 828-829).** Remove `|| []` from the two `resolveFindingPaths` calls on the new entry. `entry.modules_touched` is always an array (initialized as `[]` at line 763). `entry.build_concerns` is always an array (guaranteed by `?? []` at line 814). `entry.findings` is always an array (constructed via `.map()` at line 807). The backfill loop at lines 844-845 keeps its `|| []` because historical JSON entries may lack these fields.
 
-2. **Stale assertion deletion (artifact.test.ts line 1243).** Delete `expect(saves.scope.commit).toBeUndefined()`. `writeSaveMetadata` no longer writes a `commit` field. The assertion tests `undefined === undefined` — it verifies nothing. The surrounding test still validates `.saves.json` structure through `saved_at` and `hash` assertions.
+2. **Stale assertion deletion (artifact.test.ts lines 1243 and 1707).** Delete both `expect(saves.scope.commit).toBeUndefined()` (line 1243, in the `writes .saves.json with save metadata` test) and `expect(saves[type].commit).toBeUndefined()` (line 1707, in the `save-all` test's metadata loop). Same disease: `writeSaveMetadata` no longer writes a `commit` field, so both assertions test `undefined === undefined`. The surrounding tests still validate `.saves.json` structure through `saved_at` and `hash` assertions.
 
 3. **Glob cache for resolveFindingPaths.** Add an optional `globCache` parameter with a default `new Map()`. Inside the glob fallback branch (current line 355), check the cache before calling `globSync` and store results after. In `writeProofChain`, declare one shared `Map<string, string[]>` before the new-entry resolution calls and pass it to all four `resolveFindingPaths` invocations (lines 828, 829, 844, 845).
 
@@ -31,9 +31,9 @@ No user-visible output changes. All fixes are internal to the proof chain write 
 **Why:** `resolveFindingPaths` is called 4 times per `writeProofChain` invocation. Without caching, each call re-globs the same basenames. With a shared cache, each unique basename is globbed once.
 
 ### packages/cli/tests/commands/artifact.test.ts (modify)
-**What changes:** Delete the line `expect(saves.scope.commit).toBeUndefined();` at line 1243.
+**What changes:** Delete two stale assertions: `expect(saves.scope.commit).toBeUndefined()` at line 1243 and `expect(saves[type].commit).toBeUndefined()` at line 1707.
 **Pattern to follow:** N/A — pure deletion.
-**Why:** The assertion tests `undefined === undefined` since the `commit` field was removed from `writeSaveMetadata`.
+**Why:** Both assertions test `undefined === undefined` since the `commit` field was removed from `writeSaveMetadata`.
 
 ### packages/cli/tests/utils/proofSummary.test.ts (modify)
 **What changes:** Add two new tests in the `resolveFindingPaths` describe block: (a) a test that verifies glob is called once per unique basename when a shared cache is passed across multiple calls, (b) a test that verifies calling `resolveFindingPaths` without a cache parameter still resolves paths correctly via glob fallback (default behavior preserved).
@@ -44,7 +44,7 @@ No user-visible output changes. All fixes are internal to the proof chain write 
 
 - [ ] AC1: `resolveFindingPaths` call at work.ts:828 passes `entry.modules_touched` directly without `|| []`
 - [ ] AC2: `resolveFindingPaths` call at work.ts:829 passes `entry.build_concerns` and `entry.modules_touched` directly without `|| []`
-- [ ] AC3: The `expect(saves.scope.commit).toBeUndefined()` assertion no longer exists in artifact.test.ts
+- [ ] AC3: Both stale commit assertions are removed from artifact.test.ts (lines 1243 and 1707)
 - [ ] AC4: `resolveFindingPaths` accepts an optional `globCache` parameter (defaults to a new `Map<string, string[]>`)
 - [ ] AC5: When `globCache` is provided, `resolveFindingPaths` checks the cache before calling `globSync` and stores results after
 - [ ] AC6: `writeProofChain` creates one shared `Map<string, string[]>` and passes it to all `resolveFindingPaths` calls (new entry + backfill loop)
