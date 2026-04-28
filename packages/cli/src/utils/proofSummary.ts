@@ -334,12 +334,14 @@ export function extractFileRefs(summary: string): string[] {
  * @param items - Array of objects with a `file` field (findings or build_concerns)
  * @param modules - Array of full relative paths from modules_touched
  * @param projectRoot - Project root for existence checks and glob fallback
+ * @param globCache - Optional shared cache to avoid redundant globSync calls across invocations
  * @returns void (mutates items in place)
  */
 export function resolveFindingPaths(
   items: Array<{ file: string | null }>,
   modules: string[],
   projectRoot: string,
+  globCache: Map<string, string[]> = new Map(),
 ): void {
   for (const item of items) {
     if (!item.file) continue;
@@ -352,10 +354,14 @@ export function resolveFindingPaths(
       item.file = matches[0]!;
     } else {
       // Glob fallback: search the project filesystem for an unambiguous match
-      const globMatches = globSync('**/' + basename, {
-        cwd: projectRoot,
-        ignore: ['**/node_modules/**', '**/.ana/**'],
-      });
+      let globMatches = globCache.get(basename);
+      if (globMatches === undefined) {
+        globMatches = globSync('**/' + basename, {
+          cwd: projectRoot,
+          ignore: ['**/node_modules/**', '**/.ana/**'],
+        });
+        globCache.set(basename, globMatches);
+      }
       if (globMatches.length === 1) {
         item.file = globMatches[0]!;
       }

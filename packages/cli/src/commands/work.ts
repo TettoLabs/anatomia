@@ -824,9 +824,12 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
   }
 
   // Resolve finding/build_concern file fields from basenames to full paths.
+  // Shared cache avoids redundant globSync calls across all resolution passes.
+  const globCache = new Map<string, string[]>();
+
   // New entry: resolve against its own modules_touched
-  resolveFindingPaths(entry.findings, entry.modules_touched || [], projectRoot);
-  resolveFindingPaths(entry.build_concerns || [], entry.modules_touched || [], projectRoot);
+  resolveFindingPaths(entry.findings, entry.modules_touched, projectRoot, globCache);
+  resolveFindingPaths(entry.build_concerns, entry.modules_touched, projectRoot, globCache);
 
   // Maintenance counters
   let autoClosed = 0;
@@ -841,8 +844,8 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
       delete existingAny['callouts'];
     }
 
-    resolveFindingPaths(existing.findings || [], existing.modules_touched || [], projectRoot);
-    resolveFindingPaths(existing.build_concerns || [], existing.modules_touched || [], projectRoot);
+    resolveFindingPaths(existing.findings || [], existing.modules_touched || [], projectRoot, globCache);
+    resolveFindingPaths(existing.build_concerns || [], existing.modules_touched || [], projectRoot, globCache);
 
     // Backfill status (AC4) — idempotent
     for (const finding of existing.findings || []) {
