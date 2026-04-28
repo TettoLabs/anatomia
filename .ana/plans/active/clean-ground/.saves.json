@@ -28,5 +28,82 @@
     "packages/cli/src/utils/proofSummary.ts",
     "packages/cli/tests/commands/artifact.test.ts",
     "packages/cli/tests/utils/proofSummary.test.ts"
-  ]
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:95003ecb75f0dfb3ef2ffa3de1d5a7a1c84c6ff8da50a3f609b71fc3370e5adb",
+    "assertions": [
+      {
+        "id": "A001",
+        "says": "Dead fallback removed from findings resolution on new entry",
+        "status": "COVERED"
+      },
+      {
+        "id": "A002",
+        "says": "Dead fallback removed from build concerns resolution on new entry",
+        "status": "COVERED"
+      },
+      {
+        "id": "A003",
+        "says": "Backfill loop still guards against missing fields in historical entries",
+        "status": "COVERED"
+      },
+      {
+        "id": "A004",
+        "says": "Both stale commit assertions are removed from artifact tests",
+        "status": "COVERED"
+      },
+      {
+        "id": "A005",
+        "says": "Path resolver accepts an optional cache to avoid redundant filesystem scans",
+        "status": "COVERED"
+      },
+      {
+        "id": "A006",
+        "says": "Cache defaults to a new Map so existing callers work unchanged",
+        "status": "COVERED"
+      },
+      {
+        "id": "A007",
+        "says": "Cached basenames skip the filesystem glob on subsequent lookups",
+        "status": "COVERED"
+      },
+      {
+        "id": "A008",
+        "says": "Glob results are stored in cache after first lookup",
+        "status": "COVERED"
+      },
+      {
+        "id": "A009",
+        "says": "Proof chain writer shares one cache across all path resolution calls",
+        "status": "COVERED"
+      },
+      {
+        "id": "A010",
+        "says": "Repeated lookups for the same file hit the cache instead of re-scanning",
+        "status": "COVERED"
+      },
+      {
+        "id": "A011",
+        "says": "Calling the resolver without a cache still resolves files correctly",
+        "status": "COVERED"
+      },
+      {
+        "id": "A012",
+        "says": "All pre-existing tests continue to pass after the changes",
+        "status": "COVERED"
+      }
+    ],
+    "covered": 12,
+    "uncovered": 0,
+    "run_at": "2026-04-28T17:30:23.237Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-04-28T17:30:23.268Z",
+    "hash": "sha256:256e3cd3d403e0756f7693f17496fe914d22163c5c121e65feec8baeec79df93"
+  },
+  "verify-data": {
+    "saved_at": "2026-04-28T17:30:23.268Z",
+    "hash": "sha256:433ec78b45c5d7ed476e8b84688b85570967685552b5770ced109f726fa70733"
+  }
 }
