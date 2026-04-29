@@ -37,6 +37,7 @@ export interface ProofChainStats {
   lessons: number;
   promoted: number;
   closed: number;
+  newFindings: number;
   maintenance?: {
     auto_closed: number;
     lessons_classified: number;

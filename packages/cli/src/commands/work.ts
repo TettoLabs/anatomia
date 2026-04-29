@@ -987,6 +987,7 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
     lessons: lessonsCount,
     promoted: promotedCount,
     closed: closedCount,
+    newFindings: entry.findings.length,
   };
 
   if (autoClosed > 0 || lessonsClassified > 0) {
@@ -1081,22 +1082,20 @@ export async function completeWork(slug: string): Promise<void> {
           const proof = generateProofSummary(completedPath);
           const chainPath = path.join(projectRoot, '.ana', 'proof_chain.json');
           let runs = 0;
-          let activeCount = 0;
+          let findingsCount = 0;
           if (fs.existsSync(chainPath)) {
             try {
               const chain = JSON.parse(fs.readFileSync(chainPath, 'utf-8'));
               runs = Array.isArray(chain.entries) ? chain.entries.length : 0;
               for (const e of chain.entries || []) {
-                for (const f of e.findings || []) {
-                  if (f.status === 'active' || !f.status) activeCount++;
-                }
+                findingsCount += (e.findings || []).length;
               }
             } catch { /* */ }
           }
           const statusIcon = proof.result === 'PASS' ? '✓' : '✗';
           console.log(`\n${statusIcon} ${proof.result} — ${proof.feature}`);
-          console.log(`  ${proof.contract.covered}/${proof.contract.total} covered · ${proof.contract.satisfied}/${proof.contract.total} satisfied · ${proof.deviations.length} deviation${proof.deviations.length !== 1 ? 's' : ''}`);
-          console.log(chalk.gray(`  Chain: ${runs} ${runs !== 1 ? 'runs' : 'run'} · ${activeCount} active finding${activeCount !== 1 ? 's' : ''}`));
+          console.log(`  ${proof.contract.satisfied}/${proof.contract.total} satisfied · ${proof.deviations.length} deviation${proof.deviations.length !== 1 ? 's' : ''}`);
+          console.log(chalk.gray(`  Chain: ${runs} ${runs !== 1 ? 'runs' : 'run'} · ${findingsCount} finding${findingsCount !== 1 ? 's' : ''}`));
           return;
         }
       } catch { /* git status failed — treat as genuinely completed */ }
@@ -1283,36 +1282,14 @@ export async function completeWork(slug: string): Promise<void> {
     // Silently continue if remote branch doesn't exist or was already deleted
   }
 
-  // 13. Print summary (3-line proof summary + optional maintenance)
+  // 13. Print summary
   const statusIcon = proof.result === 'PASS' ? '✓' : '✗';
   console.log(`\n${statusIcon} ${proof.result} — ${proof.feature}`);
-  console.log(`  ${proof.contract.covered}/${proof.contract.total} covered · ${proof.contract.satisfied}/${proof.contract.total} satisfied · ${proof.deviations.length} deviation${proof.deviations.length !== 1 ? 's' : ''}`);
-  console.log(chalk.gray(`  Chain: ${stats.runs} ${stats.runs !== 1 ? 'runs' : 'run'} · ${stats.active} active finding${stats.active !== 1 ? 's' : ''}`));
-  if (stats.maintenance) {
-    console.log(chalk.gray(`  Maintenance: ${stats.maintenance.auto_closed} auto-closed, ${stats.maintenance.lessons_classified} classified as lessons`));
-  }
-
-  // Nudge: suggest proof audit when findings pile up AND no human closures exist
-  if (stats.active > 20) {
-    let hasHumanClosure = false;
-    const chainPath = path.join(projectRoot, '.ana', 'proof_chain.json');
-    try {
-      const chainData: ProofChain = JSON.parse(fs.readFileSync(chainPath, 'utf-8'));
-      for (const e of chainData.entries) {
-        for (const f of e.findings || []) {
-          if (f.closed_by === 'human') {
-            hasHumanClosure = true;
-            break;
-          }
-        }
-        if (hasHumanClosure) break;
-      }
-    } catch { /* chain read failed — skip nudge */ }
-
-    if (!hasHumanClosure) {
-      console.log(chalk.cyan('→ Run `ana proof audit` to review active findings'));
-    }
-  }
+  console.log(`  ${proof.contract.satisfied}/${proof.contract.total} satisfied · ${proof.deviations.length} deviation${proof.deviations.length !== 1 ? 's' : ''}`);
+  const chainLine = stats.newFindings > 0
+    ? `  Chain: ${stats.runs} ${stats.runs !== 1 ? 'runs' : 'run'} · ${stats.findings} finding${stats.findings !== 1 ? 's' : ''} (+${stats.newFindings} new)`
+    : `  Chain: ${stats.runs} ${stats.runs !== 1 ? 'runs' : 'run'} · ${stats.findings} finding${stats.findings !== 1 ? 's' : ''}`;
+  console.log(chalk.gray(chainLine));
 }
 
 /**
