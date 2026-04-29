@@ -30,7 +30,7 @@ Foundation 3.5 fixes the data quality so Foundation 4 can build intelligence on 
   - `.claude/agents/ana-build.md` — dogfood sync
   - ~12 test files — old severity value updates, new validation tests, new field tests, health expansion tests
 - **Blast radius:** The type changes in `proof.ts` propagate to every consumer — TypeScript compiler flags each one. The save validation changes affect every future `ana artifact save verify-report` and `ana artifact save build-report`. The template changes affect every future Verify and Build agent session. The severity migration in `writeProofChain` runs on every `work complete`, touching all findings until old values are gone (then becomes a no-op scan). The `computeChainHealth` expansion changes the `meta` block on every `--json` response — existing consumers handle new fields gracefully (additive-only JSON contract).
-- **Estimated effort:** ~60 minutes pipeline time (large scope, planner splits into 2 specs)
+- **Estimated effort:** 2-3 hours pipeline time across 2 specs
 - **Multi-phase:** yes — recommend 2 specs: (1) types + validation + reader + migration + schema version + templates, (2) health expansion + audit display
 
 ## Approach
@@ -69,7 +69,7 @@ The severity migration (`blocker→risk`, `note→observation`, `observation` st
 - AC18: Verify template (`ana-verify.md`): YAML example uses `risk`/`debt`/`observation` instead of `blocker`/`observation`/`note`. `severity` and `suggested_action` listed as required fields.
 - AC19: Verify template includes a classification brief (~6 lines) explaining the three severity values and four action values, placed at the verify_data.yaml instructions (step 6b).
 - AC20: Build template (`ana-build.md`): classification brief added for build_data.yaml concerns. Concerns gain `severity` and `suggested_action` fields.
-- AC21: Dogfood copies (`.claude/agents/ana-verify.md` and `.claude/agents/ana-build.md`) mirror template changes exactly. `diff` between template and dogfood produces empty output.
+- AC21: Dogfood copies (`.claude/agents/ana-verify.md` and `.claude/agents/ana-build.md`) contain the same classification brief, YAML example, and required fields as the templates. The changed sections match exactly.
 - AC22: Audit display (`ana proof audit`) shows `[severity · action]` badges inline on each finding. Sorted by severity (risk → debt → observation).
 - AC23: Audit `--json` output includes `suggested_action` on each finding object.
 - AC24: All consumers of `result` (work.ts PASS check, proof.ts result color, proofSummary.ts UNKNOWN warning) compile cleanly with the union type.
