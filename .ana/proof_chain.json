@@ -2690,7 +2690,10 @@
           "file": null,
           "anchor": "0 callouts",
           "id": "proof-chain-health-signal-C3",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Stale — references callout vocabulary from pre-F1. Function restructured in findings-lifecycle-foundation.",
+          "closed_at": "2026-04-29T07:51:18.773Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
