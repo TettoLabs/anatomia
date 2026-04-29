@@ -1067,7 +1067,7 @@ describe('ana proof', () => {
 
   // @ana A015
   describe('truncates audit at 8 files', () => {
-    it('caps display at 8 files with overflow', async () => {
+    it('caps display at exactly 8 files with overflow', async () => {
       // 30 findings across 10 files → only 8 files shown
       await createAuditChain(30, 10);
       process.chdir(tempDir);
@@ -1075,10 +1075,9 @@ describe('ana proof', () => {
       const { stdout, exitCode } = runProof(['audit']);
       expect(exitCode).toBe(0);
 
-      // Count file headers (lines containing "findings)")
-      const fileHeaders = stdout.split('\n').filter((l: string) => l.includes('finding'));
-      // Should be 8 file headers + 1 summary line at top + overflow
-      expect(fileHeaders.length).toBeLessThanOrEqual(10); // 8 files + summary + overflow
+      // Count file headers: lines matching "  src/fileN.ts (N finding(s))"
+      const fileHeaders = stdout.split('\n').filter((l: string) => /^\s+\S+\s+\(\d+ findings?\)/.test(l));
+      expect(fileHeaders.length).toBe(8);
       expect(stdout).toContain('more');
     });
   });

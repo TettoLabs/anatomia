@@ -1947,13 +1947,21 @@ Tests: 5 passed
     // @ana A027
     describe('work complete warns on pull failure', () => {
       it('warns on non-conflict pull failure', async () => {
-        // Verify the source code contains the warning pattern
-        const source = fsSync.readFileSync(
-          path.resolve(__dirname, '../../src/commands/work.ts'),
-          'utf-8',
-        );
-        expect(source).toContain('Warning: Pull failed (network error)');
-        expect(source).toContain('Run `git pull` manually');
+        await createMergedProject({ slug: 'pull-warn-test', phases: 1 });
+
+        // Add a remote that will fail with a non-conflict error
+        execSync('git remote add origin https://invalid.example.com/repo.git', { cwd: tempDir, stdio: 'ignore' });
+
+        const originalError = console.error;
+        const errors: string[] = [];
+        console.error = (...args: unknown[]) => { errors.push(args.map(String).join(' ')); };
+
+        await completeWork('pull-warn-test');
+
+        console.error = originalError;
+        const output = errors.join('\n');
+        expect(output).toContain('Warning');
+        expect(output).toContain('Pull failed');
       });
     });
 
