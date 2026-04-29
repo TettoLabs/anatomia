@@ -12,7 +12,7 @@
 
 import { Command } from 'commander';
 import chalk from 'chalk';
-import { execSync } from 'node:child_process';
+import { execSync, spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as fsPromises from 'node:fs/promises';
 import * as path from 'node:path';
@@ -1069,7 +1069,8 @@ export async function completeWork(slug: string): Promise<void> {
             stdio: 'pipe', cwd: projectRoot,
           });
           const commitMessage = `[${slug}] Complete — archived to plans/completed\n\nCo-authored-by: ${coAuthor}`;
-          execSync(`git commit -m "${commitMessage}"`, { stdio: 'pipe', cwd: projectRoot });
+          const commitResult = spawnSync('git', ['commit', '-m', commitMessage], { stdio: 'pipe', cwd: projectRoot });
+          if (commitResult.status !== 0) throw new Error(commitResult.stderr?.toString() || 'Commit failed');
           try {
             execSync('git push', { stdio: 'pipe', cwd: projectRoot });
           } catch {
@@ -1254,7 +1255,8 @@ export async function completeWork(slug: string): Promise<void> {
   try {
     execSync('git add .ana/plans/ .ana/proof_chain.json .ana/PROOF_CHAIN.md', { stdio: 'pipe', cwd: projectRoot });
     const commitMessage = `[${slug}] Complete — archived to plans/completed\n\nCo-authored-by: ${coAuthor}`;
-    execSync(`git commit -m "${commitMessage}"`, { stdio: 'pipe', cwd: projectRoot });
+    const commitResult = spawnSync('git', ['commit', '-m', commitMessage], { stdio: 'pipe', cwd: projectRoot });
+    if (commitResult.status !== 0) throw new Error(commitResult.stderr?.toString() || 'Commit failed');
   } catch {
     console.error(chalk.red(`Error: Failed to commit. Run \`ana work complete ${slug}\` to retry.`));
     process.exit(1);

@@ -21,7 +21,7 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import * as path from 'node:path';
 import * as fs from 'node:fs';
-import { execSync } from 'node:child_process';
+import { execSync, spawnSync } from 'node:child_process';
 import type { ProofChainEntry, ProofChain } from '../types/proof.js';
 import { findProjectRoot } from '../utils/validators.js';
 import { getProofContext, wrapJsonResponse, wrapJsonError, generateDashboard, computeChainHealth } from '../utils/proofSummary.js';
@@ -466,7 +466,8 @@ export function registerProofCommand(program: Command): void {
       try {
         execSync('git add .ana/proof_chain.json .ana/PROOF_CHAIN.md', { stdio: 'pipe', cwd: proofRoot });
         const commitMessage = `[proof] Close ${id}: ${options.reason}`;
-        execSync(`git commit -m "${commitMessage}"`, { stdio: 'pipe', cwd: proofRoot });
+        const commitResult = spawnSync('git', ['commit', '-m', commitMessage], { stdio: 'pipe', cwd: proofRoot });
+        if (commitResult.status !== 0) throw new Error(commitResult.stderr?.toString() || 'Commit failed');
       } catch {
         console.error(chalk.red('Error: Failed to commit. Changes saved to proof_chain.json but not committed.'));
         process.exit(1);
