@@ -22,24 +22,24 @@ This run also serves as the first post-Foundation 3 dogfood under normal conditi
 
 Only commit calls change. Other `execSync` calls (`git add`, `git push`, `git pull`, `git remote`) don't interpolate dynamic content and are out of scope.
 
-**Fix 2 — Nudge re-read (close-the-loop-C3).** Add `hasHumanClosure: boolean` to `ProofChainStats`. During `writeProofChain`'s existing iteration over all findings (the backfill/staleness loops that already touch every finding), set a flag when `closed_by === 'human'` is encountered. Return it in stats. Replace the 12-line file re-read block at work.ts:1295-1308 with `if (!stats.hasHumanClosure)`.
+**Fix 2 — Nudge re-read (close-the-loop-C3).** Add `hasManagedClosure: boolean` to `ProofChainStats`. During `writeProofChain`'s existing iteration over all findings, set a flag when `closed_by !== 'mechanical'` is encountered — this covers human closures, agent closures, and future Learn closures. The distinction matters: mechanical closures (file-deleted, anchor-absent) happen automatically without anyone choosing to manage the chain. Any other closure means someone or something is actively managing quality. The nudge should disappear when the chain is managed, regardless of who's managing it. Return the flag in stats. Replace the 12-line file re-read block at work.ts:1295-1308 with `if (!stats.hasManagedClosure)`.
 
 ## Acceptance Criteria
 - AC1: All 5 `execSync` git commit calls replaced with `spawnSync` equivalents
 - AC2: Multi-line commit messages with co-author trailers still produce correct git commits
 - AC3: Commit failures still produce the same error messages and exit codes
-- AC4: `ProofChainStats` has a `hasHumanClosure` boolean field
-- AC5: `writeProofChain` populates `hasHumanClosure` from existing iteration — no additional file reads
+- AC4: `ProofChainStats` has a `hasManagedClosure` boolean field — true when any finding has `closed_by !== 'mechanical'` (covers human, agent, and future Learn closures)
+- AC5: `writeProofChain` populates `hasManagedClosure` from existing iteration — no additional file reads
 - AC6: The nudge block no longer reads proof_chain.json from disk
-- AC7: Nudge still appears when active > 20 and no human closures exist
-- AC8: Nudge still disappears when a human closure exists
+- AC7: Nudge still appears when active > 20 and no managed closures exist (chain unmanaged)
+- AC8: Nudge disappears when any intentional closure exists — human, agent, or Learn (chain managed)
 - AC9: All existing tests pass without modification
 
 ## Edge Cases & Risks
 
 - **Multi-line messages.** 4 of 5 commit messages contain `\n\nCo-authored-by:`. Verified that `spawnSync('git', ['commit', '-m', msg])` handles embedded newlines correctly — git receives the full multi-line string as a single argument.
 - **Error handling difference.** `execSync` throws on non-zero exit. `spawnSync` returns an object. The try/catch blocks around each call need adjustment to check `result.status !== 0` and throw or exit accordingly.
-- **`hasHumanClosure` on first run.** A fresh proof chain has zero findings. `hasHumanClosure` defaults to `false`. The nudge fires if active > 20 — which can't happen on first run. No edge case.
+- **`hasManagedClosure` on first run.** A fresh proof chain has zero findings. `hasManagedClosure` defaults to `false`. The nudge fires if active > 20 — which can't happen on first run. No edge case.
 
 ## Rejected Approaches
 
@@ -59,9 +59,9 @@ None.
 - work.ts:983-996 — `ProofChainStats` construction, returned to `completeWork` which runs the nudge at 1293-1313
 
 ### Constraints Discovered
-- [TYPE-VERIFIED] `ProofChainStats` defined in types/proof.ts:33-44 — adding `hasHumanClosure?: boolean` is additive
-- [OBSERVED] `computeChainHealth` at proofSummary.ts:682 iterates all findings but uses a loose type — not the right place for `hasHumanClosure`. The check belongs in `writeProofChain` which has the full `ProofChainEntry` type.
-- [OBSERVED] The nudge code at work.ts:1294-1312 runs inside `completeWork`, after `writeProofChain` returns stats. The threading path is: writeProofChain loop → stats.hasHumanClosure → completeWork nudge check.
+- [TYPE-VERIFIED] `ProofChainStats` defined in types/proof.ts:33-44 — adding `hasManagedClosure?: boolean` is additive
+- [OBSERVED] `computeChainHealth` at proofSummary.ts:682 iterates all findings but uses a loose type — not the right place for `hasManagedClosure`. The check belongs in `writeProofChain` which has the full `ProofChainEntry` type.
+- [OBSERVED] The nudge code at work.ts:1294-1312 runs inside `completeWork`, after `writeProofChain` returns stats. The threading path is: writeProofChain loop → stats.hasManagedClosure → completeWork nudge check.
 
 ### Test Infrastructure
 - proof.test.ts — close tests use temp git repos, verify commit behavior
@@ -80,7 +80,7 @@ artifact.ts:939 and 1012 — existing `spawnSync` usage for git operations with 
 - `packages/cli/src/commands/work.ts:1071-1072` — recovery path commit (1 commit call)
 - `packages/cli/src/commands/work.ts:1256-1257` — main complete path commit (1 commit call)
 - `packages/cli/src/commands/work.ts:1293-1313` — nudge block (re-read to eliminate)
-- `packages/cli/src/commands/work.ts:850-860` — writeProofChain backfill loop (add hasHumanClosure flag)
+- `packages/cli/src/commands/work.ts:850-860` — writeProofChain backfill loop (add hasManagedClosure flag)
 - `packages/cli/src/types/proof.ts:33-44` — ProofChainStats interface (add field)
 
 ### Patterns to Follow
@@ -92,4 +92,4 @@ artifact.ts:939 and 1012 — existing `spawnSync` usage for git operations with 
 - Import additions: proof.ts and work.ts need `spawnSync` added to existing `execSync` import. Don't remove `execSync` — it's still used for `git add`, `git push`, etc.
 
 ### Things to Investigate
-- Review the existing nudge tests in work.test.ts to determine how `hasHumanClosure` should be verified — whether the tests mock writeProofChain or run the full flow.
+- Review the existing nudge tests in work.test.ts to determine how `hasManagedClosure` should be verified — whether the tests mock writeProofChain or run the full flow.
