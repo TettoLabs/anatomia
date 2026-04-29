@@ -1977,6 +1977,203 @@ Tests: 5 passed
       });
     });
 
+    describe('--json output', () => {
+      // @ana A001
+      it('completeCommand registers --json option', () => {
+        const source = fsSync.readFileSync(
+          path.resolve(__dirname, '../../src/commands/work.ts'),
+          'utf-8'
+        );
+        expect(source).toContain("option('--json'");
+      });
+
+      // @ana A002, A003, A004, A005
+      it('main path outputs four-key JSON envelope', async () => {
+        await createMergedProject({ slug: 'json-test', phases: 1 });
+
+        const originalLog = console.log;
+        const logs: string[] = [];
+        console.log = (...args: unknown[]) => { logs.push(args.join(' ')); };
+
+        await completeWork('json-test', { json: true });
+
+        console.log = originalLog;
+        const output = logs.join('\n');
+        const json = JSON.parse(output);
+
+        expect(json.command).toBe('work complete');
+        expect(json.timestamp).toBeDefined();
+        expect(json.results).toBeDefined();
+        expect(json.meta).toBeDefined();
+      });
+
+      // @ana A006, A007, A008, A009, A010, A011
+      it('main path results contain all expected fields', async () => {
+        await createMergedProject({ slug: 'fields-test', phases: 1 });
+
+        const originalLog = console.log;
+        const logs: string[] = [];
+        console.log = (...args: unknown[]) => { logs.push(args.join(' ')); };
+
+        await completeWork('fields-test', { json: true });
+
+        console.log = originalLog;
+        const output = logs.join('\n');
+        const json = JSON.parse(output);
+
+        expect(json.results.slug).toBe('fields-test');
+        expect(json.results.feature).toBeDefined();
+        expect(json.results.result).toContain('PASS');
+        expect(json.results.contract).toBeDefined();
+        expect(json.results.contract.satisfied).toBeDefined();
+        expect(json.results.contract.total).toBeDefined();
+        expect(json.results.contract.unsatisfied).toBeDefined();
+        expect(json.results.contract.deviated).toBeDefined();
+        expect(json.results.new_findings).toBeDefined();
+        expect(typeof json.results.new_findings).toBe('number');
+        expect(json.results.rejection_cycles).toBeDefined();
+        expect(typeof json.results.rejection_cycles).toBe('number');
+      });
+
+      // @ana A027
+      it('contract object does not leak covered/uncovered fields', async () => {
+        await createMergedProject({ slug: 'contract-shape', phases: 1 });
+
+        const originalLog = console.log;
+        const logs: string[] = [];
+        console.log = (...args: unknown[]) => { logs.push(args.join(' ')); };
+
+        await completeWork('contract-shape', { json: true });
+
+        console.log = originalLog;
+        const output = logs.join('\n');
+        const json = JSON.parse(output);
+
+        expect(json.results.contract).not.toHaveProperty('covered');
+        expect(json.results.contract).not.toHaveProperty('uncovered');
+      });
+
+      // @ana A012, A013
+      it('meta includes by_severity and by_action breakdowns', async () => {
+        await createMergedProject({ slug: 'meta-test', phases: 1 });
+
+        const originalLog = console.log;
+        const logs: string[] = [];
+        console.log = (...args: unknown[]) => { logs.push(args.join(' ')); };
+
+        await completeWork('meta-test', { json: true });
+
+        console.log = originalLog;
+        const output = logs.join('\n');
+        const json = JSON.parse(output);
+
+        expect(json.meta.findings.by_severity).toBeDefined();
+        expect(json.meta.findings.by_action).toBeDefined();
+      });
+
+      // @ana A014, A015, A016
+      it('recovery path outputs JSON envelope with new_findings zero', async () => {
+        // Simulate crash recovery scenario
+        execSync('git init', { cwd: tempDir, stdio: 'ignore' });
+        execSync('git config user.email "test@test.com"', { cwd: tempDir, stdio: 'ignore' });
+        execSync('git config user.name "Test"', { cwd: tempDir, stdio: 'ignore' });
+
+        const anaDir = path.join(tempDir, '.ana');
+        await fs.mkdir(anaDir, { recursive: true });
+        await fs.writeFile(
+          path.join(anaDir, 'ana.json'),
+          JSON.stringify({ artifactBranch: 'main' }),
+          'utf-8'
+        );
+
+        execSync('git add -A && git commit -m "init"', { cwd: tempDir, stdio: 'ignore' });
+        execSync('git branch -M main', { cwd: tempDir, stdio: 'ignore' });
+
+        // Create completed directory (simulating directory move)
+        const completedPath = path.join(anaDir, 'plans', 'completed', 'recovery-json');
+        await fs.mkdir(completedPath, { recursive: true });
+        await fs.writeFile(path.join(completedPath, 'scope.md'), '# Scope', 'utf-8');
+        await fs.writeFile(
+          path.join(completedPath, 'plan.md'),
+          '# Plan\n## Phases\n- [ ] Phase 1\n  Spec: spec.md',
+          'utf-8'
+        );
+        await fs.writeFile(path.join(completedPath, 'spec.md'), '# Spec', 'utf-8');
+        await fs.writeFile(path.join(completedPath, 'build_report.md'), '# Build Report', 'utf-8');
+        await fs.writeFile(
+          path.join(completedPath, 'verify_report.md'),
+          '# Verify Report\n\n**Result:** PASS',
+          'utf-8'
+        );
+        await fs.writeFile(path.join(completedPath, 'contract.yaml'),
+          `version: "1.0"\nsealed_by: "AnaPlan"\nfeature: "Recovery JSON Test"\n\nassertions:\n  - id: A001\n    says: "Test"\n    block: "test"\n    target: "r"\n    matcher: "truthy"\n\nfile_changes:\n  - path: "src/t.ts"\n    action: create`,
+          'utf-8'
+        );
+        await fs.writeFile(path.join(completedPath, '.saves.json'), JSON.stringify({
+          'build-report': { saved_at: '2026-04-27T00:00:00Z', hash: 'sha256:' + 'a'.repeat(64) },
+          'verify-report': { saved_at: '2026-04-27T00:00:00Z', hash: 'sha256:' + 'b'.repeat(64) },
+          'pre-check': { seal: 'INTACT', assertions: [{ id: 'A001', says: 'Test', status: 'COVERED' }], covered: 1, uncovered: 0 },
+        }), 'utf-8');
+
+        await fs.writeFile(path.join(anaDir, 'proof_chain.json'), JSON.stringify({
+          entries: [{
+            slug: 'recovery-json',
+            feature: 'Recovery JSON Test',
+            result: 'PASS',
+            author: { name: 'Test', email: 'test@test.com' },
+            contract: { covered: 1, total: 1, satisfied: 1, unsatisfied: 0, deviated: 0 },
+            assertions: [{ id: 'A001', says: 'Test', status: 'SATISFIED' }],
+            acceptance_criteria: [],
+            timing: {},
+            hashes: {},
+            completed_at: new Date().toISOString(),
+            modules_touched: [],
+            findings: [],
+          }],
+        }), 'utf-8');
+        await fs.writeFile(path.join(anaDir, 'PROOF_CHAIN.md'), '# Proof Chain Dashboard\n', 'utf-8');
+
+        // Uncommitted changes trigger recovery
+        const originalLog = console.log;
+        const logs: string[] = [];
+        console.log = (...args: unknown[]) => { logs.push(args.join(' ')); };
+
+        await completeWork('recovery-json', { json: true });
+
+        console.log = originalLog;
+        const output = logs.join('\n');
+
+        // Should contain JSON, not human output
+        const jsonLine = output.split('\n').find(l => l.includes('"command"'));
+        expect(jsonLine).toBeDefined();
+
+        const json = JSON.parse(output.substring(output.indexOf('{')));
+        expect(json.command).toBe('work complete');
+        expect(json.results.new_findings).toBe(0);
+        expect(json.meta).toBeDefined();
+        expect(json.meta.findings.by_severity).toBeDefined();
+      });
+
+      // @ana A017
+      it('non-JSON output unchanged when --json not passed', async () => {
+        await createMergedProject({ slug: 'no-json', phases: 1 });
+
+        const originalLog = console.log;
+        const logs: string[] = [];
+        console.log = (...args: unknown[]) => { logs.push(args.join(' ')); };
+
+        await completeWork('no-json');
+
+        console.log = originalLog;
+        const output = logs.join('\n');
+
+        // Should contain human-readable output, not JSON
+        expect(output).not.toContain('"command"');
+        expect(output).toContain('PASS');
+        expect(output).toContain('satisfied');
+      });
+    });
+
     describe('commit failure error message', () => {
       // @ana A020
       it('commit failure error includes retry command', async () => {

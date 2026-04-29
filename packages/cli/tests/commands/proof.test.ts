@@ -303,6 +303,173 @@ describe('ana proof', () => {
     });
   });
 
+  // ─── Proof Card Findings Display Tests ─────────────────────────────
+
+  // @ana A018, A019
+  describe('displays findings with badges', () => {
+    it('shows severity and action badges on findings', async () => {
+      const entryWithFindings = {
+        ...sampleEntry,
+        findings: [
+          { id: 'C1', category: 'code', summary: 'Unvalidated user input', file: 'src/api.ts', anchor: null, severity: 'risk', suggested_action: 'promote' },
+          { id: 'C2', category: 'code', summary: 'Missing rate limit', file: 'src/api.ts', anchor: null, severity: 'debt', suggested_action: 'scope' },
+        ],
+        build_concerns: [],
+      };
+      await createProofChain([entryWithFindings]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['stripe-payments']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('[risk');
+      expect(stdout).toContain('promote]');
+      expect(stdout).toContain('[debt');
+      expect(stdout).toContain('Findings');
+    });
+  });
+
+  // @ana A020
+  describe('findings sorted by severity', () => {
+    it('shows risk before debt before observation', async () => {
+      const entryWithFindings = {
+        ...sampleEntry,
+        findings: [
+          { id: 'C1', category: 'code', summary: 'Obs finding', file: null, anchor: null, severity: 'observation', suggested_action: 'monitor' },
+          { id: 'C2', category: 'code', summary: 'Risk finding', file: null, anchor: null, severity: 'risk', suggested_action: 'promote' },
+          { id: 'C3', category: 'code', summary: 'Debt finding', file: null, anchor: null, severity: 'debt', suggested_action: 'scope' },
+        ],
+        build_concerns: [],
+      };
+      await createProofChain([entryWithFindings]);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['stripe-payments']);
+      const lines = stdout.split('\n');
+      const riskIdx = lines.findIndex((l: string) => l.includes('Risk finding'));
+      const debtIdx = lines.findIndex((l: string) => l.includes('Debt finding'));
+      const obsIdx = lines.findIndex((l: string) => l.includes('Obs finding'));
+      expect(riskIdx).toBeLessThan(debtIdx);
+      expect(debtIdx).toBeLessThan(obsIdx);
+    });
+  });
+
+  // @ana A021
+  describe('findings truncated at 5', () => {
+    it('shows top 5 with truncation message', async () => {
+      const findings = Array.from({ length: 7 }, (_, i) => ({
+        id: `C${i + 1}`,
+        category: 'code' as const,
+        summary: `Finding number ${i + 1}`,
+        file: null,
+        anchor: null,
+        severity: 'observation' as const,
+        suggested_action: 'monitor' as const,
+      }));
+      const entryWithFindings = {
+        ...sampleEntry,
+        findings,
+        build_concerns: [],
+      };
+      await createProofChain([entryWithFindings]);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['stripe-payments']);
+      expect(stdout).toContain('... and 2 more');
+    });
+
+    it('no truncation message when exactly 5 findings', async () => {
+      const findings = Array.from({ length: 5 }, (_, i) => ({
+        id: `C${i + 1}`,
+        category: 'code' as const,
+        summary: `Finding number ${i + 1}`,
+        file: null,
+        anchor: null,
+        severity: 'debt' as const,
+        suggested_action: 'scope' as const,
+      }));
+      const entryWithFindings = {
+        ...sampleEntry,
+        findings,
+        build_concerns: [],
+      };
+      await createProofChain([entryWithFindings]);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['stripe-payments']);
+      expect(stdout).not.toContain('... and');
+    });
+  });
+
+  // @ana A022, A023
+  describe('build concerns displayed with badges', () => {
+    it('shows Build Concerns section with badges', async () => {
+      const entryWithConcerns = {
+        ...sampleEntry,
+        findings: [],
+        build_concerns: [
+          { summary: 'Test coverage below threshold', file: 'src/payments.ts', severity: 'debt', suggested_action: 'scope' },
+          { summary: 'Hardcoded timeout', file: 'src/retry.ts', severity: 'observation', suggested_action: 'accept' },
+        ],
+      };
+      await createProofChain([entryWithConcerns]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['stripe-payments']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('Build Concerns');
+      expect(stdout).toContain('[debt');
+      expect(stdout).toContain('[observation');
+    });
+  });
+
+  // @ana A024, A025
+  describe('pre-Phase B entries degrade gracefully', () => {
+    it('shows findings without badges when severity/action missing', async () => {
+      const entryWithLegacy = {
+        ...sampleEntry,
+        findings: [
+          { id: 'C1', category: 'code', summary: 'Legacy finding without classification', file: null, anchor: null },
+        ],
+        build_concerns: [],
+      };
+      await createProofChain([entryWithLegacy]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['stripe-payments']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('Legacy finding without classification');
+      expect(stdout).not.toContain('undefined');
+    });
+  });
+
+  // @ana A026
+  describe('empty findings omit section', () => {
+    it('does not show Findings header when no findings', async () => {
+      // sampleEntry has no findings field by default
+      await createProofChain([sampleEntry]);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['stripe-payments']);
+      expect(stdout).not.toContain('Findings');
+    });
+
+    it('does not show Build Concerns header when no concerns', async () => {
+      const entryNoConcerns = {
+        ...sampleEntry,
+        findings: [
+          { id: 'C1', category: 'code', summary: 'A finding', file: null, anchor: null, severity: 'risk', suggested_action: 'scope' },
+        ],
+        build_concerns: [],
+      };
+      await createProofChain([entryNoConcerns]);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['stripe-payments']);
+      expect(stdout).toContain('Findings');
+      expect(stdout).not.toContain('Build Concerns');
+    });
+  });
+
   // ─── Context Subcommand Tests ──────────────────────────────────────
 
   /**

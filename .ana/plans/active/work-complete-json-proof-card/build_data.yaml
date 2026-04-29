@@ -1,0 +1,14 @@
+schema: 1
+concerns:
+  - summary: "Main path re-reads proof_chain.json because writeProofChain returns stats not chain object"
+    file: "packages/cli/src/commands/work.ts"
+    severity: debt
+    suggested_action: monitor
+  - summary: "Recovery path leaks non-JSON 'Recovering...' text to stdout before JSON envelope when --json is passed"
+    file: "packages/cli/src/commands/work.ts"
+    severity: risk
+    suggested_action: scope
+  - summary: "SEVERITY_ORDER map duplicated in findings and build concerns blocks"
+    file: "packages/cli/src/commands/proof.ts"
+    severity: debt
+    suggested_action: monitor

@@ -1,0 +1,33 @@
+schema: 1
+findings:
+  - category: code
+    summary: "Recovery path console.log on line 1078 leaks non-JSON text to stdout before JSON envelope — CI consumers doing JSON.parse(stdout) will fail"
+    file: "packages/cli/src/commands/work.ts"
+    line: 1078
+    severity: risk
+    suggested_action: scope
+  - category: code
+    summary: "SEVERITY_ORDER lookup duplicated identically in Findings block and Build Concerns block — extract to module-level constant"
+    file: "packages/cli/src/commands/proof.ts"
+    line: 147
+    severity: debt
+    suggested_action: monitor
+  - category: test
+    summary: "A001 test reads source code to check --json registration instead of behavioral test — same anti-pattern flagged in proof context for A020"
+    file: "packages/cli/tests/commands/work.test.ts"
+    line: 1981
+    severity: debt
+    suggested_action: accept
+  - category: code
+    summary: "Main path re-reads proof_chain.json from disk for computeChainHealth after writeProofChain just wrote it — matches known build concern about nudge re-read pattern"
+    file: "packages/cli/src/commands/work.ts"
+    line: 1318
+    severity: observation
+    suggested_action: monitor
+    related_assertions: ["A012", "A013"]
+  - category: test
+    summary: "Recovery path JSON test uses output.indexOf('{') to skip non-JSON output — fragile parsing that masks the stdout pollution issue"
+    file: "packages/cli/tests/commands/work.test.ts"
+    line: 2145
+    severity: debt
+    suggested_action: scope
