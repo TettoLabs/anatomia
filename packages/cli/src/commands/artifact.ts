@@ -520,7 +520,8 @@ interface BuildDataSchema {
  * Valid finding categories for verify_data.yaml
  */
 const VALID_FINDING_CATEGORIES = ['code', 'test', 'upstream'];
-const VALID_FINDING_SEVERITIES = ['blocker', 'observation', 'note'];
+const VALID_FINDING_SEVERITIES = ['risk', 'debt', 'observation'];
+const VALID_FINDING_ACTIONS = ['promote', 'scope', 'monitor', 'accept'];
 
 /**
  * Validate verify_data.yaml companion format.
@@ -586,11 +587,19 @@ export function validateVerifyDataFormat(filePath: string, projectRoot?: string)
         errors.push(`${prefix}: missing "summary" field`);
       }
 
-      // severity optional, but if present must be valid
-      if (sev !== undefined) {
-        if (typeof sev !== 'string' || !VALID_FINDING_SEVERITIES.includes(sev)) {
-          errors.push(`${prefix}: invalid severity "${sev}" (valid: ${VALID_FINDING_SEVERITIES.join(', ')})`);
-        }
+      // severity required, must be valid
+      if (sev === undefined || sev === null) {
+        errors.push(`${prefix}: missing "severity" field`);
+      } else if (typeof sev !== 'string' || !VALID_FINDING_SEVERITIES.includes(sev)) {
+        errors.push(`${prefix}: invalid severity "${sev}" (valid: ${VALID_FINDING_SEVERITIES.join(', ')})`);
+      }
+
+      // suggested_action required, must be valid
+      const action = finding['suggested_action'];
+      if (action === undefined || action === null) {
+        errors.push(`${prefix}: missing "suggested_action" field`);
+      } else if (typeof action !== 'string' || !VALID_FINDING_ACTIONS.includes(action)) {
+        errors.push(`${prefix}: invalid suggested_action "${action}" (valid: ${VALID_FINDING_ACTIONS.join(', ')})`);
       }
 
       // related_assertions optional, but if present must be array of strings
@@ -662,6 +671,22 @@ export function validateBuildDataFormat(filePath: string): { errors: string[]; w
 
       if (!summary || typeof summary !== 'string' || !summary.trim()) {
         errors.push(`${prefix}: missing "summary" field`);
+      }
+
+      // severity required, must be valid
+      const sev = concern['severity'];
+      if (sev === undefined || sev === null) {
+        errors.push(`${prefix}: missing "severity" field`);
+      } else if (typeof sev !== 'string' || !VALID_FINDING_SEVERITIES.includes(sev)) {
+        errors.push(`${prefix}: invalid severity "${sev}" (valid: ${VALID_FINDING_SEVERITIES.join(', ')})`);
+      }
+
+      // suggested_action required, must be valid
+      const action = concern['suggested_action'];
+      if (action === undefined || action === null) {
+        errors.push(`${prefix}: missing "suggested_action" field`);
+      } else if (typeof action !== 'string' || !VALID_FINDING_ACTIONS.includes(action)) {
+        errors.push(`${prefix}: invalid suggested_action "${action}" (valid: ${VALID_FINDING_ACTIONS.join(', ')})`);
       }
     }
   }
