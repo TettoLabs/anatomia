@@ -392,11 +392,18 @@ schema: 1
 concerns:
   - summary: "extractFileRefs cannot parse dotted test filenames"
     file: "packages/cli/src/utils/proofSummary.ts"
+    severity: debt
+    suggested_action: scope
   - summary: "Census dialect as sentinel entry is a workaround"
+    severity: observation
+    suggested_action: monitor
 ```
 
-**Required fields:** `summary` (non-empty string)
+**Required fields:** `summary` (non-empty string), `severity` (risk/debt/observation), `suggested_action` (promote/scope/monitor/accept)
 **Optional fields:** `file` (repo-relative path)
+
+**Severity** classifies impact: `risk` = could hurt you, `debt` = making the codebase worse, `observation` = information worth recording.
+**Suggested action** recommends what to do: `promote` = encode as a skill rule, `scope` = needs engineering work, `monitor` = watch no action now, `accept` = acknowledged can be closed.
 
 If there are genuinely zero open issues, create the file with an empty array: `schema: 1\nconcerns: []`
 
