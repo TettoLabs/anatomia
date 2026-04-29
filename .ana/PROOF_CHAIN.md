@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-26 runs · 63 active · 25 lessons · 0 promoted · 39 closed
+27 runs · 67 active · 26 lessons · 0 promoted · 39 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 63 total)
+## Active Findings (30 shown of 67 total)
 
 ### packages/cli/src/commands/artifact.ts
 
@@ -29,12 +29,16 @@
 - **code:** Shell injection in close commit message — user-controlled --reason interpolated into shell command — *Close the Loop*
 - **code:** Anchor stripping regex false-positives — aggressive strip reduces anchors to common words — *Close the Loop*
 
+### packages/cli/src/commands/verify.ts
+
+- **code:** Comment filter only matches // and # — block comments (/* @ana A001 */) in added lines are silently ignored — *Diff-Scoped Tag Search*
+- **code:** No size guard on git diff output — very large diffs loaded entirely into memory before parsing — *Diff-Scoped Tag Search*
+
 ### packages/cli/src/commands/work.ts
 
 - **code:** Severity migration does not handle unexpected old values beyond blocker/note — if a future writer introduces an unknown severity value (e.g. from a malformed manual edit), the migration loop silently ignores it. Not blocking since validation prevents new bad values, but the migration is only protective for known old values. — *Finding Enrichment Schema*
 - **code:** Recovery path counts total findings via loop but main path uses stats.findings — two different counting mechanisms for the same display. If totalFindings computation in writeProofChain diverges from the simple loop, recovery output could drift. — *Harden git commit calls*
 - **code:** Unnecessary disk re-read for nudge human closure check — *Close the Loop*
-- **code:** Recovery catch swallows git status failure: `packages/cli/src/commands/work.ts:1080` — if `git status --porcelain .ana/` throws (e.g., corrupt `.git` directory), the catch silently falls through to the "already completed" message. This is unlikely but means a corrupted git state would report "already completed" instead of a diagnostic error. The spec doesn't cover this edge case, so it's not a FAIL — but it's a sharp edge. — *Fix artifact save bypass, cwd bug, and work complete crash recovery*
 
 ### packages/cli/src/utils/proofSummary.ts
 
@@ -44,7 +48,6 @@
 - **code:** Cache never invalidated — stale if files created between resolveFindingPaths calls within one writeProofChain invocation — *Clean Ground for Foundation 3*
 - **code:** PreCheckData interface retains seal_commit field despite seal_commit removal from ProofChainEntry and ProofSummary. Intentional — reads old .saves.json — but inconsistent with the removal theme. — *Structured Findings Companion*
 - **code:** getProofContext uses conditional property assignment (if finding.line !== undefined) rather than always-present optional fields. Result object shape varies — fine for TypeScript consumers but JSON shape is polymorphic. — *Structured Findings Companion*
-- **code:** Dashboard duplicates Active Issues logic: `packages/cli/src/utils/proofSummary.ts:566-616` — reimplements the collection, filtering, capping, and file-grouping from `generateActiveIssuesMarkdown` (lines 385-473). The format differs (### vs ## headings, no truncation), but extracting shared helpers for the filtering and grouping would reduce the ~50 lines of duplication. — *Findings Lifecycle Foundation*
 
 ### packages/cli/tests/commands/artifact.test.ts
 
@@ -56,6 +59,11 @@
 - **test:** createAuditChain helper never generates 'debt' severity — badge display for [debt · X] is untested in human-readable audit output — *Finding Enrichment Schema*
 - **test:** A032 test uses toBeDefined() not a specific string value — passes even if suggested_action is empty string or unexpected value — *Finding Enrichment Schema*
 
+### packages/cli/tests/commands/verify.test.ts
+
+- **test:** Four pre-existing @ana tags mislabeled for this contract's IDs — A005 on fallback test, A006 on UNVERIFIABLE test, A010 on formatted output test, A011 on UNVERIFIABLE message test — *Diff-Scoped Tag Search*
+- **test:** Substantial test setup duplication across 8 integration tests — each creates git repo, contract, hash, saves from scratch — *Diff-Scoped Tag Search*
+
 ### packages/cli/tests/commands/work.test.ts
 
 - **test:** Severity migration tests (A019, A020, A021) don't have dedicated tagged tests in the changed test files — they're covered indirectly through the backfill loop in work.test.ts existing tests and by type-level evidence. No test explicitly creates a finding with severity 'blocker', runs the migration loop, and asserts severity is now 'risk'. The behavior is exercised but not directly asserted. — *Finding Enrichment Schema*
@@ -63,8 +71,6 @@
 - **test:** @ana tag collision: A001-A005 tags in work.test.ts match previous features' contracts, not this one. Pre-check reports COVERED for spawnSync assertions but no tagged test actually verifies spawnSync usage. Spec says no new unit tests needed; source verification confirms correctness. — *Harden git commit calls*
 - **test:** A011 assertion checks one value not cleared state: `packages/cli/tests/commands/work.test.ts:1447` — asserts `closed_reason` is not `'superseded by new-C1'` but doesn't assert `closed_at` or `closed_by` are also cleared. The test proves the specific contract assertion (matcher: `not_equals`, value: `'superseded by new-C1'`) but a stronger test would verify all three closure fields are absent. — *Fix Proof Chain Mechanical Accuracy*
 - **test:** A020 uses source-code reading instead of behavioral test: `packages/cli/tests/commands/work.test.ts:1736` — reads `work.ts` source and asserts the retry string exists. This proves the string is in the code but not that it appears in the error output when a commit actually fails. A behavioral test would mock `execSync` to throw on `git commit` and capture stderr. Low risk — the error path is straightforward (`catch` → `console.error` → `process.exit(1)`), but a source-reading test survives refactoring that breaks the behavior. — *Fix artifact save bypass, cwd bug, and work complete crash recovery*
-- **test:** A015/A016 edge cases not behaviorally exercised: `packages/cli/tests/commands/work.test.ts:1278` — the supersession test proves the core mechanism but doesn't include an unresolved-basename finding (to prove A015's skip) or two same-entry findings with matching file+category (to prove A016's guard). The code guards are trivial and correct by inspection, but the test coverage gap means a regression in those guards wouldn't be caught. — *Findings Lifecycle Foundation*
-- **test:** A024 warning test doesn't trigger the warning: `packages/cli/tests/commands/work.test.ts:1372` — the test is tagged `@ana A024` but only asserts the entry has `result === 'PASS'`. The UNKNOWN warning path is unreachable through `completeWork` because of pre-validation. A direct `writeProofChain` test with an UNKNOWN-result proof object would exercise the actual warning. — *Findings Lifecycle Foundation*
 
 ### packages/cli/tests/engine/detectors/readme.test.ts
 

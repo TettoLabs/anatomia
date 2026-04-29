@@ -274,7 +274,7 @@
           "anchor": "BROWSER_FRAMEWORKS.has(d)",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-29T15:47:34.808Z",
+          "closed_at": "2026-04-29T17:58:27.306Z",
           "closed_by": "mechanical"
         },
         {
@@ -285,7 +285,7 @@
           "anchor": "getFrameworkDisplayName()",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-29T15:47:34.808Z",
+          "closed_at": "2026-04-29T17:58:27.306Z",
           "closed_by": "mechanical"
         },
         {
@@ -296,7 +296,7 @@
           "anchor": "ProjectKindResult",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-29T15:47:34.808Z",
+          "closed_at": "2026-04-29T17:58:27.306Z",
           "closed_by": "mechanical"
         },
         {
@@ -315,7 +315,7 @@
           "anchor": "not.toContain('node:fs')",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-29T15:47:34.810Z",
+          "closed_at": "2026-04-29T17:58:27.308Z",
           "closed_by": "mechanical"
         },
         {
@@ -2876,7 +2876,7 @@
           "id": "seal-hash-simplification-C3",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-29T15:47:34.814Z",
+          "closed_at": "2026-04-29T17:58:27.309Z",
           "closed_by": "mechanical"
         },
         {
@@ -5446,6 +5446,210 @@
           "file": "packages/cli/src/commands/proof.ts",
           "severity": "observation",
           "suggested_action": "monitor"
+        }
+      ]
+    },
+    {
+      "slug": "diff-scoped-tag-search",
+      "feature": "Diff-Scoped Tag Search",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 17,
+        "covered": 17,
+        "uncovered": 0,
+        "satisfied": 17,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Scoped search uses git diff output instead of reading file contents",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "Only added lines from the diff are searched for tags",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Deleted lines in the diff are not searched",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "Only comment lines are searched for tags",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "String literals containing @ana tags do not produce false matches",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "Old tags from prior features do not produce false covered results",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "New tags added on the feature branch are correctly detected",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "Tags in newly created test files are detected",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "Assertions without matching tags report uncovered",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "Test fixture strings with @ana inside them do not count as coverage",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "Out-of-scope tags are still detected via the global fallback",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "Pre-check still works when git merge-base is unavailable",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "The diff parser correctly extracts file paths from diff headers",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "The diff parser handles multiple files in a single diff",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "The diff parser skips diff header lines that start with plus signs",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "The diff parser handles diffs with only deletions",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A017",
+          "says": "The diff parser includes Python-style hash comments",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 12,
+        "met": 12
+      },
+      "timing": {
+        "total_minutes": 21,
+        "think": 8,
+        "plan": 8,
+        "build": 6,
+        "verify": 7
+      },
+      "hashes": {
+        "scope": "sha256:2b365e69f9ce2da054df5c64294c5386f5a24561f6975f75647de19468aa8176",
+        "contract": "sha256:37cabad3bf6dc7d7830bec8f746745ec31e9c6ee111d51900e5ec26a361661b4",
+        "plan": "sha256:94ecd908c815265a872e30d85f5e053dbaa790cdf182e713a3ceb9388dcd659c",
+        "spec": "sha256:3c6c413f604184c263fd4df75ef1140c04d7a3fad1fb1786ffa27fd68b93935a",
+        "build-report": "sha256:5382312bf69bfedf380ec498706b41f20ee257f82c3d36f7d7597a7a6183588a",
+        "build-data": "sha256:fe0b6c289ea896606efd09acfaf6b8a934e19a55cc90d8f9645b98bc3700111a",
+        "verify-report": "sha256:6a14b188f2ade424f22214c6e164071df3e67b75761103e60ed548aad0c4fd0a",
+        "verify-data": "sha256:f5530685ca069726bf1f876ee61d068217565a80d472c5367a3a3778d507e263"
+      },
+      "completed_at": "2026-04-29T17:58:27.285Z",
+      "modules_touched": [
+        "packages/cli/src/commands/verify.ts",
+        "packages/cli/tests/commands/verify.test.ts"
+      ],
+      "scope_summary": "Tag collision (INFRA-064) is the most recurring finding in the proof system — 7 instances across 7 runs. Every contract generates `A001`, `A002`, etc. After 25+ pipeline runs, test files accumulate `@ana A001` tags from dozens of different contracts. Pre-check matches any of them, producing false COVEREDs that degrade the signal.",
+      "findings": [
+        {
+          "category": "upstream",
+          "summary": "Contract A016 value imprecise — says parsedMap.size equals 0 but implementation returns size 1 (entry with empty array) for deletion-only diffs",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "related_assertions": [
+            "A016"
+          ],
+          "id": "diff-scoped-tag-search-C1",
+          "status": "lesson"
+        },
+        {
+          "category": "test",
+          "summary": "Four pre-existing @ana tags mislabeled for this contract's IDs — A005 on fallback test, A006 on UNVERIFIABLE test, A010 on formatted output test, A011 on UNVERIFIABLE message test",
+          "file": "packages/cli/tests/commands/verify.test.ts",
+          "anchor": null,
+          "severity": "debt",
+          "suggested_action": "accept",
+          "id": "diff-scoped-tag-search-C2",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Comment filter only matches // and # — block comments (/* @ana A001 */) in added lines are silently ignored",
+          "file": "packages/cli/src/commands/verify.ts",
+          "anchor": null,
+          "line": 91,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "diff-scoped-tag-search-C3",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "No size guard on git diff output — very large diffs loaded entirely into memory before parsing",
+          "file": "packages/cli/src/commands/verify.ts",
+          "anchor": null,
+          "line": 189,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "diff-scoped-tag-search-C4",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "Substantial test setup duplication across 8 integration tests — each creates git repo, contract, hash, saves from scratch",
+          "file": "packages/cli/tests/commands/verify.test.ts",
+          "anchor": null,
+          "severity": "debt",
+          "suggested_action": "scope",
+          "id": "diff-scoped-tag-search-C5",
+          "status": "active"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "parseDiffAddedCommentLines assumes b/ path always present in diff --git header",
+          "file": "packages/cli/src/commands/verify.ts",
+          "severity": "observation",
+          "suggested_action": "monitor"
+        },
+        {
+          "summary": "Hash comment filter (#) may match non-comment lines in some languages (e.g. Ruby shebang, Markdown headings)",
+          "file": "packages/cli/src/commands/verify.ts",
+          "severity": "observation",
+          "suggested_action": "accept"
         }
       ]
     }
