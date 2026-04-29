@@ -29,5 +29,97 @@
     "packages/cli/src/commands/work.ts",
     "packages/cli/src/types/proof.ts",
     "packages/cli/tests/commands/work.test.ts"
-  ]
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:1a76ad4a8862bd27d22e6dea81a0b34bf65f794af25f86f405691bb55f73416b",
+    "assertions": [
+      {
+        "id": "A001",
+        "says": "Proof close commits use safe argument passing instead of shell interpolation",
+        "status": "COVERED"
+      },
+      {
+        "id": "A002",
+        "says": "Artifact save commits use safe argument passing instead of shell interpolation",
+        "status": "COVERED"
+      },
+      {
+        "id": "A003",
+        "says": "Work complete commits use safe argument passing instead of shell interpolation",
+        "status": "COVERED"
+      },
+      {
+        "id": "A004",
+        "says": "Commit messages with special characters and newlines produce correct git commits",
+        "status": "COVERED"
+      },
+      {
+        "id": "A005",
+        "says": "Failed commits still show error messages and exit the process",
+        "status": "COVERED"
+      },
+      {
+        "id": "A006",
+        "says": "Proof chain stats include the count of new findings from the latest run",
+        "status": "COVERED"
+      },
+      {
+        "id": "A007",
+        "says": "New findings count comes from the current entry's findings",
+        "status": "COVERED"
+      },
+      {
+        "id": "A008",
+        "says": "Completion output shows satisfied count without the word covered",
+        "status": "COVERED"
+      },
+      {
+        "id": "A009",
+        "says": "Completion output shows the new satisfied-only contract format",
+        "status": "COVERED"
+      },
+      {
+        "id": "A010",
+        "says": "Completion output shows finding count with delta when new findings exist",
+        "status": "COVERED"
+      },
+      {
+        "id": "A011",
+        "says": "Completion output omits delta when no new findings were added",
+        "status": "COVERED"
+      },
+      {
+        "id": "A012",
+        "says": "The nudge recommendation is completely removed from completion output",
+        "status": "COVERED"
+      },
+      {
+        "id": "A013",
+        "says": "The maintenance statistics line is removed from completion output",
+        "status": "COVERED"
+      },
+      {
+        "id": "A014",
+        "says": "Chain output shows total finding count instead of only active findings",
+        "status": "COVERED"
+      },
+      {
+        "id": "A015",
+        "says": "All existing tests continue to pass after the changes",
+        "status": "COVERED"
+      }
+    ],
+    "covered": 15,
+    "uncovered": 0,
+    "run_at": "2026-04-29T05:09:26.627Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-04-29T05:09:26.656Z",
+    "hash": "sha256:c8c2a96d31c39d08b1af13865702dcd1bbb574b8d4506e5af712fb608b6f351a"
+  },
+  "verify-data": {
+    "saved_at": "2026-04-29T05:09:26.656Z",
+    "hash": "sha256:44d39d9e4db581903f88ecca71404e7b522dddf74575a58bc6702dd6cffbe92d"
+  }
 }
