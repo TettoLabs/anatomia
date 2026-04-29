@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-23 runs · 57 active · 21 lessons · 0 promoted · 31 closed
+24 runs · 60 active · 22 lessons · 0 promoted · 31 closed
 
 ## Hot Modules
 
@@ -9,14 +9,14 @@
 | packages/cli/src/utils/proofSummary.ts | 10 | 6 |
 | packages/cli/tests/utils/proofSummary.test.ts | 8 | 4 |
 | packages/cli/tests/commands/work.test.ts | 5 | 4 |
+| packages/cli/src/commands/proof.ts | 4 | 3 |
 | packages/cli/tests/commands/artifact.test.ts | 3 | 2 |
-| packages/cli/src/engine/scan-engine.ts | 2 | 2 |
 
 ## Promoted Rules
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 57 total)
+## Active Findings (30 shown of 60 total)
 
 ### packages/cli/src/commands/artifact.ts
 
@@ -25,6 +25,8 @@
 
 ### packages/cli/src/commands/proof.ts
 
+- **code:** Shell injection in close commit message — user-controlled --reason interpolated into shell command — *Close the Loop*
+- **code:** Anchor stripping regex false-positives — aggressive strip reduces anchors to common words — *Close the Loop*
 - **test:** No dedicated test for `formatContextResult` truncation: `src/commands/proof.ts:362-367` — The truncation logic is tagged `@ana A020, A021` in source code, but no test file exercises this code path. Pre-check reports COVERED due to tag collision with other features' A020/A021 tags. The behavior is correct (verified by code review and live `ana proof context` output), but a regression in this function would not be caught by automated tests. A test in `proof.test.ts` that creates a proof chain entry with a >250-char callout summary and asserts the `proof context` output is truncated would close this gap. — *Clear the Deck — foundation fixes from proof chain audit*
 
 ### packages/cli/src/commands/verify.ts
@@ -33,6 +35,7 @@
 
 ### packages/cli/src/commands/work.ts
 
+- **code:** Unnecessary disk re-read for nudge human closure check — *Close the Loop*
 - **code:** `delete` instead of explicit `undefined` in reopen loop: `packages/cli/src/commands/work.ts:887-889` — Spec says "Don't use `delete` — set explicitly so the JSON serialization is clean." Builder used `delete`. Functionally identical for `JSON.stringify` output (both omit the property), but deviates from spec guidance. Not a blocker — the behavior is correct. — *Fix Proof Chain Mechanical Accuracy*
 - **code:** Recovery catch swallows git status failure: `packages/cli/src/commands/work.ts:1080` — if `git status --porcelain .ana/` throws (e.g., corrupt `.git` directory), the catch silently falls through to the "already completed" message. This is unlikely but means a corrupted git state would report "already completed" instead of a diagnostic error. The spec doesn't cover this edge case, so it's not a FAIL — but it's a sharp edge. — *Fix artifact save bypass, cwd bug, and work complete crash recovery*
 
@@ -49,7 +52,6 @@
 - **code:** Redundant status filter in Hot Modules: `packages/cli/src/utils/proofSummary.ts:535-536` — double-checks `finding.status` both as truthy and not-undefined, then re-checks on the next line. A single `if (finding.status !== 'active' && finding.status !== undefined) continue;` would be clearer. — *Findings Lifecycle Foundation*
 - **code:** Dashboard duplicates Active Issues logic: `packages/cli/src/utils/proofSummary.ts:566-616` — reimplements the collection, filtering, capping, and file-grouping from `generateActiveIssuesMarkdown` (lines 385-473). The format differs (### vs ## headings, no truncation), but extracting shared helpers for the filtering and grouping would reduce the ~50 lines of duplication. — *Findings Lifecycle Foundation*
 - **code:** globSync exception if projectRoot is invalid: `packages/cli/src/utils/proofSummary.ts:345` — If `projectRoot` points to a non-existent directory, `globSync` will throw. The callers in `work.ts` pass `projectRoot` from `writeProofChain`'s parameter, which comes from `findProjectRoot()` — a validated path. But `resolveCalloutPaths` doesn't validate its own input. Consistent with the existing pattern (no defensive validation in utility functions), but worth knowing. — *Clear the Deck Phase 2*
-- **code:** Root-level module paths won't match: `proofSummary.ts:336` — `m.endsWith('/' + basename)` requires a `/` prefix. A module at the repository root (e.g., bare `census.ts` in `modules_touched`) wouldn't match. Dormant — `git diff` always produces paths with directory segments. If `modules_touched` ever comes from a source that produces bare filenames, resolution silently skips them. — *Proof context file query*
 
 ### packages/cli/tests/commands/artifact.test.ts
 
@@ -68,11 +70,6 @@
 ### packages/cli/tests/engine/detectors/readme.test.ts
 
 - **test:** A018/A019/A020 tag collision with other contracts: The pre-check reports these as COVERED, but the matched tags belong to tests from other features (readme.test.ts, confirmation.test.ts, scanProject.test.ts, proof.test.ts). No NEW tagged tests were written for this contract's template assertions. The existing `agent-proof-context.test.ts:66-75` (`@ana A008`) does verify template-dogfood sync byte-for-byte, and the template content was verified directly. Functional coverage exists; formal tag coverage for this contract does not. — *Fix Proof Chain Mechanical Accuracy*
-
-### packages/cli/tests/templates/agent-proof-context.test.ts
-
-- **test:** A001/A004 use whole-file contains, weaker than section-specific extraction: `packages/cli/tests/templates/agent-proof-context.test.ts:14,43` — These tests would still pass if someone moved `ana proof context` to the wrong section of the file. The contract targets (`ana.md.content`, `ana-verify.md.content`) are whole-file scoped, so the test is technically correct. But A002/A003 demonstrate the stronger pattern (section extraction before assertion). Future contract assertions for section-specific content should use section-specific targets. — *Replace PROOF_CHAIN.md reads with targeted proof context queries*
-- **test:** A008 tests all 4 dogfood files in a single `it` block: `agent-proof-context.test.ts:67-75` — If the first file comparison fails, the loop short-circuits and the remaining 3 aren't checked. The error message includes the filename (`${file} dogfood should match template`), which mitigates debugging difficulty. Separate `it` blocks per file would give complete coverage reporting, but the contract only has one assertion (A008) covering all 4, making a single test reasonable. — *Replace PROOF_CHAIN.md reads with targeted proof context queries*
 
 ### packages/cli/tests/utils/proofSummary.test.ts
 
