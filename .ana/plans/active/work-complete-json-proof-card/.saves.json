@@ -28,5 +28,157 @@
     "packages/cli/src/commands/work.ts",
     "packages/cli/tests/commands/proof.test.ts",
     "packages/cli/tests/commands/work.test.ts"
-  ]
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:a4e10906e29ae3ad08a92f75d34fb634554de96d6be1c954e24077a46a5921dd",
+    "assertions": [
+      {
+        "id": "A001",
+        "says": "Work complete accepts a JSON output flag",
+        "status": "COVERED"
+      },
+      {
+        "id": "A002",
+        "says": "Completing work with JSON flag produces a structured envelope",
+        "status": "COVERED"
+      },
+      {
+        "id": "A003",
+        "says": "JSON output includes a timestamp for audit trails",
+        "status": "COVERED"
+      },
+      {
+        "id": "A004",
+        "says": "JSON output includes results with completion summary",
+        "status": "COVERED"
+      },
+      {
+        "id": "A005",
+        "says": "JSON output includes chain health metadata",
+        "status": "COVERED"
+      },
+      {
+        "id": "A006",
+        "says": "JSON results include the work item slug",
+        "status": "COVERED"
+      },
+      {
+        "id": "A007",
+        "says": "JSON results include the feature name",
+        "status": "COVERED"
+      },
+      {
+        "id": "A008",
+        "says": "JSON results include the verification result",
+        "status": "COVERED"
+      },
+      {
+        "id": "A009",
+        "says": "JSON results include contract satisfaction counts",
+        "status": "COVERED"
+      },
+      {
+        "id": "A010",
+        "says": "JSON results include new findings count",
+        "status": "COVERED"
+      },
+      {
+        "id": "A011",
+        "says": "JSON results include rejection cycle count",
+        "status": "COVERED"
+      },
+      {
+        "id": "A012",
+        "says": "Chain health metadata includes severity breakdowns from Phase B",
+        "status": "COVERED"
+      },
+      {
+        "id": "A013",
+        "says": "Chain health metadata includes action breakdowns from Phase B",
+        "status": "COVERED"
+      },
+      {
+        "id": "A014",
+        "says": "Recovery path produces the same JSON envelope as the main path",
+        "status": "COVERED"
+      },
+      {
+        "id": "A015",
+        "says": "Recovery path JSON includes chain health metadata",
+        "status": "COVERED"
+      },
+      {
+        "id": "A016",
+        "says": "Recovery path reports zero new findings since it replays a completed state",
+        "status": "COVERED"
+      },
+      {
+        "id": "A017",
+        "says": "Completing work without JSON flag produces the same console output as before",
+        "status": "COVERED"
+      },
+      {
+        "id": "A018",
+        "says": "Proof card shows findings with severity and action badges",
+        "status": "COVERED"
+      },
+      {
+        "id": "A019",
+        "says": "Proof card findings show the action in the badge",
+        "status": "COVERED"
+      },
+      {
+        "id": "A020",
+        "says": "Findings are sorted so risk items appear before debt and observation",
+        "status": "COVERED"
+      },
+      {
+        "id": "A021",
+        "says": "Only the top five findings are shown with a count of remaining",
+        "status": "COVERED"
+      },
+      {
+        "id": "A022",
+        "says": "Proof card shows build concerns with the same badge format",
+        "status": "COVERED"
+      },
+      {
+        "id": "A023",
+        "says": "Build concerns use severity and action badges",
+        "status": "COVERED"
+      },
+      {
+        "id": "A024",
+        "says": "Findings without severity display without crashing or showing undefined",
+        "status": "COVERED"
+      },
+      {
+        "id": "A025",
+        "says": "Findings without severity still show their summary text",
+        "status": "COVERED"
+      },
+      {
+        "id": "A026",
+        "says": "Proof card with no findings omits the Findings section entirely",
+        "status": "COVERED"
+      },
+      {
+        "id": "A027",
+        "says": "JSON contract object contains only the four expected fields",
+        "status": "COVERED"
+      }
+    ],
+    "covered": 27,
+    "uncovered": 0,
+    "run_at": "2026-04-29T18:12:49.482Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-04-29T18:12:49.510Z",
+    "hash": "sha256:b735548644024973e3794ba44534a88b46ffa17ff5ef51f3f45724867931f07a"
+  },
+  "verify-data": {
+    "saved_at": "2026-04-29T18:12:49.510Z",
+    "hash": "sha256:9098c367933e0f5deff1e3062de9caf53404a2da224a1b9cd951691a350e1a85"
+  }
 }
