@@ -1173,6 +1173,24 @@ describe('ana proof', () => {
     });
   });
 
+  // ─── Template Tests ─────────────────────────────────────────────────
+
+  // @ana A026
+  describe('template includes proof context subsection', () => {
+    it('Plan template has ### Proof Context between Pattern Extracts and Checkpoint Commands', async () => {
+      const templatePath = path.join(__dirname, '../../templates/.claude/agents/ana-plan.md');
+      const content = await fs.readFile(templatePath, 'utf-8');
+      expect(content).toContain('### Proof Context');
+
+      // Verify ordering: Pattern Extracts < Proof Context < Checkpoint Commands
+      const patternIdx = content.indexOf('### Pattern Extracts');
+      const proofIdx = content.indexOf('### Proof Context');
+      const checkpointIdx = content.indexOf('### Checkpoint Commands');
+      expect(patternIdx).toBeLessThan(proofIdx);
+      expect(proofIdx).toBeLessThan(checkpointIdx);
+    });
+  });
+
   // @ana A022, A023
   describe('existing commands use contract envelope', () => {
     it('list --json has 4-key envelope with meta', async () => {
