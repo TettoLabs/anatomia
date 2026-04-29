@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-24 runs · 59 active · 22 lessons · 0 promoted · 32 closed
+24 runs · 58 active · 22 lessons · 0 promoted · 33 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 59 total)
+## Active Findings (30 shown of 58 total)
 
 ### packages/cli/src/commands/artifact.ts
 
@@ -36,7 +36,6 @@
 ### packages/cli/src/commands/work.ts
 
 - **code:** Unnecessary disk re-read for nudge human closure check — *Close the Loop*
-- **code:** `delete` instead of explicit `undefined` in reopen loop: `packages/cli/src/commands/work.ts:887-889` — Spec says "Don't use `delete` — set explicitly so the JSON serialization is clean." Builder used `delete`. Functionally identical for `JSON.stringify` output (both omit the property), but deviates from spec guidance. Not a blocker — the behavior is correct. — *Fix Proof Chain Mechanical Accuracy*
 - **code:** Recovery catch swallows git status failure: `packages/cli/src/commands/work.ts:1080` — if `git status --porcelain .ana/` throws (e.g., corrupt `.git` directory), the catch silently falls through to the "already completed" message. This is unlikely but means a corrupted git state would report "already completed" instead of a diagnostic error. The spec doesn't cover this edge case, so it's not a FAIL — but it's a sharp edge. — *Fix artifact save bypass, cwd bug, and work complete crash recovery*
 
 ### packages/cli/src/types/contract.ts
@@ -73,6 +72,7 @@
 ### packages/cli/tests/templates/agent-proof-context.test.ts
 
 - **test:** A001/A004 use whole-file contains, weaker than section-specific extraction: `packages/cli/tests/templates/agent-proof-context.test.ts:14,43` — These tests would still pass if someone moved `ana proof context` to the wrong section of the file. The contract targets (`ana.md.content`, `ana-verify.md.content`) are whole-file scoped, so the test is technically correct. But A002/A003 demonstrate the stronger pattern (section extraction before assertion). Future contract assertions for section-specific content should use section-specific targets. — *Replace PROOF_CHAIN.md reads with targeted proof context queries*
+- **test:** A008 tests all 4 dogfood files in a single `it` block: `agent-proof-context.test.ts:67-75` — If the first file comparison fails, the loop short-circuits and the remaining 3 aren't checked. The error message includes the filename (`${file} dogfood should match template`), which mitigates debugging difficulty. Separate `it` blocks per file would give complete coverage reporting, but the contract only has one assertion (A008) covering all 4, making a single test reasonable. — *Replace PROOF_CHAIN.md reads with targeted proof context queries*
 
 ### packages/cli/tests/utils/proofSummary.test.ts
 
