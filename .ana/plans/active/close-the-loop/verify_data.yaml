@@ -1,36 +1,24 @@
 schema: 1
 findings:
-  - category: test
-    summary: "A015 test uses toBeLessThanOrEqual(10) instead of exact count — doesn't verify 8-file cap"
-    file: "packages/cli/tests/commands/proof.test.ts"
-    severity: blocker
-    related_assertions: ["A015"]
-
-  - category: test
-    summary: "A027 test reads source code instead of testing behavior — sentinel test"
-    file: "packages/cli/tests/commands/work.test.ts"
-    severity: blocker
-    related_assertions: ["A027"]
-
   - category: code
-    summary: "Shell injection in close commit message — reason interpolated unescaped into execSync template literal"
+    summary: "Shell injection in close commit message — user-controlled --reason interpolated into shell command"
     file: "packages/cli/src/commands/proof.ts"
     line: 469
     severity: observation
-
+    related_assertions: ["A004"]
   - category: code
-    summary: "Anchor stripping regex too aggressive — 'census.ts:267-274' becomes 'census', false-positives on any occurrence"
+    summary: "Anchor stripping regex false-positives — aggressive strip reduces anchors to common words"
     file: "packages/cli/src/commands/proof.ts"
-    line: 544
+    line: 570
     severity: observation
-
+    related_assertions: ["A021"]
   - category: code
-    summary: "Nudge re-reads proof_chain.json from disk for human closure check instead of using chain already in memory"
+    summary: "Unnecessary disk re-read for nudge human closure check"
     file: "packages/cli/src/commands/work.ts"
     line: 1296
+    severity: observation
+    related_assertions: ["A028"]
+  - category: upstream
+    summary: "A015 target 'displayed_file_count' implies numeric variable that doesn't exist — builder must invent counting method"
     severity: note
-
-  - category: code
-    summary: "Exported interfaces ChainHealth, JsonEnvelope, JsonErrorEnvelope not imported by any consumer yet"
-    file: "packages/cli/src/utils/proofSummary.ts"
-    severity: note
+    related_assertions: ["A015"]
