@@ -35,5 +35,192 @@
     "packages/cli/tests/commands/artifact.test.ts",
     "packages/cli/tests/commands/proof.test.ts",
     "packages/cli/tests/utils/proofSummary.test.ts"
-  ]
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:00d755c62292eacb7737c06f0e93b2c062bc3d023cdae2e30b0e6b682c40d59e",
+    "assertions": [
+      {
+        "id": "A001",
+        "says": "Findings can be classified by impact: risk, debt, or observation",
+        "status": "COVERED"
+      },
+      {
+        "id": "A002",
+        "says": "Findings include a recommended next action",
+        "status": "COVERED"
+      },
+      {
+        "id": "A003",
+        "says": "Proof summary findings carry the same classification fields",
+        "status": "COVERED"
+      },
+      {
+        "id": "A004",
+        "says": "Verification results use exact status values, not open strings",
+        "status": "COVERED"
+      },
+      {
+        "id": "A005",
+        "says": "Assertion statuses use exact values, not open strings",
+        "status": "COVERED"
+      },
+      {
+        "id": "A006",
+        "says": "Finding categories use exact values, not open strings",
+        "status": "COVERED"
+      },
+      {
+        "id": "A007",
+        "says": "The proof chain tracks its schema version for future migrations",
+        "status": "COVERED"
+      },
+      {
+        "id": "A008",
+        "says": "Only the new severity values are accepted — old values are rejected",
+        "status": "COVERED"
+      },
+      {
+        "id": "A009",
+        "says": "The four recommended actions are the only accepted values",
+        "status": "COVERED"
+      },
+      {
+        "id": "A010",
+        "says": "Saving a finding without severity is blocked with a clear error",
+        "status": "COVERED"
+      },
+      {
+        "id": "A011",
+        "says": "Saving a finding without a recommended action is blocked",
+        "status": "COVERED"
+      },
+      {
+        "id": "A012",
+        "says": "Saving a finding with an invalid severity value is blocked",
+        "status": "COVERED"
+      },
+      {
+        "id": "A013",
+        "says": "Saving a finding with an invalid action value is blocked",
+        "status": "COVERED"
+      },
+      {
+        "id": "A014",
+        "says": "Build concerns also require severity classification",
+        "status": "COVERED"
+      },
+      {
+        "id": "A015",
+        "says": "Build concerns also require a recommended action",
+        "status": "COVERED"
+      },
+      {
+        "id": "A016",
+        "says": "The YAML reader correctly parses the recommended action from companion files",
+        "status": "COVERED"
+      },
+      {
+        "id": "A017",
+        "says": "Proof context lookups include the recommended action when available",
+        "status": "COVERED"
+      },
+      {
+        "id": "A018",
+        "says": "Proof context omits the action field when the finding predates enrichment",
+        "status": "COVERED"
+      },
+      {
+        "id": "A016b",
+        "says": "Build concern classification survives the YAML reader without being silently dropped",
+        "status": "COVERED"
+      },
+      {
+        "id": "A019",
+        "says": "Old blocker findings are automatically reclassified as risk",
+        "status": "COVERED"
+      },
+      {
+        "id": "A020",
+        "says": "Old note findings are automatically reclassified as observation",
+        "status": "COVERED"
+      },
+      {
+        "id": "A021",
+        "says": "Severity migration is safe to run repeatedly without changing results",
+        "status": "COVERED"
+      },
+      {
+        "id": "A022",
+        "says": "The verify agent template teaches the new severity vocabulary",
+        "status": "COVERED"
+      },
+      {
+        "id": "A023",
+        "says": "The verify agent template requires both classification fields",
+        "status": "COVERED"
+      },
+      {
+        "id": "A024",
+        "says": "The build agent template teaches concern classification",
+        "status": "COVERED"
+      },
+      {
+        "id": "A025",
+        "says": "Dogfood agent copies match the templates exactly",
+        "status": "COVERED"
+      },
+      {
+        "id": "A026",
+        "says": "Health statistics break down findings by impact severity",
+        "status": "COVERED"
+      },
+      {
+        "id": "A027",
+        "says": "Health statistics break down findings by recommended action",
+        "status": "COVERED"
+      },
+      {
+        "id": "A028",
+        "says": "Findings without severity are counted as unclassified, not lost",
+        "status": "COVERED"
+      },
+      {
+        "id": "A029",
+        "says": "Findings without an action are counted as unclassified, not lost",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A030",
+        "says": "JSON API responses include the severity breakdown",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A031",
+        "says": "Audit shows each finding's severity and action at a glance",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A032",
+        "says": "Audit JSON includes the recommended action for each finding",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A033",
+        "says": "Audit surfaces the most critical findings first within each file",
+        "status": "UNCOVERED"
+      }
+    ],
+    "covered": 29,
+    "uncovered": 5,
+    "run_at": "2026-04-29T15:34:17.581Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-04-29T15:34:17.612Z",
+    "hash": "sha256:a1da09c1fb1042abc689ef33857f18b71ae4bc44d094e758b45ccdb4de70511e"
+  },
+  "verify-data": {
+    "saved_at": "2026-04-29T15:34:17.612Z",
+    "hash": "sha256:c560606377163004c67f19b1b1f98f655f806836bcc75a93362d5ee857468955"
+  }
 }
