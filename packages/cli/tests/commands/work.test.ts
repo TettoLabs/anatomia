@@ -2023,7 +2023,7 @@ Tests: 5 passed
 
         expect(json.results.slug).toBe('fields-test');
         expect(json.results.feature).toBeDefined();
-        expect(json.results.result).toBeDefined();
+        expect(json.results.result).toContain('PASS');
         expect(json.results.contract).toBeDefined();
         expect(json.results.contract.satisfied).toBeDefined();
         expect(json.results.contract.total).toBeDefined();
