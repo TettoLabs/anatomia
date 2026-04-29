@@ -274,7 +274,7 @@
           "anchor": "BROWSER_FRAMEWORKS.has(d)",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-29T01:32:06.959Z",
+          "closed_at": "2026-04-29T06:16:00.513Z",
           "closed_by": "mechanical"
         },
         {
@@ -285,7 +285,7 @@
           "anchor": "getFrameworkDisplayName()",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-29T01:32:06.959Z",
+          "closed_at": "2026-04-29T06:16:00.513Z",
           "closed_by": "mechanical"
         },
         {
@@ -296,7 +296,7 @@
           "anchor": "ProjectKindResult",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-29T01:32:06.959Z",
+          "closed_at": "2026-04-29T06:16:00.513Z",
           "closed_by": "mechanical"
         },
         {
@@ -315,7 +315,7 @@
           "anchor": "not.toContain('node:fs')",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-29T01:32:06.960Z",
+          "closed_at": "2026-04-29T06:16:00.515Z",
           "closed_by": "mechanical"
         },
         {
@@ -2861,7 +2861,7 @@
           "id": "seal-hash-simplification-C3",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-29T01:32:06.964Z",
+          "closed_at": "2026-04-29T06:16:00.516Z",
           "closed_by": "mechanical"
         },
         {
@@ -4855,6 +4855,186 @@
         {
           "summary": "Anchor stripping regex can false-positive on common-word anchors",
           "file": "packages/cli/src/commands/proof.ts"
+        }
+      ]
+    },
+    {
+      "slug": "harden-git-commit-calls",
+      "feature": "Harden git commit calls",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 15,
+        "covered": 15,
+        "uncovered": 0,
+        "satisfied": 15,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Proof close commits use safe argument passing instead of shell interpolation",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "Artifact save commits use safe argument passing instead of shell interpolation",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Work complete commits use safe argument passing instead of shell interpolation",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "Commit messages with special characters and newlines produce correct git commits",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "Failed commits still show error messages and exit the process",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "Proof chain stats include the count of new findings from the latest run",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "New findings count comes from the current entry's findings",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "Completion output shows satisfied count without the word covered",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "Completion output shows the new satisfied-only contract format",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "Completion output shows finding count with delta when new findings exist",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "Completion output omits delta when no new findings were added",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "The nudge recommendation is completely removed from completion output",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "The maintenance statistics line is removed from completion output",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "Chain output shows total finding count instead of only active findings",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "All existing tests continue to pass after the changes",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 10,
+        "met": 10
+      },
+      "timing": {
+        "total_minutes": 39,
+        "think": 6,
+        "plan": 6,
+        "build": 17,
+        "verify": 16
+      },
+      "hashes": {
+        "scope": "sha256:ff0ffb0d971459ce47dbffa15c1b294f6a90241bb5803170fde20b881481c4e6",
+        "contract": "sha256:1a76ad4a8862bd27d22e6dea81a0b34bf65f794af25f86f405691bb55f73416b",
+        "plan": "sha256:77e08b66d66bade92ea7430def5c139c7a39e745c995390eb564750e84f0c9b6",
+        "spec": "sha256:21a734910ba37ecce219ccd8076023cf8d4961f473f31c423185727b06da18dd",
+        "build-report": "sha256:5e20d877e619936417d6e1a98f8939359ad91bf96052e405ac31007aeaa229c3",
+        "build-data": "sha256:fb88c3765b1749c9fa6265dcf867de300092b5bc254cbd6f9a9b58de3eea2917",
+        "verify-report": "sha256:c8c2a96d31c39d08b1af13865702dcd1bbb574b8d4506e5af712fb608b6f351a",
+        "verify-data": "sha256:44d39d9e4db581903f88ecca71404e7b522dddf74575a58bc6702dd6cffbe92d"
+      },
+      "completed_at": "2026-04-29T06:16:00.484Z",
+      "modules_touched": [
+        "packages/cli/src/commands/artifact.ts",
+        "packages/cli/src/commands/proof.ts",
+        "packages/cli/src/commands/work.ts",
+        "packages/cli/src/types/proof.ts",
+        "packages/cli/tests/commands/work.test.ts"
+      ],
+      "scope_summary": "Two fixes on the same files. First: git commit messages are constructed via template literals and passed through the shell — user-controlled text in `--reason` can break commits or theoretically execute code. Replace all 5 `execSync` git commit calls with `spawnSync` so message content is never shell-interpreted. Second: the `work complete` output has a nudge block that re-reads the entire proof_chain.json to decide whether to show a recommendation. The nudge is the wrong design — it's a one-shot discoverability hack with an arbitrary threshold, not a data-driven signal. Remove it entirely and replace the chain output line with a cleaner format that includes the per-run finding delta.",
+      "findings": [
+        {
+          "category": "test",
+          "summary": "Test name 'shows maintenance line when findings were auto-closed' is now inverted — assertions check not.toContain('Maintenance:') but name says 'shows'",
+          "file": "packages/cli/tests/commands/work.test.ts",
+          "anchor": null,
+          "line": 1607,
+          "severity": "observation",
+          "id": "harden-git-commit-calls-C1",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "@ana tag collision: A001-A005 tags in work.test.ts match previous features' contracts, not this one. Pre-check reports COVERED for spawnSync assertions but no tagged test actually verifies spawnSync usage. Spec says no new unit tests needed; source verification confirms correctness.",
+          "file": "packages/cli/tests/commands/work.test.ts",
+          "anchor": null,
+          "line": 1107,
+          "severity": "observation",
+          "related_assertions": [
+            "A001",
+            "A002",
+            "A003",
+            "A004",
+            "A005"
+          ],
+          "id": "harden-git-commit-calls-C2",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Recovery path counts total findings via loop but main path uses stats.findings — two different counting mechanisms for the same display. If totalFindings computation in writeProofChain diverges from the simple loop, recovery output could drift.",
+          "file": "packages/cli/src/commands/work.ts",
+          "anchor": null,
+          "line": 1085,
+          "severity": "observation",
+          "id": "harden-git-commit-calls-C3",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "Spec says to remove ProofChain from import type on line 23 — but ProofChain is still used in writeProofChain (line 748). Spec guidance was incorrect; builder correctly kept the import.",
+          "file": null,
+          "anchor": null,
+          "severity": "note",
+          "id": "harden-git-commit-calls-C4",
+          "status": "lesson"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "Recovery path duplicates finding-count logic from computeChainHealth",
+          "file": "packages/cli/src/commands/work.ts"
         }
       ]
     }
