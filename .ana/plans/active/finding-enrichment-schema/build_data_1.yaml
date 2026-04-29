@@ -1,0 +1,10 @@
+schema: 1
+concerns:
+  - summary: "Spec references templates at templates/.claude/agents/ but actual path is packages/cli/templates/.claude/agents/"
+    file: "packages/cli/templates/.claude/agents/ana-verify.md"
+    severity: observation
+    suggested_action: accept
+  - summary: "ProofSummary.result left as string — tightening requires changing parseResult return type and lastResult variable, which cascades beyond this spec's scope"
+    file: "packages/cli/src/utils/proofSummary.ts"
+    severity: debt
+    suggested_action: scope
