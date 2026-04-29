@@ -1,0 +1,6 @@
+schema: 1
+concerns:
+  - summary: "Audit severity sort also affects JSON output order, which may change expectations for downstream JSON consumers"
+    file: "packages/cli/src/commands/proof.ts"
+    severity: observation
+    suggested_action: monitor
