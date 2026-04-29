@@ -91,25 +91,25 @@ Proof Audit: 57 active findings across 14 files
 
   src/commands/work.ts (5 findings)
     [validation] Missing input sanitization on slug parameter
-      28d · anchor: validateSlug · blocker · A003, A004
-      from: Fix Artifact Save
+           age: 28d | anchor: ✓ | severity: blocker
+           from: Fix Artifact Save
     [error-handling] Silent catch swallows non-conflict pull errors
-      3d · anchor: catch (error) · observation · —
-      from: Clean Ground
+           age: 3d | anchor: ✓ | severity: observation
+           from: Clean Ground
     [testing] Integration test missing for multi-phase complete
-      14d · anchor: completeWork · note · A012
-      from: Structured Findings
+           age: 14d | anchor: ✓ | severity: note
+           from: Structured Findings
 
   src/commands/proof.ts (3 findings)
     [contract] JSON output shape inconsistent across subcommands
-      3d · anchor: --json · blocker · —
-      from: Clean Ground
+           age: 3d | anchor: ✓ | severity: blocker
+           from: Clean Ground
     [testing] No test for corrupt proof_chain.json handling
-      28d · anchor: JSON.parse · note · —
-      from: Findings Lifecycle
+           age: 28d | anchor: ✗ | severity: —
+           from: Findings Lifecycle
     [error-handling] Missing findProjectRoot error boundary
-      28d · anchor: findProjectRoot · observation · —
-      from: Findings Lifecycle
+           age: 28d | anchor: ✓ | severity: —
+           from: Findings Lifecycle
 
   ... and 6 more files (49 findings)
 ```
@@ -233,7 +233,7 @@ Proof Audit: 57 active findings across 14 files
 - [ ] AC7: `ana proof close --json` returns `{ command, timestamp, results: { finding, previous_status, new_status, reason, closed_by }, meta }` on success.
 - [ ] AC8: All `--json` error responses follow `{ command, timestamp, error: { code, message, ...context }, meta }`.
 - [ ] AC9: `ana proof audit` lists active findings grouped by file, top 3 per file, top 8 files, with overflow.
-- [ ] AC10: Each audit finding displays: `[category] summary`, `age | anchor | severity | assertions`, `from: Feature Name`.
+- [ ] AC10: Each audit finding displays three lines: `[category] summary`, `age: Nd | anchor: ✓/✗ | severity: {level}`, `from: Feature Name`.
 - [ ] AC11: `ana proof audit --json` returns `{ command, timestamp, results: { total_active, by_file }, meta }` with full finding objects.
 - [ ] AC12: Existing `ana proof --json`, `ana proof {slug} --json`, `ana proof context --json` restructured into 4-key contract.
 - [ ] AC13: `meta` on every command contains `{ chain_runs, findings: { active, closed, lesson, promoted, total } }`.
