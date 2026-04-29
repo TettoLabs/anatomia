@@ -1,0 +1,205 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Work Complete JSON + Proof Card Findings"
+
+assertions:
+  # AC1: --json flag accepted
+  - id: A001
+    says: "Work complete accepts a JSON output flag"
+    block: "work complete --json flag registration"
+    target: "completeCommand.options"
+    matcher: "contains"
+    value: "--json"
+
+  # AC2: Main path JSON envelope
+  - id: A002
+    says: "Completing work with JSON flag produces a structured envelope"
+    block: "main path outputs JSON envelope"
+    target: "json.command"
+    matcher: "equals"
+    value: "work complete"
+
+  - id: A003
+    says: "JSON output includes a timestamp for audit trails"
+    block: "main path outputs JSON envelope"
+    target: "json.timestamp"
+    matcher: "exists"
+
+  - id: A004
+    says: "JSON output includes results with completion summary"
+    block: "main path outputs JSON envelope"
+    target: "json.results"
+    matcher: "exists"
+
+  - id: A005
+    says: "JSON output includes chain health metadata"
+    block: "main path outputs JSON envelope"
+    target: "json.meta"
+    matcher: "exists"
+
+  # AC3: results fields
+  - id: A006
+    says: "JSON results include the work item slug"
+    block: "main path results contain completion fields"
+    target: "json.results.slug"
+    matcher: "exists"
+
+  - id: A007
+    says: "JSON results include the feature name"
+    block: "main path results contain completion fields"
+    target: "json.results.feature"
+    matcher: "exists"
+
+  - id: A008
+    says: "JSON results include the verification result"
+    block: "main path results contain completion fields"
+    target: "json.results.result"
+    matcher: "contains"
+    value: "PASS"
+
+  - id: A009
+    says: "JSON results include contract satisfaction counts"
+    block: "main path results contain completion fields"
+    target: "json.results.contract.satisfied"
+    matcher: "exists"
+
+  - id: A010
+    says: "JSON results include new findings count"
+    block: "main path results contain completion fields"
+    target: "json.results.new_findings"
+    matcher: "exists"
+
+  - id: A011
+    says: "JSON results include rejection cycle count"
+    block: "main path results contain completion fields"
+    target: "json.results.rejection_cycles"
+    matcher: "exists"
+
+  # AC4: meta uses computeChainHealth
+  - id: A012
+    says: "Chain health metadata includes severity breakdowns from Phase B"
+    block: "meta uses computeChainHealth"
+    target: "json.meta.findings.by_severity"
+    matcher: "exists"
+
+  - id: A013
+    says: "Chain health metadata includes action breakdowns from Phase B"
+    block: "meta uses computeChainHealth"
+    target: "json.meta.findings.by_action"
+    matcher: "exists"
+
+  # AC5-6: Recovery path JSON
+  - id: A014
+    says: "Recovery path produces the same JSON envelope as the main path"
+    block: "recovery path outputs JSON envelope"
+    target: "json.command"
+    matcher: "equals"
+    value: "work complete"
+
+  - id: A015
+    says: "Recovery path JSON includes chain health metadata"
+    block: "recovery path outputs JSON envelope"
+    target: "json.meta"
+    matcher: "exists"
+
+  - id: A016
+    says: "Recovery path reports zero new findings since it replays a completed state"
+    block: "recovery path results have new_findings zero"
+    target: "json.results.new_findings"
+    matcher: "equals"
+    value: 0
+
+  # AC7: Non-JSON unchanged
+  - id: A017
+    says: "Completing work without JSON flag produces the same console output as before"
+    block: "non-JSON output unchanged"
+    target: "stdout"
+    matcher: "not_contains"
+    value: "\"command\""
+
+  # AC8: Proof card findings with badges
+  - id: A018
+    says: "Proof card shows findings with severity and action badges"
+    block: "proof card displays findings with badges"
+    target: "stdout"
+    matcher: "contains"
+    value: "[risk"
+
+  - id: A019
+    says: "Proof card findings show the action in the badge"
+    block: "proof card displays findings with badges"
+    target: "stdout"
+    matcher: "contains"
+    value: "promote]"
+
+  # AC9: Severity sort
+  - id: A020
+    says: "Findings are sorted so risk items appear before debt and observation"
+    block: "findings sorted by severity"
+    target: "finding_order"
+    matcher: "equals"
+    value: "risk,debt,observation"
+
+  # AC10: Truncation
+  - id: A021
+    says: "Only the top five findings are shown with a count of remaining"
+    block: "findings truncated at 5"
+    target: "stdout"
+    matcher: "contains"
+    value: "... and"
+
+  # AC11: Build concerns
+  - id: A022
+    says: "Proof card shows build concerns with the same badge format"
+    block: "build concerns displayed with badges"
+    target: "stdout"
+    matcher: "contains"
+    value: "Build Concerns"
+
+  - id: A023
+    says: "Build concerns use severity and action badges"
+    block: "build concerns displayed with badges"
+    target: "stdout"
+    matcher: "contains"
+    value: "["
+
+  # AC12: Graceful degradation
+  - id: A024
+    says: "Findings without severity display without crashing or showing undefined"
+    block: "pre-Phase B entries degrade gracefully"
+    target: "stdout"
+    matcher: "not_contains"
+    value: "undefined"
+
+  - id: A025
+    says: "Findings without severity still show their summary text"
+    block: "pre-Phase B entries degrade gracefully"
+    target: "stdout"
+    matcher: "contains"
+    value: "Legacy finding without classification"
+
+  # Empty findings — section omitted
+  - id: A026
+    says: "Proof card with no findings omits the Findings section entirely"
+    block: "empty findings omit section"
+    target: "stdout"
+    matcher: "not_contains"
+    value: "Findings"
+
+  # Contract shape — no leaking extra fields
+  - id: A027
+    says: "JSON contract object contains only the four expected fields"
+    block: "contract shape is clean"
+    target: "json.results.contract"
+    matcher: "not_contains"
+    value: "covered"
+
+file_changes:
+  - path: "packages/cli/src/commands/work.ts"
+    action: modify
+  - path: "packages/cli/src/commands/proof.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/work.test.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/proof.test.ts"
+    action: modify
