@@ -1,0 +1,263 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Finding Enrichment Schema"
+
+assertions:
+  # --- Phase 1: Types ---
+  - id: A001
+    says: "Findings can be classified by impact: risk, debt, or observation"
+    block: "ProofChainEntry finding type has severity union"
+    target: "ProofChainEntry.findings[].severity"
+    matcher: "contains"
+    value: "risk"
+
+  - id: A002
+    says: "Findings include a recommended next action"
+    block: "ProofChainEntry finding type has suggested_action union"
+    target: "ProofChainEntry.findings[].suggested_action"
+    matcher: "contains"
+    value: "promote"
+
+  - id: A003
+    says: "Proof summary findings carry the same classification fields"
+    block: "ProofSummary finding type has severity and suggested_action"
+    target: "ProofSummary.findings[].severity"
+    matcher: "exists"
+
+  - id: A004
+    says: "Verification results use exact status values, not open strings"
+    block: "ProofChainEntry.result is union type"
+    target: "ProofChainEntry.result"
+    matcher: "contains"
+    value: "PASS"
+
+  - id: A005
+    says: "Assertion statuses use exact values, not open strings"
+    block: "ProofChainEntry.assertions[].status is union type"
+    target: "ProofChainEntry.assertions[].status"
+    matcher: "contains"
+    value: "SATISFIED"
+
+  - id: A006
+    says: "Finding categories use exact values, not open strings"
+    block: "ProofChainEntry.findings[].category is union type"
+    target: "ProofChainEntry.findings[].category"
+    matcher: "contains"
+    value: "code"
+
+  - id: A007
+    says: "The proof chain tracks its schema version for future migrations"
+    block: "ProofChain has schema field and writeProofChain sets it"
+    target: "chain.schema"
+    matcher: "equals"
+    value: 1
+
+  # --- Phase 1: Validation ---
+  - id: A008
+    says: "Only the new severity values are accepted — old values are rejected"
+    block: "VALID_FINDING_SEVERITIES uses new values"
+    target: "VALID_FINDING_SEVERITIES"
+    matcher: "not_contains"
+    value: "blocker"
+
+  - id: A009
+    says: "The four recommended actions are the only accepted values"
+    block: "VALID_FINDING_ACTIONS constant exists"
+    target: "VALID_FINDING_ACTIONS"
+    matcher: "contains"
+    value: "promote"
+
+  - id: A010
+    says: "Saving a finding without severity is blocked with a clear error"
+    block: "validateVerifyDataFormat requires severity"
+    target: "errors"
+    matcher: "contains"
+    value: "missing \"severity\" field"
+
+  - id: A011
+    says: "Saving a finding without a recommended action is blocked"
+    block: "validateVerifyDataFormat requires suggested_action"
+    target: "errors"
+    matcher: "contains"
+    value: "missing \"suggested_action\" field"
+
+  - id: A012
+    says: "Saving a finding with an invalid severity value is blocked"
+    block: "validateVerifyDataFormat rejects invalid severity"
+    target: "errors"
+    matcher: "contains"
+    value: "invalid severity"
+
+  - id: A013
+    says: "Saving a finding with an invalid action value is blocked"
+    block: "validateVerifyDataFormat rejects invalid suggested_action"
+    target: "errors"
+    matcher: "contains"
+    value: "invalid suggested_action"
+
+  - id: A014
+    says: "Build concerns also require severity classification"
+    block: "validateBuildDataFormat requires severity on concerns"
+    target: "errors"
+    matcher: "contains"
+    value: "missing \"severity\" field"
+
+  - id: A015
+    says: "Build concerns also require a recommended action"
+    block: "validateBuildDataFormat requires suggested_action on concerns"
+    target: "errors"
+    matcher: "contains"
+    value: "missing \"suggested_action\" field"
+
+  # --- Phase 1: YAML Reader + Context ---
+  - id: A016
+    says: "The YAML reader correctly parses the recommended action from companion files"
+    block: "YAML reader parses suggested_action"
+    target: "summary.findings[0].suggested_action"
+    matcher: "exists"
+
+  - id: A017
+    says: "Proof context lookups include the recommended action when available"
+    block: "getProofContext returns suggested_action"
+    target: "results[0].findings[0].suggested_action"
+    matcher: "exists"
+
+  - id: A018
+    says: "Proof context omits the action field when the finding predates enrichment"
+    block: "getProofContext omits suggested_action when absent"
+    target: "results[0].findings[0].suggested_action"
+    matcher: "equals"
+    value: undefined
+
+  # --- Phase 1: Migration ---
+  - id: A019
+    says: "Old blocker findings are automatically reclassified as risk"
+    block: "severity migration blocker to risk"
+    target: "finding.severity"
+    matcher: "equals"
+    value: "risk"
+
+  - id: A020
+    says: "Old note findings are automatically reclassified as observation"
+    block: "severity migration note to observation"
+    target: "finding.severity"
+    matcher: "equals"
+    value: "observation"
+
+  - id: A021
+    says: "Severity migration is safe to run repeatedly without changing results"
+    block: "severity migration is idempotent"
+    target: "finding.severity"
+    matcher: "equals"
+    value: "risk"
+
+  # --- Phase 1: Templates ---
+  - id: A022
+    says: "The verify agent template teaches the new severity vocabulary"
+    block: "verify template uses new severity values"
+    target: "ana-verify.md"
+    matcher: "contains"
+    value: "risk"
+
+  - id: A023
+    says: "The verify agent template requires both classification fields"
+    block: "verify template lists severity and suggested_action as required"
+    target: "ana-verify.md"
+    matcher: "contains"
+    value: "suggested_action"
+
+  - id: A024
+    says: "The build agent template teaches concern classification"
+    block: "build template includes severity and suggested_action"
+    target: "ana-build.md"
+    matcher: "contains"
+    value: "suggested_action"
+
+  - id: A025
+    says: "Dogfood agent copies match the templates exactly"
+    block: "dogfood copies match templates"
+    target: "diff"
+    matcher: "equals"
+    value: ""
+
+  # --- Phase 2: Health Expansion ---
+  - id: A026
+    says: "Health statistics break down findings by impact severity"
+    block: "computeChainHealth returns by_severity"
+    target: "health.findings.by_severity.risk"
+    matcher: "exists"
+
+  - id: A027
+    says: "Health statistics break down findings by recommended action"
+    block: "computeChainHealth returns by_action"
+    target: "health.findings.by_action.promote"
+    matcher: "exists"
+
+  - id: A028
+    says: "Findings without severity are counted as unclassified, not lost"
+    block: "computeChainHealth counts unclassified severity"
+    target: "health.findings.by_severity.unclassified"
+    matcher: "greater"
+    value: 0
+
+  - id: A029
+    says: "Findings without an action are counted as unclassified, not lost"
+    block: "computeChainHealth counts unclassified action"
+    target: "health.findings.by_action.unclassified"
+    matcher: "greater"
+    value: 0
+
+  - id: A030
+    says: "JSON API responses include the severity breakdown"
+    block: "JSON meta includes by_severity"
+    target: "meta.findings.by_severity"
+    matcher: "exists"
+
+  # --- Phase 2: Audit Display ---
+  - id: A031
+    says: "Audit shows each finding's severity and action at a glance"
+    block: "audit display shows severity and action badges"
+    target: "audit output"
+    matcher: "contains"
+    value: "[risk · scope]"
+
+  - id: A032
+    says: "Audit JSON includes the recommended action for each finding"
+    block: "audit JSON includes suggested_action"
+    target: "audit finding.suggested_action"
+    matcher: "exists"
+
+  - id: A033
+    says: "Audit surfaces the most critical findings first within each file"
+    block: "audit sorts findings by severity within file groups"
+    target: "audit finding order"
+    matcher: "equals"
+    value: "risk before debt before observation"
+
+file_changes:
+  # Phase 1
+  - path: "packages/cli/src/types/proof.ts"
+    action: modify
+  - path: "packages/cli/src/utils/proofSummary.ts"
+    action: modify
+  - path: "packages/cli/src/commands/artifact.ts"
+    action: modify
+  - path: "packages/cli/src/commands/work.ts"
+    action: modify
+  - path: "templates/.claude/agents/ana-verify.md"
+    action: modify
+  - path: "templates/.claude/agents/ana-build.md"
+    action: modify
+  - path: ".claude/agents/ana-verify.md"
+    action: modify
+  - path: ".claude/agents/ana-build.md"
+    action: modify
+  - path: "packages/cli/tests/commands/artifact.test.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/proof.test.ts"
+    action: modify
+  - path: "packages/cli/tests/utils/proofSummary.test.ts"
+    action: modify
+  # Phase 2
+  - path: "packages/cli/src/commands/proof.ts"
+    action: modify
