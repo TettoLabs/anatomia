@@ -322,7 +322,7 @@
           "id": "add-project-kind-detection-C6",
           "category": "test",
           "summary": "No priority test for bin-over-framework or CLI-dep-over-framework: Tests cover bin-over-library (A013) and CLI-dep-over-library (A014), but don't test that `hasBin: true` + `frameworkName: 'Express'` returns `'cli'` (not `'api-server'`). The priority chain handles it correctly (bin check at line 85 returns before framework check at line 95), but no test proves it.",
-          "file": null,
+          "file": "packages/cli/tests/engine/scanProject.test.ts",
           "anchor": "hasBin: true",
           "status": "active"
         },
@@ -1415,7 +1415,7 @@
           "id": "add-readme-extraction-C2",
           "category": "code",
           "summary": "A009 contract deviation — Contract specifies `value: 5000` for total cap. Implementation now uses 4000 to make the cap reachable. The original 5000 was unreachable dead code (3 × 1500 = 4500 < 5000). Lowering to 4000 makes `applyTotalCap` a real constraint. The contract's `says` field (\"capped at 5000 characters\") is now technically inaccurate — the actual cap is 4000. Scope/plan documents reference 5000. This is a justified deviation.",
-          "file": null,
+          "file": "packages/cli/src/engine/detectors/readme.ts",
           "anchor": "value: 5000",
           "status": "active"
         },
