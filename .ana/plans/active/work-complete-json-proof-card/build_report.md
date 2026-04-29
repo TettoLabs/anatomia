@@ -54,6 +54,11 @@
 
 None — contract followed exactly.
 
+## Fix History
+
+### Cycle 1 (verify failure → fix)
+AnaVerify found A008 UNSATISFIED: test at `work.test.ts:2026` used `toBeDefined()` instead of `toContain('PASS')` for `json.results.result`. Contract specifies `matcher: "contains"`, `value: "PASS"`. Fixed by changing `expect(json.results.result).toBeDefined()` to `expect(json.results.result).toContain('PASS')`. One-line change, all tests pass.
+
 ## Test Results
 
 ### Baseline (before changes)
@@ -83,11 +88,14 @@ Test Files  97 passed (97)
 ```
 pnpm run build
 (cd packages/cli && pnpm vitest run)
-pnpm lint
+pnpm run lint
 ```
 
 ## Git History
 ```
+3d8b0d5 [work-complete-json-proof-card] Fix: A008 assertion checks result contains PASS
+e2837d9 [work-complete-json-proof-card] Verify report
+d43b283 [work-complete-json-proof-card] Build report
 ec7fee0 [work-complete-json-proof-card] Add findings display to proof card
 9ec1a7b [work-complete-json-proof-card] Add --json flag to work complete
 ```
@@ -97,5 +105,7 @@ ec7fee0 [work-complete-json-proof-card] Add findings display to proof card
 1. **Main path re-reads proof_chain.json for meta:** The JSON output branch reads the chain file that `writeProofChain` just wrote. Passing the chain object through from `writeProofChain` would avoid the re-read, but would require changing that function's return type. Low-priority refactor.
 
 2. **Recovery path does not suppress non-JSON console output for "Recovering" line:** The `console.log(chalk.yellow('Recovering incomplete completion...'))` fires before the JSON branch check. When `--json` is passed during recovery, this human-readable line precedes the JSON output. The test handles this by finding the JSON portion, but a strict JSON consumer would see the "Recovering" prefix. The spec didn't address this — the recovery "Recovering" log happens at line 1076 before the proof summary section where JSON branching occurs.
+
+3. **SEVERITY_ORDER duplicated in proof.ts:** The `{ risk: 0, debt: 1, observation: 2 }` map is defined twice — once for findings sort and once for build concerns sort. Could be extracted to a single const if a third use appears.
 
 Verified complete by second pass.

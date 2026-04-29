@@ -16,12 +16,12 @@
     "hash": "sha256:bfae1950047352586b30a0b48127d700cb58b92d3da036b3bdbbe2c8c7f44304"
   },
   "build-report": {
-    "saved_at": "2026-04-29T18:07:04.356Z",
-    "hash": "sha256:80dba76628dcdaff70e2341b2b3749b6cd063f0c3cf3916fc3de72233da361e0"
+    "saved_at": "2026-04-29T18:16:29.777Z",
+    "hash": "sha256:6a9fcc3f36ad8711397831baf0219dd1323e1275906e651c97939f247fe003b4"
   },
   "build-data": {
-    "saved_at": "2026-04-29T18:07:04.356Z",
-    "hash": "sha256:efd243d4d9aa30cb92c02537faaee1c38a8af7ce5c396e90d63f4c47dd566a10"
+    "saved_at": "2026-04-29T18:16:29.778Z",
+    "hash": "sha256:08db1fd663d979c5e6e43fe017522cc186e6d10e99b2ab1bccea278c6eb79071"
   },
   "modules_touched": [
     "packages/cli/src/commands/proof.ts",
