@@ -1,8 +1,10 @@
 schema: 1
 concerns:
-  - summary: "A027 (pull warning) tested via source inspection, not runtime execution"
-    file: "packages/cli/tests/commands/work.test.ts"
   - summary: "Close command multi-word --reason requires shell quoting in tests"
     file: "packages/cli/tests/commands/proof.test.ts"
   - summary: "Context subcommand --json re-reads chain from disk for envelope wrapping"
+    file: "packages/cli/src/commands/proof.ts"
+  - summary: "Nudge re-reads proof_chain.json instead of threading chain object from writeProofChain"
+    file: "packages/cli/src/commands/work.ts"
+  - summary: "Anchor stripping regex can false-positive on common-word anchors"
     file: "packages/cli/src/commands/proof.ts"

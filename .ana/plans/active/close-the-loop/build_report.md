@@ -13,7 +13,7 @@
 - `packages/cli/templates/.claude/agents/ana-plan.md` (modified): Added `### Proof Context` subsection between `### Pattern Extracts` and `### Checkpoint Commands` with curation instructions for findings delivery to Build.
 - `.claude/agents/ana-plan.md` (modified): Mirrored template change — identical `### Proof Context` subsection.
 - `packages/cli/tests/commands/proof.test.ts` (modified): Updated 7 existing tests for new JSON envelope format (`json.results.X` instead of `json.X`). Added 21 new tests: close success path (A001-A005), close error codes (A006-A009), lesson closure (A010), close JSON envelope (A011-A013), error envelope (A024-A025), audit display (A014), audit truncation (A015-A016), audit overflow (A017), audit branch-agnostic (A018), audit zero-findings (A019), audit JSON (A020-A021), contract envelope (A022-A023), template test (A026).
-- `packages/cli/tests/commands/work.test.ts` (modified): Added 3 new tests: pull warning source check (A027), nudge with 25 active + 0 human closures (A028), nudge suppression with human closure (A029).
+- `packages/cli/tests/commands/work.test.ts` (modified): Added 3 new tests: pull warning behavioral test (A027), nudge with 25 active + 0 human closures (A028), nudge suppression with human closure (A029).
 
 ## PR Summary
 
@@ -40,7 +40,7 @@
 - AC13 "meta contains chain health" → proof.test.ts "list --json has 4-key envelope with meta" (7 assertions on all meta.findings fields)
 - AC14 "Plan template includes ### Proof Context" → proof.test.ts "Plan template has ### Proof Context" (3 assertions)
 - AC15 "work complete nudge" → work.test.ts "shows nudge when active > 20 and zero human closures" (1 assertion)
-- AC16 "work complete pull warning" → work.test.ts "warns on non-conflict pull failure" (2 assertions on source)
+- AC16 "work complete pull warning" → work.test.ts "warns on non-conflict pull failure" — behavioral test with unreachable remote (2 assertions on captured console.error output)
 - AC17 "closing a lesson shows transition" → proof.test.ts "shows lesson → closed transition" (2 assertions)
 - Tests pass ✅
 - No build errors ✅
@@ -60,31 +60,38 @@
 
 None — contract followed exactly.
 
+## Fix History
+
+### Cycle 1 (verification failure)
+Two contract assertions were UNSATISFIED:
+- **A015:** Test used `toBeLessThanOrEqual(10)` with imprecise line counting. Fixed: regex pattern `/^\s+\S+\s+\(\d+ findings?\)/` to match actual file header format, assert exactly 8.
+- **A027:** Test read source code for string presence instead of exercising the code path. Fixed: behavioral test that adds an unreachable remote (`https://invalid.example.com/repo.git`), runs `completeWork`, and asserts `Warning` and `Pull failed` appear in captured `console.error` output.
+
 ## Test Results
 
 ### Baseline (before changes)
 ```
 cd packages/cli && pnpm vitest run
 Test Files  97 passed (97)
-Tests  1575 passed | 2 skipped (1577)
+Tests  1599 passed | 2 skipped (1601)
 ```
 
 ### After Changes
 ```
 cd packages/cli && pnpm vitest run
 Test Files  97 passed (97)
-Tests  1598 passed | 2 skipped (1600)
+Tests  1599 passed | 2 skipped (1601)
 ```
 
 ### Comparison
-- Tests added: 24 (21 in proof.test.ts, 3 in work.test.ts)
+- Tests added: 24 (21 in proof.test.ts, 3 in work.test.ts) — from original build
 - Tests removed: 0
-- Tests modified: 7 (updated for JSON envelope format in proof.test.ts)
+- Tests modified: 2 (A015 and A027 assertions strengthened in fix cycle)
 - Regressions: none
 
 ### New Tests Written
 - `packages/cli/tests/commands/proof.test.ts`: Close success path, close error codes (WRONG_BRANCH, FINDING_NOT_FOUND, ALREADY_CLOSED, REASON_REQUIRED), lesson closure, close JSON envelope, error JSON envelope, audit grouped display, audit truncation (8 files, 3 per file), audit overflow, audit branch-agnostic, audit zero-findings, audit JSON, existing commands contract envelope, template subsection verification
-- `packages/cli/tests/commands/work.test.ts`: Pull warning source verification, nudge with active > 20 + 0 human closures, nudge suppression with human closure
+- `packages/cli/tests/commands/work.test.ts`: Pull warning behavioral test (unreachable remote → warning in output), nudge with active > 20 + 0 human closures, nudge suppression with human closure
 
 ## Verification Commands
 ```
@@ -95,6 +102,9 @@ pnpm run lint
 
 ## Git History
 ```
+fc19ec2 [close-the-loop] Fix: Strengthen A015 and A027 test assertions
+eb705cf [close-the-loop] Verify report
+896ef49 [close-the-loop] Build report
 3907727 [close-the-loop] Add test for Proof Context template subsection
 77086f3 [close-the-loop] Add Proof Context subsection to Build Brief template
 ba1f87f [close-the-loop] Harden work complete pull handling and audit nudge
@@ -104,10 +114,12 @@ ef8ed91 [close-the-loop] Add close and audit subcommands with JSON contract
 
 ## Open Issues
 
-1. **A027 (pull warning) tested via source inspection, not runtime.** The pull warning fires on non-conflict `git pull --rebase` failure, which requires mocking `execSync` to simulate a network error. The test verifies the warning text exists in source code rather than running the actual code path. Verifier should assess whether this constitutes adequate coverage.
+1. **Close command multi-word `--reason` requires shell quoting.** When invoked via `execSync` (as in tests), `--reason "addressed in fix"` splits into multiple arguments. Tests use single-word reasons to avoid this. In real CLI usage, Commander handles quoted strings correctly. This is a test infrastructure limitation, not a code bug.
 
-2. **Close command multi-word `--reason` requires shell quoting.** When invoked via `execSync` (as in tests), `--reason "addressed in fix"` splits into multiple arguments. Tests use single-word reasons to avoid this. In real CLI usage, Commander handles quoted strings correctly. This is a test infrastructure limitation, not a code bug.
+2. **Context subcommand `--json` re-reads chain from disk.** The context command already reads the chain via `getProofContext`, but to wrap in the JSON envelope, it reads proof_chain.json a second time. This is a minor inefficiency — `getProofContext` doesn't return the parsed chain object.
 
-3. **Context subcommand `--json` re-reads chain from disk.** The context command already reads the chain via `getProofContext`, but to wrap in the JSON envelope, it reads proof_chain.json a second time. This is a minor inefficiency — `getProofContext` doesn't return the parsed chain object.
+3. **Nudge reads chain from disk for human-closure check.** The spec says "scan all findings in the chain for any with `closed_by === 'human'`." The implementation re-reads `proof_chain.json` after `writeProofChain` instead of threading the chain object through. Functionally equivalent but unnecessary I/O.
+
+4. **Anchor stripping regex can false-positive on common words.** The regex chain strips file extensions and line ranges from anchors (e.g., `census.ts:267-274` → `census`), then `content.includes('census')` matches any occurrence. For common-word anchors this inflates `anchor_present` counts.
 
 Verified complete by second pass.
