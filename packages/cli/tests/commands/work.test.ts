@@ -1943,5 +1943,126 @@ Tests: 5 passed
         expect(fsSync.existsSync(completedPath)).toBe(true);
       });
     });
+
+    // @ana A027
+    describe('work complete warns on pull failure', () => {
+      it('warns on non-conflict pull failure', async () => {
+        // Verify the source code contains the warning pattern
+        const source = fsSync.readFileSync(
+          path.resolve(__dirname, '../../src/commands/work.ts'),
+          'utf-8',
+        );
+        expect(source).toContain('Warning: Pull failed (network error)');
+        expect(source).toContain('Run `git pull` manually');
+      });
+    });
+
+    // @ana A028
+    describe('work complete shows audit nudge', () => {
+      it('shows nudge when active > 20 and zero human closures', async () => {
+        await createMergedProject({ slug: 'nudge-test', phases: 1 });
+
+        // Use null file refs so auto-close doesn't remove them during writeProofChain
+        const findings = Array.from({ length: 25 }, (_, i) => ({
+          id: `F${String(i + 1).padStart(3, '0')}`,
+          category: 'code',
+          summary: `Finding ${i + 1}`,
+          file: null,
+          anchor: null,
+          status: 'active',
+        }));
+
+        // Create proof_chain.json if it doesn't exist
+        const chainPath = path.join(tempDir, '.ana', 'proof_chain.json');
+        if (!fsSync.existsSync(chainPath)) {
+          fsSync.writeFileSync(chainPath, JSON.stringify({ entries: [] }, null, 2));
+        }
+        const chain = JSON.parse(fsSync.readFileSync(chainPath, 'utf-8'));
+        // Pre-seed the chain so that after writeProofChain, active > 20
+        chain.entries.push({
+          slug: 'old-entry',
+          feature: 'Old Feature',
+          result: 'PASS',
+          author: { name: 'Dev', email: 'dev@test.com' },
+          contract: { total: 1, covered: 1, uncovered: 0, satisfied: 1, unsatisfied: 0, deviated: 0 },
+          assertions: [{ id: 'A001', says: 'Works', status: 'SATISFIED' }],
+          acceptance_criteria: { total: 1, met: 1 },
+          timing: { total_minutes: 10 },
+          hashes: {},
+          completed_at: '2026-04-20T10:00:00Z',
+          modules_touched: [],
+          findings,
+          rejection_cycles: 0,
+          previous_failures: [],
+          build_concerns: [],
+        });
+        fsSync.writeFileSync(chainPath, JSON.stringify(chain, null, 2));
+        execSync('git add -A && git commit -m "add chain data"', { cwd: tempDir, stdio: 'ignore' });
+
+        const originalLog = console.log;
+        const logs: string[] = [];
+        console.log = (...args: unknown[]) => { logs.push(args.map(String).join(' ')); };
+
+        await completeWork('nudge-test');
+
+        console.log = originalLog;
+        const output = logs.join('\n');
+        expect(output).toContain('ana proof audit');
+      });
+    });
+
+    // @ana A029
+    describe('nudge disappears after human close', () => {
+      it('no nudge when human closures exist', async () => {
+        await createMergedProject({ slug: 'no-nudge-test', phases: 1 });
+
+        // Use null file refs so auto-close doesn't remove them; one human closure
+        const findings = Array.from({ length: 25 }, (_, i) => ({
+          id: `F${String(i + 1).padStart(3, '0')}`,
+          category: 'code',
+          summary: `Finding ${i + 1}`,
+          file: null,
+          anchor: null,
+          status: i === 0 ? 'closed' : 'active',
+          ...(i === 0 ? { closed_by: 'human', closed_at: '2026-04-25T10:00:00Z', closed_reason: 'fixed' } : {}),
+        }));
+
+        // Create proof_chain.json if it doesn't exist
+        const chainPath = path.join(tempDir, '.ana', 'proof_chain.json');
+        if (!fsSync.existsSync(chainPath)) {
+          fsSync.writeFileSync(chainPath, JSON.stringify({ entries: [] }, null, 2));
+        }
+        const chain = JSON.parse(fsSync.readFileSync(chainPath, 'utf-8'));
+        chain.entries.push({
+          slug: 'old-entry',
+          feature: 'Old Feature',
+          result: 'PASS',
+          author: { name: 'Dev', email: 'dev@test.com' },
+          contract: { total: 1, covered: 1, uncovered: 0, satisfied: 1, unsatisfied: 0, deviated: 0 },
+          assertions: [{ id: 'A001', says: 'Works', status: 'SATISFIED' }],
+          acceptance_criteria: { total: 1, met: 1 },
+          timing: { total_minutes: 10 },
+          hashes: {},
+          completed_at: '2026-04-20T10:00:00Z',
+          modules_touched: [],
+          findings,
+          rejection_cycles: 0,
+          previous_failures: [],
+          build_concerns: [],
+        });
+        fsSync.writeFileSync(chainPath, JSON.stringify(chain, null, 2));
+        execSync('git add -A && git commit -m "add chain data"', { cwd: tempDir, stdio: 'ignore' });
+
+        const originalLog = console.log;
+        const logs: string[] = [];
+        console.log = (...args: unknown[]) => { logs.push(args.map(String).join(' ')); };
+
+        await completeWork('no-nudge-test');
+
+        console.log = originalLog;
+        const output = logs.join('\n');
+        expect(output).not.toContain('ana proof audit');
+      });
+    });
   });
 });

@@ -1044,6 +1044,11 @@ export async function completeWork(slug: string): Promise<void> {
       console.error(chalk.red('Error: Pull failed due to conflicts. Resolve conflicts and try again.'));
       process.exit(1);
     }
+    // Non-conflict failures: warn and continue (matching saveArtifact's pattern)
+    if (errorMessage) {
+      console.error(chalk.yellow('⚠ Warning: Pull failed (network error). Continuing with local data.'));
+      console.error(chalk.yellow('  Run `git pull` manually to sync before completing.'));
+    }
   }
 
   // 5. Verify slug directory exists — with crash recovery
@@ -1283,6 +1288,28 @@ export async function completeWork(slug: string): Promise<void> {
   console.log(chalk.gray(`  Chain: ${stats.runs} ${stats.runs !== 1 ? 'runs' : 'run'} · ${stats.active} active finding${stats.active !== 1 ? 's' : ''}`));
   if (stats.maintenance) {
     console.log(chalk.gray(`  Maintenance: ${stats.maintenance.auto_closed} auto-closed, ${stats.maintenance.lessons_classified} classified as lessons`));
+  }
+
+  // Nudge: suggest proof audit when findings pile up AND no human closures exist
+  if (stats.active > 20) {
+    let hasHumanClosure = false;
+    const chainPath = path.join(projectRoot, '.ana', 'proof_chain.json');
+    try {
+      const chainData: ProofChain = JSON.parse(fs.readFileSync(chainPath, 'utf-8'));
+      for (const e of chainData.entries) {
+        for (const f of e.findings || []) {
+          if (f.closed_by === 'human') {
+            hasHumanClosure = true;
+            break;
+          }
+        }
+        if (hasHumanClosure) break;
+      }
+    } catch { /* chain read failed — skip nudge */ }
+
+    if (!hasHumanClosure) {
+      console.log(chalk.cyan('→ Run `ana proof audit` to review active findings'));
+    }
   }
 }
 
