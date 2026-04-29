@@ -1,0 +1,10 @@
+schema: 1
+concerns:
+  - summary: "Main path re-reads proof_chain.json instead of receiving chain from writeProofChain"
+    file: "packages/cli/src/commands/work.ts"
+    severity: debt
+    suggested_action: accept
+  - summary: "Recovery path 'Recovering' console.log fires before JSON branch check, polluting JSON output"
+    file: "packages/cli/src/commands/work.ts"
+    severity: debt
+    suggested_action: scope
