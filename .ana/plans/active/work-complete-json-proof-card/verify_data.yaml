@@ -1,12 +1,5 @@
 schema: 1
 findings:
-  - category: test
-    summary: "A008 test asserts toBeDefined() instead of checking value contains 'PASS' — passes even if result is 'FAIL'"
-    file: "packages/cli/tests/commands/work.test.ts"
-    line: 2024
-    severity: risk
-    suggested_action: scope
-    related_assertions: ["A008"]
   - category: code
     summary: "Recovery path console.log on line 1078 leaks non-JSON text to stdout before JSON envelope — CI consumers doing JSON.parse(stdout) will fail"
     file: "packages/cli/src/commands/work.ts"
@@ -18,12 +11,12 @@ findings:
     file: "packages/cli/src/commands/proof.ts"
     line: 147
     severity: debt
-    suggested_action: scope
+    suggested_action: monitor
   - category: test
     summary: "A001 test reads source code to check --json registration instead of behavioral test — same anti-pattern flagged in proof context for A020"
     file: "packages/cli/tests/commands/work.test.ts"
     line: 1981
-    severity: observation
+    severity: debt
     suggested_action: accept
   - category: code
     summary: "Main path re-reads proof_chain.json from disk for computeChainHealth after writeProofChain just wrote it — matches known build concern about nudge re-read pattern"
