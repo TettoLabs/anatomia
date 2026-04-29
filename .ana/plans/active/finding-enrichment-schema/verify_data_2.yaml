@@ -1,0 +1,34 @@
+schema: 1
+findings:
+  - category: code
+    summary: "Duplicate 'from:' line in audit human-readable display — line 660 already has 'from: {feature}' in metadata, line 661 repeats it standalone"
+    file: "packages/cli/src/commands/proof.ts"
+    line: 661
+    severity: debt
+    suggested_action: scope
+    related_assertions: ["A031"]
+  - category: test
+    summary: "createAuditChain helper never generates 'debt' severity — badge display for [debt · X] is untested in human-readable audit output"
+    file: "packages/cli/tests/commands/proof.test.ts"
+    line: 1025
+    severity: observation
+    suggested_action: monitor
+    related_assertions: ["A031"]
+  - category: test
+    summary: "A032 test uses toBeDefined() not a specific string value — passes even if suggested_action is empty string or unexpected value"
+    file: "packages/cli/tests/commands/proof.test.ts"
+    line: 1188
+    severity: observation
+    suggested_action: accept
+    related_assertions: ["A032"]
+  - category: code
+    summary: "SEVERITY_WEIGHT map is local to audit command block — if severity sort is needed elsewhere, it will be duplicated"
+    file: "packages/cli/src/commands/proof.ts"
+    line: 619
+    severity: observation
+    suggested_action: monitor
+  - category: upstream
+    summary: "Pre-check tag collision on A026-A033 — tags exist in readme.test.ts, dependencies.test.ts, work.test.ts from other features' contracts"
+    severity: observation
+    suggested_action: monitor
+    related_assertions: ["A026", "A027", "A028", "A029", "A030", "A031", "A032", "A033"]

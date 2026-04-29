@@ -19,6 +19,7 @@ import {
   getProofContext,
   extractScopeSummary,
   generateDashboard,
+  computeChainHealth,
 } from '../../src/utils/proofSummary.js';
 
 describe('generateProofSummary', () => {
@@ -1750,6 +1751,7 @@ findings:
     file: "src/test.ts"
     line: 42
     severity: observation
+    suggested_action: monitor
     related_assertions: ["A001", "A002"]
 `);
 
@@ -1757,6 +1759,7 @@ findings:
     expect(summary.findings.length).toBeGreaterThan(0);
     expect(summary.findings[0]!.summary).toBe('Structured finding from YAML');
     expect(summary.findings[0]!.severity).toBe('observation');
+    expect(summary.findings[0]!.suggested_action).toBe('monitor');
     expect(summary.findings[0]!.line).toBe(42);
     expect(summary.findings[0]!.related_assertions).toEqual(['A001', 'A002']);
   });
@@ -1779,6 +1782,30 @@ findings:
     expect(summary.findings[0]!.severity).toBeUndefined();
     expect(summary.findings[0]!.line).toBeUndefined();
     expect(summary.findings[0]!.related_assertions).toBeUndefined();
+  });
+
+  // @ana A016b
+  it('reads concern severity and suggested_action from build_data.yaml', () => {
+    fs.writeFileSync(path.join(slugDir, 'build_report.md'), `# Build Report
+
+## Deviations
+None.
+
+## Open Issues
+1. **Classified concern:** Details.
+`);
+    fs.writeFileSync(path.join(slugDir, 'build_data.yaml'), `schema: 1
+concerns:
+  - summary: "Classified concern"
+    file: "src/test.ts"
+    severity: debt
+    suggested_action: scope
+`);
+
+    const summary = generateProofSummary(slugDir);
+    expect(summary.build_concerns.length).toBeGreaterThan(0);
+    expect(summary.build_concerns[0]!.severity).toBe('debt');
+    expect(summary.build_concerns[0]!.suggested_action).toBe('scope');
   });
 
   // @ana A019
@@ -1906,6 +1933,60 @@ describe('getProofContext new fields', () => {
     expect(results[0]!.findings[0]!.related_assertions).toEqual(['A001', 'A003']);
   });
 
+  // @ana A017
+  it('getProofContext returns suggested_action when present', () => {
+    const chain = {
+      entries: [{
+        feature: 'Test Feature',
+        completed_at: '2026-04-28T10:00:00Z',
+        findings: [{
+          id: 'test-C2',
+          category: 'code',
+          summary: 'Issue with suggested action',
+          file: 'packages/cli/src/test.ts',
+          anchor: null,
+          severity: 'risk',
+          suggested_action: 'scope',
+          status: 'active',
+        }],
+      }],
+    };
+    fs.writeFileSync(
+      path.join(tempDir, '.ana', 'proof_chain.json'),
+      JSON.stringify(chain, null, 2),
+    );
+
+    const results = getProofContext(['packages/cli/src/test.ts'], tempDir);
+    expect(results[0]!.findings.length).toBe(1);
+    expect(results[0]!.findings[0]!.suggested_action).toBe('scope');
+  });
+
+  // @ana A018
+  it('getProofContext omits suggested_action when absent', () => {
+    const chain = {
+      entries: [{
+        feature: 'Old Feature',
+        completed_at: '2026-04-28T10:00:00Z',
+        findings: [{
+          id: 'old-C2',
+          category: 'code',
+          summary: 'Old-style finding without action',
+          file: 'packages/cli/src/test.ts',
+          anchor: null,
+          status: 'active',
+        }],
+      }],
+    };
+    fs.writeFileSync(
+      path.join(tempDir, '.ana', 'proof_chain.json'),
+      JSON.stringify(chain, null, 2),
+    );
+
+    const results = getProofContext(['packages/cli/src/test.ts'], tempDir);
+    expect(results[0]!.findings.length).toBe(1);
+    expect(results[0]!.findings[0]!.suggested_action).toBeUndefined();
+  });
+
   it('getProofContext omits new fields when not present in chain', () => {
     const chain = {
       entries: [{
@@ -1931,5 +2012,133 @@ describe('getProofContext new fields', () => {
     expect(results[0]!.findings[0]!.severity).toBeUndefined();
     expect(results[0]!.findings[0]!.line).toBeUndefined();
     expect(results[0]!.findings[0]!.related_assertions).toBeUndefined();
+  });
+});
+
+describe('computeChainHealth', () => {
+  // @ana A026
+  it('returns by_severity with correct counts for mixed severity values', () => {
+    const chain = {
+      entries: [{
+        findings: [
+          { status: 'active', severity: 'risk', suggested_action: 'scope' },
+          { status: 'active', severity: 'risk', suggested_action: 'promote' },
+          { status: 'active', severity: 'debt', suggested_action: 'monitor' },
+          { status: 'active', severity: 'observation', suggested_action: 'accept' },
+        ],
+      }],
+    };
+    const health = computeChainHealth(chain);
+    expect(health.findings.by_severity).toEqual({
+      risk: 2, debt: 1, observation: 1, unclassified: 0,
+    });
+  });
+
+  // @ana A027
+  it('returns by_action with correct counts for mixed action values', () => {
+    const chain = {
+      entries: [{
+        findings: [
+          { status: 'active', severity: 'risk', suggested_action: 'scope' },
+          { status: 'active', severity: 'risk', suggested_action: 'promote' },
+          { status: 'active', severity: 'debt', suggested_action: 'monitor' },
+          { status: 'active', severity: 'observation', suggested_action: 'accept' },
+        ],
+      }],
+    };
+    const health = computeChainHealth(chain);
+    expect(health.findings.by_action).toEqual({
+      promote: 1, scope: 1, monitor: 1, accept: 1, unclassified: 0,
+    });
+  });
+
+  // @ana A028
+  it('counts findings without severity as unclassified', () => {
+    const chain = {
+      entries: [{
+        findings: [
+          { status: 'active', severity: 'risk' },
+          { status: 'active' },
+          { status: 'active' },
+        ],
+      }],
+    };
+    const health = computeChainHealth(chain);
+    expect(health.findings.by_severity.unclassified).toBe(2);
+    expect(health.findings.by_severity.risk).toBe(1);
+  });
+
+  // @ana A029
+  it('counts findings without suggested_action as unclassified', () => {
+    const chain = {
+      entries: [{
+        findings: [
+          { status: 'active', suggested_action: 'promote' },
+          { status: 'active' },
+          { status: 'active' },
+        ],
+      }],
+    };
+    const health = computeChainHealth(chain);
+    expect(health.findings.by_action.unclassified).toBe(2);
+    expect(health.findings.by_action.promote).toBe(1);
+  });
+
+  it('returns all zeros for empty chain', () => {
+    const health = computeChainHealth({ entries: [] });
+    expect(health.chain_runs).toBe(0);
+    expect(health.findings.total).toBe(0);
+    expect(health.findings.by_severity).toEqual({
+      risk: 0, debt: 0, observation: 0, unclassified: 0,
+    });
+    expect(health.findings.by_action).toEqual({
+      promote: 0, scope: 0, monitor: 0, accept: 0, unclassified: 0,
+    });
+  });
+
+  it('returns all zeros for entries with no findings', () => {
+    const chain = { entries: [{ findings: [] }, {}] };
+    const health = computeChainHealth(chain);
+    expect(health.chain_runs).toBe(2);
+    expect(health.findings.total).toBe(0);
+    expect(health.findings.by_severity.unclassified).toBe(0);
+    expect(health.findings.by_action.unclassified).toBe(0);
+  });
+
+  // @ana A030
+  it('preserves existing status counts alongside new breakdowns', () => {
+    const chain = {
+      entries: [{
+        findings: [
+          { status: 'active', severity: 'risk', suggested_action: 'scope' },
+          { status: 'closed', severity: 'debt', suggested_action: 'accept' },
+          { status: 'lesson', severity: 'observation', suggested_action: 'monitor' },
+        ],
+      }],
+    };
+    const health = computeChainHealth(chain);
+    expect(health.findings.active).toBe(1);
+    expect(health.findings.closed).toBe(1);
+    expect(health.findings.lesson).toBe(1);
+    expect(health.findings.total).toBe(3);
+    expect(health.findings.by_severity.risk).toBe(1);
+    expect(health.findings.by_severity.debt).toBe(1);
+    expect(health.findings.by_severity.observation).toBe(1);
+  });
+
+  it('counts across multiple entries', () => {
+    const chain = {
+      entries: [
+        { findings: [{ status: 'active', severity: 'risk', suggested_action: 'promote' }] },
+        { findings: [{ status: 'active', severity: 'debt', suggested_action: 'scope' }] },
+      ],
+    };
+    const health = computeChainHealth(chain);
+    expect(health.chain_runs).toBe(2);
+    expect(health.findings.total).toBe(2);
+    expect(health.findings.by_severity.risk).toBe(1);
+    expect(health.findings.by_severity.debt).toBe(1);
+    expect(health.findings.by_action.promote).toBe(1);
+    expect(health.findings.by_action.scope).toBe(1);
   });
 });

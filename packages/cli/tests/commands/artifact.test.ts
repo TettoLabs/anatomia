@@ -130,7 +130,9 @@ Ready to review.`;
 findings:
   - category: code
     summary: "Test finding"
-    file: "src/test.ts"`;
+    file: "src/test.ts"
+    severity: risk
+    suggested_action: scope`;
   }
 
   /**
@@ -139,7 +141,9 @@ findings:
   function getValidBuildDataContent(): string {
     return `schema: 1
 concerns:
-  - summary: "Test concern"`;
+  - summary: "Test concern"
+    severity: debt
+    suggested_action: monitor`;
   }
 
   async function createArtifact(slug: string, fileName: string, content?: string): Promise<void> {
@@ -1505,13 +1509,13 @@ describe('ana artifact save-all', () => {
       const companionName = fileName.replace(/_report/, '_data').replace(/\.md$/, '.yaml');
       const companionPath = path.join(artifactPath, companionName);
       if (!(await fs.stat(companionPath).catch(() => null))) {
-        await fs.writeFile(companionPath, 'schema: 1\nfindings:\n  - category: code\n    summary: "Test finding"\n    file: "src/test.ts"', 'utf-8');
+        await fs.writeFile(companionPath, 'schema: 1\nfindings:\n  - category: code\n    summary: "Test finding"\n    file: "src/test.ts"\n    severity: risk\n    suggested_action: scope', 'utf-8');
       }
     } else if (fileName.match(/^build_report(_\d+)?\.md$/)) {
       const companionName = fileName.replace(/_report/, '_data').replace(/\.md$/, '.yaml');
       const companionPath = path.join(artifactPath, companionName);
       if (!(await fs.stat(companionPath).catch(() => null))) {
-        await fs.writeFile(companionPath, 'schema: 1\nconcerns:\n  - summary: "Test concern"', 'utf-8');
+        await fs.writeFile(companionPath, 'schema: 1\nconcerns:\n  - summary: "Test concern"\n    severity: debt\n    suggested_action: monitor', 'utf-8');
       }
     }
   }
@@ -1930,12 +1934,16 @@ findings:
     summary: "Test finding"
     file: "src/test.ts"
     severity: observation
+    suggested_action: monitor
     related_assertions: ["A001"]
   - category: test
     summary: "Another finding"
-    severity: blocker
+    severity: risk
+    suggested_action: scope
   - category: upstream
     summary: "Upstream issue"
+    severity: debt
+    suggested_action: accept
 `, 'utf-8');
 
     const result = validateVerifyDataFormat(filePath, tempDir);
@@ -2021,7 +2029,8 @@ findings:
 findings:
   - category: code
     summary: "Test"
-    severity: blocker
+    severity: risk
+    suggested_action: scope
 `, 'utf-8');
 
     const result = validateVerifyDataFormat(filePath);
@@ -2035,6 +2044,8 @@ findings:
 findings:
   - category: code
     summary: "Test"
+    severity: risk
+    suggested_action: scope
     related_assertions: "A001"
 `, 'utf-8');
 
@@ -2060,6 +2071,8 @@ findings:
   - category: code
     summary: "Test"
     file: "src/nonexistent.ts"
+    severity: risk
+    suggested_action: scope
 `, 'utf-8');
 
     const result = validateVerifyDataFormat(filePath, tempDir);
@@ -2073,6 +2086,8 @@ findings:
 findings:
   - category: code
     summary: "Test without file"
+    severity: risk
+    suggested_action: scope
 `, 'utf-8');
 
     const result = validateVerifyDataFormat(filePath, tempDir);
@@ -2086,6 +2101,8 @@ findings:
 findings:
   - category: upstream
     summary: "Upstream issue without file"
+    severity: observation
+    suggested_action: monitor
 `, 'utf-8');
 
     const result = validateVerifyDataFormat(filePath, tempDir);
@@ -2099,7 +2116,117 @@ findings:
 findings:
   - category: code
     summary: "Test"
+    severity: risk
+    suggested_action: scope
     custom_field: "extra data"
+`, 'utf-8');
+
+    const result = validateVerifyDataFormat(filePath);
+    expect(result.errors.length).toBe(0);
+  });
+
+  // @ana A010
+  it('rejects finding missing severity field', async () => {
+    const filePath = path.join(tempDir, 'verify_data.yaml');
+    await fs.writeFile(filePath, `schema: 1
+findings:
+  - category: code
+    summary: "Test"
+    suggested_action: scope
+`, 'utf-8');
+
+    const result = validateVerifyDataFormat(filePath);
+    expect(result.errors.some(e => e.includes('missing "severity" field'))).toBe(true);
+  });
+
+  // @ana A011
+  it('rejects finding missing suggested_action field', async () => {
+    const filePath = path.join(tempDir, 'verify_data.yaml');
+    await fs.writeFile(filePath, `schema: 1
+findings:
+  - category: code
+    summary: "Test"
+    severity: risk
+`, 'utf-8');
+
+    const result = validateVerifyDataFormat(filePath);
+    expect(result.errors.some(e => e.includes('missing "suggested_action" field'))).toBe(true);
+  });
+
+  // @ana A013
+  it('rejects finding with invalid suggested_action', async () => {
+    const filePath = path.join(tempDir, 'verify_data.yaml');
+    await fs.writeFile(filePath, `schema: 1
+findings:
+  - category: code
+    summary: "Test"
+    severity: risk
+    suggested_action: fix
+`, 'utf-8');
+
+    const result = validateVerifyDataFormat(filePath);
+    expect(result.errors.some(e => e.includes('invalid suggested_action'))).toBe(true);
+  });
+
+  // @ana A012
+  it('rejects finding with old severity value blocker', async () => {
+    const filePath = path.join(tempDir, 'verify_data.yaml');
+    await fs.writeFile(filePath, `schema: 1
+findings:
+  - category: code
+    summary: "Test"
+    severity: blocker
+    suggested_action: scope
+`, 'utf-8');
+
+    const result = validateVerifyDataFormat(filePath);
+    expect(result.errors.some(e => e.includes('invalid severity'))).toBe(true);
+  });
+
+  // @ana A008
+  it('accepts all new severity values', async () => {
+    const filePath = path.join(tempDir, 'verify_data.yaml');
+    await fs.writeFile(filePath, `schema: 1
+findings:
+  - category: code
+    summary: "Risk finding"
+    severity: risk
+    suggested_action: scope
+  - category: test
+    summary: "Debt finding"
+    severity: debt
+    suggested_action: promote
+  - category: upstream
+    summary: "Observation finding"
+    severity: observation
+    suggested_action: monitor
+`, 'utf-8');
+
+    const result = validateVerifyDataFormat(filePath);
+    expect(result.errors.length).toBe(0);
+  });
+
+  // @ana A009
+  it('accepts all suggested_action values', async () => {
+    const filePath = path.join(tempDir, 'verify_data.yaml');
+    await fs.writeFile(filePath, `schema: 1
+findings:
+  - category: code
+    summary: "Promote"
+    severity: risk
+    suggested_action: promote
+  - category: code
+    summary: "Scope"
+    severity: risk
+    suggested_action: scope
+  - category: code
+    summary: "Monitor"
+    severity: risk
+    suggested_action: monitor
+  - category: code
+    summary: "Accept"
+    severity: risk
+    suggested_action: accept
 `, 'utf-8');
 
     const result = validateVerifyDataFormat(filePath);
@@ -2125,7 +2252,11 @@ describe('validateBuildDataFormat', () => {
 concerns:
   - summary: "Test concern"
     file: "src/test.ts"
+    severity: risk
+    suggested_action: scope
   - summary: "Another concern"
+    severity: debt
+    suggested_action: monitor
 `, 'utf-8');
 
     const result = validateBuildDataFormat(filePath);
@@ -2162,6 +2293,58 @@ concerns: []
 
     const result = validateBuildDataFormat(filePath);
     expect(result.errors.length).toBe(0);
+  });
+
+  // @ana A014
+  it('rejects concern missing severity', async () => {
+    const filePath = path.join(tempDir, 'build_data.yaml');
+    await fs.writeFile(filePath, `schema: 1
+concerns:
+  - summary: "Test concern"
+    suggested_action: scope
+`, 'utf-8');
+
+    const result = validateBuildDataFormat(filePath);
+    expect(result.errors.some(e => e.includes('missing "severity" field'))).toBe(true);
+  });
+
+  // @ana A015
+  it('rejects concern missing suggested_action', async () => {
+    const filePath = path.join(tempDir, 'build_data.yaml');
+    await fs.writeFile(filePath, `schema: 1
+concerns:
+  - summary: "Test concern"
+    severity: risk
+`, 'utf-8');
+
+    const result = validateBuildDataFormat(filePath);
+    expect(result.errors.some(e => e.includes('missing "suggested_action" field'))).toBe(true);
+  });
+
+  it('rejects concern with invalid severity', async () => {
+    const filePath = path.join(tempDir, 'build_data.yaml');
+    await fs.writeFile(filePath, `schema: 1
+concerns:
+  - summary: "Test concern"
+    severity: blocker
+    suggested_action: scope
+`, 'utf-8');
+
+    const result = validateBuildDataFormat(filePath);
+    expect(result.errors.some(e => e.includes('invalid severity'))).toBe(true);
+  });
+
+  it('rejects concern with invalid suggested_action', async () => {
+    const filePath = path.join(tempDir, 'build_data.yaml');
+    await fs.writeFile(filePath, `schema: 1
+concerns:
+  - summary: "Test concern"
+    severity: risk
+    suggested_action: fix
+`, 'utf-8');
+
+    const result = validateBuildDataFormat(filePath);
+    expect(result.errors.some(e => e.includes('invalid suggested_action'))).toBe(true);
   });
 });
 
@@ -2246,6 +2429,8 @@ findings:
   - category: code
     summary: "Test finding"
     file: "src/test.ts"
+    severity: risk
+    suggested_action: scope
 `, 'utf-8');
 
     saveArtifact('verify-report', 'test-slug');
@@ -2283,6 +2468,8 @@ Done.`, 'utf-8');
     await fs.writeFile(path.join(slugDir, 'build_data.yaml'), `schema: 1
 concerns:
   - summary: "Test concern"
+    severity: debt
+    suggested_action: monitor
 `, 'utf-8');
 
     saveArtifact('build-report', 'test-slug');
@@ -2305,6 +2492,8 @@ concerns:
 findings:
   - category: code
     summary: "Test"
+    severity: risk
+    suggested_action: scope
 `, 'utf-8');
 
     saveAllArtifacts('test-slug');
@@ -2325,6 +2514,8 @@ findings:
 findings:
   - category: test
     summary: "Numbered test"
+    severity: debt
+    suggested_action: scope
 `, 'utf-8');
 
     saveAllArtifacts('test-slug');
@@ -2343,6 +2534,8 @@ findings:
   - category: code
     summary: "Test"
     file: "src/nonexistent.ts"
+    severity: risk
+    suggested_action: scope
 `, 'utf-8');
 
     const originalWarn = console.warn;

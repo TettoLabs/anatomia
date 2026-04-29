@@ -803,7 +803,7 @@ describe('ana proof', () => {
     completed_at: '2026-04-20T10:00:00Z',
     modules_touched: ['src/api/payments.ts'],
     findings: [
-      { id: 'F001', category: 'validation', summary: 'Missing request validation', file: 'src/api/payments.ts', anchor: 'validateInput', status: 'active', severity: 'blocker' },
+      { id: 'F001', category: 'validation', summary: 'Missing request validation', file: 'src/api/payments.ts', anchor: 'validateInput', status: 'active', severity: 'risk' },
       { id: 'F002', category: 'testing', summary: 'No test for edge case', file: 'src/api/payments.ts', anchor: null, status: 'active' },
       { id: 'F003', category: 'code', summary: 'Redundant import', file: 'src/utils/helpers.ts', anchor: null, status: 'closed', closed_by: 'mechanical', closed_at: '2026-04-22T10:00:00Z', closed_reason: 'auto-closed' },
     ],
@@ -1022,7 +1022,8 @@ describe('ana proof', () => {
         file: `src/file${fileIdx}.ts`,
         anchor: null,
         status: 'active',
-        severity: i % 3 === 0 ? 'blocker' : 'observation',
+        severity: i % 3 === 0 ? 'risk' : 'observation',
+        suggested_action: i % 2 === 0 ? 'scope' : 'monitor',
       });
     }
 
@@ -1169,6 +1170,90 @@ describe('ana proof', () => {
       expect(json.results.by_file.length).toBeGreaterThan(0);
       expect(json.results.by_file[0].findings[0].anchor_present).toBeDefined();
       expect(json.meta.chain_runs).toBeDefined();
+    });
+  });
+
+  // @ana A032
+  describe('audit JSON includes suggested_action on findings', () => {
+    it('each finding in JSON output has suggested_action field', async () => {
+      await createAuditChain(3, 1);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['audit', '--json']);
+      expect(exitCode).toBe(0);
+
+      const json = JSON.parse(stdout);
+      const findings = json.results.by_file[0].findings;
+      for (const f of findings) {
+        expect(f.suggested_action).toBeDefined();
+        expect(typeof f.suggested_action).toBe('string');
+      }
+    });
+  });
+
+  // @ana A031
+  describe('audit human-readable shows severity and action badges', () => {
+    it('shows [severity · action] badge on each finding', async () => {
+      await createAuditChain(3, 1);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['audit']);
+      expect(exitCode).toBe(0);
+
+      // createAuditChain: i=0 → risk/scope, i=1 → observation/monitor, i=2 → observation/scope
+      expect(stdout).toContain('[risk · scope]');
+      expect(stdout).toContain('[observation · monitor]');
+    });
+  });
+
+  // @ana A033
+  describe('audit sorts findings by severity within file groups', () => {
+    it('risk findings appear before observation within same file', async () => {
+      // Create chain with mixed severity in one file — risk and observation interleaved
+      const findings = [
+        { id: 'F001', category: 'code', summary: 'Obs first', file: 'src/app.ts', anchor: null, status: 'active', severity: 'observation', suggested_action: 'monitor' },
+        { id: 'F002', category: 'code', summary: 'Risk second', file: 'src/app.ts', anchor: null, status: 'active', severity: 'risk', suggested_action: 'scope' },
+        { id: 'F003', category: 'code', summary: 'Debt third', file: 'src/app.ts', anchor: null, status: 'active', severity: 'debt', suggested_action: 'accept' },
+      ];
+      const entry = {
+        slug: 'sort-test',
+        feature: 'Sort Test',
+        result: 'PASS',
+        author: { name: 'Dev', email: 'dev@example.com' },
+        contract: { total: 1, covered: 1, uncovered: 0, satisfied: 1, unsatisfied: 0, deviated: 0 },
+        assertions: [{ id: 'A001', says: 'Works', status: 'SATISFIED' }],
+        acceptance_criteria: { total: 1, met: 1 },
+        timing: { total_minutes: 10 },
+        hashes: {},
+        completed_at: '2026-04-20T10:00:00Z',
+        modules_touched: [],
+        findings,
+        rejection_cycles: 0,
+        previous_failures: [],
+        build_concerns: [],
+      };
+
+      await createTestProject(tempDir);
+      await fs.writeFile(
+        path.join(tempDir, '.ana', 'proof_chain.json'),
+        JSON.stringify({ entries: [entry] }, null, 2),
+      );
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['audit']);
+      expect(exitCode).toBe(0);
+
+      // Extract finding summary lines (lines containing the summary text)
+      const lines = stdout.split('\n');
+      const summaryLines = lines.filter((l: string) => l.includes('Risk second') || l.includes('Debt third') || l.includes('Obs first'));
+      expect(summaryLines.length).toBe(3);
+
+      // Risk should be first, then debt, then observation
+      const riskIdx = lines.findIndex((l: string) => l.includes('Risk second'));
+      const debtIdx = lines.findIndex((l: string) => l.includes('Debt third'));
+      const obsIdx = lines.findIndex((l: string) => l.includes('Obs first'));
+      expect(riskIdx).toBeLessThan(debtIdx);
+      expect(debtIdx).toBeLessThan(obsIdx);
     });
   });
 

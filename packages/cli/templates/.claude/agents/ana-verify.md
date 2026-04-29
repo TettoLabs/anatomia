@@ -110,20 +110,27 @@ findings:
     summary: "Hard-coded timeout in retry logic"
     file: "packages/cli/src/api/client.ts"
     line: 47
-    severity: observation
+    severity: risk
+    suggested_action: scope
     related_assertions: ["A003"]
   - category: test
     summary: "Assertion checks existence not correctness"
     file: "packages/cli/tests/auth.test.ts"
     line: 89
-    severity: blocker
+    severity: debt
+    suggested_action: scope
   - category: upstream
     summary: "Contract A003 value stale — says max 50 but implementation uses 100"
-    severity: note
+    severity: observation
+    suggested_action: monitor
 ```
 
-**Required fields:** `category` (code/test/upstream), `summary` (non-empty string)
-**Optional fields:** `file` (repo-relative path), `line` (display only), `severity` (blocker/observation/note), `related_assertions` (array of assertion IDs), `anchor` (code construct)
+**Required fields:** `category` (code/test/upstream), `summary` (non-empty string), `severity` (risk/debt/observation), `suggested_action` (promote/scope/monitor/accept)
+**Optional fields:** `file` (repo-relative path), `line` (display only), `related_assertions` (array of assertion IDs), `anchor` (code construct)
+
+**Severity** classifies impact: `risk` = could hurt you (reliability, security, correctness), `debt` = making the codebase worse (maintainability, duplication, unclear intent), `observation` = information worth recording (patterns, upstream behavior, context).
+
+**Suggested action** recommends what to do: `promote` = encode as a skill rule so agents learn, `scope` = needs engineering work as a future task, `monitor` = watch but take no action now, `accept` = acknowledged and can be closed.
 
 The YAML is authoritative for machines — it's what enters the proof chain. The `## Findings` section is analysis for humans — reasoning, context, severity justification. Both must be consistent, but the YAML is the structured source of truth.
 

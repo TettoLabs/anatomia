@@ -74,12 +74,18 @@ export interface ProofSummary {
     file: string | null;
     anchor: string | null;
     line?: number;
-    severity?: 'blocker' | 'observation' | 'note';
+    severity?: 'risk' | 'debt' | 'observation';
+    suggested_action?: 'promote' | 'scope' | 'monitor' | 'accept';
     related_assertions?: string[];
   }>;
   rejection_cycles: number;
   previous_failures: Array<{ id: string; summary: string }>;
-  build_concerns: Array<{ summary: string; file: string | null }>;
+  build_concerns: Array<{
+    summary: string;
+    file: string | null;
+    severity?: 'risk' | 'debt' | 'observation';
+    suggested_action?: 'promote' | 'scope' | 'monitor' | 'accept';
+  }>;
 }
 
 /**
@@ -643,6 +649,19 @@ export interface ChainHealth {
     lesson: number;
     promoted: number;
     total: number;
+    by_severity: {
+      risk: number;
+      debt: number;
+      observation: number;
+      unclassified: number;
+    };
+    by_action: {
+      promote: number;
+      scope: number;
+      monitor: number;
+      accept: number;
+      unclassified: number;
+    };
   };
 }
 
@@ -679,13 +698,26 @@ export interface JsonErrorEnvelope {
  * @param chain.entries - Array of proof chain entries
  * @returns Chain health counts for use in JSON meta fields
  */
-export function computeChainHealth(chain: { entries: Array<{ findings?: Array<{ status?: string }> }> }): ChainHealth {
+export function computeChainHealth(chain: { entries: Array<{ findings?: Array<{ status?: string; severity?: string; suggested_action?: string }> }> }): ChainHealth {
   const runs = chain.entries.length;
   let total = 0;
   let active = 0;
   let closed = 0;
   let lesson = 0;
   let promoted = 0;
+
+  // Severity breakdowns
+  let sevRisk = 0;
+  let sevDebt = 0;
+  let sevObservation = 0;
+  let sevUnclassified = 0;
+
+  // Action breakdowns
+  let actPromote = 0;
+  let actScope = 0;
+  let actMonitor = 0;
+  let actAccept = 0;
+  let actUnclassified = 0;
 
   for (const e of chain.entries) {
     for (const f of e.findings || []) {
@@ -697,12 +729,29 @@ export function computeChainHealth(chain: { entries: Array<{ findings?: Array<{ 
         case 'closed': closed++; break;
         default: active++; break; // undefined = active
       }
+      switch (f.severity) {
+        case 'risk': sevRisk++; break;
+        case 'debt': sevDebt++; break;
+        case 'observation': sevObservation++; break;
+        default: sevUnclassified++; break;
+      }
+      switch (f.suggested_action) {
+        case 'promote': actPromote++; break;
+        case 'scope': actScope++; break;
+        case 'monitor': actMonitor++; break;
+        case 'accept': actAccept++; break;
+        default: actUnclassified++; break;
+      }
     }
   }
 
   return {
     chain_runs: runs,
-    findings: { active, closed, lesson, promoted, total },
+    findings: {
+      active, closed, lesson, promoted, total,
+      by_severity: { risk: sevRisk, debt: sevDebt, observation: sevObservation, unclassified: sevUnclassified },
+      by_action: { promote: actPromote, scope: actScope, monitor: actMonitor, accept: actAccept, unclassified: actUnclassified },
+    },
   };
 }
 
@@ -715,7 +764,7 @@ export function computeChainHealth(chain: { entries: Array<{ findings?: Array<{ 
  * @param chain.entries - Array of proof chain entries
  * @returns Four-key JSON envelope
  */
-export function wrapJsonResponse<T>(command: string, results: T, chain: { entries: Array<{ findings?: Array<{ status?: string }> }> }): JsonEnvelope<T> {
+export function wrapJsonResponse<T>(command: string, results: T, chain: { entries: Array<{ findings?: Array<{ status?: string; severity?: string; suggested_action?: string }> }> }): JsonEnvelope<T> {
   return {
     command,
     timestamp: new Date().toISOString(),
@@ -740,11 +789,18 @@ export function wrapJsonError(
   code: string,
   message: string,
   context: Record<string, unknown>,
-  chain: { entries: Array<{ findings?: Array<{ status?: string }> }> } | null,
+  chain: { entries: Array<{ findings?: Array<{ status?: string; severity?: string; suggested_action?: string }> }> } | null,
 ): JsonErrorEnvelope {
   const meta: ChainHealth = chain
     ? computeChainHealth(chain)
-    : { chain_runs: 0, findings: { active: 0, closed: 0, lesson: 0, promoted: 0, total: 0 } };
+    : {
+      chain_runs: 0,
+      findings: {
+        active: 0, closed: 0, lesson: 0, promoted: 0, total: 0,
+        by_severity: { risk: 0, debt: 0, observation: 0, unclassified: 0 },
+        by_action: { promote: 0, scope: 0, monitor: 0, accept: 0, unclassified: 0 },
+      },
+    };
 
   return {
     command,
@@ -1083,7 +1139,8 @@ export function generateProofSummary(slugDir: string): ProofSummary {
                 anchor: typeof f['anchor'] === 'string' ? f['anchor'] : null,
               };
               if (typeof f['line'] === 'number') finding.line = f['line'];
-              if (typeof f['severity'] === 'string') finding.severity = f['severity'] as 'blocker' | 'observation' | 'note';
+              if (typeof f['severity'] === 'string') finding.severity = f['severity'] as 'risk' | 'debt' | 'observation';
+              if (typeof f['suggested_action'] === 'string') finding.suggested_action = f['suggested_action'] as 'promote' | 'scope' | 'monitor' | 'accept';
               if (Array.isArray(f['related_assertions'])) finding.related_assertions = f['related_assertions'] as string[];
               allFindings.push(finding);
             }
@@ -1135,10 +1192,13 @@ export function generateProofSummary(slugDir: string): ProofSummary {
           const yamlContent = yaml.parse(fs.readFileSync(buildCompanionPath, 'utf-8'));
           if (yamlContent && Array.isArray(yamlContent.concerns)) {
             for (const c of yamlContent.concerns as Array<Record<string, unknown>>) {
-              summary.build_concerns.push({
+              const concern: ProofSummary['build_concerns'][0] = {
                 summary: String(c['summary'] ?? ''),
                 file: typeof c['file'] === 'string' ? c['file'] : null,
-              });
+              };
+              if (typeof c['severity'] === 'string') concern.severity = c['severity'] as 'risk' | 'debt' | 'observation';
+              if (typeof c['suggested_action'] === 'string') concern.suggested_action = c['suggested_action'] as 'promote' | 'scope' | 'monitor' | 'accept';
+              summary.build_concerns.push(concern);
             }
           }
         } catch {
@@ -1179,7 +1239,8 @@ export interface ProofContextResult {
     file: string;
     anchor: string | null;
     line?: number;
-    severity?: 'blocker' | 'observation' | 'note';
+    severity?: 'risk' | 'debt' | 'observation';
+    suggested_action?: 'promote' | 'scope' | 'monitor' | 'accept';
     related_assertions?: string[];
     from: string;
     date: string;
@@ -1209,11 +1270,17 @@ interface ProofChainEntryForContext {
     file: string | null;
     anchor: string | null;
     line?: number;
-    severity?: 'blocker' | 'observation' | 'note';
+    severity?: 'risk' | 'debt' | 'observation';
+    suggested_action?: 'promote' | 'scope' | 'monitor' | 'accept';
     related_assertions?: string[];
     status?: string;
   }>;
-  build_concerns?: Array<{ summary: string; file: string | null }>;
+  build_concerns?: Array<{
+    summary: string;
+    file: string | null;
+    severity?: 'risk' | 'debt' | 'observation';
+    suggested_action?: 'promote' | 'scope' | 'monitor' | 'accept';
+  }>;
 }
 
 /**
@@ -1314,6 +1381,7 @@ export function getProofContext(queries: string[], projectRoot: string, options?
           };
           if (finding.line !== undefined) matched.line = finding.line;
           if (finding.severity !== undefined) matched.severity = finding.severity;
+          if (finding.suggested_action !== undefined) matched.suggested_action = finding.suggested_action;
           if (finding.related_assertions !== undefined) matched.related_assertions = finding.related_assertions;
           matchedFindings.push(matched);
           entryTouches = true;

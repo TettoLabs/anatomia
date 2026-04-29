@@ -24,6 +24,7 @@ import type { ProofSummary } from '../utils/proofSummary.js';
  * Proof chain JSON structure — the top-level container.
  */
 export interface ProofChain {
+  schema?: number;
   entries: ProofChainEntry[];
 }
 
@@ -47,13 +48,13 @@ export interface ProofChainStats {
 export interface ProofChainEntry {
   slug: string;
   feature: string;
-  result: string;
+  result: 'PASS' | 'FAIL' | 'UNKNOWN';
   author: { name: string; email: string };
   contract: ProofSummary['contract'];
   assertions: Array<{
     id: string;
     says: string;
-    status: string;
+    status: 'SATISFIED' | 'UNSATISFIED' | 'DEVIATED' | 'UNCOVERED';
     deviation?: string;
   }>;
   acceptance_criteria: ProofSummary['acceptance_criteria'];
@@ -65,12 +66,13 @@ export interface ProofChainEntry {
   scope_summary?: string | undefined;
   findings: Array<{
     id: string;
-    category: string;
+    category: 'code' | 'test' | 'upstream';
     summary: string;
     file: string | null;
     anchor: string | null;
     line?: number; // Display only. NOT used for matching or staleness.
-    severity?: 'blocker' | 'observation' | 'note';
+    severity?: 'risk' | 'debt' | 'observation';
+    suggested_action?: 'promote' | 'scope' | 'monitor' | 'accept';
     related_assertions?: string[];
     status?: 'active' | 'lesson' | 'promoted' | 'closed';
     closed_reason?: string;
@@ -80,5 +82,10 @@ export interface ProofChainEntry {
   }>;
   rejection_cycles: number;
   previous_failures: Array<{ id: string; summary: string }>;
-  build_concerns: Array<{ summary: string; file: string | null }>;
+  build_concerns: Array<{
+    summary: string;
+    file: string | null;
+    severity?: 'risk' | 'debt' | 'observation';
+    suggested_action?: 'promote' | 'scope' | 'monitor' | 'accept';
+  }>;
 }

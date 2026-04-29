@@ -783,14 +783,14 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
   const entry: ProofChainEntry = {
     slug,
     feature: proof.feature,
-    result: proof.result,
+    result: proof.result as ProofChainEntry['result'],
     author: proof.author,
     contract: proof.contract,
     assertions: proof.assertions.map(a => {
-      const base: { id: string; says: string; status: string; deviation?: string } = {
+      const base: ProofChainEntry['assertions'][0] = {
         id: a.id,
         says: a.says,
-        status: a.verifyStatus || a.preCheckStatus,
+        status: (a.verifyStatus || a.preCheckStatus) as ProofChainEntry['assertions'][0]['status'],
       };
       if (a.verifyStatus === 'DEVIATED') {
         const deviation = proof.deviations.find(d => d.contract_id === a.id)?.instead;
@@ -856,6 +856,13 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
         } else {
           finding.status = 'active';
         }
+      }
+      // Severity migration — blocker→risk, note→observation. Idempotent.
+      const sev = finding.severity as string | undefined;
+      if (sev === 'blocker') {
+        finding.severity = 'risk';
+      } else if (sev === 'note') {
+        finding.severity = 'observation';
       }
     }
 
@@ -968,6 +975,7 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
   // distinguish same-issue from different-issue without semantic judgment.
 
   chain.entries.push(entry);
+  chain.schema = 1;
   await fsPromises.writeFile(chainPath, JSON.stringify(chain, null, 2));
 
   // 2. Regenerate PROOF_CHAIN.md as quality dashboard
