@@ -633,6 +633,128 @@ export function generateDashboard(entries: DashboardEntry[], stats: { runs: numb
 }
 
 /**
+ * Chain health counts for metadata.
+ */
+export interface ChainHealth {
+  chain_runs: number;
+  findings: {
+    active: number;
+    closed: number;
+    lesson: number;
+    promoted: number;
+    total: number;
+  };
+}
+
+/**
+ * JSON envelope for successful proof responses.
+ */
+export interface JsonEnvelope<T = unknown> {
+  command: string;
+  timestamp: string;
+  results: T;
+  meta: ChainHealth;
+}
+
+/**
+ * JSON envelope for error proof responses.
+ */
+export interface JsonErrorEnvelope {
+  command: string;
+  timestamp: string;
+  error: {
+    code: string;
+    message: string;
+    [key: string]: unknown;
+  };
+  meta: ChainHealth;
+}
+
+/**
+ * Compute chain health counts from a parsed ProofChain object.
+ *
+ * Pure synchronous function — caller handles file I/O.
+ *
+ * @param chain - Parsed proof chain (must have `entries` array)
+ * @param chain.entries - Array of proof chain entries
+ * @returns Chain health counts for use in JSON meta fields
+ */
+export function computeChainHealth(chain: { entries: Array<{ findings?: Array<{ status?: string }> }> }): ChainHealth {
+  const runs = chain.entries.length;
+  let total = 0;
+  let active = 0;
+  let closed = 0;
+  let lesson = 0;
+  let promoted = 0;
+
+  for (const e of chain.entries) {
+    for (const f of e.findings || []) {
+      total++;
+      switch (f.status) {
+        case 'active': active++; break;
+        case 'lesson': lesson++; break;
+        case 'promoted': promoted++; break;
+        case 'closed': closed++; break;
+        default: active++; break; // undefined = active
+      }
+    }
+  }
+
+  return {
+    chain_runs: runs,
+    findings: { active, closed, lesson, promoted, total },
+  };
+}
+
+/**
+ * Wrap a successful command result in the standard JSON envelope.
+ *
+ * @param command - Command name (e.g., "proof", "proof close")
+ * @param results - Command-specific results object
+ * @param chain - Parsed proof chain for health metadata
+ * @param chain.entries - Array of proof chain entries
+ * @returns Four-key JSON envelope
+ */
+export function wrapJsonResponse<T>(command: string, results: T, chain: { entries: Array<{ findings?: Array<{ status?: string }> }> }): JsonEnvelope<T> {
+  return {
+    command,
+    timestamp: new Date().toISOString(),
+    results,
+    meta: computeChainHealth(chain),
+  };
+}
+
+/**
+ * Wrap an error in the standard JSON error envelope.
+ *
+ * @param command - Command name (e.g., "proof close")
+ * @param code - Machine-readable error code (e.g., "WRONG_BRANCH")
+ * @param message - Human-readable error message
+ * @param context - Additional context fields for the error
+ * @param chain - Parsed proof chain for health metadata (null if chain unavailable)
+ * @param chain.entries - Array of proof chain entries
+ * @returns Four-key JSON error envelope
+ */
+export function wrapJsonError(
+  command: string,
+  code: string,
+  message: string,
+  context: Record<string, unknown>,
+  chain: { entries: Array<{ findings?: Array<{ status?: string }> }> } | null,
+): JsonErrorEnvelope {
+  const meta: ChainHealth = chain
+    ? computeChainHealth(chain)
+    : { chain_runs: 0, findings: { active: 0, closed: 0, lesson: 0, promoted: 0, total: 0 } };
+
+  return {
+    command,
+    timestamp: new Date().toISOString(),
+    error: { code, message, ...context },
+    meta,
+  };
+}
+
+/**
  * Parse findings from verify report's ## Callouts section.
  *
  * Format-agnostic: finds bold category keywords (Code, Test, Upstream, Security,

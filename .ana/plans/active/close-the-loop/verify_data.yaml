@@ -1,0 +1,24 @@
+schema: 1
+findings:
+  - category: code
+    summary: "Shell injection in close commit message — user-controlled --reason interpolated into shell command"
+    file: "packages/cli/src/commands/proof.ts"
+    line: 469
+    severity: observation
+    related_assertions: ["A004"]
+  - category: code
+    summary: "Anchor stripping regex false-positives — aggressive strip reduces anchors to common words"
+    file: "packages/cli/src/commands/proof.ts"
+    line: 570
+    severity: observation
+    related_assertions: ["A021"]
+  - category: code
+    summary: "Unnecessary disk re-read for nudge human closure check"
+    file: "packages/cli/src/commands/work.ts"
+    line: 1296
+    severity: observation
+    related_assertions: ["A028"]
+  - category: upstream
+    summary: "A015 target 'displayed_file_count' implies numeric variable that doesn't exist — builder must invent counting method"
+    severity: note
+    related_assertions: ["A015"]

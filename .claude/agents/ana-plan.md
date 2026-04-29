@@ -405,6 +405,15 @@ The Brief should contain ONLY information the builder couldn't find in 30 second
 
 Paste existing code from files you read. Every code block in the spec must be copied from an existing file — never invented.
 
+### Proof Context
+Run `ana proof context {affected files}` for each file in the File Changes section. Curate the top 2-3 findings per affected file:
+- Prioritize by severity: blockers first, then observations, then notes
+- Skip notes unless directly relevant to the build (e.g., "missing test for X" when X is being modified)
+- Flag any finding whose `related_assertions` overlap with current contract assertions
+- If no active findings exist for affected files, state: "No active proof findings for affected files."
+
+This delivers institutional memory to Build — awareness of known issues that could inform implementation decisions.
+
 ### Checkpoint Commands
 Copy checkpoint commands from `ana.json` `commands` field.
 

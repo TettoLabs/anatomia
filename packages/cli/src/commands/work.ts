@@ -18,7 +18,7 @@ import * as fsPromises from 'node:fs/promises';
 import * as path from 'node:path';
 import { globSync } from 'glob';
 import { readArtifactBranch, readBranchPrefix, getCurrentBranch } from '../utils/git-operations.js';
-import { generateProofSummary, resolveFindingPaths, extractScopeSummary, generateDashboard, type ProofSummary } from '../utils/proofSummary.js';
+import { generateProofSummary, resolveFindingPaths, extractScopeSummary, generateDashboard, computeChainHealth, type ProofSummary } from '../utils/proofSummary.js';
 import { findProjectRoot } from '../utils/validators.js';
 import type { ProofChainEntry, ProofChain, ProofChainStats } from '../types/proof.js';
 
@@ -973,26 +973,9 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
   // 2. Regenerate PROOF_CHAIN.md as quality dashboard
   const chainMdPath = path.join(anaDir, 'PROOF_CHAIN.md');
 
-  // Compute chain health counts
-  const runs = chain.entries.length;
-  let totalFindings = 0;
-  let activeCount = 0;
-  let lessonsCount = 0;
-  let promotedCount = 0;
-  let closedCount = 0;
-
-  for (const e of chain.entries) {
-    for (const f of e.findings || []) {
-      totalFindings++;
-      switch (f.status) {
-        case 'active': activeCount++; break;
-        case 'lesson': lessonsCount++; break;
-        case 'promoted': promotedCount++; break;
-        case 'closed': closedCount++; break;
-        default: activeCount++; break; // undefined = active
-      }
-    }
-  }
+  // Compute chain health counts via shared utility
+  const health = computeChainHealth(chain);
+  const { chain_runs: runs, findings: { active: activeCount, closed: closedCount, lesson: lessonsCount, promoted: promotedCount, total: totalFindings } } = health;
 
   const dashboardMd = generateDashboard(chain.entries, { runs, active: activeCount, lessons: lessonsCount, promoted: promotedCount, closed: closedCount });
   await fsPromises.writeFile(chainMdPath, dashboardMd);
@@ -1060,6 +1043,11 @@ export async function completeWork(slug: string): Promise<void> {
     if (errorMessage.includes('conflict') || errorMessage.includes('Cannot rebase')) {
       console.error(chalk.red('Error: Pull failed due to conflicts. Resolve conflicts and try again.'));
       process.exit(1);
+    }
+    // Non-conflict failures: warn and continue (matching saveArtifact's pattern)
+    if (errorMessage) {
+      console.error(chalk.yellow('⚠ Warning: Pull failed (network error). Continuing with local data.'));
+      console.error(chalk.yellow('  Run `git pull` manually to sync before completing.'));
     }
   }
 
@@ -1300,6 +1288,28 @@ export async function completeWork(slug: string): Promise<void> {
   console.log(chalk.gray(`  Chain: ${stats.runs} ${stats.runs !== 1 ? 'runs' : 'run'} · ${stats.active} active finding${stats.active !== 1 ? 's' : ''}`));
   if (stats.maintenance) {
     console.log(chalk.gray(`  Maintenance: ${stats.maintenance.auto_closed} auto-closed, ${stats.maintenance.lessons_classified} classified as lessons`));
+  }
+
+  // Nudge: suggest proof audit when findings pile up AND no human closures exist
+  if (stats.active > 20) {
+    let hasHumanClosure = false;
+    const chainPath = path.join(projectRoot, '.ana', 'proof_chain.json');
+    try {
+      const chainData: ProofChain = JSON.parse(fs.readFileSync(chainPath, 'utf-8'));
+      for (const e of chainData.entries) {
+        for (const f of e.findings || []) {
+          if (f.closed_by === 'human') {
+            hasHumanClosure = true;
+            break;
+          }
+        }
+        if (hasHumanClosure) break;
+      }
+    } catch { /* chain read failed — skip nudge */ }
+
+    if (!hasHumanClosure) {
+      console.log(chalk.cyan('→ Run `ana proof audit` to review active findings'));
+    }
   }
 }
 

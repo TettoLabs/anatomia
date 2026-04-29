@@ -236,9 +236,9 @@ describe('ana proof', () => {
     });
   });
 
-  // @ana A012, A013
+  // @ana A012, A013, A022, A023
   describe('outputs JSON list with --json flag', () => {
-    it('outputs valid JSON with entries array', async () => {
+    it('outputs valid JSON with 4-key contract envelope', async () => {
       await createProofChain([sampleEntry, olderEntry]);
       process.chdir(tempDir);
 
@@ -247,9 +247,18 @@ describe('ana proof', () => {
 
       const json = JSON.parse(stdout);
       expect(json).toBeTruthy();
-      expect(json.entries).toBeDefined();
-      expect(Array.isArray(json.entries)).toBe(true);
-      expect(json.entries).toHaveLength(2);
+      // 4-key envelope
+      expect(json.command).toBe('proof');
+      expect(json.timestamp).toBeDefined();
+      expect(json.results).toBeDefined();
+      expect(json.meta).toBeDefined();
+      // results contains entries
+      expect(json.results.entries).toBeDefined();
+      expect(Array.isArray(json.results.entries)).toBe(true);
+      expect(json.results.entries).toHaveLength(2);
+      // meta contains chain health
+      expect(json.meta.chain_runs).toBeDefined();
+      expect(json.meta.findings).toBeDefined();
     });
   });
 
@@ -264,7 +273,7 @@ describe('ana proof', () => {
       expect(exitCode).toBe(0);
 
       const json = JSON.parse(stdout);
-      expect(json.entries).toHaveLength(0);
+      expect(json.results.entries).toHaveLength(0);
     });
   });
 
@@ -340,9 +349,9 @@ describe('ana proof', () => {
     });
   });
 
-  // @ana A011, A012
+  // @ana A011, A012, A022, A023
   describe('ana proof context --json', () => {
-    it('returns valid parseable JSON', async () => {
+    it('returns valid parseable JSON with contract envelope', async () => {
       await createContextChain();
       process.chdir(tempDir);
 
@@ -350,10 +359,16 @@ describe('ana proof', () => {
       expect(exitCode).toBe(0);
 
       const json = JSON.parse(stdout);
-      expect(json.results).toBeDefined();
-      expect(json.results[0].findings).toBeDefined();
-      expect(json.results[0].findings.length).toBeGreaterThan(0);
-      expect(json.results[0].build_concerns).toBeDefined();
+      // 4-key envelope
+      expect(json.command).toBe('proof context');
+      expect(json.timestamp).toBeDefined();
+      expect(json.meta).toBeDefined();
+      expect(json.meta.chain_runs).toBeDefined();
+      // results contains context data
+      expect(json.results.results).toBeDefined();
+      expect(json.results.results[0].findings).toBeDefined();
+      expect(json.results.results[0].findings.length).toBeGreaterThan(0);
+      expect(json.results.results[0].build_concerns).toBeDefined();
     });
   });
 
@@ -408,9 +423,9 @@ describe('ana proof', () => {
     });
   });
 
-  // @ana A017
-  describe('detail JSON unchanged', () => {
-    it('still works with a slug and --json', async () => {
+  // @ana A017, A022, A023
+  describe('detail JSON uses contract envelope', () => {
+    it('wraps entry in 4-key envelope', async () => {
       await createProofChain([sampleEntry]);
       process.chdir(tempDir);
 
@@ -418,7 +433,11 @@ describe('ana proof', () => {
       expect(exitCode).toBe(0);
 
       const json = JSON.parse(stdout);
-      expect(json.slug).toBe('stripe-payments');
+      expect(json.command).toBe('proof stripe-payments');
+      expect(json.timestamp).toBeDefined();
+      expect(json.results.slug).toBe('stripe-payments');
+      expect(json.meta).toBeDefined();
+      expect(json.meta.chain_runs).toBeDefined();
     });
   });
 
@@ -546,48 +565,51 @@ describe('ana proof', () => {
 
   // @ana A013, A014, A015, A016
   describe('outputs JSON with --json flag', () => {
-    it('outputs valid JSON', async () => {
+    it('outputs valid JSON envelope', async () => {
       await createProofChain([sampleEntry]);
       process.chdir(tempDir);
 
       const { stdout, exitCode } = runProof(['stripe-payments', '--json']);
       expect(exitCode).toBe(0);
 
-      let parsed: unknown;
+      let parsed: Record<string, unknown> | undefined;
       expect(() => {
         parsed = JSON.parse(stdout);
       }).not.toThrow();
       expect(parsed).toBeTruthy();
+      expect(parsed!['command']).toBeDefined();
+      expect(parsed!['results']).toBeDefined();
+      expect(parsed!['meta']).toBeDefined();
     });
 
-    it('includes slug field', async () => {
+    it('includes slug field in results', async () => {
       await createProofChain([sampleEntry]);
       process.chdir(tempDir);
 
       const { stdout } = runProof(['stripe-payments', '--json']);
       const json = JSON.parse(stdout);
-      expect(json.slug).toBeDefined();
-      expect(json.slug).toBe('stripe-payments');
+      expect(json.results.slug).toBeDefined();
+      expect(json.results.slug).toBe('stripe-payments');
     });
 
-    it('includes assertions array', async () => {
+    it('includes assertions array in results', async () => {
       await createProofChain([sampleEntry]);
       process.chdir(tempDir);
 
       const { stdout } = runProof(['stripe-payments', '--json']);
       const json = JSON.parse(stdout);
-      expect(json.assertions).toBeDefined();
-      expect(Array.isArray(json.assertions)).toBe(true);
+      expect(json.results.assertions).toBeDefined();
+      expect(Array.isArray(json.results.assertions)).toBe(true);
     });
 
-    it('includes timing information', async () => {
+    it('includes timing information in results', async () => {
       await createProofChain([sampleEntry]);
       process.chdir(tempDir);
 
       const { stdout } = runProof(['stripe-payments', '--json']);
       const json = JSON.parse(stdout);
-      expect(json.timing).toBeDefined();
-      expect(json.timing.total_minutes).toBe(90);
+      expect(json.results.timing).toBeDefined();
+      expect(json.results.timing.total_minutes).toBe(90);
     });
   });
 
@@ -731,6 +753,461 @@ describe('ana proof', () => {
 
       const { stdout } = runProof(['stripe-payments']);
       expect(stdout).toContain('?');
+    });
+  });
+
+  // ─── Close Subcommand Tests ──────────────────────────────────────────
+
+  /**
+   * Helper to create a git-initialized project with proof chain for close testing.
+   * Sets up a "main" branch so close can verify branch.
+   */
+  async function createCloseTestProject(entries: unknown[], options?: { branch?: string }): Promise<void> {
+    const branch = options?.branch ?? 'main';
+
+    // Init git
+    execSync('git init', { cwd: tempDir, stdio: 'ignore' });
+    execSync('git config user.email "test@test.com"', { cwd: tempDir, stdio: 'ignore' });
+    execSync('git config user.name "Test"', { cwd: tempDir, stdio: 'ignore' });
+
+    // Create .ana/ana.json
+    const anaDir = path.join(tempDir, '.ana');
+    await fs.mkdir(anaDir, { recursive: true });
+    await fs.writeFile(
+      path.join(anaDir, 'ana.json'),
+      JSON.stringify({ artifactBranch: 'main' }),
+    );
+
+    // Write proof chain
+    await fs.writeFile(
+      path.join(anaDir, 'proof_chain.json'),
+      JSON.stringify({ entries }, null, 2),
+    );
+
+    // Initial commit and set branch
+    execSync('git add -A && git commit -m "init"', { cwd: tempDir, stdio: 'ignore' });
+    execSync(`git branch -M ${branch}`, { cwd: tempDir, stdio: 'ignore' });
+  }
+
+  /** Entry with active findings for close testing */
+  const closeEntry = {
+    slug: 'fix-validation',
+    feature: 'Fix Input Validation',
+    result: 'PASS',
+    author: { name: 'Developer', email: 'dev@example.com' },
+    contract: { total: 5, covered: 5, uncovered: 0, satisfied: 5, unsatisfied: 0, deviated: 0 },
+    assertions: [{ id: 'A001', says: 'Validates input', status: 'SATISFIED' }],
+    acceptance_criteria: { total: 3, met: 3 },
+    timing: { total_minutes: 30 },
+    hashes: {},
+    completed_at: '2026-04-20T10:00:00Z',
+    modules_touched: ['src/api/payments.ts'],
+    findings: [
+      { id: 'F001', category: 'validation', summary: 'Missing request validation', file: 'src/api/payments.ts', anchor: 'validateInput', status: 'active', severity: 'blocker' },
+      { id: 'F002', category: 'testing', summary: 'No test for edge case', file: 'src/api/payments.ts', anchor: null, status: 'active' },
+      { id: 'F003', category: 'code', summary: 'Redundant import', file: 'src/utils/helpers.ts', anchor: null, status: 'closed', closed_by: 'mechanical', closed_at: '2026-04-22T10:00:00Z', closed_reason: 'auto-closed' },
+    ],
+    rejection_cycles: 0,
+    previous_failures: [],
+    build_concerns: [],
+  };
+
+  /** Entry with a lesson finding */
+  const lessonEntry = {
+    slug: 'add-logging',
+    feature: 'Add Structured Logging',
+    result: 'PASS',
+    author: { name: 'Developer', email: 'dev@example.com' },
+    contract: { total: 3, covered: 3, uncovered: 0, satisfied: 3, unsatisfied: 0, deviated: 0 },
+    assertions: [{ id: 'A001', says: 'Logs work', status: 'SATISFIED' }],
+    acceptance_criteria: { total: 2, met: 2 },
+    timing: { total_minutes: 20 },
+    hashes: {},
+    completed_at: '2026-04-21T10:00:00Z',
+    modules_touched: [],
+    findings: [
+      { id: 'L001', category: 'testing', summary: 'Consider adding log rotation test', file: null, anchor: null, status: 'lesson' },
+    ],
+    rejection_cycles: 0,
+    previous_failures: [],
+    build_concerns: [],
+  };
+
+  // @ana A001, A002, A003, A004, A005
+  describe('closes finding successfully', () => {
+    it('marks finding as closed with reason', async () => {
+      await createCloseTestProject([closeEntry]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['close', 'F001', '--reason', 'fixed-in-pr']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('Closed F001');
+      expect(stdout).toContain('fixed-in-pr');
+
+      // Verify chain was mutated
+      const chain = JSON.parse(await fs.readFile(path.join(tempDir, '.ana', 'proof_chain.json'), 'utf-8'));
+      const finding = chain.entries[0].findings.find((f: { id: string }) => f.id === 'F001');
+      expect(finding.status).toBe('closed');
+      expect(finding.closed_by).toBe('human');
+      expect(finding.closed_reason).toBe('fixed-in-pr');
+      expect(finding.closed_at).toBeDefined();
+
+      // Verify PROOF_CHAIN.md was regenerated
+      const dashboard = await fs.readFile(path.join(tempDir, '.ana', 'PROOF_CHAIN.md'), 'utf-8');
+      expect(dashboard).toContain('Proof Chain Dashboard');
+
+      // Verify commit was created
+      const lastCommit = execSync('git log -1 --pretty=%s', { cwd: tempDir, encoding: 'utf-8' }).trim();
+      expect(lastCommit).toContain('[proof] Close');
+      expect(lastCommit).toContain('F001');
+    });
+  });
+
+  // @ana A006
+  describe('rejects close from wrong branch', () => {
+    it('shows WRONG_BRANCH error', async () => {
+      await createCloseTestProject([closeEntry], { branch: 'feature/other' });
+      process.chdir(tempDir);
+
+      const { stderr, exitCode } = runProof(['close', 'F001', '--reason', 'test']);
+      expect(exitCode).not.toBe(0);
+      expect(stderr).toContain('Wrong branch');
+    });
+
+    it('returns WRONG_BRANCH code in JSON', async () => {
+      await createCloseTestProject([closeEntry], { branch: 'feature/other' });
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['close', 'F001', '--reason', 'test', '--json']);
+      expect(exitCode).not.toBe(0);
+
+      const json = JSON.parse(stdout);
+      expect(json.error.code).toBe('WRONG_BRANCH');
+    });
+  });
+
+  // @ana A007
+  describe('rejects nonexistent finding', () => {
+    it('shows FINDING_NOT_FOUND error', async () => {
+      await createCloseTestProject([closeEntry]);
+      process.chdir(tempDir);
+
+      const { stderr, exitCode } = runProof(['close', 'F999', '--reason', 'test']);
+      expect(exitCode).not.toBe(0);
+      expect(stderr).toContain('not found');
+    });
+
+    it('returns FINDING_NOT_FOUND code in JSON', async () => {
+      await createCloseTestProject([closeEntry]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['close', 'F999', '--reason', 'test', '--json']);
+      expect(exitCode).not.toBe(0);
+
+      const json = JSON.parse(stdout);
+      expect(json.error.code).toBe('FINDING_NOT_FOUND');
+    });
+  });
+
+  // @ana A008
+  describe('rejects already-closed finding', () => {
+    it('shows ALREADY_CLOSED error with closer info', async () => {
+      await createCloseTestProject([closeEntry]);
+      process.chdir(tempDir);
+
+      const { stderr, exitCode } = runProof(['close', 'F003', '--reason', 'again']);
+      expect(exitCode).not.toBe(0);
+      expect(stderr).toContain('already closed');
+    });
+
+    it('returns ALREADY_CLOSED code in JSON', async () => {
+      await createCloseTestProject([closeEntry]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['close', 'F003', '--reason', 'again', '--json']);
+      expect(exitCode).not.toBe(0);
+
+      const json = JSON.parse(stdout);
+      expect(json.error.code).toBe('ALREADY_CLOSED');
+      expect(json.error.closed_by).toBe('mechanical');
+    });
+  });
+
+  // @ana A009
+  describe('rejects close without reason', () => {
+    it('shows REASON_REQUIRED error', async () => {
+      await createCloseTestProject([closeEntry]);
+      process.chdir(tempDir);
+
+      const { stderr, exitCode } = runProof(['close', 'F001']);
+      expect(exitCode).not.toBe(0);
+      expect(stderr).toContain('--reason is required');
+    });
+
+    it('returns REASON_REQUIRED code in JSON', async () => {
+      await createCloseTestProject([closeEntry]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['close', 'F001', '--json']);
+      expect(exitCode).not.toBe(0);
+
+      const json = JSON.parse(stdout);
+      expect(json.error.code).toBe('REASON_REQUIRED');
+    });
+  });
+
+  // @ana A010
+  describe('closes lesson finding', () => {
+    it('shows lesson → closed transition', async () => {
+      await createCloseTestProject([lessonEntry]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['close', 'L001', '--reason', 'no longer relevant']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('lesson');
+      expect(stdout).toContain('closed');
+    });
+  });
+
+  // @ana A011, A012, A013
+  describe('close returns valid JSON envelope', () => {
+    it('returns 4-key envelope with finding and meta', async () => {
+      await createCloseTestProject([closeEntry]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['close', 'F001', '--reason', 'fixed', '--json']);
+      expect(exitCode).toBe(0);
+
+      const json = JSON.parse(stdout);
+      expect(json.command).toBe('proof close');
+      expect(json.timestamp).toBeDefined();
+      expect(json.results.finding.id).toBe('F001');
+      expect(json.results.previous_status).toBe('active');
+      expect(json.results.new_status).toBe('closed');
+      expect(json.results.closed_by).toBe('human');
+      expect(json.meta.findings.active).toBeDefined();
+      expect(json.meta.chain_runs).toBeDefined();
+    });
+  });
+
+  // @ana A024, A025
+  describe('error responses use contract envelope', () => {
+    it('returns error envelope with code and meta', async () => {
+      await createCloseTestProject([closeEntry]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['close', 'F999', '--reason', 'test', '--json']);
+      expect(exitCode).not.toBe(0);
+
+      const json = JSON.parse(stdout);
+      expect(json.command).toBe('proof close');
+      expect(json.error.code).toBe('FINDING_NOT_FOUND');
+      expect(json.meta).toBeDefined();
+    });
+  });
+
+  // ─── Audit Subcommand Tests ──────────────────────────────────────────
+
+  /**
+   * Helper to create proof chain with many findings for audit testing
+   */
+  async function createAuditChain(findingCount: number, fileCount: number): Promise<void> {
+    const findings: Array<Record<string, unknown>> = [];
+    for (let i = 0; i < findingCount; i++) {
+      const fileIdx = i % fileCount;
+      findings.push({
+        id: `F${String(i + 1).padStart(3, '0')}`,
+        category: 'code',
+        summary: `Finding ${i + 1} in file ${fileIdx}`,
+        file: `src/file${fileIdx}.ts`,
+        anchor: null,
+        status: 'active',
+        severity: i % 3 === 0 ? 'blocker' : 'observation',
+      });
+    }
+
+    const entry = {
+      slug: 'bulk-test',
+      feature: 'Bulk Test Feature',
+      result: 'PASS',
+      author: { name: 'Dev', email: 'dev@example.com' },
+      contract: { total: 1, covered: 1, uncovered: 0, satisfied: 1, unsatisfied: 0, deviated: 0 },
+      assertions: [{ id: 'A001', says: 'Works', status: 'SATISFIED' }],
+      acceptance_criteria: { total: 1, met: 1 },
+      timing: { total_minutes: 10 },
+      hashes: {},
+      completed_at: '2026-04-20T10:00:00Z',
+      modules_touched: [],
+      findings,
+      rejection_cycles: 0,
+      previous_failures: [],
+      build_concerns: [],
+    };
+
+    await createTestProject(tempDir);
+    await fs.writeFile(
+      path.join(tempDir, '.ana', 'proof_chain.json'),
+      JSON.stringify({ entries: [entry] }, null, 2),
+    );
+  }
+
+  // @ana A014
+  describe('displays audit grouped by file', () => {
+    it('shows file headers with finding count', async () => {
+      await createAuditChain(5, 2);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['audit']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('findings)');
+      expect(stdout).toContain('src/file0.ts');
+      expect(stdout).toContain('src/file1.ts');
+    });
+  });
+
+  // @ana A015
+  describe('truncates audit at 8 files', () => {
+    it('caps display at exactly 8 files with overflow', async () => {
+      // 30 findings across 10 files → only 8 files shown
+      await createAuditChain(30, 10);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['audit']);
+      expect(exitCode).toBe(0);
+
+      // Count file headers: lines matching "  src/fileN.ts (N finding(s))"
+      const fileHeaders = stdout.split('\n').filter((l: string) => /^\s+\S+\s+\(\d+ findings?\)/.test(l));
+      expect(fileHeaders.length).toBe(8);
+      expect(stdout).toContain('more');
+    });
+  });
+
+  // @ana A016
+  describe('truncates findings per file at 3', () => {
+    it('caps findings per file at 3 with overflow', async () => {
+      // 6 findings all in 1 file → 3 shown + "3 more"
+      await createAuditChain(6, 1);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['audit']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('3 more');
+    });
+  });
+
+  // @ana A017
+  describe('shows overflow message', () => {
+    it('shows overflow for files exceeding cap', async () => {
+      await createAuditChain(50, 12);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['audit']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('more');
+    });
+  });
+
+  // @ana A018
+  describe('audit works from non-artifact branch', () => {
+    it('succeeds without branch check', async () => {
+      // Create on a feature branch — audit should still work
+      execSync('git init', { cwd: tempDir, stdio: 'ignore' });
+      execSync('git config user.email "test@test.com"', { cwd: tempDir, stdio: 'ignore' });
+      execSync('git config user.name "Test"', { cwd: tempDir, stdio: 'ignore' });
+
+      const anaDir = path.join(tempDir, '.ana');
+      await fs.mkdir(anaDir, { recursive: true });
+      await fs.writeFile(path.join(anaDir, 'ana.json'), JSON.stringify({ artifactBranch: 'main' }));
+      await fs.writeFile(
+        path.join(anaDir, 'proof_chain.json'),
+        JSON.stringify({ entries: [closeEntry] }, null, 2),
+      );
+      execSync('git add -A && git commit -m "init"', { cwd: tempDir, stdio: 'ignore' });
+      execSync('git checkout -b feature/something', { cwd: tempDir, stdio: 'ignore' });
+
+      process.chdir(tempDir);
+
+      const { exitCode } = runProof(['audit']);
+      expect(exitCode).toBe(0);
+    });
+  });
+
+  // @ana A019
+  describe('audit with zero findings shows clean message', () => {
+    it('shows clean message when no active findings', async () => {
+      // All findings are closed
+      const closedEntry = {
+        ...closeEntry,
+        findings: closeEntry.findings.map(f => ({ ...f, status: 'closed' })),
+      };
+      await createTestProject(tempDir);
+      await fs.writeFile(
+        path.join(tempDir, '.ana', 'proof_chain.json'),
+        JSON.stringify({ entries: [closedEntry] }, null, 2),
+      );
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['audit']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('clean');
+    });
+  });
+
+  // @ana A020, A021
+  describe('audit returns valid JSON envelope', () => {
+    it('returns total_active and by_file with anchor_present', async () => {
+      await createAuditChain(5, 2);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['audit', '--json']);
+      expect(exitCode).toBe(0);
+
+      const json = JSON.parse(stdout);
+      expect(json.command).toBe('proof audit');
+      expect(json.results.total_active).toBe(5);
+      expect(json.results.by_file).toBeDefined();
+      expect(json.results.by_file.length).toBeGreaterThan(0);
+      expect(json.results.by_file[0].findings[0].anchor_present).toBeDefined();
+      expect(json.meta.chain_runs).toBeDefined();
+    });
+  });
+
+  // ─── Template Tests ─────────────────────────────────────────────────
+
+  // @ana A026
+  describe('template includes proof context subsection', () => {
+    it('Plan template has ### Proof Context between Pattern Extracts and Checkpoint Commands', async () => {
+      const templatePath = path.join(__dirname, '../../templates/.claude/agents/ana-plan.md');
+      const content = await fs.readFile(templatePath, 'utf-8');
+      expect(content).toContain('### Proof Context');
+
+      // Verify ordering: Pattern Extracts < Proof Context < Checkpoint Commands
+      const patternIdx = content.indexOf('### Pattern Extracts');
+      const proofIdx = content.indexOf('### Proof Context');
+      const checkpointIdx = content.indexOf('### Checkpoint Commands');
+      expect(patternIdx).toBeLessThan(proofIdx);
+      expect(proofIdx).toBeLessThan(checkpointIdx);
+    });
+  });
+
+  // @ana A022, A023
+  describe('existing commands use contract envelope', () => {
+    it('list --json has 4-key envelope with meta', async () => {
+      await createProofChain([sampleEntry]);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['--json']);
+      const json = JSON.parse(stdout);
+      expect(json.command).toBeDefined();
+      expect(json.timestamp).toBeDefined();
+      expect(json.results).toBeDefined();
+      expect(json.meta).toBeDefined();
+      expect(json.meta.chain_runs).toBeDefined();
+      expect(json.meta.findings.active).toBeDefined();
+      expect(json.meta.findings.closed).toBeDefined();
+      expect(json.meta.findings.lesson).toBeDefined();
+      expect(json.meta.findings.promoted).toBeDefined();
+      expect(json.meta.findings.total).toBeDefined();
     });
   });
 });

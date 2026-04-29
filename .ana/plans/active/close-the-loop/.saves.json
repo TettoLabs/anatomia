@@ -14,5 +14,184 @@
   "spec": {
     "saved_at": "2026-04-29T00:33:26.875Z",
     "hash": "sha256:38ebc1be1ee0b0b14e71ff6a3a93b7ed53e11cde35b50a08f7cbd3b8137bf253"
+  },
+  "build-report": {
+    "saved_at": "2026-04-29T01:18:54.971Z",
+    "hash": "sha256:03dba7dd655bcdba71937fdf24792f4998176f31aa2c0d2d64d4554cb87d66df"
+  },
+  "build-data": {
+    "saved_at": "2026-04-29T01:18:54.972Z",
+    "hash": "sha256:17bf99aafe37fa702787afe5771d11fe11fb52645f05aa01600d44a0c1f596e3"
+  },
+  "modules_touched": [
+    ".claude/agents/ana-plan.md",
+    "packages/cli/src/commands/proof.ts",
+    "packages/cli/src/commands/work.ts",
+    "packages/cli/src/utils/proofSummary.ts",
+    "packages/cli/templates/.claude/agents/ana-plan.md",
+    "packages/cli/tests/commands/proof.test.ts",
+    "packages/cli/tests/commands/work.test.ts"
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:17ed7a31fc050af32d7ed1948ade6f721bb0a64823f0e2ef8356ffc89ad8a7bf",
+    "assertions": [
+      {
+        "id": "A001",
+        "says": "Closing a finding marks it as closed with the developer's reason",
+        "status": "COVERED"
+      },
+      {
+        "id": "A002",
+        "says": "Closed findings record who closed them and why",
+        "status": "COVERED"
+      },
+      {
+        "id": "A003",
+        "says": "Closed findings record the reason provided",
+        "status": "COVERED"
+      },
+      {
+        "id": "A004",
+        "says": "Closing a finding commits the change to git with a traceable message",
+        "status": "COVERED"
+      },
+      {
+        "id": "A005",
+        "says": "Closing regenerates the proof chain dashboard",
+        "status": "COVERED"
+      },
+      {
+        "id": "A006",
+        "says": "Closing from the wrong branch is rejected with a clear error",
+        "status": "COVERED"
+      },
+      {
+        "id": "A007",
+        "says": "Closing a nonexistent finding tells the developer it doesn't exist",
+        "status": "COVERED"
+      },
+      {
+        "id": "A008",
+        "says": "Closing an already-closed finding shows who closed it and when",
+        "status": "COVERED"
+      },
+      {
+        "id": "A009",
+        "says": "Closing without a reason is rejected because closures need explanations",
+        "status": "COVERED"
+      },
+      {
+        "id": "A010",
+        "says": "Closing a lesson shows the transition from lesson to closed",
+        "status": "COVERED"
+      },
+      {
+        "id": "A011",
+        "says": "Close JSON response includes the full finding object",
+        "status": "COVERED"
+      },
+      {
+        "id": "A012",
+        "says": "Close JSON response includes the status transition",
+        "status": "COVERED"
+      },
+      {
+        "id": "A013",
+        "says": "Close JSON response includes chain health metadata",
+        "status": "COVERED"
+      },
+      {
+        "id": "A014",
+        "says": "Audit shows active findings grouped by file",
+        "status": "COVERED"
+      },
+      {
+        "id": "A015",
+        "says": "Audit caps display at 8 files maximum",
+        "status": "COVERED"
+      },
+      {
+        "id": "A016",
+        "says": "Audit caps display at 3 findings per file",
+        "status": "COVERED"
+      },
+      {
+        "id": "A017",
+        "says": "Audit shows overflow count when findings exceed display caps",
+        "status": "COVERED"
+      },
+      {
+        "id": "A018",
+        "says": "Audit works from any branch without requiring artifact branch",
+        "status": "COVERED"
+      },
+      {
+        "id": "A019",
+        "says": "Audit on a clean chain tells the developer there are no active findings",
+        "status": "COVERED"
+      },
+      {
+        "id": "A020",
+        "says": "Audit JSON includes total active count and per-file breakdown",
+        "status": "COVERED"
+      },
+      {
+        "id": "A021",
+        "says": "Audit JSON includes anchor presence check for each finding",
+        "status": "COVERED"
+      },
+      {
+        "id": "A022",
+        "says": "All proof JSON responses use the permanent four-key envelope",
+        "status": "COVERED"
+      },
+      {
+        "id": "A023",
+        "says": "All proof JSON responses include chain health in metadata",
+        "status": "COVERED"
+      },
+      {
+        "id": "A024",
+        "says": "JSON error responses include the error code and chain metadata",
+        "status": "COVERED"
+      },
+      {
+        "id": "A025",
+        "says": "JSON error responses still include metadata even on failure",
+        "status": "COVERED"
+      },
+      {
+        "id": "A026",
+        "says": "The Plan template delivers proof context to Build as a structural subsection",
+        "status": "COVERED"
+      },
+      {
+        "id": "A027",
+        "says": "Work complete warns when pull fails for non-conflict reasons",
+        "status": "COVERED"
+      },
+      {
+        "id": "A028",
+        "says": "Work complete nudges the developer to audit when findings pile up",
+        "status": "COVERED"
+      },
+      {
+        "id": "A029",
+        "says": "The audit nudge disappears after the first manual finding closure",
+        "status": "COVERED"
+      }
+    ],
+    "covered": 29,
+    "uncovered": 0,
+    "run_at": "2026-04-29T01:25:31.214Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-04-29T01:25:31.246Z",
+    "hash": "sha256:b5a77e430031c2d73a76e4ce5e77f3baa6a5f82bf68b44b1ef2aaad72a3b82d4"
+  },
+  "verify-data": {
+    "saved_at": "2026-04-29T01:25:31.246Z",
+    "hash": "sha256:502d4c4fd16e5a33f5d901832b538e2779c751e856eb4a2295f4dc168340049c"
   }
 }
