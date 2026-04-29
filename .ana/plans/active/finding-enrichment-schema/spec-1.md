@@ -69,8 +69,9 @@ findings:
 3. **`getProofContext` (~line 1316):** Add `suggested_action` to the explicit field mapping block, same conditional pattern as `severity` and `line`.
 4. **`ProofContextResult` interface (~line 1182):** `severity` union changes to `'risk' | 'debt' | 'observation'`. Add `suggested_action?: 'promote' | 'scope' | 'monitor' | 'accept'`.
 5. **`ProofChainEntryForContext` interface (~line 1212):** Same severity union change + add `suggested_action`.
-**Pattern to follow:** Field mapping at proofSummary.ts:1315-1317 — conditional property assignment for optional fields.
-**Why:** `getProofContext` uses explicit mapping (not spread). If `suggested_action` isn't added, it's silently dropped — this was a real bug class in structured-findings-companion.
+6. **Build concern YAML reader (~line 1137-1141):** Currently constructs concern objects with only `summary` and `file`, ignoring all other YAML fields. After Phase 1, Build is required to provide `severity` and `suggested_action` on every concern — but this reader silently drops them. Add the same type-guard + cast pattern used for findings: `if (typeof c['severity'] === 'string') concern.severity = c['severity'] as ...;` and same for `suggested_action`. The concern construction must use a `const concern: ProofSummary['build_concerns'][0]` variable (same pattern as the findings reader at ~line 1079) so optional fields can be conditionally added.
+**Pattern to follow:** Field mapping at proofSummary.ts:1315-1317 — conditional property assignment for optional fields. YAML reader at proofSummary.ts:1085-1087 — type-guard + cast for optional fields.
+**Why:** `getProofContext` and the build concern reader both use explicit construction (not spread). If `suggested_action` or `severity` isn't added to either, it's silently dropped — this was a real bug class in structured-findings-companion. The build concern reader has the same gap.
 
 ### `packages/cli/src/commands/artifact.ts` (modify)
 **What changes:**
@@ -161,8 +162,9 @@ findings:
 - **Unit tests (artifact.test.ts):** New validation tests for required `severity`, required `suggested_action`, invalid `suggested_action`, and build concern validation. Update existing fixtures to use new severity values and include `suggested_action`.
 - **Unit tests (proofSummary.test.ts):** Extend YAML reader test to assert `suggested_action` parsing. Extend `getProofContext` tests to assert `suggested_action` mapping and omission.
 - **Unit tests (proof.test.ts):** Mechanical update — change `blocker` to `risk` in test fixtures.
+- **Unit tests (proofSummary.test.ts):** Add test for build concern YAML reader: verify_data.yaml concerns with `severity` and `suggested_action` are preserved through `generateProofSummary` into `summary.build_concerns`.
 - **Integration:** TypeScript compilation (`tsc --noEmit`) serves as integration test — every consumer of the tightened union types must handle the new shape.
-- **Edge cases:** Finding with `severity: undefined` is rejected by save validation (required). Finding with old value `blocker` is rejected by save validation (not in new enum). Build concern with only `summary` is rejected. YAML with `suggested_action` missing is rejected at save but the reader handles its absence gracefully (optional on type).
+- **Edge cases:** Finding with `severity: undefined` is rejected by save validation (required). Finding with old value `blocker` is rejected by save validation (not in new enum). Build concern with only `summary` is rejected. YAML with `suggested_action` missing is rejected at save but the reader handles its absence gracefully (optional on type). Build concern with severity/action in YAML is correctly read (not silently dropped).
 
 ## Dependencies
 
@@ -181,6 +183,7 @@ None. Phase 1 is self-contained.
 - **Severity on save is required, severity on type is optional.** This asymmetry is intentional — the type accommodates old data, the validator enforces new data quality. Don't make the type field required.
 - **`chain.schema = 1` must be set before `JSON.stringify`.** The `writeProofChain` function writes the chain with `await fsPromises.writeFile(chainPath, JSON.stringify(chain, null, 2))` at ~line 971. Set `chain.schema` just before this line, after the `chain.entries.push(entry)`.
 - **Build concerns validation loop is minimal.** The current `validateBuildDataFormat` loop only checks `summary`. Adding `severity` + `suggested_action` means reading those fields and running the same check pattern as verify findings. Don't miss this — it's easy to update verify validation and forget build validation.
+- **Build concern YAML reader silently drops fields.** The reader at proofSummary.ts:1137-1141 constructs concerns with only `{ summary, file }`. It does not read `severity` or `suggested_action` from the YAML. After this scope, Build writes both fields — but if the reader isn't updated, the fields enter build_data.yaml, pass validation, then vanish when `generateProofSummary` reads the companion. The data enters the proof chain via `ProofSummary.build_concerns` without the classification. Same silent-drop bug class as `getProofContext`.
 
 ## Build Brief
 
@@ -213,6 +216,17 @@ This changes to required (remove the `!== undefined` guard, add missing check). 
               if (Array.isArray(f['related_assertions'])) finding.related_assertions = f['related_assertions'] as string[];
 ```
 Add `suggested_action` line following same pattern. Update severity cast to new union.
+
+**Build concern YAML reader — proofSummary.ts:1137-1141:**
+```typescript
+            for (const c of yamlContent.concerns as Array<Record<string, unknown>>) {
+              summary.build_concerns.push({
+                summary: String(c['summary'] ?? ''),
+                file: typeof c['file'] === 'string' ? c['file'] : null,
+              });
+            }
+```
+This must be restructured to use a variable + conditional field assignment (matching the findings reader pattern above) so severity and suggested_action can be added.
 
 **getProofContext explicit mapping — proofSummary.ts:1315-1317:**
 ```typescript

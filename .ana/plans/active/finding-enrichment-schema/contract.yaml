@@ -129,6 +129,12 @@ assertions:
     matcher: "equals"
     value: undefined
 
+  - id: A016b
+    says: "Build concern classification survives the YAML reader without being silently dropped"
+    block: "build concern YAML reader parses severity and suggested_action"
+    target: "summary.build_concerns[0].suggested_action"
+    matcher: "exists"
+
   # --- Phase 1: Migration ---
   - id: A019
     says: "Old blocker findings are automatically reclassified as risk"
