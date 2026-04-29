@@ -1,0 +1,4 @@
+schema: 1
+concerns:
+  - summary: "Recovery path duplicates finding-count logic from computeChainHealth"
+    file: "packages/cli/src/commands/work.ts"
