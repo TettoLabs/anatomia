@@ -1,0 +1,29 @@
+schema: 1
+findings:
+  - category: upstream
+    summary: "Contract A016 value imprecise — says parsedMap.size equals 0 but implementation returns size 1 (entry with empty array) for deletion-only diffs"
+    severity: observation
+    suggested_action: monitor
+    related_assertions: ["A016"]
+  - category: test
+    summary: "Four pre-existing @ana tags mislabeled for this contract's IDs — A005 on fallback test, A006 on UNVERIFIABLE test, A010 on formatted output test, A011 on UNVERIFIABLE message test"
+    file: "packages/cli/tests/commands/verify.test.ts"
+    severity: debt
+    suggested_action: accept
+  - category: code
+    summary: "Comment filter only matches // and # — block comments (/* @ana A001 */) in added lines are silently ignored"
+    file: "packages/cli/src/commands/verify.ts"
+    line: 91
+    severity: observation
+    suggested_action: monitor
+  - category: code
+    summary: "No size guard on git diff output — very large diffs loaded entirely into memory before parsing"
+    file: "packages/cli/src/commands/verify.ts"
+    line: 189
+    severity: observation
+    suggested_action: monitor
+  - category: test
+    summary: "Substantial test setup duplication across 8 integration tests — each creates git repo, contract, hash, saves from scratch"
+    file: "packages/cli/tests/commands/verify.test.ts"
+    severity: debt
+    suggested_action: scope

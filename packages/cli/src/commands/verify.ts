@@ -46,6 +46,59 @@ interface ContractPreCheckResult {
 // ContractAssertion, ContractSchema imported from types/contract.ts
 
 /**
+ * Parse raw `git diff -U0` output and extract added comment lines per file.
+ *
+ * Returns a map from file path (relative, as reported by git) to an array of
+ * added comment lines (with the leading `+` stripped). Only lines whose trimmed
+ * content starts with `//` or `#` are included — this eliminates false positives
+ * from `@ana` tags inside string literals or code.
+ *
+ * @param diffOutput - Raw output from `git diff <merge-base>..HEAD -U0`
+ * @returns Map of file path → added comment lines
+ */
+export function parseDiffAddedCommentLines(diffOutput: string): Map<string, string[]> {
+  const result = new Map<string, string[]>();
+  let currentFile: string | null = null;
+
+  for (const line of diffOutput.split('\n')) {
+    // File header: diff --git a/path b/path
+    if (line.startsWith('diff --git ')) {
+      const bPathMatch = line.match(/ b\/(.+)$/);
+      if (bPathMatch) {
+        currentFile = bPathMatch[1]!;
+        if (!result.has(currentFile)) {
+          result.set(currentFile, []);
+        }
+      }
+      continue;
+    }
+
+    // Skip diff metadata headers
+    if (line.startsWith('---') || line.startsWith('+++') || line.startsWith('@@')) {
+      continue;
+    }
+
+    // Skip non-addition lines
+    if (!line.startsWith('+')) {
+      continue;
+    }
+
+    // Strip the leading +
+    const content = line.slice(1);
+    const trimmed = content.trimStart();
+
+    // Only keep comment lines
+    if (trimmed.startsWith('//') || trimmed.startsWith('#')) {
+      if (currentFile) {
+        result.get(currentFile)!.push(content);
+      }
+    }
+  }
+
+  return result;
+}
+
+/**
  * Run contract-mode pre-check (S8+)
  * Checks seal integrity and tag coverage
  *
@@ -120,9 +173,11 @@ export function runContractPreCheck(slug: string, projectRoot: string = findProj
     };
   }
 
-  // Scope tag search to files Build changed (git diff from merge-base to HEAD).
-  // Prevents false COVERED from @ana tags in other features' test files.
-  // Falls back to global search if merge-base is unavailable.
+  // Scope tag search to added comment lines in the diff from merge-base to HEAD.
+  // Only lines added on the feature branch are searched, eliminating false COVEREDs
+  // from stale @ana tags in prior features. Falls back to global search if merge-base
+  // is unavailable.
+  let scopedCommentLines: Map<string, string[]> | null = null;
   let testFiles: string[] = [];
   let scopedSearch = false;
   try {
@@ -132,16 +187,13 @@ export function runContractPreCheck(slug: string, projectRoot: string = findProj
       { encoding: 'utf-8', cwd: projectRoot, stdio: ['pipe', 'pipe', 'pipe'] }
     ).trim();
     const diffOutput = execSync(
-      `git diff ${mergeBase}..HEAD --name-only`,
+      `git diff ${mergeBase}..HEAD -U0`,
       { encoding: 'utf-8', cwd: projectRoot, stdio: ['pipe', 'pipe', 'pipe'] }
-    ).trim();
-    if (diffOutput) {
-      testFiles = diffOutput.split('\n')
-        .filter(Boolean)
-        .map(f => path.join(projectRoot, f))
-        .filter(f => fs.existsSync(f));
-      scopedSearch = testFiles.length > 0;
-    }
+    );
+    scopedCommentLines = parseDiffAddedCommentLines(diffOutput);
+    // Derive testFiles from map keys for the global fallback's outsideScope filter
+    testFiles = [...scopedCommentLines.keys()].map(f => path.join(projectRoot, f));
+    scopedSearch = scopedCommentLines.size > 0;
   } catch {
     // git diff failed — fall through to global search
   }
@@ -163,15 +215,29 @@ export function runContractPreCheck(slug: string, projectRoot: string = findProj
     const pattern = new RegExp(`@ana\\s+[\\w,\\s]*\\b${assertion.id}\\b`);
     let found = false;
 
-    for (const testFile of testFiles) {
-      try {
-        const content = fs.readFileSync(testFile, 'utf-8');
-        if (pattern.test(content)) {
-          found = true;
-          break;
+    if (scopedCommentLines && scopedSearch) {
+      // Search only added comment lines from the diff
+      for (const lines of scopedCommentLines.values()) {
+        for (const line of lines) {
+          if (pattern.test(line)) {
+            found = true;
+            break;
+          }
         }
-      } catch {
-        // Skip unreadable files
+        if (found) break;
+      }
+    } else {
+      // Global fallback: read full file content
+      for (const testFile of testFiles) {
+        try {
+          const content = fs.readFileSync(testFile, 'utf-8');
+          if (pattern.test(content)) {
+            found = true;
+            break;
+          }
+        } catch {
+          // Skip unreadable files
+        }
       }
     }
 
