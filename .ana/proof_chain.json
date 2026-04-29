@@ -3365,7 +3365,10 @@
           "file": null,
           "anchor": "@ana A001",
           "id": "clear-the-deck-2-C3",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Meta-observation about pre-check reliability. Root cause addressed by INFRA-064 (namespaced IDs, Phase C).",
+          "closed_at": "2026-04-29T07:51:28.241Z",
+          "closed_by": "human"
         },
         {
           "category": "upstream",

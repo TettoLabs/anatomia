@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-25 runs · 58 active · 23 lessons · 0 promoted · 36 closed
+25 runs · 57 active · 23 lessons · 0 promoted · 37 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 58 total)
+## Active Findings (30 shown of 57 total)
 
 ### packages/cli/src/commands/artifact.ts
 
@@ -72,12 +72,12 @@
 
 - **test:** A018/A019/A020 tag collision with other contracts: The pre-check reports these as COVERED, but the matched tags belong to tests from other features (readme.test.ts, confirmation.test.ts, scanProject.test.ts, proof.test.ts). No NEW tagged tests were written for this contract's template assertions. The existing `agent-proof-context.test.ts:66-75` (`@ana A008`) does verify template-dogfood sync byte-for-byte, and the template content was verified directly. Functional coverage exists; formal tag coverage for this contract does not. — *Fix Proof Chain Mechanical Accuracy*
 
+### packages/cli/tests/templates/agent-proof-context.test.ts
+
+- **test:** A001/A004 use whole-file contains, weaker than section-specific extraction: `packages/cli/tests/templates/agent-proof-context.test.ts:14,43` — These tests would still pass if someone moved `ana proof context` to the wrong section of the file. The contract targets (`ana.md.content`, `ana-verify.md.content`) are whole-file scoped, so the test is technically correct. But A002/A003 demonstrate the stronger pattern (section extraction before assertion). Future contract assertions for section-specific content should use section-specific targets. — *Replace PROOF_CHAIN.md reads with targeted proof context queries*
+
 ### packages/cli/tests/utils/proofSummary.test.ts
 
 - **test:** Pre-check tag collision — A001-A009 COVERED via tags from prior contracts, not new tags — *Clean Ground for Foundation 3*
 - **test:** vi.mock('glob') adds file-level module mock — correct for spying but implicit coupling to all glob-using tests — *Clean Ground for Foundation 3*
-
-### General
-
-- **test:** Template assertions rely on tag collision for coverage: Contract assertions A001-A007 target template content. Pre-check reports COVERED because `@ana A001` etc. tags exist in test files from OTHER features. No test in this build actually verifies template frontmatter values or template content. Templates are text-only, so manual verification (which I performed) is the correct approach, but the coverage signal is misleading. — *Clear the Deck Phase 2*
 
