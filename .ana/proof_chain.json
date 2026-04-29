@@ -3587,7 +3587,10 @@
           "file": "packages/cli/src/utils/proofSummary.ts",
           "anchor": "finding.status",
           "id": "findings-lifecycle-foundation-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed in pre-F2 cleanup (39df6ba). Redundant double-filter simplified to single conditional. Anchor too generic for mechanical detection.",
+          "closed_at": "2026-04-29T02:47:39.641Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
