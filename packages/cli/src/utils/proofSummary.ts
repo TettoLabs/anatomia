@@ -74,12 +74,18 @@ export interface ProofSummary {
     file: string | null;
     anchor: string | null;
     line?: number;
-    severity?: 'blocker' | 'observation' | 'note';
+    severity?: 'risk' | 'debt' | 'observation';
+    suggested_action?: 'promote' | 'scope' | 'monitor' | 'accept';
     related_assertions?: string[];
   }>;
   rejection_cycles: number;
   previous_failures: Array<{ id: string; summary: string }>;
-  build_concerns: Array<{ summary: string; file: string | null }>;
+  build_concerns: Array<{
+    summary: string;
+    file: string | null;
+    severity?: 'risk' | 'debt' | 'observation';
+    suggested_action?: 'promote' | 'scope' | 'monitor' | 'accept';
+  }>;
 }
 
 /**
@@ -1083,7 +1089,8 @@ export function generateProofSummary(slugDir: string): ProofSummary {
                 anchor: typeof f['anchor'] === 'string' ? f['anchor'] : null,
               };
               if (typeof f['line'] === 'number') finding.line = f['line'];
-              if (typeof f['severity'] === 'string') finding.severity = f['severity'] as 'blocker' | 'observation' | 'note';
+              if (typeof f['severity'] === 'string') finding.severity = f['severity'] as 'risk' | 'debt' | 'observation';
+              if (typeof f['suggested_action'] === 'string') finding.suggested_action = f['suggested_action'] as 'promote' | 'scope' | 'monitor' | 'accept';
               if (Array.isArray(f['related_assertions'])) finding.related_assertions = f['related_assertions'] as string[];
               allFindings.push(finding);
             }
@@ -1135,10 +1142,13 @@ export function generateProofSummary(slugDir: string): ProofSummary {
           const yamlContent = yaml.parse(fs.readFileSync(buildCompanionPath, 'utf-8'));
           if (yamlContent && Array.isArray(yamlContent.concerns)) {
             for (const c of yamlContent.concerns as Array<Record<string, unknown>>) {
-              summary.build_concerns.push({
+              const concern: ProofSummary['build_concerns'][0] = {
                 summary: String(c['summary'] ?? ''),
                 file: typeof c['file'] === 'string' ? c['file'] : null,
-              });
+              };
+              if (typeof c['severity'] === 'string') concern.severity = c['severity'] as 'risk' | 'debt' | 'observation';
+              if (typeof c['suggested_action'] === 'string') concern.suggested_action = c['suggested_action'] as 'promote' | 'scope' | 'monitor' | 'accept';
+              summary.build_concerns.push(concern);
             }
           }
         } catch {
@@ -1179,7 +1189,8 @@ export interface ProofContextResult {
     file: string;
     anchor: string | null;
     line?: number;
-    severity?: 'blocker' | 'observation' | 'note';
+    severity?: 'risk' | 'debt' | 'observation';
+    suggested_action?: 'promote' | 'scope' | 'monitor' | 'accept';
     related_assertions?: string[];
     from: string;
     date: string;
@@ -1209,11 +1220,17 @@ interface ProofChainEntryForContext {
     file: string | null;
     anchor: string | null;
     line?: number;
-    severity?: 'blocker' | 'observation' | 'note';
+    severity?: 'risk' | 'debt' | 'observation';
+    suggested_action?: 'promote' | 'scope' | 'monitor' | 'accept';
     related_assertions?: string[];
     status?: string;
   }>;
-  build_concerns?: Array<{ summary: string; file: string | null }>;
+  build_concerns?: Array<{
+    summary: string;
+    file: string | null;
+    severity?: 'risk' | 'debt' | 'observation';
+    suggested_action?: 'promote' | 'scope' | 'monitor' | 'accept';
+  }>;
 }
 
 /**
@@ -1314,6 +1331,7 @@ export function getProofContext(queries: string[], projectRoot: string, options?
           };
           if (finding.line !== undefined) matched.line = finding.line;
           if (finding.severity !== undefined) matched.severity = finding.severity;
+          if (finding.suggested_action !== undefined) matched.suggested_action = finding.suggested_action;
           if (finding.related_assertions !== undefined) matched.related_assertions = finding.related_assertions;
           matchedFindings.push(matched);
           entryTouches = true;
