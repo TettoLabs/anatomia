@@ -274,7 +274,7 @@
           "anchor": "BROWSER_FRAMEWORKS.has(d)",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-29T17:58:27.306Z",
+          "closed_at": "2026-04-29T18:22:24.305Z",
           "closed_by": "mechanical"
         },
         {
@@ -285,7 +285,7 @@
           "anchor": "getFrameworkDisplayName()",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-29T17:58:27.306Z",
+          "closed_at": "2026-04-29T18:22:24.305Z",
           "closed_by": "mechanical"
         },
         {
@@ -296,7 +296,7 @@
           "anchor": "ProjectKindResult",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-29T17:58:27.306Z",
+          "closed_at": "2026-04-29T18:22:24.305Z",
           "closed_by": "mechanical"
         },
         {
@@ -315,7 +315,7 @@
           "anchor": "not.toContain('node:fs')",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-29T17:58:27.308Z",
+          "closed_at": "2026-04-29T18:22:24.306Z",
           "closed_by": "mechanical"
         },
         {
@@ -2876,7 +2876,7 @@
           "id": "seal-hash-simplification-C3",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-29T17:58:27.309Z",
+          "closed_at": "2026-04-29T18:22:24.308Z",
           "closed_by": "mechanical"
         },
         {
@@ -5650,6 +5650,277 @@
           "file": "packages/cli/src/commands/verify.ts",
           "severity": "observation",
           "suggested_action": "accept"
+        }
+      ]
+    },
+    {
+      "slug": "work-complete-json-proof-card",
+      "feature": "Work Complete JSON + Proof Card Findings",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 27,
+        "covered": 27,
+        "uncovered": 0,
+        "satisfied": 27,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Work complete accepts a JSON output flag",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "Completing work with JSON flag produces a structured envelope",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "JSON output includes a timestamp for audit trails",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "JSON output includes results with completion summary",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "JSON output includes chain health metadata",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "JSON results include the work item slug",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "JSON results include the feature name",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "JSON results include the verification result",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "JSON results include contract satisfaction counts",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "JSON results include new findings count",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "JSON results include rejection cycle count",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "Chain health metadata includes severity breakdowns from Phase B",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "Chain health metadata includes action breakdowns from Phase B",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "Recovery path produces the same JSON envelope as the main path",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "Recovery path JSON includes chain health metadata",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "Recovery path reports zero new findings since it replays a completed state",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A017",
+          "says": "Completing work without JSON flag produces the same console output as before",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A018",
+          "says": "Proof card shows findings with severity and action badges",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A019",
+          "says": "Proof card findings show the action in the badge",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A020",
+          "says": "Findings are sorted so risk items appear before debt and observation",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A021",
+          "says": "Only the top five findings are shown with a count of remaining",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A022",
+          "says": "Proof card shows build concerns with the same badge format",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A023",
+          "says": "Build concerns use severity and action badges",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A024",
+          "says": "Findings without severity display without crashing or showing undefined",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A025",
+          "says": "Findings without severity still show their summary text",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A026",
+          "says": "Proof card with no findings omits the Findings section entirely",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A027",
+          "says": "JSON contract object contains only the four expected fields",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 14,
+        "met": 14
+      },
+      "timing": {
+        "total_minutes": 611,
+        "think": 468,
+        "plan": 468,
+        "build": 139,
+        "verify": 4
+      },
+      "hashes": {
+        "scope": "sha256:5d9262d1743c7938a4d38265ba481262db9ac045ec233c31b4682b6cad7327d6",
+        "contract": "sha256:a4e10906e29ae3ad08a92f75d34fb634554de96d6be1c954e24077a46a5921dd",
+        "plan": "sha256:649a90a6d9a6671477e5e304b11cc1b3ce00b162248af4ab48bb93aac41bbfd7",
+        "spec": "sha256:bfae1950047352586b30a0b48127d700cb58b92d3da036b3bdbbe2c8c7f44304",
+        "build-report": "sha256:6a9fcc3f36ad8711397831baf0219dd1323e1275906e651c97939f247fe003b4",
+        "build-data": "sha256:08db1fd663d979c5e6e43fe017522cc186e6d10e99b2ab1bccea278c6eb79071",
+        "verify-report": "sha256:f4a82c09d0c0472ed680b311c149ebec989b1b5c14a1059540590a16996945d0",
+        "verify-data": "sha256:b1ab678d3506b97aacc4c4556c0b771e85dec562f5c40a393d799aa75a5388b2"
+      },
+      "completed_at": "2026-04-29T18:22:24.284Z",
+      "modules_touched": [
+        "packages/cli/src/commands/proof.ts",
+        "packages/cli/src/commands/work.ts",
+        "packages/cli/tests/commands/proof.test.ts",
+        "packages/cli/tests/commands/work.test.ts"
+      ],
+      "scope_summary": "Every pipeline-critical command has `--json` except the one that finalizes every run. `work complete` produces console output but no structured data. The autonomous pipeline needs structured completion output. Learn chains from completion to triage. CI gates read the result.",
+      "findings": [
+        {
+          "category": "code",
+          "summary": "Recovery path console.log on line 1078 leaks non-JSON text to stdout before JSON envelope — CI consumers doing JSON.parse(stdout) will fail",
+          "file": "packages/cli/src/commands/work.ts",
+          "anchor": null,
+          "line": 1078,
+          "severity": "risk",
+          "suggested_action": "scope",
+          "id": "work-complete-json-proof-card-C1",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "SEVERITY_ORDER lookup duplicated identically in Findings block and Build Concerns block — extract to module-level constant",
+          "file": "packages/cli/src/commands/proof.ts",
+          "anchor": null,
+          "line": 147,
+          "severity": "debt",
+          "suggested_action": "monitor",
+          "id": "work-complete-json-proof-card-C2",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "A001 test reads source code to check --json registration instead of behavioral test — same anti-pattern flagged in proof context for A020",
+          "file": "packages/cli/tests/commands/work.test.ts",
+          "anchor": null,
+          "line": 1981,
+          "severity": "debt",
+          "suggested_action": "accept",
+          "id": "work-complete-json-proof-card-C3",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Main path re-reads proof_chain.json from disk for computeChainHealth after writeProofChain just wrote it — matches known build concern about nudge re-read pattern",
+          "file": "packages/cli/src/commands/work.ts",
+          "anchor": null,
+          "line": 1318,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "related_assertions": [
+            "A012",
+            "A013"
+          ],
+          "id": "work-complete-json-proof-card-C4",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "Recovery path JSON test uses output.indexOf('{') to skip non-JSON output — fragile parsing that masks the stdout pollution issue",
+          "file": "packages/cli/tests/commands/work.test.ts",
+          "anchor": null,
+          "line": 2145,
+          "severity": "debt",
+          "suggested_action": "scope",
+          "id": "work-complete-json-proof-card-C5",
+          "status": "active"
+        }
+      ],
+      "rejection_cycles": 1,
+      "previous_failures": [
+        {
+          "id": "A008",
+          "summary": "Test used `toBeDefined()` instead of `toContain('PASS')`"
+        }
+      ],
+      "build_concerns": [
+        {
+          "summary": "Main path re-reads proof_chain.json because writeProofChain returns stats not chain object",
+          "file": "packages/cli/src/commands/work.ts",
+          "severity": "debt",
+          "suggested_action": "monitor"
+        },
+        {
+          "summary": "Recovery path leaks non-JSON 'Recovering...' text to stdout before JSON envelope when --json is passed",
+          "file": "packages/cli/src/commands/work.ts",
+          "severity": "risk",
+          "suggested_action": "scope"
+        },
+        {
+          "summary": "SEVERITY_ORDER map duplicated in findings and build concerns blocks",
+          "file": "packages/cli/src/commands/proof.ts",
+          "severity": "debt",
+          "suggested_action": "monitor"
         }
       ]
     }
