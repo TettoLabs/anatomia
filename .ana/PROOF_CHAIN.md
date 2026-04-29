@@ -1,80 +1,74 @@
 # Proof Chain Dashboard
 
-25 runs · 57 active · 23 lessons · 0 promoted · 37 closed
+26 runs · 63 active · 25 lessons · 0 promoted · 39 closed
 
 ## Hot Modules
 
 | File | Active | Entries |
 |------|--------|--------|
-| packages/cli/src/utils/proofSummary.ts | 9 | 6 |
+| packages/cli/src/utils/proofSummary.ts | 11 | 7 |
 | packages/cli/tests/utils/proofSummary.test.ts | 8 | 4 |
-| packages/cli/tests/commands/work.test.ts | 7 | 5 |
-| packages/cli/src/commands/proof.ts | 4 | 3 |
-| packages/cli/tests/engine/scanProject.test.ts | 3 | 2 |
+| packages/cli/tests/commands/work.test.ts | 8 | 6 |
+| packages/cli/src/commands/proof.ts | 6 | 4 |
+| packages/cli/src/commands/work.ts | 4 | 4 |
 
 ## Promoted Rules
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 57 total)
+## Active Findings (30 shown of 63 total)
 
 ### packages/cli/src/commands/artifact.ts
 
 - **code:** Double YAML parse in companion success message — validateVerifyDataFormat/validateBuildDataFormat parses the file, then saveArtifact re-parses at lines 932-933 to count findings for the console message. Validation function could return the parsed count. — *Structured Findings Companion*
-- **code:** `captureModulesTouched` silent catch: `src/commands/artifact.ts:161` — The outer try/catch swallows all errors silently. If `readArtifactBranch` fails (missing ana.json), `git merge-base` fails (detached HEAD), or `git diff` fails (corrupt index), `modules_touched` simply isn't written. This is acceptable graceful degradation for a metadata-capture function, but it means a misconfigured environment silently produces incomplete proof chain data. A `console.warn` on failure would make debugging easier without breaking the pipeline. — *Clear the Deck — foundation fixes from proof chain audit*
 
 ### packages/cli/src/commands/proof.ts
 
+- **code:** Duplicate 'from:' line in audit human-readable display — line 660 already has 'from: {feature}' in metadata, line 661 repeats it standalone — *Finding Enrichment Schema*
+- **code:** SEVERITY_WEIGHT map is local to audit command block — if severity sort is needed elsewhere, it will be duplicated — *Finding Enrichment Schema*
 - **code:** Shell injection in close commit message — user-controlled --reason interpolated into shell command — *Close the Loop*
 - **code:** Anchor stripping regex false-positives — aggressive strip reduces anchors to common words — *Close the Loop*
-- **test:** No dedicated test for `formatContextResult` truncation: `src/commands/proof.ts:362-367` — The truncation logic is tagged `@ana A020, A021` in source code, but no test file exercises this code path. Pre-check reports COVERED due to tag collision with other features' A020/A021 tags. The behavior is correct (verified by code review and live `ana proof context` output), but a regression in this function would not be caught by automated tests. A test in `proof.test.ts` that creates a proof chain entry with a >250-char callout summary and asserts the `proof context` output is truncated would close this gap. — *Clear the Deck — foundation fixes from proof chain audit*
-
-### packages/cli/src/commands/verify.ts
-
-- **code:** `execSync` import retained but usage reduced: `verify.ts:17` — `execSync` is still imported and used for the merge-base/diff commands (lines 150-157). The old `git show` call was the fragile one (required exact commit hash). The remaining `execSync` calls use merge-base, which is robust. Not a problem — just noting that the file still has a child-process dependency for the scoped search path. — *Seal hash simplification*
 
 ### packages/cli/src/commands/work.ts
 
+- **code:** Severity migration does not handle unexpected old values beyond blocker/note — if a future writer introduces an unknown severity value (e.g. from a malformed manual edit), the migration loop silently ignores it. Not blocking since validation prevents new bad values, but the migration is only protective for known old values. — *Finding Enrichment Schema*
 - **code:** Recovery path counts total findings via loop but main path uses stats.findings — two different counting mechanisms for the same display. If totalFindings computation in writeProofChain diverges from the simple loop, recovery output could drift. — *Harden git commit calls*
 - **code:** Unnecessary disk re-read for nudge human closure check — *Close the Loop*
 - **code:** Recovery catch swallows git status failure: `packages/cli/src/commands/work.ts:1080` — if `git status --porcelain .ana/` throws (e.g., corrupt `.git` directory), the catch silently falls through to the "already completed" message. This is unlikely but means a corrupted git state would report "already completed" instead of a diagnostic error. The spec doesn't cover this edge case, so it's not a FAIL — but it's a sharp edge. — *Fix artifact save bypass, cwd bug, and work complete crash recovery*
 
-### packages/cli/src/types/contract.ts
-
-- **code:** `ContractAssertion` and `ContractFileChange` exported but never directly imported: `src/types/contract.ts:14,26` — Both interfaces are exported but no consumer imports them directly. They're accessed structurally through `ContractSchema.assertions` and `ContractSchema.file_changes`. The exports are forward-looking — a future consumer (e.g., a contract linter) would import them. Not a problem today, but if the interfaces drift from what `ContractSchema` uses, the exported types become misleading. — *Clear the Deck — foundation fixes from proof chain audit*
-
 ### packages/cli/src/utils/proofSummary.ts
 
+- **code:** ProofSummary.result still typed as string, not union — spec says to tighten to match ProofChainEntry ('PASS' | 'FAIL' | 'UNKNOWN') but builder left it as open string. Contract A004 only targets ProofChainEntry.result so not a contract violation, but consumers of ProofSummary.result don't get compiler protection. — *Finding Enrichment Schema*
+- **code:** Build concern YAML reader correctly updated — prediction #1 was wrong. The reader at proofSummary.ts:1144-1150 now uses the variable + conditional assignment pattern for severity and suggested_action, matching the findings reader. Confirmed by reading the code and by the A016b test passing. — *Finding Enrichment Schema*
 - **code:** globCache parameter widens the public API surface of an exported function — *Clean Ground for Foundation 3*
 - **code:** Cache never invalidated — stale if files created between resolveFindingPaths calls within one writeProofChain invocation — *Clean Ground for Foundation 3*
 - **code:** PreCheckData interface retains seal_commit field despite seal_commit removal from ProofChainEntry and ProofSummary. Intentional — reads old .saves.json — but inconsistent with the removal theme. — *Structured Findings Companion*
 - **code:** getProofContext uses conditional property assignment (if finding.line !== undefined) rather than always-present optional fields. Result object shape varies — fine for TypeScript consumers but JSON shape is polymorphic. — *Structured Findings Companion*
 - **code:** Dashboard duplicates Active Issues logic: `packages/cli/src/utils/proofSummary.ts:566-616` — reimplements the collection, filtering, capping, and file-grouping from `generateActiveIssuesMarkdown` (lines 385-473). The format differs (### vs ## headings, no truncation), but extracting shared helpers for the filtering and grouping would reduce the ~50 lines of duplication. — *Findings Lifecycle Foundation*
-- **code:** globSync exception if projectRoot is invalid: `packages/cli/src/utils/proofSummary.ts:345` — If `projectRoot` points to a non-existent directory, `globSync` will throw. The callers in `work.ts` pass `projectRoot` from `writeProofChain`'s parameter, which comes from `findProjectRoot()` — a validated path. But `resolveCalloutPaths` doesn't validate its own input. Consistent with the existing pattern (no defensive validation in utility functions), but worth knowing. — *Clear the Deck Phase 2*
 
 ### packages/cli/tests/commands/artifact.test.ts
 
 - **test:** Pre-check tag collision: A022-A025 and A029 reported COVERED because @ana tags from OTHER features' contracts share the same IDs. The 'covering' tests (readme.test.ts, confirmation.test.ts) don't test this feature's assertions. No dedicated tests for writeProofChain spread, seal_commit removal, or template content. — *Structured Findings Companion*
 - **test:** blocks-save tests (A006, A007) use toThrow() without checking exit code or error message content. saveArtifact calls process.exit(1), which throws in test — the assertion confirms the throw but not the exit code value or the descriptive error message. — *Structured Findings Companion*
-- **test:** A024 weak assertion on coverage count: `tests/commands/artifact.test.ts:1650` — `expect(saves['pre-check'].covered).toBeGreaterThanOrEqual(0)` passes even if coverage is 0. The test sets up one tagged assertion that should be covered, so `toBeGreaterThanOrEqual(1)` or `toBe(1)` would be more specific. Not a false positive today (the setup ensures coverage), but the assertion is weaker than it needs to be. — *Clear the Deck — foundation fixes from proof chain audit*
+
+### packages/cli/tests/commands/proof.test.ts
+
+- **test:** createAuditChain helper never generates 'debt' severity — badge display for [debt · X] is untested in human-readable audit output — *Finding Enrichment Schema*
+- **test:** A032 test uses toBeDefined() not a specific string value — passes even if suggested_action is empty string or unexpected value — *Finding Enrichment Schema*
 
 ### packages/cli/tests/commands/work.test.ts
 
+- **test:** Severity migration tests (A019, A020, A021) don't have dedicated tagged tests in the changed test files — they're covered indirectly through the backfill loop in work.test.ts existing tests and by type-level evidence. No test explicitly creates a finding with severity 'blocker', runs the migration loop, and asserts severity is now 'risk'. The behavior is exercised but not directly asserted. — *Finding Enrichment Schema*
 - **test:** Test name 'shows maintenance line when findings were auto-closed' is now inverted — assertions check not.toContain('Maintenance:') but name says 'shows' — *Harden git commit calls*
 - **test:** @ana tag collision: A001-A005 tags in work.test.ts match previous features' contracts, not this one. Pre-check reports COVERED for spawnSync assertions but no tagged test actually verifies spawnSync usage. Spec says no new unit tests needed; source verification confirms correctness. — *Harden git commit calls*
 - **test:** A011 assertion checks one value not cleared state: `packages/cli/tests/commands/work.test.ts:1447` — asserts `closed_reason` is not `'superseded by new-C1'` but doesn't assert `closed_at` or `closed_by` are also cleared. The test proves the specific contract assertion (matcher: `not_equals`, value: `'superseded by new-C1'`) but a stronger test would verify all three closure fields are absent. — *Fix Proof Chain Mechanical Accuracy*
 - **test:** A020 uses source-code reading instead of behavioral test: `packages/cli/tests/commands/work.test.ts:1736` — reads `work.ts` source and asserts the retry string exists. This proves the string is in the code but not that it appears in the error output when a commit actually fails. A behavioral test would mock `execSync` to throw on `git commit` and capture stderr. Low risk — the error path is straightforward (`catch` → `console.error` → `process.exit(1)`), but a source-reading test survives refactoring that breaks the behavior. — *Fix artifact save bypass, cwd bug, and work complete crash recovery*
 - **test:** A015/A016 edge cases not behaviorally exercised: `packages/cli/tests/commands/work.test.ts:1278` — the supersession test proves the core mechanism but doesn't include an unresolved-basename finding (to prove A015's skip) or two same-entry findings with matching file+category (to prove A016's guard). The code guards are trivial and correct by inspection, but the test coverage gap means a regression in those guards wouldn't be caught. — *Findings Lifecycle Foundation*
 - **test:** A024 warning test doesn't trigger the warning: `packages/cli/tests/commands/work.test.ts:1372` — the test is tagged `@ana A024` but only asserts the entry has `result === 'PASS'`. The UNKNOWN warning path is unreachable through `completeWork` because of pre-validation. A direct `writeProofChain` test with an UNKNOWN-result proof object would exercise the actual warning. — *Findings Lifecycle Foundation*
-- **code:** A008/A009 tag collision with prior feature: `work.test.ts:423` — Tags `@ana A008, A009` exist from a previous feature's contract (configurable branchPrefix). Pre-check tools that grep for `@ana A008` will find both. No functional impact today, but as tag density grows, disambiguation may be needed (e.g., feature-scoped tag namespaces). — *Proof chain health signal*
 
 ### packages/cli/tests/engine/detectors/readme.test.ts
 
 - **test:** A018/A019/A020 tag collision with other contracts: The pre-check reports these as COVERED, but the matched tags belong to tests from other features (readme.test.ts, confirmation.test.ts, scanProject.test.ts, proof.test.ts). No NEW tagged tests were written for this contract's template assertions. The existing `agent-proof-context.test.ts:66-75` (`@ana A008`) does verify template-dogfood sync byte-for-byte, and the template content was verified directly. Functional coverage exists; formal tag coverage for this contract does not. — *Fix Proof Chain Mechanical Accuracy*
-
-### packages/cli/tests/templates/agent-proof-context.test.ts
-
-- **test:** A001/A004 use whole-file contains, weaker than section-specific extraction: `packages/cli/tests/templates/agent-proof-context.test.ts:14,43` — These tests would still pass if someone moved `ana proof context` to the wrong section of the file. The contract targets (`ana.md.content`, `ana-verify.md.content`) are whole-file scoped, so the test is technically correct. But A002/A003 demonstrate the stronger pattern (section extraction before assertion). Future contract assertions for section-specific content should use section-specific targets. — *Replace PROOF_CHAIN.md reads with targeted proof context queries*
 
 ### packages/cli/tests/utils/proofSummary.test.ts
 

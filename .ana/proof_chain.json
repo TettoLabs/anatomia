@@ -274,7 +274,7 @@
           "anchor": "BROWSER_FRAMEWORKS.has(d)",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-29T06:16:00.513Z",
+          "closed_at": "2026-04-29T15:47:34.808Z",
           "closed_by": "mechanical"
         },
         {
@@ -285,7 +285,7 @@
           "anchor": "getFrameworkDisplayName()",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-29T06:16:00.513Z",
+          "closed_at": "2026-04-29T15:47:34.808Z",
           "closed_by": "mechanical"
         },
         {
@@ -296,7 +296,7 @@
           "anchor": "ProjectKindResult",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-29T06:16:00.513Z",
+          "closed_at": "2026-04-29T15:47:34.808Z",
           "closed_by": "mechanical"
         },
         {
@@ -315,7 +315,7 @@
           "anchor": "not.toContain('node:fs')",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-29T06:16:00.515Z",
+          "closed_at": "2026-04-29T15:47:34.810Z",
           "closed_by": "mechanical"
         },
         {
@@ -324,7 +324,10 @@
           "summary": "No priority test for bin-over-framework or CLI-dep-over-framework: Tests cover bin-over-library (A013) and CLI-dep-over-library (A014), but don't test that `hasBin: true` + `frameworkName: 'Express'` returns `'cli'` (not `'api-server'`). The priority chain handles it correctly (bin check at line 85 returns before framework check at line 95), but no test proves it.",
           "file": "packages/cli/tests/engine/scanProject.test.ts",
           "anchor": "hasBin: true",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "code changed, anchor absent",
+          "closed_at": "2026-04-29T15:47:34.810Z",
+          "closed_by": "mechanical"
         },
         {
           "id": "add-project-kind-detection-C7",
@@ -1423,7 +1426,10 @@
           "summary": "A009 contract deviation — Contract specifies `value: 5000` for total cap. Implementation now uses 4000 to make the cap reachable. The original 5000 was unreachable dead code (3 × 1500 = 4500 < 5000). Lowering to 4000 makes `applyTotalCap` a real constraint. The contract's `says` field (\"capped at 5000 characters\") is now technically inaccurate — the actual cap is 4000. Scope/plan documents reference 5000. This is a justified deviation.",
           "file": "packages/cli/src/engine/detectors/readme.ts",
           "anchor": "value: 5000",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "code changed, anchor absent",
+          "closed_at": "2026-04-29T15:47:34.811Z",
+          "closed_by": "mechanical"
         },
         {
           "id": "add-readme-extraction-C3",
@@ -2870,7 +2876,7 @@
           "id": "seal-hash-simplification-C3",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-29T06:16:00.516Z",
+          "closed_at": "2026-04-29T15:47:34.814Z",
           "closed_by": "mechanical"
         },
         {
@@ -4522,7 +4528,7 @@
           "summary": "Pre-check tag collision — A001-A009 COVERED via tags from prior contracts, not new tags",
           "file": "packages/cli/tests/utils/proofSummary.test.ts",
           "anchor": null,
-          "severity": "note",
+          "severity": "observation",
           "related_assertions": [
             "A001",
             "A002",
@@ -4832,7 +4838,7 @@
           "summary": "A015 target 'displayed_file_count' implies numeric variable that doesn't exist — builder must invent counting method",
           "file": null,
           "anchor": null,
-          "severity": "note",
+          "severity": "observation",
           "related_assertions": [
             "A015"
           ],
@@ -5036,7 +5042,7 @@
           "summary": "Spec says to remove ProofChain from import type on line 23 — but ProofChain is still used in writeProofChain (line 748). Spec guidance was incorrect; builder correctly kept the import.",
           "file": null,
           "anchor": null,
-          "severity": "note",
+          "severity": "observation",
           "id": "harden-git-commit-calls-C4",
           "status": "lesson"
         }
@@ -5049,6 +5055,400 @@
           "file": "packages/cli/src/commands/work.ts"
         }
       ]
+    },
+    {
+      "slug": "finding-enrichment-schema",
+      "feature": "Finding Enrichment Schema",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 34,
+        "covered": 34,
+        "uncovered": 0,
+        "satisfied": 34,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Findings can be classified by impact: risk, debt, or observation",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "Findings include a recommended next action",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Proof summary findings carry the same classification fields",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "Verification results use exact status values, not open strings",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "Assertion statuses use exact values, not open strings",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "Finding categories use exact values, not open strings",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "The proof chain tracks its schema version for future migrations",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "Only the new severity values are accepted — old values are rejected",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "The four recommended actions are the only accepted values",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "Saving a finding without severity is blocked with a clear error",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "Saving a finding without a recommended action is blocked",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "Saving a finding with an invalid severity value is blocked",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "Saving a finding with an invalid action value is blocked",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "Build concerns also require severity classification",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "Build concerns also require a recommended action",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "The YAML reader correctly parses the recommended action from companion files",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A017",
+          "says": "Proof context lookups include the recommended action when available",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A018",
+          "says": "Proof context omits the action field when the finding predates enrichment",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016b",
+          "says": "Build concern classification survives the YAML reader without being silently dropped",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A019",
+          "says": "Old blocker findings are automatically reclassified as risk",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A020",
+          "says": "Old note findings are automatically reclassified as observation",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A021",
+          "says": "Severity migration is safe to run repeatedly without changing results",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A022",
+          "says": "The verify agent template teaches the new severity vocabulary",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A023",
+          "says": "The verify agent template requires both classification fields",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A024",
+          "says": "The build agent template teaches concern classification",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A025",
+          "says": "Dogfood agent copies match the templates exactly",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A026",
+          "says": "Health statistics break down findings by impact severity",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A027",
+          "says": "Health statistics break down findings by recommended action",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A028",
+          "says": "Findings without severity are counted as unclassified, not lost",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A029",
+          "says": "Findings without an action are counted as unclassified, not lost",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A030",
+          "says": "JSON API responses include the severity breakdown",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A031",
+          "says": "Audit shows each finding's severity and action at a glance",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A032",
+          "says": "Audit JSON includes the recommended action for each finding",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A033",
+          "says": "Audit surfaces the most critical findings first within each file",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 7,
+        "met": 7
+      },
+      "timing": {
+        "total_minutes": 462,
+        "think": 19,
+        "plan": 19,
+        "build": 438,
+        "verify": 4
+      },
+      "hashes": {
+        "scope": "sha256:e947b5a1107e9302c477d8c901cec1968b57fca92d14ce0dfc988ad93889be8b",
+        "contract": "sha256:00d755c62292eacb7737c06f0e93b2c062bc3d023cdae2e30b0e6b682c40d59e",
+        "plan": "sha256:2cea6446e70e0139793d980787e54fc869ca5765eff1e815362204ff7b0d6fbb",
+        "spec": "sha256:6e53841049d151682c34ce478582ae65ba84c8978a2a9cab9b9a5cdb1e3212c7",
+        "build-report": "sha256:aa0f82b542e2062259547e88b9791f764daa1396de428f493fca997221d0161a",
+        "build-data": "sha256:0bafe63977d14f1b73aed4fb3c38c0c34fcd6b0d9545260207d2f374f0c36e2a",
+        "verify-report": "sha256:5e90cb0d8638c566ca5008470d8daa3b9499c8ae757eb779d6c85ea760a64326",
+        "verify-data": "sha256:01e55294089fd24957abc10c9dec8424b39a3afcdf1deaed3a8741a42330e07d"
+      },
+      "completed_at": "2026-04-29T15:47:34.786Z",
+      "modules_touched": [
+        ".claude/agents/ana-build.md",
+        ".claude/agents/ana-verify.md",
+        "packages/cli/src/commands/artifact.ts",
+        "packages/cli/src/commands/proof.ts",
+        "packages/cli/src/commands/work.ts",
+        "packages/cli/src/types/proof.ts",
+        "packages/cli/src/utils/proofSummary.ts",
+        "packages/cli/templates/.claude/agents/ana-build.md",
+        "packages/cli/templates/.claude/agents/ana-verify.md",
+        "packages/cli/tests/commands/artifact.test.ts",
+        "packages/cli/tests/commands/proof.test.ts",
+        "packages/cli/tests/utils/proofSummary.test.ts"
+      ],
+      "scope_summary": "The intelligence layer (health, Learn, promote) operates on findings. The quality of every downstream feature is bounded by the quality of what enters the pipe. Right now:",
+      "findings": [
+        {
+          "category": "code",
+          "summary": "ProofSummary.result still typed as string, not union — spec says to tighten to match ProofChainEntry ('PASS' | 'FAIL' | 'UNKNOWN') but builder left it as open string. Contract A004 only targets ProofChainEntry.result so not a contract violation, but consumers of ProofSummary.result don't get compiler protection.",
+          "file": "packages/cli/src/utils/proofSummary.ts",
+          "anchor": null,
+          "line": 41,
+          "severity": "debt",
+          "suggested_action": "scope",
+          "related_assertions": [
+            "A004"
+          ],
+          "id": "finding-enrichment-schema-C1",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Severity migration does not handle unexpected old values beyond blocker/note — if a future writer introduces an unknown severity value (e.g. from a malformed manual edit), the migration loop silently ignores it. Not blocking since validation prevents new bad values, but the migration is only protective for known old values.",
+          "file": "packages/cli/src/commands/work.ts",
+          "anchor": null,
+          "line": 861,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "related_assertions": [
+            "A019",
+            "A020"
+          ],
+          "id": "finding-enrichment-schema-C2",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "Severity migration tests (A019, A020, A021) don't have dedicated tagged tests in the changed test files — they're covered indirectly through the backfill loop in work.test.ts existing tests and by type-level evidence. No test explicitly creates a finding with severity 'blocker', runs the migration loop, and asserts severity is now 'risk'. The behavior is exercised but not directly asserted.",
+          "file": "packages/cli/tests/commands/work.test.ts",
+          "anchor": null,
+          "severity": "debt",
+          "suggested_action": "scope",
+          "related_assertions": [
+            "A019",
+            "A020",
+            "A021"
+          ],
+          "id": "finding-enrichment-schema-C3",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "Contract assertions A019-A021 target the severity migration but pre-check found the @ana tags on these IDs pointing to work.test.ts tests from a DIFFERENT feature's contract (configurable branchPrefix). The pre-check tool marks them COVERED based on tag presence, but the tagged tests don't test severity migration at all.",
+          "file": null,
+          "anchor": null,
+          "severity": "risk",
+          "suggested_action": "scope",
+          "related_assertions": [
+            "A019",
+            "A020",
+            "A021"
+          ],
+          "id": "finding-enrichment-schema-C4",
+          "status": "lesson"
+        },
+        {
+          "category": "code",
+          "summary": "Build concern YAML reader correctly updated — prediction #1 was wrong. The reader at proofSummary.ts:1144-1150 now uses the variable + conditional assignment pattern for severity and suggested_action, matching the findings reader. Confirmed by reading the code and by the A016b test passing.",
+          "file": "packages/cli/src/utils/proofSummary.ts",
+          "anchor": null,
+          "line": 1144,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "finding-enrichment-schema-C5",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Duplicate 'from:' line in audit human-readable display — line 660 already has 'from: {feature}' in metadata, line 661 repeats it standalone",
+          "file": "packages/cli/src/commands/proof.ts",
+          "anchor": null,
+          "line": 661,
+          "severity": "debt",
+          "suggested_action": "scope",
+          "related_assertions": [
+            "A031"
+          ],
+          "id": "finding-enrichment-schema-C6",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "createAuditChain helper never generates 'debt' severity — badge display for [debt · X] is untested in human-readable audit output",
+          "file": "packages/cli/tests/commands/proof.test.ts",
+          "anchor": null,
+          "line": 1025,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "related_assertions": [
+            "A031"
+          ],
+          "id": "finding-enrichment-schema-C7",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "A032 test uses toBeDefined() not a specific string value — passes even if suggested_action is empty string or unexpected value",
+          "file": "packages/cli/tests/commands/proof.test.ts",
+          "anchor": null,
+          "line": 1188,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A032"
+          ],
+          "id": "finding-enrichment-schema-C8",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "SEVERITY_WEIGHT map is local to audit command block — if severity sort is needed elsewhere, it will be duplicated",
+          "file": "packages/cli/src/commands/proof.ts",
+          "anchor": null,
+          "line": 619,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "finding-enrichment-schema-C9",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "Pre-check tag collision on A026-A033 — tags exist in readme.test.ts, dependencies.test.ts, work.test.ts from other features' contracts",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "related_assertions": [
+            "A026",
+            "A027",
+            "A028",
+            "A029",
+            "A030",
+            "A031",
+            "A032",
+            "A033"
+          ],
+          "id": "finding-enrichment-schema-C10",
+          "status": "lesson"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "Spec references templates at templates/.claude/agents/ but actual path is packages/cli/templates/.claude/agents/",
+          "file": "packages/cli/templates/.claude/agents/ana-verify.md",
+          "severity": "observation",
+          "suggested_action": "accept"
+        },
+        {
+          "summary": "ProofSummary.result left as string — tightening requires changing parseResult return type and lastResult variable, which cascades beyond this spec's scope",
+          "file": "packages/cli/src/utils/proofSummary.ts",
+          "severity": "debt",
+          "suggested_action": "scope"
+        },
+        {
+          "summary": "Audit severity sort also affects JSON output order, which may change expectations for downstream JSON consumers",
+          "file": "packages/cli/src/commands/proof.ts",
+          "severity": "observation",
+          "suggested_action": "monitor"
+        }
+      ]
     }
-  ]
+  ],
+  "schema": 1
 }
