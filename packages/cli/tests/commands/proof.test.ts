@@ -803,7 +803,7 @@ describe('ana proof', () => {
     completed_at: '2026-04-20T10:00:00Z',
     modules_touched: ['src/api/payments.ts'],
     findings: [
-      { id: 'F001', category: 'validation', summary: 'Missing request validation', file: 'src/api/payments.ts', anchor: 'validateInput', status: 'active', severity: 'blocker' },
+      { id: 'F001', category: 'validation', summary: 'Missing request validation', file: 'src/api/payments.ts', anchor: 'validateInput', status: 'active', severity: 'risk' },
       { id: 'F002', category: 'testing', summary: 'No test for edge case', file: 'src/api/payments.ts', anchor: null, status: 'active' },
       { id: 'F003', category: 'code', summary: 'Redundant import', file: 'src/utils/helpers.ts', anchor: null, status: 'closed', closed_by: 'mechanical', closed_at: '2026-04-22T10:00:00Z', closed_reason: 'auto-closed' },
     ],
@@ -1022,7 +1022,7 @@ describe('ana proof', () => {
         file: `src/file${fileIdx}.ts`,
         anchor: null,
         status: 'active',
-        severity: i % 3 === 0 ? 'blocker' : 'observation',
+        severity: i % 3 === 0 ? 'risk' : 'observation',
       });
     }
 

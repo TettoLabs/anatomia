@@ -1750,6 +1750,7 @@ findings:
     file: "src/test.ts"
     line: 42
     severity: observation
+    suggested_action: monitor
     related_assertions: ["A001", "A002"]
 `);
 
@@ -1757,6 +1758,7 @@ findings:
     expect(summary.findings.length).toBeGreaterThan(0);
     expect(summary.findings[0]!.summary).toBe('Structured finding from YAML');
     expect(summary.findings[0]!.severity).toBe('observation');
+    expect(summary.findings[0]!.suggested_action).toBe('monitor');
     expect(summary.findings[0]!.line).toBe(42);
     expect(summary.findings[0]!.related_assertions).toEqual(['A001', 'A002']);
   });
@@ -1779,6 +1781,30 @@ findings:
     expect(summary.findings[0]!.severity).toBeUndefined();
     expect(summary.findings[0]!.line).toBeUndefined();
     expect(summary.findings[0]!.related_assertions).toBeUndefined();
+  });
+
+  // @ana A016b
+  it('reads concern severity and suggested_action from build_data.yaml', () => {
+    fs.writeFileSync(path.join(slugDir, 'build_report.md'), `# Build Report
+
+## Deviations
+None.
+
+## Open Issues
+1. **Classified concern:** Details.
+`);
+    fs.writeFileSync(path.join(slugDir, 'build_data.yaml'), `schema: 1
+concerns:
+  - summary: "Classified concern"
+    file: "src/test.ts"
+    severity: debt
+    suggested_action: scope
+`);
+
+    const summary = generateProofSummary(slugDir);
+    expect(summary.build_concerns.length).toBeGreaterThan(0);
+    expect(summary.build_concerns[0]!.severity).toBe('debt');
+    expect(summary.build_concerns[0]!.suggested_action).toBe('scope');
   });
 
   // @ana A019
@@ -1904,6 +1930,60 @@ describe('getProofContext new fields', () => {
     expect(results[0]!.findings[0]!.severity).toBe('observation');
     expect(results[0]!.findings[0]!.line).toBe(42);
     expect(results[0]!.findings[0]!.related_assertions).toEqual(['A001', 'A003']);
+  });
+
+  // @ana A017
+  it('getProofContext returns suggested_action when present', () => {
+    const chain = {
+      entries: [{
+        feature: 'Test Feature',
+        completed_at: '2026-04-28T10:00:00Z',
+        findings: [{
+          id: 'test-C2',
+          category: 'code',
+          summary: 'Issue with suggested action',
+          file: 'packages/cli/src/test.ts',
+          anchor: null,
+          severity: 'risk',
+          suggested_action: 'scope',
+          status: 'active',
+        }],
+      }],
+    };
+    fs.writeFileSync(
+      path.join(tempDir, '.ana', 'proof_chain.json'),
+      JSON.stringify(chain, null, 2),
+    );
+
+    const results = getProofContext(['packages/cli/src/test.ts'], tempDir);
+    expect(results[0]!.findings.length).toBe(1);
+    expect(results[0]!.findings[0]!.suggested_action).toBe('scope');
+  });
+
+  // @ana A018
+  it('getProofContext omits suggested_action when absent', () => {
+    const chain = {
+      entries: [{
+        feature: 'Old Feature',
+        completed_at: '2026-04-28T10:00:00Z',
+        findings: [{
+          id: 'old-C2',
+          category: 'code',
+          summary: 'Old-style finding without action',
+          file: 'packages/cli/src/test.ts',
+          anchor: null,
+          status: 'active',
+        }],
+      }],
+    };
+    fs.writeFileSync(
+      path.join(tempDir, '.ana', 'proof_chain.json'),
+      JSON.stringify(chain, null, 2),
+    );
+
+    const results = getProofContext(['packages/cli/src/test.ts'], tempDir);
+    expect(results[0]!.findings.length).toBe(1);
+    expect(results[0]!.findings[0]!.suggested_action).toBeUndefined();
   });
 
   it('getProofContext omits new fields when not present in chain', () => {
