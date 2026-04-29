@@ -1,0 +1,21 @@
+schema: 1
+findings:
+  - category: test
+    summary: "Test name 'shows maintenance line when findings were auto-closed' is now inverted — assertions check not.toContain('Maintenance:') but name says 'shows'"
+    file: "packages/cli/tests/commands/work.test.ts"
+    line: 1607
+    severity: observation
+  - category: test
+    summary: "@ana tag collision: A001-A005 tags in work.test.ts match previous features' contracts, not this one. Pre-check reports COVERED for spawnSync assertions but no tagged test actually verifies spawnSync usage. Spec says no new unit tests needed; source verification confirms correctness."
+    file: "packages/cli/tests/commands/work.test.ts"
+    line: 1107
+    severity: observation
+    related_assertions: ["A001", "A002", "A003", "A004", "A005"]
+  - category: code
+    summary: "Recovery path counts total findings via loop but main path uses stats.findings — two different counting mechanisms for the same display. If totalFindings computation in writeProofChain diverges from the simple loop, recovery output could drift."
+    file: "packages/cli/src/commands/work.ts"
+    line: 1085
+    severity: observation
+  - category: upstream
+    summary: "Spec says to remove ProofChain from import type on line 23 — but ProofChain is still used in writeProofChain (line 748). Spec guidance was incorrect; builder correctly kept the import."
+    severity: note

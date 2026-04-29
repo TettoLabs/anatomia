@@ -1031,7 +1031,8 @@ export function saveArtifact(type: string, slug: string): void {
   const prefix = isTracked ? 'Update: ' : '';
   const commitMessage = `[${slug}] ${prefix}${typeInfo.displayName}\n\nCo-authored-by: ${coAuthor}`;
   try {
-    execSync(`git commit -m "${commitMessage}"`, { stdio: 'pipe', cwd: projectRoot });
+    const commitResult = spawnSync('git', ['commit', '-m', commitMessage], { stdio: 'pipe', cwd: projectRoot });
+    if (commitResult.status !== 0) throw new Error(commitResult.stderr?.toString() || 'Commit failed');
   } catch (error) {
     console.error(chalk.red(`Error: Commit failed. ${error instanceof Error ? error.message : 'Unknown error'}`));
     process.exit(1);
@@ -1353,7 +1354,8 @@ export function saveAllArtifacts(slug: string): void {
   const commitMessage = `[${slug}] ${action}: ${typeNames}\n\nCo-authored-by: ${coAuthor}`;
 
   try {
-    execSync(`git commit -m "${commitMessage}"`, { stdio: 'pipe', cwd: projectRoot });
+    const commitResult = spawnSync('git', ['commit', '-m', commitMessage], { stdio: 'pipe', cwd: projectRoot });
+    if (commitResult.status !== 0) throw new Error(commitResult.stderr?.toString() || 'Commit failed');
   } catch (error) {
     console.error(chalk.red(`Error: Commit failed. ${error instanceof Error ? error.message : 'Unknown error'}`));
     process.exit(1);
