@@ -26,5 +26,107 @@
   "modules_touched": [
     "packages/cli/src/commands/verify.ts",
     "packages/cli/tests/commands/verify.test.ts"
-  ]
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:37cabad3bf6dc7d7830bec8f746745ec31e9c6ee111d51900e5ec26a361661b4",
+    "assertions": [
+      {
+        "id": "A001",
+        "says": "Scoped search uses git diff output instead of reading file contents",
+        "status": "COVERED"
+      },
+      {
+        "id": "A002",
+        "says": "Only added lines from the diff are searched for tags",
+        "status": "COVERED"
+      },
+      {
+        "id": "A003",
+        "says": "Deleted lines in the diff are not searched",
+        "status": "COVERED"
+      },
+      {
+        "id": "A004",
+        "says": "Only comment lines are searched for tags",
+        "status": "COVERED"
+      },
+      {
+        "id": "A005",
+        "says": "String literals containing @ana tags do not produce false matches",
+        "status": "COVERED"
+      },
+      {
+        "id": "A006",
+        "says": "Old tags from prior features do not produce false covered results",
+        "status": "COVERED"
+      },
+      {
+        "id": "A007",
+        "says": "New tags added on the feature branch are correctly detected",
+        "status": "COVERED"
+      },
+      {
+        "id": "A008",
+        "says": "Tags in newly created test files are detected",
+        "status": "COVERED"
+      },
+      {
+        "id": "A009",
+        "says": "Assertions without matching tags report uncovered",
+        "status": "COVERED"
+      },
+      {
+        "id": "A010",
+        "says": "Test fixture strings with @ana inside them do not count as coverage",
+        "status": "COVERED"
+      },
+      {
+        "id": "A011",
+        "says": "Out-of-scope tags are still detected via the global fallback",
+        "status": "COVERED"
+      },
+      {
+        "id": "A012",
+        "says": "Pre-check still works when git merge-base is unavailable",
+        "status": "COVERED"
+      },
+      {
+        "id": "A013",
+        "says": "The diff parser correctly extracts file paths from diff headers",
+        "status": "COVERED"
+      },
+      {
+        "id": "A014",
+        "says": "The diff parser handles multiple files in a single diff",
+        "status": "COVERED"
+      },
+      {
+        "id": "A015",
+        "says": "The diff parser skips diff header lines that start with plus signs",
+        "status": "COVERED"
+      },
+      {
+        "id": "A016",
+        "says": "The diff parser handles diffs with only deletions",
+        "status": "COVERED"
+      },
+      {
+        "id": "A017",
+        "says": "The diff parser includes Python-style hash comments",
+        "status": "COVERED"
+      }
+    ],
+    "covered": 17,
+    "uncovered": 0,
+    "run_at": "2026-04-29T17:55:28.033Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-04-29T17:55:28.058Z",
+    "hash": "sha256:6a14b188f2ade424f22214c6e164071df3e67b75761103e60ed548aad0c4fd0a"
+  },
+  "verify-data": {
+    "saved_at": "2026-04-29T17:55:28.059Z",
+    "hash": "sha256:f5530685ca069726bf1f876ee61d068217565a80d472c5367a3a3778d507e263"
+  }
 }
