@@ -1,0 +1,120 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Harden git commit calls"
+
+assertions:
+  - id: A001
+    says: "Proof close commits use safe argument passing instead of shell interpolation"
+    block: "proof close commits with spawnSync"
+    target: "proof.ts.commitCall"
+    matcher: "contains"
+    value: "spawnSync"
+
+  - id: A002
+    says: "Artifact save commits use safe argument passing instead of shell interpolation"
+    block: "artifact save commits with spawnSync"
+    target: "artifact.ts.commitCalls"
+    matcher: "contains"
+    value: "spawnSync"
+
+  - id: A003
+    says: "Work complete commits use safe argument passing instead of shell interpolation"
+    block: "work complete commits with spawnSync"
+    target: "work.ts.commitCalls"
+    matcher: "contains"
+    value: "spawnSync"
+
+  - id: A004
+    says: "Commit messages with special characters and newlines produce correct git commits"
+    block: "multi-line commit messages work with spawnSync"
+    target: "commitResult.status"
+    matcher: "equals"
+    value: 0
+
+  - id: A005
+    says: "Failed commits still show error messages and exit the process"
+    block: "commit failure produces error output"
+    target: "errorOutput"
+    matcher: "contains"
+    value: "Error"
+
+  - id: A006
+    says: "Proof chain stats include the count of new findings from the latest run"
+    block: "ProofChainStats includes newFindings"
+    target: "stats.newFindings"
+    matcher: "exists"
+
+  - id: A007
+    says: "New findings count comes from the current entry's findings"
+    block: "newFindings equals entry findings length"
+    target: "stats.newFindings"
+    matcher: "equals"
+    value: 3
+
+  - id: A008
+    says: "Completion output shows satisfied count without the word covered"
+    block: "contract line omits covered"
+    target: "output"
+    matcher: "not_contains"
+    value: "covered"
+
+  - id: A009
+    says: "Completion output shows the new satisfied-only contract format"
+    block: "contract line shows satisfied format"
+    target: "output"
+    matcher: "contains"
+    value: "satisfied"
+
+  - id: A010
+    says: "Completion output shows finding count with delta when new findings exist"
+    block: "chain line shows delta for new findings"
+    target: "output"
+    matcher: "contains"
+    value: "(+3 new)"
+
+  - id: A011
+    says: "Completion output omits delta when no new findings were added"
+    block: "chain line omits delta when zero new findings"
+    target: "output"
+    matcher: "not_contains"
+    value: "(+"
+
+  - id: A012
+    says: "The nudge recommendation is completely removed from completion output"
+    block: "no nudge in output"
+    target: "output"
+    matcher: "not_contains"
+    value: "ana proof audit"
+
+  - id: A013
+    says: "The maintenance statistics line is removed from completion output"
+    block: "no maintenance line in output"
+    target: "output"
+    matcher: "not_contains"
+    value: "Maintenance:"
+
+  - id: A014
+    says: "Chain output shows total finding count instead of only active findings"
+    block: "chain line shows findings not active findings"
+    target: "output"
+    matcher: "contains"
+    value: "findings"
+
+  - id: A015
+    says: "All existing tests continue to pass after the changes"
+    block: "test suite passes"
+    target: "testRun.exitCode"
+    matcher: "equals"
+    value: 0
+
+file_changes:
+  - path: "packages/cli/src/commands/proof.ts"
+    action: modify
+  - path: "packages/cli/src/commands/artifact.ts"
+    action: modify
+  - path: "packages/cli/src/commands/work.ts"
+    action: modify
+  - path: "packages/cli/src/types/proof.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/work.test.ts"
+    action: modify
