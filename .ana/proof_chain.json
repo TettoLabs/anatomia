@@ -443,7 +443,10 @@
           "summary": "No test coverage for template content. These are static files copied verbatim during init, so testing would require either snapshot tests or parsing the markdown. Current approach (visual inspection against spec) is reasonable for static templates. If templates grow more complex, consider adding a test that at least validates markdown structure.",
           "file": null,
           "anchor": null,
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Test strategy observation. No file anchor, not actionable as a finding.",
+          "closed_at": "2026-04-29T07:51:05.000Z",
+          "closed_by": "human"
         }
       ],
       "scope_summary": "Two skill templates ship with gaps that affect every new Anatomia project. The data-access template has no security guidance — teams start without IDOR prevention at the data layer. The coding-standards template has an absolutist error-handling rule that contradicts intentional graceful degradation patterns. Fix both."
