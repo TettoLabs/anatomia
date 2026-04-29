@@ -1,0 +1,10 @@
+schema: 1
+concerns:
+  - summary: "parseDiffAddedCommentLines assumes b/ path always present in diff --git header"
+    file: "packages/cli/src/commands/verify.ts"
+    severity: observation
+    suggested_action: monitor
+  - summary: "Hash comment filter (#) may match non-comment lines in some languages (e.g. Ruby shebang, Markdown headings)"
+    file: "packages/cli/src/commands/verify.ts"
+    severity: observation
+    suggested_action: accept

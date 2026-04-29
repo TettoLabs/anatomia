@@ -14,5 +14,17 @@
   "spec": {
     "saved_at": "2026-04-29T17:42:49.969Z",
     "hash": "sha256:3c6c413f604184c263fd4df75ef1140c04d7a3fad1fb1786ffa27fd68b93935a"
-  }
+  },
+  "build-report": {
+    "saved_at": "2026-04-29T17:48:50.969Z",
+    "hash": "sha256:5382312bf69bfedf380ec498706b41f20ee257f82c3d36f7d7597a7a6183588a"
+  },
+  "build-data": {
+    "saved_at": "2026-04-29T17:48:50.970Z",
+    "hash": "sha256:fe0b6c289ea896606efd09acfaf6b8a934e19a55cc90d8f9645b98bc3700111a"
+  },
+  "modules_touched": [
+    "packages/cli/src/commands/verify.ts",
+    "packages/cli/tests/commands/verify.test.ts"
+  ]
 }
