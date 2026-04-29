@@ -49,7 +49,7 @@ Output mockup:
 - AC7: When `newFindings` is 0, the delta parenthetical is omitted
 - AC8: The nudge block is removed entirely — no threshold checks, no file re-reads, no recommendations
 - AC9: The maintenance output line is removed
-- AC10: All existing tests pass (nudge-related tests should be removed or updated to reflect removal)
+- AC10: All tests pass
 
 ## Edge Cases & Risks
 
