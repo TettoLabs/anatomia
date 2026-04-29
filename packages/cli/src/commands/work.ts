@@ -18,7 +18,7 @@ import * as fsPromises from 'node:fs/promises';
 import * as path from 'node:path';
 import { globSync } from 'glob';
 import { readArtifactBranch, readBranchPrefix, getCurrentBranch } from '../utils/git-operations.js';
-import { generateProofSummary, resolveFindingPaths, extractScopeSummary, generateDashboard, computeChainHealth, type ProofSummary } from '../utils/proofSummary.js';
+import { generateProofSummary, resolveFindingPaths, extractScopeSummary, generateDashboard, computeChainHealth, wrapJsonResponse, type ProofSummary } from '../utils/proofSummary.js';
 import { findProjectRoot } from '../utils/validators.js';
 import type { ProofChainEntry, ProofChain, ProofChainStats } from '../types/proof.js';
 
@@ -1009,8 +1009,10 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
  * Complete a work item after PR merge
  *
  * @param slug - Work item slug to complete
+ * @param options - Optional flags for output format
+ * @param options.json - When true, output structured JSON envelope instead of console output
  */
-export async function completeWork(slug: string): Promise<void> {
+export async function completeWork(slug: string, options?: { json?: boolean }): Promise<void> {
   // 1. Read artifactBranch, branchPrefix, and coAuthor from ana.json
   const projectRoot = findProjectRoot();
   const artifactBranch = readArtifactBranch(projectRoot);
@@ -1091,19 +1093,39 @@ export async function completeWork(slug: string): Promise<void> {
           const chainPath = path.join(projectRoot, '.ana', 'proof_chain.json');
           let runs = 0;
           let findingsCount = 0;
+          let recoveryChain: { entries: Array<{ findings?: Array<{ status?: string; severity?: string; suggested_action?: string }> }> } = { entries: [] };
           if (fs.existsSync(chainPath)) {
             try {
-              const chain = JSON.parse(fs.readFileSync(chainPath, 'utf-8'));
-              runs = Array.isArray(chain.entries) ? chain.entries.length : 0;
-              for (const e of chain.entries || []) {
+              const parsed = JSON.parse(fs.readFileSync(chainPath, 'utf-8'));
+              recoveryChain = parsed;
+              runs = Array.isArray(parsed.entries) ? parsed.entries.length : 0;
+              for (const e of parsed.entries || []) {
                 findingsCount += (e.findings || []).length;
               }
             } catch { /* */ }
           }
-          const statusIcon = proof.result === 'PASS' ? '✓' : '✗';
-          console.log(`\n${statusIcon} ${proof.result} — ${proof.feature}`);
-          console.log(`  ${proof.contract.satisfied}/${proof.contract.total} satisfied · ${proof.deviations.length} deviation${proof.deviations.length !== 1 ? 's' : ''}`);
-          console.log(chalk.gray(`  Chain: ${runs} ${runs !== 1 ? 'runs' : 'run'} · ${findingsCount} finding${findingsCount !== 1 ? 's' : ''}`));
+
+          if (options?.json) {
+            const jsonResults = {
+              slug,
+              feature: proof.feature,
+              result: proof.result,
+              contract: {
+                total: proof.contract.total,
+                satisfied: proof.contract.satisfied,
+                unsatisfied: proof.contract.unsatisfied,
+                deviated: proof.contract.deviated,
+              },
+              new_findings: 0,
+              rejection_cycles: proof.rejection_cycles ?? 0,
+            };
+            console.log(JSON.stringify(wrapJsonResponse('work complete', jsonResults, recoveryChain), null, 2));
+          } else {
+            const statusIcon = proof.result === 'PASS' ? '✓' : '✗';
+            console.log(`\n${statusIcon} ${proof.result} — ${proof.feature}`);
+            console.log(`  ${proof.contract.satisfied}/${proof.contract.total} satisfied · ${proof.deviations.length} deviation${proof.deviations.length !== 1 ? 's' : ''}`);
+            console.log(chalk.gray(`  Chain: ${runs} ${runs !== 1 ? 'runs' : 'run'} · ${findingsCount} finding${findingsCount !== 1 ? 's' : ''}`));
+          }
           return;
         }
       } catch { /* git status failed — treat as genuinely completed */ }
@@ -1290,14 +1312,40 @@ export async function completeWork(slug: string): Promise<void> {
     // Silently continue if remote branch doesn't exist or was already deleted
   }
 
-  // 13. Print summary
-  const statusIcon = proof.result === 'PASS' ? '✓' : '✗';
-  console.log(`\n${statusIcon} ${proof.result} — ${proof.feature}`);
-  console.log(`  ${proof.contract.satisfied}/${proof.contract.total} satisfied · ${proof.deviations.length} deviation${proof.deviations.length !== 1 ? 's' : ''}`);
-  const chainLine = stats.newFindings > 0
-    ? `  Chain: ${stats.runs} ${stats.runs !== 1 ? 'runs' : 'run'} · ${stats.findings} finding${stats.findings !== 1 ? 's' : ''} (+${stats.newFindings} new)`
-    : `  Chain: ${stats.runs} ${stats.runs !== 1 ? 'runs' : 'run'} · ${stats.findings} finding${stats.findings !== 1 ? 's' : ''}`;
-  console.log(chalk.gray(chainLine));
+  // 13. Print summary or JSON output
+  if (options?.json) {
+    // Read the chain for meta computation
+    const chainPath = path.join(projectRoot, '.ana', 'proof_chain.json');
+    let mainChain: { entries: Array<{ findings?: Array<{ status?: string; severity?: string; suggested_action?: string }> }> } = { entries: [] };
+    if (fs.existsSync(chainPath)) {
+      try {
+        mainChain = JSON.parse(fs.readFileSync(chainPath, 'utf-8'));
+      } catch { /* use empty */ }
+    }
+
+    const jsonResults = {
+      slug,
+      feature: proof.feature,
+      result: proof.result,
+      contract: {
+        total: proof.contract.total,
+        satisfied: proof.contract.satisfied,
+        unsatisfied: proof.contract.unsatisfied,
+        deviated: proof.contract.deviated,
+      },
+      new_findings: stats.newFindings,
+      rejection_cycles: proof.rejection_cycles ?? 0,
+    };
+    console.log(JSON.stringify(wrapJsonResponse('work complete', jsonResults, mainChain), null, 2));
+  } else {
+    const statusIcon = proof.result === 'PASS' ? '✓' : '✗';
+    console.log(`\n${statusIcon} ${proof.result} — ${proof.feature}`);
+    console.log(`  ${proof.contract.satisfied}/${proof.contract.total} satisfied · ${proof.deviations.length} deviation${proof.deviations.length !== 1 ? 's' : ''}`);
+    const chainLine = stats.newFindings > 0
+      ? `  Chain: ${stats.runs} ${stats.runs !== 1 ? 'runs' : 'run'} · ${stats.findings} finding${stats.findings !== 1 ? 's' : ''} (+${stats.newFindings} new)`
+      : `  Chain: ${stats.runs} ${stats.runs !== 1 ? 'runs' : 'run'} · ${stats.findings} finding${stats.findings !== 1 ? 's' : ''}`;
+    console.log(chalk.gray(chainLine));
+  }
 }
 
 /**
@@ -1319,8 +1367,9 @@ export function registerWorkCommand(program: Command): void {
   const completeCommand = new Command('complete')
     .description('Archive completed work after PR merge')
     .argument('<slug>', 'Work item slug to complete')
-    .action(async (slug: string) => {
-      await completeWork(slug);
+    .option('--json', 'Output JSON format for programmatic consumption')
+    .action(async (slug: string, cmdOptions: { json?: boolean }) => {
+      await completeWork(slug, cmdOptions);
     });
 
   workCommand.addCommand(statusCommand);
