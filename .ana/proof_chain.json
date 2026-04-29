@@ -432,7 +432,10 @@
           "summary": "The error-handling rule is now longer than the others (spans multiple sentences where most rules are one sentence + why). This is appropriate given the nuance being expressed, but worth noting as a slight voice deviation — the rule is more complex because the guidance is more complex.",
           "file": null,
           "anchor": null,
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Cosmetic observation about template prose voice. No file reference, not staleness-checkable.",
+          "closed_at": "2026-04-29T07:50:55.136Z",
+          "closed_by": "human"
         },
         {
           "id": "fix-skill-template-gaps-C3",
