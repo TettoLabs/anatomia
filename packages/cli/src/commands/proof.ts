@@ -547,6 +547,7 @@ export function registerProofCommand(program: Command): void {
         line?: number;
         age_days: number;
         severity: string;
+        suggested_action: string;
         related_assertions?: string[];
         entry_slug: string;
         entry_feature: string;
@@ -583,6 +584,7 @@ export function registerProofCommand(program: Command): void {
             anchor_present: anchorPresent,
             age_days: ageDays,
             severity: finding.severity ?? '—',
+            suggested_action: finding.suggested_action ?? '—',
             entry_slug: entry.slug,
             entry_feature: entry.feature,
           };
@@ -614,9 +616,19 @@ export function registerProofCommand(program: Command): void {
       // Sort files by count descending, cap at 8
       const MAX_FILES = 8;
       const MAX_PER_FILE = 3;
+      const SEVERITY_WEIGHT: Record<string, number> = { risk: 0, debt: 1, observation: 2 };
       const sortedFiles = Array.from(fileGroups.entries())
         .sort((a, b) => b[1].length - a[1].length)
         .slice(0, MAX_FILES);
+
+      // Sort findings within each file group by severity (risk → debt → observation → unclassified)
+      for (const [, findings] of sortedFiles) {
+        findings.sort((a, b) => {
+          const wa = SEVERITY_WEIGHT[a.severity] ?? 3;
+          const wb = SEVERITY_WEIGHT[b.severity] ?? 3;
+          return wa - wb;
+        });
+      }
 
       if (useJson) {
         const byFile = sortedFiles.map(([file, findings]) => ({
@@ -643,9 +655,9 @@ export function registerProofCommand(program: Command): void {
           console.log(`  ${file} (${findings.length} finding${findings.length !== 1 ? 's' : ''})`);
           const displayed = findings.slice(0, MAX_PER_FILE);
           for (const f of displayed) {
-            console.log(`    ${chalk.dim(`[${f.category}]`)} ${f.summary}`);
+            console.log(`    ${chalk.dim(`[${f.category}]`)} ${chalk.dim(`[${f.severity} · ${f.suggested_action}]`)} ${f.summary}`);
             const anchorIcon = f.anchor ? (f.anchor_present ? '✓' : '✗') : '—';
-            console.log(`           age: ${f.age_days}d | anchor: ${anchorIcon} | severity: ${f.severity}`);
+            console.log(`           age: ${f.age_days}d | anchor: ${anchorIcon} | from: ${f.entry_feature}`);
             console.log(`           from: ${f.entry_feature}`);
           }
           if (findings.length > MAX_PER_FILE) {
