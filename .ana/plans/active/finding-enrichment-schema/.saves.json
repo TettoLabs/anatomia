@@ -189,39 +189,39 @@
       {
         "id": "A029",
         "says": "Findings without an action are counted as unclassified, not lost",
-        "status": "UNCOVERED"
+        "status": "COVERED"
       },
       {
         "id": "A030",
         "says": "JSON API responses include the severity breakdown",
-        "status": "UNCOVERED"
+        "status": "COVERED"
       },
       {
         "id": "A031",
         "says": "Audit shows each finding's severity and action at a glance",
-        "status": "UNCOVERED"
+        "status": "COVERED"
       },
       {
         "id": "A032",
         "says": "Audit JSON includes the recommended action for each finding",
-        "status": "UNCOVERED"
+        "status": "COVERED"
       },
       {
         "id": "A033",
         "says": "Audit surfaces the most critical findings first within each file",
-        "status": "UNCOVERED"
+        "status": "COVERED"
       }
     ],
-    "covered": 29,
-    "uncovered": 5,
-    "run_at": "2026-04-29T15:34:17.581Z"
+    "covered": 34,
+    "uncovered": 0,
+    "run_at": "2026-04-29T15:46:01.703Z"
   },
   "verify-report": {
-    "saved_at": "2026-04-29T15:34:17.612Z",
-    "hash": "sha256:a1da09c1fb1042abc689ef33857f18b71ae4bc44d094e758b45ccdb4de70511e"
+    "saved_at": "2026-04-29T15:46:01.732Z",
+    "hash": "sha256:5e90cb0d8638c566ca5008470d8daa3b9499c8ae757eb779d6c85ea760a64326"
   },
   "verify-data": {
-    "saved_at": "2026-04-29T15:34:17.612Z",
-    "hash": "sha256:c560606377163004c67f19b1b1f98f655f806836bcc75a93362d5ee857468955"
+    "saved_at": "2026-04-29T15:46:01.732Z",
+    "hash": "sha256:01e55294089fd24957abc10c9dec8424b39a3afcdf1deaed3a8741a42330e07d"
   }
 }
