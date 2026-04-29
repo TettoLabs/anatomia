@@ -649,6 +649,19 @@ export interface ChainHealth {
     lesson: number;
     promoted: number;
     total: number;
+    by_severity: {
+      risk: number;
+      debt: number;
+      observation: number;
+      unclassified: number;
+    };
+    by_action: {
+      promote: number;
+      scope: number;
+      monitor: number;
+      accept: number;
+      unclassified: number;
+    };
   };
 }
 
@@ -685,13 +698,26 @@ export interface JsonErrorEnvelope {
  * @param chain.entries - Array of proof chain entries
  * @returns Chain health counts for use in JSON meta fields
  */
-export function computeChainHealth(chain: { entries: Array<{ findings?: Array<{ status?: string }> }> }): ChainHealth {
+export function computeChainHealth(chain: { entries: Array<{ findings?: Array<{ status?: string; severity?: string; suggested_action?: string }> }> }): ChainHealth {
   const runs = chain.entries.length;
   let total = 0;
   let active = 0;
   let closed = 0;
   let lesson = 0;
   let promoted = 0;
+
+  // Severity breakdowns
+  let sevRisk = 0;
+  let sevDebt = 0;
+  let sevObservation = 0;
+  let sevUnclassified = 0;
+
+  // Action breakdowns
+  let actPromote = 0;
+  let actScope = 0;
+  let actMonitor = 0;
+  let actAccept = 0;
+  let actUnclassified = 0;
 
   for (const e of chain.entries) {
     for (const f of e.findings || []) {
@@ -703,12 +729,29 @@ export function computeChainHealth(chain: { entries: Array<{ findings?: Array<{ 
         case 'closed': closed++; break;
         default: active++; break; // undefined = active
       }
+      switch (f.severity) {
+        case 'risk': sevRisk++; break;
+        case 'debt': sevDebt++; break;
+        case 'observation': sevObservation++; break;
+        default: sevUnclassified++; break;
+      }
+      switch (f.suggested_action) {
+        case 'promote': actPromote++; break;
+        case 'scope': actScope++; break;
+        case 'monitor': actMonitor++; break;
+        case 'accept': actAccept++; break;
+        default: actUnclassified++; break;
+      }
     }
   }
 
   return {
     chain_runs: runs,
-    findings: { active, closed, lesson, promoted, total },
+    findings: {
+      active, closed, lesson, promoted, total,
+      by_severity: { risk: sevRisk, debt: sevDebt, observation: sevObservation, unclassified: sevUnclassified },
+      by_action: { promote: actPromote, scope: actScope, monitor: actMonitor, accept: actAccept, unclassified: actUnclassified },
+    },
   };
 }
 
@@ -721,7 +764,7 @@ export function computeChainHealth(chain: { entries: Array<{ findings?: Array<{ 
  * @param chain.entries - Array of proof chain entries
  * @returns Four-key JSON envelope
  */
-export function wrapJsonResponse<T>(command: string, results: T, chain: { entries: Array<{ findings?: Array<{ status?: string }> }> }): JsonEnvelope<T> {
+export function wrapJsonResponse<T>(command: string, results: T, chain: { entries: Array<{ findings?: Array<{ status?: string; severity?: string; suggested_action?: string }> }> }): JsonEnvelope<T> {
   return {
     command,
     timestamp: new Date().toISOString(),
@@ -746,11 +789,18 @@ export function wrapJsonError(
   code: string,
   message: string,
   context: Record<string, unknown>,
-  chain: { entries: Array<{ findings?: Array<{ status?: string }> }> } | null,
+  chain: { entries: Array<{ findings?: Array<{ status?: string; severity?: string; suggested_action?: string }> }> } | null,
 ): JsonErrorEnvelope {
   const meta: ChainHealth = chain
     ? computeChainHealth(chain)
-    : { chain_runs: 0, findings: { active: 0, closed: 0, lesson: 0, promoted: 0, total: 0 } };
+    : {
+      chain_runs: 0,
+      findings: {
+        active: 0, closed: 0, lesson: 0, promoted: 0, total: 0,
+        by_severity: { risk: 0, debt: 0, observation: 0, unclassified: 0 },
+        by_action: { promote: 0, scope: 0, monitor: 0, accept: 0, unclassified: 0 },
+      },
+    };
 
   return {
     command,
