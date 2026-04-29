@@ -1,0 +1,139 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Diff-Scoped Tag Search"
+
+assertions:
+  # AC1: Diff-based scoped search
+  - id: A001
+    says: "Scoped search uses git diff output instead of reading file contents"
+    block: "uses git diff -U0 for scoped search"
+    target: "scopedSearch.method"
+    matcher: "equals"
+    value: "diff"
+
+  # AC2: Only added lines searched
+  - id: A002
+    says: "Only added lines from the diff are searched for tags"
+    block: "parses only added lines from diff output"
+    target: "parsedLines.source"
+    matcher: "equals"
+    value: "added"
+
+  - id: A003
+    says: "Deleted lines in the diff are not searched"
+    block: "ignores deleted lines in diff output"
+    target: "deletedLineMatch"
+    matcher: "equals"
+    value: false
+
+  # AC3: Comment-line filtering
+  - id: A004
+    says: "Only comment lines are searched for tags"
+    block: "filters to comment lines starting with // or #"
+    target: "commentFilter.active"
+    matcher: "truthy"
+
+  - id: A005
+    says: "String literals containing @ana tags do not produce false matches"
+    block: "excludes string literals from tag search"
+    target: "stringLiteralMatch"
+    matcher: "equals"
+    value: false
+
+  # AC4: Collision resistance
+  - id: A006
+    says: "Old tags from prior features do not produce false covered results"
+    block: "ignores old @ana tags present on both branches"
+    target: "assertion.status"
+    matcher: "equals"
+    value: "UNCOVERED"
+
+  - id: A007
+    says: "New tags added on the feature branch are correctly detected"
+    block: "finds new @ana tags in added lines"
+    target: "assertion.status"
+    matcher: "equals"
+    value: "COVERED"
+
+  # AC5: New file scenario
+  - id: A008
+    says: "Tags in newly created test files are detected"
+    block: "detects tags when entire file is additions"
+    target: "assertion.status"
+    matcher: "equals"
+    value: "COVERED"
+
+  # AC6: UNCOVERED reporting
+  - id: A009
+    says: "Assertions without matching tags report uncovered"
+    block: "reports UNCOVERED when no added comment line has the tag"
+    target: "assertion.status"
+    matcher: "equals"
+    value: "UNCOVERED"
+
+  # AC7: String literal false positive
+  - id: A010
+    says: "Test fixture strings with @ana inside them do not count as coverage"
+    block: "string literal @ana in test fixture does not match"
+    target: "assertion.status"
+    matcher: "equals"
+    value: "UNCOVERED"
+
+  # AC8: Global fallback unchanged
+  - id: A011
+    says: "Out-of-scope tags are still detected via the global fallback"
+    block: "global fallback reports out-of-scope tag location"
+    target: "outOfScope.length"
+    matcher: "greater"
+    value: 0
+
+  # AC9: No-git fallback unchanged
+  - id: A012
+    says: "Pre-check still works when git merge-base is unavailable"
+    block: "falls back to global search when merge-base fails"
+    target: "assertion.status"
+    matcher: "equals"
+    value: "COVERED"
+
+  # Pure function: parseDiffAddedCommentLines
+  - id: A013
+    says: "The diff parser correctly extracts file paths from diff headers"
+    block: "parses file paths from diff --git headers"
+    target: "parsedMap.size"
+    matcher: "greater"
+    value: 0
+
+  - id: A014
+    says: "The diff parser handles multiple files in a single diff"
+    block: "parses multiple files from one diff output"
+    target: "parsedMap.size"
+    matcher: "equals"
+    value: 2
+
+  - id: A015
+    says: "The diff parser skips diff header lines that start with plus signs"
+    block: "skips +++ header lines"
+    target: "headerLineIncluded"
+    matcher: "equals"
+    value: false
+
+  - id: A016
+    says: "The diff parser handles diffs with only deletions"
+    block: "returns empty map for deletion-only diff"
+    target: "parsedMap.size"
+    matcher: "equals"
+    value: 0
+
+  - id: A017
+    says: "The diff parser includes Python-style hash comments"
+    block: "includes lines starting with #"
+    target: "hashCommentIncluded"
+    matcher: "truthy"
+
+  # AC10: Regex unchanged (verified by existing tests passing)
+
+file_changes:
+  - path: "packages/cli/src/commands/verify.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/verify.test.ts"
+    action: modify
