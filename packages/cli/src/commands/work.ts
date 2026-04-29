@@ -18,7 +18,7 @@ import * as fsPromises from 'node:fs/promises';
 import * as path from 'node:path';
 import { globSync } from 'glob';
 import { readArtifactBranch, readBranchPrefix, getCurrentBranch } from '../utils/git-operations.js';
-import { generateProofSummary, resolveFindingPaths, extractScopeSummary, generateDashboard, type ProofSummary } from '../utils/proofSummary.js';
+import { generateProofSummary, resolveFindingPaths, extractScopeSummary, generateDashboard, computeChainHealth, type ProofSummary } from '../utils/proofSummary.js';
 import { findProjectRoot } from '../utils/validators.js';
 import type { ProofChainEntry, ProofChain, ProofChainStats } from '../types/proof.js';
 
@@ -973,26 +973,9 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
   // 2. Regenerate PROOF_CHAIN.md as quality dashboard
   const chainMdPath = path.join(anaDir, 'PROOF_CHAIN.md');
 
-  // Compute chain health counts
-  const runs = chain.entries.length;
-  let totalFindings = 0;
-  let activeCount = 0;
-  let lessonsCount = 0;
-  let promotedCount = 0;
-  let closedCount = 0;
-
-  for (const e of chain.entries) {
-    for (const f of e.findings || []) {
-      totalFindings++;
-      switch (f.status) {
-        case 'active': activeCount++; break;
-        case 'lesson': lessonsCount++; break;
-        case 'promoted': promotedCount++; break;
-        case 'closed': closedCount++; break;
-        default: activeCount++; break; // undefined = active
-      }
-    }
-  }
+  // Compute chain health counts via shared utility
+  const health = computeChainHealth(chain);
+  const { chain_runs: runs, findings: { active: activeCount, closed: closedCount, lesson: lessonsCount, promoted: promotedCount, total: totalFindings } } = health;
 
   const dashboardMd = generateDashboard(chain.entries, { runs, active: activeCount, lessons: lessonsCount, promoted: promotedCount, closed: closedCount });
   await fsPromises.writeFile(chainMdPath, dashboardMd);
