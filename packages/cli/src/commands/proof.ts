@@ -137,6 +137,64 @@ function formatHumanReadable(entry: ProofChainEntry): string {
     lines.push(`  ${'Verify'.padEnd(12)} ${entry.timing.verify} min`);
   }
 
+  // Findings section (only if there are findings)
+  const findings = entry.findings || [];
+  if (findings.length > 0) {
+    lines.push('');
+    lines.push(chalk.bold('  Findings'));
+    lines.push(chalk.gray('  ' + BOX.horizontal.repeat(8)));
+
+    const SEVERITY_ORDER: Record<string, number> = { risk: 0, debt: 1, observation: 2 };
+    const sortedFindings = [...findings].sort((a, b) => {
+      const wa = a.severity ? (SEVERITY_ORDER[a.severity] ?? 3) : 3;
+      const wb = b.severity ? (SEVERITY_ORDER[b.severity] ?? 3) : 3;
+      return wa - wb;
+    });
+
+    const MAX_DISPLAY = 5;
+    const displayed = sortedFindings.slice(0, MAX_DISPLAY);
+    for (const finding of displayed) {
+      if (finding.severity && finding.suggested_action) {
+        lines.push(`  [${finding.severity} · ${finding.suggested_action}] ${finding.summary}`);
+      } else {
+        lines.push(`  ${finding.summary}`);
+      }
+    }
+
+    if (sortedFindings.length > MAX_DISPLAY) {
+      lines.push(`  ... and ${sortedFindings.length - MAX_DISPLAY} more`);
+    }
+  }
+
+  // Build Concerns section (only if there are build concerns)
+  const buildConcerns = entry.build_concerns || [];
+  if (buildConcerns.length > 0) {
+    lines.push('');
+    lines.push(chalk.bold('  Build Concerns'));
+    lines.push(chalk.gray('  ' + BOX.horizontal.repeat(14)));
+
+    const SEVERITY_ORDER: Record<string, number> = { risk: 0, debt: 1, observation: 2 };
+    const sortedConcerns = [...buildConcerns].sort((a, b) => {
+      const wa = a.severity ? (SEVERITY_ORDER[a.severity] ?? 3) : 3;
+      const wb = b.severity ? (SEVERITY_ORDER[b.severity] ?? 3) : 3;
+      return wa - wb;
+    });
+
+    const MAX_DISPLAY = 5;
+    const displayedConcerns = sortedConcerns.slice(0, MAX_DISPLAY);
+    for (const concern of displayedConcerns) {
+      if (concern.severity && concern.suggested_action) {
+        lines.push(`  [${concern.severity} · ${concern.suggested_action}] ${concern.summary}`);
+      } else {
+        lines.push(`  ${concern.summary}`);
+      }
+    }
+
+    if (sortedConcerns.length > MAX_DISPLAY) {
+      lines.push(`  ... and ${sortedConcerns.length - MAX_DISPLAY} more`);
+    }
+  }
+
   // Deviations section (only if there are deviations)
   const deviatedAssertions = entry.assertions.filter(a => a.status === 'DEVIATED' && a.deviation);
   if (deviatedAssertions.length > 0) {
