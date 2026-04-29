@@ -14,5 +14,22 @@
   "spec": {
     "saved_at": "2026-04-29T00:33:26.875Z",
     "hash": "sha256:38ebc1be1ee0b0b14e71ff6a3a93b7ed53e11cde35b50a08f7cbd3b8137bf253"
-  }
+  },
+  "build-report": {
+    "saved_at": "2026-04-29T01:01:56.110Z",
+    "hash": "sha256:d613f463e0ee27d08d2399388cfaab0c07b1232c25acdb383f7b7c9139041c28"
+  },
+  "build-data": {
+    "saved_at": "2026-04-29T01:01:56.111Z",
+    "hash": "sha256:f6378c3aaa96a8a7af8da5206d69ea49327ecbd281c41c74e583724343156c50"
+  },
+  "modules_touched": [
+    ".claude/agents/ana-plan.md",
+    "packages/cli/src/commands/proof.ts",
+    "packages/cli/src/commands/work.ts",
+    "packages/cli/src/utils/proofSummary.ts",
+    "packages/cli/templates/.claude/agents/ana-plan.md",
+    "packages/cli/tests/commands/proof.test.ts",
+    "packages/cli/tests/commands/work.test.ts"
+  ]
 }
