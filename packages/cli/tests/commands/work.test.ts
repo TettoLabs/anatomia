@@ -2038,11 +2038,8 @@ Tests: 5 passed
         console.log = originalLog;
         const output = logs.join('\n');
 
-        // Should contain JSON, not human output
-        const jsonLine = output.split('\n').find(l => l.includes('"command"'));
-        expect(jsonLine).toBeDefined();
-
-        const json = JSON.parse(output.substring(output.indexOf('{')));
+        // Should be clean JSON — no human-readable text before the envelope
+        const json = JSON.parse(output);
         expect(json.command).toBe('work complete');
         expect(json.results.new_findings).toBe(0);
         expect(json.meta).toBeDefined();
