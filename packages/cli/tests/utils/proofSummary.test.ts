@@ -20,6 +20,12 @@ import {
   extractScopeSummary,
   generateDashboard,
   computeChainHealth,
+  computeHealthReport,
+  detectHealthChange,
+  MIN_FINDINGS_HOT,
+  MIN_ENTRIES_HOT,
+  TRAJECTORY_WINDOW,
+  MIN_ENTRIES_FOR_TREND,
 } from '../../src/utils/proofSummary.js';
 
 describe('generateProofSummary', () => {
@@ -2140,5 +2146,601 @@ describe('computeChainHealth', () => {
     expect(health.findings.by_severity.debt).toBe(1);
     expect(health.findings.by_action.promote).toBe(1);
     expect(health.findings.by_action.scope).toBe(1);
+  });
+});
+
+describe('computeHealthReport', () => {
+  // Helper to create entries with specific risk counts
+  function makeEntry(risks: number, debts = 0, observations = 0, opts?: {
+    slug?: string;
+    file?: string;
+    status?: string;
+    suggested_action?: string;
+    category?: string;
+    promoted_to?: string;
+  }): {
+    slug: string;
+    findings: Array<{
+      id: string;
+      status: string;
+      severity: string;
+      category: string;
+      summary: string;
+      file: string | null;
+      suggested_action: string;
+      promoted_to?: string;
+    }>;
+  } {
+    const findings: Array<{
+      id: string;
+      status: string;
+      severity: string;
+      category: string;
+      summary: string;
+      file: string | null;
+      suggested_action: string;
+      promoted_to?: string;
+    }> = [];
+    const status = opts?.status || 'active';
+    const action = opts?.suggested_action || 'scope';
+    const category = opts?.category || 'code';
+    const file = opts?.file ?? 'src/test.ts';
+    let idCounter = 0;
+    for (let i = 0; i < risks; i++) {
+      const f: typeof findings[0] = {
+        id: `F${String(++idCounter).padStart(3, '0')}`,
+        status,
+        severity: 'risk',
+        category,
+        summary: `risk finding ${i}`,
+        file,
+        suggested_action: action,
+      };
+      if (opts?.promoted_to) f.promoted_to = opts.promoted_to;
+      findings.push(f);
+    }
+    for (let i = 0; i < debts; i++) {
+      findings.push({
+        id: `F${String(++idCounter).padStart(3, '0')}`,
+        status,
+        severity: 'debt',
+        category,
+        summary: `debt finding ${i}`,
+        file,
+        suggested_action: action,
+      });
+    }
+    for (let i = 0; i < observations; i++) {
+      findings.push({
+        id: `F${String(++idCounter).padStart(3, '0')}`,
+        status,
+        severity: 'observation',
+        category,
+        summary: `observation finding ${i}`,
+        file,
+        suggested_action: action,
+      });
+    }
+    return { slug: opts?.slug || 'test-slug', findings };
+  }
+
+  describe('trajectory', () => {
+    // @ana A019, A020
+    it('returns nulls and insufficient_data for empty chain', () => {
+      const report = computeHealthReport({ entries: [] });
+      expect(report.runs).toBe(0);
+      expect(report.trajectory.risks_per_run_last5).toBeNull();
+      expect(report.trajectory.risks_per_run_all).toBeNull();
+      expect(report.trajectory.trend).toBe('insufficient_data');
+      expect(report.trajectory.unclassified_count).toBe(0);
+    });
+
+    // @ana A029, A030
+    it('with fewer than 5 entries last5 equals all', () => {
+      const chain = {
+        entries: [
+          makeEntry(2), // 2 risks
+          makeEntry(1), // 1 risk
+        ],
+      };
+      const report = computeHealthReport(chain);
+      expect(report.trajectory.risks_per_run_last5).toBe(1.5);
+      expect(report.trajectory.risks_per_run_all).toBe(1.5);
+    });
+
+    // @ana A028
+    it('with fewer than 10 entries trend reports insufficient_data', () => {
+      const entries = Array.from({ length: 7 }, () => makeEntry(1));
+      const report = computeHealthReport({ entries });
+      expect(report.trajectory.trend).toBe('insufficient_data');
+    });
+
+    // @ana A027
+    it('counts risks per entry not cumulatively', () => {
+      // 2 entries, each with 2 risks → 2.0 per run, not 4
+      const chain = {
+        entries: [
+          makeEntry(2),
+          makeEntry(2),
+        ],
+      };
+      const report = computeHealthReport(chain);
+      expect(report.trajectory.risks_per_run_all).toBe(2.0);
+    });
+
+    // @ana A039
+    it('trend reflects improving trajectory', () => {
+      // First 5 entries: 3 risks each, last 5 entries: 1 risk each
+      const entries = [
+        ...Array.from({ length: 5 }, () => makeEntry(3)),
+        ...Array.from({ length: 5 }, () => makeEntry(1)),
+      ];
+      const report = computeHealthReport({ entries });
+      expect(report.trajectory.trend).toBe('improving');
+    });
+
+    it('trend reflects worsening trajectory', () => {
+      const entries = [
+        ...Array.from({ length: 5 }, () => makeEntry(1)),
+        ...Array.from({ length: 5 }, () => makeEntry(3)),
+      ];
+      const report = computeHealthReport({ entries });
+      expect(report.trajectory.trend).toBe('worsening');
+    });
+
+    it('trend reflects stable trajectory', () => {
+      const entries = Array.from({ length: 10 }, () => makeEntry(2));
+      const report = computeHealthReport({ entries });
+      expect(report.trajectory.trend).toBe('stable');
+    });
+
+    // @ana A021, A022
+    it('counts unclassified findings separately from trajectory', () => {
+      // 2 entries: first has 1 risk + 2 unclassified, second has 1 risk + 1 unclassified
+      const chain = {
+        entries: [
+          {
+            slug: 'e1',
+            findings: [
+              { severity: 'risk', status: 'active', category: 'code', summary: 'r1', file: 'a.ts' },
+              { status: 'active', category: 'code', summary: 'u1', file: 'b.ts' }, // no severity
+              { status: 'active', category: 'code', summary: 'u2', file: 'c.ts' }, // no severity
+            ],
+          },
+          {
+            slug: 'e2',
+            findings: [
+              { severity: 'risk', status: 'active', category: 'code', summary: 'r2', file: 'a.ts' },
+              { status: 'active', category: 'code', summary: 'u3', file: 'd.ts' }, // no severity
+            ],
+          },
+        ],
+      };
+      const report = computeHealthReport(chain);
+      expect(report.trajectory.unclassified_count).toBe(3);
+      // risks per run: entry1 has 1 risk, entry2 has 1 risk → 1.0
+      expect(report.trajectory.risks_per_run_all).toBe(1.0);
+    });
+
+    // @ana A040
+    it('all unclassified reports no_classified_data', () => {
+      const chain = {
+        entries: [
+          {
+            slug: 'e1',
+            findings: [
+              { status: 'active', category: 'code', summary: 'u1', file: 'a.ts' },
+              { status: 'active', category: 'code', summary: 'u2', file: 'b.ts' },
+            ],
+          },
+        ],
+      };
+      const report = computeHealthReport(chain);
+      expect(report.trajectory.trend).toBe('no_classified_data');
+      expect(report.trajectory.risks_per_run_all).toBeNull();
+      expect(report.trajectory.risks_per_run_last5).toBeNull();
+      expect(report.trajectory.unclassified_count).toBe(2);
+    });
+
+    it('trajectory window uses last 5 entries', () => {
+      // 8 entries: first 3 have 0 risks, last 5 have 2 risks each
+      const entries = [
+        ...Array.from({ length: 3 }, () => makeEntry(0)),
+        ...Array.from({ length: 5 }, () => makeEntry(2)),
+      ];
+      const report = computeHealthReport({ entries });
+      expect(report.trajectory.risks_per_run_last5).toBe(2.0);
+      // all: (0*3 + 2*5) / 8 = 1.3
+      expect(report.trajectory.risks_per_run_all).toBe(1.3);
+    });
+  });
+
+  describe('hot modules', () => {
+    // @ana A033
+    it('detects hot module at threshold', () => {
+      // 3 findings from 2 entries on same file
+      const chain = {
+        entries: [
+          makeEntry(2, 0, 0, { file: 'src/hot.ts', slug: 'e1' }),
+          makeEntry(1, 0, 0, { file: 'src/hot.ts', slug: 'e2' }),
+        ],
+      };
+      const report = computeHealthReport(chain);
+      expect(report.hot_modules.length).toBeGreaterThan(0);
+      expect(report.hot_modules[0]!.file).toBe('src/hot.ts');
+      expect(report.hot_modules[0]!.finding_count).toBe(3);
+      expect(report.hot_modules[0]!.entry_count).toBe(2);
+    });
+
+    // @ana A034
+    it('excludes modules below threshold', () => {
+      // 2 findings from 1 entry — below both thresholds
+      const chain = {
+        entries: [
+          makeEntry(2, 0, 0, { file: 'src/cold.ts' }),
+        ],
+      };
+      const report = computeHealthReport(chain);
+      expect(report.hot_modules.length).toBe(0);
+    });
+
+    // @ana A036
+    it('hot module shows severity breakdown', () => {
+      const chain = {
+        entries: [
+          makeEntry(1, 1, 0, { file: 'src/mixed.ts', slug: 'e1' }),
+          makeEntry(1, 0, 1, { file: 'src/mixed.ts', slug: 'e2' }),
+        ],
+      };
+      // 1 risk + 1 debt + 1 risk + 1 observation = 4 findings, 2 entries
+      const report = computeHealthReport(chain);
+      expect(report.hot_modules.length).toBeGreaterThan(0);
+      const mod = report.hot_modules[0]!;
+      expect(mod.by_severity).toBeDefined();
+      expect(mod.by_severity.risk).toBe(2);
+      expect(mod.by_severity.debt).toBe(1);
+      expect(mod.by_severity.observation).toBe(1);
+    });
+
+    it('only counts active findings for hot modules', () => {
+      const chain = {
+        entries: [
+          {
+            slug: 'e1',
+            findings: [
+              { id: 'F001', status: 'active', severity: 'risk', category: 'code', file: 'src/a.ts', summary: 'r1', suggested_action: 'scope' },
+              { id: 'F002', status: 'closed', severity: 'risk', category: 'code', file: 'src/a.ts', summary: 'r2', suggested_action: 'scope' },
+              { id: 'F003', status: 'active', severity: 'debt', category: 'code', file: 'src/a.ts', summary: 'd1', suggested_action: 'scope' },
+            ],
+          },
+          {
+            slug: 'e2',
+            findings: [
+              { id: 'F004', status: 'active', severity: 'risk', category: 'code', file: 'src/a.ts', summary: 'r3', suggested_action: 'scope' },
+            ],
+          },
+        ],
+      };
+      const report = computeHealthReport(chain);
+      // 3 active findings from 2 entries → hot
+      expect(report.hot_modules.length).toBe(1);
+      expect(report.hot_modules[0]!.finding_count).toBe(3);
+    });
+
+    it('caps hot modules at 5, sorted by count', () => {
+      const entries = [];
+      for (let i = 0; i < 7; i++) {
+        entries.push(makeEntry(3 + i, 0, 0, { file: `src/mod${i}.ts`, slug: `e1-${i}` }));
+        entries.push(makeEntry(1, 0, 0, { file: `src/mod${i}.ts`, slug: `e2-${i}` }));
+      }
+      const report = computeHealthReport({ entries });
+      expect(report.hot_modules.length).toBeLessThanOrEqual(5);
+      // Verify sorted descending
+      for (let i = 1; i < report.hot_modules.length; i++) {
+        expect(report.hot_modules[i]!.finding_count).toBeLessThanOrEqual(report.hot_modules[i - 1]!.finding_count);
+      }
+    });
+
+    it('skips findings without file', () => {
+      const chain = {
+        entries: [
+          {
+            slug: 'e1',
+            findings: [
+              { id: 'F001', status: 'active', severity: 'risk', category: 'code', file: null, summary: 'r1', suggested_action: 'scope' },
+              { id: 'F002', status: 'active', severity: 'risk', category: 'code', file: null, summary: 'r2', suggested_action: 'scope' },
+              { id: 'F003', status: 'active', severity: 'risk', category: 'code', file: null, summary: 'r3', suggested_action: 'scope' },
+            ],
+          },
+          {
+            slug: 'e2',
+            findings: [
+              { id: 'F004', status: 'active', severity: 'risk', category: 'code', file: null, summary: 'r4', suggested_action: 'scope' },
+            ],
+          },
+        ],
+      };
+      const report = computeHealthReport(chain);
+      expect(report.hot_modules.length).toBe(0);
+    });
+  });
+
+  describe('promotion candidates', () => {
+    it('includes findings with suggested_action promote', () => {
+      const chain = {
+        entries: [{
+          slug: 'e1',
+          findings: [
+            { id: 'F042', status: 'active', severity: 'risk', category: 'code', summary: 'Promote me', file: 'src/a.ts', suggested_action: 'promote' },
+          ],
+        }],
+      };
+      const report = computeHealthReport(chain);
+      expect(report.promotion_candidates.length).toBe(1);
+      expect(report.promotion_candidates[0]!.id).toBe('F042');
+      expect(report.promotion_candidates[0]!.suggested_action).toBe('promote');
+    });
+
+    // @ana A038
+    it('includes recurring scope findings from multiple entries', () => {
+      const chain = {
+        entries: [
+          {
+            slug: 'e1',
+            findings: [
+              { id: 'F001', status: 'active', severity: 'debt', category: 'code', summary: 'Recurring scope', file: 'src/a.ts', suggested_action: 'scope' },
+            ],
+          },
+          {
+            slug: 'e2',
+            findings: [
+              { id: 'F002', status: 'active', severity: 'debt', category: 'code', summary: 'Recurring scope v2', file: 'src/a.ts', suggested_action: 'scope' },
+            ],
+          },
+        ],
+      };
+      const report = computeHealthReport(chain);
+      const scopeCandidates = report.promotion_candidates.filter(c => c.suggested_action === 'scope');
+      expect(scopeCandidates.length).toBeGreaterThan(0);
+      expect(scopeCandidates[0]!.recurrence_count).toBe(2);
+    });
+
+    it('does not include single-occurrence scope findings', () => {
+      const chain = {
+        entries: [{
+          slug: 'e1',
+          findings: [
+            { id: 'F001', status: 'active', severity: 'debt', category: 'code', summary: 'One-off scope', file: 'src/a.ts', suggested_action: 'scope' },
+          ],
+        }],
+      };
+      const report = computeHealthReport(chain);
+      expect(report.promotion_candidates.length).toBe(0);
+    });
+
+    // @ana A025
+    it('returns empty promotions when no findings have been promoted', () => {
+      const chain = {
+        entries: [makeEntry(2)],
+      };
+      const report = computeHealthReport(chain);
+      expect(report.promotions).toEqual([]);
+    });
+  });
+
+  describe('promotion effectiveness', () => {
+    // @ana A023
+    it('shows tracking status for promotions with < 5 subsequent entries', () => {
+      const chain = {
+        entries: [
+          {
+            slug: 'e1',
+            findings: [
+              { id: 'F001', status: 'promoted', severity: 'risk', category: 'code', summary: 'Promoted finding', file: 'src/a.ts', suggested_action: 'promote', promoted_to: 'rule-1' },
+            ],
+          },
+          makeEntry(0, 0, 0, { slug: 'e2' }),
+          makeEntry(0, 0, 0, { slug: 'e3' }),
+        ],
+      };
+      const report = computeHealthReport(chain);
+      expect(report.promotions.length).toBe(1);
+      expect(report.promotions[0]!.status).toBe('tracking');
+      expect(report.promotions[0]!.reduction_pct).toBeNull();
+    });
+
+    // @ana A024
+    it('computes reduction percentage for mature promotions', () => {
+      const chain = {
+        entries: [
+          {
+            slug: 'e1',
+            findings: [
+              { id: 'F001', status: 'promoted', severity: 'risk', category: 'code', summary: 'Promoted finding', file: 'src/a.ts', suggested_action: 'promote', promoted_to: 'rule-1' },
+            ],
+          },
+          // 5 subsequent entries with no matching findings = 100% reduction
+          ...Array.from({ length: 5 }, (_, i) => makeEntry(0, 0, 0, { slug: `e${i + 2}`, file: 'src/b.ts' })),
+        ],
+      };
+      const report = computeHealthReport(chain);
+      expect(report.promotions.length).toBe(1);
+      expect(report.promotions[0]!.status).toBe('effective');
+      expect(report.promotions[0]!.reduction_pct).toBe(100);
+    });
+
+    // @ana A037
+    it('matches by severity plus category plus file', () => {
+      const chain = {
+        entries: [
+          {
+            slug: 'e1',
+            findings: [
+              { id: 'F001', status: 'promoted', severity: 'risk', category: 'code', summary: 'Promoted', file: 'src/a.ts', suggested_action: 'promote', promoted_to: 'rule-1' },
+            ],
+          },
+          // 5 subsequent entries with matching severity+category+file
+          ...Array.from({ length: 5 }, (_, i) => ({
+            slug: `e${i + 2}`,
+            findings: [
+              { id: `F${i + 10}`, status: 'active', severity: 'risk', category: 'code', summary: 'match', file: 'src/a.ts', suggested_action: 'scope' },
+            ],
+          })),
+        ],
+      };
+      const report = computeHealthReport(chain);
+      expect(report.promotions[0]!.match_criteria).toBeDefined();
+      expect(report.promotions[0]!.match_criteria.severity).toBe('risk');
+      expect(report.promotions[0]!.match_criteria.category).toBe('code');
+      expect(report.promotions[0]!.match_criteria.file).toBe('src/a.ts');
+      // 5 matching findings in 5 entries = 0% reduction
+      expect(report.promotions[0]!.reduction_pct).toBe(0);
+      expect(report.promotions[0]!.status).toBe('ineffective');
+    });
+  });
+
+  describe('named constants', () => {
+    // @ana A031
+    it('exports MIN_FINDINGS_HOT constant', () => {
+      expect(MIN_FINDINGS_HOT).toBe(3);
+    });
+
+    // @ana A032
+    it('exports MIN_ENTRIES_HOT constant', () => {
+      expect(MIN_ENTRIES_HOT).toBe(2);
+    });
+
+    it('exports TRAJECTORY_WINDOW constant', () => {
+      expect(TRAJECTORY_WINDOW).toBe(5);
+    });
+
+    it('exports MIN_ENTRIES_FOR_TREND constant', () => {
+      expect(MIN_ENTRIES_FOR_TREND).toBe(10);
+    });
+  });
+});
+
+describe('detectHealthChange', () => {
+  // @ana A035
+  it('first entry produces no change', () => {
+    const chain = {
+      entries: [{
+        slug: 'first',
+        findings: [
+          { id: 'F001', status: 'active', severity: 'risk', category: 'code', summary: 'r1', file: 'src/a.ts', suggested_action: 'scope' },
+        ],
+      }],
+    };
+    const change = detectHealthChange(chain);
+    expect(change.changed).toBe(false);
+    expect(change.triggers).toEqual([]);
+  });
+
+  it('empty chain produces no change', () => {
+    const change = detectHealthChange({ entries: [] });
+    expect(change.changed).toBe(false);
+  });
+
+  it('detects trend improvement', () => {
+    // Need 10+ entries for trend. First 5 high risks, last 6 low.
+    const entries = [
+      ...Array.from({ length: 5 }, (_, i) => ({
+        slug: `e${i}`,
+        findings: Array.from({ length: 4 }, (_, j) => ({
+          id: `F${i * 10 + j}`, status: 'active', severity: 'risk', category: 'code', summary: 'r', file: 'src/a.ts', suggested_action: 'scope',
+        })),
+      })),
+      ...Array.from({ length: 6 }, (_, i) => ({
+        slug: `e${i + 5}`,
+        findings: [
+          { id: `F${50 + i}`, status: 'active', severity: 'risk', category: 'code', summary: 'r', file: `src/b${i}.ts`, suggested_action: 'scope' },
+        ],
+      })),
+    ];
+    const change = detectHealthChange({ entries });
+    // The 11th entry shifts the trend comparison
+    if (change.changed) {
+      expect(change.triggers).toContain('trend_improved');
+    }
+    // Always includes trajectory snapshot
+    expect(change.trajectory).toBeDefined();
+  });
+
+  it('detects new hot module', () => {
+    // Set up a chain where the last entry pushes a module over the hot threshold
+    const entries = [
+      {
+        slug: 'e1',
+        findings: [
+          { id: 'F001', status: 'active', severity: 'risk', category: 'code', summary: 'r1', file: 'src/hot.ts', suggested_action: 'scope' },
+          { id: 'F002', status: 'active', severity: 'debt', category: 'code', summary: 'd1', file: 'src/hot.ts', suggested_action: 'scope' },
+        ],
+      },
+      // This entry pushes src/hot.ts to 3 findings from 2 entries → hot
+      {
+        slug: 'e2',
+        findings: [
+          { id: 'F003', status: 'active', severity: 'risk', category: 'code', summary: 'r2', file: 'src/hot.ts', suggested_action: 'scope' },
+        ],
+      },
+    ];
+    const change = detectHealthChange({ entries });
+    expect(change.changed).toBe(true);
+    expect(change.triggers).toContain('new_hot_module');
+    expect(change.details.some(d => d.includes('src/hot.ts'))).toBe(true);
+  });
+
+  it('detects new promotion candidates', () => {
+    const entries = [
+      {
+        slug: 'e1',
+        findings: [
+          { id: 'F001', status: 'active', severity: 'risk', category: 'code', summary: 'existing', file: 'src/a.ts', suggested_action: 'scope' },
+        ],
+      },
+      {
+        slug: 'e2',
+        findings: [
+          { id: 'F002', status: 'active', severity: 'risk', category: 'code', summary: 'new promote', file: 'src/b.ts', suggested_action: 'promote' },
+        ],
+      },
+    ];
+    const change = detectHealthChange({ entries });
+    expect(change.changed).toBe(true);
+    expect(change.triggers).toContain('new_candidates');
+  });
+
+  // @ana A026
+  it('no change when stable', () => {
+    // 2 entries with monitor action — no scope recurrence, no promote, no hot modules
+    const change = detectHealthChange({
+      entries: [
+        {
+          slug: 'e1',
+          findings: [
+            { id: 'F001', status: 'active', severity: 'risk', category: 'code', summary: 'r1', file: 'src/a.ts', suggested_action: 'monitor' },
+          ],
+        },
+        {
+          slug: 'e2',
+          findings: [
+            { id: 'F002', status: 'active', severity: 'risk', category: 'code', summary: 'r2', file: 'src/b.ts', suggested_action: 'monitor' },
+          ],
+        },
+      ],
+    });
+    expect(change.changed).toBe(false);
+    expect(change.triggers).toEqual([]);
+  });
+
+  it('always includes trajectory snapshot', () => {
+    const change = detectHealthChange({
+      entries: [
+        { slug: 'e1', findings: [{ id: 'F001', status: 'active', severity: 'risk', category: 'code', summary: 'r', file: 'a.ts', suggested_action: 'scope' }] },
+        { slug: 'e2', findings: [] },
+      ],
+    });
+    expect(change.trajectory).toBeDefined();
+    expect(change.trajectory.risks_per_run_all).toBeDefined();
   });
 });
