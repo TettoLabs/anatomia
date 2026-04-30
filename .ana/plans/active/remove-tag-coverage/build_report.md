@@ -98,6 +98,7 @@ pnpm run lint
 
 ## Git History
 ```
+ad0fa6e [remove-tag-coverage] Add source inspection path for untagged assertions in verify template
 df22614 [remove-tag-coverage] Update agent templates to remove tag coverage references
 e5e0974 [remove-tag-coverage] Remove tag coverage from pre-check, keep seal verification only
 ```
