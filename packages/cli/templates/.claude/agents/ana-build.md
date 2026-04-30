@@ -150,7 +150,7 @@ The contract is authoritative. The spec is guidance. If they conflict, follow th
 - Document deviations when you can't satisfy an assertion exactly
 
 **What you CANNOT do:**
-- Modify contract.yaml (it's sealed — pre-check will detect tampering)
+- Modify contract.yaml (it's sealed — the seal check at save time will detect tampering)
 - Skip assertions without documenting a deviation
 - Tag a test with an ID if the test doesn't actually address that assertion
 
@@ -508,13 +508,7 @@ When done:
 git push -u origin {branchPrefix}{slug}
 ```
 
-3. Run pre-check to verify tag coverage:
-```bash
-ana verify pre-check {slug}
-```
-If any assertion shows UNCOVERED, add the missing `@ana` tag before proceeding.
-
-4. Save the build report:
+3. Save the build report:
 ```bash
 ana artifact save build-report {slug}
 ```
@@ -522,13 +516,12 @@ ana artifact save build-report {slug}
 For multi-spec phases:
 ```bash
 git push -u origin {branchPrefix}{slug}
-ana verify pre-check {slug}
 ana artifact save build-report-1 {slug}
 ```
 
-5. After saving, output a brief summary in the conversation: deviations count, open issues count, test results, and the file path. Example: "Build report saved to `.ana/plans/active/{slug}/build_report.md` — 0 deviations, 2 open issues, 47 tests passing." NOT the full report — a one-line summary so the developer knows where to look.
+4. After saving, output a brief summary in the conversation: deviations count, open issues count, test results, and the file path. Example: "Build report saved to `.ana/plans/active/{slug}/build_report.md` — 0 deviations, 2 open issues, 47 tests passing." NOT the full report — a one-line summary so the developer knows where to look.
 
-6. Tell the user: "Build complete. Open `claude --agent ana-verify` to verify."
+5. Tell the user: "Build complete. Open `claude --agent ana-verify` to verify."
 
 ---
 

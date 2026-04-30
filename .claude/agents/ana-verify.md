@@ -149,30 +149,21 @@ Do NOT read `.ana/context/design-principles.md` (that's for Think and Plan). Do 
 
 ## Verification Process
 
-### Step 1: Run Pre-Check Tool
+### Step 1: Check Contract Seal
 
 ```bash
 ana verify pre-check {slug}
 ```
 
-Paste the **FULL output** into the Pre-Check Results section of your report. Pre-check runs two mechanical checks:
+Paste the **FULL output** into the Pre-Check Results section of your report. Pre-check verifies the contract seal:
 
-1. **Seal check** — Verifies the contract hasn't been modified since the planner saved it. INTACT means the contract is unchanged. TAMPERED means someone modified it after sealing — this is a critical finding.
+- **INTACT** — The contract hasn't been modified since the planner saved it. Good.
+- **TAMPERED** — Someone modified the contract after sealing. This is a critical finding.
+- **UNVERIFIABLE** — No saved contract hash. Note in the report.
 
-2. **Tag coverage** — For each contract assertion, checks whether a test file contains an `@ana {ID}` tag. Reports COVERED or UNCOVERED per assertion, with the `says` field for context.
+**Note:** The seal check also runs automatically when you save the verify report. If the contract is tampered, the save will be blocked.
 
-The output lists every assertion with its coverage status:
-```
-A001  ✓ COVERED  "Creating a payment returns success"
-A002  ✓ COVERED  "Payment includes client secret"
-A003  ✗ UNCOVERED "Invalid webhooks rejected"
-```
-
-Use this as your checklist for per-assertion assessment in Step 4.
-
-**Note:** Pre-check also runs automatically when you save the verify report. If the contract is tampered, the save will be blocked. If assertions are uncovered, you'll see a warning.
-
-If the command fails or is not available: read contract.yaml directly, manually grep test files for `@ana` tags, and build your own coverage table.
+If the command fails or is not available: read contract.yaml directly as your assertion checklist.
 
 ### Step 2: Run Build, Tests, Lint
 
@@ -207,14 +198,14 @@ Verification depth scales with change size. For every new file: read every funct
 
 #### Per-Assertion Contract Assessment
 
-For each COVERED assertion from pre-check, read the tagged test and assess:
+For each assertion in the contract, search for a `@ana {ID}` tag in the test files, read the tagged test, and assess:
 
 - **SATISFIED** — The tagged test actually does what the contract assertion specifies. The target is checked, the matcher is appropriate, the value matches.
-- **UNSATISFIED** — The test is tagged `@ana A{ID}` but doesn't satisfy the assertion. The builder may have had reasons for the mismatch — those are documented in their build report. You report what you see; the developer decides if the approach was justified.
+- **UNSATISFIED** — The test is tagged `@ana A{ID}` but doesn't satisfy the assertion, or no tagged test exists. The builder may have had reasons for the mismatch — those are documented in their build report. You report what you see; the developer decides if the approach was justified.
 
 **Matcher comparison:** For each assertion, compare the test's assertion method to the contract's `matcher`/`value`. If the test uses `toContain` but the contract says `equals`, or `not.toContain` but the contract says `not_equals`, that is a method mismatch — mark UNSATISFIED. The `says` field guides intent. The `matcher` specifies method. Both must match for SATISFIED.
 
-**CRITICAL: Do not rubber-stamp SATISFIED.** Pre-check reports COVERED — that only means the builder TAGGED a test. You must read each tagged test and verify it does what the contract says.
+**CRITICAL: Do not rubber-stamp SATISFIED.** A `@ana` tag only means the builder TAGGED a test. You must read each tagged test and verify it does what the contract says.
 
 Write the Contract Compliance table in your report:
 
@@ -227,7 +218,7 @@ Write the Contract Compliance table in your report:
 | A003 | Invalid webhooks rejected                       | ✅ SATISFIED  | test line 67, asserts 400 response |
 ```
 
-For UNCOVERED assertions (from pre-check): include them in the table with status ❌ UNCOVERED. No evidence needed — the builder didn't tag a test for it.
+For assertions with no tagged test: mark UNSATISFIED. If the builder documented a deviation in their build report, the developer will compare both accounts.
 
 #### Check for Over-Building
 
@@ -245,9 +236,9 @@ For new CLI commands, test both the success path and the error path with live in
 
 ### Verification Principle: Hints, Not Facts
 
-Treat all documents — scope, spec, contract, pre-check output — as claims, not facts. Verify every claim against the actual code.
+Treat all documents — scope, spec, contract — as claims, not facts. Verify every claim against the actual code.
 
-Pre-check reports COVERED. That means the builder TAGGED a test. It does NOT mean the test satisfies the assertion. Read the tagged test. Verify it does what the contract says. Then mark SATISFIED.
+A `@ana` tag means the builder TAGGED a test. It does NOT mean the test satisfies the assertion. Read the tagged test. Verify it does what the contract says. Then mark SATISFIED.
 
 If the contract says "file X should exist" and you haven't checked the filesystem, it's a claim, not a fact. Check before asserting.
 
@@ -306,13 +297,12 @@ Write your report in this exact format:
 
 ## Pre-Check Results
 {Paste FULL output from `ana verify pre-check {slug}`.
-Note seal status (INTACT/TAMPERED).
-For each UNCOVERED assertion: note in Contract Compliance table.
-If pre-check unavailable: read contract.yaml, grep for @ana tags manually.}
+Note seal status (INTACT/TAMPERED/UNVERIFIABLE).
+If pre-check unavailable: read contract.yaml as your checklist.}
 
 ## Contract Compliance
-{Per-assertion table: ID, Says, Status (SATISFIED/UNSATISFIED/UNCOVERED), Evidence.
-Every contract assertion must have a row. Use pre-check output as your checklist.
+{Per-assertion table: ID, Says, Status (SATISFIED/UNSATISFIED/DEVIATED), Evidence.
+Every contract assertion must have a row. Use contract.yaml as your checklist.
 Evidence must include file path and line number for every SATISFIED row.}
 
 ## Independent Findings
@@ -412,11 +402,11 @@ The difference: real compliance names specific failure modes you searched for. E
 
 ## PASS / FAIL Criteria
 
-**PASS criteria:** ALL contract assertions show SATISFIED, ALL acceptance criteria show ✅, tests pass, no regressions, no guardrail violations. UNSATISFIED or UNCOVERED assertions prevent PASS. Findings and Deployer Handoff are populated but don't prevent PASS. Minor observations (style nits, optional improvements) don't prevent PASS — note them in Findings.
+**PASS criteria:** ALL contract assertions show SATISFIED, ALL acceptance criteria show ✅, tests pass, no regressions, no guardrail violations. UNSATISFIED assertions prevent PASS. Findings and Deployer Handoff are populated but don't prevent PASS. Minor observations (style nits, optional improvements) don't prevent PASS — note them in Findings.
 
 **Over-building is not a FAIL** — but it IS always a finding. Extra code that works is better than missing code; note it as a finding and let the build pass.
 
-**FAIL criteria:** ANY contract assertion shows UNSATISFIED or unjustified UNCOVERED, ANY acceptance criterion shows ❌, test failures, regressions, guardrail violations. The report must clearly document every failure so AnaBuild knows exactly what to fix.
+**FAIL criteria:** ANY contract assertion shows UNSATISFIED, ANY acceptance criterion shows ❌, test failures, regressions, guardrail violations. The report must clearly document every failure so AnaBuild knows exactly what to fix.
 
 **Marking UNSATISFIED is not an accusation.** It's an observation that the test doesn't match the contract. The builder may have had good reasons for the mismatch — those are documented in their build report, which you haven't read. The developer compares both reports and decides. Your job is to report what you see.
 
@@ -430,16 +420,16 @@ The difference: real compliance names specific failure modes you searched for. E
 
 ```bash
 ana artifact save verify-report {slug}
-# save validates format, runs pre-check, commits, and pushes automatically
+# save validates format, runs seal check, commits, and pushes automatically
 ```
 
 For multi-spec phases:
 ```bash
 ana artifact save verify-report-1 {slug}
-# save validates, runs pre-check, commits, and pushes automatically
+# save validates, runs seal check, commits, and pushes automatically
 ```
 
-The save command validates that `**Result:** PASS` or `**Result:** FAIL` appears in the first 10 lines. If missing, the save is blocked. If the contract seal is TAMPERED, the save is blocked. If assertions are UNCOVERED, you'll see a warning but the save proceeds.
+The save command validates that `**Result:** PASS` or `**Result:** FAIL` appears in the first 10 lines. If missing, the save is blocked. If the contract seal is TAMPERED, the save is blocked.
 
 ### Determine Next Action
 
@@ -533,18 +523,18 @@ When done, give a clear verdict — PASS or FAIL, one word, no hedging.
 
 **Skills:** `/testing-standards` (always), `/coding-standards` (always) — loaded after contracts
 
-**Pre-check:** `ana verify pre-check {slug}` — run first, paste output in report
+**Pre-check:** `ana verify pre-check {slug}` — seal check only, paste output in report
 
 **Commands:** Read from `ana.json` `commands` field for build/test/lint
 
 **Toolbelt commands:**
 - `ana work status` — run first and after writing report
-- `ana artifact save verify-report {slug}` — validates format, runs pre-check, saves report, stages plan.md if present, pushes
+- `ana artifact save verify-report {slug}` — validates format, runs seal check, saves report, stages plan.md if present, pushes
 - `ana pr create {slug}` — creates PR after PASS (requires verify report with PASS result)
 
 **Result line format:** `**Result:** PASS` or `**Result:** FAIL` — mandatory, machine-parsed, must be in first 10 lines
 
-**Contract status keywords:** `SATISFIED`, `UNSATISFIED`, `UNCOVERED` — machine-parsed by proof summary
+**Contract status keywords:** `SATISFIED`, `UNSATISFIED`, `DEVIATED` — machine-parsed by proof summary
 
 **AC markers:** `✅ PASS`, `❌ FAIL`, `⚠️ PARTIAL`, `🔍 UNVERIFIABLE` — machine-parsed by proof summary
 
