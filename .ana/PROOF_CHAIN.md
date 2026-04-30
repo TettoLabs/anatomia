@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-35 runs · 65 active · 30 lessons · 0 promoted · 74 closed
+35 runs · 64 active · 30 lessons · 0 promoted · 75 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 65 total)
+## Active Findings (30 shown of 64 total)
 
 ### packages/cli/src/commands/proof.ts
 
@@ -59,7 +59,6 @@
 
 ### packages/cli/tests/commands/verify.test.ts
 
-- **test:** A006 @ana tag on wrong test — tagged on UNVERIFIABLE test (line 241) instead of parseDiffAddedCommentLines removal test — *Remove Pre-Check Tag Coverage*
 - **test:** Substantial test setup duplication across 8 integration tests — each creates git repo, contract, hash, saves from scratch — *Diff-Scoped Tag Search*
 
 ### packages/cli/tests/commands/work.test.ts
@@ -69,6 +68,7 @@
 - **test:** Pre-check COVERED status for A004-A010 comes from other features' tag collisions, not from harden-hot-files-specific tests — *Harden Hot Files*
 - **test:** Recovery path JSON test uses output.indexOf('{') to skip non-JSON output — fragile parsing that masks the stdout pollution issue — *Work Complete JSON + Proof Card Findings*
 - **test:** Severity migration tests (A019, A020, A021) don't have dedicated tagged tests in the changed test files — they're covered indirectly through the backfill loop in work.test.ts existing tests and by type-level evidence. No test explicitly creates a finding with severity 'blocker', runs the migration loop, and asserts severity is now 'risk'. The behavior is exercised but not directly asserted. — *Finding Enrichment Schema*
+- **test:** Test name 'shows maintenance line when findings were auto-closed' is now inverted — assertions check not.toContain('Maintenance:') but name says 'shows' — *Harden git commit calls*
 
 ### packages/cli/tests/utils/proofSummary.test.ts
 
