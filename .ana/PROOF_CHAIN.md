@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-35 runs · 71 active · 30 lessons · 0 promoted · 68 closed
+35 runs · 70 active · 30 lessons · 0 promoted · 69 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 71 total)
+## Active Findings (30 shown of 70 total)
 
 ### packages/cli/src/commands/artifact.ts
 
@@ -50,6 +50,7 @@
 - **code:** PreCheckData interface vestigial — retains assertions/covered/uncovered fields for reading old .saves.json but the code path that used them for assertion bootstrap is deleted — *Remove Pre-Check Tag Coverage*
 - **code:** parseComplianceTable regex omits UNVERIFIED — regex at line 171 matches SATISFIED|UNSATISFIED|DEVIATED|UNCOVERED but not UNVERIFIED. Correct behavior since verify reports never contain UNVERIFIED rows, but the omission could confuse future maintainers who see UNVERIFIED in the type union — *Remove Pre-Check Tag Coverage*
 - **code:** Trajectory 'worsening' label can be counterintuitive with sparse classification — reports worsening on 0.1 risks/run when most findings lack severity. Algorithm is correct but label may mislead operators. — *Proof Health V1*
+- **code:** ProofSummary.result still typed as string, not union — spec says to tighten to match ProofChainEntry ('PASS' | 'FAIL' | 'UNKNOWN') but builder left it as open string. Contract A004 only targets ProofChainEntry.result so not a contract violation, but consumers of ProofSummary.result don't get compiler protection. — *Finding Enrichment Schema*
 
 ### packages/cli/templates/.claude/agents/ana-learn.md
 
@@ -76,8 +77,4 @@
 - **test:** No negative test for Callouts heading rejection — parseFindings tests verify Findings works but don't assert Callouts is rejected — *Delete backward-compatibility code*
 - **test:** detectHealthChange 'detects trend improvement' unit test uses conditional assertion (if change.changed) — if change.changed is false, the expect on triggers never executes. This masks a potential false pass. — *Proof Health V1*
 - **test:** Promotion effectiveness test covers only the extremes (0% reduction, 100% reduction, tracking). No test for intermediate reduction (e.g., 40%) or negative reduction (more matches than baseline). — *Proof Health V1*
-
-### General
-
-- **test:** All 24 contract assertions are UNCOVERED by tagged tests — spec says templates are markdown verified by reading not unit tests, so pre-check shows 0 covered. Mechanical verification was done manually in this report. — *Ana Learn V1*
 
