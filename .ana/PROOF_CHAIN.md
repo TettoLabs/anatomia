@@ -1,12 +1,12 @@
 # Proof Chain Dashboard
 
-35 runs · 68 active · 30 lessons · 0 promoted · 71 closed
+35 runs · 67 active · 30 lessons · 0 promoted · 72 closed
 
 ## Hot Modules
 
 | File | Active | Entries |
 |------|--------|--------|
-| packages/cli/src/commands/proof.ts | 11 | 7 |
+| packages/cli/src/commands/proof.ts | 10 | 7 |
 | packages/cli/tests/commands/work.test.ts | 10 | 8 |
 | packages/cli/src/utils/proofSummary.ts | 9 | 7 |
 | packages/cli/src/commands/work.ts | 8 | 7 |
@@ -16,17 +16,17 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 68 total)
+## Active Findings (30 shown of 67 total)
 
 ### packages/cli/src/commands/proof.ts
 
-- **code:** Unknown severity values get own bucket instead of 'unclassified' as spec says — only '—' maps to unclassified, other unknowns display raw — *Proof Command UX*
 - **code:** SEVERITY_ORDER duplication still present — sevOrder inline array at line 1026 is correct local choice but broader duplication across audit/findings blocks remains — *Proof Command UX*
 - **code:** options.skill typed as non-optional string but can be undefined after requiredOption→option change — *Proof Promote*
 - **code:** No summary truncation for promoted finding display — long summaries break terminal formatting — *Proof Promote*
 - **code:** Hardcoded 10 in trend display instead of using MIN_ENTRIES_FOR_TREND constant. Template literal uses ${10} rather than importing and using the named constant, creating drift risk if threshold changes. — *Proof Health V1*
 - **code:** Promotion candidate display has no summary truncation. Long summaries from findings (up to 1000 chars) render untruncated in terminal output. Not a crash risk but degrades terminal readability. — *Proof Health V1*
 - **code:** SEVERITY_ORDER lookup duplicated identically in Findings block and Build Concerns block — extract to module-level constant — *Work Complete JSON + Proof Card Findings*
+- **code:** Duplicate 'from:' line in audit human-readable display — line 660 already has 'from: {feature}' in metadata, line 661 repeats it standalone — *Finding Enrichment Schema*
 
 ### packages/cli/src/commands/verify.ts
 
