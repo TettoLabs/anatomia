@@ -4805,7 +4805,10 @@
             "A004"
           ],
           "id": "close-the-loop-C1",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed in harden-git-commit-calls (entry #25). proof.ts now uses spawnSync.",
+          "closed_at": "2026-04-30T00:09:44.168Z",
+          "closed_by": "human"
         },
         {
           "category": "code",

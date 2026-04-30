@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-28 runs · 72 active · 26 lessons · 0 promoted · 39 closed
+28 runs · 71 active · 26 lessons · 0 promoted · 40 closed
 
 ## Hot Modules
 
@@ -9,14 +9,14 @@
 | packages/cli/src/utils/proofSummary.ts | 11 | 7 |
 | packages/cli/tests/commands/work.test.ts | 10 | 7 |
 | packages/cli/tests/utils/proofSummary.test.ts | 8 | 4 |
-| packages/cli/src/commands/proof.ts | 7 | 5 |
+| packages/cli/src/commands/proof.ts | 6 | 5 |
 | packages/cli/src/commands/work.ts | 6 | 5 |
 
 ## Promoted Rules
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 72 total)
+## Active Findings (30 shown of 71 total)
 
 ### packages/cli/src/commands/artifact.ts
 
@@ -27,7 +27,6 @@
 - **code:** SEVERITY_ORDER lookup duplicated identically in Findings block and Build Concerns block — extract to module-level constant — *Work Complete JSON + Proof Card Findings*
 - **code:** Duplicate 'from:' line in audit human-readable display — line 660 already has 'from: {feature}' in metadata, line 661 repeats it standalone — *Finding Enrichment Schema*
 - **code:** SEVERITY_WEIGHT map is local to audit command block — if severity sort is needed elsewhere, it will be duplicated — *Finding Enrichment Schema*
-- **code:** Shell injection in close commit message — user-controlled --reason interpolated into shell command — *Close the Loop*
 - **code:** Anchor stripping regex false-positives — aggressive strip reduces anchors to common words — *Close the Loop*
 
 ### packages/cli/src/commands/verify.ts
@@ -51,6 +50,10 @@
 - **code:** Cache never invalidated — stale if files created between resolveFindingPaths calls within one writeProofChain invocation — *Clean Ground for Foundation 3*
 - **code:** PreCheckData interface retains seal_commit field despite seal_commit removal from ProofChainEntry and ProofSummary. Intentional — reads old .saves.json — but inconsistent with the removal theme. — *Structured Findings Companion*
 - **code:** getProofContext uses conditional property assignment (if finding.line !== undefined) rather than always-present optional fields. Result object shape varies — fine for TypeScript consumers but JSON shape is polymorphic. — *Structured Findings Companion*
+
+### packages/cli/tests/commands/artifact.test.ts
+
+- **test:** Pre-check tag collision: A022-A025 and A029 reported COVERED because @ana tags from OTHER features' contracts share the same IDs. The 'covering' tests (readme.test.ts, confirmation.test.ts) don't test this feature's assertions. No dedicated tests for writeProofChain spread, seal_commit removal, or template content. — *Structured Findings Companion*
 
 ### packages/cli/tests/commands/proof.test.ts
 
