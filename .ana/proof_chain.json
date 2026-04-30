@@ -4050,7 +4050,10 @@
           "file": "packages/cli/tests/engine/detectors/readme.test.ts",
           "anchor": "@ana A008",
           "id": "fix-proof-chain-mechanical-accuracy-C4",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Root cause fixed by diff-scoped-tag-search (entry #27). Pre-check now searches added lines only.",
+          "closed_at": "2026-04-30T00:10:30.333Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
