@@ -2688,7 +2688,10 @@
           "file": "packages/cli/tests/commands/work.test.ts",
           "anchor": "@ana A008, A009",
           "id": "proof-chain-health-signal-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Root cause fixed by diff-scoped-tag-search (entry #27). Pre-check now searches added lines only.",
+          "closed_at": "2026-04-30T00:10:11.293Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
