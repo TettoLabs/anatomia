@@ -36,12 +36,15 @@ Health V1 has two surfaces: the `ana proof health` command and the fourth line i
 ## Acceptance Criteria
 - AC1: `ana proof health` displays severity breakdown, action breakdown, trajectory (risks/run last 5, lifetime, trend), hot modules (top 5 by active finding count), and promotion candidates (findings with `suggested_action: promote`, plus recurring `scope` findings)
 - AC2: `ana proof health --json` outputs the four-key envelope with `command: "proof health"` and `results` containing runs, severity, actions, trajectory, hot_modules, promotion_candidates, promotions
-- AC3: `work complete` (non-JSON) displays a fourth line when health detects a change: trajectory direction shift, new promote candidates, or a module crossing the hot threshold (3+ active findings from 2+ entries)
-- AC4: `work complete --json` includes health change data in the `results` object (a `quality` key or similar) so AI consumers can read it without parsing terminal text
+- AC3: `work complete` (non-JSON) displays a fourth line when health detects a change: trajectory direction shift, new promote candidates, or a module crossing the hot threshold
+- AC4: `work complete --json` includes health change data in `results.quality` — an object containing whether a change was detected, the trajectory snapshot, and which trigger fired. The key is `quality`, not negotiable — this is a permanent JSON contract addition
 - AC5: `ana proof health` with an empty chain outputs zeros and no errors
 - AC6: `ana proof health` with pre-backfill data (findings lacking severity) counts them as `unclassified` in the trajectory — the metric is computed on classified findings only, unclassified are reported separately
-- AC7: Promotion effectiveness section displays "tracking..." for promoted findings with fewer than 5 subsequent entries, and computes reduction percentage when data is sufficient
+- AC7: Promotion effectiveness section displays "tracking..." for promoted findings with fewer than 5 subsequent entries, and computes reduction percentage when data is sufficient. When no findings have been promoted (the state at Health V1 launch, before Promote ships), the promotions section does not appear
 - AC8: The fourth line does NOT appear when nothing changed — if trajectory is stable, no new candidates, no new hot modules, the third line (chain summary) is the last line
+- AC9: Trajectory counts risk findings per entry (the findings that entry produced), not cumulative active risks across the chain. Each entry's risk count is the number of findings with `severity: risk` in that entry's findings array, regardless of their current lifecycle status
+- AC10: With fewer than 10 entries, trend reports "insufficient data" instead of comparing windows. With fewer than 5 entries, "last 5" equals "all"
+- AC11: Hot modules are files with 3+ active findings from 2+ distinct entries. The threshold values are named constants, not hardcoded comparisons
 
 ## Edge Cases & Risks
 
@@ -55,7 +58,7 @@ Health V1 has two surfaces: the `ana proof health` command and the fourth line i
 
 **Promotion effectiveness with no promotions.** The section simply doesn't appear. No "0 promotions" message — that's noise.
 
-**`--json` fourth line data.** The `work complete --json` output must include health change data in `results`, not just in terminal display. AI consumers read JSON, not chalk-formatted text. The `quality` key (or similar) in results should contain: whether a change was detected, the trajectory, and any specific trigger that fired.
+**`--json` fourth line data.** The `work complete --json` output must include health change data in `results.quality`, not just in terminal display. AI consumers read JSON, not chalk-formatted text. The `quality` key contains: whether a change was detected, the trajectory snapshot, and which trigger fired.
 
 ## Rejected Approaches
 
