@@ -1782,9 +1782,12 @@
           "summary": "First-provider-wins with no conflict detection: `scan-engine.ts:313` and `scan-engine.ts:337` — both directory and sibling handlers use `if (!provider)` to take the first datasource block found. If a `.prisma` directory contains conflicting provider declarations (theoretically invalid Prisma, but possible in a broken project), the scanner silently picks whichever file `readdir` returns first. File system ordering is non-deterministic on some platforms. Acceptable because Prisma itself rejects multiple datasource blocks, but the scanner's behavior would be platform-dependent on malformed input.",
           "file": "packages/cli/src/engine/scan-engine.ts",
           "anchor": "if (!provider)",
-          "status": "active",
+          "status": "closed",
           "severity": "risk",
-          "suggested_action": "scope"
+          "suggested_action": "scope",
+          "closed_reason": "accept: invalid Prisma input, best-effort scanner, not our problem",
+          "closed_at": "2026-04-30T23:09:29.876Z",
+          "closed_by": "human"
         },
         {
           "id": "fix-prisma-schema-detection-C2",
