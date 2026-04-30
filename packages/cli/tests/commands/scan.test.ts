@@ -17,6 +17,7 @@ import {
   getPatternDisplayName,
 } from '../../src/utils/displayNames.js';
 
+// @ana A012, A013
 describe('ana scan', () => {
   let tempDir: string;
   let originalCwd: string;

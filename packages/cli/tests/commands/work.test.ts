@@ -1239,8 +1239,7 @@ Tests: 5 passed
         expect(output).toContain('findings');
       });
 
-      // @ana A006
-      // @ana A010
+      // @ana A006, A010, A015, A016
       it('closes findings for deleted files', async () => {
         await createProofProject('test-feature', { existingChain: true });
 

@@ -340,8 +340,9 @@ file_changes:
   });
 });
 
-// @ana A010, A012
+// @ana A010, A012, A008, A009
 describe('parseFindings', () => {
+  // @ana A008
   it('parses bulleted findings with em-dash format', () => {
     const content = `## Findings
 
@@ -753,9 +754,9 @@ describe('extractFileRefs', () => {
   });
 });
 
-// @ana A011
+// @ana A011, A010
 describe('generateActiveIssuesMarkdown', () => {
-  // @ana A007
+  // @ana A007, A010
   it('generateActiveIssuesMarkdown uses finding.file not extractFileRefs', () => {
     // Source-level verification: the renderer reads finding.file directly.
     // If it still called extractFileRefs, a finding with file=null but a file ref
