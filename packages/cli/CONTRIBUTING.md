@@ -40,7 +40,7 @@ packages/cli/
 │   │   └── init/          # 6-file split: index, types, preflight, skills, assets, state
 │   ├── engine/            # Scan engine
 │   │   ├── scan-engine.ts #   scanProject() — public entry point
-│   │   ├── index.ts       #   analyze() — legacy orchestrator with WASM-deferred imports
+│   │   ├── index.ts       #   Re-exports: EngineResult, scanProject, ASTCache, ParserManager
 │   │   ├── detectors/     #   framework/service/git/deployment/monorepo + node/ + python/
 │   │   ├── analyzers/     #   patterns/, structure/, conventions/ (each a 4–6 file folder)
 │   │   ├── types/         #   EngineResult + pattern/convention/parsed Zod schemas
@@ -51,15 +51,15 @@ packages/cli/
 │   ├── utils/             # Shared utilities (git-operations, gotchas, displayNames, ...)
 │   ├── data/
 │   │   └── gotchas.ts     # GOTCHAS — pre-populated trigger-based gotchas
-│   └── constants.ts       # CORE_SKILLS, CONDITIONAL_SKILL_TRIGGERS, getStackSummary
+│   └── constants.ts       # CORE_SKILLS, CONDITIONAL_SKILL_TRIGGERS, AGENT_FILES, getStackSummary
 ├── templates/
 │   ├── CLAUDE.md          # Project entry point template
 │   ├── context/           # Context scaffolds
 │   ├── .ana/              # Hook scripts + static docs
 │   └── .claude/
-│       ├── agents/        # 5 agent definitions (ana, ana-plan, ana-build, ana-verify, ana-setup)
+│       ├── agents/        # Agent definitions — see AGENT_FILES in src/constants.ts for the current list
 │       └── skills/        # 8 skill templates (5 core + 3 conditional)
-├── tests/                 # Vitest suite — 984 tests, 73 files
+├── tests/                 # Vitest suite — run `(cd packages/cli && pnpm vitest run)` for current counts
 │   ├── commands/          # Command tests
 │   ├── engine/            # Engine tests (analyzers, detectors, parsers, conventions, patterns, utils, types)
 │   ├── e2e/               # End-to-end init/scan tests
@@ -395,7 +395,7 @@ The 118 catch blocks in `src/` audited during S18 were all legitimately one of t
 
 ## Branching Policy
 
-**For S19 and beyond: feature branches + PR review.**
+**Branching policy: feature branches + PR review.**
 
 1. Create a branch: `feature/s19-<name>` or `fix/<short-description>`
 2. Open a PR to `main`
