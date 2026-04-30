@@ -1,0 +1,301 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Proof Health V1"
+
+assertions:
+  # AC1 — proof health terminal display
+  - id: A001
+    says: "Running proof health shows the number of pipeline runs"
+    block: "displays run count in terminal"
+    target: "stdout"
+    matcher: "contains"
+    value: "Proof Health:"
+
+  - id: A002
+    says: "Trajectory section shows risks per run for the recent window"
+    block: "displays trajectory with risks per run"
+    target: "stdout"
+    matcher: "contains"
+    value: "Risks/run (last 5):"
+
+  - id: A003
+    says: "Trajectory section shows the lifetime average"
+    block: "displays trajectory with risks per run"
+    target: "stdout"
+    matcher: "contains"
+    value: "Risks/run (all):"
+
+  - id: A004
+    says: "Trajectory section shows the trend direction"
+    block: "displays trajectory with trend"
+    target: "stdout"
+    matcher: "contains"
+    value: "Trend:"
+
+  - id: A005
+    says: "Hot modules section appears in the health dashboard"
+    block: "displays hot modules section"
+    target: "stdout"
+    matcher: "contains"
+    value: "Hot Modules"
+
+  - id: A006
+    says: "Promotion candidates section appears in the health dashboard"
+    block: "displays promotion candidates section"
+    target: "stdout"
+    matcher: "contains"
+    value: "Promotion Candidates"
+
+  # AC2 — proof health JSON
+  - id: A007
+    says: "Health JSON uses the standard four-key envelope"
+    block: "outputs JSON with four-key envelope"
+    target: "response.command"
+    matcher: "equals"
+    value: "proof health"
+
+  - id: A008
+    says: "Health JSON results include trajectory data"
+    block: "outputs JSON with four-key envelope"
+    target: "response.results.trajectory"
+    matcher: "exists"
+
+  - id: A009
+    says: "Health JSON results include hot modules list"
+    block: "outputs JSON with four-key envelope"
+    target: "response.results.hot_modules"
+    matcher: "exists"
+
+  - id: A010
+    says: "Health JSON results include promotion candidates"
+    block: "outputs JSON with four-key envelope"
+    target: "response.results.promotion_candidates"
+    matcher: "exists"
+
+  - id: A011
+    says: "Health JSON results include promotions array"
+    block: "outputs JSON with four-key envelope"
+    target: "response.results.promotions"
+    matcher: "exists"
+
+  - id: A012
+    says: "Health JSON results include run count"
+    block: "outputs JSON with four-key envelope"
+    target: "response.results.runs"
+    matcher: "equals"
+    value: 28
+
+  # AC3 — fourth line in work complete (terminal)
+  - id: A013
+    says: "Work complete shows a health line when trajectory changes"
+    block: "shows fourth line on trajectory change"
+    target: "stdout"
+    matcher: "contains"
+    value: "Health:"
+
+  - id: A014
+    says: "The health line describes what changed"
+    block: "shows fourth line on trajectory change"
+    target: "stdout"
+    matcher: "contains"
+    value: "trend"
+
+  # AC4 — fourth line in work complete (JSON)
+  - id: A015
+    says: "Work complete JSON includes quality data"
+    block: "includes quality key in JSON output"
+    target: "response.results.quality"
+    matcher: "exists"
+
+  - id: A016
+    says: "Quality data indicates whether a change was detected"
+    block: "includes quality key in JSON output"
+    target: "response.results.quality.changed"
+    matcher: "exists"
+
+  - id: A017
+    says: "Quality data includes the trajectory snapshot"
+    block: "includes quality key in JSON output"
+    target: "response.results.quality.trajectory"
+    matcher: "exists"
+
+  - id: A018
+    says: "Quality data lists which triggers fired"
+    block: "includes quality key in JSON output"
+    target: "response.results.quality.triggers"
+    matcher: "exists"
+
+  # AC5 — empty chain
+  - id: A019
+    says: "Health command works with an empty proof chain"
+    block: "handles empty chain without errors"
+    target: "exitCode"
+    matcher: "equals"
+    value: 0
+
+  - id: A020
+    says: "Empty chain shows zero runs"
+    block: "handles empty chain without errors"
+    target: "stdout"
+    matcher: "contains"
+    value: "0 runs"
+
+  # AC6 — unclassified findings
+  - id: A021
+    says: "Findings without severity are counted as unclassified"
+    block: "counts unclassified findings separately"
+    target: "report.trajectory.unclassified_count"
+    matcher: "greater"
+    value: 0
+
+  - id: A022
+    says: "Trajectory computes risks per run on classified findings only"
+    block: "trajectory excludes unclassified from risk calculation"
+    target: "report.trajectory.risks_per_run_all"
+    matcher: "equals"
+    value: 1.0
+
+  # AC7 — promotion effectiveness
+  - id: A023
+    says: "Promotions with insufficient data show tracking status"
+    block: "shows tracking for recent promotions"
+    target: "report.promotions[0].status"
+    matcher: "equals"
+    value: "tracking"
+
+  - id: A024
+    says: "Promotions with enough data show reduction percentage"
+    block: "computes reduction for mature promotions"
+    target: "report.promotions[0].reduction_pct"
+    matcher: "exists"
+
+  - id: A025
+    says: "With no promoted findings the promotions section is empty"
+    block: "omits promotions when none exist"
+    target: "report.promotions"
+    matcher: "equals"
+    value: []
+
+  # AC8 — no fourth line when nothing changed
+  - id: A026
+    says: "Work complete does not show a health line when nothing changed"
+    block: "no fourth line when stable"
+    target: "stdout"
+    matcher: "not_contains"
+    value: "Health:"
+
+  # AC9 — per-entry trajectory
+  - id: A027
+    says: "Each entry's risk count is only the risks in that entry's findings"
+    block: "counts risks per entry not cumulatively"
+    target: "report.trajectory.risks_per_run_all"
+    matcher: "equals"
+    value: 2.0
+
+  # AC10 — insufficient data handling
+  - id: A028
+    says: "With fewer than ten entries the trend reports insufficient data"
+    block: "reports insufficient data for trend with few entries"
+    target: "report.trajectory.trend"
+    matcher: "equals"
+    value: "insufficient_data"
+
+  - id: A029
+    says: "With fewer than five entries the recent window equals lifetime"
+    block: "last5 equals all when fewer than 5 entries"
+    target: "report.trajectory.risks_per_run_last5"
+    matcher: "equals"
+    value: 1.5
+
+  - id: A030
+    says: "With fewer than five entries the lifetime average matches"
+    block: "last5 equals all when fewer than 5 entries"
+    target: "report.trajectory.risks_per_run_all"
+    matcher: "equals"
+    value: 1.5
+
+  # AC11 — hot module thresholds
+  - id: A031
+    says: "Hot module threshold for finding count is a named constant"
+    block: "uses named constants for thresholds"
+    target: "source"
+    matcher: "contains"
+    value: "MIN_FINDINGS_HOT"
+
+  - id: A032
+    says: "Hot module threshold for entry count is a named constant"
+    block: "uses named constants for thresholds"
+    target: "source"
+    matcher: "contains"
+    value: "MIN_ENTRIES_HOT"
+
+  - id: A033
+    says: "A module with three findings from two entries is hot"
+    block: "detects hot module at threshold"
+    target: "report.hot_modules.length"
+    matcher: "greater"
+    value: 0
+
+  - id: A034
+    says: "A module below threshold is not hot"
+    block: "excludes modules below threshold"
+    target: "report.hot_modules.length"
+    matcher: "equals"
+    value: 0
+
+  # Additional edge cases
+  - id: A035
+    says: "First pipeline run produces no fourth line"
+    block: "no fourth line on first entry"
+    target: "change.changed"
+    matcher: "equals"
+    value: false
+
+  - id: A036
+    says: "Hot module display includes severity breakdown per module"
+    block: "hot module shows severity breakdown"
+    target: "report.hot_modules[0].by_severity"
+    matcher: "exists"
+
+  - id: A037
+    says: "Promotion effectiveness matches by severity plus category plus file"
+    block: "effectiveness tracks matching severity category and file"
+    target: "report.promotions[0].match_criteria"
+    matcher: "exists"
+
+  - id: A038
+    says: "Promotion candidates include recurring scope findings from multiple entries"
+    block: "recurring scope findings appear as candidates"
+    target: "report.promotion_candidates.length"
+    matcher: "greater"
+    value: 0
+
+  - id: A039
+    says: "Health JSON trajectory trend reflects window comparison"
+    block: "trend reflects improving trajectory"
+    target: "report.trajectory.trend"
+    matcher: "equals"
+    value: "improving"
+
+  - id: A040
+    says: "All-unclassified chain reports no classified data instead of zero"
+    block: "all unclassified reports no classified data"
+    target: "report.trajectory.trend"
+    matcher: "equals"
+    value: "no_classified_data"
+
+file_changes:
+  - path: "packages/cli/src/types/proof.ts"
+    action: modify
+  - path: "packages/cli/src/utils/proofSummary.ts"
+    action: modify
+  - path: "packages/cli/src/commands/proof.ts"
+    action: modify
+  - path: "packages/cli/src/commands/work.ts"
+    action: modify
+  - path: "packages/cli/tests/utils/proofSummary.test.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/proof.test.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/work.test.ts"
+    action: modify
