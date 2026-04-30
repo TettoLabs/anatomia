@@ -5900,7 +5900,10 @@
           "severity": "debt",
           "suggested_action": "accept",
           "id": "work-complete-json-proof-card-C3",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Source-code-reading anti-pattern. Known. Tracked as AGENT-048 for first promotion when promote ships.",
+          "closed_at": "2026-04-30T00:11:45.916Z",
+          "closed_by": "human"
         },
         {
           "category": "code",

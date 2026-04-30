@@ -1,14 +1,14 @@
 # Proof Chain Dashboard
 
-28 runs · 61 active · 26 lessons · 0 promoted · 50 closed
+28 runs · 60 active · 26 lessons · 0 promoted · 51 closed
 
 ## Hot Modules
 
 | File | Active | Entries |
 |------|--------|--------|
 | packages/cli/src/utils/proofSummary.ts | 10 | 7 |
-| packages/cli/tests/commands/work.test.ts | 8 | 6 |
 | packages/cli/tests/utils/proofSummary.test.ts | 7 | 4 |
+| packages/cli/tests/commands/work.test.ts | 7 | 6 |
 | packages/cli/src/commands/proof.ts | 5 | 4 |
 | packages/cli/src/commands/work.ts | 5 | 4 |
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 61 total)
+## Active Findings (30 shown of 60 total)
 
 ### packages/cli/src/commands/artifact.ts
 
@@ -50,6 +50,7 @@
 - **code:** PreCheckData interface retains seal_commit field despite seal_commit removal from ProofChainEntry and ProofSummary. Intentional — reads old .saves.json — but inconsistent with the removal theme. — *Structured Findings Companion*
 - **code:** getProofContext uses conditional property assignment (if finding.line !== undefined) rather than always-present optional fields. Result object shape varies — fine for TypeScript consumers but JSON shape is polymorphic. — *Structured Findings Companion*
 - **code:** Dashboard duplicates Active Issues logic: `packages/cli/src/utils/proofSummary.ts:566-616` — reimplements the collection, filtering, capping, and file-grouping from `generateActiveIssuesMarkdown` (lines 385-473). The format differs (### vs ## headings, no truncation), but extracting shared helpers for the filtering and grouping would reduce the ~50 lines of duplication. — *Findings Lifecycle Foundation*
+- **code:** globSync exception if projectRoot is invalid: `packages/cli/src/utils/proofSummary.ts:345` — If `projectRoot` points to a non-existent directory, `globSync` will throw. The callers in `work.ts` pass `projectRoot` from `writeProofChain`'s parameter, which comes from `findProjectRoot()` — a validated path. But `resolveCalloutPaths` doesn't validate its own input. Consistent with the existing pattern (no defensive validation in utility functions), but worth knowing. — *Clear the Deck Phase 2*
 
 ### packages/cli/tests/commands/artifact.test.ts
 
@@ -65,7 +66,6 @@
 
 ### packages/cli/tests/commands/work.test.ts
 
-- **test:** A001 test reads source code to check --json registration instead of behavioral test — same anti-pattern flagged in proof context for A020 — *Work Complete JSON + Proof Card Findings*
 - **test:** Recovery path JSON test uses output.indexOf('{') to skip non-JSON output — fragile parsing that masks the stdout pollution issue — *Work Complete JSON + Proof Card Findings*
 - **test:** Severity migration tests (A019, A020, A021) don't have dedicated tagged tests in the changed test files — they're covered indirectly through the backfill loop in work.test.ts existing tests and by type-level evidence. No test explicitly creates a finding with severity 'blocker', runs the migration loop, and asserts severity is now 'risk'. The behavior is exercised but not directly asserted. — *Finding Enrichment Schema*
 - **test:** Test name 'shows maintenance line when findings were auto-closed' is now inverted — assertions check not.toContain('Maintenance:') but name says 'shows' — *Harden git commit calls*
