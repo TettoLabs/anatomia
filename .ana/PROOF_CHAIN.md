@@ -1,12 +1,12 @@
 # Proof Chain Dashboard
 
-35 runs · 73 active · 32 lessons · 0 promoted · 64 closed
+35 runs · 72 active · 32 lessons · 0 promoted · 65 closed
 
 ## Hot Modules
 
 | File | Active | Entries |
 |------|--------|--------|
-| packages/cli/src/commands/proof.ts | 12 | 7 |
+| packages/cli/src/commands/proof.ts | 11 | 7 |
 | packages/cli/tests/commands/work.test.ts | 10 | 8 |
 | packages/cli/src/utils/proofSummary.ts | 9 | 7 |
 | packages/cli/tests/utils/proofSummary.test.ts | 8 | 5 |
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 73 total)
+## Active Findings (30 shown of 72 total)
 
 ### packages/cli/src/commands/artifact.ts
 
@@ -26,7 +26,6 @@
 
 - **code:** Unknown severity values get own bucket instead of 'unclassified' as spec says — only '—' maps to unclassified, other unknowns display raw — *Proof Command UX*
 - **code:** SEVERITY_ORDER duplication still present — sevOrder inline array at line 1026 is correct local choice but broader duplication across audit/findings blocks remains — *Proof Command UX*
-- **code:** rule_text includes markdown bullet prefix '- ' in JSON output — *Proof Promote*
 - **code:** options.skill typed as non-optional string but can be undefined after requiredOption→option change — *Proof Promote*
 - **code:** No summary truncation for promoted finding display — long summaries break terminal formatting — *Proof Promote*
 - **code:** Hardcoded 10 in trend display instead of using MIN_ENTRIES_FOR_TREND constant. Template literal uses ${10} rather than importing and using the named constant, creating drift risk if threshold changes. — *Proof Health V1*
@@ -36,6 +35,7 @@
 ### packages/cli/src/commands/verify.ts
 
 - **code:** Comment filter only matches // and # — block comments (/* @ana A001 */) in added lines are silently ignored — *Diff-Scoped Tag Search*
+- **code:** No size guard on git diff output — very large diffs loaded entirely into memory before parsing — *Diff-Scoped Tag Search*
 
 ### packages/cli/src/commands/work.ts
 
