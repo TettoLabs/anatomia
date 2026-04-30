@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-35 runs · 71 active · 31 lessons · 0 promoted · 67 closed
+35 runs · 71 active · 30 lessons · 0 promoted · 68 closed
 
 ## Hot Modules
 
