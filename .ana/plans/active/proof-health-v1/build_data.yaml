@@ -7,6 +7,14 @@ concerns:
   - summary: "Promotion effectiveness baseline assumes 1 match per entry as neutral — simplification"
     severity: observation
     suggested_action: accept
-  - summary: "Fourth line integration tests limited — cannot control appended entry findings in completeWork"
+  - summary: "Hardcoded literal 10 in proof.ts:810 instead of MIN_ENTRIES_FOR_TREND constant"
+    file: "packages/cli/src/commands/proof.ts"
+    severity: debt
+    suggested_action: scope
+  - summary: "No summary truncation for promotion candidates — long summaries break terminal formatting"
+    file: "packages/cli/src/commands/proof.ts"
+    severity: debt
+    suggested_action: scope
+  - summary: "Promotion effectiveness tests only cover 0% and 100% — no intermediate or negative reduction test"
     severity: observation
-    suggested_action: accept
+    suggested_action: monitor

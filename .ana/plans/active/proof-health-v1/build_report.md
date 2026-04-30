@@ -13,7 +13,11 @@
 - `packages/cli/src/commands/work.ts` (modified): Added health change detection to `completeWork`. Chain read consolidated (single read for both meta and health). Added `quality` key to JSON output. Added conditional fourth line to terminal output.
 - `packages/cli/tests/utils/proofSummary.test.ts` (modified): Added 40 tests for `computeHealthReport` (trajectory, hot modules, promotion candidates, promotion effectiveness, named constants) and `detectHealthChange` (trend changes, new hot modules, new candidates, stability, edge cases).
 - `packages/cli/tests/commands/proof.test.ts` (modified): Added 16 tests for `ana proof health` subcommand (terminal display, JSON envelope, empty chain, missing chain, parent --json inheritance).
-- `packages/cli/tests/commands/work.test.ts` (modified): Added 4 tests for fourth line (trajectory change, no change when stable, quality JSON key, first completion).
+- `packages/cli/tests/commands/work.test.ts` (modified): Added 4 tests for fourth line (trajectory change, no change when stable, quality JSON key, first completion). Fixed A013/A014 test chain construction.
+
+## Fix History
+
+**Round 1 → Round 2:** Verify report identified A013/A014 as UNSATISFIED. The test chain used 10 entries (5 high-risk + 5 low-risk) producing "improving" trend on both 10 and 11 entries — `detectHealthChange` never fired. Fix: rebuilt chain with 10 entries each having 2 risks (stable trend). When completeWork adds entry #11 with 0 risks, the trend flips from stable to improving, triggering the fourth line. The assertions now correctly check for `Health:` and `trend` in the output.
 
 ## PR Summary
 
@@ -27,7 +31,7 @@
 
 - AC1 "proof health displays severity breakdown, action breakdown, trajectory, hot modules, promotion candidates" → proof.test.ts A001-A006 (6 tests verify each section appears)
 - AC2 "proof health --json four-key envelope" → proof.test.ts A007-A012 (6 tests verify envelope and result fields)
-- AC3 "work complete fourth line on health change" → work.test.ts A013, A014 (1 test — see Deviations)
+- AC3 "work complete fourth line on health change" → work.test.ts A013, A014 (asserts `Health:` and `trend` appear in output)
 - AC4 "work complete --json quality key" → work.test.ts A015-A018 (2 tests verify quality structure)
 - AC5 "empty chain outputs zeros and no errors" → proof.test.ts A019, A020 + proofSummary.test.ts (3 tests)
 - AC6 "pre-backfill data counted as unclassified" → proofSummary.test.ts A021, A022, A040 (3 tests)
@@ -48,19 +52,11 @@
 
 3. **Chain re-read consolidation.** Moved the chain read from inside the JSON branch to before the if/else, so both terminal and JSON paths can use it for health change detection. This also consolidates the mainChain type to include the fields needed by `detectHealthChange`.
 
-4. **Fourth line test for trajectory change (A013/A014).** The "shows fourth line on trajectory change" test sets up a chain with an improving trend (high→low risks) but verifies `Chain:` line presence rather than `Health:` directly, because whether the trend comparison triggers depends on whether adding the new entry changes the comparison boundary. The "no change when stable" test (A026) directly asserts `Health:` is absent.
+4. **A013/A014 test chain construction (fixed in round 2).** Uses 10 entries with uniform 2-risks-each (stable trend). When completeWork adds entry #11 with 0 risk findings, the second half average drops below the first half → improving. The `detectHealthChange` comparison sees stable→improving and fires the fourth line.
 
 ## Deviations from Contract
 
-### A013: Work complete shows a health line when trajectory changes
-**Instead:** Test verifies chain line is present; trigger verification relies on separate unit test for `detectHealthChange`
-**Reason:** Creating an integration test that reliably triggers a trend change in `completeWork` requires precise control over chain state and the entry being appended by `writeProofChain` — the appended entry's findings are generated from verify report parsing, not directly controlled by the test. The unit test for `detectHealthChange` in proofSummary.test.ts directly verifies trend change detection.
-**Outcome:** Functionally equivalent — change detection logic is thoroughly unit-tested
-
-### A014: The health line describes what changed
-**Instead:** Verified through `detectHealthChange` unit test that `details` array contains "trend" text
-**Reason:** Same integration difficulty as A013
-**Outcome:** Functionally equivalent — details format is verified at the unit level
+None — contract followed exactly. A013/A014 tests now directly assert `Health:` and `trend` in the output.
 
 ## Test Results
 
@@ -74,12 +70,14 @@ Test Files  97 passed (97)
 ### After Changes
 ```
 (cd packages/cli && pnpm vitest run)
-Test Files  97 passed (97)
-     Tests  1711 passed | 2 skipped (1713)
+ Test Files  97 passed (97)
+      Tests  1711 passed | 2 skipped (1713)
+   Start at  19:18:00
+   Duration  19.17s
 ```
 
 ### Comparison
-- Tests added: 54 (40 in proofSummary.test.ts, 10 in proof.test.ts (net: 16 new health tests), 4 in work.test.ts)
+- Tests added: 54 (40 in proofSummary.test.ts, 16 in proof.test.ts, 4 in work.test.ts)
 - Tests removed: 0
 - Regressions: none
 
@@ -97,6 +95,9 @@ pnpm run lint
 
 ## Git History
 ```
+87e3798 [proof-health-v1] Fix: A013/A014 test chain construction to trigger fourth line
+66bf600 [proof-health-v1] Verify report
+04e9e49 [proof-health-v1] Build report
 cf318bb [proof-health-v1] Add fourth health line to work complete
 6037ce8 [proof-health-v1] Add proof health subcommand
 fa2f712 [proof-health-v1] Add computeHealthReport and detectHealthChange
@@ -109,6 +110,10 @@ fa2f712 [proof-health-v1] Add computeHealthReport and detectHealthChange
 
 2. **Promotion effectiveness baseline assumption.** The "1 match per entry = no change" baseline is a simplification. A more sophisticated approach would track the actual match rate before promotion and compare. Acceptable for V1 since zero promotions exist in any real chain yet.
 
-3. **Fourth line integration test coverage (A013/A014).** The integration tests for the fourth line are limited because `completeWork` generates its own chain entry from verify report parsing — the test can't directly control the appended entry's findings. The unit tests for `detectHealthChange` thoroughly cover the detection logic. A future integration test could mock `writeProofChain` to control the appended entry.
+3. **Hardcoded threshold in display string.** `proof.ts:810` uses literal `10` in `insufficient data (need ${10}+ runs)` instead of the exported `MIN_ENTRIES_FOR_TREND` constant. If the threshold changes, the display message stays stale. Noted by verifier in round 1.
+
+4. **No summary truncation for promotion candidates.** `proof.ts:844` outputs full finding summaries with no truncation. Long summaries could break terminal formatting. Hot module file paths are naturally bounded; summaries are not.
+
+5. **Promotion effectiveness only covers extremes.** Tests cover 0% reduction, 100% reduction, and tracking. No test for intermediate reduction or negative reduction (more matches than baseline). The reduction formula can produce negative percentages but no test exercises this path.
 
 Verified complete by second pass.
