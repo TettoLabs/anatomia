@@ -4834,7 +4834,10 @@
             "A028"
           ],
           "id": "close-the-loop-C3",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed in harden-git-commit-calls (entry #25). Nudge block deleted entirely.",
+          "closed_at": "2026-04-30T00:09:54.365Z",
+          "closed_by": "human"
         },
         {
           "category": "upstream",

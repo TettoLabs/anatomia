@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-28 runs · 71 active · 26 lessons · 0 promoted · 40 closed
+28 runs · 70 active · 26 lessons · 0 promoted · 41 closed
 
 ## Hot Modules
 
@@ -10,13 +10,13 @@
 | packages/cli/tests/commands/work.test.ts | 10 | 7 |
 | packages/cli/tests/utils/proofSummary.test.ts | 8 | 4 |
 | packages/cli/src/commands/proof.ts | 6 | 5 |
-| packages/cli/src/commands/work.ts | 6 | 5 |
+| packages/cli/src/commands/work.ts | 5 | 4 |
 
 ## Promoted Rules
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 71 total)
+## Active Findings (30 shown of 70 total)
 
 ### packages/cli/src/commands/artifact.ts
 
@@ -40,7 +40,6 @@
 - **code:** Main path re-reads proof_chain.json from disk for computeChainHealth after writeProofChain just wrote it — matches known build concern about nudge re-read pattern — *Work Complete JSON + Proof Card Findings*
 - **code:** Severity migration does not handle unexpected old values beyond blocker/note — if a future writer introduces an unknown severity value (e.g. from a malformed manual edit), the migration loop silently ignores it. Not blocking since validation prevents new bad values, but the migration is only protective for known old values. — *Finding Enrichment Schema*
 - **code:** Recovery path counts total findings via loop but main path uses stats.findings — two different counting mechanisms for the same display. If totalFindings computation in writeProofChain diverges from the simple loop, recovery output could drift. — *Harden git commit calls*
-- **code:** Unnecessary disk re-read for nudge human closure check — *Close the Loop*
 
 ### packages/cli/src/utils/proofSummary.ts
 
@@ -54,6 +53,7 @@
 ### packages/cli/tests/commands/artifact.test.ts
 
 - **test:** Pre-check tag collision: A022-A025 and A029 reported COVERED because @ana tags from OTHER features' contracts share the same IDs. The 'covering' tests (readme.test.ts, confirmation.test.ts) don't test this feature's assertions. No dedicated tests for writeProofChain spread, seal_commit removal, or template content. — *Structured Findings Companion*
+- **test:** blocks-save tests (A006, A007) use toThrow() without checking exit code or error message content. saveArtifact calls process.exit(1), which throws in test — the assertion confirms the throw but not the exit code value or the descriptive error message. — *Structured Findings Companion*
 
 ### packages/cli/tests/commands/proof.test.ts
 
