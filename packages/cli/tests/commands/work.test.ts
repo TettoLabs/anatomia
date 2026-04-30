@@ -2180,15 +2180,17 @@ Tests: 5 passed
         // Create a merged project, then manually add a chain with entries that trigger change
         await createMergedProject({ slug: 'test-feature', phases: 1 });
 
-        // Write a pre-existing chain with entries that create a trend change
-        // First 5 entries: high risks, next 5: low risks → improving trend
-        // When work complete adds entry 11 and compares, the trend detection fires
+        // Strategy: 10 existing entries with equal risk counts → stable trend.
+        // All 10 entries have 2 risks each. First half avg = 2.0, second half avg = 2.0 → stable.
+        // When completeWork adds entry #11 (0 new risk findings from verify),
+        // first half (5) avg = 2.0, second half (6) avg = (5×2 + 0)/6 = 1.67 → improving.
+        // detectHealthChange compares 10-entry (stable) vs 11-entry (improving) → fires.
         const chainPath = path.join(tempDir, '.ana', 'proof_chain.json');
         const existingEntries = [];
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < 10; i++) {
           existingEntries.push({
-            slug: `old-${i}`,
-            feature: `Old Feature ${i}`,
+            slug: `entry-${i}`,
+            feature: `Feature ${i}`,
             result: 'PASS',
             author: { name: 'Dev', email: 'dev@test.com' },
             contract: { total: 1, covered: 1, uncovered: 0, satisfied: 1, unsatisfied: 0, deviated: 0 },
@@ -2198,44 +2200,16 @@ Tests: 5 passed
             hashes: {},
             completed_at: '2026-03-01T00:00:00Z',
             modules_touched: [],
-            findings: Array.from({ length: 4 }, (_, j) => ({
+            findings: Array.from({ length: 2 }, (_, j) => ({
               id: `F${i * 10 + j}`,
               category: 'code',
               summary: `risk ${j}`,
-              file: `src/old${j}.ts`,
+              file: `src/file${i}-${j}.ts`,
               anchor: null,
               severity: 'risk',
               suggested_action: 'monitor',
               status: 'active',
             })),
-            build_concerns: [],
-          });
-        }
-        for (let i = 5; i < 10; i++) {
-          existingEntries.push({
-            slug: `new-${i}`,
-            feature: `New Feature ${i}`,
-            result: 'PASS',
-            author: { name: 'Dev', email: 'dev@test.com' },
-            contract: { total: 1, covered: 1, uncovered: 0, satisfied: 1, unsatisfied: 0, deviated: 0 },
-            assertions: [{ id: 'A001', says: 'Works', status: 'SATISFIED' }],
-            acceptance_criteria: { total: 1, met: 1 },
-            timing: { total_minutes: 10 },
-            hashes: {},
-            completed_at: '2026-04-01T00:00:00Z',
-            modules_touched: [],
-            findings: [
-              {
-                id: `F${i * 10}`,
-                category: 'code',
-                summary: 'one risk',
-                file: `src/new${i}.ts`,
-                anchor: null,
-                severity: 'risk',
-                suggested_action: 'monitor',
-                status: 'active',
-              },
-            ],
             build_concerns: [],
           });
         }
@@ -2254,12 +2228,10 @@ Tests: 5 passed
         console.log = originalLog;
         const output = logs.join('\n');
 
-        // The fourth line appears when health detects a change
-        // With 10 existing entries + new entry, and the trend is improving (high→low risks),
-        // if this triggers a change, we should see "Health:" in the output
-        // If the chain comparison doesn't trigger (both before and after have the same improving trend),
-        // the line won't appear — that's also valid. Test for the presence of chain line at minimum.
-        expect(output).toContain('Chain:');
+        // 10 entries → stable. completeWork adds #11 (0 risks) → improving.
+        // detectHealthChange sees stable→improving → fires → fourth line appears.
+        expect(output).toContain('Health:');
+        expect(output).toContain('trend');
       });
 
       // @ana A026
