@@ -1,0 +1,10 @@
+schema: 1
+concerns:
+  - summary: "Commander requiredOption intercepts missing --skill before custom SKILL_REQUIRED handler runs"
+    file: "packages/cli/src/commands/proof.ts"
+    severity: observation
+    suggested_action: accept
+  - summary: "Multi-word --text values require shell quoting — test workaround uses embedded double quotes"
+    file: "packages/cli/tests/commands/proof.test.ts"
+    severity: observation
+    suggested_action: accept
