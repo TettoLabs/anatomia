@@ -135,6 +135,7 @@ Implementation-specific:
 - **No `memory: project` in frontmatter.** Only Think (ana.md) has this. Learn's memory IS the proof chain — it doesn't need cross-session memory in the Claude Code sense.
 - **The CLAUDE.md template is tiny (5 lines).** Adding one line is the entire change. Don't restructure it or add content beyond the single Learn reference line.
 - **`AGENT_FILES` is a `const` array with `as const`.** The type annotation matters. Add the entry as a string literal to match the existing pattern.
+- **Scope says registration is in `init/assets.ts` — it's actually in `constants.ts`.** The scope's Complexity Assessment lists `packages/cli/src/commands/init/assets.ts` as the registration file, but `AGENT_FILES` lives in `packages/cli/src/constants.ts`. The spec and contract reference the correct file (`constants.ts`). Verify: note this discrepancy as an upstream finding if you see it — the scope was wrong, the spec is right.
 
 ## Build Brief
 

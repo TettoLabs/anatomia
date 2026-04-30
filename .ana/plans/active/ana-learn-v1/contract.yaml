@@ -20,9 +20,9 @@ assertions:
   - id: A003
     says: "Learn agent does not declare skills in frontmatter because it loads them dynamically"
     block: "template frontmatter"
-    target: "frontmatter.skills"
-    matcher: "not_equals"
-    value: "present"
+    target: "frontmatter.content"
+    matcher: "not_contains"
+    value: "skills:"
 
   # AC2: Startup reads
   - id: A004
