@@ -14,5 +14,149 @@
   "spec": {
     "saved_at": "2026-04-30T18:09:02.157Z",
     "hash": "sha256:0bdcd115ce6afeb221bb9bf61b606046af3e35467e3f12e491de7125647f2039"
+  },
+  "build-report": {
+    "saved_at": "2026-04-30T18:34:33.051Z",
+    "hash": "sha256:356a37b4d7a6c5a8e941d2b04e09b586bf4310e96ae29a6aeffd4e00083666fe"
+  },
+  "build-data": {
+    "saved_at": "2026-04-30T18:34:33.052Z",
+    "hash": "sha256:cd16341ac7e17141fc8fc988df56dec679c2d623688f0ed6cf7cfe71136039fb"
+  },
+  "modules_touched": [
+    "packages/cli/src/commands/scan.ts",
+    "packages/cli/src/commands/work.ts",
+    "packages/cli/src/engine/types/index.ts",
+    "packages/cli/src/types/proof.ts",
+    "packages/cli/src/utils/proofSummary.ts",
+    "packages/cli/tests/commands/scan.test.ts",
+    "packages/cli/tests/commands/work.test.ts",
+    "packages/cli/tests/engine/backward-compat.test.ts",
+    "packages/cli/tests/engine/parsed-backward-compat.test.ts",
+    "packages/cli/tests/engine/patterns-backward-compat.test.ts",
+    "packages/cli/tests/engine/structure-backward-compat.test.ts",
+    "packages/cli/tests/utils/proofSummary.test.ts"
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:1dd1645bddd906fa6446689437c1f829e5d977e219eb363df9d2a71cf858d6f6",
+    "assertions": [
+      {
+        "id": "A001",
+        "says": "Work complete no longer renames callouts to findings on existing entries",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A002",
+        "says": "Work complete no longer backfills missing status on existing findings",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A003",
+        "says": "Work complete no longer migrates severity values on existing findings",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A004",
+        "says": "Work complete no longer backfills scope summary on existing entries",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A005",
+        "says": "Work complete no longer removes seal_commit from existing entries",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A006",
+        "says": "The reopen loop that reversed mechanical closures is deleted",
+        "status": "COVERED"
+      },
+      {
+        "id": "A007",
+        "says": "No code checks closed_by to reopen findings",
+        "status": "COVERED"
+      },
+      {
+        "id": "A008",
+        "says": "Finding parser only matches the Findings heading, not legacy Callouts",
+        "status": "COVERED"
+      },
+      {
+        "id": "A009",
+        "says": "Finding parser docstring says Findings, not Callouts",
+        "status": "COVERED"
+      },
+      {
+        "id": "A010",
+        "says": "Active issues filter checks status explicitly without undefined fallback",
+        "status": "COVERED"
+      },
+      {
+        "id": "A011",
+        "says": "The four backward-compat test files no longer exist",
+        "status": "COVERED"
+      },
+      {
+        "id": "A012",
+        "says": "Scan command no longer re-exports display name functions",
+        "status": "COVERED"
+      },
+      {
+        "id": "A013",
+        "says": "Scan test imports display names from the source module directly",
+        "status": "COVERED"
+      },
+      {
+        "id": "A014",
+        "says": "The AnalysisResultSchema comment reflects its actual consumers",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A015",
+        "says": "Path resolution still runs on existing entries",
+        "status": "COVERED"
+      },
+      {
+        "id": "A016",
+        "says": "Staleness checks still run on all entries",
+        "status": "COVERED"
+      },
+      {
+        "id": "A017",
+        "says": "The lessonsClassified counter no longer exists",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A018",
+        "says": "Maintenance stats no longer track lesson classification",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A019",
+        "says": "All remaining tests pass after deletion",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A020",
+        "says": "Build compiles without errors",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A021",
+        "says": "Test file count decreases after removing backward-compat tests",
+        "status": "UNCOVERED"
+      }
+    ],
+    "covered": 10,
+    "uncovered": 11,
+    "run_at": "2026-04-30T19:01:23.421Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-04-30T19:01:23.446Z",
+    "hash": "sha256:aaee2e9d3037269a022597366f391434d76bcaaa7772e2c46d02119071c4b889"
+  },
+  "verify-data": {
+    "saved_at": "2026-04-30T19:01:23.446Z",
+    "hash": "sha256:456689c7ae2902e2c14fff95a854da290df4cf31b1b0f5bef134265d754cfa0b"
   }
 }

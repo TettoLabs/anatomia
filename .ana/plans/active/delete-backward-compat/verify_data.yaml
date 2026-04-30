@@ -1,0 +1,23 @@
+schema: 1
+findings:
+  - category: code
+    summary: "Stale comment references deleted reopen loop"
+    file: "packages/cli/src/commands/work.ts"
+    line: 843
+    severity: debt
+    suggested_action: scope
+    anchor: "run after path resolution, reopen, and status assignment"
+  - category: test
+    summary: "No negative test for Callouts heading rejection — parseFindings tests verify Findings works but don't assert Callouts is rejected"
+    file: "packages/cli/tests/utils/proofSummary.test.ts"
+    severity: observation
+    suggested_action: accept
+    related_assertions: ["A008"]
+  - category: upstream
+    summary: "11 of 21 contract assertions UNCOVERED — deletion specs with not_contains matchers lack natural test targets. Pre-check tag system doesn't model source-level absence checks."
+    severity: observation
+    suggested_action: monitor
+  - category: upstream
+    summary: "@ana tag ID collision across features — A001-A005, A014, A017-A021 flagged in unrelated test files (git-operations.test.ts, scanProject.test.ts, readme.test.ts). Per-feature namespacing would prevent false matches."
+    severity: debt
+    suggested_action: scope

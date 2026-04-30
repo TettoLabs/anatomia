@@ -18,7 +18,7 @@ import * as fsPromises from 'node:fs/promises';
 import * as path from 'node:path';
 import { globSync } from 'glob';
 import { readArtifactBranch, readBranchPrefix, getCurrentBranch } from '../utils/git-operations.js';
-import { generateProofSummary, resolveFindingPaths, extractScopeSummary, generateDashboard, computeChainHealth, wrapJsonResponse, detectHealthChange, type ProofSummary } from '../utils/proofSummary.js';
+import { generateProofSummary, resolveFindingPaths, generateDashboard, computeChainHealth, wrapJsonResponse, detectHealthChange, type ProofSummary } from '../utils/proofSummary.js';
 import { findProjectRoot } from '../utils/validators.js';
 import type { ProofChainEntry, ProofChain, ProofChainStats } from '../types/proof.js';
 
@@ -833,74 +833,11 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
 
   // Maintenance counters
   let autoClosed = 0;
-  let lessonsClassified = 0;
 
-  // Existing entries: backfill (idempotent — already-resolved files are skipped)
+  // Existing entries: resolve finding paths (idempotent — already-resolved files are skipped)
   for (const existing of chain.entries) {
-    // Migration: rename callouts → findings field (AC16)
-    const existingAny = existing as unknown as Record<string, unknown>;
-    if (existingAny['callouts'] && !existing.findings) {
-      existing.findings = existingAny['callouts'] as ProofChainEntry['findings'];
-      delete existingAny['callouts'];
-    }
-
     resolveFindingPaths(existing.findings || [], existing.modules_touched || [], projectRoot, globCache);
     resolveFindingPaths(existing.build_concerns || [], existing.modules_touched || [], projectRoot, globCache);
-
-    // Backfill status (AC4) — idempotent
-    for (const finding of existing.findings || []) {
-      if (!finding.status) {
-        if (finding.category === 'upstream') {
-          finding.status = 'lesson';
-          lessonsClassified++;
-        } else {
-          finding.status = 'active';
-        }
-      }
-      // Severity migration — blocker→risk, note→observation. Idempotent.
-      const sev = finding.severity as string | undefined;
-      if (sev === 'blocker') {
-        finding.severity = 'risk';
-      } else if (sev === 'note') {
-        finding.severity = 'observation';
-      }
-    }
-
-    // Backfill scope_summary (AC11)
-    if (!existing.scope_summary) {
-      const scopePath = path.join(anaDir, 'plans', 'completed', existing.slug, 'scope.md');
-      existing.scope_summary = extractScopeSummary(scopePath);
-    }
-
-    // Remove dead seal_commit field from existing entries (idempotent)
-    delete (existing as unknown as Record<string, unknown>)['seal_commit'];
-  }
-
-  // Phase ordering is load-bearing: backfill → reopen → resolve → stale.
-  // Reopen MUST happen before resolveFindingPaths and before staleness.
-  // If staleness ran first on still-closed findings, it would skip them.
-  // Then reopens would activate them — but they'd never get checked by
-  // corrected staleness logic. The phases ensure every finding passes
-  // through the corrected checks exactly once.
-
-  // Reopen wrongly-closed findings — reverse broken mechanical closures
-  for (const existing of chain.entries) {
-    for (const finding of existing.findings || []) {
-      if (finding.closed_by !== 'mechanical') continue;
-
-      const reason = finding.closed_reason;
-      const shouldReopen =
-        (typeof reason === 'string' && reason.startsWith('superseded by')) ||
-        reason === 'file removed' ||
-        (reason === 'code changed, anchor absent' && finding.category === 'upstream');
-
-      if (shouldReopen) {
-        finding.status = finding.category === 'upstream' ? 'lesson' : 'active';
-        delete finding.closed_reason;
-        delete finding.closed_at;
-        delete finding.closed_by;
-      }
-    }
   }
 
   // Staleness checks — run after path resolution, reopen, and status assignment
@@ -998,8 +935,8 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
     newFindings: entry.findings.length,
   };
 
-  if (autoClosed > 0 || lessonsClassified > 0) {
-    stats.maintenance = { auto_closed: autoClosed, lessons_classified: lessonsClassified };
+  if (autoClosed > 0) {
+    stats.maintenance = { auto_closed: autoClosed };
   }
 
   return stats;

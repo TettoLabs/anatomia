@@ -340,10 +340,11 @@ file_changes:
   });
 });
 
-// @ana A010, A012
+// @ana A010, A012, A008, A009
 describe('parseFindings', () => {
+  // @ana A008
   it('parses bulleted findings with em-dash format', () => {
-    const content = `## Callouts
+    const content = `## Findings
 
 - **Code — Dead logic in full-stack check:** \`projectKind.ts:105\` — BROWSER_FRAMEWORKS.has(d) will never match because dep names are lowercase.
 
@@ -367,7 +368,7 @@ describe('parseFindings', () => {
   });
 
   it('parses numbered findings', () => {
-    const content = `## Callouts
+    const content = `## Findings
 
 1. **Code — Unused export:** ProjectKindResult exported but never imported.
 
@@ -382,7 +383,7 @@ describe('parseFindings', () => {
   });
 
   it('parses findings with colon-only format (no em-dash)', () => {
-    const content = `## Callouts
+    const content = `## Findings
 
 - **Code:** slug truncation at 24 chars misaligns table columns for long slugs.
 
@@ -408,7 +409,7 @@ Some ACs here.
   });
 
   it('returns empty array when Callouts section in verify report has no parseable entries', () => {
-    const content = `## Callouts
+    const content = `## Findings
 
 Just some plain text with no structured findings.
 `;
@@ -417,7 +418,7 @@ Just some plain text with no structured findings.
 
   it('caps summary at 1000 characters', () => {
     const longDesc = 'x'.repeat(1100);
-    const content = `## Callouts
+    const content = `## Findings
 
 - **Code — Long one:** ${longDesc}
 `;
@@ -427,7 +428,7 @@ Just some plain text with no structured findings.
   });
 
   it('extracts code anchor from backtick-quoted construct', () => {
-    const content = `## Callouts
+    const content = `## Findings
 
 - **Code — Non-recursive check:** \`readdirSync(prismaDir)\` only checks top-level entries in the directory.
 `;
@@ -437,7 +438,7 @@ Just some plain text with no structured findings.
   });
 
   it('returns null anchor when no suitable backtick content', () => {
-    const content = `## Callouts
+    const content = `## Findings
 
 - **Upstream — Spec deviation:** The spec suggested a different approach but implementation is better.
 `;
@@ -447,7 +448,7 @@ Just some plain text with no structured findings.
   });
 
   it('skips file:line references as anchors', () => {
-    const content = `## Callouts
+    const content = `## Findings
 
 - **Code — Issue at location:** \`census.ts:219\` has a problem. The real code is \`readdirSync(prismaDir)\`.
 `;
@@ -458,7 +459,7 @@ Just some plain text with no structured findings.
   });
 
   it('handles multi-line finding descriptions', () => {
-    const content = `## Callouts
+    const content = `## Findings
 
 - **Code — Multi-line issue:** First line of description
   continues on second line with more detail
@@ -475,7 +476,7 @@ Just some plain text with no structured findings.
   });
 
   it('parses category-header format with sub-bullets (add-hook-detection style)', () => {
-    const content = `## Callouts
+    const content = `## Findings
 
 **Code:**
 - **Component file heuristic may over-count:** confirmation.ts:797 includes any .tsx file.
@@ -506,7 +507,7 @@ Just some plain text with no structured findings.
   });
 
   it('parses standalone paragraph format (fix-skill-template-gaps style)', () => {
-    const content = `## Callouts
+    const content = `## Findings
 
 **Upstream:** Contract assertions A007 and A008 were sealed with incorrect values. The planner miscounted.
 
@@ -529,7 +530,7 @@ Just some plain text with no structured findings.
 
   // @ana A001
   it('returns file field with first file ref from summary', () => {
-    const content = `## Callouts
+    const content = `## Findings
 
 - **Code — Dead logic in full-stack check:** \`projectKind.ts:105\` — BROWSER_FRAMEWORKS.has(d) will never match.
 `;
@@ -540,7 +541,7 @@ Just some plain text with no structured findings.
 
   // @ana A002
   it('returns null file when no file ref in summary', () => {
-    const content = `## Callouts
+    const content = `## Findings
 
 - **Upstream — Contract assertion sealed with incorrect value:** The planner miscounted the total assertions.
 `;
@@ -551,7 +552,7 @@ Just some plain text with no structured findings.
 
   // @ana A003
   it('takes first file ref when multiple files present in summary', () => {
-    const content = `## Callouts
+    const content = `## Findings
 
 - **Code — Cross-file issue:** fileA.ts:10 and fileB.ts:20 both have the same problem.
 `;
@@ -561,7 +562,7 @@ Just some plain text with no structured findings.
   });
 
   it('accepts non-standard categories like Security or Performance', () => {
-    const content = `## Callouts
+    const content = `## Findings
 
 - **Security — SQL injection in query builder:** db/queries.ts:42 — user input concatenated into SQL string.
 - **Performance — N+1 query in user list:** api/users.ts:15 — fetches roles individually per user.
@@ -753,9 +754,9 @@ describe('extractFileRefs', () => {
   });
 });
 
-// @ana A011
+// @ana A011, A010
 describe('generateActiveIssuesMarkdown', () => {
-  // @ana A007
+  // @ana A007, A010
   it('generateActiveIssuesMarkdown uses finding.file not extractFileRefs', () => {
     // Source-level verification: the renderer reads finding.file directly.
     // If it still called extractFileRefs, a finding with file=null but a file ref
@@ -765,7 +766,7 @@ describe('generateActiveIssuesMarkdown', () => {
         feature: 'Test',
         completed_at: '2026-04-16T10:00:00Z',
         findings: [
-          { id: 'test-C1', category: 'code', summary: 'Issue mentions test.ts:42 in text', file: null, anchor: null },
+          { id: 'test-C1', category: 'code', summary: 'Issue mentions test.ts:42 in text', file: null, anchor: null, status: 'active' },
         ],
       },
     ];
@@ -782,7 +783,7 @@ describe('generateActiveIssuesMarkdown', () => {
         feature: 'Test',
         completed_at: '2026-04-16T10:00:00Z',
         findings: [
-          { id: 'test-C2', category: 'code', summary: 'Issue in test.ts', file: 'test.ts', anchor: null },
+          { id: 'test-C2', category: 'code', summary: 'Issue in test.ts', file: 'test.ts', anchor: null, status: 'active' },
         ],
       },
     ];
@@ -798,7 +799,7 @@ describe('generateActiveIssuesMarkdown', () => {
         feature: 'Project kind detection',
         completed_at: '2026-04-16T10:00:00Z',
         findings: [
-          { id: 'test-C3', category: 'code', summary: 'Dead logic in projectKind.ts:105', file: 'projectKind.ts', anchor: null },
+          { id: 'test-C3', category: 'code', summary: 'Dead logic in projectKind.ts:105', file: 'projectKind.ts', anchor: null, status: 'active' },
         ],
       },
     ];
@@ -813,7 +814,7 @@ describe('generateActiveIssuesMarkdown', () => {
         feature: 'Some feature',
         completed_at: '2026-04-16T10:00:00Z',
         findings: [
-          { id: 'test-C4', category: 'upstream', summary: 'Pre-check tag collision across features', file: null, anchor: null },
+          { id: 'test-C4', category: 'upstream', summary: 'Pre-check tag collision across features', file: null, anchor: null, status: 'active' },
         ],
       },
     ];
@@ -829,7 +830,7 @@ describe('generateActiveIssuesMarkdown', () => {
       entries.push({
         feature: `Feature ${i}`,
         completed_at: `2026-04-${String(i + 1).padStart(2, '0')}T10:00:00Z`,
-        findings: [{ id: `test-C${i}`, category: 'code', summary: `Issue ${i} in file${i}.ts`, file: `file${i}.ts`, anchor: null }],
+        findings: [{ id: `test-C${i}`, category: 'code', summary: `Issue ${i} in file${i}.ts`, file: `file${i}.ts`, anchor: null, status: 'active' }],
       });
     }
     const output = generateActiveIssuesMarkdown(entries);
@@ -859,7 +860,7 @@ describe('generateActiveIssuesMarkdown', () => {
         feature: 'Project kind detection',
         completed_at: '2026-04-16T10:00:00Z',
         findings: [
-          { id: 'test-C6', category: 'code', summary: 'Some issue in test.ts', file: 'test.ts', anchor: null },
+          { id: 'test-C6', category: 'code', summary: 'Some issue in test.ts', file: 'test.ts', anchor: null, status: 'active' },
         ],
       },
     ];
@@ -873,7 +874,7 @@ describe('generateActiveIssuesMarkdown', () => {
       {
         feature: 'Test',
         completed_at: '2026-04-16T10:00:00Z',
-        findings: [{ id: 'test-C7', category: 'code', summary: 'Issue in test.ts', file: 'test.ts', anchor: null }],
+        findings: [{ id: 'test-C7', category: 'code', summary: 'Issue in test.ts', file: 'test.ts', anchor: null, status: 'active' }],
       },
     ];
     const output = generateActiveIssuesMarkdown(entries);
@@ -887,7 +888,7 @@ describe('generateActiveIssuesMarkdown', () => {
       {
         feature: 'Test',
         completed_at: '2026-04-16T10:00:00Z',
-        findings: [{ id: 'test-C8', category: 'code', summary: 'Issue in test.ts', file: 'test.ts', anchor: null }],
+        findings: [{ id: 'test-C8', category: 'code', summary: 'Issue in test.ts', file: 'test.ts', anchor: null, status: 'active' }],
       },
     ];
     const output = generateActiveIssuesMarkdown(entries);
@@ -901,7 +902,7 @@ describe('generateActiveIssuesMarkdown', () => {
         feature: 'Cross-file issue',
         completed_at: '2026-04-16T10:00:00Z',
         findings: [
-          { id: 'test-C9', category: 'code', summary: 'Issue spans fileA.ts:10 and fileB.ts:20', file: 'fileA.ts', anchor: null },
+          { id: 'test-C9', category: 'code', summary: 'Issue spans fileA.ts:10 and fileB.ts:20', file: 'fileA.ts', anchor: null, status: 'active' },
         ],
       },
     ];
@@ -921,7 +922,7 @@ describe('generateActiveIssuesMarkdown', () => {
       {
         feature: 'Test',
         completed_at: '2026-04-16T10:00:00Z',
-        findings: [{ id: 'test-C10', category: 'code', summary: 'Issue in test.ts', file: 'test.ts', anchor: null }],
+        findings: [{ id: 'test-C10', category: 'code', summary: 'Issue in test.ts', file: 'test.ts', anchor: null, status: 'active' }],
       },
     ];
     const output = generateActiveIssuesMarkdown(entries);
@@ -935,7 +936,7 @@ describe('generateActiveIssuesMarkdown', () => {
       {
         feature: 'Test',
         completed_at: '2026-04-16T10:00:00Z',
-        findings: [{ id: 'test-C11', category: 'code', summary: longSummary, file: 'test.ts', anchor: null }],
+        findings: [{ id: 'test-C11', category: 'code', summary: longSummary, file: 'test.ts', anchor: null, status: 'active' }],
       },
     ];
     const output = generateActiveIssuesMarkdown(entries);
@@ -953,9 +954,9 @@ describe('generateActiveIssuesMarkdown', () => {
         feature: 'Test',
         completed_at: '2026-04-16T10:00:00Z',
         findings: [
-          { id: 'test-C12', category: 'code', summary: 'Issue in zebra.ts', file: 'zebra.ts', anchor: null },
-          { id: 'test-C13', category: 'code', summary: 'Issue in alpha.ts', file: 'alpha.ts', anchor: null },
-          { id: 'test-C14', category: 'upstream', summary: 'General issue without file ref', file: null, anchor: null },
+          { id: 'test-C12', category: 'code', summary: 'Issue in zebra.ts', file: 'zebra.ts', anchor: null, status: 'active' },
+          { id: 'test-C13', category: 'code', summary: 'Issue in alpha.ts', file: 'alpha.ts', anchor: null, status: 'active' },
+          { id: 'test-C14', category: 'upstream', summary: 'General issue without file ref', file: null, anchor: null, status: 'active' },
         ],
       },
     ];
@@ -975,7 +976,7 @@ describe('generateActiveIssuesMarkdown', () => {
       entries.push({
         feature: `Old Feature ${i}`,
         completed_at: `2026-01-${String(i + 1).padStart(2, '0')}T10:00:00Z`,
-        findings: [{ id: 'test-C15', category: 'code', summary: `old-issue-${i} in file.ts`, file: 'file.ts', anchor: null }],
+        findings: [{ id: 'test-C15', category: 'code', summary: `old-issue-${i} in file.ts`, file: 'file.ts', anchor: null, status: 'active' }],
       });
     }
     // Add 10 new entries (at end of array = newest)
@@ -983,7 +984,7 @@ describe('generateActiveIssuesMarkdown', () => {
       entries.push({
         feature: `New Feature ${i}`,
         completed_at: `2026-04-${String(i + 1).padStart(2, '0')}T10:00:00Z`,
-        findings: [{ id: 'test-C16', category: 'code', summary: `new-issue-${i} in file.ts`, file: 'file.ts', anchor: null }],
+        findings: [{ id: 'test-C16', category: 'code', summary: `new-issue-${i} in file.ts`, file: 'file.ts', anchor: null, status: 'active' }],
       });
     }
     const output = generateActiveIssuesMarkdown(entries);
@@ -1003,9 +1004,9 @@ describe('generateActiveIssuesMarkdown', () => {
       feature: 'Test',
       completed_at: '2026-04-17T00:00:00Z',
       findings: [
-        { id: 'test-C17', category: 'code', summary: 'issue one in foo.ts', file: 'foo.ts', anchor: null },
-        { id: 'test-C18', category: 'test', summary: 'issue two in bar.ts', file: 'bar.ts', anchor: null },
-        { id: 'test-C19', category: 'code', summary: 'issue three in baz.ts', file: 'baz.ts', anchor: null },
+        { id: 'test-C17', category: 'code', summary: 'issue one in foo.ts', file: 'foo.ts', anchor: null, status: 'active' },
+        { id: 'test-C18', category: 'test', summary: 'issue two in bar.ts', file: 'bar.ts', anchor: null, status: 'active' },
+        { id: 'test-C19', category: 'code', summary: 'issue three in baz.ts', file: 'baz.ts', anchor: null, status: 'active' },
       ],
     }];
     const md = generateActiveIssuesMarkdown(entries);
@@ -1014,7 +1015,7 @@ describe('generateActiveIssuesMarkdown', () => {
   });
 
   it('heading shows cap info when over 30 findings', () => {
-    const findings = Array.from({ length: 35 }, (_, i) => ({ id: `test-C${i}`, category: 'code', summary: `issue number ${i + 1} in unique-file-${i}.ts`, file: `unique-file-${i}.ts`, anchor: null,
+    const findings = Array.from({ length: 35 }, (_, i) => ({ id: `test-C${i}`, category: 'code', summary: `issue number ${i + 1} in unique-file-${i}.ts`, file: `unique-file-${i}.ts`, anchor: null, status: 'active',
     }));
     const entries = [{
       feature: 'Big Feature',
@@ -1033,7 +1034,7 @@ describe('generateActiveIssuesMarkdown', () => {
   });
 
   it('heading shows exact count at cap boundary', () => {
-    const findings = Array.from({ length: 30 }, (_, i) => ({ id: `test-C${i}`, category: 'code', summary: `issue ${i + 1} in file-${i}.ts`, file: `file-${i}.ts`, anchor: null,
+    const findings = Array.from({ length: 30 }, (_, i) => ({ id: `test-C${i}`, category: 'code', summary: `issue ${i + 1} in file-${i}.ts`, file: `file-${i}.ts`, anchor: null, status: 'active',
     }));
     const entries = [{
       feature: 'Feature',
@@ -1050,7 +1051,7 @@ describe('generateActiveIssuesMarkdown', () => {
     const entries = [{
       feature: 'Test',
       completed_at: '2026-04-17T00:00:00Z',
-      findings: [{ id: 'test-C22', category: 'code', summary: longSummary, file: null, anchor: null }],
+      findings: [{ id: 'test-C22', category: 'code', summary: longSummary, file: null, anchor: null, status: 'active' }],
     }];
     const md = generateActiveIssuesMarkdown(entries);
     expect(md).toContain('...');
@@ -1067,7 +1068,7 @@ describe('generateActiveIssuesMarkdown', () => {
     const entries = [{
       feature: 'Test',
       completed_at: '2026-04-17T00:00:00Z',
-      findings: [{ id: 'test-C23', category: 'code', summary: noSpaceSummary, file: 'packages/cli/src/engine/analyzers/patterns/confirmation.ts', anchor: null }],
+      findings: [{ id: 'test-C23', category: 'code', summary: noSpaceSummary, file: 'packages/cli/src/engine/analyzers/patterns/confirmation.ts', anchor: null, status: 'active' }],
     }];
     const md = generateActiveIssuesMarkdown(entries);
     expect(md).toContain('...');
@@ -1577,17 +1578,6 @@ describe('generateActiveIssuesMarkdown status filtering', () => {
     expect(output).not.toContain('Lesson finding summary');
   });
 
-  it('includes findings without status for backward compat', () => {
-    const entries = [{
-      feature: 'Test',
-      completed_at: '2026-04-16T10:00:00Z',
-      findings: [
-        { id: 'c1', category: 'code', summary: 'No status finding', file: 'file.ts', anchor: null },
-      ],
-    }];
-    const output = generateActiveIssuesMarkdown(entries);
-    expect(output).toContain('No status finding');
-  });
 });
 
 // @ana A022, A023
@@ -1885,15 +1875,6 @@ describe('parseFindings backward compat', () => {
     expect(findings[0]!.summary).toContain('New heading test');
   });
 
-  it('still parses findings with ## Callouts heading', () => {
-    const content = `## Callouts
-
-- **Code — Old heading test:** This uses the old heading.
-`;
-    const findings = parseFindings(content);
-    expect(findings.length).toBeGreaterThan(0);
-    expect(findings[0]!.summary).toContain('Old heading test');
-  });
 });
 
 // @ana A020, A021

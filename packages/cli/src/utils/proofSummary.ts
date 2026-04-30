@@ -411,11 +411,9 @@ export function generateActiveIssuesMarkdown(entries: ProofChainEntryForIndex[])
   const reversedEntries = [...entries].reverse();
 
   for (const entry of reversedEntries) {
-    // Handle entries without findings (older entries may not have this field)
     const findings = entry.findings || [];
     for (const finding of findings) {
-      // Filter to active findings only (status === 'active' or undefined for backward compat)
-      if (finding.status && finding.status !== 'active') continue;
+      if (finding.status !== 'active') continue;
       allFindings.push({
         category: finding.category,
         summary: finding.summary,
@@ -1187,7 +1185,7 @@ export function wrapJsonError(
 }
 
 /**
- * Parse findings from verify report's ## Callouts section.
+ * Parse findings from verify report's ## Findings section.
  *
  * Format-agnostic: finds bold category keywords (Code, Test, Upstream, Security,
  * Performance, etc.) and captures summaries. Handles all observed formats:
@@ -1203,8 +1201,8 @@ export function wrapJsonError(
 export function parseFindings(content: string): Array<{ category: string; summary: string; file: string | null; anchor: string | null }> {
   const results: Array<{ category: string; summary: string; file: string | null; anchor: string | null }> = [];
 
-  // Find ## Callouts or ## Findings section (backward compatible)
-  const findingsMatch = content.match(/## (?:Callouts|Findings)\n([\s\S]*?)(?=\n## |$)/);
+  // Find ## Findings section
+  const findingsMatch = content.match(/## Findings\n([\s\S]*?)(?=\n## |$)/);
   if (!findingsMatch || !findingsMatch[1]) return results;
 
   const section = findingsMatch[1];

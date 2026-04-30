@@ -1133,7 +1133,7 @@ Tests: 5 passed
 
         const patchedContent = verifyContent.replace(
           '## Verdict',
-          `## Callouts
+          `## Findings
 - **Code — Hard-coded timeout:** \`src/client.ts:47\` — uses 5000ms constant
 - **Test — Weak assertion:** \`tests/auth.test.ts:89\` — uses toBeDefined instead of specific check
 - **Code — Missing error handler:** \`src/api.ts:12\` — catch block is empty
@@ -1197,7 +1197,7 @@ Tests: 5 passed
 
         const patchedContent = verifyContent.replace(
           '## Verdict',
-          `## Callouts
+          `## Findings
 - **Code — Hard-coded timeout:** \`src/client.ts:47\` — uses 5000ms constant
 - **Test — Weak assertion:** \`tests/auth.test.ts:89\` — uses toBeDefined instead of specific check
 - **Code — Missing error handler:** \`src/api.ts:12\` — catch block is empty
@@ -1239,42 +1239,7 @@ Tests: 5 passed
         expect(output).toContain('findings');
       });
 
-      // @ana A006
-      it('backfills status active on findings without status', async () => {
-        await createProofProject('test-feature', { existingChain: true });
-
-        // Patch existing chain to have findings without status
-        const chainPath = path.join(tempDir, '.ana', 'proof_chain.json');
-        const chain = JSON.parse(fsSync.readFileSync(chainPath, 'utf-8'));
-        chain.entries[0].findings = [
-          { id: 'old-C1', category: 'code', summary: 'No status', file: null, anchor: null },
-        ];
-        fsSync.writeFileSync(chainPath, JSON.stringify(chain));
-
-        await completeWork('test-feature');
-
-        const updated = JSON.parse(fsSync.readFileSync(chainPath, 'utf-8'));
-        expect(updated.entries[0].findings[0].status).toBe('active');
-      });
-
-      // @ana A007
-      it('backfills upstream findings as lessons', async () => {
-        await createProofProject('test-feature', { existingChain: true });
-
-        const chainPath = path.join(tempDir, '.ana', 'proof_chain.json');
-        const chain = JSON.parse(fsSync.readFileSync(chainPath, 'utf-8'));
-        chain.entries[0].findings = [
-          { id: 'old-C1', category: 'upstream', summary: 'Upstream obs', file: null, anchor: null },
-        ];
-        fsSync.writeFileSync(chainPath, JSON.stringify(chain));
-
-        await completeWork('test-feature');
-
-        const updated = JSON.parse(fsSync.readFileSync(chainPath, 'utf-8'));
-        expect(updated.entries[0].findings[0].status).toBe('lesson');
-      });
-
-      // @ana A010
+      // @ana A006, A010, A015, A016
       it('closes findings for deleted files', async () => {
         await createProofProject('test-feature', { existingChain: true });
 
@@ -1300,7 +1265,7 @@ Tests: 5 passed
         const chainPath = path.join(tempDir, '.ana', 'proof_chain.json');
         const chain = JSON.parse(fsSync.readFileSync(chainPath, 'utf-8'));
         chain.entries[0].findings = [
-          { id: 'old-C1', category: 'code', summary: 'No file', file: null, anchor: null },
+          { id: 'old-C1', category: 'code', summary: 'No file', file: null, anchor: null, status: 'active' },
         ];
         fsSync.writeFileSync(chainPath, JSON.stringify(chain));
 
@@ -1366,7 +1331,7 @@ Tests: 5 passed
         const chain = JSON.parse(fsSync.readFileSync(chainPath, 'utf-8'));
         // Older entry has a finding
         chain.entries[0].findings = [
-          { id: 'old-C1', category: 'code', summary: 'Old issue', file: 'src/shared.ts', anchor: null },
+          { id: 'old-C1', category: 'code', summary: 'Old issue', file: 'src/shared.ts', anchor: null, status: 'active' },
         ];
         fsSync.writeFileSync(chainPath, JSON.stringify(chain));
 
@@ -1376,7 +1341,7 @@ Tests: 5 passed
         const verifyContent = fsSync.readFileSync(verifyPath, 'utf-8');
         const patchedContent = verifyContent.replace(
           '## Verdict',
-          `## Callouts
+          `## Findings
 - **Code — New issue:** \`src/shared.ts:10\` — newer finding
 
 ## Verdict`,
@@ -1410,7 +1375,7 @@ Tests: 5 passed
         const chainPath = path.join(tempDir, '.ana', 'proof_chain.json');
         const chain = JSON.parse(fsSync.readFileSync(chainPath, 'utf-8'));
         chain.entries[0].findings = [
-          { id: 'old-C1', category: 'code', summary: 'Partial path', file: 'src/types/contract.ts', anchor: null },
+          { id: 'old-C1', category: 'code', summary: 'Partial path', file: 'src/types/contract.ts', anchor: null, status: 'active' },
         ];
         fsSync.writeFileSync(chainPath, JSON.stringify(chain));
 
@@ -1484,54 +1449,6 @@ Tests: 5 passed
       });
 
       // @ana A010, A011
-      it('reopens wrongly-closed superseded findings', async () => {
-        await createProofProject('test-feature', { existingChain: true });
-
-        const srcDir = path.join(tempDir, 'src');
-        fsSync.mkdirSync(srcDir, { recursive: true });
-        fsSync.writeFileSync(path.join(srcDir, 'shared.ts'), 'export const x = 1;');
-
-        const chainPath = path.join(tempDir, '.ana', 'proof_chain.json');
-        const chain = JSON.parse(fsSync.readFileSync(chainPath, 'utf-8'));
-        chain.entries[0].findings = [
-          {
-            id: 'old-C1', category: 'code', summary: 'Was superseded',
-            file: 'src/shared.ts', anchor: null,
-            status: 'closed', closed_reason: 'superseded by new-C1',
-            closed_at: '2026-04-20T00:00:00Z', closed_by: 'mechanical',
-          },
-        ];
-        fsSync.writeFileSync(chainPath, JSON.stringify(chain));
-
-        await completeWork('test-feature');
-
-        const updated = JSON.parse(fsSync.readFileSync(chainPath, 'utf-8'));
-        expect(updated.entries[0].findings[0].status).toBe('active');
-        expect(updated.entries[0].findings[0].closed_reason).not.toBe('superseded by new-C1');
-      });
-
-      // @ana A012
-      it('reopens wrongly-closed upstream findings as lessons', async () => {
-        await createProofProject('test-feature', { existingChain: true });
-
-        const chainPath = path.join(tempDir, '.ana', 'proof_chain.json');
-        const chain = JSON.parse(fsSync.readFileSync(chainPath, 'utf-8'));
-        chain.entries[0].findings = [
-          {
-            id: 'old-C1', category: 'upstream', summary: 'Upstream wrongly closed',
-            file: 'nonexistent.ts', anchor: null,
-            status: 'closed', closed_reason: 'code changed, anchor absent',
-            closed_at: '2026-04-20T00:00:00Z', closed_by: 'mechanical',
-          },
-        ];
-        fsSync.writeFileSync(chainPath, JSON.stringify(chain));
-
-        await completeWork('test-feature');
-
-        const updated = JSON.parse(fsSync.readFileSync(chainPath, 'utf-8'));
-        expect(updated.entries[0].findings[0].status).toBe('lesson');
-      });
-
       // @ana A016
       it('closes findings whose anchor is absent from existing file', async () => {
         await createProofProject('test-feature', { existingChain: true });
@@ -1581,38 +1498,16 @@ Tests: 5 passed
         expect(updated.entries[0].findings[0].closed_reason).not.toBe('code changed, anchor absent');
       });
 
-      // @ana A031
-      it('migrates callouts field to findings during backfill', async () => {
-        await createProofProject('test-feature', { existingChain: true });
-
-        const chainPath = path.join(tempDir, '.ana', 'proof_chain.json');
-        const chain = JSON.parse(fsSync.readFileSync(chainPath, 'utf-8'));
-        // Simulate old entry with callouts field
-        chain.entries[0].callouts = [
-          { id: 'old-C1', category: 'code', summary: 'Legacy finding', file: null, anchor: null },
-        ];
-        delete chain.entries[0].findings;
-        fsSync.writeFileSync(chainPath, JSON.stringify(chain));
-
-        await completeWork('test-feature');
-
-        const updated = JSON.parse(fsSync.readFileSync(chainPath, 'utf-8'));
-        // callouts should be migrated to findings
-        expect(updated.entries[0].findings).toBeDefined();
-        expect(updated.entries[0].findings[0].summary).toBe('Legacy finding');
-        expect(updated.entries[0].callouts).toBeUndefined();
-      });
-
       // @ana A029, A030
       it('shows maintenance line when findings were auto-closed', async () => {
         await createProofProject('test-feature', { existingChain: true });
 
         const chainPath = path.join(tempDir, '.ana', 'proof_chain.json');
         const chain = JSON.parse(fsSync.readFileSync(chainPath, 'utf-8'));
-        // Add findings without status that reference nonexistent files
+        // Add findings that reference nonexistent files (will be auto-closed by staleness)
         chain.entries[0].findings = [
-          { id: 'old-C1', category: 'code', summary: 'Stale', file: 'src/deleted.ts', anchor: null },
-          { id: 'old-C2', category: 'upstream', summary: 'Upstream', file: null, anchor: null },
+          { id: 'old-C1', category: 'code', summary: 'Stale', file: 'src/deleted.ts', anchor: null, status: 'active' },
+          { id: 'old-C2', category: 'upstream', summary: 'Upstream', file: null, anchor: null, status: 'lesson' },
         ];
         fsSync.writeFileSync(chainPath, JSON.stringify(chain));
 
@@ -1661,7 +1556,7 @@ Tests: 5 passed
         const verifyContent = fsSync.readFileSync(verifyPath, 'utf-8');
         const patchedContent = verifyContent.replace(
           '## Verdict',
-          `## Callouts
+          `## Findings
 - **Code — Issue:** Code finding here
 - **Upstream — Observation:** Upstream observation
 

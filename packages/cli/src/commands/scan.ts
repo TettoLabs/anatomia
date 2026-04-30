@@ -463,5 +463,3 @@ export function registerScanCommand(program: Command): void {
   program.addCommand(scanCommand);
 }
 
-// Re-export display names for test backward compatibility
-export { getLanguageDisplayName, getFrameworkDisplayName, getPatternDisplayName } from '../utils/displayNames.js';
