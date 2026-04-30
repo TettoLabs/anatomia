@@ -1,0 +1,12 @@
+schema: 1
+concerns:
+  - summary: "proofSummary.ts now ~1550 lines — growing past comfort threshold"
+    file: "packages/cli/src/utils/proofSummary.ts"
+    severity: debt
+    suggested_action: monitor
+  - summary: "Promotion effectiveness baseline assumes 1 match per entry as neutral — simplification"
+    severity: observation
+    suggested_action: accept
+  - summary: "Fourth line integration tests limited — cannot control appended entry findings in completeWork"
+    severity: observation
+    suggested_action: accept
