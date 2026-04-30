@@ -1,0 +1,33 @@
+schema: 1
+findings:
+  - category: test
+    summary: "A013 conditional assertion passes vacuously when health line absent — if (output.includes('Health:')) guard means zero assertions fire when improving trend doesn't produce a health line"
+    file: "packages/cli/tests/commands/work.test.ts"
+    line: 2313
+    severity: debt
+    suggested_action: scope
+    related_assertions: ["A013"]
+  - category: test
+    summary: "A002 lacks negative proof of active-only counting — fixture has only active findings, no closed finding to prove exclusion"
+    file: "packages/cli/tests/commands/proof.test.ts"
+    line: 1432
+    severity: observation
+    suggested_action: monitor
+    related_assertions: ["A002"]
+  - category: code
+    summary: "Unknown severity values get own bucket instead of 'unclassified' as spec says — only '—' maps to unclassified, other unknowns display raw"
+    file: "packages/cli/src/commands/proof.ts"
+    line: 1031
+    severity: observation
+    suggested_action: accept
+  - category: code
+    summary: "SEVERITY_ORDER duplication still present — sevOrder inline array at line 1026 is correct local choice but broader duplication across audit/findings blocks remains"
+    file: "packages/cli/src/commands/proof.ts"
+    line: 1026
+    severity: observation
+    suggested_action: monitor
+  - category: upstream
+    summary: "Contract A013 assertion weaker than intent — not_contains '→' on stdout is trivially true when health line absent, doesn't prove nudge suppression on informational triggers"
+    severity: observation
+    suggested_action: monitor
+    related_assertions: ["A013"]

@@ -1,0 +1,8 @@
+schema: 1
+concerns:
+  - summary: "Work test findings use file: null to avoid staleness auto-close; real verify_data.yaml findings with file references would be auto-closed in test environments without matching source files"
+    severity: observation
+    suggested_action: accept
+  - summary: "Trend_worsened test uses monitor (not scope) for verify_data.yaml findings to avoid scope recurrence triggering new_candidates — test accurately isolates trend_worsened but doesn't test scope+worsened combo"
+    severity: observation
+    suggested_action: accept

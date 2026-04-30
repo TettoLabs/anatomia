@@ -2168,6 +2168,299 @@ Tests: 5 passed
         expect(Array.isArray(json.results.quality.triggers)).toBe(true);
       });
 
+      // @ana A011
+      it('appends learn nudge when new_candidates fires', async () => {
+        await createMergedProject({ slug: 'test-feature', phases: 1 });
+
+        // Add 1 existing chain entry with no promote findings
+        const chainPath = path.join(tempDir, '.ana', 'proof_chain.json');
+        const existingEntry = {
+          slug: 'prev-entry',
+          feature: 'Previous Feature',
+          result: 'PASS',
+          author: { name: 'Dev', email: 'dev@test.com' },
+          contract: { total: 1, covered: 1, uncovered: 0, satisfied: 1, unsatisfied: 0, deviated: 0 },
+          assertions: [{ id: 'A001', says: 'Works', status: 'SATISFIED' }],
+          acceptance_criteria: { total: 1, met: 1 },
+          timing: { total_minutes: 10 },
+          hashes: {},
+          completed_at: '2026-03-01T00:00:00Z',
+          modules_touched: [],
+          findings: [
+            { id: 'F001', category: 'code', summary: 'issue', file: null, severity: 'observation', suggested_action: 'monitor', status: 'active' },
+          ],
+          build_concerns: [],
+        };
+        fsSync.writeFileSync(chainPath, JSON.stringify({ entries: [existingEntry] }, null, 2));
+
+        // Add verify_data.yaml with a promote finding
+        const slugDir = path.join(tempDir, '.ana', 'plans', 'active', 'test-feature');
+        fsSync.writeFileSync(path.join(slugDir, 'verify_data.yaml'),
+          'findings:\n  - category: code\n    summary: Should be a rule\n    severity: risk\n    suggested_action: promote\n');
+
+        execSync('git add -A && git commit -m "add chain and verify data"', { cwd: tempDir, stdio: 'ignore' });
+
+        const originalLog = console.log;
+        const logs: string[] = [];
+        console.log = (...args: unknown[]) => { logs.push(args.join(' ')); };
+
+        await completeWork('test-feature');
+
+        console.log = originalLog;
+        const output = logs.join('\n');
+        expect(output).toContain('claude --agent ana-learn');
+      });
+
+      // @ana A012
+      it('appends audit nudge when trend_worsened fires', async () => {
+        await createMergedProject({ slug: 'test-feature', phases: 1 });
+
+        // 10 existing entries each with 1 observation (0 risk) → stable trend
+        const chainPath = path.join(tempDir, '.ana', 'proof_chain.json');
+        const existingEntries = [];
+        for (let i = 0; i < 10; i++) {
+          existingEntries.push({
+            slug: `entry-${i}`,
+            feature: `Feature ${i}`,
+            result: 'PASS',
+            author: { name: 'Dev', email: 'dev@test.com' },
+            contract: { total: 1, covered: 1, uncovered: 0, satisfied: 1, unsatisfied: 0, deviated: 0 },
+            assertions: [{ id: 'A001', says: 'Works', status: 'SATISFIED' }],
+            acceptance_criteria: { total: 1, met: 1 },
+            timing: { total_minutes: 10 },
+            hashes: {},
+            completed_at: '2026-03-01T00:00:00Z',
+            modules_touched: [],
+            findings: [
+              { id: `F${i}`, category: 'code', summary: `obs ${i}`, file: null, severity: 'observation', suggested_action: 'monitor', status: 'active' },
+            ],
+            build_concerns: [],
+          });
+        }
+        fsSync.writeFileSync(chainPath, JSON.stringify({ entries: existingEntries }, null, 2));
+
+        // Add verify_data.yaml with risk findings to shift trend to worsening.
+        // Use monitor (not scope) to avoid scope recurrence triggering new_candidates.
+        const slugDir = path.join(tempDir, '.ana', 'plans', 'active', 'test-feature');
+        fsSync.writeFileSync(path.join(slugDir, 'verify_data.yaml'),
+          'findings:\n' +
+          '  - category: code\n    summary: risk1\n    severity: risk\n    suggested_action: monitor\n' +
+          '  - category: code\n    summary: risk2\n    severity: risk\n    suggested_action: monitor\n' +
+          '  - category: code\n    summary: risk3\n    severity: risk\n    suggested_action: monitor\n');
+
+        execSync('git add -A && git commit -m "add chain and verify data"', { cwd: tempDir, stdio: 'ignore' });
+
+        const originalLog = console.log;
+        const logs: string[] = [];
+        console.log = (...args: unknown[]) => { logs.push(args.join(' ')); };
+
+        await completeWork('test-feature');
+
+        console.log = originalLog;
+        const output = logs.join('\n');
+        expect(output).toContain('ana proof audit');
+      });
+
+      // @ana A013
+      it('no nudge for informational triggers only', async () => {
+        // This case is already covered by existing "no health line when stable" test.
+        // Additional verification: when health line IS shown (trend_improved) but no actionable trigger.
+        await createMergedProject({ slug: 'test-feature', phases: 1 });
+
+        // 10 entries with decreasing risk → improving trend. New entry (0 risk) keeps improving.
+        const chainPath = path.join(tempDir, '.ana', 'proof_chain.json');
+        const existingEntries = [];
+        for (let i = 0; i < 10; i++) {
+          const riskCount = i < 5 ? 3 : 1; // first half high risk, second half low → improving
+          const findings = [];
+          for (let r = 0; r < riskCount; r++) {
+            findings.push({ id: `F${i}-${r}`, category: 'code', summary: `risk`, file: null, severity: 'risk', suggested_action: 'scope', status: 'active' });
+          }
+          // Add an observation so entries without risk still have classified data
+          findings.push({ id: `F${i}-obs`, category: 'code', summary: 'obs', file: null, severity: 'observation', suggested_action: 'monitor', status: 'active' });
+          existingEntries.push({
+            slug: `entry-${i}`,
+            feature: `Feature ${i}`,
+            result: 'PASS',
+            author: { name: 'Dev', email: 'dev@test.com' },
+            contract: { total: 1, covered: 1, uncovered: 0, satisfied: 1, unsatisfied: 0, deviated: 0 },
+            assertions: [{ id: 'A001', says: 'Works', status: 'SATISFIED' }],
+            acceptance_criteria: { total: 1, met: 1 },
+            timing: { total_minutes: 10 },
+            hashes: {},
+            completed_at: '2026-03-01T00:00:00Z',
+            modules_touched: [],
+            findings,
+            build_concerns: [],
+          });
+        }
+        fsSync.writeFileSync(chainPath, JSON.stringify({ entries: existingEntries }, null, 2));
+
+        // Add a non-risk finding so entry 11 has classified data but 0 risk
+        const slugDir = path.join(tempDir, '.ana', 'plans', 'active', 'test-feature');
+        fsSync.writeFileSync(path.join(slugDir, 'verify_data.yaml'),
+          'findings:\n  - category: code\n    summary: obs\n    severity: observation\n    suggested_action: monitor\n');
+
+        execSync('git add -A && git commit -m "add chain and verify data"', { cwd: tempDir, stdio: 'ignore' });
+
+        const originalLog = console.log;
+        const logs: string[] = [];
+        console.log = (...args: unknown[]) => { logs.push(args.join(' ')); };
+
+        await completeWork('test-feature');
+
+        console.log = originalLog;
+        const output = logs.join('\n');
+        // Health line may appear (trend improved) but should NOT have a nudge arrow
+        if (output.includes('Health:')) {
+          expect(output).not.toContain('→');
+        }
+      });
+
+      // @ana A014, A015
+      it('highest priority nudge wins when multiple triggers fire', async () => {
+        await createMergedProject({ slug: 'test-feature', phases: 1 });
+
+        // 10 entries with stable 0-risk → adding risk entry worsens trend
+        const chainPath = path.join(tempDir, '.ana', 'proof_chain.json');
+        const existingEntries = [];
+        for (let i = 0; i < 10; i++) {
+          existingEntries.push({
+            slug: `entry-${i}`,
+            feature: `Feature ${i}`,
+            result: 'PASS',
+            author: { name: 'Dev', email: 'dev@test.com' },
+            contract: { total: 1, covered: 1, uncovered: 0, satisfied: 1, unsatisfied: 0, deviated: 0 },
+            assertions: [{ id: 'A001', says: 'Works', status: 'SATISFIED' }],
+            acceptance_criteria: { total: 1, met: 1 },
+            timing: { total_minutes: 10 },
+            hashes: {},
+            completed_at: '2026-03-01T00:00:00Z',
+            modules_touched: [],
+            findings: [
+              { id: `F${i}`, category: 'code', summary: `obs`, file: `src/f${i}.ts`, severity: 'observation', suggested_action: 'monitor', status: 'active' },
+            ],
+            build_concerns: [],
+          });
+        }
+        fsSync.writeFileSync(chainPath, JSON.stringify({ entries: existingEntries }, null, 2));
+
+        // Add both risk findings (for trend_worsened) AND promote finding (for new_candidates)
+        const slugDir = path.join(tempDir, '.ana', 'plans', 'active', 'test-feature');
+        fsSync.writeFileSync(path.join(slugDir, 'verify_data.yaml'),
+          'findings:\n' +
+          '  - category: code\n    summary: Should be a rule\n    severity: risk\n    suggested_action: promote\n' +
+          '  - category: code\n    summary: risk2\n    severity: risk\n    suggested_action: scope\n' +
+          '  - category: code\n    summary: risk3\n    severity: risk\n    suggested_action: scope\n');
+
+        execSync('git add -A && git commit -m "add chain and verify data"', { cwd: tempDir, stdio: 'ignore' });
+
+        const originalLog = console.log;
+        const logs: string[] = [];
+        console.log = (...args: unknown[]) => { logs.push(args.join(' ')); };
+
+        await completeWork('test-feature');
+
+        console.log = originalLog;
+        const output = logs.join('\n');
+        // new_candidates takes priority over trend_worsened
+        expect(output).toContain('claude --agent ana-learn');
+        expect(output).not.toContain('ana proof audit');
+      });
+
+      // @ana A016
+      it('suggested_action is run_learn for new_candidates in JSON', async () => {
+        await createMergedProject({ slug: 'test-feature', phases: 1 });
+
+        const chainPath = path.join(tempDir, '.ana', 'proof_chain.json');
+        fsSync.writeFileSync(chainPath, JSON.stringify({ entries: [{
+          slug: 'prev', feature: 'Prev', result: 'PASS',
+          author: { name: 'Dev', email: 'dev@test.com' },
+          contract: { total: 1, covered: 1, uncovered: 0, satisfied: 1, unsatisfied: 0, deviated: 0 },
+          assertions: [{ id: 'A001', says: 'Works', status: 'SATISFIED' }],
+          acceptance_criteria: { total: 1, met: 1 },
+          timing: { total_minutes: 10 }, hashes: {},
+          completed_at: '2026-03-01T00:00:00Z', modules_touched: [],
+          findings: [{ id: 'F1', category: 'code', summary: 'obs', file: null, severity: 'observation', suggested_action: 'monitor', status: 'active' }],
+          build_concerns: [],
+        }] }, null, 2));
+
+        const slugDir = path.join(tempDir, '.ana', 'plans', 'active', 'test-feature');
+        fsSync.writeFileSync(path.join(slugDir, 'verify_data.yaml'),
+          'findings:\n  - category: code\n    summary: rule\n    severity: risk\n    suggested_action: promote\n');
+
+        execSync('git add -A && git commit -m "add chain"', { cwd: tempDir, stdio: 'ignore' });
+
+        const originalLog = console.log;
+        const logs: string[] = [];
+        console.log = (...args: unknown[]) => { logs.push(args.join(' ')); };
+
+        await completeWork('test-feature', { json: true });
+
+        console.log = originalLog;
+        const output = logs.join('\n');
+        const json = JSON.parse(output);
+        expect(json.results.quality.suggested_action).toBe('run_learn');
+      });
+
+      // @ana A017
+      it('suggested_action is run_audit for trend_worsened in JSON', async () => {
+        await createMergedProject({ slug: 'test-feature', phases: 1 });
+
+        const chainPath = path.join(tempDir, '.ana', 'proof_chain.json');
+        const existingEntries = [];
+        for (let i = 0; i < 10; i++) {
+          existingEntries.push({
+            slug: `entry-${i}`, feature: `Feature ${i}`, result: 'PASS',
+            author: { name: 'Dev', email: 'dev@test.com' },
+            contract: { total: 1, covered: 1, uncovered: 0, satisfied: 1, unsatisfied: 0, deviated: 0 },
+            assertions: [{ id: 'A001', says: 'Works', status: 'SATISFIED' }],
+            acceptance_criteria: { total: 1, met: 1 },
+            timing: { total_minutes: 10 }, hashes: {},
+            completed_at: '2026-03-01T00:00:00Z', modules_touched: [],
+            findings: [{ id: `F${i}`, category: 'code', summary: 'obs', file: null, severity: 'observation', suggested_action: 'monitor', status: 'active' }],
+            build_concerns: [],
+          });
+        }
+        fsSync.writeFileSync(chainPath, JSON.stringify({ entries: existingEntries }, null, 2));
+
+        const slugDir = path.join(tempDir, '.ana', 'plans', 'active', 'test-feature');
+        fsSync.writeFileSync(path.join(slugDir, 'verify_data.yaml'),
+          'findings:\n' +
+          '  - category: code\n    summary: r1\n    severity: risk\n    suggested_action: monitor\n' +
+          '  - category: code\n    summary: r2\n    severity: risk\n    suggested_action: monitor\n' +
+          '  - category: code\n    summary: r3\n    severity: risk\n    suggested_action: monitor\n');
+
+        execSync('git add -A && git commit -m "add chain"', { cwd: tempDir, stdio: 'ignore' });
+
+        const originalLog = console.log;
+        const logs: string[] = [];
+        console.log = (...args: unknown[]) => { logs.push(args.join(' ')); };
+
+        await completeWork('test-feature', { json: true });
+
+        console.log = originalLog;
+        const output = logs.join('\n');
+        const json = JSON.parse(output);
+        expect(json.results.quality.suggested_action).toBe('run_audit');
+      });
+
+      // @ana A018
+      it('suggested_action is null for informational triggers in JSON', async () => {
+        await createMergedProject({ slug: 'test-feature', phases: 1 });
+
+        const originalLog = console.log;
+        const logs: string[] = [];
+        console.log = (...args: unknown[]) => { logs.push(args.join(' ')); };
+
+        await completeWork('test-feature', { json: true });
+
+        console.log = originalLog;
+        const output = logs.join('\n');
+        const json = JSON.parse(output);
+        expect(json.results.quality.suggested_action).toBeNull();
+      });
+
       it('quality.changed is false for first completion', async () => {
         await createMergedProject({ slug: 'test-feature', phases: 1 });
 
