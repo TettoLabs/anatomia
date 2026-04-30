@@ -274,7 +274,7 @@
           "anchor": "BROWSER_FRAMEWORKS.has(d)",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-30T03:31:40.651Z",
+          "closed_at": "2026-04-30T03:47:47.821Z",
           "closed_by": "mechanical"
         },
         {
@@ -285,7 +285,7 @@
           "anchor": "getFrameworkDisplayName()",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-30T03:31:40.651Z",
+          "closed_at": "2026-04-30T03:47:47.821Z",
           "closed_by": "mechanical"
         },
         {
@@ -296,7 +296,7 @@
           "anchor": "ProjectKindResult",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-30T03:31:40.651Z",
+          "closed_at": "2026-04-30T03:47:47.821Z",
           "closed_by": "mechanical"
         },
         {
@@ -317,7 +317,7 @@
           "anchor": "not.toContain('node:fs')",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-30T03:31:40.653Z",
+          "closed_at": "2026-04-30T03:47:47.822Z",
           "closed_by": "mechanical"
         },
         {
@@ -2933,7 +2933,7 @@
           "id": "seal-hash-simplification-C3",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-30T03:31:40.657Z",
+          "closed_at": "2026-04-30T03:47:47.824Z",
           "closed_by": "mechanical"
         },
         {
@@ -6670,6 +6670,231 @@
         {
           "summary": "Multi-word --text values require shell quoting — test workaround uses embedded double quotes",
           "file": "packages/cli/tests/commands/proof.test.ts",
+          "severity": "observation",
+          "suggested_action": "accept"
+        }
+      ]
+    },
+    {
+      "slug": "ana-learn-v1",
+      "feature": "Ana Learn V1",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 24,
+        "covered": 0,
+        "uncovered": 24,
+        "satisfied": 23,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Learn agent uses Sonnet model for affordable automated sessions",
+          "status": "UNKNOWN"
+        },
+        {
+          "id": "A002",
+          "says": "Learn agent has a description summarizing its role",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Learn agent does not declare skills in frontmatter because it loads them dynamically",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "Learn reads the project config file on startup",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "Learn reads design principles to judge promotion worthiness",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "Learn discovers installed skills by listing the directory",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "Learn checks for enrichment files to distinguish template from custom skills",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "Learn runs the health command for proof chain overview",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "Learn runs the audit command to see active findings",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "Learn understands how knowledge flows through the pipeline from scope to proof chain",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "Learn can distinguish machine-owned content from human-authored content",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "Learn understands how agents consume skills differently",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "Learn knows proof chain field semantics for decision-making",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "Learn processes accept-action findings first before other categories",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "Learn presents all suggestions before executing any actions",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "Learn reads the target skill file before drafting a promotion rule",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A017",
+          "says": "Learn suggests closing accept-action findings with classification as evidence",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A018",
+          "says": "Learn can diagnose where an observation belongs in the system",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A019",
+          "says": "Learn is explicitly prohibited from auto-executing without approval",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A020",
+          "says": "Learn does not read build reports or verify reports",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A021",
+          "says": "Learn requires the artifact branch for executing close and promote commands",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A022",
+          "says": "Learn template is registered so init copies it to new projects",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A023",
+          "says": "The project's own Learn agent matches the template",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A024",
+          "says": "The CLAUDE.md template tells developers how to run Learn",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 15,
+        "met": 15
+      },
+      "timing": {
+        "total_minutes": 188,
+        "think": 15,
+        "plan": 15,
+        "build": 167,
+        "verify": 6
+      },
+      "hashes": {
+        "scope": "sha256:50771f14aa3e6ff9f42fdd79634446e925d3120166942af8a09a495ecbc6e9a1",
+        "contract": "sha256:fd1a6192459d7fdb55866c258f1fdf75efae5f945d7ffab756067439078d0a0a",
+        "plan": "sha256:4c1a01a3960812e5457ce7c1cc2a82fe9f28087d9d2bb3d9f3b6ec121051af11",
+        "spec": "sha256:eb3c432326d0fdabe0b8cff9d1622da1dc348d8ab6b26b75755c7013c7093199",
+        "build-report": "sha256:9cdc252ae4d21442c0dfe193daad8ef89d01b6b643b46fb7100f1906cd316425",
+        "build-data": "sha256:e475154b1b475b0e9856e1de385bb92bbac0aab9b9179e8380965a5e203a9d2c",
+        "verify-report": "sha256:747e4e4a285ed8225f06ce617aea994df60cca207cef305cb5953e78d7159d25",
+        "verify-data": "sha256:145b9270dee7ec98c9ff6bd6096a7c22468fbc7d5f5022d2da0e7348a240cd42"
+      },
+      "completed_at": "2026-04-30T03:47:47.796Z",
+      "modules_touched": [
+        ".claude/agents/ana-learn.md",
+        "packages/cli/src/constants.ts",
+        "packages/cli/templates/.claude/agents/ana-learn.md",
+        "packages/cli/templates/CLAUDE.md"
+      ],
+      "scope_summary": "The developer wants an agent that maintains the proof chain and helps improve the system. Ana Learn is the fifth agent — not part of Think → Plan → Build → Verify, but running alongside it. Learn reads health and audit data, verifies findings against current code, suggests closures and promotions, and helps the developer route their own observations into permanent system improvements.",
+      "findings": [
+        {
+          "category": "upstream",
+          "summary": "Contract A001 specifies model: sonnet but developer overrode to opus[1m] — human decision, not a defect",
+          "file": "packages/cli/templates/.claude/agents/ana-learn.md",
+          "anchor": null,
+          "line": 2,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A001"
+          ],
+          "id": "ana-learn-v1-C1",
+          "status": "lesson"
+        },
+        {
+          "category": "upstream",
+          "summary": "Scope lists registration file as init/assets.ts but AGENT_FILES lives in constants.ts — spec corrected this but scope is stale",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "ana-learn-v1-C2",
+          "status": "lesson"
+        },
+        {
+          "category": "code",
+          "summary": "Template instructs Learn to read .claude/skills/{name}/SKILL.md but actual skill files use different naming (e.g., coding-standards.md not SKILL.md) — agent will adapt at runtime but the path hint is misleading",
+          "file": "packages/cli/templates/.claude/agents/ana-learn.md",
+          "anchor": null,
+          "line": 201,
+          "severity": "debt",
+          "suggested_action": "monitor",
+          "id": "ana-learn-v1-C3",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "All 24 contract assertions are UNCOVERED by tagged tests — spec says templates are markdown verified by reading not unit tests, so pre-check shows 0 covered. Mechanical verification was done manually in this report.",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "ana-learn-v1-C4",
+          "status": "active"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "Contract A001 specifies model: sonnet but developer overrode to opus[1m] — verify will flag as UNSATISFIED",
+          "file": "packages/cli/templates/.claude/agents/ana-learn.md",
           "severity": "observation",
           "suggested_action": "accept"
         }

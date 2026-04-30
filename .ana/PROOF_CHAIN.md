@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-30 runs · 69 active · 27 lessons · 0 promoted · 51 closed
+31 runs · 71 active · 29 lessons · 0 promoted · 51 closed
 
 ## Hot Modules
 
@@ -16,11 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 69 total)
-
-### packages/cli/src/commands/artifact.ts
-
-- **code:** Double YAML parse in companion success message — validateVerifyDataFormat/validateBuildDataFormat parses the file, then saveArtifact re-parses at lines 932-933 to count findings for the console message. Validation function could return the parsed count. — *Structured Findings Companion*
+## Active Findings (30 shown of 71 total)
 
 ### packages/cli/src/commands/proof.ts
 
@@ -52,7 +48,10 @@
 - **code:** ProofSummary.result still typed as string, not union — spec says to tighten to match ProofChainEntry ('PASS' | 'FAIL' | 'UNKNOWN') but builder left it as open string. Contract A004 only targets ProofChainEntry.result so not a contract violation, but consumers of ProofSummary.result don't get compiler protection. — *Finding Enrichment Schema*
 - **code:** globCache parameter widens the public API surface of an exported function — *Clean Ground for Foundation 3*
 - **code:** Cache never invalidated — stale if files created between resolveFindingPaths calls within one writeProofChain invocation — *Clean Ground for Foundation 3*
-- **code:** PreCheckData interface retains seal_commit field despite seal_commit removal from ProofChainEntry and ProofSummary. Intentional — reads old .saves.json — but inconsistent with the removal theme. — *Structured Findings Companion*
+
+### packages/cli/templates/.claude/agents/ana-learn.md
+
+- **code:** Template instructs Learn to read .claude/skills/{name}/SKILL.md but actual skill files use different naming (e.g., coding-standards.md not SKILL.md) — agent will adapt at runtime but the path hint is misleading — *Ana Learn V1*
 
 ### packages/cli/tests/commands/proof.test.ts
 
@@ -74,4 +73,8 @@
 - **test:** detectHealthChange 'detects trend improvement' unit test uses conditional assertion (if change.changed) — if change.changed is false, the expect on triggers never executes. This masks a potential false pass. — *Proof Health V1*
 - **test:** Promotion effectiveness test covers only the extremes (0% reduction, 100% reduction, tracking). No test for intermediate reduction (e.g., 40%) or negative reduction (more matches than baseline). — *Proof Health V1*
 - **test:** vi.mock('glob') adds file-level module mock — correct for spying but implicit coupling to all glob-using tests — *Clean Ground for Foundation 3*
+
+### General
+
+- **test:** All 24 contract assertions are UNCOVERED by tagged tests — spec says templates are markdown verified by reading not unit tests, so pre-check shows 0 covered. Mechanical verification was done manually in this report. — *Ana Learn V1*
 
