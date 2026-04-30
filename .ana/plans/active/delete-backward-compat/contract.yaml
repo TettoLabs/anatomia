@@ -1,0 +1,173 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Delete backward-compatibility code"
+
+assertions:
+  - id: A001
+    says: "Work complete no longer renames callouts to findings on existing entries"
+    block: "migration code is deleted from writeProofChain"
+    target: "work.ts source"
+    matcher: "not_contains"
+    value: "callouts"
+
+  - id: A002
+    says: "Work complete no longer backfills missing status on existing findings"
+    block: "migration code is deleted from writeProofChain"
+    target: "work.ts source"
+    matcher: "not_contains"
+    value: "Backfill status"
+
+  - id: A003
+    says: "Work complete no longer migrates severity values on existing findings"
+    block: "migration code is deleted from writeProofChain"
+    target: "work.ts source"
+    matcher: "not_contains"
+    value: "Severity migration"
+
+  - id: A004
+    says: "Work complete no longer backfills scope summary on existing entries"
+    block: "migration code is deleted from writeProofChain"
+    target: "work.ts source"
+    matcher: "not_contains"
+    value: "Backfill scope_summary"
+
+  - id: A005
+    says: "Work complete no longer removes seal_commit from existing entries"
+    block: "migration code is deleted from writeProofChain"
+    target: "work.ts source"
+    matcher: "not_contains"
+    value: "seal_commit"
+
+  - id: A006
+    says: "The reopen loop that reversed mechanical closures is deleted"
+    block: "reopen-wrongly-closed loop is deleted"
+    target: "work.ts source"
+    matcher: "not_contains"
+    value: "Reopen wrongly-closed"
+
+  - id: A007
+    says: "No code checks closed_by to reopen findings"
+    block: "reopen-wrongly-closed loop is deleted"
+    target: "work.ts source"
+    matcher: "not_contains"
+    value: "shouldReopen"
+
+  - id: A008
+    says: "Finding parser only matches the Findings heading, not legacy Callouts"
+    block: "parseFindings matches Findings only"
+    target: "parseFindings regex"
+    matcher: "not_contains"
+    value: "Callouts"
+
+  - id: A009
+    says: "Finding parser docstring says Findings, not Callouts"
+    block: "parseFindings matches Findings only"
+    target: "parseFindings docstring"
+    matcher: "contains"
+    value: "Findings section"
+
+  - id: A010
+    says: "Active issues filter checks status explicitly without undefined fallback"
+    block: "undefined guard removed from generateActiveIssuesMarkdown"
+    target: "generateActiveIssuesMarkdown filter"
+    matcher: "not_contains"
+    value: "undefined for backward compat"
+
+  - id: A011
+    says: "The four backward-compat test files no longer exist"
+    block: "backward-compat test files deleted"
+    target: "filesystem"
+    matcher: "equals"
+    value: 0
+
+  - id: A012
+    says: "Scan command no longer re-exports display name functions"
+    block: "scan.ts re-export deleted"
+    target: "scan.ts source"
+    matcher: "not_contains"
+    value: "test backward compatibility"
+
+  - id: A013
+    says: "Scan test imports display names from the source module directly"
+    block: "scan.test.ts import fixed"
+    target: "scan.test.ts import"
+    matcher: "contains"
+    value: "displayNames.js"
+
+  - id: A014
+    says: "The AnalysisResultSchema comment reflects its actual consumers"
+    block: "types comment updated"
+    target: "types/index.ts comment"
+    matcher: "not_contains"
+    value: "backward-compat tests"
+
+  - id: A015
+    says: "Path resolution still runs on existing entries"
+    block: "resolveFindingPaths survives deletion"
+    target: "work.ts source"
+    matcher: "contains"
+    value: "resolveFindingPaths(existing.findings"
+
+  - id: A016
+    says: "Staleness checks still run on all entries"
+    block: "staleness checks survive deletion"
+    target: "work.ts source"
+    matcher: "contains"
+    value: "Staleness checks"
+
+  - id: A017
+    says: "The lessonsClassified counter no longer exists"
+    block: "lessonsClassified deleted"
+    target: "work.ts source"
+    matcher: "not_contains"
+    value: "lessonsClassified"
+
+  - id: A018
+    says: "Maintenance stats no longer track lesson classification"
+    block: "lessonsClassified deleted"
+    target: "ProofChainStats type"
+    matcher: "not_contains"
+    value: "lessons_classified"
+
+  - id: A019
+    says: "All remaining tests pass after deletion"
+    block: "test suite passes"
+    target: "vitest exit code"
+    matcher: "equals"
+    value: 0
+
+  - id: A020
+    says: "Build compiles without errors"
+    block: "build succeeds"
+    target: "build exit code"
+    matcher: "equals"
+    value: 0
+
+  - id: A021
+    says: "Test file count decreases after removing backward-compat tests"
+    block: "test count decreases"
+    target: "test file count"
+    matcher: "equals"
+    value: 93
+
+file_changes:
+  - path: "src/commands/work.ts"
+    action: modify
+  - path: "src/utils/proofSummary.ts"
+    action: modify
+  - path: "src/engine/types/index.ts"
+    action: modify
+  - path: "src/commands/scan.ts"
+    action: modify
+  - path: "tests/commands/scan.test.ts"
+    action: modify
+  - path: "src/types/proof.ts"
+    action: modify
+  - path: "tests/engine/backward-compat.test.ts"
+    action: delete
+  - path: "tests/engine/parsed-backward-compat.test.ts"
+    action: delete
+  - path: "tests/engine/patterns-backward-compat.test.ts"
+    action: delete
+  - path: "tests/engine/structure-backward-compat.test.ts"
+    action: delete
