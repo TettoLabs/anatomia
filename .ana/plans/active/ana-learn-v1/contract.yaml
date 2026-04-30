@@ -1,0 +1,193 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Ana Learn V1"
+
+assertions:
+  # AC1: Frontmatter
+  - id: A001
+    says: "Learn agent uses Sonnet model for affordable automated sessions"
+    block: "template frontmatter"
+    target: "frontmatter.model"
+    matcher: "equals"
+    value: "sonnet"
+
+  - id: A002
+    says: "Learn agent has a description summarizing its role"
+    block: "template frontmatter"
+    target: "frontmatter.description"
+    matcher: "exists"
+
+  - id: A003
+    says: "Learn agent does not declare skills in frontmatter because it loads them dynamically"
+    block: "template frontmatter"
+    target: "frontmatter.skills"
+    matcher: "not_equals"
+    value: "present"
+
+  # AC2: Startup reads
+  - id: A004
+    says: "Learn reads the project config file on startup"
+    block: "startup instructions"
+    target: "template.content"
+    matcher: "contains"
+    value: ".ana/ana.json"
+
+  - id: A005
+    says: "Learn reads design principles to judge promotion worthiness"
+    block: "startup instructions"
+    target: "template.content"
+    matcher: "contains"
+    value: "design-principles.md"
+
+  - id: A006
+    says: "Learn discovers installed skills by listing the directory"
+    block: "startup instructions"
+    target: "template.content"
+    matcher: "contains"
+    value: ".claude/skills/"
+
+  - id: A007
+    says: "Learn checks for enrichment files to distinguish template from custom skills"
+    block: "startup instructions"
+    target: "template.content"
+    matcher: "contains"
+    value: "ENRICHMENT.md"
+
+  - id: A008
+    says: "Learn runs the health command for proof chain overview"
+    block: "startup instructions"
+    target: "template.content"
+    matcher: "contains"
+    value: "ana proof health"
+
+  - id: A009
+    says: "Learn runs the audit command to see active findings"
+    block: "startup instructions"
+    target: "template.content"
+    matcher: "contains"
+    value: "ana proof audit"
+
+  # AC3: System Knowledge
+  - id: A010
+    says: "Learn understands how knowledge flows through the pipeline from scope to proof chain"
+    block: "system knowledge"
+    target: "template.content"
+    matcher: "contains"
+    value: "Build Brief"
+
+  - id: A011
+    says: "Learn can distinguish machine-owned content from human-authored content"
+    block: "system knowledge"
+    target: "template.content"
+    matcher: "contains"
+    value: "Detected"
+
+  - id: A012
+    says: "Learn understands how agents consume skills differently"
+    block: "system knowledge"
+    target: "template.content"
+    matcher: "contains"
+    value: "frontmatter"
+
+  - id: A013
+    says: "Learn knows proof chain field semantics for decision-making"
+    block: "system knowledge"
+    target: "template.content"
+    matcher: "contains"
+    value: "suggested_action"
+
+  # AC4-AC5: Triage
+  - id: A014
+    says: "Learn processes accept-action findings first before other categories"
+    block: "triage order"
+    target: "template.content"
+    matcher: "contains"
+    value: "accept-action"
+
+  - id: A015
+    says: "Learn presents all suggestions before executing any actions"
+    block: "suggest then execute"
+    target: "template.content"
+    matcher: "contains"
+    value: "before"
+
+  # AC6: Promotion
+  - id: A016
+    says: "Learn reads the target skill file before drafting a promotion rule"
+    block: "promotion workflow"
+    target: "template.content"
+    matcher: "contains"
+    value: "ana proof promote"
+
+  # AC7: Closure
+  - id: A017
+    says: "Learn suggests closing accept-action findings with classification as evidence"
+    block: "closure workflow"
+    target: "template.content"
+    matcher: "contains"
+    value: "ana proof close"
+
+  # AC8: Observation routing
+  - id: A018
+    says: "Learn can diagnose where an observation belongs in the system"
+    block: "observation routing"
+    target: "template.content"
+    matcher: "contains"
+    value: "observation"
+
+  # AC9: Boundaries
+  - id: A019
+    says: "Learn is explicitly prohibited from auto-executing without approval"
+    block: "boundaries"
+    target: "template.content"
+    matcher: "contains"
+    value: "NOT"
+
+  - id: A020
+    says: "Learn does not read build reports or verify reports"
+    block: "boundaries"
+    target: "template.content"
+    matcher: "contains"
+    value: "build report"
+
+  # AC10: Branch requirement
+  - id: A021
+    says: "Learn requires the artifact branch for executing close and promote commands"
+    block: "branch requirement"
+    target: "template.content"
+    matcher: "contains"
+    value: "artifact branch"
+
+  # AC11: Registration
+  - id: A022
+    says: "Learn template is registered so init copies it to new projects"
+    block: "init registration"
+    target: "constants.AGENT_FILES"
+    matcher: "contains"
+    value: "ana-learn.md"
+
+  # AC12: Dogfood
+  - id: A023
+    says: "The project's own Learn agent matches the template"
+    block: "dogfood copy"
+    target: "dogfood.matches_template"
+    matcher: "equals"
+    value: true
+
+  # AC13: CLAUDE.md
+  - id: A024
+    says: "The CLAUDE.md template tells developers how to run Learn"
+    block: "CLAUDE.md template"
+    target: "claude_md.content"
+    matcher: "contains"
+    value: "ana-learn"
+
+file_changes:
+  - path: "packages/cli/templates/.claude/agents/ana-learn.md"
+    action: create
+  - path: ".claude/agents/ana-learn.md"
+    action: create
+  - path: "packages/cli/src/constants.ts"
+    action: modify
+  - path: "packages/cli/templates/CLAUDE.md"
+    action: modify
