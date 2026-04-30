@@ -8,12 +8,13 @@
 - templates/.ana/hooks/verify-context-file.sh
 - templates/.ana/hooks/run-check.sh
 
-### Agent Definitions (5)
+### Agent Definitions
 - templates/.claude/agents/ana.md
 - templates/.claude/agents/ana-plan.md
 - templates/.claude/agents/ana-setup.md
 - templates/.claude/agents/ana-build.md
 - templates/.claude/agents/ana-verify.md
+- templates/.claude/agents/ana-learn.md
 
 ### Skill Templates (5 core + conditional)
 - templates/.claude/skills/coding-standards/SKILL.md

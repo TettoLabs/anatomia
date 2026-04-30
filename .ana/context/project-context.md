@@ -4,7 +4,7 @@
 
 **Detected:** pnpm monorepo. 120 source files, 87 test files.
 
-Anatomia is an open-source methodology and CLI tool for verified AI development. It exports a framework — think, plan, build, verify — that turns AI coding tools from fast-but-unreliable into structured-and-proven. The CLI (`ana`) is the delivery mechanism: it scans a project, generates validated context, and runs every change through a four-agent pipeline that produces mechanical proof.
+Anatomia is an open-source methodology and CLI tool for verified AI development. It exports a framework — think, plan, build, verify — that turns AI coding tools from fast-but-unreliable into structured-and-proven. The CLI (`ana`) is the delivery mechanism: it scans a project, generates validated context, and runs every change through a four-agent pipeline (Think, Plan, Build, Verify) with a fifth agent (Learn) that tends the proof chain between cycles
 
 Three things Anatomia provides that don't exist elsewhere:
 
@@ -105,10 +105,15 @@ An LLM asked to "change the default coding-standards rules" should edit `templat
 - **Scan** — engine analysis of a project. Produces `EngineResult` (serialized as `scan.json`). Two tiers: surface and deep.
 - **Init** — bootstraps `.ana/` and `.claude/` from scan data. Idempotent — re-init refreshes scan without destroying user content.
 - **Census** — the `ProjectCensus` object: source roots, deps, configs, primary root. Built once, consumed by all detectors.
-- **Findings** — deterministic checks (secrets, validation, env hygiene). Severity: critical, warn, info, pass.
+- **Scan finding** — deterministic check from the engine (secrets, validation, env hygiene). Severity: critical, warn, info, pass. Lives in `scan.json`.
+- **Proof finding** — verification observation from Verify or Build. Severity: risk (could hurt you), debt (codebase getting worse), observation (information). Suggested action: promote (encode as rule), scope (needs work), monitor (watch), accept (closeable). Lives in `proof_chain.json` with lifecycle state: active → promoted, closed, or lesson.
 - **Gotcha** — stack-specific tip injected into skill Gotchas sections. Triggered by stack field matches. The library grows over time.
 - **Skill** — `.claude/skills/{name}/SKILL.md`. Four sections: Detected (machine-owned), Rules, Gotchas, Examples (human-owned).
 - **Contract** — `contract.yaml` written by Plan. Each assertion has: `id` (A001, A002...), `says` (plain-English description a non-engineer would understand), `block` (test label), `target` (what's checked, dot notation), `matcher` (equals, exists, contains, greater, truthy, not_equals, not_contains), and `value` (expected result). Build tags tests with `// @ana A001`. Verify checks each tag independently against the code.
-- **Proof chain** — `proof_chain.json` + `PROOF_CHAIN.md`. One entry per completed pipeline run. Assertions, timing, SHA-256 hashes.
+- **Proof chain** — `proof_chain.json` + `PROOF_CHAIN.md`. One entry per completed pipeline run. Each entry contains: result (PASS/FAIL), contract assertions with status, proof findings with severity and suggested action, build concerns, modules touched, timing, SHA-256 hashes. The structured record that Learn triages and health computes on.
+- **Health** — `ana proof health`. Quality trajectory across pipeline runs. North star metric: risks/run trending down.
+- **Promote** — `ana proof promote`. A proof finding becomes a skill rule. The mechanism that turns verification intelligence into agent behavior change.
+- **Learn** — `claude --agent ana-learn`. The fifth agent. Triages findings, promotes patterns to skills, routes developer observations. Runs between pipeline cycles.
+- **Trajectory** — risks/run averaged over a window. Computed per-entry (what did this run produce?), not cumulative. Trend: improving, stable, worsening, or insufficient data.
 - **Primary root** — in monorepos, the package that defines project identity. Largest `apps/` package with framework hints, or largest package overall.
 - **Slug** — kebab-case work item identifier. Used in branches (`feature/{slug}`), commits (`[{slug}]`), and plan directories.

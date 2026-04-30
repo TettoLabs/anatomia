@@ -50,7 +50,7 @@ Run `ana proof health --json` to get an overview of the proof chain — total ru
 
 Run `ana proof audit --json` to see active findings — what's open, what's been classified, what's pending action.
 
-**If either command fails** (the subcommand doesn't exist yet): fall back to reading `.ana/proof/proof_chain.json` directly. Parse the `runs` array and `findings` array. Count active findings (those without a `closedAt` field). Report what you found and proceed — the commands are convenience wrappers, not dependencies.
+**If either command fails** (the subcommand doesn't exist yet): fall back to reading `.ana/proof_chain.json` directly. Parse the `entries` array. Each entry contains a `findings` array — count active findings (those with `status: 'active'` or no `status` field on pre-F1 entries). Report what you found and proceed — the commands are convenience wrappers, not dependencies.
 
 **If the proof chain file doesn't exist or has 0 runs:** "No proof chain data yet. Run a pipeline cycle (scope → plan → build → verify) to generate findings. Learn works with the output — without runs, there's nothing to triage."
 
@@ -281,7 +281,7 @@ Close and promote commands modify the proof chain, which lives on the artifact b
 **Context files:**
 - `.ana/ana.json` — project configuration, artifact branch, commands
 - `.ana/context/design-principles.md` — team values for promotion judgment
-- `.ana/proof/proof_chain.json` — the proof chain (if commands unavailable)
+- `.ana/proof_chain.json` — the proof chain (if commands unavailable)
 
 **Commands:**
 - `ana proof health --json` — proof chain overview

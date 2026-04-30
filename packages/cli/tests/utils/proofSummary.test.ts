@@ -2343,9 +2343,9 @@ describe('computeHealthReport', () => {
     });
 
     it('trajectory window uses last 5 entries', () => {
-      // 8 entries: first 3 have 0 risks, last 5 have 2 risks each
+      // 8 entries: first 3 have 0 risks (1 observation each), last 5 have 2 risks each
       const entries = [
-        ...Array.from({ length: 3 }, () => makeEntry(0)),
+        ...Array.from({ length: 3 }, () => makeEntry(0, 0, 1)),
         ...Array.from({ length: 5 }, () => makeEntry(2)),
       ];
       const report = computeHealthReport({ entries });
