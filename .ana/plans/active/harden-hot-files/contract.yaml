@@ -1,0 +1,101 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Harden Hot Files"
+
+assertions:
+  # Fix 1: Guard recovery log for JSON mode
+  - id: A001
+    says: "Recovery with JSON mode produces clean JSON without human-readable text"
+    block: "recovery JSON output is clean"
+    target: "output"
+    matcher: "not_contains"
+    value: "Recovering"
+
+  - id: A002
+    says: "Recovery JSON output is valid JSON from the first character"
+    block: "recovery JSON output is clean"
+    target: "JSON.parse(output)"
+    matcher: "exists"
+
+  - id: A003
+    says: "Recovery without JSON mode still shows the recovery message"
+    block: "recovery non-JSON output shows message"
+    target: "output"
+    matcher: "contains"
+    value: "Recovering"
+
+  # Fix 2: Delete duplicate from: line
+  - id: A004
+    says: "Each audit finding shows its source exactly once"
+    block: "audit display has no duplicate from line"
+    target: "fromLineCount"
+    matcher: "equals"
+    value: 1
+
+  # Fix 3: Extract SEVERITY_ORDER constant
+  - id: A005
+    says: "Severity ordering is defined once at module level"
+    block: "SEVERITY_ORDER is a single module-level constant"
+    target: "moduleLevel.SEVERITY_ORDER"
+    matcher: "exists"
+
+  - id: A006
+    says: "No local severity ordering maps remain inside functions"
+    block: "no local SEVERITY_ORDER declarations remain"
+    target: "localDeclarationCount"
+    matcher: "equals"
+    value: 0
+
+  # Fix 4a: captureModulesTouched structured error handling
+  - id: A007
+    says: "Missing remote branch does not block artifact saves"
+    block: "captureModulesTouched silently handles merge-base failure"
+    target: "result"
+    matcher: "truthy"
+
+  - id: A008
+    says: "Unexpected file operation failures surface a warning"
+    block: "captureModulesTouched warns on unexpected failure"
+    target: "warning"
+    matcher: "contains"
+    value: "Warning"
+
+  # Fix 4b: work.ts recovery catch surfacing
+  - id: A009
+    says: "Unexpected git failures during recovery are surfaced to the user"
+    block: "recovery catch warns on unexpected git failure"
+    target: "stderr"
+    matcher: "contains"
+    value: "Warning"
+
+  - id: A010
+    says: "Expected not-a-repo errors stay silent during recovery"
+    block: "recovery catch silent for not-a-git-repository"
+    target: "stderr"
+    matcher: "not_contains"
+    value: "Warning"
+
+  # Fix 5: Test update proves Fix 1
+  - id: A011
+    says: "Recovery JSON test parses output directly without workaround"
+    block: "recovery JSON test uses direct JSON.parse"
+    target: "testSource"
+    matcher: "not_contains"
+    value: "indexOf"
+
+  - id: A012
+    says: "Recovery JSON test validates the complete response envelope"
+    block: "recovery JSON test uses direct JSON.parse"
+    target: "json.command"
+    matcher: "equals"
+    value: "work complete"
+
+file_changes:
+  - path: "packages/cli/src/commands/work.ts"
+    action: modify
+  - path: "packages/cli/src/commands/proof.ts"
+    action: modify
+  - path: "packages/cli/src/commands/artifact.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/work.test.ts"
+    action: modify
