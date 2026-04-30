@@ -1012,7 +1012,9 @@ export async function completeWork(slug: string, options?: { json?: boolean }): 
         }).trim();
         if (porcelain) {
           // Recovery: retry the commit
-          console.log(chalk.yellow('Recovering incomplete completion — retrying commit...'));
+          if (!options?.json) {
+            console.log(chalk.yellow('Recovering incomplete completion — retrying commit...'));
+          }
           execSync('git add .ana/plans/ .ana/proof_chain.json .ana/PROOF_CHAIN.md', {
             stdio: 'pipe', cwd: projectRoot,
           });
@@ -1065,7 +1067,13 @@ export async function completeWork(slug: string, options?: { json?: boolean }): 
           }
           return;
         }
-      } catch { /* git status failed — treat as genuinely completed */ }
+      } catch (err) {
+          // @ana A009, A010
+          const errMsg = err instanceof Error ? err.message : String(err);
+          if (!errMsg.includes('not a git repository')) {
+            console.error(chalk.yellow(`⚠ Warning: Could not check recovery status: ${errMsg}`));
+          }
+        }
 
       console.log(chalk.gray(`Work item \`${slug}\` was already completed.`));
       process.exit(0);

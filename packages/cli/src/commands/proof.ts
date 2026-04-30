@@ -42,6 +42,12 @@ const BOX = {
   bottomRight: '\u2518', // ┘
 };
 
+// @ana A005, A006
+/**
+ * Severity ordering for display sorting: risk → debt → observation → unclassified
+ */
+const SEVERITY_ORDER: Record<string, number> = { risk: 0, debt: 1, observation: 2 };
+
 /**
  * Get status icon for assertion status
  *
@@ -145,7 +151,6 @@ function formatHumanReadable(entry: ProofChainEntry): string {
     lines.push(chalk.bold('  Findings'));
     lines.push(chalk.gray('  ' + BOX.horizontal.repeat(8)));
 
-    const SEVERITY_ORDER: Record<string, number> = { risk: 0, debt: 1, observation: 2 };
     const sortedFindings = [...findings].sort((a, b) => {
       const wa = a.severity ? (SEVERITY_ORDER[a.severity] ?? 3) : 3;
       const wb = b.severity ? (SEVERITY_ORDER[b.severity] ?? 3) : 3;
@@ -174,7 +179,6 @@ function formatHumanReadable(entry: ProofChainEntry): string {
     lines.push(chalk.bold('  Build Concerns'));
     lines.push(chalk.gray('  ' + BOX.horizontal.repeat(14)));
 
-    const SEVERITY_ORDER: Record<string, number> = { risk: 0, debt: 1, observation: 2 };
     const sortedConcerns = [...buildConcerns].sort((a, b) => {
       const wa = a.severity ? (SEVERITY_ORDER[a.severity] ?? 3) : 3;
       const wb = b.severity ? (SEVERITY_ORDER[b.severity] ?? 3) : 3;
@@ -971,7 +975,6 @@ export function registerProofCommand(program: Command): void {
       // Sort files by count descending, cap at 8
       const MAX_FILES = 8;
       const MAX_PER_FILE = 3;
-      const SEVERITY_WEIGHT: Record<string, number> = { risk: 0, debt: 1, observation: 2 };
       const sortedFiles = Array.from(fileGroups.entries())
         .sort((a, b) => b[1].length - a[1].length)
         .slice(0, MAX_FILES);
@@ -979,8 +982,8 @@ export function registerProofCommand(program: Command): void {
       // Sort findings within each file group by severity (risk → debt → observation → unclassified)
       for (const [, findings] of sortedFiles) {
         findings.sort((a, b) => {
-          const wa = SEVERITY_WEIGHT[a.severity] ?? 3;
-          const wb = SEVERITY_WEIGHT[b.severity] ?? 3;
+          const wa = SEVERITY_ORDER[a.severity] ?? 3;
+          const wb = SEVERITY_ORDER[b.severity] ?? 3;
           return wa - wb;
         });
       }
@@ -1012,8 +1015,8 @@ export function registerProofCommand(program: Command): void {
           for (const f of displayed) {
             console.log(`    ${chalk.dim(`[${f.category}]`)} ${chalk.dim(`[${f.severity} · ${f.suggested_action}]`)} ${f.summary}`);
             const anchorIcon = f.anchor ? (f.anchor_present ? '✓' : '✗') : '—';
+            // @ana A004
             console.log(`           age: ${f.age_days}d | anchor: ${anchorIcon} | from: ${f.entry_feature}`);
-            console.log(`           from: ${f.entry_feature}`);
           }
           if (findings.length > MAX_PER_FILE) {
             console.log(`    ... and ${findings.length - MAX_PER_FILE} more`);

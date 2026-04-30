@@ -1966,7 +1966,7 @@ Tests: 5 passed
         expect(json.meta.findings.by_action).toBeDefined();
       });
 
-      // @ana A014, A015, A016
+      // @ana A014, A015, A016, A001, A002, A011, A012
       it('recovery path outputs JSON envelope with new_findings zero', async () => {
         // Simulate crash recovery scenario
         execSync('git init', { cwd: tempDir, stdio: 'ignore' });
@@ -2038,18 +2038,15 @@ Tests: 5 passed
         console.log = originalLog;
         const output = logs.join('\n');
 
-        // Should contain JSON, not human output
-        const jsonLine = output.split('\n').find(l => l.includes('"command"'));
-        expect(jsonLine).toBeDefined();
-
-        const json = JSON.parse(output.substring(output.indexOf('{')));
+        // Should be clean JSON — no human-readable text before the envelope
+        const json = JSON.parse(output);
         expect(json.command).toBe('work complete');
         expect(json.results.new_findings).toBe(0);
         expect(json.meta).toBeDefined();
         expect(json.meta.findings.by_severity).toBeDefined();
       });
 
-      // @ana A017
+      // @ana A017, A003
       it('non-JSON output unchanged when --json not passed', async () => {
         await createMergedProject({ slug: 'no-json', phases: 1 });
 

@@ -14,5 +14,96 @@
   "spec": {
     "saved_at": "2026-04-30T18:05:31.461Z",
     "hash": "sha256:ce70f146fa8206cbc011143ec9c201cc75baf45a1949cf5532d819bd3980880e"
+  },
+  "build-report": {
+    "saved_at": "2026-04-30T19:13:56.536Z",
+    "hash": "sha256:ec1da3242f14046de43d5a0c49391dc9d1c6f00237b1e6bb0cff23cb3de61c22"
+  },
+  "build-data": {
+    "saved_at": "2026-04-30T19:13:56.537Z",
+    "hash": "sha256:f54f54dab4f5f7fcc3226cf6466a7e2e45e2245a84d461af0c92924b190c1bb4"
+  },
+  "modules_touched": [
+    "packages/cli/src/commands/artifact.ts",
+    "packages/cli/src/commands/proof.ts",
+    "packages/cli/src/commands/work.ts",
+    "packages/cli/tests/commands/work.test.ts"
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:629a37421c16c8ad39b338cc03a99d91158ad05b72a543cfc57492dfd6ea0e29",
+    "assertions": [
+      {
+        "id": "A001",
+        "says": "Recovery with JSON mode produces clean JSON without human-readable text",
+        "status": "COVERED"
+      },
+      {
+        "id": "A002",
+        "says": "Recovery JSON output is valid JSON from the first character",
+        "status": "COVERED"
+      },
+      {
+        "id": "A003",
+        "says": "Recovery without JSON mode still shows the recovery message",
+        "status": "COVERED"
+      },
+      {
+        "id": "A004",
+        "says": "Each audit finding shows its source exactly once",
+        "status": "COVERED"
+      },
+      {
+        "id": "A005",
+        "says": "Severity ordering is defined once at module level",
+        "status": "COVERED"
+      },
+      {
+        "id": "A006",
+        "says": "No local severity ordering maps remain inside functions",
+        "status": "COVERED"
+      },
+      {
+        "id": "A007",
+        "says": "Missing remote branch does not block artifact saves",
+        "status": "COVERED"
+      },
+      {
+        "id": "A008",
+        "says": "Unexpected file operation failures surface a warning",
+        "status": "COVERED"
+      },
+      {
+        "id": "A009",
+        "says": "Unexpected git failures during recovery are surfaced to the user",
+        "status": "COVERED"
+      },
+      {
+        "id": "A010",
+        "says": "Expected not-a-repo errors stay silent during recovery",
+        "status": "COVERED"
+      },
+      {
+        "id": "A011",
+        "says": "Recovery JSON test parses output directly without workaround",
+        "status": "COVERED"
+      },
+      {
+        "id": "A012",
+        "says": "Recovery JSON test validates the complete response envelope",
+        "status": "COVERED"
+      }
+    ],
+    "covered": 12,
+    "uncovered": 0,
+    "run_at": "2026-04-30T19:21:00.961Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-04-30T19:21:00.985Z",
+    "hash": "sha256:5a6125384cd8b721c64f86d6db8fa3127d95dc4ec29899ee1babc7201a9040ac"
+  },
+  "verify-data": {
+    "saved_at": "2026-04-30T19:21:00.985Z",
+    "hash": "sha256:5a7b1c4e183ddc1019c50dca79354583e97dd6f9c86aee39bf655e2139a026f4"
   }
 }
