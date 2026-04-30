@@ -1,0 +1,31 @@
+schema: 1
+findings:
+  - category: code
+    summary: "Catch block indentation inconsistent — body at 10-space indent vs surrounding 8-space convention"
+    file: "packages/cli/src/commands/work.ts"
+    line: 1071
+    severity: debt
+    suggested_action: accept
+  - category: test
+    summary: "A003 tagged test exercises normal completion, not recovery — does not assert 'Recovering' in output"
+    file: "packages/cli/tests/commands/work.test.ts"
+    line: 2049
+    severity: observation
+    suggested_action: scope
+    related_assertions: ["A003"]
+  - category: test
+    summary: "Pre-check COVERED status for A004-A010 comes from other features' tag collisions, not from harden-hot-files-specific tests"
+    file: "packages/cli/tests/commands/work.test.ts"
+    severity: observation
+    suggested_action: monitor
+    related_assertions: ["A004", "A005", "A006", "A007", "A008", "A009", "A010"]
+  - category: upstream
+    summary: "Spec says 'no new tests needed' but contract has behavioral assertions (A007-A010) that imply test coverage — tension between spec and contract"
+    severity: observation
+    suggested_action: monitor
+  - category: code
+    summary: "captureModulesTouched warning includes raw error message in output — could leak internal paths or stack traces to terminal"
+    file: "packages/cli/src/commands/artifact.ts"
+    line: 183
+    severity: observation
+    suggested_action: accept
