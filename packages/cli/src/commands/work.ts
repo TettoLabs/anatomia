@@ -18,7 +18,7 @@ import * as fsPromises from 'node:fs/promises';
 import * as path from 'node:path';
 import { globSync } from 'glob';
 import { readArtifactBranch, readBranchPrefix, getCurrentBranch } from '../utils/git-operations.js';
-import { generateProofSummary, resolveFindingPaths, extractScopeSummary, generateDashboard, computeChainHealth, wrapJsonResponse, type ProofSummary } from '../utils/proofSummary.js';
+import { generateProofSummary, resolveFindingPaths, extractScopeSummary, generateDashboard, computeChainHealth, wrapJsonResponse, detectHealthChange, type ProofSummary } from '../utils/proofSummary.js';
 import { findProjectRoot } from '../utils/validators.js';
 import type { ProofChainEntry, ProofChain, ProofChainStats } from '../types/proof.js';
 
@@ -1312,17 +1312,19 @@ export async function completeWork(slug: string, options?: { json?: boolean }): 
     // Silently continue if remote branch doesn't exist or was already deleted
   }
 
-  // 13. Print summary or JSON output
-  if (options?.json) {
-    // Read the chain for meta computation
-    const chainPath = path.join(projectRoot, '.ana', 'proof_chain.json');
-    let mainChain: { entries: Array<{ findings?: Array<{ status?: string; severity?: string; suggested_action?: string }> }> } = { entries: [] };
-    if (fs.existsSync(chainPath)) {
-      try {
-        mainChain = JSON.parse(fs.readFileSync(chainPath, 'utf-8'));
-      } catch { /* use empty */ }
-    }
+  // 13. Read chain once for both meta and health change detection
+  const chainPath = path.join(projectRoot, '.ana', 'proof_chain.json');
+  let mainChain: { entries: Array<{ slug?: string; findings?: Array<{ id?: string; status?: string; severity?: string; category?: string; suggested_action?: string; summary?: string; file?: string | null; promoted_to?: string }> }> } = { entries: [] };
+  if (fs.existsSync(chainPath)) {
+    try {
+      mainChain = JSON.parse(fs.readFileSync(chainPath, 'utf-8'));
+    } catch { /* use empty */ }
+  }
 
+  const healthChange = detectHealthChange(mainChain);
+
+  // 14. Print summary or JSON output
+  if (options?.json) {
     const jsonResults = {
       slug,
       feature: proof.feature,
@@ -1335,6 +1337,11 @@ export async function completeWork(slug: string, options?: { json?: boolean }): 
       },
       new_findings: stats.newFindings,
       rejection_cycles: proof.rejection_cycles ?? 0,
+      quality: {
+        changed: healthChange.changed,
+        trajectory: healthChange.trajectory,
+        triggers: healthChange.triggers,
+      },
     };
     console.log(JSON.stringify(wrapJsonResponse('work complete', jsonResults, mainChain), null, 2));
   } else {
@@ -1345,6 +1352,12 @@ export async function completeWork(slug: string, options?: { json?: boolean }): 
       ? `  Chain: ${stats.runs} ${stats.runs !== 1 ? 'runs' : 'run'} · ${stats.findings} finding${stats.findings !== 1 ? 's' : ''} (+${stats.newFindings} new)`
       : `  Chain: ${stats.runs} ${stats.runs !== 1 ? 'runs' : 'run'} · ${stats.findings} finding${stats.findings !== 1 ? 's' : ''}`;
     console.log(chalk.gray(chainLine));
+
+    // Fourth line: health change notification
+    if (healthChange.changed && healthChange.details.length > 0) {
+      const healthLine = `  Health: ${healthChange.details.join(' · ')}`;
+      console.log(chalk.gray(healthLine));
+    }
   }
 }
 

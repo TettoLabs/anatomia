@@ -14,5 +14,239 @@
   "spec": {
     "saved_at": "2026-04-30T00:49:16.460Z",
     "hash": "sha256:2c0df117a47a0830d3226b52a82111d636aedccb618ade750d9b4b39320c168b"
+  },
+  "build-report": {
+    "saved_at": "2026-04-30T01:19:58.434Z",
+    "hash": "sha256:dcc05d1d53d6d1722a87c3c0a0ed16e15f97368c036b82c6364ca96506565d8a"
+  },
+  "build-data": {
+    "saved_at": "2026-04-30T01:19:58.435Z",
+    "hash": "sha256:ac9d846db87047469da928ebfff0431b3473fa510b5c9d637d2ff7733d33468e"
+  },
+  "modules_touched": [
+    "packages/cli/src/commands/proof.ts",
+    "packages/cli/src/commands/work.ts",
+    "packages/cli/src/types/proof.ts",
+    "packages/cli/src/utils/proofSummary.ts",
+    "packages/cli/tests/commands/proof.test.ts",
+    "packages/cli/tests/commands/work.test.ts",
+    "packages/cli/tests/utils/proofSummary.test.ts"
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:f5b7031c643f1ad27d575c6298af97d7e3be01c93f4e414a30787ff78902cd72",
+    "assertions": [
+      {
+        "id": "A001",
+        "says": "Running proof health shows the number of pipeline runs",
+        "status": "COVERED"
+      },
+      {
+        "id": "A002",
+        "says": "Trajectory section shows risks per run for the recent window",
+        "status": "COVERED"
+      },
+      {
+        "id": "A003",
+        "says": "Trajectory section shows the lifetime average",
+        "status": "COVERED"
+      },
+      {
+        "id": "A004",
+        "says": "Trajectory section shows the trend direction",
+        "status": "COVERED"
+      },
+      {
+        "id": "A005",
+        "says": "Hot modules section appears in the health dashboard",
+        "status": "COVERED"
+      },
+      {
+        "id": "A006",
+        "says": "Promotion candidates section appears in the health dashboard",
+        "status": "COVERED"
+      },
+      {
+        "id": "A007",
+        "says": "Health JSON uses the standard four-key envelope",
+        "status": "COVERED"
+      },
+      {
+        "id": "A008",
+        "says": "Health JSON results include trajectory data",
+        "status": "COVERED"
+      },
+      {
+        "id": "A009",
+        "says": "Health JSON results include hot modules list",
+        "status": "COVERED"
+      },
+      {
+        "id": "A010",
+        "says": "Health JSON results include promotion candidates",
+        "status": "COVERED"
+      },
+      {
+        "id": "A011",
+        "says": "Health JSON results include promotions array",
+        "status": "COVERED"
+      },
+      {
+        "id": "A012",
+        "says": "Health JSON results include run count",
+        "status": "COVERED"
+      },
+      {
+        "id": "A013",
+        "says": "Work complete shows a health line when trajectory changes",
+        "status": "COVERED"
+      },
+      {
+        "id": "A014",
+        "says": "The health line describes what changed",
+        "status": "COVERED"
+      },
+      {
+        "id": "A015",
+        "says": "Work complete JSON includes quality data",
+        "status": "COVERED"
+      },
+      {
+        "id": "A016",
+        "says": "Quality data indicates whether a change was detected",
+        "status": "COVERED"
+      },
+      {
+        "id": "A017",
+        "says": "Quality data includes the trajectory snapshot",
+        "status": "COVERED"
+      },
+      {
+        "id": "A018",
+        "says": "Quality data lists which triggers fired",
+        "status": "COVERED"
+      },
+      {
+        "id": "A019",
+        "says": "Health command works with an empty proof chain",
+        "status": "COVERED"
+      },
+      {
+        "id": "A020",
+        "says": "Empty chain shows zero runs",
+        "status": "COVERED"
+      },
+      {
+        "id": "A021",
+        "says": "Findings without severity are counted as unclassified",
+        "status": "COVERED"
+      },
+      {
+        "id": "A022",
+        "says": "Trajectory computes risks per run on classified findings only",
+        "status": "COVERED"
+      },
+      {
+        "id": "A023",
+        "says": "Promotions with insufficient data show tracking status",
+        "status": "COVERED"
+      },
+      {
+        "id": "A024",
+        "says": "Promotions with enough data show reduction percentage",
+        "status": "COVERED"
+      },
+      {
+        "id": "A025",
+        "says": "With no promoted findings the promotions section is empty",
+        "status": "COVERED"
+      },
+      {
+        "id": "A026",
+        "says": "Work complete does not show a health line when nothing changed",
+        "status": "COVERED"
+      },
+      {
+        "id": "A027",
+        "says": "Each entry's risk count is only the risks in that entry's findings",
+        "status": "COVERED"
+      },
+      {
+        "id": "A028",
+        "says": "With fewer than ten entries the trend reports insufficient data",
+        "status": "COVERED"
+      },
+      {
+        "id": "A029",
+        "says": "With fewer than five entries the recent window equals lifetime",
+        "status": "COVERED"
+      },
+      {
+        "id": "A030",
+        "says": "With fewer than five entries the lifetime average matches",
+        "status": "COVERED"
+      },
+      {
+        "id": "A031",
+        "says": "Hot module threshold for finding count is a named constant",
+        "status": "COVERED"
+      },
+      {
+        "id": "A032",
+        "says": "Hot module threshold for entry count is a named constant",
+        "status": "COVERED"
+      },
+      {
+        "id": "A033",
+        "says": "A module with three findings from two entries is hot",
+        "status": "COVERED"
+      },
+      {
+        "id": "A034",
+        "says": "A module below threshold is not hot",
+        "status": "COVERED"
+      },
+      {
+        "id": "A035",
+        "says": "First pipeline run produces no fourth line",
+        "status": "COVERED"
+      },
+      {
+        "id": "A036",
+        "says": "Hot module display includes severity breakdown per module",
+        "status": "COVERED"
+      },
+      {
+        "id": "A037",
+        "says": "Promotion effectiveness matches by severity plus category plus file",
+        "status": "COVERED"
+      },
+      {
+        "id": "A038",
+        "says": "Promotion candidates include recurring scope findings from multiple entries",
+        "status": "COVERED"
+      },
+      {
+        "id": "A039",
+        "says": "Health JSON trajectory trend reflects window comparison",
+        "status": "COVERED"
+      },
+      {
+        "id": "A040",
+        "says": "All-unclassified chain reports no classified data instead of zero",
+        "status": "COVERED"
+      }
+    ],
+    "covered": 40,
+    "uncovered": 0,
+    "run_at": "2026-04-30T01:26:20.798Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-04-30T01:26:20.827Z",
+    "hash": "sha256:4dea1ea171bdaecf93468403fe2830e924985877efbab8f4d4143d416244a4cb"
+  },
+  "verify-data": {
+    "saved_at": "2026-04-30T01:26:20.827Z",
+    "hash": "sha256:d1a466dcaf6da8acf6c1e37a77e9d8babd7aa89e81aa06f5ed6cbb4aa7dd80e8"
   }
 }

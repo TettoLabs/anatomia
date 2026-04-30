@@ -2174,6 +2174,124 @@ Tests: 5 passed
       });
     });
 
+    describe('health fourth line', () => {
+      // @ana A013, A014
+      it('shows fourth line on trajectory change', async () => {
+        // Create a merged project, then manually add a chain with entries that trigger change
+        await createMergedProject({ slug: 'test-feature', phases: 1 });
+
+        // Strategy: 10 existing entries with equal risk counts → stable trend.
+        // All 10 entries have 2 risks each. First half avg = 2.0, second half avg = 2.0 → stable.
+        // When completeWork adds entry #11 (0 new risk findings from verify),
+        // first half (5) avg = 2.0, second half (6) avg = (5×2 + 0)/6 = 1.67 → improving.
+        // detectHealthChange compares 10-entry (stable) vs 11-entry (improving) → fires.
+        const chainPath = path.join(tempDir, '.ana', 'proof_chain.json');
+        const existingEntries = [];
+        for (let i = 0; i < 10; i++) {
+          existingEntries.push({
+            slug: `entry-${i}`,
+            feature: `Feature ${i}`,
+            result: 'PASS',
+            author: { name: 'Dev', email: 'dev@test.com' },
+            contract: { total: 1, covered: 1, uncovered: 0, satisfied: 1, unsatisfied: 0, deviated: 0 },
+            assertions: [{ id: 'A001', says: 'Works', status: 'SATISFIED' }],
+            acceptance_criteria: { total: 1, met: 1 },
+            timing: { total_minutes: 10 },
+            hashes: {},
+            completed_at: '2026-03-01T00:00:00Z',
+            modules_touched: [],
+            findings: Array.from({ length: 2 }, (_, j) => ({
+              id: `F${i * 10 + j}`,
+              category: 'code',
+              summary: `risk ${j}`,
+              file: `src/file${i}-${j}.ts`,
+              anchor: null,
+              severity: 'risk',
+              suggested_action: 'monitor',
+              status: 'active',
+            })),
+            build_concerns: [],
+          });
+        }
+        fsSync.writeFileSync(chainPath, JSON.stringify({ entries: existingEntries }, null, 2));
+        execSync('git add -A && git commit -m "add chain"', { cwd: tempDir, stdio: 'ignore' });
+        // Re-merge
+        execSync('git checkout main', { cwd: tempDir, stdio: 'ignore' });
+        execSync('git merge --no-ff feature/test-feature -m "re-merge"', { cwd: tempDir, stdio: 'ignore' });
+
+        const originalLog = console.log;
+        const logs: string[] = [];
+        console.log = (...args: unknown[]) => { logs.push(args.join(' ')); };
+
+        await completeWork('test-feature');
+
+        console.log = originalLog;
+        const output = logs.join('\n');
+
+        // 10 entries → stable. completeWork adds #11 (0 risks) → improving.
+        // detectHealthChange sees stable→improving → fires → fourth line appears.
+        expect(output).toContain('Health:');
+        expect(output).toContain('trend');
+      });
+
+      // @ana A026
+      it('no fourth line when stable', async () => {
+        await createMergedProject({ slug: 'test-feature', phases: 1 });
+
+        const originalLog = console.log;
+        const logs: string[] = [];
+        console.log = (...args: unknown[]) => { logs.push(args.join(' ')); };
+
+        await completeWork('test-feature');
+
+        console.log = originalLog;
+        const output = logs.join('\n');
+
+        // With just one entry being added (empty chain → 1 entry),
+        // detectHealthChange returns changed: false for single entry
+        expect(output).not.toContain('Health:');
+      });
+
+      // @ana A015, A016, A017, A018
+      it('includes quality key in JSON output', async () => {
+        await createMergedProject({ slug: 'test-feature', phases: 1 });
+
+        const originalLog = console.log;
+        const logs: string[] = [];
+        console.log = (...args: unknown[]) => { logs.push(args.join(' ')); };
+
+        await completeWork('test-feature', { json: true });
+
+        console.log = originalLog;
+        const output = logs.join('\n');
+        const json = JSON.parse(output);
+
+        expect(json.results.quality).toBeDefined();
+        expect(json.results.quality.changed).toBeDefined();
+        expect(typeof json.results.quality.changed).toBe('boolean');
+        expect(json.results.quality.trajectory).toBeDefined();
+        expect(json.results.quality.triggers).toBeDefined();
+        expect(Array.isArray(json.results.quality.triggers)).toBe(true);
+      });
+
+      it('quality.changed is false for first completion', async () => {
+        await createMergedProject({ slug: 'test-feature', phases: 1 });
+
+        const originalLog = console.log;
+        const logs: string[] = [];
+        console.log = (...args: unknown[]) => { logs.push(args.join(' ')); };
+
+        await completeWork('test-feature', { json: true });
+
+        console.log = originalLog;
+        const output = logs.join('\n');
+        const json = JSON.parse(output);
+
+        expect(json.results.quality.changed).toBe(false);
+        expect(json.results.quality.triggers).toEqual([]);
+      });
+    });
+
     describe('commit failure error message', () => {
       // @ana A020
       it('commit failure error includes retry command', async () => {

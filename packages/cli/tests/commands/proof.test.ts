@@ -1462,4 +1462,255 @@ describe('ana proof', () => {
       expect(json.meta.findings.total).toBeDefined();
     });
   });
+
+  // ─── Health Subcommand Tests ────────────────────────────────────────
+
+  describe('ana proof health', () => {
+    /**
+     * Helper to create entries with findings for health testing
+     */
+    function makeHealthEntry(opts: {
+      slug: string;
+      risks?: number;
+      debts?: number;
+      observations?: number;
+      file?: string;
+      action?: string;
+    }): Record<string, unknown> {
+      const findings = [];
+      const file = opts.file ?? 'src/test.ts';
+      const action = opts.action ?? 'scope';
+      for (let i = 0; i < (opts.risks ?? 0); i++) {
+        findings.push({
+          id: `F${findings.length + 1}`,
+          category: 'code',
+          summary: `risk finding ${i}`,
+          file,
+          anchor: null,
+          severity: 'risk',
+          suggested_action: action,
+          status: 'active',
+        });
+      }
+      for (let i = 0; i < (opts.debts ?? 0); i++) {
+        findings.push({
+          id: `F${findings.length + 1}`,
+          category: 'code',
+          summary: `debt finding ${i}`,
+          file,
+          anchor: null,
+          severity: 'debt',
+          suggested_action: action,
+          status: 'active',
+        });
+      }
+      for (let i = 0; i < (opts.observations ?? 0); i++) {
+        findings.push({
+          id: `F${findings.length + 1}`,
+          category: 'code',
+          summary: `observation finding ${i}`,
+          file,
+          anchor: null,
+          severity: 'observation',
+          suggested_action: action,
+          status: 'active',
+        });
+      }
+      return {
+        slug: opts.slug,
+        feature: `Feature ${opts.slug}`,
+        result: 'PASS',
+        author: { name: 'Dev', email: 'dev@test.com' },
+        contract: { total: 1, covered: 1, uncovered: 0, satisfied: 1, unsatisfied: 0, deviated: 0 },
+        assertions: [{ id: 'A001', says: 'Works', status: 'SATISFIED' }],
+        acceptance_criteria: { total: 1, met: 1 },
+        timing: { total_minutes: 10 },
+        hashes: { scope: 'sha256:aaa', contract: 'sha256:bbb' },
+        completed_at: '2026-04-01T00:00:00Z',
+        modules_touched: [],
+        findings,
+        build_concerns: [],
+      };
+    }
+
+    // @ana A001
+    it('displays run count in terminal', async () => {
+      const entries = Array.from({ length: 28 }, (_, i) =>
+        makeHealthEntry({ slug: `slug-${i}`, risks: 1 })
+      );
+      await createProofChain(entries);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['health']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('Proof Health:');
+      expect(stdout).toContain('28');
+    });
+
+    // @ana A002
+    it('displays trajectory with risks per run last 5', async () => {
+      const entries = Array.from({ length: 10 }, (_, i) =>
+        makeHealthEntry({ slug: `slug-${i}`, risks: i < 5 ? 3 : 1 })
+      );
+      await createProofChain(entries);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health']);
+      expect(stdout).toContain('Risks/run (last 5):');
+    });
+
+    // @ana A003
+    it('displays trajectory with risks per run all', async () => {
+      const entries = Array.from({ length: 10 }, (_, i) =>
+        makeHealthEntry({ slug: `slug-${i}`, risks: 2 })
+      );
+      await createProofChain(entries);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health']);
+      expect(stdout).toContain('Risks/run (all):');
+    });
+
+    // @ana A004
+    it('displays trajectory with trend', async () => {
+      const entries = Array.from({ length: 10 }, (_, i) =>
+        makeHealthEntry({ slug: `slug-${i}`, risks: 1 })
+      );
+      await createProofChain(entries);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health']);
+      expect(stdout).toContain('Trend:');
+    });
+
+    // @ana A005
+    it('displays hot modules section', async () => {
+      const entries = [
+        makeHealthEntry({ slug: 'e1', risks: 2, file: 'src/hot.ts' }),
+        makeHealthEntry({ slug: 'e2', risks: 1, file: 'src/hot.ts' }),
+      ];
+      await createProofChain(entries);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health']);
+      expect(stdout).toContain('Hot Modules');
+    });
+
+    // @ana A006
+    it('displays promotion candidates section', async () => {
+      await createProofChain([makeHealthEntry({ slug: 'e1', risks: 1, action: 'promote' })]);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health']);
+      expect(stdout).toContain('Promotion Candidates');
+    });
+
+    // @ana A019, A020
+    it('handles empty chain without errors', async () => {
+      await createProofChain([]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['health']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('0 runs');
+    });
+
+    it('handles missing proof chain', async () => {
+      await createTestProject(tempDir);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['health']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('0 runs');
+    });
+
+    // JSON tests
+    // @ana A007
+    it('outputs JSON with four-key envelope', async () => {
+      const entries = Array.from({ length: 28 }, (_, i) =>
+        makeHealthEntry({ slug: `slug-${i}`, risks: 1 })
+      );
+      await createProofChain(entries);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health', '--json']);
+      const json = JSON.parse(stdout);
+      expect(json.command).toBe('proof health');
+      expect(json.timestamp).toBeDefined();
+      expect(json.results).toBeDefined();
+      expect(json.meta).toBeDefined();
+    });
+
+    // @ana A008
+    it('JSON results include trajectory data', async () => {
+      await createProofChain([makeHealthEntry({ slug: 'e1', risks: 1 })]);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health', '--json']);
+      const json = JSON.parse(stdout);
+      expect(json.results.trajectory).toBeDefined();
+    });
+
+    // @ana A009
+    it('JSON results include hot modules list', async () => {
+      await createProofChain([makeHealthEntry({ slug: 'e1', risks: 1 })]);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health', '--json']);
+      const json = JSON.parse(stdout);
+      expect(json.results.hot_modules).toBeDefined();
+    });
+
+    // @ana A010
+    it('JSON results include promotion candidates', async () => {
+      await createProofChain([makeHealthEntry({ slug: 'e1', risks: 1 })]);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health', '--json']);
+      const json = JSON.parse(stdout);
+      expect(json.results.promotion_candidates).toBeDefined();
+    });
+
+    // @ana A011
+    it('JSON results include promotions array', async () => {
+      await createProofChain([makeHealthEntry({ slug: 'e1', risks: 1 })]);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health', '--json']);
+      const json = JSON.parse(stdout);
+      expect(json.results.promotions).toBeDefined();
+    });
+
+    // @ana A012
+    it('JSON results include correct run count', async () => {
+      const entries = Array.from({ length: 28 }, (_, i) =>
+        makeHealthEntry({ slug: `slug-${i}`, risks: 1 })
+      );
+      await createProofChain(entries);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health', '--json']);
+      const json = JSON.parse(stdout);
+      expect(json.results.runs).toBe(28);
+    });
+
+    it('parent --json option works', async () => {
+      await createProofChain([makeHealthEntry({ slug: 'e1', risks: 1 })]);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['--json', 'health']);
+      const json = JSON.parse(stdout);
+      expect(json.command).toBe('proof health');
+    });
+
+    it('empty chain JSON output', async () => {
+      await createProofChain([]);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health', '--json']);
+      const json = JSON.parse(stdout);
+      expect(json.results.runs).toBe(0);
+      expect(json.results.trajectory.trend).toBe('insufficient_data');
+    });
+  });
 });

@@ -24,7 +24,7 @@ import * as fs from 'node:fs';
 import { execSync, spawnSync } from 'node:child_process';
 import type { ProofChainEntry, ProofChain } from '../types/proof.js';
 import { findProjectRoot } from '../utils/validators.js';
-import { getProofContext, wrapJsonResponse, wrapJsonError, generateDashboard, computeChainHealth } from '../utils/proofSummary.js';
+import { getProofContext, wrapJsonResponse, wrapJsonError, generateDashboard, computeChainHealth, computeHealthReport } from '../utils/proofSummary.js';
 import type { ProofContextResult } from '../utils/proofSummary.js';
 import { readArtifactBranch, getCurrentBranch } from '../utils/git-operations.js';
 
@@ -734,6 +734,133 @@ export function registerProofCommand(program: Command): void {
     });
 
   proofCommand.addCommand(auditCommand);
+
+  // Register health subcommand
+  const healthCommand = new Command('health')
+    .description('Display proof chain health dashboard')
+    .option('--json', 'Output JSON format')
+    .action(async (options: { json?: boolean }) => {
+      const proofRoot = findProjectRoot();
+      const proofChainPath = path.join(proofRoot, '.ana', 'proof_chain.json');
+      const parentOpts = proofCommand.opts();
+      const useJson = options.json || parentOpts['json'];
+
+      // Read chain (no branch check — health is read-only)
+      if (!fs.existsSync(proofChainPath)) {
+        if (useJson) {
+          console.log(JSON.stringify(wrapJsonResponse('proof health', {
+            runs: 0,
+            trajectory: { risks_per_run_last5: null, risks_per_run_all: null, trend: 'insufficient_data', unclassified_count: 0 },
+            hot_modules: [],
+            promotion_candidates: [],
+            promotions: [],
+          }, { entries: [] }), null, 2));
+        } else {
+          console.log('Proof Health: 0 runs');
+          console.log('');
+          console.log('Trajectory');
+          console.log('  No data.');
+        }
+        return;
+      }
+
+      let chain: ProofChain;
+      try {
+        chain = JSON.parse(fs.readFileSync(proofChainPath, 'utf-8'));
+      } catch {
+        console.error(chalk.red('Error: Failed to parse proof_chain.json'));
+        process.exit(1);
+        return;
+      }
+
+      const report = computeHealthReport(chain);
+
+      if (useJson) {
+        console.log(JSON.stringify(wrapJsonResponse('proof health', report, chain), null, 2));
+        return;
+      }
+
+      // Terminal display
+      console.log(`Proof Health: ${report.runs} ${report.runs !== 1 ? 'runs' : 'run'}`);
+      console.log('');
+
+      if (report.runs === 0) {
+        console.log('Trajectory');
+        console.log('  No data.');
+        return;
+      }
+
+      // Trajectory section
+      console.log('Trajectory');
+      if (report.trajectory.trend === 'no_classified_data') {
+        console.log('  Risks/run (last 5):  no classified data');
+        console.log('  Risks/run (all):     no classified data');
+        console.log('  Trend:               no classified data');
+      } else {
+        const last5 = report.trajectory.risks_per_run_last5 !== null
+          ? String(report.trajectory.risks_per_run_last5)
+          : 'no data';
+        const all = report.trajectory.risks_per_run_all !== null
+          ? String(report.trajectory.risks_per_run_all)
+          : 'no data';
+        console.log(`  Risks/run (last 5):  ${last5}`);
+        console.log(`  Risks/run (all):     ${all}`);
+
+        const trendDisplay = report.trajectory.trend === 'insufficient_data'
+          ? `insufficient data (need ${10}+ runs)`
+          : report.trajectory.trend;
+        console.log(`  Trend:               ${trendDisplay}`);
+      }
+      if (report.trajectory.unclassified_count > 0) {
+        console.log(`  Unclassified:        ${report.trajectory.unclassified_count} findings (excluded from trajectory)`);
+      } else {
+        console.log(`  Unclassified:        ${report.trajectory.unclassified_count}`);
+      }
+      console.log('');
+
+      // Hot Modules section
+      console.log(`Hot Modules (3+ findings from 2+ runs)`);
+      if (report.hot_modules.length === 0) {
+        console.log('  No hot modules.');
+      } else {
+        for (const mod of report.hot_modules) {
+          const sevParts: string[] = [];
+          if (mod.by_severity.risk > 0) sevParts.push(`${mod.by_severity.risk} risk`);
+          if (mod.by_severity.debt > 0) sevParts.push(`${mod.by_severity.debt} debt`);
+          if (mod.by_severity.observation > 0) sevParts.push(`${mod.by_severity.observation} observation`);
+          if (mod.by_severity.unclassified > 0) sevParts.push(`${mod.by_severity.unclassified} unclassified`);
+          console.log(`  ${mod.file}    ${mod.finding_count} findings (${sevParts.join(', ')})  from ${mod.entry_count} runs`);
+        }
+      }
+      console.log('');
+
+      // Promotion Candidates section
+      console.log('Promotion Candidates');
+      if (report.promotion_candidates.length === 0) {
+        console.log('  No candidates.');
+      } else {
+        for (const c of report.promotion_candidates) {
+          const recurrence = c.recurrence_count ? `  (recurring: ${c.recurrence_count} entries)` : '';
+          console.log(`  ${c.id}  [${c.severity} · ${c.suggested_action}]  ${c.summary}${recurrence}`);
+        }
+      }
+
+      // Promotions section — only show if there are promoted findings
+      if (report.promotions.length > 0) {
+        console.log('');
+        console.log('Promotion Effectiveness');
+        for (const p of report.promotions) {
+          if (p.status === 'tracking') {
+            console.log(`  ${p.id}  ${p.summary}  tracking... (${p.subsequent_entries} entries, need 5)`);
+          } else {
+            const pct = p.reduction_pct !== null ? `${p.reduction_pct}%` : '—';
+            console.log(`  ${p.id}  ${p.summary}  ${p.status} (${pct} reduction)`);
+          }
+        }
+      }
+    });
+
+  proofCommand.addCommand(healthCommand);
 
   program.addCommand(proofCommand);
 }

@@ -1,0 +1,36 @@
+schema: 1
+findings:
+  - category: code
+    summary: "Hardcoded 10 in trend display instead of using MIN_ENTRIES_FOR_TREND constant. Template literal uses ${10} rather than importing and using the named constant, creating drift risk if threshold changes."
+    file: "packages/cli/src/commands/proof.ts"
+    line: 810
+    severity: debt
+    suggested_action: scope
+
+  - category: test
+    summary: "detectHealthChange 'detects trend improvement' unit test uses conditional assertion (if change.changed) — if change.changed is false, the expect on triggers never executes. This masks a potential false pass."
+    file: "packages/cli/tests/utils/proofSummary.test.ts"
+    line: 2662
+    severity: debt
+    suggested_action: scope
+
+  - category: code
+    summary: "Promotion candidate display has no summary truncation. Long summaries from findings (up to 1000 chars) render untruncated in terminal output. Not a crash risk but degrades terminal readability."
+    file: "packages/cli/src/commands/proof.ts"
+    line: 844
+    severity: observation
+    suggested_action: monitor
+
+  - category: test
+    summary: "Promotion effectiveness test covers only the extremes (0% reduction, 100% reduction, tracking). No test for intermediate reduction (e.g., 40%) or negative reduction (more matches than baseline)."
+    file: "packages/cli/tests/utils/proofSummary.test.ts"
+    line: 2531
+    severity: observation
+    suggested_action: monitor
+
+  - category: code
+    summary: "Trajectory 'worsening' label can be counterintuitive with sparse classification — reports worsening on 0.1 risks/run when most findings lack severity. Algorithm is correct but label may mislead operators."
+    file: "packages/cli/src/utils/proofSummary.ts"
+    line: 790
+    severity: observation
+    suggested_action: monitor

@@ -689,6 +689,378 @@ export interface JsonErrorEnvelope {
   meta: ChainHealth;
 }
 
+// ─── Health Report Constants ─────────────────────────────────────────
+/** Minimum active findings for a module to be "hot" */
+export const MIN_FINDINGS_HOT = 3;
+/** Minimum distinct entries for a module to be "hot" */
+export const MIN_ENTRIES_HOT = 2;
+/** Number of recent entries for trajectory window */
+export const TRAJECTORY_WINDOW = 5;
+/** Minimum entries before trend can be computed */
+export const MIN_ENTRIES_FOR_TREND = 10;
+/** Minimum subsequent entries before promotion effectiveness is computed */
+const MIN_ENTRIES_FOR_EFFECTIVENESS = 5;
+
+/**
+ * Compute health report from a parsed proof chain.
+ *
+ * Pure synchronous function — caller handles file I/O.
+ * Analyzes trajectory, hot modules, promotion candidates, and promotion effectiveness.
+ *
+ * @param chain - Parsed proof chain (must have `entries` array)
+ * @param chain.entries - Array of proof chain entries with findings
+ * @returns HealthReport with trajectory, hot modules, promotion candidates, and effectiveness
+ */
+export function computeHealthReport(chain: {
+  entries: Array<{
+    slug?: string;
+    findings?: Array<{
+      id?: string;
+      status?: string;
+      severity?: string;
+      category?: string;
+      suggested_action?: string;
+      summary?: string;
+      file?: string | null;
+      promoted_to?: string;
+    }>;
+  }>;
+}): import('../types/proof.js').HealthReport {
+  const runs = chain.entries.length;
+
+  if (runs === 0) {
+    return {
+      runs: 0,
+      trajectory: {
+        risks_per_run_last5: null,
+        risks_per_run_all: null,
+        trend: 'insufficient_data',
+        unclassified_count: 0,
+      },
+      hot_modules: [],
+      promotion_candidates: [],
+      promotions: [],
+    };
+  }
+
+  // ─── Trajectory ──────────────────────────────────────────────────
+  let totalUnclassified = 0;
+  const riskCounts: number[] = [];
+  let hasClassifiedData = false;
+
+  for (const entry of chain.entries) {
+    let entryRisks = 0;
+    for (const f of entry.findings || []) {
+      if (!f.severity) {
+        totalUnclassified++;
+        continue;
+      }
+      hasClassifiedData = true;
+      if (f.severity === 'risk') {
+        entryRisks++;
+      }
+    }
+    riskCounts.push(entryRisks);
+  }
+
+  let risksPerRunAll: number | null = null;
+  let risksPerRunLast5: number | null = null;
+  let trend: import('../types/proof.js').TrajectoryData['trend'] = 'insufficient_data';
+
+  if (!hasClassifiedData && totalUnclassified > 0) {
+    trend = 'no_classified_data';
+  } else if (hasClassifiedData) {
+    const sum = riskCounts.reduce((a, b) => a + b, 0);
+    risksPerRunAll = Math.round((sum / runs) * 10) / 10;
+
+    const window = riskCounts.slice(-TRAJECTORY_WINDOW);
+    const windowSum = window.reduce((a, b) => a + b, 0);
+    risksPerRunLast5 = Math.round((windowSum / window.length) * 10) / 10;
+
+    if (runs < MIN_ENTRIES_FOR_TREND) {
+      trend = 'insufficient_data';
+    } else {
+      // Compare first half vs second half
+      const half = Math.floor(runs / 2);
+      const firstHalf = riskCounts.slice(0, half);
+      const secondHalf = riskCounts.slice(half);
+      const firstAvg = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
+      const secondAvg = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
+
+      if (secondAvg < firstAvg) {
+        trend = 'improving';
+      } else if (secondAvg > firstAvg) {
+        trend = 'worsening';
+      } else {
+        trend = 'stable';
+      }
+    }
+  }
+
+  const trajectory: import('../types/proof.js').TrajectoryData = {
+    risks_per_run_last5: risksPerRunLast5,
+    risks_per_run_all: risksPerRunAll,
+    trend,
+    unclassified_count: totalUnclassified,
+  };
+
+  // ─── Hot Modules ─────────────────────────────────────────────────
+  const moduleMap = new Map<string, {
+    findings: number;
+    entries: Set<number>;
+    risk: number;
+    debt: number;
+    observation: number;
+    unclassified: number;
+  }>();
+
+  for (let i = 0; i < chain.entries.length; i++) {
+    const entry = chain.entries[i]!;
+    for (const f of entry.findings || []) {
+      // Only count active findings
+      if (f.status && f.status !== 'active') continue;
+      if (!f.file) continue;
+
+      let mod = moduleMap.get(f.file);
+      if (!mod) {
+        mod = { findings: 0, entries: new Set(), risk: 0, debt: 0, observation: 0, unclassified: 0 };
+        moduleMap.set(f.file, mod);
+      }
+      mod.findings++;
+      mod.entries.add(i);
+      switch (f.severity) {
+        case 'risk': mod.risk++; break;
+        case 'debt': mod.debt++; break;
+        case 'observation': mod.observation++; break;
+        default: mod.unclassified++; break;
+      }
+    }
+  }
+
+  const hotModules: import('../types/proof.js').HotModule[] = [];
+  for (const [file, data] of moduleMap) {
+    if (data.findings >= MIN_FINDINGS_HOT && data.entries.size >= MIN_ENTRIES_HOT) {
+      hotModules.push({
+        file,
+        finding_count: data.findings,
+        entry_count: data.entries.size,
+        by_severity: {
+          risk: data.risk,
+          debt: data.debt,
+          observation: data.observation,
+          unclassified: data.unclassified,
+        },
+      });
+    }
+  }
+
+  // Sort by finding count descending, cap at 5
+  hotModules.sort((a, b) => b.finding_count - a.finding_count);
+  const topHotModules = hotModules.slice(0, 5);
+
+  // ─── Promotion Candidates ───────────────────────────────────────
+  const candidates: import('../types/proof.js').PromotionCandidate[] = [];
+  // Track scope findings by (severity + category + file) for recurrence detection
+  const scopeRecurrence = new Map<string, { count: number; finding: { id: string; severity: string; suggested_action: string; summary: string; file: string | null; entry_slug: string } }>();
+
+  for (const entry of chain.entries) {
+    for (const f of entry.findings || []) {
+      if (f.status && f.status !== 'active') continue;
+
+      if (f.suggested_action === 'promote') {
+        candidates.push({
+          id: f.id || 'unknown',
+          severity: f.severity || 'unclassified',
+          suggested_action: 'promote',
+          summary: f.summary || '',
+          file: f.file ?? null,
+          entry_slug: entry.slug || '',
+        });
+      } else if (f.suggested_action === 'scope') {
+        const key = `${f.severity || ''}:${f.category || ''}:${f.file || ''}`;
+        const existing = scopeRecurrence.get(key);
+        if (existing) {
+          existing.count++;
+          // Update to latest entry
+          existing.finding = {
+            id: f.id || 'unknown',
+            severity: f.severity || 'unclassified',
+            suggested_action: 'scope',
+            summary: f.summary || '',
+            file: f.file ?? null,
+            entry_slug: entry.slug || '',
+          };
+        } else {
+          scopeRecurrence.set(key, {
+            count: 1,
+            finding: {
+              id: f.id || 'unknown',
+              severity: f.severity || 'unclassified',
+              suggested_action: 'scope',
+              summary: f.summary || '',
+              file: f.file ?? null,
+              entry_slug: entry.slug || '',
+            },
+          });
+        }
+      }
+    }
+  }
+
+  // Add recurring scope findings (2+ entries)
+  for (const [, data] of scopeRecurrence) {
+    if (data.count >= 2) {
+      candidates.push({
+        ...data.finding,
+        recurrence_count: data.count,
+      });
+    }
+  }
+
+  // ─── Promotion Effectiveness ─────────────────────────────────────
+  const promotions: import('../types/proof.js').PromotionEffectiveness[] = [];
+
+  for (let i = 0; i < chain.entries.length; i++) {
+    const entry = chain.entries[i]!;
+    for (const f of entry.findings || []) {
+      if (f.status !== 'promoted') continue;
+
+      const severity = f.severity || '';
+      const category = f.category || '';
+      const file = f.file ?? null;
+
+      // Count matching findings in subsequent entries
+      const subsequentEntries = chain.entries.slice(i + 1);
+      let matchingFindings = 0;
+      for (const subEntry of subsequentEntries) {
+        for (const sf of subEntry.findings || []) {
+          if (sf.severity === severity && sf.category === category && (sf.file ?? null) === file) {
+            matchingFindings++;
+          }
+        }
+      }
+
+      const subsequent = subsequentEntries.length;
+      let status: 'tracking' | 'effective' | 'ineffective';
+      let reductionPct: number | null = null;
+
+      if (subsequent < MIN_ENTRIES_FOR_EFFECTIVENESS) {
+        status = 'tracking';
+      } else {
+        // Compare: if matching findings decreased relative to baseline (1 per entry), it's effective
+        const expectedBaseline = subsequent; // 1 match per entry would be no change
+        reductionPct = Math.round((1 - matchingFindings / expectedBaseline) * 100);
+        status = reductionPct > 0 ? 'effective' : 'ineffective';
+      }
+
+      promotions.push({
+        id: f.id || 'unknown',
+        summary: f.summary || '',
+        severity,
+        category,
+        file,
+        promoted_to: f.promoted_to ?? null,
+        subsequent_entries: subsequent,
+        status,
+        reduction_pct: reductionPct,
+        match_criteria: { severity, category, file },
+      });
+    }
+  }
+
+  return {
+    runs,
+    trajectory,
+    hot_modules: topHotModules,
+    promotion_candidates: candidates,
+    promotions,
+  };
+}
+
+/**
+ * Detect health changes by comparing current chain vs chain-minus-last-entry.
+ *
+ * @param chain - Full parsed proof chain
+ * @param chain.entries - Array of proof chain entries with findings
+ * @returns HealthChange indicating whether anything meaningful changed
+ */
+export function detectHealthChange(chain: {
+  entries: Array<{
+    slug?: string;
+    findings?: Array<{
+      id?: string;
+      status?: string;
+      severity?: string;
+      category?: string;
+      suggested_action?: string;
+      summary?: string;
+      file?: string | null;
+      promoted_to?: string;
+    }>;
+  }>;
+}): import('../types/proof.js').HealthChange {
+  const current = computeHealthReport(chain);
+  const noChange: import('../types/proof.js').HealthChange = {
+    changed: false,
+    trajectory: current.trajectory,
+    triggers: [],
+    details: [],
+  };
+
+  // Single entry or empty — no comparison possible
+  if (chain.entries.length <= 1) {
+    return noChange;
+  }
+
+  const previous = computeHealthReport({ entries: chain.entries.slice(0, -1) });
+  const triggers: import('../types/proof.js').HealthChange['triggers'] = [];
+  const details: string[] = [];
+
+  // Check trend direction change
+  const trendOrder = ['worsening', 'stable', 'improving'] as const;
+  const currentTrendIdx = trendOrder.indexOf(current.trajectory.trend as typeof trendOrder[number]);
+  const previousTrendIdx = trendOrder.indexOf(previous.trajectory.trend as typeof trendOrder[number]);
+
+  if (currentTrendIdx >= 0 && previousTrendIdx >= 0 && currentTrendIdx !== previousTrendIdx) {
+    if (currentTrendIdx > previousTrendIdx) {
+      triggers.push('trend_improved');
+      details.push(`trend improved (risks/run ${previous.trajectory.risks_per_run_last5} → ${current.trajectory.risks_per_run_last5})`);
+    } else {
+      triggers.push('trend_worsened');
+      details.push(`trend worsened (risks/run ${previous.trajectory.risks_per_run_last5} → ${current.trajectory.risks_per_run_last5})`);
+    }
+  }
+
+  // Check new hot modules
+  const previousHotFiles = new Set(previous.hot_modules.map(m => m.file));
+  const newHotModules = current.hot_modules.filter(m => !previousHotFiles.has(m.file));
+  if (newHotModules.length > 0) {
+    triggers.push('new_hot_module');
+    for (const m of newHotModules) {
+      details.push(`${m.file} is now a hot module`);
+    }
+  }
+
+  // Check new promotion candidates
+  const previousCandidateIds = new Set(previous.promotion_candidates.map(c => c.id));
+  const newCandidates = current.promotion_candidates.filter(c => !previousCandidateIds.has(c.id));
+  if (newCandidates.length > 0) {
+    triggers.push('new_candidates');
+    details.push(`${newCandidates.length} new promotion candidate${newCandidates.length !== 1 ? 's' : ''}`);
+  }
+
+  if (triggers.length === 0) {
+    return noChange;
+  }
+
+  return {
+    changed: true,
+    trajectory: current.trajectory,
+    triggers,
+    details,
+  };
+}
+
 /**
  * Compute chain health counts from a parsed ProofChain object.
  *
