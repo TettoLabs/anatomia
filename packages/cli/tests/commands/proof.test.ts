@@ -1424,6 +1424,223 @@ describe('ana proof', () => {
     });
   });
 
+  // ─── Audit Summary Line Tests ───────────────────────────────────────
+
+  // @ana A001, A002
+  describe('displays severity summary after audit header', () => {
+    it('shows severity breakdown for classified findings', async () => {
+      const findings = [
+        { id: 'F001', category: 'code', summary: 'A', file: 'src/a.ts', anchor: null, status: 'active', severity: 'risk', suggested_action: 'promote' },
+        { id: 'F002', category: 'code', summary: 'B', file: 'src/a.ts', anchor: null, status: 'active', severity: 'risk', suggested_action: 'scope' },
+        { id: 'F003', category: 'code', summary: 'C', file: 'src/b.ts', anchor: null, status: 'active', severity: 'debt', suggested_action: 'scope' },
+        { id: 'F004', category: 'code', summary: 'D', file: 'src/b.ts', anchor: null, status: 'active', severity: 'observation', suggested_action: 'monitor' },
+        { id: 'F005', category: 'code', summary: 'E', file: 'src/c.ts', anchor: null, status: 'active', severity: 'observation', suggested_action: 'accept' },
+      ];
+      const entry = {
+        slug: 'summary-test', feature: 'Summary Test', result: 'PASS',
+        author: { name: 'Dev', email: 'dev@example.com' },
+        contract: { total: 1, covered: 1, uncovered: 0, satisfied: 1, unsatisfied: 0, deviated: 0 },
+        assertions: [{ id: 'A001', says: 'Works', status: 'SATISFIED' }],
+        acceptance_criteria: { total: 1, met: 1 },
+        timing: { total_minutes: 10 }, hashes: {},
+        completed_at: '2026-04-20T10:00:00Z', modules_touched: [],
+        findings, rejection_cycles: 0, previous_failures: [], build_concerns: [],
+      };
+
+      await createTestProject(tempDir);
+      await fs.writeFile(
+        path.join(tempDir, '.ana', 'proof_chain.json'),
+        JSON.stringify({ entries: [entry] }, null, 2),
+      );
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['audit']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('2 risk');
+      expect(stdout).toContain('1 debt');
+      expect(stdout).toContain('2 observation');
+    });
+  });
+
+  // @ana A003
+  describe('omits zero-count severity buckets', () => {
+    it('does not show buckets with zero count', async () => {
+      // Only risk and observation — no debt
+      const findings = [
+        { id: 'F001', category: 'code', summary: 'A', file: 'src/a.ts', anchor: null, status: 'active', severity: 'risk', suggested_action: 'scope' },
+        { id: 'F002', category: 'code', summary: 'B', file: 'src/a.ts', anchor: null, status: 'active', severity: 'observation', suggested_action: 'monitor' },
+      ];
+      const entry = {
+        slug: 'zero-bucket', feature: 'Zero Bucket', result: 'PASS',
+        author: { name: 'Dev', email: 'dev@example.com' },
+        contract: { total: 1, covered: 1, uncovered: 0, satisfied: 1, unsatisfied: 0, deviated: 0 },
+        assertions: [{ id: 'A001', says: 'Works', status: 'SATISFIED' }],
+        acceptance_criteria: { total: 1, met: 1 },
+        timing: { total_minutes: 10 }, hashes: {},
+        completed_at: '2026-04-20T10:00:00Z', modules_touched: [],
+        findings, rejection_cycles: 0, previous_failures: [], build_concerns: [],
+      };
+
+      await createTestProject(tempDir);
+      await fs.writeFile(
+        path.join(tempDir, '.ana', 'proof_chain.json'),
+        JSON.stringify({ entries: [entry] }, null, 2),
+      );
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['audit']);
+      expect(stdout).not.toContain('0 debt');
+      expect(stdout).not.toContain('debt');
+      expect(stdout).toContain('1 risk');
+      expect(stdout).toContain('1 observation');
+    });
+  });
+
+  // @ana A004, A005
+  describe('displays action summary after severity line', () => {
+    it('shows action breakdown with closeable hint on accept', async () => {
+      const findings = [
+        { id: 'F001', category: 'code', summary: 'A', file: 'src/a.ts', anchor: null, status: 'active', severity: 'risk', suggested_action: 'promote' },
+        { id: 'F002', category: 'code', summary: 'B', file: 'src/a.ts', anchor: null, status: 'active', severity: 'debt', suggested_action: 'scope' },
+        { id: 'F003', category: 'code', summary: 'C', file: 'src/a.ts', anchor: null, status: 'active', severity: 'debt', suggested_action: 'scope' },
+        { id: 'F004', category: 'code', summary: 'D', file: 'src/b.ts', anchor: null, status: 'active', severity: 'observation', suggested_action: 'monitor' },
+        { id: 'F005', category: 'code', summary: 'E', file: 'src/b.ts', anchor: null, status: 'active', severity: 'observation', suggested_action: 'accept' },
+      ];
+      const entry = {
+        slug: 'action-test', feature: 'Action Test', result: 'PASS',
+        author: { name: 'Dev', email: 'dev@example.com' },
+        contract: { total: 1, covered: 1, uncovered: 0, satisfied: 1, unsatisfied: 0, deviated: 0 },
+        assertions: [{ id: 'A001', says: 'Works', status: 'SATISFIED' }],
+        acceptance_criteria: { total: 1, met: 1 },
+        timing: { total_minutes: 10 }, hashes: {},
+        completed_at: '2026-04-20T10:00:00Z', modules_touched: [],
+        findings, rejection_cycles: 0, previous_failures: [], build_concerns: [],
+      };
+
+      await createTestProject(tempDir);
+      await fs.writeFile(
+        path.join(tempDir, '.ana', 'proof_chain.json'),
+        JSON.stringify({ entries: [entry] }, null, 2),
+      );
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['audit']);
+      expect(stdout).toContain('1 promote');
+      expect(stdout).toContain('2 scope');
+      expect(stdout).toContain('1 monitor');
+      expect(stdout).toContain('accept (closeable)');
+    });
+  });
+
+  // @ana A006
+  describe('includes unclassified bucket for dash severity', () => {
+    it('shows unclassified count when some findings have dash severity', async () => {
+      const findings = [
+        { id: 'F001', category: 'code', summary: 'A', file: 'src/a.ts', anchor: null, status: 'active', severity: 'risk', suggested_action: 'scope' },
+        { id: 'F002', category: 'code', summary: 'B', file: 'src/a.ts', anchor: null, status: 'active', severity: '—', suggested_action: 'monitor' },
+        { id: 'F003', category: 'code', summary: 'C', file: 'src/b.ts', anchor: null, status: 'active', severity: '—', suggested_action: '—' },
+      ];
+      const entry = {
+        slug: 'unclass-test', feature: 'Unclassified Test', result: 'PASS',
+        author: { name: 'Dev', email: 'dev@example.com' },
+        contract: { total: 1, covered: 1, uncovered: 0, satisfied: 1, unsatisfied: 0, deviated: 0 },
+        assertions: [{ id: 'A001', says: 'Works', status: 'SATISFIED' }],
+        acceptance_criteria: { total: 1, met: 1 },
+        timing: { total_minutes: 10 }, hashes: {},
+        completed_at: '2026-04-20T10:00:00Z', modules_touched: [],
+        findings, rejection_cycles: 0, previous_failures: [], build_concerns: [],
+      };
+
+      await createTestProject(tempDir);
+      await fs.writeFile(
+        path.join(tempDir, '.ana', 'proof_chain.json'),
+        JSON.stringify({ entries: [entry] }, null, 2),
+      );
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['audit']);
+      expect(stdout).toContain('1 risk');
+      expect(stdout).toContain('2 unclassified');
+    });
+  });
+
+  // @ana A007, A008
+  describe('skips both summary lines when all findings unclassified', () => {
+    it('no summary lines but audit header still shows', async () => {
+      const findings = [
+        { id: 'F001', category: 'code', summary: 'A', file: 'src/a.ts', anchor: null, status: 'active', severity: '—', suggested_action: '—' },
+        { id: 'F002', category: 'code', summary: 'B', file: 'src/b.ts', anchor: null, status: 'active', severity: '—', suggested_action: '—' },
+      ];
+      const entry = {
+        slug: 'all-unclass', feature: 'All Unclassified', result: 'PASS',
+        author: { name: 'Dev', email: 'dev@example.com' },
+        contract: { total: 1, covered: 1, uncovered: 0, satisfied: 1, unsatisfied: 0, deviated: 0 },
+        assertions: [{ id: 'A001', says: 'Works', status: 'SATISFIED' }],
+        acceptance_criteria: { total: 1, met: 1 },
+        timing: { total_minutes: 10 }, hashes: {},
+        completed_at: '2026-04-20T10:00:00Z', modules_touched: [],
+        findings, rejection_cycles: 0, previous_failures: [], build_concerns: [],
+      };
+
+      await createTestProject(tempDir);
+      await fs.writeFile(
+        path.join(tempDir, '.ana', 'proof_chain.json'),
+        JSON.stringify({ entries: [entry] }, null, 2),
+      );
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['audit']);
+      expect(stdout).toContain('active finding');
+      expect(stdout).not.toContain('unclassified');
+      expect(stdout).not.toContain('risk');
+      expect(stdout).not.toContain('debt');
+      expect(stdout).not.toContain('observation');
+    });
+  });
+
+  // @ana A009
+  describe('no summary lines with zero active findings', () => {
+    it('zero findings shows clean message without summary', async () => {
+      const closedFindings = [
+        { id: 'F001', category: 'code', summary: 'A', file: 'src/a.ts', anchor: null, status: 'closed', severity: 'risk', suggested_action: 'scope' },
+      ];
+      const entry = {
+        slug: 'zero-active', feature: 'Zero Active', result: 'PASS',
+        author: { name: 'Dev', email: 'dev@example.com' },
+        contract: { total: 1, covered: 1, uncovered: 0, satisfied: 1, unsatisfied: 0, deviated: 0 },
+        assertions: [{ id: 'A001', says: 'Works', status: 'SATISFIED' }],
+        acceptance_criteria: { total: 1, met: 1 },
+        timing: { total_minutes: 10 }, hashes: {},
+        completed_at: '2026-04-20T10:00:00Z', modules_touched: [],
+        findings: closedFindings, rejection_cycles: 0, previous_failures: [], build_concerns: [],
+      };
+
+      await createTestProject(tempDir);
+      await fs.writeFile(
+        path.join(tempDir, '.ana', 'proof_chain.json'),
+        JSON.stringify({ entries: [entry] }, null, 2),
+      );
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['audit']);
+      expect(stdout).toContain('clean');
+      expect(stdout).not.toContain('risk');
+    });
+  });
+
+  // @ana A010
+  describe('audit JSON has no summary field', () => {
+    it('JSON output does not contain severity_summary', async () => {
+      await createAuditChain(5, 2);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['audit', '--json']);
+      const json = JSON.parse(stdout);
+      expect(json.results.severity_summary).toBeUndefined();
+      expect(json.results.action_summary).toBeUndefined();
+    });
+  });
+
   // ─── Template Tests ─────────────────────────────────────────────────
 
   // @ana A026

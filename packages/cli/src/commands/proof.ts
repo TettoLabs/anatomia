@@ -1007,6 +1007,53 @@ export function registerProofCommand(program: Command): void {
         // Human-readable output
         const totalFiles = fileGroups.size;
         console.log(`\nProof Audit: ${activeFindings.length} active finding${activeFindings.length !== 1 ? 's' : ''} across ${totalFiles} file${totalFiles !== 1 ? 's' : ''}`);
+
+        // Severity and action summary lines (active findings only)
+        const severityCounts: Record<string, number> = {};
+        const actionCounts: Record<string, number> = {};
+        let allUnclassified = true;
+        for (const f of activeFindings) {
+          const sev = f.severity === '—' ? 'unclassified' : f.severity;
+          severityCounts[sev] = (severityCounts[sev] || 0) + 1;
+          if (f.severity !== '—') allUnclassified = false;
+
+          if (f.suggested_action !== '—') {
+            actionCounts[f.suggested_action] = (actionCounts[f.suggested_action] || 0) + 1;
+          }
+        }
+
+        if (activeFindings.length > 0 && !allUnclassified) {
+          const sevOrder = ['risk', 'debt', 'observation', 'unclassified'];
+          const sevParts = sevOrder
+            .filter(s => (severityCounts[s] || 0) > 0)
+            .map(s => `${severityCounts[s]} ${s}`);
+          // Include any unknown severity values not in sevOrder
+          for (const [key, count] of Object.entries(severityCounts)) {
+            if (!sevOrder.includes(key) && count > 0) {
+              sevParts.push(`${count} ${key}`);
+            }
+          }
+          console.log(chalk.dim(`  ${sevParts.join(' · ')}`));
+
+          const actOrder = ['promote', 'scope', 'monitor', 'accept'];
+          const actParts: string[] = [];
+          for (const act of actOrder) {
+            if ((actionCounts[act] || 0) > 0) {
+              const label = act === 'accept' ? `${actionCounts[act]} accept (closeable)` : `${actionCounts[act]} ${act}`;
+              actParts.push(label);
+            }
+          }
+          // Include any unknown action values not in actOrder
+          for (const [key, count] of Object.entries(actionCounts)) {
+            if (!actOrder.includes(key) && count > 0) {
+              actParts.push(`${count} ${key}`);
+            }
+          }
+          if (actParts.length > 0) {
+            console.log(chalk.dim(`  ${actParts.join(' · ')}`));
+          }
+        }
+
         console.log('');
 
         for (const [file, findings] of sortedFiles) {
