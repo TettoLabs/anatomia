@@ -151,10 +151,18 @@ function runPreCheckAndStore(slug: string, slugDir: string, projectRoot: string)
 function captureModulesTouched(projectRoot: string, slugDir: string): void {
   try {
     const artBranch = readArtifactBranch(projectRoot);
-    const mergeBase = execSync(
-      `git merge-base ${artBranch} HEAD`,
-      { encoding: 'utf-8', cwd: projectRoot, stdio: ['pipe', 'pipe', 'pipe'] }
-    ).trim();
+
+    // Inner try: merge-base failure is expected on first commit or no remote
+    let mergeBase: string;
+    try {
+      mergeBase = execSync(
+        `git merge-base ${artBranch} HEAD`,
+        { encoding: 'utf-8', cwd: projectRoot, stdio: ['pipe', 'pipe', 'pipe'] }
+      ).trim();
+    } catch {
+      return; // Expected on new repos — silently skip
+    }
+
     const diffOutput = execSync(
       `git diff ${mergeBase} --name-only -- . ':!.ana'`,
       { encoding: 'utf-8', cwd: projectRoot, stdio: ['pipe', 'pipe', 'pipe'] }
@@ -168,7 +176,10 @@ function captureModulesTouched(projectRoot: string, slugDir: string): void {
     }
     savesData['modules_touched'] = modulesList;
     fs.writeFileSync(savesPath, JSON.stringify(savesData, null, 2));
-  } catch { /* merge-base or diff failed — modules_touched stays empty */ }
+  } catch (err) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    console.error(chalk.yellow(`⚠ Warning: Could not capture modules_touched — saving without it. ${errMsg}`));
+  }
 }
 
 /**
