@@ -1,0 +1,6 @@
+schema: 1
+concerns:
+  - summary: "Contract A001 specifies model: sonnet but developer overrode to opus[1m] — verify will flag as UNSATISFIED"
+    file: "packages/cli/templates/.claude/agents/ana-learn.md"
+    severity: observation
+    suggested_action: accept
