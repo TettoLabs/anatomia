@@ -42,6 +42,7 @@ const BOX = {
   bottomRight: '\u2518', // ┘
 };
 
+// @ana A005, A006
 /**
  * Severity ordering for display sorting: risk → debt → observation → unclassified
  */
@@ -1014,6 +1015,7 @@ export function registerProofCommand(program: Command): void {
           for (const f of displayed) {
             console.log(`    ${chalk.dim(`[${f.category}]`)} ${chalk.dim(`[${f.severity} · ${f.suggested_action}]`)} ${f.summary}`);
             const anchorIcon = f.anchor ? (f.anchor_present ? '✓' : '✗') : '—';
+            // @ana A004
             console.log(`           age: ${f.age_days}d | anchor: ${anchorIcon} | from: ${f.entry_feature}`);
           }
           if (findings.length > MAX_PER_FILE) {

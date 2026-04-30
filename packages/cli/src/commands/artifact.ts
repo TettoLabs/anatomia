@@ -152,6 +152,7 @@ function captureModulesTouched(projectRoot: string, slugDir: string): void {
   try {
     const artBranch = readArtifactBranch(projectRoot);
 
+    // @ana A007
     // Inner try: merge-base failure is expected on first commit or no remote
     let mergeBase: string;
     try {
@@ -177,6 +178,7 @@ function captureModulesTouched(projectRoot: string, slugDir: string): void {
     savesData['modules_touched'] = modulesList;
     fs.writeFileSync(savesPath, JSON.stringify(savesData, null, 2));
   } catch (err) {
+    // @ana A008
     const errMsg = err instanceof Error ? err.message : String(err);
     console.error(chalk.yellow(`⚠ Warning: Could not capture modules_touched — saving without it. ${errMsg}`));
   }

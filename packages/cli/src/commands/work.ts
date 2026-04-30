@@ -1068,6 +1068,7 @@ export async function completeWork(slug: string, options?: { json?: boolean }): 
           return;
         }
       } catch (err) {
+          // @ana A009, A010
           const errMsg = err instanceof Error ? err.message : String(err);
           if (!errMsg.includes('not a git repository')) {
             console.error(chalk.yellow(`⚠ Warning: Could not check recovery status: ${errMsg}`));

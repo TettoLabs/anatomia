@@ -1966,7 +1966,7 @@ Tests: 5 passed
         expect(json.meta.findings.by_action).toBeDefined();
       });
 
-      // @ana A014, A015, A016
+      // @ana A014, A015, A016, A001, A002, A011, A012
       it('recovery path outputs JSON envelope with new_findings zero', async () => {
         // Simulate crash recovery scenario
         execSync('git init', { cwd: tempDir, stdio: 'ignore' });
@@ -2046,7 +2046,7 @@ Tests: 5 passed
         expect(json.meta.findings.by_severity).toBeDefined();
       });
 
-      // @ana A017
+      // @ana A017, A003
       it('non-JSON output unchanged when --json not passed', async () => {
         await createMergedProject({ slug: 'no-json', phases: 1 });
 
