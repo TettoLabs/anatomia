@@ -5631,7 +5631,10 @@
           "severity": "debt",
           "suggested_action": "accept",
           "id": "diff-scoped-tag-search-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Pre-existing tag mislabeling. Root cause fixed by diff-scoped search.",
+          "closed_at": "2026-04-30T00:11:36.494Z",
+          "closed_by": "human"
         },
         {
           "category": "code",

@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-28 runs · 62 active · 26 lessons · 0 promoted · 49 closed
+28 runs · 61 active · 26 lessons · 0 promoted · 50 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 62 total)
+## Active Findings (30 shown of 61 total)
 
 ### packages/cli/src/commands/artifact.ts
 
@@ -61,7 +61,6 @@
 
 ### packages/cli/tests/commands/verify.test.ts
 
-- **test:** Four pre-existing @ana tags mislabeled for this contract's IDs — A005 on fallback test, A006 on UNVERIFIABLE test, A010 on formatted output test, A011 on UNVERIFIABLE message test — *Diff-Scoped Tag Search*
 - **test:** Substantial test setup duplication across 8 integration tests — each creates git repo, contract, hash, saves from scratch — *Diff-Scoped Tag Search*
 
 ### packages/cli/tests/commands/work.test.ts
@@ -73,6 +72,7 @@
 - **test:** A011 assertion checks one value not cleared state: `packages/cli/tests/commands/work.test.ts:1447` — asserts `closed_reason` is not `'superseded by new-C1'` but doesn't assert `closed_at` or `closed_by` are also cleared. The test proves the specific contract assertion (matcher: `not_equals`, value: `'superseded by new-C1'`) but a stronger test would verify all three closure fields are absent. — *Fix Proof Chain Mechanical Accuracy*
 - **test:** A020 uses source-code reading instead of behavioral test: `packages/cli/tests/commands/work.test.ts:1736` — reads `work.ts` source and asserts the retry string exists. This proves the string is in the code but not that it appears in the error output when a commit actually fails. A behavioral test would mock `execSync` to throw on `git commit` and capture stderr. Low risk — the error path is straightforward (`catch` → `console.error` → `process.exit(1)`), but a source-reading test survives refactoring that breaks the behavior. — *Fix artifact save bypass, cwd bug, and work complete crash recovery*
 - **test:** A015/A016 edge cases not behaviorally exercised: `packages/cli/tests/commands/work.test.ts:1278` — the supersession test proves the core mechanism but doesn't include an unresolved-basename finding (to prove A015's skip) or two same-entry findings with matching file+category (to prove A016's guard). The code guards are trivial and correct by inspection, but the test coverage gap means a regression in those guards wouldn't be caught. — *Findings Lifecycle Foundation*
+- **test:** A024 warning test doesn't trigger the warning: `packages/cli/tests/commands/work.test.ts:1372` — the test is tagged `@ana A024` but only asserts the entry has `result === 'PASS'`. The UNKNOWN warning path is unreachable through `completeWork` because of pre-validation. A direct `writeProofChain` test with an UNKNOWN-result proof object would exercise the actual warning. — *Findings Lifecycle Foundation*
 
 ### packages/cli/tests/utils/proofSummary.test.ts
 
