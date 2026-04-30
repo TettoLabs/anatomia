@@ -44,6 +44,7 @@ What stays: `resolveFindingPaths` on existing entries (cheap, legitimate path re
 - AC10: Build compiles
 - AC11: Lint passes
 - AC12: Test count decreases (this is correct — tests for unused code are not testing anything)
+- AC13: The `lessonsClassified` counter is deleted — no migration code increments it after the status backfill is removed. The maintenance stats condition (`autoClosed > 0 || lessonsClassified > 0`) is simplified to `autoClosed > 0` only, and `lessons_classified` is removed from the maintenance object
 
 ## Edge Cases & Risks
 - **Phase ordering comment is stale after deletion.** The comment at work.ts:879 says "Phase ordering is load-bearing: backfill -> reopen -> resolve -> stale." After deleting backfill and reopen, the remaining order is resolve -> stale. The comment must be updated or removed.
@@ -63,6 +64,7 @@ None. All claims verified against proof_chain.json and source code.
 
 ### Patterns Discovered
 - work.ts:838-904 — migration block iterates all existing entries through 6 checks that match zero data, plus a reopen loop that actively churns 5 findings every run
+- work.ts:836,1001-1003 — `lessonsClassified` counter declared at line 836, only incremented inside the status backfill block being deleted. The maintenance stats condition at line 1001 checks `lessonsClassified > 0` which is always false after deletion. Dead variable and dead branch.
 - proofSummary.ts:1207 — regex alternation `(?:Callouts|Findings)` where the `Callouts` branch can never match on new reports
 - proofSummary.ts:417-418 — undefined guard with comment acknowledging it's backward-compat
 - engine/types/index.ts:120 — comment explicitly says "retained for backward-compat tests"
@@ -87,8 +89,10 @@ None. All claims verified against proof_chain.json and source code.
 `src/commands/work.ts` staleness check loop (lines 906-972) — same structure as the migration loop being deleted (iterates chain.entries, processes findings), but serves a live purpose. Shows the pattern that should remain after the dead code is removed.
 
 ### Relevant Code Paths
+- `src/commands/work.ts:836` — `lessonsClassified` declaration (dead after status backfill deletion)
 - `src/commands/work.ts:838-904` — the migration block and reopen loop to delete
 - `src/commands/work.ts:906-972` — staleness checks that stay
+- `src/commands/work.ts:1001-1003` — maintenance stats condition referencing `lessonsClassified` (simplify to `autoClosed > 0`, remove `lessons_classified` from object)
 - `src/commands/work.ts:830-832` — new entry path resolution that stays
 - `src/utils/proofSummary.ts:1203-1210` — parseFindings with Callouts regex
 - `src/utils/proofSummary.ts:414-427` — generateActiveIssuesMarkdown with undefined guard
