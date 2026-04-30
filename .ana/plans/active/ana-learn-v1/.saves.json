@@ -28,5 +28,142 @@
     "packages/cli/src/constants.ts",
     "packages/cli/templates/.claude/agents/ana-learn.md",
     "packages/cli/templates/CLAUDE.md"
-  ]
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:fd1a6192459d7fdb55866c258f1fdf75efae5f945d7ffab756067439078d0a0a",
+    "assertions": [
+      {
+        "id": "A001",
+        "says": "Learn agent uses Sonnet model for affordable automated sessions",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A002",
+        "says": "Learn agent has a description summarizing its role",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A003",
+        "says": "Learn agent does not declare skills in frontmatter because it loads them dynamically",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A004",
+        "says": "Learn reads the project config file on startup",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A005",
+        "says": "Learn reads design principles to judge promotion worthiness",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A006",
+        "says": "Learn discovers installed skills by listing the directory",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A007",
+        "says": "Learn checks for enrichment files to distinguish template from custom skills",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A008",
+        "says": "Learn runs the health command for proof chain overview",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A009",
+        "says": "Learn runs the audit command to see active findings",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A010",
+        "says": "Learn understands how knowledge flows through the pipeline from scope to proof chain",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A011",
+        "says": "Learn can distinguish machine-owned content from human-authored content",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A012",
+        "says": "Learn understands how agents consume skills differently",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A013",
+        "says": "Learn knows proof chain field semantics for decision-making",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A014",
+        "says": "Learn processes accept-action findings first before other categories",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A015",
+        "says": "Learn presents all suggestions before executing any actions",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A016",
+        "says": "Learn reads the target skill file before drafting a promotion rule",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A017",
+        "says": "Learn suggests closing accept-action findings with classification as evidence",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A018",
+        "says": "Learn can diagnose where an observation belongs in the system",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A019",
+        "says": "Learn is explicitly prohibited from auto-executing without approval",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A020",
+        "says": "Learn does not read build reports or verify reports",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A021",
+        "says": "Learn requires the artifact branch for executing close and promote commands",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A022",
+        "says": "Learn template is registered so init copies it to new projects",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A023",
+        "says": "The project's own Learn agent matches the template",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A024",
+        "says": "The CLAUDE.md template tells developers how to run Learn",
+        "status": "UNCOVERED"
+      }
+    ],
+    "covered": 0,
+    "uncovered": 24,
+    "run_at": "2026-04-30T03:46:22.001Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-04-30T03:46:22.028Z",
+    "hash": "sha256:747e4e4a285ed8225f06ce617aea994df60cca207cef305cb5953e78d7159d25"
+  },
+  "verify-data": {
+    "saved_at": "2026-04-30T03:46:22.029Z",
+    "hash": "sha256:145b9270dee7ec98c9ff6bd6096a7c22468fbc7d5f5022d2da0e7348a240cd42"
+  }
 }
