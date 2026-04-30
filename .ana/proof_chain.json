@@ -1815,9 +1815,12 @@
           "summary": "A009 uses weak matcher when specific value is known: `scanProject.test.ts:199` — `toBeGreaterThan(0)` when the test fixture has exactly 2 models. The contract specifies `greater: 0`, so the test matches the contract. But `toBe(2)` would catch regressions that `toBeGreaterThan(0)` wouldn't (e.g., if sibling counting broke and only returned 1 model).",
           "file": "packages/cli/tests/engine/scanProject.test.ts",
           "anchor": "toBeGreaterThan(0)",
-          "status": "active",
+          "status": "closed",
           "severity": "debt",
-          "suggested_action": "promote"
+          "suggested_action": "promote",
+          "closed_reason": "covered by existing testing-standards rule (line 21) — strengthened with explicit toBeGreaterThan example",
+          "closed_at": "2026-04-30T23:16:37.276Z",
+          "closed_by": "human"
         },
         {
           "id": "fix-prisma-schema-detection-C5",
