@@ -6905,6 +6905,229 @@
           "suggested_action": "accept"
         }
       ]
+    },
+    {
+      "slug": "delete-backward-compat",
+      "feature": "Delete backward-compatibility code",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 21,
+        "covered": 10,
+        "uncovered": 11,
+        "satisfied": 20,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Work complete no longer renames callouts to findings on existing entries",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "Work complete no longer backfills missing status on existing findings",
+          "status": "UNCOVERED"
+        },
+        {
+          "id": "A003",
+          "says": "Work complete no longer migrates severity values on existing findings",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "Work complete no longer backfills scope summary on existing entries",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "Work complete no longer removes seal_commit from existing entries",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "The reopen loop that reversed mechanical closures is deleted",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "No code checks closed_by to reopen findings",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "Finding parser only matches the Findings heading, not legacy Callouts",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "Finding parser docstring says Findings, not Callouts",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "Active issues filter checks status explicitly without undefined fallback",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "The four backward-compat test files no longer exist",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "Scan command no longer re-exports display name functions",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "Scan test imports display names from the source module directly",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "The AnalysisResultSchema comment reflects its actual consumers",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "Path resolution still runs on existing entries",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "Staleness checks still run on all entries",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A017",
+          "says": "The lessonsClassified counter no longer exists",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A018",
+          "says": "Maintenance stats no longer track lesson classification",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A019",
+          "says": "All remaining tests pass after deletion",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A020",
+          "says": "Build compiles without errors",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A021",
+          "says": "Test file count decreases after removing backward-compat tests",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 13,
+        "met": 13
+      },
+      "timing": {
+        "total_minutes": 57,
+        "think": 5,
+        "plan": 5,
+        "build": 26,
+        "verify": 27
+      },
+      "hashes": {
+        "scope": "sha256:5fbb8c68796750a2cf4af07f6aeecd0feedb76efc4ff3ad450e65be55586f4d3",
+        "contract": "sha256:1dd1645bddd906fa6446689437c1f829e5d977e219eb363df9d2a71cf858d6f6",
+        "plan": "sha256:6aaf5d17f04ee57b9ab7b531b09d05f9a557abdd400046b234ea1013c4eea898",
+        "spec": "sha256:0bdcd115ce6afeb221bb9bf61b606046af3e35467e3f12e491de7125647f2039",
+        "build-report": "sha256:356a37b4d7a6c5a8e941d2b04e09b586bf4310e96ae29a6aeffd4e00083666fe",
+        "build-data": "sha256:cd16341ac7e17141fc8fc988df56dec679c2d623688f0ed6cf7cfe71136039fb",
+        "verify-report": "sha256:aaee2e9d3037269a022597366f391434d76bcaaa7772e2c46d02119071c4b889",
+        "verify-data": "sha256:456689c7ae2902e2c14fff95a854da290df4cf31b1b0f5bef134265d754cfa0b"
+      },
+      "completed_at": "2026-04-30T19:02:41.192Z",
+      "modules_touched": [
+        "packages/cli/src/commands/scan.ts",
+        "packages/cli/src/commands/work.ts",
+        "packages/cli/src/engine/types/index.ts",
+        "packages/cli/src/types/proof.ts",
+        "packages/cli/src/utils/proofSummary.ts",
+        "packages/cli/tests/commands/scan.test.ts",
+        "packages/cli/tests/commands/work.test.ts",
+        "packages/cli/tests/engine/backward-compat.test.ts",
+        "packages/cli/tests/engine/parsed-backward-compat.test.ts",
+        "packages/cli/tests/engine/patterns-backward-compat.test.ts",
+        "packages/cli/tests/engine/structure-backward-compat.test.ts",
+        "packages/cli/tests/utils/proofSummary.test.ts"
+      ],
+      "scope_summary": "Delete all backward-compatibility and migration code from the codebase. Zero customers, zero installed base, zero reason to maintain migration paths. The only installation is our own dogfood, which is fully migrated. Every line of backward-compat code is solving a problem for nobody.",
+      "findings": [
+        {
+          "category": "code",
+          "summary": "Stale comment references deleted reopen loop",
+          "file": "packages/cli/src/commands/work.ts",
+          "anchor": "run after path resolution, reopen, and status assignment",
+          "line": 843,
+          "severity": "debt",
+          "suggested_action": "scope",
+          "id": "delete-backward-compat-C1",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "No negative test for Callouts heading rejection — parseFindings tests verify Findings works but don't assert Callouts is rejected",
+          "file": "packages/cli/tests/utils/proofSummary.test.ts",
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A008"
+          ],
+          "id": "delete-backward-compat-C2",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "11 of 21 contract assertions UNCOVERED — deletion specs with not_contains matchers lack natural test targets. Pre-check tag system doesn't model source-level absence checks.",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "delete-backward-compat-C3",
+          "status": "lesson"
+        },
+        {
+          "category": "upstream",
+          "summary": "@ana tag ID collision across features — A001-A005, A014, A017-A021 flagged in unrelated test files (git-operations.test.ts, scanProject.test.ts, readme.test.ts). Per-feature namespacing would prevent false matches.",
+          "file": null,
+          "anchor": null,
+          "severity": "debt",
+          "suggested_action": "scope",
+          "id": "delete-backward-compat-C4",
+          "status": "lesson"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "parseFindings no longer matches ## Callouts — historical verify reports re-parsed would silently drop findings",
+          "file": "packages/cli/src/utils/proofSummary.ts",
+          "severity": "observation",
+          "suggested_action": "monitor"
+        },
+        {
+          "summary": "Old proof_chain.json entries without status field will be filtered out by generateActiveIssuesMarkdown",
+          "file": "packages/cli/src/utils/proofSummary.ts",
+          "severity": "observation",
+          "suggested_action": "accept"
+        }
+      ]
     }
   ],
   "schema": 1

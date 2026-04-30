@@ -1,22 +1,22 @@
 # Proof Chain Dashboard
 
-31 runs · 69 active · 29 lessons · 0 promoted · 53 closed
+32 runs · 71 active · 31 lessons · 0 promoted · 53 closed
 
 ## Hot Modules
 
 | File | Active | Entries |
 |------|--------|--------|
+| packages/cli/tests/utils/proofSummary.test.ts | 10 | 6 |
 | packages/cli/src/utils/proofSummary.ts | 10 | 7 |
 | packages/cli/src/commands/proof.ts | 10 | 6 |
-| packages/cli/tests/utils/proofSummary.test.ts | 9 | 5 |
 | packages/cli/tests/commands/work.test.ts | 7 | 6 |
-| packages/cli/src/commands/work.ts | 5 | 4 |
+| packages/cli/src/commands/work.ts | 6 | 5 |
 
 ## Promoted Rules
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 69 total)
+## Active Findings (30 shown of 71 total)
 
 ### packages/cli/src/commands/proof.ts
 
@@ -37,6 +37,7 @@
 
 ### packages/cli/src/commands/work.ts
 
+- **code:** Stale comment references deleted reopen loop — *Delete backward-compatibility code*
 - **code:** Recovery path console.log on line 1078 leaks non-JSON text to stdout before JSON envelope — CI consumers doing JSON.parse(stdout) will fail — *Work Complete JSON + Proof Card Findings*
 - **code:** Main path re-reads proof_chain.json from disk for computeChainHealth after writeProofChain just wrote it — matches known build concern about nudge re-read pattern — *Work Complete JSON + Proof Card Findings*
 - **code:** Severity migration does not handle unexpected old values beyond blocker/note — if a future writer introduces an unknown severity value (e.g. from a malformed manual edit), the migration loop silently ignores it. Not blocking since validation prevents new bad values, but the migration is only protective for known old values. — *Finding Enrichment Schema*
@@ -47,7 +48,6 @@
 - **code:** Trajectory 'worsening' label can be counterintuitive with sparse classification — reports worsening on 0.1 risks/run when most findings lack severity. Algorithm is correct but label may mislead operators. — *Proof Health V1*
 - **code:** ProofSummary.result still typed as string, not union — spec says to tighten to match ProofChainEntry ('PASS' | 'FAIL' | 'UNKNOWN') but builder left it as open string. Contract A004 only targets ProofChainEntry.result so not a contract violation, but consumers of ProofSummary.result don't get compiler protection. — *Finding Enrichment Schema*
 - **code:** globCache parameter widens the public API surface of an exported function — *Clean Ground for Foundation 3*
-- **code:** Cache never invalidated — stale if files created between resolveFindingPaths calls within one writeProofChain invocation — *Clean Ground for Foundation 3*
 
 ### packages/cli/templates/.claude/agents/ana-learn.md
 
@@ -70,9 +70,9 @@
 
 ### packages/cli/tests/utils/proofSummary.test.ts
 
+- **test:** No negative test for Callouts heading rejection — parseFindings tests verify Findings works but don't assert Callouts is rejected — *Delete backward-compatibility code*
 - **test:** detectHealthChange 'detects trend improvement' unit test uses conditional assertion (if change.changed) — if change.changed is false, the expect on triggers never executes. This masks a potential false pass. — *Proof Health V1*
 - **test:** Promotion effectiveness test covers only the extremes (0% reduction, 100% reduction, tracking). No test for intermediate reduction (e.g., 40%) or negative reduction (more matches than baseline). — *Proof Health V1*
-- **test:** vi.mock('glob') adds file-level module mock — correct for spying but implicit coupling to all glob-using tests — *Clean Ground for Foundation 3*
 
 ### General
 
