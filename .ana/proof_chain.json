@@ -3922,9 +3922,12 @@
           "file": "packages/cli/tests/commands/work.test.ts",
           "anchor": "work.ts",
           "id": "fix-artifact-save-and-work-complete-C1",
-          "status": "active",
+          "status": "closed",
           "severity": "debt",
-          "suggested_action": "promote"
+          "suggested_action": "promote",
+          "closed_reason": "promoted to testing-standards Rules: never assert on source code content",
+          "closed_at": "2026-04-30T23:16:56.277Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
