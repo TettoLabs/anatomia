@@ -3934,9 +3934,12 @@
           "file": "packages/cli/src/commands/work.ts",
           "anchor": "git status --porcelain .ana/",
           "id": "fix-artifact-save-and-work-complete-C3",
-          "status": "active",
+          "status": "closed",
           "severity": "risk",
-          "suggested_action": "scope"
+          "suggested_action": "scope",
+          "closed_reason": "resolved: harden-hot-files surfaced git failures in catch (9ac6644)",
+          "closed_at": "2026-04-30T23:03:06.459Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
