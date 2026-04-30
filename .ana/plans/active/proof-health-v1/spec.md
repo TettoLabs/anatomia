@@ -42,9 +42,6 @@ Hot Modules (3+ findings from 2+ runs)
 Promotion Candidates
   F042  [risk · promote]  Anchor stripping regex false-positives
   F018  [debt · scope]    Dashboard duplicates Active Issues logic  (recurring: 2 entries)
-
-Promotions
-  No findings promoted yet.
 ```
 
 With fewer than 10 entries (insufficient data for trend):
