@@ -1863,20 +1863,20 @@ describe('ana proof', () => {
       await createPromoteTestProject([promoteEntry]);
       process.chdir(tempDir);
 
-      // commander requiredOption will exit with error when --skill is missing
       const { stderr, exitCode } = runProof(['promote', 'F001']);
       expect(exitCode).not.toBe(0);
-      // commander prints missing required option error
-      expect(stderr).toContain('skill');
+      expect(stderr).toContain('coding-standards');
     });
 
-    it('returns SKILL_REQUIRED or error in JSON mode', async () => {
+    it('returns SKILL_REQUIRED in JSON mode', async () => {
       await createPromoteTestProject([promoteEntry]);
       process.chdir(tempDir);
 
-      // commander exits before action handler for requiredOption
-      const { exitCode } = runProof(['promote', 'F001', '--json']);
+      const { stdout, exitCode } = runProof(['promote', 'F001', '--json']);
       expect(exitCode).not.toBe(0);
+
+      const json = JSON.parse(stdout);
+      expect(json.error.code).toBe('SKILL_REQUIRED');
     });
   });
 

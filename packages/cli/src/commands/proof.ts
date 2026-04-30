@@ -570,7 +570,7 @@ export function registerProofCommand(program: Command): void {
   const promoteCommand = new Command('promote')
     .description('Promote a finding to a skill rule')
     .argument('<id>', 'Finding ID to promote (e.g., F001)')
-    .requiredOption('--skill <skill>', 'Skill to promote to (e.g., coding-standards)')
+    .option('--skill <skill>', 'Skill to promote to (e.g., coding-standards)')
     .option('--text <text>', 'Custom rule text (defaults to finding summary)')
     .option('--section <section>', 'Target section: rules or gotchas (default: rules)')
     .option('--force', 'Allow promoting a closed finding')
@@ -621,9 +621,9 @@ export function registerProofCommand(program: Command): void {
         process.exit(1);
       };
 
-      // Validate --skill is provided (commander handles requiredOption, but belt-and-suspenders)
+      // Validate --skill is provided
       if (!options.skill) {
-        exitError('SKILL_REQUIRED', '--skill is required.');
+        exitError('SKILL_REQUIRED', '--skill is required. Available skills: ' + availableSkills.join(', '));
         return;
       }
 
