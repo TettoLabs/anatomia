@@ -28,5 +28,122 @@
     "packages/cli/src/commands/work.ts",
     "packages/cli/tests/commands/proof.test.ts",
     "packages/cli/tests/commands/work.test.ts"
-  ]
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:fcb0a19b6b9131921312a5b825bead323fbefeb1fe0c1658422afb1b4d80f073",
+    "assertions": [
+      {
+        "id": "A001",
+        "says": "Audit shows a severity breakdown of active findings",
+        "status": "COVERED"
+      },
+      {
+        "id": "A002",
+        "says": "Audit severity counts only come from active findings",
+        "status": "COVERED"
+      },
+      {
+        "id": "A003",
+        "says": "Severity summary shows zero-count buckets as absent, not zero",
+        "status": "COVERED"
+      },
+      {
+        "id": "A004",
+        "says": "Audit shows an action breakdown of active findings",
+        "status": "COVERED"
+      },
+      {
+        "id": "A005",
+        "says": "Action summary uses the correct label format with closeable hint",
+        "status": "COVERED"
+      },
+      {
+        "id": "A006",
+        "says": "Findings with unknown severity show as unclassified in the summary",
+        "status": "COVERED"
+      },
+      {
+        "id": "A007",
+        "says": "When all findings are unclassified, the summary lines are hidden",
+        "status": "COVERED"
+      },
+      {
+        "id": "A008",
+        "says": "Skipping summary lines does not break the rest of the audit output",
+        "status": "COVERED"
+      },
+      {
+        "id": "A009",
+        "says": "Zero findings shows the clean message without summary lines",
+        "status": "COVERED"
+      },
+      {
+        "id": "A010",
+        "says": "Audit JSON output is not affected by the summary line feature",
+        "status": "COVERED"
+      },
+      {
+        "id": "A011",
+        "says": "New promotion candidates trigger a nudge to run the learn agent",
+        "status": "COVERED"
+      },
+      {
+        "id": "A012",
+        "says": "Worsening trend triggers a nudge to run proof audit",
+        "status": "COVERED"
+      },
+      {
+        "id": "A013",
+        "says": "Informational triggers like improvement do not show a nudge",
+        "status": "COVERED"
+      },
+      {
+        "id": "A014",
+        "says": "When both candidates and worsening fire, only the learn nudge appears",
+        "status": "COVERED"
+      },
+      {
+        "id": "A015",
+        "says": "Multiple nudges never appear on the same health line",
+        "status": "COVERED"
+      },
+      {
+        "id": "A016",
+        "says": "JSON output includes a suggested action when candidates exist",
+        "status": "COVERED"
+      },
+      {
+        "id": "A017",
+        "says": "JSON output suggests audit when trend worsens",
+        "status": "COVERED"
+      },
+      {
+        "id": "A018",
+        "says": "JSON output has null suggested action when no actionable trigger fires",
+        "status": "COVERED"
+      },
+      {
+        "id": "A019",
+        "says": "All existing tests continue to pass",
+        "status": "UNCOVERED"
+      },
+      {
+        "id": "A020",
+        "says": "Lint passes with no new violations",
+        "status": "UNCOVERED"
+      }
+    ],
+    "covered": 18,
+    "uncovered": 2,
+    "run_at": "2026-04-30T20:07:36.564Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-04-30T20:07:36.590Z",
+    "hash": "sha256:fac04d46aef11a32836811d94b0305c61193732a458780ec14bfbaf1cabc990a"
+  },
+  "verify-data": {
+    "saved_at": "2026-04-30T20:07:36.590Z",
+    "hash": "sha256:16b0aafda85794daa1f924ac1708ccecfc39f978941a21d5519ee61c9a6106a6"
+  }
 }
