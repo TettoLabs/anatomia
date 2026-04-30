@@ -26,5 +26,172 @@
   "modules_touched": [
     "packages/cli/src/commands/proof.ts",
     "packages/cli/tests/commands/proof.test.ts"
-  ]
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:ab254390fe81a060089e954562ddbc9ce6f385523a1a96a7fa9d7ce5a5df2537",
+    "assertions": [
+      {
+        "id": "A001",
+        "says": "Promoting a finding changes its status to promoted in the proof chain",
+        "status": "COVERED"
+      },
+      {
+        "id": "A002",
+        "says": "Promoting a finding records which skill file received the rule",
+        "status": "COVERED"
+      },
+      {
+        "id": "A003",
+        "says": "Promoting a finding regenerates the proof chain dashboard",
+        "status": "COVERED"
+      },
+      {
+        "id": "A004",
+        "says": "Promoting a finding creates a git commit with the correct message format",
+        "status": "COVERED"
+      },
+      {
+        "id": "A005",
+        "says": "Without custom text, the finding summary becomes the skill rule",
+        "status": "COVERED"
+      },
+      {
+        "id": "A006",
+        "says": "Custom text overrides the finding summary in the skill rule",
+        "status": "COVERED"
+      },
+      {
+        "id": "A007",
+        "says": "JSON output shows the actual rule text that was written",
+        "status": "COVERED"
+      },
+      {
+        "id": "A008",
+        "says": "Omitting the skill flag produces an error listing available skills",
+        "status": "COVERED"
+      },
+      {
+        "id": "A009",
+        "says": "The missing-skill error lists available skill names",
+        "status": "COVERED"
+      },
+      {
+        "id": "A010",
+        "says": "The missing-skill error returns SKILL_REQUIRED in JSON mode",
+        "status": "COVERED"
+      },
+      {
+        "id": "A011",
+        "says": "Targeting a nonexistent skill produces a clear error",
+        "status": "COVERED"
+      },
+      {
+        "id": "A012",
+        "says": "The section flag can target the Gotchas section instead of Rules",
+        "status": "COVERED"
+      },
+      {
+        "id": "A013",
+        "says": "When targeting Gotchas, the Rules section is unchanged",
+        "status": "COVERED"
+      },
+      {
+        "id": "A014",
+        "says": "Promoting an already-promoted finding is rejected",
+        "status": "COVERED"
+      },
+      {
+        "id": "A015",
+        "says": "The already-promoted error shows where the finding was promoted to",
+        "status": "COVERED"
+      },
+      {
+        "id": "A016",
+        "says": "Promoting a closed finding is rejected without the force flag",
+        "status": "COVERED"
+      },
+      {
+        "id": "A017",
+        "says": "The force flag allows promoting a closed finding",
+        "status": "COVERED"
+      },
+      {
+        "id": "A018",
+        "says": "A force-promoted closed finding transitions to promoted status",
+        "status": "COVERED"
+      },
+      {
+        "id": "A019",
+        "says": "JSON output follows the four-key envelope format",
+        "status": "COVERED"
+      },
+      {
+        "id": "A020",
+        "says": "JSON results include the promoted skill file path",
+        "status": "COVERED"
+      },
+      {
+        "id": "A021",
+        "says": "JSON meta includes chain health statistics",
+        "status": "COVERED"
+      },
+      {
+        "id": "A022",
+        "says": "A rule with high word overlap triggers a duplicate warning",
+        "status": "COVERED"
+      },
+      {
+        "id": "A023",
+        "says": "A duplicate warning does not block the promotion",
+        "status": "COVERED"
+      },
+      {
+        "id": "A024",
+        "says": "In JSON mode, the duplicate warning appears as a field, not stderr",
+        "status": "COVERED"
+      },
+      {
+        "id": "A025",
+        "says": "A placeholder-only section gets replaced, not appended to",
+        "status": "COVERED"
+      },
+      {
+        "id": "A026",
+        "says": "The new rule appears in place of the placeholder",
+        "status": "COVERED"
+      },
+      {
+        "id": "A027",
+        "says": "Promoting from the wrong branch is rejected",
+        "status": "COVERED"
+      },
+      {
+        "id": "A028",
+        "says": "Empty custom text is rejected",
+        "status": "COVERED"
+      },
+      {
+        "id": "A029",
+        "says": "A skill file missing the target section produces a clear error",
+        "status": "COVERED"
+      },
+      {
+        "id": "A030",
+        "says": "A lesson finding can be promoted to a skill rule",
+        "status": "COVERED"
+      }
+    ],
+    "covered": 30,
+    "uncovered": 0,
+    "run_at": "2026-04-30T03:14:38.441Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-04-30T03:14:38.471Z",
+    "hash": "sha256:fdc82129b94f6f8af3a0ce8128e948467b51ef1da7d01a54366e28a73e718224"
+  },
+  "verify-data": {
+    "saved_at": "2026-04-30T03:14:38.472Z",
+    "hash": "sha256:cdbe0ec3e27a98c935c83bd31e458a6e5aa2a60f8103e4e67645b68778c9b6f6"
+  }
 }
