@@ -89,3 +89,85 @@ export interface ProofChainEntry {
     suggested_action?: 'promote' | 'scope' | 'monitor' | 'accept';
   }>;
 }
+
+/**
+ * Trajectory data — risks per run analysis.
+ */
+export interface TrajectoryData {
+  risks_per_run_last5: number | null;
+  risks_per_run_all: number | null;
+  trend: 'improving' | 'worsening' | 'stable' | 'insufficient_data' | 'no_classified_data';
+  unclassified_count: number;
+}
+
+/**
+ * Hot module — file with recurring findings across entries.
+ */
+export interface HotModule {
+  file: string;
+  finding_count: number;
+  entry_count: number;
+  by_severity: {
+    risk: number;
+    debt: number;
+    observation: number;
+    unclassified: number;
+  };
+}
+
+/**
+ * Promotion candidate — finding eligible for promotion to a skill rule.
+ */
+export interface PromotionCandidate {
+  id: string;
+  severity: string;
+  suggested_action: string;
+  summary: string;
+  file: string | null;
+  entry_slug: string;
+  recurrence_count?: number;
+}
+
+/**
+ * Promotion effectiveness — tracks whether a promoted finding reduced recurrence.
+ */
+export interface PromotionEffectiveness {
+  id: string;
+  summary: string;
+  severity: string;
+  category: string;
+  file: string | null;
+  promoted_to: string | null;
+  subsequent_entries: number;
+  status: 'tracking' | 'effective' | 'ineffective';
+  reduction_pct: number | null;
+  match_criteria: {
+    severity: string;
+    category: string;
+    file: string | null;
+  };
+}
+
+/**
+ * Health report — analysis layer over the proof chain.
+ *
+ * Separate from ChainHealth (which counts what exists).
+ * HealthReport analyzes what's trending, what's hot, and what's actionable.
+ */
+export interface HealthReport {
+  runs: number;
+  trajectory: TrajectoryData;
+  hot_modules: HotModule[];
+  promotion_candidates: PromotionCandidate[];
+  promotions: PromotionEffectiveness[];
+}
+
+/**
+ * Health change detection — compares two health snapshots.
+ */
+export interface HealthChange {
+  changed: boolean;
+  trajectory: TrajectoryData;
+  triggers: Array<'trend_improved' | 'trend_worsened' | 'new_hot_module' | 'new_candidates'>;
+  details: string[];
+}
