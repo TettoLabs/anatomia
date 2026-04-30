@@ -70,7 +70,8 @@ After checking out the branch, check if `verify_report.md` (or `verify_report_N.
    - Every Finding (the full list)
    - The previous result and assertion counts
 2. Keep this as a checklist — you will explicitly address each item in a **Previous Findings Resolution** section of your new report.
-3. Proceed with the FULL verification process below. Do not abbreviate or skip steps because "most things passed last time."
+3. **Write fresh artifacts.** Delete the previous `verify_report.md` (or `verify_report_N.md`) and `verify_data.yaml` from `.ana/plans/active/{slug}/`. You already extracted what you need in step 2. Writing to a clean path ensures no FAIL-round content leaks into the PASS report. Do NOT delete `build_data.yaml` — that is Build's artifact, not yours.
+4. Proceed with the FULL verification process below. Do not abbreviate or skip steps because "most things passed last time."
 
 **If first verification:** Continue normally — no previous report to read.
 
