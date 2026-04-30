@@ -92,6 +92,7 @@ None.
 
 ### Known Gotchas
 - **Fix 1:** The `options` parameter is accessible at line 1078 — it's a parameter of `completeWork`, and the recovery path is inside the function body. Verified.
+- **Line numbers are stale at build time.** The clean-dead-migrations scope ships first and deletes ~30 lines from work.ts (the migration loop at ~840-877). All work.ts line numbers in this scope shift down after that merge. Search by code pattern, not line number, for every fix location.
 - **Fix 2:** Search for the duplicate `from:` pattern by content, not line number. Lines shift frequently in proof.ts.
 - **Fix 3:** Two different names exist (`SEVERITY_ORDER` at 148/177, `SEVERITY_WEIGHT` at 974). Use `SEVERITY_ORDER` for the extracted constant.
 - **Fix 4a:** `readArtifactBranch` calls process.exit(1), not throw. The two-try-block structure only needs to handle `execSync` failures and file operations — not readArtifactBranch. The inner try wraps only the merge-base call; the outer try wraps everything including diff and file ops.
