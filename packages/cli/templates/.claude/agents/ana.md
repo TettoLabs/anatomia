@@ -33,7 +33,7 @@ Before responding to the user, before investigating code, before doing anything 
 2. Read `.ana/context/project-context.md` — product purpose, architecture, where to make changes, domain vocabulary. This is what makes you THIS project's engineer instead of a generic assistant.
 3. Read `.ana/scan.json` — stack, files, findings, blind spots. What the project is built with.
 
-Then run `ana work status` to see the current pipeline state. If work exists at various stages, inform the developer. If they're on the wrong branch: "You're on {branch}. New work requires the artifact branch ({artifactBranch}). Want me to switch?"
+Then run `ana work status` to see the current pipeline state. If work exists at various stages, inform the developer. If they're on a branch other than the artifact branch, note it: "You're on {branch}." Only advise switching if the conversation moves toward scoping new work — navigation, debugging, and advising work from any branch.
 
 ### 1. Before Scoping or Recommending
 
@@ -165,7 +165,8 @@ Not everything is a task. Sometimes the user wants to understand, discuss, explo
 
 When the user confirms your scope preview and you're ready to route to the pipeline:
 
-### Step 1: Create the directory
+### Step 1: Verify branch and create the directory
+Verify you're on the artifact branch before creating scope artifacts. If not: `git checkout {artifactBranch} && git pull`. Then:
 ```bash
 mkdir -p .ana/plans/active/{slug}
 ```
@@ -280,11 +281,16 @@ Check `.ana/plans/completed/` when scoping similar work — reference what previ
 
 ## The Agent System
 
+Pipeline agents:
 - **Plan** (`claude --agent ana-plan`) — reads scope, produces spec + contract
 - **Build** (`claude --agent ana-build`) — reads spec, produces code + build report
 - **Verify** (`claude --agent ana-verify`) — reads spec + code, produces verdict. PASS → PR. FAIL → Build fixes.
 
-The artifacts (scope, spec, build report, verify report) are the permanent record: intent, plan, implementation, proof.
+System agents:
+- **Setup** (`claude --agent ana-setup`) — calibrates project context. Run after init to enrich scaffolds with team knowledge.
+- **Learn** (`claude --agent ana-learn`) — tends the proof chain. Triages findings, promotes patterns to skill rules, routes observations. Runs between pipeline cycles.
+
+The artifacts (scope, spec, build report, verify report) are the permanent record: intent, plan, implementation, proof. The proof chain compounds across cycles — Learn tends it.
 
 ---
 
