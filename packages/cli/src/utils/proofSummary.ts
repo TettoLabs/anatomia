@@ -354,7 +354,7 @@ export function resolveFindingPaths(
     if (fs.existsSync(path.join(projectRoot, item.file))) continue;
 
     const basename = item.file;
-    const matches = modules.filter(m => m.endsWith('/' + basename));
+    const matches = modules.filter(m => m === basename || m.endsWith('/' + basename));
 
     if (matches.length === 1) {
       item.file = matches[0]!;
@@ -750,17 +750,21 @@ export function computeHealthReport(chain: {
 
   for (const entry of chain.entries) {
     let entryRisks = 0;
+    let entryHasClassified = false;
     for (const f of entry.findings || []) {
       if (!f.severity) {
         totalUnclassified++;
         continue;
       }
       hasClassifiedData = true;
+      entryHasClassified = true;
       if (f.severity === 'risk') {
         entryRisks++;
       }
     }
-    riskCounts.push(entryRisks);
+    if (entryHasClassified) {
+      riskCounts.push(entryRisks);
+    }
   }
 
   let risksPerRunAll: number | null = null;
@@ -771,17 +775,17 @@ export function computeHealthReport(chain: {
     trend = 'no_classified_data';
   } else if (hasClassifiedData) {
     const sum = riskCounts.reduce((a, b) => a + b, 0);
-    risksPerRunAll = Math.round((sum / runs) * 10) / 10;
+    risksPerRunAll = Math.round((sum / riskCounts.length) * 10) / 10;
 
     const window = riskCounts.slice(-TRAJECTORY_WINDOW);
     const windowSum = window.reduce((a, b) => a + b, 0);
     risksPerRunLast5 = Math.round((windowSum / window.length) * 10) / 10;
 
-    if (runs < MIN_ENTRIES_FOR_TREND) {
+    if (riskCounts.length < MIN_ENTRIES_FOR_TREND) {
       trend = 'insufficient_data';
     } else {
       // Compare first half vs second half
-      const half = Math.floor(runs / 2);
+      const half = Math.floor(riskCounts.length / 2);
       const firstHalf = riskCounts.slice(0, half);
       const secondHalf = riskCounts.slice(half);
       const firstAvg = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;

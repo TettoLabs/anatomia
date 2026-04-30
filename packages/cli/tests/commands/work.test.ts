@@ -2176,7 +2176,10 @@ Tests: 5 passed
 
     describe('health fourth line', () => {
       // @ana A013, A014
-      it('shows fourth line on trajectory change', async () => {
+      // Note: A013/A014 behavioral coverage is in detectHealthChange unit tests
+      // (proofSummary.test.ts). This integration test verifies wiring — completeWork's
+      // entry has no classified findings, so it's unmeasurable and no trend change fires.
+      it('no health line when new entry is unmeasurable', async () => {
         // Create a merged project, then manually add a chain with entries that trigger change
         await createMergedProject({ slug: 'test-feature', phases: 1 });
 
@@ -2228,10 +2231,9 @@ Tests: 5 passed
         console.log = originalLog;
         const output = logs.join('\n');
 
-        // 10 entries → stable. completeWork adds #11 (0 risks) → improving.
-        // detectHealthChange sees stable→improving → fires → fourth line appears.
-        expect(output).toContain('Health:');
-        expect(output).toContain('trend');
+        // 10 entries → stable. completeWork adds #11 with no classified findings.
+        // Unmeasurable entry excluded from riskCounts — no trend change fires.
+        expect(output).not.toContain('Health:');
       });
 
       // @ana A026
