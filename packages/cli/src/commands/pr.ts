@@ -116,10 +116,11 @@ function renderProofMarkdown(proof: ProofSummary): string {
     lines.push('|----|------|--------|');
 
     for (const a of proof.assertions) {
-      const status = a.verifyStatus || a.preCheckStatus;
+      const status = a.verifyStatus || 'UNVERIFIED';
       let statusIcon = '✅';
       if (status === 'UNSATISFIED' || status === 'UNCOVERED') statusIcon = '❌';
       if (status === 'DEVIATED') statusIcon = '⚠️';
+      if (status === 'UNVERIFIED') statusIcon = '❓';
       lines.push(`| ${a.id} | ${a.says} | ${statusIcon} ${status} |`);
     }
 

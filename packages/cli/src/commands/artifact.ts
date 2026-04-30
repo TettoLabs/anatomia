@@ -79,9 +79,9 @@ function writeSaveMetadata(slugDir: string, artifactType: string, content: strin
 }
 
 /**
- * Run contract pre-check and store results in .saves.json.
+ * Run contract seal check and store results in .saves.json.
  *
- * Blocks (process.exit(1)) on TAMPERED seal. Warns on uncovered assertions.
+ * Blocks (process.exit(1)) on TAMPERED seal.
  * Called by both saveArtifact and saveAllArtifacts when a verify-report is present.
  *
  * @param slug - Work item slug
@@ -105,16 +105,7 @@ function runPreCheckAndStore(slug: string, slugDir: string, projectRoot: string)
     process.exit(1);
   }
 
-  // UNCOVERED warns but proceeds
-  if (preCheckResult.summary.uncovered > 0) {
-    console.warn(chalk.yellow(`WARNING: ${preCheckResult.summary.uncovered} contract assertions uncovered:`));
-    preCheckResult.assertions
-      .filter(a => a.status === 'UNCOVERED')
-      .forEach(a => console.warn(chalk.yellow(`  ${a.id}  ✗ UNCOVERED  "${a.says}"`)));
-    console.warn(chalk.gray('Verify report saved. Uncovered assertions will appear in the proof.'));
-  }
-
-  // Store pre-check results in .saves.json
+  // Store seal-only results in .saves.json
   const savesPath = path.join(slugDir, '.saves.json');
   let saves: Record<string, unknown> = {};
   if (fs.existsSync(savesPath)) {
@@ -128,9 +119,6 @@ function runPreCheckAndStore(slug: string, slugDir: string, projectRoot: string)
   saves['pre-check'] = {
     seal: preCheckResult.seal,
     seal_hash: preCheckResult.sealHash,
-    assertions: preCheckResult.assertions,
-    covered: preCheckResult.summary.covered,
-    uncovered: preCheckResult.summary.uncovered,
     run_at: new Date().toISOString(),
   };
 

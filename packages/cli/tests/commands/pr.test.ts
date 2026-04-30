@@ -279,12 +279,8 @@ file_changes:
             },
             'pre-check': {
               seal: 'INTACT',
-              assertions: [
-                { id: 'A001', says: 'Creates item successfully', status: 'COVERED' },
-                { id: 'A002', says: 'Returns proper status', status: 'COVERED' }
-              ],
-              covered: 2,
-              uncovered: 0
+              seal_hash: 'sha256:contract456',
+              run_at: '2026-04-01T10:35:00.000Z'
             }
           }),
           'utf-8'

@@ -790,7 +790,7 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
       const base: ProofChainEntry['assertions'][0] = {
         id: a.id,
         says: a.says,
-        status: (a.verifyStatus || a.preCheckStatus) as ProofChainEntry['assertions'][0]['status'],
+        status: (a.verifyStatus || 'UNVERIFIED') as ProofChainEntry['assertions'][0]['status'],
       };
       if (a.verifyStatus === 'DEVIATED') {
         const deviation = proof.deviations.find(d => d.contract_id === a.id)?.instead;

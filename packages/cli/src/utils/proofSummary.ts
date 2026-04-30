@@ -17,8 +17,7 @@ import * as yaml from 'yaml';
 export interface ProofAssertion {
   id: string;
   says: string;
-  preCheckStatus: 'COVERED' | 'UNCOVERED';
-  verifyStatus?: 'SATISFIED' | 'UNSATISFIED' | 'DEVIATED' | null;
+  verifyStatus: 'SATISFIED' | 'UNSATISFIED' | 'DEVIATED' | 'UNCOVERED' | null;
   evidence?: string;
 }
 
@@ -46,8 +45,6 @@ export interface ProofSummary {
   assertions: ProofAssertion[];
   contract: {
     total: number;
-    covered: number;
-    uncovered: number;
     satisfied: number;
     unsatisfied: number;
     deviated: number;
@@ -1375,8 +1372,6 @@ export function generateProofSummary(slugDir: string): ProofSummary {
     assertions: [],
     contract: {
       total: 0,
-      covered: 0,
-      uncovered: 0,
       satisfied: 0,
       unsatisfied: 0,
       deviated: 0,
@@ -1417,24 +1412,7 @@ export function generateProofSummary(slugDir: string): ProofSummary {
       // Extract timing
       summary.timing = computeTiming(saves);
 
-      // Extract pre-check data
-      const preCheck = saves['pre-check'] as PreCheckData | undefined;
-      if (preCheck) {
-
-        // Build assertions from pre-check
-        if (preCheck.assertions && Array.isArray(preCheck.assertions)) {
-          summary.assertions = preCheck.assertions.map(a => ({
-            id: a.id,
-            says: a.says,
-            preCheckStatus: a.status,
-            verifyStatus: null,
-          }));
-
-          summary.contract.total = preCheck.assertions.length;
-          summary.contract.covered = preCheck.covered || preCheck.assertions.filter(a => a.status === 'COVERED').length;
-          summary.contract.uncovered = preCheck.uncovered || preCheck.assertions.filter(a => a.status === 'UNCOVERED').length;
-        }
-      }
+      // Pre-check data in .saves.json is vestigial — assertions now come from contract.yaml
     } catch {
       // Continue with defaults
     }
@@ -1449,16 +1427,14 @@ export function generateProofSummary(slugDir: string): ProofSummary {
         summary.feature = contract.feature;
       }
 
-      // If no pre-check data, build assertions from contract
+      // Build assertions from contract (primary path)
       if (summary.assertions.length === 0 && contract.assertions) {
         summary.assertions = contract.assertions.map(a => ({
           id: a.id,
           says: a.says,
-          preCheckStatus: 'UNCOVERED' as const,
           verifyStatus: null,
         }));
         summary.contract.total = contract.assertions.length;
-        summary.contract.uncovered = contract.assertions.length;
       }
     } catch {
       // Continue with defaults

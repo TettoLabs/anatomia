@@ -62,6 +62,8 @@ function getStatusIcon(status: string): string {
       return chalk.red('✗');
     case 'DEVIATED':
       return chalk.yellow('⚠');
+    case 'UNVERIFIED':
+      return chalk.gray('?');
     case 'UNCOVERED':
       return chalk.gray('?');
     default:
