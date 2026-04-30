@@ -14,5 +14,27 @@
   "spec": {
     "saved_at": "2026-04-30T18:09:02.157Z",
     "hash": "sha256:0bdcd115ce6afeb221bb9bf61b606046af3e35467e3f12e491de7125647f2039"
-  }
+  },
+  "build-report": {
+    "saved_at": "2026-04-30T18:34:33.051Z",
+    "hash": "sha256:356a37b4d7a6c5a8e941d2b04e09b586bf4310e96ae29a6aeffd4e00083666fe"
+  },
+  "build-data": {
+    "saved_at": "2026-04-30T18:34:33.052Z",
+    "hash": "sha256:cd16341ac7e17141fc8fc988df56dec679c2d623688f0ed6cf7cfe71136039fb"
+  },
+  "modules_touched": [
+    "packages/cli/src/commands/scan.ts",
+    "packages/cli/src/commands/work.ts",
+    "packages/cli/src/engine/types/index.ts",
+    "packages/cli/src/types/proof.ts",
+    "packages/cli/src/utils/proofSummary.ts",
+    "packages/cli/tests/commands/scan.test.ts",
+    "packages/cli/tests/commands/work.test.ts",
+    "packages/cli/tests/engine/backward-compat.test.ts",
+    "packages/cli/tests/engine/parsed-backward-compat.test.ts",
+    "packages/cli/tests/engine/patterns-backward-compat.test.ts",
+    "packages/cli/tests/engine/structure-backward-compat.test.ts",
+    "packages/cli/tests/utils/proofSummary.test.ts"
+  ]
 }

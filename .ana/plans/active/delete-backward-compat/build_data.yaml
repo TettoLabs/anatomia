@@ -1,0 +1,10 @@
+schema: 1
+concerns:
+  - summary: "parseFindings no longer matches ## Callouts — historical verify reports re-parsed would silently drop findings"
+    file: "packages/cli/src/utils/proofSummary.ts"
+    severity: observation
+    suggested_action: monitor
+  - summary: "Old proof_chain.json entries without status field will be filtered out by generateActiveIssuesMarkdown"
+    file: "packages/cli/src/utils/proofSummary.ts"
+    severity: observation
+    suggested_action: accept
