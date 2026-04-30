@@ -69,7 +69,7 @@ Health V1 has two surfaces: the `ana proof health` command and the fourth line i
 
 ## Open Questions
 
-None. The design decisions were resolved in the F4 requirements session.
+Design decisions resolved in the F4 requirements session. No open questions for Plan.
 
 ## Exploration Findings
 
