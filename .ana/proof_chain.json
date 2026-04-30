@@ -5489,7 +5489,10 @@
             "A021"
           ],
           "id": "finding-enrichment-schema-C4",
-          "status": "lesson"
+          "status": "closed",
+          "closed_reason": "resolved: remove-tag-coverage removed pre-check tag coverage system (e5e0974)",
+          "closed_at": "2026-04-30T23:03:16.589Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
