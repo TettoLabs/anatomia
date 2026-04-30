@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-35 runs · 72 active · 32 lessons · 0 promoted · 65 closed
+35 runs · 71 active · 31 lessons · 0 promoted · 67 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 72 total)
+## Active Findings (30 shown of 71 total)
 
 ### packages/cli/src/commands/artifact.ts
 
@@ -58,11 +58,11 @@
 ### packages/cli/tests/commands/proof.test.ts
 
 - **test:** A002 lacks negative proof of active-only counting — fixture has only active findings, no closed finding to prove exclusion — *Proof Command UX*
-- **test:** A006 test passes text with shell-escaped double quotes wrapping — tests quoted-string path not raw text — *Proof Promote*
 
 ### packages/cli/tests/commands/verify.test.ts
 
 - **test:** A006 @ana tag on wrong test — tagged on UNVERIFIABLE test (line 241) instead of parseDiffAddedCommentLines removal test — *Remove Pre-Check Tag Coverage*
+- **test:** Substantial test setup duplication across 8 integration tests — each creates git repo, contract, hash, saves from scratch — *Diff-Scoped Tag Search*
 
 ### packages/cli/tests/commands/work.test.ts
 
