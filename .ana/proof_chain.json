@@ -274,7 +274,7 @@
           "anchor": "BROWSER_FRAMEWORKS.has(d)",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-29T18:22:24.305Z",
+          "closed_at": "2026-04-30T01:27:45.233Z",
           "closed_by": "mechanical"
         },
         {
@@ -285,7 +285,7 @@
           "anchor": "getFrameworkDisplayName()",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-29T18:22:24.305Z",
+          "closed_at": "2026-04-30T01:27:45.233Z",
           "closed_by": "mechanical"
         },
         {
@@ -296,7 +296,7 @@
           "anchor": "ProjectKindResult",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-29T18:22:24.305Z",
+          "closed_at": "2026-04-30T01:27:45.233Z",
           "closed_by": "mechanical"
         },
         {
@@ -315,7 +315,7 @@
           "anchor": "not.toContain('node:fs')",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-29T18:22:24.306Z",
+          "closed_at": "2026-04-30T01:27:45.234Z",
           "closed_by": "mechanical"
         },
         {
@@ -2879,7 +2879,7 @@
           "id": "seal-hash-simplification-C3",
           "status": "closed",
           "closed_reason": "file removed",
-          "closed_at": "2026-04-29T18:22:24.308Z",
+          "closed_at": "2026-04-30T01:27:45.236Z",
           "closed_by": "mechanical"
         },
         {
@@ -5956,6 +5956,357 @@
           "summary": "SEVERITY_ORDER map duplicated in findings and build concerns blocks",
           "file": "packages/cli/src/commands/proof.ts",
           "severity": "debt",
+          "suggested_action": "monitor"
+        }
+      ]
+    },
+    {
+      "slug": "proof-health-v1",
+      "feature": "Proof Health V1",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 40,
+        "covered": 40,
+        "uncovered": 0,
+        "satisfied": 40,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Running proof health shows the number of pipeline runs",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "Trajectory section shows risks per run for the recent window",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Trajectory section shows the lifetime average",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "Trajectory section shows the trend direction",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "Hot modules section appears in the health dashboard",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "Promotion candidates section appears in the health dashboard",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "Health JSON uses the standard four-key envelope",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "Health JSON results include trajectory data",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "Health JSON results include hot modules list",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "Health JSON results include promotion candidates",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "Health JSON results include promotions array",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "Health JSON results include run count",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "Work complete shows a health line when trajectory changes",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "The health line describes what changed",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "Work complete JSON includes quality data",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "Quality data indicates whether a change was detected",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A017",
+          "says": "Quality data includes the trajectory snapshot",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A018",
+          "says": "Quality data lists which triggers fired",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A019",
+          "says": "Health command works with an empty proof chain",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A020",
+          "says": "Empty chain shows zero runs",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A021",
+          "says": "Findings without severity are counted as unclassified",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A022",
+          "says": "Trajectory computes risks per run on classified findings only",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A023",
+          "says": "Promotions with insufficient data show tracking status",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A024",
+          "says": "Promotions with enough data show reduction percentage",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A025",
+          "says": "With no promoted findings the promotions section is empty",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A026",
+          "says": "Work complete does not show a health line when nothing changed",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A027",
+          "says": "Each entry's risk count is only the risks in that entry's findings",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A028",
+          "says": "With fewer than ten entries the trend reports insufficient data",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A029",
+          "says": "With fewer than five entries the recent window equals lifetime",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A030",
+          "says": "With fewer than five entries the lifetime average matches",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A031",
+          "says": "Hot module threshold for finding count is a named constant",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A032",
+          "says": "Hot module threshold for entry count is a named constant",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A033",
+          "says": "A module with three findings from two entries is hot",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A034",
+          "says": "A module below threshold is not hot",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A035",
+          "says": "First pipeline run produces no fourth line",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A036",
+          "says": "Hot module display includes severity breakdown per module",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A037",
+          "says": "Promotion effectiveness matches by severity plus category plus file",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A038",
+          "says": "Promotion candidates include recurring scope findings from multiple entries",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A039",
+          "says": "Health JSON trajectory trend reflects window comparison",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A040",
+          "says": "All-unclassified chain reports no classified data instead of zero",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 14,
+        "met": 14
+      },
+      "timing": {
+        "total_minutes": 51,
+        "think": 8,
+        "plan": 8,
+        "build": 36,
+        "verify": 6
+      },
+      "hashes": {
+        "scope": "sha256:688e88624bb63c5b26ab5285e200cd23ee7def2b231430d23e1efa5a3a2ce3f1",
+        "contract": "sha256:f5b7031c643f1ad27d575c6298af97d7e3be01c93f4e414a30787ff78902cd72",
+        "plan": "sha256:cbea6b107e7c0670bd9e0d6408ed18ccb7bb7ea62aa87fcca24bc5d0024e7a22",
+        "spec": "sha256:2c0df117a47a0830d3226b52a82111d636aedccb618ade750d9b4b39320c168b",
+        "build-report": "sha256:dcc05d1d53d6d1722a87c3c0a0ed16e15f97368c036b82c6364ca96506565d8a",
+        "build-data": "sha256:ac9d846db87047469da928ebfff0431b3473fa510b5c9d637d2ff7733d33468e",
+        "verify-report": "sha256:4dea1ea171bdaecf93468403fe2830e924985877efbab8f4d4143d416244a4cb",
+        "verify-data": "sha256:d1a466dcaf6da8acf6c1e37a77e9d8babd7aa89e81aa06f5ed6cbb4aa7dd80e8"
+      },
+      "completed_at": "2026-04-30T01:27:45.210Z",
+      "modules_touched": [
+        "packages/cli/src/commands/proof.ts",
+        "packages/cli/src/commands/work.ts",
+        "packages/cli/src/types/proof.ts",
+        "packages/cli/src/utils/proofSummary.ts",
+        "packages/cli/tests/commands/proof.test.ts",
+        "packages/cli/tests/commands/work.test.ts",
+        "packages/cli/tests/utils/proofSummary.test.ts"
+      ],
+      "scope_summary": "The developer wants to see quality trajectory across pipeline runs. `ana proof health` computes severity-weighted metrics, identifies hot modules, surfaces promotion candidates, and reports on promotion effectiveness. The `work complete` output gains a change-driven fourth line that surfaces health insights when something shifted since the last run. Health is the measurement layer that validates the severity taxonomy, informs promotion decisions, and provides the north star metric (risks/run trending down).",
+      "findings": [
+        {
+          "category": "code",
+          "summary": "Hardcoded 10 in trend display instead of using MIN_ENTRIES_FOR_TREND constant. Template literal uses ${10} rather than importing and using the named constant, creating drift risk if threshold changes.",
+          "file": "packages/cli/src/commands/proof.ts",
+          "anchor": null,
+          "line": 810,
+          "severity": "debt",
+          "suggested_action": "scope",
+          "id": "proof-health-v1-C1",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "detectHealthChange 'detects trend improvement' unit test uses conditional assertion (if change.changed) — if change.changed is false, the expect on triggers never executes. This masks a potential false pass.",
+          "file": "packages/cli/tests/utils/proofSummary.test.ts",
+          "anchor": null,
+          "line": 2662,
+          "severity": "debt",
+          "suggested_action": "scope",
+          "id": "proof-health-v1-C2",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Promotion candidate display has no summary truncation. Long summaries from findings (up to 1000 chars) render untruncated in terminal output. Not a crash risk but degrades terminal readability.",
+          "file": "packages/cli/src/commands/proof.ts",
+          "anchor": null,
+          "line": 844,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "proof-health-v1-C3",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "Promotion effectiveness test covers only the extremes (0% reduction, 100% reduction, tracking). No test for intermediate reduction (e.g., 40%) or negative reduction (more matches than baseline).",
+          "file": "packages/cli/tests/utils/proofSummary.test.ts",
+          "anchor": null,
+          "line": 2531,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "proof-health-v1-C4",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Trajectory 'worsening' label can be counterintuitive with sparse classification — reports worsening on 0.1 risks/run when most findings lack severity. Algorithm is correct but label may mislead operators.",
+          "file": "packages/cli/src/utils/proofSummary.ts",
+          "anchor": null,
+          "line": 790,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "proof-health-v1-C5",
+          "status": "active"
+        }
+      ],
+      "rejection_cycles": 1,
+      "previous_failures": [
+        {
+          "id": "A013",
+          "summary": "Test asserted `toContain('Chain:')` not `toContain('Health:')`. Chain setup (5 high + 5 low) produced improving on both 10 and 11 entries — `detectHealthChange` never fired."
+        },
+        {
+          "id": "A014",
+          "summary": "Same test — asserted `toContain('Chain:')` not `toContain('trend')`. Fourth line never rendered."
+        }
+      ],
+      "build_concerns": [
+        {
+          "summary": "proofSummary.ts now ~1550 lines — growing past comfort threshold",
+          "file": "packages/cli/src/utils/proofSummary.ts",
+          "severity": "debt",
+          "suggested_action": "monitor"
+        },
+        {
+          "summary": "Promotion effectiveness baseline assumes 1 match per entry as neutral — simplification",
+          "file": null,
+          "severity": "observation",
+          "suggested_action": "accept"
+        },
+        {
+          "summary": "Hardcoded literal 10 in proof.ts:810 instead of MIN_ENTRIES_FOR_TREND constant",
+          "file": "packages/cli/src/commands/proof.ts",
+          "severity": "debt",
+          "suggested_action": "scope"
+        },
+        {
+          "summary": "No summary truncation for promotion candidates — long summaries break terminal formatting",
+          "file": "packages/cli/src/commands/proof.ts",
+          "severity": "debt",
+          "suggested_action": "scope"
+        },
+        {
+          "summary": "Promotion effectiveness tests only cover 0% and 100% — no intermediate or negative reduction test",
+          "file": null,
+          "severity": "observation",
           "suggested_action": "monitor"
         }
       ]
