@@ -5374,7 +5374,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "finding-enrichment-schema-C5",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Non-finding. Verify gave Build credit for correct work. Process artifact, not code observation.",
+          "closed_at": "2026-04-30T00:11:17.754Z",
+          "closed_by": "human"
         },
         {
           "category": "code",

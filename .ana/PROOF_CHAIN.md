@@ -1,12 +1,12 @@
 # Proof Chain Dashboard
 
-28 runs · 64 active · 26 lessons · 0 promoted · 47 closed
+28 runs · 63 active · 26 lessons · 0 promoted · 48 closed
 
 ## Hot Modules
 
 | File | Active | Entries |
 |------|--------|--------|
-| packages/cli/src/utils/proofSummary.ts | 11 | 7 |
+| packages/cli/src/utils/proofSummary.ts | 10 | 7 |
 | packages/cli/tests/commands/work.test.ts | 8 | 6 |
 | packages/cli/tests/utils/proofSummary.test.ts | 7 | 4 |
 | packages/cli/src/commands/proof.ts | 5 | 4 |
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 64 total)
+## Active Findings (30 shown of 63 total)
 
 ### packages/cli/src/commands/artifact.ts
 
@@ -45,11 +45,11 @@
 ### packages/cli/src/utils/proofSummary.ts
 
 - **code:** ProofSummary.result still typed as string, not union — spec says to tighten to match ProofChainEntry ('PASS' | 'FAIL' | 'UNKNOWN') but builder left it as open string. Contract A004 only targets ProofChainEntry.result so not a contract violation, but consumers of ProofSummary.result don't get compiler protection. — *Finding Enrichment Schema*
-- **code:** Build concern YAML reader correctly updated — prediction #1 was wrong. The reader at proofSummary.ts:1144-1150 now uses the variable + conditional assignment pattern for severity and suggested_action, matching the findings reader. Confirmed by reading the code and by the A016b test passing. — *Finding Enrichment Schema*
 - **code:** globCache parameter widens the public API surface of an exported function — *Clean Ground for Foundation 3*
 - **code:** Cache never invalidated — stale if files created between resolveFindingPaths calls within one writeProofChain invocation — *Clean Ground for Foundation 3*
 - **code:** PreCheckData interface retains seal_commit field despite seal_commit removal from ProofChainEntry and ProofSummary. Intentional — reads old .saves.json — but inconsistent with the removal theme. — *Structured Findings Companion*
 - **code:** getProofContext uses conditional property assignment (if finding.line !== undefined) rather than always-present optional fields. Result object shape varies — fine for TypeScript consumers but JSON shape is polymorphic. — *Structured Findings Companion*
+- **code:** Dashboard duplicates Active Issues logic: `packages/cli/src/utils/proofSummary.ts:566-616` — reimplements the collection, filtering, capping, and file-grouping from `generateActiveIssuesMarkdown` (lines 385-473). The format differs (### vs ## headings, no truncation), but extracting shared helpers for the filtering and grouping would reduce the ~50 lines of duplication. — *Findings Lifecycle Foundation*
 
 ### packages/cli/tests/commands/artifact.test.ts
 
