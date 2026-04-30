@@ -1,0 +1,232 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Proof Promote"
+
+assertions:
+  # AC1: Core promote lifecycle
+  - id: A001
+    says: "Promoting a finding changes its status to promoted in the proof chain"
+    block: "promotes finding successfully"
+    target: "chain.finding.status"
+    matcher: "equals"
+    value: "promoted"
+
+  - id: A002
+    says: "Promoting a finding records which skill file received the rule"
+    block: "promotes finding successfully"
+    target: "chain.finding.promoted_to"
+    matcher: "equals"
+    value: ".claude/skills/coding-standards/SKILL.md"
+
+  - id: A003
+    says: "Promoting a finding regenerates the proof chain dashboard"
+    block: "promotes finding successfully"
+    target: "dashboard"
+    matcher: "contains"
+    value: "Proof Chain Dashboard"
+
+  - id: A004
+    says: "Promoting a finding creates a git commit with the correct message format"
+    block: "promotes finding successfully"
+    target: "git.lastCommit"
+    matcher: "contains"
+    value: "[proof] Promote F001 to coding-standards"
+
+  # AC2: Default rule text from summary
+  - id: A005
+    says: "Without custom text, the finding summary becomes the skill rule"
+    block: "appends finding summary as rule"
+    target: "skillFile.content"
+    matcher: "contains"
+    value: "- Missing request validation"
+
+  # AC3: Custom --text
+  - id: A006
+    says: "Custom text overrides the finding summary in the skill rule"
+    block: "uses custom text when provided"
+    target: "skillFile.content"
+    matcher: "contains"
+    value: "- Always validate request bodies before processing"
+
+  - id: A007
+    says: "JSON output shows the actual rule text that was written"
+    block: "uses custom text when provided"
+    target: "json.results.rule_text"
+    matcher: "contains"
+    value: "Always validate request bodies"
+
+  # AC4: --skill required
+  - id: A008
+    says: "Omitting the skill flag produces an error listing available skills"
+    block: "rejects promote without skill flag"
+    target: "exitCode"
+    matcher: "not_equals"
+    value: 0
+
+  - id: A009
+    says: "The missing-skill error lists available skill names"
+    block: "rejects promote without skill flag"
+    target: "stderr"
+    matcher: "contains"
+    value: "coding-standards"
+
+  - id: A010
+    says: "The missing-skill error returns SKILL_REQUIRED in JSON mode"
+    block: "rejects promote without skill flag"
+    target: "json.error.code"
+    matcher: "equals"
+    value: "SKILL_REQUIRED"
+
+  # AC5: Skill not found
+  - id: A011
+    says: "Targeting a nonexistent skill produces a clear error"
+    block: "rejects nonexistent skill"
+    target: "json.error.code"
+    matcher: "equals"
+    value: "SKILL_NOT_FOUND"
+
+  # AC6: --section gotchas
+  - id: A012
+    says: "The section flag can target the Gotchas section instead of Rules"
+    block: "appends to gotchas section"
+    target: "skillFile.gotchasSection"
+    matcher: "contains"
+    value: "- Missing request validation"
+
+  - id: A013
+    says: "When targeting Gotchas, the Rules section is unchanged"
+    block: "appends to gotchas section"
+    target: "skillFile.rulesSection"
+    matcher: "not_contains"
+    value: "Missing request validation"
+
+  # AC7: Already promoted
+  - id: A014
+    says: "Promoting an already-promoted finding is rejected"
+    block: "rejects already-promoted finding"
+    target: "json.error.code"
+    matcher: "equals"
+    value: "ALREADY_PROMOTED"
+
+  - id: A015
+    says: "The already-promoted error shows where the finding was promoted to"
+    block: "rejects already-promoted finding"
+    target: "output"
+    matcher: "contains"
+    value: ".claude/skills/"
+
+  # AC8: Already closed, and --force override
+  - id: A016
+    says: "Promoting a closed finding is rejected without the force flag"
+    block: "rejects closed finding without force"
+    target: "json.error.code"
+    matcher: "equals"
+    value: "ALREADY_CLOSED"
+
+  - id: A017
+    says: "The force flag allows promoting a closed finding"
+    block: "promotes closed finding with force"
+    target: "exitCode"
+    matcher: "equals"
+    value: 0
+
+  - id: A018
+    says: "A force-promoted closed finding transitions to promoted status"
+    block: "promotes closed finding with force"
+    target: "chain.finding.status"
+    matcher: "equals"
+    value: "promoted"
+
+  # AC9: JSON envelope
+  - id: A019
+    says: "JSON output follows the four-key envelope format"
+    block: "returns valid JSON envelope"
+    target: "json.command"
+    matcher: "equals"
+    value: "proof promote"
+
+  - id: A020
+    says: "JSON results include the promoted skill file path"
+    block: "returns valid JSON envelope"
+    target: "json.results.promoted_to"
+    matcher: "exists"
+
+  - id: A021
+    says: "JSON meta includes chain health statistics"
+    block: "returns valid JSON envelope"
+    target: "json.meta.chain_runs"
+    matcher: "exists"
+
+  # AC10: Duplicate detection
+  - id: A022
+    says: "A rule with high word overlap triggers a duplicate warning"
+    block: "warns on duplicate rule"
+    target: "output"
+    matcher: "contains"
+    value: "Similar rule exists"
+
+  - id: A023
+    says: "A duplicate warning does not block the promotion"
+    block: "warns on duplicate rule"
+    target: "exitCode"
+    matcher: "equals"
+    value: 0
+
+  - id: A024
+    says: "In JSON mode, the duplicate warning appears as a field, not stderr"
+    block: "warns on duplicate rule in JSON mode"
+    target: "json.results.duplicate_warning"
+    matcher: "exists"
+
+  # AC11: Placeholder replacement
+  - id: A025
+    says: "A placeholder-only section gets replaced, not appended to"
+    block: "replaces placeholder in empty section"
+    target: "skillFile.content"
+    matcher: "not_contains"
+    value: "*Not yet captured"
+
+  - id: A026
+    says: "The new rule appears in place of the placeholder"
+    block: "replaces placeholder in empty section"
+    target: "skillFile.content"
+    matcher: "contains"
+    value: "- Missing request validation"
+
+  # AC13: Branch check
+  - id: A027
+    says: "Promoting from the wrong branch is rejected"
+    block: "rejects promote from wrong branch"
+    target: "json.error.code"
+    matcher: "equals"
+    value: "WRONG_BRANCH"
+
+  # AC16: Empty text
+  - id: A028
+    says: "Empty custom text is rejected"
+    block: "rejects empty text"
+    target: "json.error.code"
+    matcher: "equals"
+    value: "TEXT_EMPTY"
+
+  # AC17: Missing section
+  - id: A029
+    says: "A skill file missing the target section produces a clear error"
+    block: "rejects skill file without target section"
+    target: "json.error.code"
+    matcher: "equals"
+    value: "SECTION_NOT_FOUND"
+
+  # Lesson promotion
+  - id: A030
+    says: "A lesson finding can be promoted to a skill rule"
+    block: "promotes lesson finding"
+    target: "chain.finding.status"
+    matcher: "equals"
+    value: "promoted"
+
+file_changes:
+  - path: "packages/cli/src/commands/proof.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/proof.test.ts"
+    action: modify
