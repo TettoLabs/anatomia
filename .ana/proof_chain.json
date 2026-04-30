@@ -726,9 +726,12 @@
           "summary": "`findProjectRoot` checks for `.ana/` directory existence (validators.ts:105), not `.ana/ana.json`. A stale `.ana/` directory containing only `state/` (like `packages/cli/src/.ana/`) causes the function to return the wrong root. `readArtifactBranch` then fails with \"No .ana/ana.json found.\" Checking `fs.existsSync(path.join(current, '.ana', 'ana.json'))` would be more robust. Not a spec violation — the spec explicitly says \"looking for a directory containing `.ana/`\" — but a production fragility worth addressing in a future cycle.",
           "file": "packages/cli/src/utils/validators.ts",
           "anchor": "findProjectRoot",
-          "status": "active",
+          "status": "closed",
           "severity": "risk",
-          "suggested_action": "scope"
+          "suggested_action": "scope",
+          "closed_reason": "Stale: code at validators.ts:105 now checks .ana/ana.json not .ana/ directory",
+          "closed_at": "2026-04-30T07:15:03.265Z",
+          "closed_by": "human"
         },
         {
           "id": "find-project-root-C2",
