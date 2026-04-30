@@ -101,8 +101,8 @@ Design decisions resolved in the F4 requirements session. No open questions for 
 ### Relevant Code Paths
 - `packages/cli/src/utils/proofSummary.ts:701-756` — `computeChainHealth`. The counting foundation. Health computation function lives next to this.
 - `packages/cli/src/commands/proof.ts:569-736` — audit subcommand. The display pattern to follow.
-- `packages/cli/src/commands/work.ts:1316-1348` — `completeWork` output. Where the fourth line integrates.
-- `packages/cli/src/commands/work.ts:1108-1128` — recovery path output. Do NOT add fourth line here.
+- `packages/cli/src/commands/work.ts:1326-1346` — `completeWork` output. JSON at 1326-1339, terminal at 1341-1346. Where the fourth line integrates.
+- `packages/cli/src/commands/work.ts:1078-1128` — recovery path output. Do NOT add fourth line here.
 - `packages/cli/src/types/proof.ts` — `ProofChainEntry` type with all fields health reads.
 
 ### Patterns to Follow
@@ -114,9 +114,10 @@ Design decisions resolved in the F4 requirements session. No open questions for 
 ### Known Gotchas
 - `computeChainHealth` counts by severity across ALL findings including closed/lesson. Trajectory needs to count by severity per ENTRY (the findings that entry produced), not across the cumulative set. These are different iterations with different semantics.
 - The `completeWork` JSON output constructs `jsonResults` inline (work.ts:1326-1338). The quality data needs to be added to this object BEFORE it's passed to `wrapJsonResponse`. Don't add it to the meta block — meta is chain health (what exists), quality is trajectory change (what shifted).
+- Fourth line change detection: compute health on `chain.entries.slice(0, -1)` (before) and the full chain (after). Compare trajectory trend, promote candidate count, hot module set. No persistence needed — the chain IS the before/after history. For "new promote candidates": count `suggested_action: promote` + `status: active` findings before and after. If count increased, new candidates appeared.
 - proof.ts uses `spawnSync` for git in close. Health has no git operations — simpler. Don't accidentally add git patterns from close.
 
 ### Things to Investigate
 - The hot module threshold: the scope says "3+ active findings from 2+ entries." Plan should verify this produces a useful hot list against the current data (proofSummary.ts has 11 active findings — would this threshold surface it? Yes, easily). The threshold should be a constant, not hardcoded in a comparison.
-- How to compute "new promote candidates since last run" for the fourth line trigger. One approach: count promote-action findings on the new entry. If any exist, it's a new candidate. Another: compare promote-action count across all active findings before and after the new entry. The simpler approach (new entry has promote findings) is probably right.
-- Whether the `HealthReport` type should extend `ChainHealth` or compose it. Compose is cleaner — `meta` already carries `ChainHealth`, and `results` carries the health-specific data. Don't mix the two.
+- Resolved: promote candidate detection uses before/after comparison on `chain.entries.slice(0, -1)` vs full chain. Count `suggested_action: promote` + `status: active` in both. If count increased, trigger fires. Moved to Known Gotchas.
+- Resolved: `HealthReport` composes `ChainHealth`, does not extend. `meta` carries ChainHealth (status counts, severity/action breakdowns). `results` carries trajectory (per-entry time series), hot_modules (file groupings), promotion_candidates (filtered findings), promotions (effectiveness tracking). Zero field overlap. No contract smell.
