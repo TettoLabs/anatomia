@@ -1133,7 +1133,7 @@ Tests: 5 passed
 
         const patchedContent = verifyContent.replace(
           '## Verdict',
-          `## Callouts
+          `## Findings
 - **Code — Hard-coded timeout:** \`src/client.ts:47\` — uses 5000ms constant
 - **Test — Weak assertion:** \`tests/auth.test.ts:89\` — uses toBeDefined instead of specific check
 - **Code — Missing error handler:** \`src/api.ts:12\` — catch block is empty
@@ -1197,7 +1197,7 @@ Tests: 5 passed
 
         const patchedContent = verifyContent.replace(
           '## Verdict',
-          `## Callouts
+          `## Findings
 - **Code — Hard-coded timeout:** \`src/client.ts:47\` — uses 5000ms constant
 - **Test — Weak assertion:** \`tests/auth.test.ts:89\` — uses toBeDefined instead of specific check
 - **Code — Missing error handler:** \`src/api.ts:12\` — catch block is empty
@@ -1342,7 +1342,7 @@ Tests: 5 passed
         const verifyContent = fsSync.readFileSync(verifyPath, 'utf-8');
         const patchedContent = verifyContent.replace(
           '## Verdict',
-          `## Callouts
+          `## Findings
 - **Code — New issue:** \`src/shared.ts:10\` — newer finding
 
 ## Verdict`,
@@ -1557,7 +1557,7 @@ Tests: 5 passed
         const verifyContent = fsSync.readFileSync(verifyPath, 'utf-8');
         const patchedContent = verifyContent.replace(
           '## Verdict',
-          `## Callouts
+          `## Findings
 - **Code — Issue:** Code finding here
 - **Upstream — Observation:** Upstream observation
 

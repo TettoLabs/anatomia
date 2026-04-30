@@ -117,7 +117,7 @@ export function createEmptyAnalysisResult(): AnalysisResult {
 }
 
 // validateAnalysisResult DELETED — S20 cleanup. Zero production callers.
-// AnalysisResultSchema retained for backward-compat tests that validate the shape.
+// AnalysisResultSchema used by types.test.ts and parsed-integration.test.ts for shape validation.
 
 // Export structure analysis types (STEP_1.2)
 export type {
