@@ -15,7 +15,7 @@ import {
   getLanguageDisplayName,
   getFrameworkDisplayName,
   getPatternDisplayName,
-} from '../../src/commands/scan.js';
+} from '../../src/utils/displayNames.js';
 
 describe('ana scan', () => {
   let tempDir: string;
