@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-35 runs · 66 active · 30 lessons · 0 promoted · 73 closed
+35 runs · 65 active · 30 lessons · 0 promoted · 74 closed
 
 ## Hot Modules
 
@@ -9,14 +9,14 @@
 | packages/cli/src/commands/proof.ts | 10 | 7 |
 | packages/cli/tests/commands/work.test.ts | 10 | 8 |
 | packages/cli/src/utils/proofSummary.ts | 8 | 7 |
-| packages/cli/src/commands/work.ts | 8 | 7 |
 | packages/cli/tests/utils/proofSummary.test.ts | 7 | 4 |
+| packages/cli/src/commands/work.ts | 7 | 6 |
 
 ## Promoted Rules
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 66 total)
+## Active Findings (30 shown of 65 total)
 
 ### packages/cli/src/commands/proof.ts
 
@@ -27,6 +27,7 @@
 - **code:** Promotion candidate display has no summary truncation. Long summaries from findings (up to 1000 chars) render untruncated in terminal output. Not a crash risk but degrades terminal readability. — *Proof Health V1*
 - **code:** SEVERITY_ORDER lookup duplicated identically in Findings block and Build Concerns block — extract to module-level constant — *Work Complete JSON + Proof Card Findings*
 - **code:** Duplicate 'from:' line in audit human-readable display — line 660 already has 'from: {feature}' in metadata, line 661 repeats it standalone — *Finding Enrichment Schema*
+- **code:** SEVERITY_WEIGHT map is local to audit command block — if severity sort is needed elsewhere, it will be duplicated — *Finding Enrichment Schema*
 
 ### packages/cli/src/commands/verify.ts
 
@@ -36,7 +37,6 @@
 ### packages/cli/src/commands/work.ts
 
 - **test:** No tests for UNVERIFIED fallback — A014-A018 verified by source inspection only; work.ts, pr.ts, proof.ts UNVERIFIED paths have zero test coverage — *Remove Pre-Check Tag Coverage*
-- **code:** Catch block indentation inconsistent — body at 10-space indent vs surrounding 8-space convention — *Harden Hot Files*
 - **code:** Stale comment references deleted reopen loop — *Delete backward-compatibility code*
 - **code:** Recovery path console.log on line 1078 leaks non-JSON text to stdout before JSON envelope — CI consumers doing JSON.parse(stdout) will fail — *Work Complete JSON + Proof Card Findings*
 - **code:** Main path re-reads proof_chain.json from disk for computeChainHealth after writeProofChain just wrote it — matches known build concern about nudge re-read pattern — *Work Complete JSON + Proof Card Findings*
