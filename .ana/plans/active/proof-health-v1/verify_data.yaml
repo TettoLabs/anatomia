@@ -1,13 +1,5 @@
 schema: 1
 findings:
-  - category: test
-    summary: "A013/A014 test is a sentinel — asserts Chain: not Health:. The chain setup produces 'improving' trend on both 10 and 11 entries, so detectHealthChange never fires. The test cannot trigger the fourth line."
-    file: "packages/cli/tests/commands/work.test.ts"
-    line: 2262
-    severity: risk
-    suggested_action: scope
-    related_assertions: ["A013", "A014"]
-
   - category: code
     summary: "Hardcoded 10 in trend display instead of using MIN_ENTRIES_FOR_TREND constant. Template literal uses ${10} rather than importing and using the named constant, creating drift risk if threshold changes."
     file: "packages/cli/src/commands/proof.ts"
@@ -15,36 +7,30 @@ findings:
     severity: debt
     suggested_action: scope
 
+  - category: test
+    summary: "detectHealthChange 'detects trend improvement' unit test uses conditional assertion (if change.changed) — if change.changed is false, the expect on triggers never executes. This masks a potential false pass."
+    file: "packages/cli/tests/utils/proofSummary.test.ts"
+    line: 2662
+    severity: debt
+    suggested_action: scope
+
   - category: code
-    summary: "Trajectory 'worsening' label is counterintuitive when absolute risk levels are very low (e.g., 0.1 all-time, 0.4 last-5). The first-half vs second-half comparison can report 'worsening' when the project is objectively clean but early entries had zero risks. Not a bug — the algorithm is correct — but the label may mislead operators."
+    summary: "Promotion candidate display has no summary truncation. Long summaries from findings (up to 1000 chars) render untruncated in terminal output. Not a crash risk but degrades terminal readability."
+    file: "packages/cli/src/commands/proof.ts"
+    line: 844
+    severity: observation
+    suggested_action: monitor
+
+  - category: test
+    summary: "Promotion effectiveness test covers only the extremes (0% reduction, 100% reduction, tracking). No test for intermediate reduction (e.g., 40%) or negative reduction (more matches than baseline)."
+    file: "packages/cli/tests/utils/proofSummary.test.ts"
+    line: 2531
+    severity: observation
+    suggested_action: monitor
+
+  - category: code
+    summary: "Trajectory 'worsening' label can be counterintuitive with sparse classification — reports worsening on 0.1 risks/run when most findings lack severity. Algorithm is correct but label may mislead operators."
     file: "packages/cli/src/utils/proofSummary.ts"
     line: 790
     severity: observation
     suggested_action: monitor
-
-  - category: code
-    summary: "Promotion candidate display has no summary truncation. Long summaries from findings (up to 1000 chars) render untruncated in terminal output at proof.ts:844. Not a crash risk but degrades terminal readability."
-    file: "packages/cli/src/commands/proof.ts"
-    line: 844
-    severity: debt
-    suggested_action: scope
-
-  - category: test
-    summary: "Promotion effectiveness test covers only the extremes (0% reduction, 100% reduction, tracking). No test for intermediate reduction (e.g., 3 matches in 5 entries = 40% reduction) or for the negative reduction case (more matches than baseline)."
-    file: "packages/cli/tests/utils/proofSummary.test.ts"
-    line: 2531
-    severity: observation
-    suggested_action: scope
-
-  - category: code
-    summary: "Recovery path JSON (work.ts:1109-1122) lacks quality key. This is intentional per spec — recovery is not a new pipeline run. But it means JSON consumers cannot rely on quality always existing in work complete output. The quality key is only present on non-recovery completions."
-    file: "packages/cli/src/commands/work.ts"
-    line: 1109
-    severity: observation
-    suggested_action: monitor
-
-  - category: upstream
-    summary: "Contract A013/A014 tests require constructing a chain that produces different trends for N vs N+1 entries — a specific boundary that the builder's chain setup didn't achieve. The contract's intent (verify fourth line appears) is clear, but the specific chain construction needed is non-obvious."
-    severity: observation
-    suggested_action: scope
-    related_assertions: ["A013", "A014"]
