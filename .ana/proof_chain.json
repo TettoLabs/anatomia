@@ -5046,7 +5046,10 @@
             "A005"
           ],
           "id": "harden-git-commit-calls-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Root cause fixed by diff-scoped-tag-search (entry #27). Pre-check now searches added lines only.",
+          "closed_at": "2026-04-30T00:10:58.757Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
