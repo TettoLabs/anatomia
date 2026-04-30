@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-32 runs · 71 active · 31 lessons · 0 promoted · 53 closed
+33 runs · 75 active · 32 lessons · 0 promoted · 53 closed
 
 ## Hot Modules
 
@@ -9,14 +9,18 @@
 | packages/cli/tests/utils/proofSummary.test.ts | 10 | 6 |
 | packages/cli/src/utils/proofSummary.ts | 10 | 7 |
 | packages/cli/src/commands/proof.ts | 10 | 6 |
-| packages/cli/tests/commands/work.test.ts | 7 | 6 |
-| packages/cli/src/commands/work.ts | 6 | 5 |
+| packages/cli/tests/commands/work.test.ts | 9 | 7 |
+| packages/cli/src/commands/work.ts | 7 | 6 |
 
 ## Promoted Rules
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 71 total)
+## Active Findings (30 shown of 75 total)
+
+### packages/cli/src/commands/artifact.ts
+
+- **code:** captureModulesTouched warning includes raw error message in output — could leak internal paths or stack traces to terminal — *Harden Hot Files*
 
 ### packages/cli/src/commands/proof.ts
 
@@ -28,7 +32,6 @@
 - **code:** SEVERITY_ORDER lookup duplicated identically in Findings block and Build Concerns block — extract to module-level constant — *Work Complete JSON + Proof Card Findings*
 - **code:** Duplicate 'from:' line in audit human-readable display — line 660 already has 'from: {feature}' in metadata, line 661 repeats it standalone — *Finding Enrichment Schema*
 - **code:** SEVERITY_WEIGHT map is local to audit command block — if severity sort is needed elsewhere, it will be duplicated — *Finding Enrichment Schema*
-- **code:** Anchor stripping regex false-positives — aggressive strip reduces anchors to common words — *Close the Loop*
 
 ### packages/cli/src/commands/verify.ts
 
@@ -37,17 +40,16 @@
 
 ### packages/cli/src/commands/work.ts
 
+- **code:** Catch block indentation inconsistent — body at 10-space indent vs surrounding 8-space convention — *Harden Hot Files*
 - **code:** Stale comment references deleted reopen loop — *Delete backward-compatibility code*
 - **code:** Recovery path console.log on line 1078 leaks non-JSON text to stdout before JSON envelope — CI consumers doing JSON.parse(stdout) will fail — *Work Complete JSON + Proof Card Findings*
 - **code:** Main path re-reads proof_chain.json from disk for computeChainHealth after writeProofChain just wrote it — matches known build concern about nudge re-read pattern — *Work Complete JSON + Proof Card Findings*
 - **code:** Severity migration does not handle unexpected old values beyond blocker/note — if a future writer introduces an unknown severity value (e.g. from a malformed manual edit), the migration loop silently ignores it. Not blocking since validation prevents new bad values, but the migration is only protective for known old values. — *Finding Enrichment Schema*
-- **code:** Recovery path counts total findings via loop but main path uses stats.findings — two different counting mechanisms for the same display. If totalFindings computation in writeProofChain diverges from the simple loop, recovery output could drift. — *Harden git commit calls*
 
 ### packages/cli/src/utils/proofSummary.ts
 
 - **code:** Trajectory 'worsening' label can be counterintuitive with sparse classification — reports worsening on 0.1 risks/run when most findings lack severity. Algorithm is correct but label may mislead operators. — *Proof Health V1*
 - **code:** ProofSummary.result still typed as string, not union — spec says to tighten to match ProofChainEntry ('PASS' | 'FAIL' | 'UNKNOWN') but builder left it as open string. Contract A004 only targets ProofChainEntry.result so not a contract violation, but consumers of ProofSummary.result don't get compiler protection. — *Finding Enrichment Schema*
-- **code:** globCache parameter widens the public API surface of an exported function — *Clean Ground for Foundation 3*
 
 ### packages/cli/templates/.claude/agents/ana-learn.md
 
@@ -64,9 +66,10 @@
 
 ### packages/cli/tests/commands/work.test.ts
 
+- **test:** A003 tagged test exercises normal completion, not recovery — does not assert 'Recovering' in output — *Harden Hot Files*
+- **test:** Pre-check COVERED status for A004-A010 comes from other features' tag collisions, not from harden-hot-files-specific tests — *Harden Hot Files*
 - **test:** Recovery path JSON test uses output.indexOf('{') to skip non-JSON output — fragile parsing that masks the stdout pollution issue — *Work Complete JSON + Proof Card Findings*
 - **test:** Severity migration tests (A019, A020, A021) don't have dedicated tagged tests in the changed test files — they're covered indirectly through the backfill loop in work.test.ts existing tests and by type-level evidence. No test explicitly creates a finding with severity 'blocker', runs the migration loop, and asserts severity is now 'risk'. The behavior is exercised but not directly asserted. — *Finding Enrichment Schema*
-- **test:** Test name 'shows maintenance line when findings were auto-closed' is now inverted — assertions check not.toContain('Maintenance:') but name says 'shows' — *Harden git commit calls*
 
 ### packages/cli/tests/utils/proofSummary.test.ts
 

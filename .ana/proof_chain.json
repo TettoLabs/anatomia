@@ -7128,6 +7128,197 @@
           "suggested_action": "accept"
         }
       ]
+    },
+    {
+      "slug": "harden-hot-files",
+      "feature": "Harden Hot Files",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 12,
+        "covered": 12,
+        "uncovered": 0,
+        "satisfied": 12,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Recovery with JSON mode produces clean JSON without human-readable text",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "Recovery JSON output is valid JSON from the first character",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Recovery without JSON mode still shows the recovery message",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "Each audit finding shows its source exactly once",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "Severity ordering is defined once at module level",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "No local severity ordering maps remain inside functions",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "Missing remote branch does not block artifact saves",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "Unexpected file operation failures surface a warning",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "Unexpected git failures during recovery are surfaced to the user",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "Expected not-a-repo errors stay silent during recovery",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "Recovery JSON test parses output directly without workaround",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "Recovery JSON test validates the complete response envelope",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 11,
+        "met": 11
+      },
+      "timing": {
+        "total_minutes": 80,
+        "think": 4,
+        "plan": 4,
+        "build": 68,
+        "verify": 7
+      },
+      "hashes": {
+        "scope": "sha256:86ea32fdd5dacfa5467497bd6fbc4aa4ff0be16ea8d453ea4583c702eb7b89b7",
+        "contract": "sha256:629a37421c16c8ad39b338cc03a99d91158ad05b72a543cfc57492dfd6ea0e29",
+        "plan": "sha256:dbb9094551152dbe7f2c15b792b07aacae0892c1a5001a203e788294ed494f0f",
+        "spec": "sha256:ce70f146fa8206cbc011143ec9c201cc75baf45a1949cf5532d819bd3980880e",
+        "build-report": "sha256:ec1da3242f14046de43d5a0c49391dc9d1c6f00237b1e6bb0cff23cb3de61c22",
+        "build-data": "sha256:f54f54dab4f5f7fcc3226cf6466a7e2e45e2245a84d461af0c92924b190c1bb4",
+        "verify-report": "sha256:5a6125384cd8b721c64f86d6db8fa3127d95dc4ec29899ee1babc7201a9040ac",
+        "verify-data": "sha256:5a7b1c4e183ddc1019c50dca79354583e97dd6f9c86aee39bf655e2139a026f4"
+      },
+      "completed_at": "2026-04-30T19:22:40.130Z",
+      "modules_touched": [
+        "packages/cli/src/commands/artifact.ts",
+        "packages/cli/src/commands/proof.ts",
+        "packages/cli/src/commands/work.ts",
+        "packages/cli/tests/commands/work.test.ts"
+      ],
+      "scope_summary": "Fix four error-handling and display bugs across the three most-modified CLI files (proof.ts, work.ts, artifact.ts). These are all hot files touched by every pipeline run. Closes 5 active findings including all 3 risk-severity findings in the current set.",
+      "findings": [
+        {
+          "category": "code",
+          "summary": "Catch block indentation inconsistent — body at 10-space indent vs surrounding 8-space convention",
+          "file": "packages/cli/src/commands/work.ts",
+          "anchor": null,
+          "line": 1071,
+          "severity": "debt",
+          "suggested_action": "accept",
+          "id": "harden-hot-files-C1",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "A003 tagged test exercises normal completion, not recovery — does not assert 'Recovering' in output",
+          "file": "packages/cli/tests/commands/work.test.ts",
+          "anchor": null,
+          "line": 2049,
+          "severity": "observation",
+          "suggested_action": "scope",
+          "related_assertions": [
+            "A003"
+          ],
+          "id": "harden-hot-files-C2",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "Pre-check COVERED status for A004-A010 comes from other features' tag collisions, not from harden-hot-files-specific tests",
+          "file": "packages/cli/tests/commands/work.test.ts",
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "related_assertions": [
+            "A004",
+            "A005",
+            "A006",
+            "A007",
+            "A008",
+            "A009",
+            "A010"
+          ],
+          "id": "harden-hot-files-C3",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "Spec says 'no new tests needed' but contract has behavioral assertions (A007-A010) that imply test coverage — tension between spec and contract",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "harden-hot-files-C4",
+          "status": "lesson"
+        },
+        {
+          "category": "code",
+          "summary": "captureModulesTouched warning includes raw error message in output — could leak internal paths or stack traces to terminal",
+          "file": "packages/cli/src/commands/artifact.ts",
+          "anchor": null,
+          "line": 183,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "harden-hot-files-C5",
+          "status": "active"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "A004-A010 contract assertions are structural/behavioral with no dedicated tests — verified by code inspection only",
+          "file": null,
+          "severity": "observation",
+          "suggested_action": "monitor"
+        },
+        {
+          "summary": "14 pre-existing @typescript-eslint/no-explicit-any lint warnings in test files outside spec scope",
+          "file": null,
+          "severity": "observation",
+          "suggested_action": "accept"
+        }
+      ]
     }
   ],
   "schema": 1
