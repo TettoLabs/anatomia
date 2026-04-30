@@ -12,7 +12,7 @@ This is the agent that closes the loop between "the system records quality data"
 Learn ships as a template in `packages/cli/templates/.claude/agents/ana-learn.md`. The template IS the product — every word ships verbatim to every team. This scope defines what the template says and why.
 
 ## Complexity Assessment
-- **Size:** medium (the template is ~250 lines, but every line requires more design judgment than 10 lines of TypeScript)
+- **Size:** medium (the template is ~280-320 lines, but every line requires more design judgment than 10 lines of TypeScript)
 - **Files affected:**
   - `packages/cli/templates/.claude/agents/ana-learn.md` — the template (NEW)
   - `.claude/agents/ana-learn.md` — dogfood copy for this project (NEW)
@@ -28,7 +28,11 @@ Learn's template follows the patterns established by the five existing agents, w
 
 **Identity first.** The opening paragraph defines Learn's disposition the way Verify's opening defines fault-finding. Learn's disposition is quality gardening — tending what's accumulated, pruning what's resolved, promoting what should be permanent. Not zealous (doesn't push closures aggressively), not passive (doesn't just list findings). Methodical and evidence-based.
 
-**System knowledge as operational guidance, not documentation.** The F4 doc specifies a System Knowledge section. But 50 lines of "here's how skills work" reads like documentation the agent is explaining to itself. Instead, the knowledge should be woven into the operational instructions — "when drafting a promotion, read the target skill's existing rules for voice" teaches the same thing as "skills have four sections: Detected, Rules, Gotchas, Examples" but in context, not in a lecture. The template teaches by example and instruction, not by exposition.
+**System knowledge as reasoning capability, not documentation.** Learn needs to understand the system deeply enough to REASON about it, not just operate within it. When the developer says "Build keeps ignoring ESM imports," Learn needs to trace the knowledge flow: Is the ESM rule in coding-standards? → Does Build load coding-standards? (No — Build reads the Build Brief, curated by Plan from skills.) → Was the rule in the Build Brief? → Is this a skill gap, a Plan curation gap, or a Build compliance issue? That diagnostic chain requires understanding how knowledge moves through the pipeline, how agents consume skills, and what each handoff produces.
+
+The template includes a System Knowledge section — not exposition ("skills have four sections"), but diagnostic reasoning patterns: how knowledge flows through the pipeline, what ownership means (Detected is machine-owned, Rules are human-authored), how to distinguish template skills from custom skills (check for ENRICHMENT.md), what the proof chain fields mean for decision-making (severity guides priority, suggested_action guides what to do, related_assertions reveals spec quality). The knowledge is structured around "what do you need to know to diagnose issues," not "here's a reference manual."
+
+Critically, Learn discovers the installation — it doesn't hardcode it. "Read ana.json for the artifact branch" not "the branch is usually main." "List .claude/skills/ to see what's configured" not "there are 5 skills." The template teaches what to look for. The agent discovers what's there.
 
 **Two modes, one agent.** Structured triage is the primary mode — Learn runs health, runs audit, reviews findings, suggests actions. Conversational routing is the secondary mode — the developer says "I noticed X" and Learn diagnoses where it belongs. The template handles both by starting with triage (the structured work) and being ready for observations (the open-ended work). Not two separate sections with different protocols — one continuous session where the developer can interject observations during triage.
 
@@ -41,16 +45,17 @@ Learn's template follows the patterns established by the five existing agents, w
 These criteria apply to the TEMPLATE content, not to compiled code. Verification is by reading the template and confirming it instructs the agent correctly.
 
 - AC1: The template has frontmatter with `model: sonnet`, `description` as a one-line summary, and no `skills:` field (Learn loads skills manually based on what it needs for promotion drafting)
-- AC2: On startup, Learn reads `.ana/context/design-principles.md`, then runs `ana proof health --json` and `ana proof audit --json` before doing anything else. The startup instructions specify both commands and what to extract from each
-- AC3: The triage loop processes findings in severity order: risk first, then debt, then observation. For each finding, Learn reads the file and code around the anchor to verify the issue still applies
-- AC4: Suggestions are presented as a complete list before any execution. The template specifies a suggestion format: finding ID, recommendation (close/promote/keep), evidence (what Learn read and found), and the exact CLI command to execute
-- AC5: For promote-action findings, the template instructs Learn to read the target skill file's existing rules, draft the rule text in the skill's voice, and use `ana proof promote {id} --skill {name} --text "{drafted rule}"`
-- AC6: For accept-action findings, the template instructs Learn to suggest closure with the classification as evidence
-- AC7: The template includes instructions for handling human observations: the developer says "I noticed X" and Learn diagnoses whether it's a missing skill rule, an existing rule not being followed, or a system-level issue. Learn routes to the appropriate action (draft a rule, note for V2, surface as a gap)
-- AC8: The template explicitly lists what Learn does NOT do: auto-execute without approval, modify agent definitions, modify source code, run during a pipeline run, duplicate mechanical maintenance (file-deleted, anchor-absent)
-- AC9: The template specifies the branch requirement: Learn must be on the artifact branch to execute close and promote commands. If on a feature branch, Learn advises switching before executing
-- AC10: The template is registered in `init/assets.ts` so `ana init` copies it to `.claude/agents/`
-- AC11: The dogfood copy at `.claude/agents/ana-learn.md` matches the template
+- AC2: On startup, Learn reads `.ana/ana.json` (configuration, artifact branch, commands), `.ana/context/design-principles.md` (team values for judging promotion worthiness), and discovers the skill landscape (`ls .claude/skills/`, checking each for ENRICHMENT.md to distinguish template from custom). Then runs `ana proof health --json` and `ana proof audit --json`. The startup builds a mental model of the installation before acting on it
+- AC3: The template includes a System Knowledge section that teaches Learn to reason about the system — not reference documentation, but diagnostic patterns: how knowledge flows through the pipeline (Think → scope → Plan → spec + Build Brief → Build → code → Verify → findings → proof chain), what ownership means (Detected is machine-owned, Rules are human-authored), how agents consume skills (Plan/Build via frontmatter `skills:` field, Verify loads manually, Think loads on demand), what proof chain fields mean for decision-making (severity guides priority, suggested_action guides what action to take, related_assertions connects findings to spec quality). The section teaches Learn to trace issues through the system, not just read individual files
+- AC4: The triage loop processes findings in severity order: risk first, then debt, then observation. For each finding, Learn reads the file and code around the anchor to verify the issue still applies
+- AC5: Suggestions are presented as a complete list before any execution. The template specifies a suggestion format: finding ID, recommendation (close/promote/keep), evidence (what Learn read and found), and the exact CLI command to execute
+- AC6: For promote-action findings, the template instructs Learn to read the target skill file's existing rules, draft the rule text in the skill's voice, and use `ana proof promote {id} --skill {name} --text "{drafted rule}"`
+- AC7: For accept-action findings, the template instructs Learn to suggest closure with the classification as evidence
+- AC8: The template includes instructions for handling human observations: the developer says "I noticed X" and Learn diagnoses the root cause by tracing through the system — is it a missing skill rule, an existing rule not being curated into Build Briefs, a Build compliance gap, or a Verify calibration issue? Learn routes to the appropriate action (draft a rule, note for V2, surface as a gap)
+- AC9: The template explicitly lists what Learn does NOT do: auto-execute without approval, modify agent definitions, modify source code, run during a pipeline run, duplicate mechanical maintenance (file-deleted, anchor-absent), read build reports or verify reports (independence constraint)
+- AC10: The template specifies the branch requirement: Learn must be on the artifact branch to execute close and promote commands. If on a feature branch, Learn advises switching before executing
+- AC11: The template is registered in `init/assets.ts` so `ana init` copies it to `.claude/agents/`
+- AC12: The dogfood copy at `.claude/agents/ana-learn.md` matches the template
 
 ## Edge Cases & Risks
 
@@ -70,7 +75,7 @@ These criteria apply to the TEMPLATE content, not to compiled code. Verification
 
 ## Rejected Approaches
 
-**System Knowledge as a separate section.** The F4 doc proposes ~50 lines of exposition about how skills, agents, the pipeline, and the CLI work. Rejected as a standalone section because it reads like documentation the agent is explaining to itself. The knowledge is better woven into operational instructions — "read the skill file's Rules section for voice" teaches skill structure in context. The agent needs to KNOW how the system works, not recite how it works.
+**System Knowledge as reference documentation.** An early draft imagined the System Knowledge section as a reference manual — "skills have four sections: Detected, Rules, Gotchas, Examples." Rejected because reference documentation teaches nothing about reasoning. The section should be diagnostic reasoning patterns — how knowledge flows through the pipeline, how to trace an issue from finding to root cause, what the proof chain fields mean for decision-making. Not "here's how skills work" but "here's how to diagnose why a skill rule isn't landing."
 
 **Learn produces a report file.** Other agents produce artifacts (scope.md, verify_report.md). Learn could produce learn_report.md. Rejected because Learn's actions ARE the record — `closed_by: 'agent'` in proof_chain.json, `promoted_to` on findings. A separate report duplicates what the chain already records. The conversation IS the session log.
 
@@ -124,12 +129,13 @@ Design decisions resolved in the F4 requirements session and this scoping conver
 
 ### Known Gotchas
 - The template ships to every team. Generic Anatomia-specific references (like "proofSummary.ts has 11 findings") must be parameterized or omitted. The template instructs the agent to read the data — it doesn't contain the data.
-- Learn's system knowledge must be operational, not documentary. "Read the target skill's Rules section" teaches skill structure implicitly. "Skills have four sections: Detected, Rules, Gotchas, Examples" is exposition the agent doesn't need to recite.
+- Learn's system knowledge must enable diagnostic reasoning, not recite reference documentation. The difference: "skills have four sections" is a fact. "When a skill rule isn't landing in builds, check whether Plan curated it into the Build Brief — Build reads the Brief, not the skill files directly" is diagnostic reasoning. The System Knowledge section teaches Learn to trace issues through the system, not describe the system's structure.
 - The approval checkpoint is the single most important instruction in the template. If the agent executes a close or promote without approval, it's modifying project files unilaterally. The instruction must be unambiguous: present ALL suggestions, wait for approval, THEN execute. No exceptions.
 - Learn must handle the case where health or promote commands don't exist yet (project running an older CLI version). Fallback: read proof_chain.json directly, suggest manual skill file edits.
 - The template must not instruct Learn to read build reports or verify reports. Build and Verify independence is a core architectural constraint. Learn reads the proof chain (the structured output), not the narrative reports.
 
 ### Things to Investigate
 - The exact format for the suggestion list. Should it be a markdown table? Numbered list? Grouped by action type? Study how Verify presents its contract compliance table (table format) and setup presents its confirmation lists (indented text). The format should be scannable — the developer approves a batch, not each item.
-- Learn reads `.ana/context/design-principles.md` at startup. Think reads it for scoping. Plan reads it for spec design. Verify explicitly does NOT read it. Learn needs principles for observation routing — "is this finding worth promoting to a rule?" is a judgment call shaped by the team's values. This is a decided design choice, not an investigation item.
 - How the template handles the transition from structured triage to observation routing. Does Learn explicitly offer? "Triage complete. I can also help route observations you've noticed — anything about the system you'd like to capture?" Or does it just be ready if the developer volunteers? Lean: explicit offer after triage completes.
+- The System Knowledge section's diagnostic patterns. The scope names the key flows (knowledge through pipeline, ownership, agent-skill routing, proof chain field semantics). Plan should identify the 5-6 most important diagnostic reasoning chains and write them as operational instructions, not as exposition. Example chain: "Build ignored a rule → check if rule is in the skill → check if Build loads that skill → check if Plan curated it into the Build Brief → diagnosis: skill gap / curation gap / compliance gap."
+- How much of the installation Learn discovers at startup vs during triage. Reading ana.json and listing skills at startup is fast. Reading every skill file's Rules section at startup is slow (5 files × 30 lines = 150 lines of context before any triage). Lean: read ana.json and skill directory listing at startup, read individual skill files on demand when a specific promotion or observation requires it.
