@@ -1,0 +1,28 @@
+schema: 1
+findings:
+  - category: test
+    summary: "A006 @ana tag on wrong test — tagged on UNVERIFIABLE test (line 241) instead of parseDiffAddedCommentLines removal test"
+    file: "packages/cli/tests/commands/verify.test.ts"
+    line: 241
+    severity: debt
+    suggested_action: accept
+    related_assertions: ["A006"]
+  - category: test
+    summary: "No tests for UNVERIFIED fallback — A014-A018 verified by source inspection only; work.ts, pr.ts, proof.ts UNVERIFIED paths have zero test coverage"
+    file: "packages/cli/src/commands/work.ts"
+    line: 793
+    severity: risk
+    suggested_action: scope
+    related_assertions: ["A014", "A015", "A016", "A017", "A018"]
+  - category: code
+    summary: "PreCheckData interface vestigial — retains assertions/covered/uncovered fields for reading old .saves.json but the code path that used them for assertion bootstrap is deleted"
+    file: "packages/cli/src/utils/proofSummary.ts"
+    line: 99
+    severity: observation
+    suggested_action: monitor
+  - category: code
+    summary: "parseComplianceTable regex omits UNVERIFIED — regex at line 171 matches SATISFIED|UNSATISFIED|DEVIATED|UNCOVERED but not UNVERIFIED. Correct behavior since verify reports never contain UNVERIFIED rows, but the omission could confuse future maintainers who see UNVERIFIED in the type union"
+    file: "packages/cli/src/utils/proofSummary.ts"
+    line: 171
+    severity: observation
+    suggested_action: accept

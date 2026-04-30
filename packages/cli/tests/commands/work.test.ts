@@ -973,12 +973,8 @@ file_changes:
             },
             'pre-check': {
               seal: 'INTACT',
-              assertions: [
-                { id: 'A001', says: 'Creates item successfully', status: 'COVERED' },
-                { id: 'A002', says: 'Returns proper status', status: 'COVERED' }
-              ],
-              covered: 2,
-              uncovered: 0
+              seal_hash: 'sha256:contract456',
+              run_at: '2026-04-01T10:35:00.000Z'
             }
           }),
           'utf-8'
@@ -1776,7 +1772,7 @@ Tests: 5 passed
         await fs.writeFile(path.join(completedPath, '.saves.json'), JSON.stringify({
           'build-report': { saved_at: '2026-04-27T00:00:00Z', hash: 'sha256:' + 'a'.repeat(64) },
           'verify-report': { saved_at: '2026-04-27T00:00:00Z', hash: 'sha256:' + 'b'.repeat(64) },
-          'pre-check': { seal: 'INTACT', assertions: [{ id: 'A001', says: 'Test', status: 'COVERED' }], covered: 1, uncovered: 0 },
+          'pre-check': { seal: 'INTACT', seal_hash: 'sha256:abc', run_at: '2026-04-27T00:00:00Z' },
         }), 'utf-8');
 
         // Write proof chain (as if generated but not committed)
@@ -2007,7 +2003,7 @@ Tests: 5 passed
         await fs.writeFile(path.join(completedPath, '.saves.json'), JSON.stringify({
           'build-report': { saved_at: '2026-04-27T00:00:00Z', hash: 'sha256:' + 'a'.repeat(64) },
           'verify-report': { saved_at: '2026-04-27T00:00:00Z', hash: 'sha256:' + 'b'.repeat(64) },
-          'pre-check': { seal: 'INTACT', assertions: [{ id: 'A001', says: 'Test', status: 'COVERED' }], covered: 1, uncovered: 0 },
+          'pre-check': { seal: 'INTACT', seal_hash: 'sha256:abc', run_at: '2026-04-27T00:00:00Z' },
         }), 'utf-8');
 
         await fs.writeFile(path.join(anaDir, 'proof_chain.json'), JSON.stringify({

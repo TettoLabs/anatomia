@@ -43,7 +43,7 @@ describe('generateProofSummary', () => {
   });
 
   it('reads all four sources and returns complete summary', async () => {
-    // Create .saves.json with pre-check data
+    // Create .saves.json with timing data (pre-check data is vestigial)
     const saves = {
       scope: {
         saved_at: '2026-04-01T10:00:00Z',
@@ -67,14 +67,8 @@ describe('generateProofSummary', () => {
       },
       'pre-check': {
         seal: 'INTACT',
-        seal_commit: 'def456',
-        assertions: [
-          { id: 'A001', says: 'Payment returns success', status: 'COVERED' },
-          { id: 'A002', says: 'Client secret included', status: 'COVERED' },
-          { id: 'A003', says: 'Webhook updates order', status: 'UNCOVERED' },
-        ],
-        covered: 2,
-        uncovered: 1,
+        seal_hash: 'sha256:contract456',
+        run_at: '2026-04-01T10:35:00Z',
       },
     };
     await fs.promises.writeFile(path.join(slugDir, '.saves.json'), JSON.stringify(saves));
@@ -133,8 +127,6 @@ file_changes:
     expect(summary.result).toBe('PASS');
     expect(summary.assertions).toHaveLength(3);
     expect(summary.contract.total).toBe(3);
-    expect(summary.contract.covered).toBe(2);
-    expect(summary.contract.uncovered).toBe(1);
     expect(summary.contract.satisfied).toBe(2);
     expect(summary.contract.deviated).toBe(1);
     expect(summary.deviations).toHaveLength(1);
@@ -146,19 +138,8 @@ file_changes:
     expect(summary.acceptance_criteria.met).toBe(2);
   });
 
-  it('handles missing verify report gracefully', async () => {
-    // Only .saves.json and contract.yaml
-    const saves = {
-      'pre-check': {
-        assertions: [
-          { id: 'A001', says: 'Test assertion', status: 'COVERED' },
-        ],
-        covered: 1,
-        uncovered: 0,
-      },
-    };
-    await fs.promises.writeFile(path.join(slugDir, '.saves.json'), JSON.stringify(saves));
-
+  // @ana A010, A011
+  it('handles missing verify report — bootstraps from contract.yaml', async () => {
     const contract = `
 version: "1.0"
 feature: "Test Feature"
@@ -176,8 +157,9 @@ file_changes:
     expect(summary.feature).toBe('Test Feature');
     expect(summary.result).toBe('UNKNOWN');
     expect(summary.assertions).toHaveLength(1);
-    expect(summary.assertions[0]!.preCheckStatus).toBe('COVERED');
     expect(summary.assertions[0]!.verifyStatus).toBeNull();
+    // preCheckStatus no longer exists on ProofAssertion
+    expect((summary.assertions[0] as unknown as Record<string, unknown>)['preCheckStatus']).toBeUndefined();
   });
 
   it('handles missing .saves.json gracefully', async () => {
@@ -200,7 +182,7 @@ file_changes:
     expect(summary.hashes).toEqual({});
     expect(summary.timing.total_minutes).toBe(0);
     expect(summary.assertions).toHaveLength(1);
-    expect(summary.assertions[0]!.preCheckStatus).toBe('UNCOVERED');
+    expect(summary.assertions[0]!.verifyStatus).toBeNull();
   });
 
   it('parses deviations from build report', async () => {
@@ -244,21 +226,24 @@ file_changes:
     expect(summary.deviations[1]!.contract_id).toBe('A002');
   });
 
-  it('merges pre-check and verify statuses', async () => {
-    // Pre-check: A001 COVERED, A002 UNCOVERED
-    const saves = {
-      'pre-check': {
-        assertions: [
-          { id: 'A001', says: 'First', status: 'COVERED' },
-          { id: 'A002', says: 'Second', status: 'UNCOVERED' },
-        ],
-        covered: 1,
-        uncovered: 1,
-      },
-    };
-    await fs.promises.writeFile(path.join(slugDir, '.saves.json'), JSON.stringify(saves));
+  // @ana A012, A013, A019
+  it('overlays verify statuses onto contract-bootstrapped assertions', async () => {
+    // Contract as assertion source
+    const contract = `
+version: "1.0"
+feature: "Test Feature"
+assertions:
+  - id: A001
+    says: "First"
+  - id: A002
+    says: "Second"
+file_changes:
+  - path: "test.ts"
+    action: create
+`;
+    await fs.promises.writeFile(path.join(slugDir, 'contract.yaml'), contract);
 
-    // Verify: A001 SATISFIED
+    // Verify: A001 SATISFIED, A002 UNCOVERED (backward compat)
     const verifyReport = `# Verify Report
 
 **Result:** PASS
@@ -276,13 +261,16 @@ file_changes:
     expect(summary.assertions).toHaveLength(2);
 
     const a001 = summary.assertions.find(a => a.id === 'A001');
-    expect(a001?.preCheckStatus).toBe('COVERED');
     expect(a001?.verifyStatus).toBe('SATISFIED');
     expect(a001?.evidence).toBe('test line 10');
 
     const a002 = summary.assertions.find(a => a.id === 'A002');
-    expect(a002?.preCheckStatus).toBe('UNCOVERED');
+    // Old verify reports with UNCOVERED status parse correctly
     expect(a002?.verifyStatus).toBe('UNCOVERED');
+
+    // No covered/uncovered fields on contract
+    expect((summary.contract as Record<string, unknown>)['covered']).toBeUndefined();
+    expect((summary.contract as Record<string, unknown>)['uncovered']).toBeUndefined();
   });
 
   it('computes timing from save timestamps', async () => {

@@ -1195,7 +1195,8 @@ file_changes:
         console.warn = originalWarn;
       }
 
-      expect(warnings.some(w => w.includes('UNCOVERED'))).toBe(true);
+      // No UNCOVERED warnings — tag coverage removed, seal-only pre-check
+      expect(warnings.some(w => w.includes('UNCOVERED'))).toBe(false);
       expect(isFileCommitted('.ana/plans/active/test-slug/verify_report.md')).toBe(true);
     });
 
@@ -1219,13 +1220,16 @@ file_changes:
       await createArtifact('test-slug', 'verify_report.md', getValidVerifyReport());
       saveArtifact('verify-report', 'test-slug');
 
-      // Read .saves.json and verify pre-check key exists
+      // Read .saves.json and verify pre-check key exists (seal-only)
       const saves = JSON.parse(await fs.readFile(savesPath, 'utf-8'));
       expect(saves['pre-check']).toBeDefined();
       expect(saves['pre-check'].seal).toBe('INTACT');
-      expect(saves['pre-check'].seal_commit).toBeUndefined();
-      expect(saves['pre-check'].assertions).toBeDefined();
+      expect(saves['pre-check'].seal_hash).toBeDefined();
       expect(saves['pre-check'].run_at).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
+      // No assertions, covered, or uncovered in seal-only data
+      expect(saves['pre-check'].assertions).toBeUndefined();
+      expect(saves['pre-check'].covered).toBeUndefined();
+      expect(saves['pre-check'].uncovered).toBeUndefined();
     });
   });
 
@@ -1850,13 +1854,14 @@ file_changes:
 
     saveAllArtifacts('test-slug');
 
-    // Read .saves.json and verify pre-check data
+    // Read .saves.json and verify pre-check data (seal-only)
     const savesPath = path.join(slugDir, '.saves.json');
     const saves = JSON.parse(await fs.readFile(savesPath, 'utf-8'));
     expect(saves['pre-check']).toBeDefined();
     expect(saves['pre-check'].seal).toBe('INTACT');
-    expect(saves['pre-check'].assertions).toBeDefined();
-    expect(saves['pre-check'].covered).toBeGreaterThanOrEqual(0);
+    // No assertions, covered, or uncovered in seal-only data
+    expect(saves['pre-check'].assertions).toBeUndefined();
+    expect(saves['pre-check'].covered).toBeUndefined();
   });
 
   // @ana A025, A027, A028

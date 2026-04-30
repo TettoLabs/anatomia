@@ -53,7 +53,7 @@ export interface ProofChainEntry {
   assertions: Array<{
     id: string;
     says: string;
-    status: 'SATISFIED' | 'UNSATISFIED' | 'DEVIATED' | 'UNCOVERED';
+    status: 'SATISFIED' | 'UNSATISFIED' | 'DEVIATED' | 'UNCOVERED' | 'UNVERIFIED';
     deviation?: string;
   }>;
   acceptance_criteria: ProofSummary['acceptance_criteria'];

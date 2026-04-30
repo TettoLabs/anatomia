@@ -1,0 +1,10 @@
+schema: 1
+concerns:
+  - summary: "Old .saves.json entries with pre-check assertion data are vestigial — PreCheckData interface retained but code path deleted"
+    file: "packages/cli/src/utils/proofSummary.ts"
+    severity: observation
+    suggested_action: monitor
+  - summary: "ProofChainEntry fixtures in work.test.ts still contain covered/uncovered in contract objects — JSON data not type-checked"
+    file: "packages/cli/tests/commands/work.test.ts"
+    severity: debt
+    suggested_action: accept
