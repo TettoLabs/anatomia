@@ -1,6 +1,6 @@
 # Verify Report: Proof Promote
 
-**Result:** FAIL
+**Result:** PASS
 **Created by:** AnaVerify
 **Date:** 2026-04-29
 **Spec:** .ana/plans/active/proof-promote/spec.md
@@ -10,7 +10,7 @@
 
 ```
 === CONTRACT COMPLIANCE ===
-  Contract: .ana/plans/active/proof-promote/contract.yaml
+  Contract: /Users/rsmith/Projects/anatomia_project/anatomia/.ana/plans/active/proof-promote/contract.yaml
   Seal: INTACT (hash sha256:ab254390fe81a060089e954562ddbc9ce6f385523a1a96a7fa9d7ce5a5df2537)
 
   A001  ✓ COVERED  "Promoting a finding changes its status to promoted in the proof chain"
@@ -49,9 +49,7 @@
 
 Seal: INTACT. All 30 assertions tagged (COVERED).
 
-Tests: 1733 passed, 0 failed, 2 skipped (97 test files). Build: passed. Lint: 0 errors (14 warnings, none in new code).
-
-Note: initial full-suite run showed 21 failures in proof promote tests — not reproducible on subsequent runs. Two consecutive full-suite runs passed clean. Likely an environment race from the branch checkout; not a regression.
+Tests: 1733 passed, 0 failed, 2 skipped (97 test files). Build: passed. Lint: 0 errors (14 warnings, all pre-existing in unrelated files).
 
 ## Contract Compliance
 
@@ -64,9 +62,9 @@ Note: initial full-suite run showed 21 failures in proof promote tests — not r
 | A005 | Without custom text, the finding summary becomes the skill rule | ✅ SATISFIED | proof.test.ts:1829, reads skill file, asserts `toContain('- Missing request validation')` |
 | A006 | Custom text overrides the finding summary in the skill rule | ✅ SATISFIED | proof.test.ts:1845, asserts skill file contains `- Always validate request bodies before processing` |
 | A007 | JSON output shows the actual rule text that was written | ✅ SATISFIED | proof.test.ts:1856, parses JSON, asserts `rule_text` contains `Always validate request bodies` |
-| A008 | Omitting the skill flag produces an error listing available skills | ✅ SATISFIED | proof.test.ts:1868, asserts `exitCode !== 0` (contract target: exitCode, matcher: not_equals, value: 0) |
-| A009 | The missing-skill error lists available skill names | ❌ UNSATISFIED | proof.test.ts:1870 asserts `stderr.toContain('skill')` but contract requires `stderr` contains `coding-standards`. Commander's `requiredOption` error is `required option '--skill <skill>' not specified` — does not list available skills. Live-verified. |
-| A010 | The missing-skill error returns SKILL_REQUIRED in JSON mode | ❌ UNSATISFIED | proof.test.ts:1878 only asserts `exitCode !== 0`. Contract requires `json.error.code === 'SKILL_REQUIRED'`. Commander exits before the action handler — no JSON is output. Live-verified. |
+| A008 | Omitting the skill flag produces an error listing available skills | ✅ SATISFIED | proof.test.ts:1867, asserts `exitCode !== 0`. Contract: exitCode not_equals 0. |
+| A009 | The missing-skill error lists available skill names | ✅ SATISFIED | proof.test.ts:1868, asserts `stderr.toContain('coding-standards')`. Contract: stderr contains `coding-standards`. The `!options.skill` guard at proof.ts:625 fires exitError('SKILL_REQUIRED', ...) which prints available skills via globSync. |
+| A010 | The missing-skill error returns SKILL_REQUIRED in JSON mode | ✅ SATISFIED | proof.test.ts:1878-1879, parses `JSON.parse(stdout)`, asserts `json.error.code.toBe('SKILL_REQUIRED')`. Contract: json.error.code equals SKILL_REQUIRED. |
 | A011 | Targeting a nonexistent skill produces a clear error | ✅ SATISFIED | proof.test.ts:1893, parses JSON, asserts `json.error.code === 'SKILL_NOT_FOUND'` |
 | A012 | The section flag can target the Gotchas section instead of Rules | ✅ SATISFIED | proof.test.ts:1918-1921, verifies rule index is between Gotchas and Examples headings |
 | A013 | When targeting Gotchas, the Rules section is unchanged | ✅ SATISFIED | proof.test.ts:1927, slices Rules section, asserts `not.toContain('Missing request validation')` |
@@ -88,91 +86,87 @@ Note: initial full-suite run showed 21 failures in proof promote tests — not r
 | A029 | A skill file missing the target section produces a clear error | ✅ SATISFIED | proof.test.ts:2121, parses JSON, asserts `json.error.code === 'SECTION_NOT_FOUND'` |
 | A030 | A lesson finding can be promoted to a skill rule | ✅ SATISFIED | proof.test.ts:2136, reads chain, asserts `finding.status === 'promoted'` |
 
-**28 SATISFIED · 2 UNSATISFIED (A009, A010)**
+**30 SATISFIED · 0 UNSATISFIED**
 
 ## Independent Findings
 
-The builder used Commander's `requiredOption('--skill <skill>')` instead of making `--skill` optional and validating it manually in the action handler. This is a clean Commander pattern — `requiredOption` produces better help text and usage docs. But it means Commander exits with its own error message before the action handler runs, making two contract assertions unreachable:
+The builder's fix was surgical: changed `.requiredOption('--skill <skill>', ...)` to `.option('--skill <skill>', ...)` and updated the two test assertions for A009/A010. The manual validation guard at line 624-628 (`if (!options.skill)`) now fires correctly, routing through the `exitError('SKILL_REQUIRED', ...)` path that was already fully implemented. Both the human-readable output (listing available skills) and JSON envelope (`SKILL_REQUIRED` error code) now work as specified.
 
-- A009 expects stderr to contain "coding-standards" (the available skills list). Commander says `error: required option '--skill <skill>' not specified`. No skill names listed.
-- A010 expects JSON error code `SKILL_REQUIRED`. Commander exits before the handler, so no JSON envelope is emitted.
+The implementation is structurally sound. The close-subcommand lifecycle pattern is faithfully replicated: branch check → pull → read chain → find finding → validate → mutate → write chain → dashboard → commit → push → output. Section boundary detection, placeholder replacement, and duplicate detection logic are all clean.
 
-The builder's exitError handler includes dead code for the `SKILL_REQUIRED` case (proof.ts:601-603, 624-628). The belt-and-suspenders `if (!options.skill)` check at line 624 is unreachable because `requiredOption` guarantees `skill` is always set when the action runs.
+**Over-building check:** No scope creep. No unused exports. The `INVALID_SECTION` error code (line 639) is defensive coding not in the contract — reasonable, not a concern. All exported functions from new code are used.
 
-**Fix path:** Change `requiredOption` to `option` and rely on the manual validation at line 624-628. The `exitError('SKILL_REQUIRED', ...)` path already implements the contract behavior — it lists available skills and outputs JSON. It just never fires.
+**Prediction resolution:**
+1. `--skill ""` bypass — Not found. Commander passes empty string, but `!options.skill` is truthy for empty string... actually, in JS `!""` is `true`, so an empty string skill would correctly hit SKILL_REQUIRED. Safe.
+2. Glob failure if no `.claude/skills/` — Not found. `globSync` returns `[]`, doesn't throw.
+3. Dead `requiredOption` comments — Not found. Clean change, no leftover artifacts.
+4. A009 false positive — Not found. The test fixture creates a `coding-standards` skill directory, and the glob discovers it. The stderr output contains the skill name from the available skills list.
+5. Tab-only `--text` — Safe. `.trim()` handles tabs and whitespace.
 
-### Code quality
+## Previous Findings Resolution
 
-The implementation is structurally sound. It follows the close subcommand's pattern faithfully: branch check → pull → read chain → find finding → validate → mutate → write → dashboard → commit → push → output. The two additions (skill file I/O and duplicate detection) are cleanly integrated.
+### Previously UNSATISFIED Assertions
+| ID | Previous Issue | Current Status | Resolution |
+|----|----------------|----------------|------------|
+| A009 | Test asserted `stderr.toContain('skill')` — Commander's error didn't list skill names | ✅ SATISFIED | Builder changed `requiredOption` to `option`; test now asserts `stderr.toContain('coding-standards')` (line 1868) |
+| A010 | Test only checked `exitCode !== 0` — Commander exited before JSON output | ✅ SATISFIED | Builder changed `requiredOption` to `option`; test now parses JSON and asserts `json.error.code.toBe('SKILL_REQUIRED')` (line 1879) |
 
-Section boundary detection (line 742-743) correctly handles the "last section in file" edge case with `nextSectionIdx === -1 ? skillContent.length : nextSectionIdx`. Placeholder replacement (line 762-768) uses a multiline regex that handles trailing content variations correctly.
-
-Duplicate detection (lines 748-758) uses word-set overlap with the smaller set as denominator, guarded against zero-size sets. The `> 0.5` threshold matches the spec's ">50% of words" requirement.
-
-### Over-building check
-
-No scope creep detected. The implementation adds exactly what the spec calls for — no extra parameters, no unused exports, no speculative features. The `INVALID_SECTION` error code (line 639) is reasonable defensive coding though not explicitly in the contract — it prevents runtime errors from invalid `--section` values. Not a concern.
-
-### Prediction resolution
-
-1. **Embedded quotes in `--text`** — Not found. Shell strips the outer quotes in the `execSync` call, passing clean text.
-2. **Duplicate detection with short texts** — Not found. `smallerSize > 0` guard prevents division by zero.
-3. **`rule_text` includes `- ` prefix** — Confirmed. `rule_text` is `- {text}`. Contract uses `contains` matcher so this passes, but the stored value differs from what a human might expect as "rule text" vs "formatted rule line".
-4. **Placeholder at EOF** — Not found. Code handles EOF boundary correctly.
-5. **No test for invalid section** — Confirmed. No test for `--section invalid`, but implementation handles it (line 638-641). Minor gap, not a blocker.
-
-**Surprised:** The `requiredOption` vs manual validation choice was the most significant finding — it creates dead code and makes two contract assertions mechanically unsatisfiable.
+### Previous Findings
+| Finding | Status | Notes |
+|---------|--------|-------|
+| Dead SKILL_REQUIRED error path (requiredOption prevented firing) | Fixed | `requiredOption` changed to `option`; manual `if (!options.skill)` guard at line 625 now reaches exitError |
+| A009 test asserts wrong value | Fixed | Test now asserts `toContain('coding-standards')` matching contract |
+| A010 test doesn't verify JSON | Fixed | Test now parses stdout and asserts `json.error.code === 'SKILL_REQUIRED'` |
+| rule_text includes formatting prefix | Still present | Design choice matching spec mockup — accepted |
+| Contract A009/A010 assume manual validation | No longer applicable | Contract and implementation now aligned after `option()` change |
+| Proof chain JSON cosmetic diff | Still present | Not introduced by promote — pre-existing unicode normalization artifact |
 
 ## AC Walkthrough
 
-- **AC1** (core promote lifecycle): ✅ PASS — Live-tested. Finding status changes, promoted_to set, dashboard regenerated, three files staged, commit message correct. Verified via `node dist/index.js proof promote F001 --skill coding-standards` in temp project.
-- **AC2** (default rule text from summary): ✅ PASS — Live-tested. Skill file shows `- test finding` appended to Rules section.
-- **AC3** (custom --text): ✅ PASS — Live-tested. `--text "Custom rule text here"` writes custom text; JSON `rule_text` includes it.
-- **AC4** (--skill required): ❌ FAIL — Commander's `requiredOption` intercepts before the action handler. The error says `required option '--skill <skill>' not specified` — it does NOT list available skills and does NOT output SKILL_REQUIRED in JSON mode. Contract A009 and A010 are unsatisfied.
-- **AC5** (skill not found): ✅ PASS — `--skill data-access` produces SKILL_NOT_FOUND with available skills listed. Verified in test and live.
-- **AC6** (--section gotchas): ✅ PASS — Test at 1908-1928 verifies rule lands in Gotchas section between headings, not in Rules.
-- **AC7** (already promoted): ✅ PASS — F004 (status: promoted) produces ALREADY_PROMOTED with promoted_to path.
-- **AC8** (already closed + --force): ✅ PASS — F003 (status: closed) rejected without --force (ALREADY_CLOSED), succeeds with --force, transitions to promoted.
-- **AC9** (JSON envelope): ✅ PASS — Four-key envelope verified: command, timestamp, results (finding, promoted_to, rule_text), meta (chain_runs, findings breakdown). Live-verified.
-- **AC10** (duplicate detection): ✅ PASS — Skill file with "Missing request validation check" triggers "Similar rule exists" warning when promoting finding with "Missing request validation". Exit code still 0.
-- **AC11** (placeholder replacement): ✅ PASS — `*Not yet captured*` replaced by rule. No append.
-- **AC12** (commit message format): ✅ PASS — `git log -1` shows `[proof] Promote F001 to coding-standards`.
-- **AC13** (branch check): ✅ PASS — Wrong branch produces WRONG_BRANCH error. Live-verified.
+- **AC1** (core promote lifecycle): ✅ PASS — Test at 1794-1816 verifies status→promoted, promoted_to set, dashboard regenerated, commit message correct. All assertions verified against contract.
+- **AC2** (default rule text from summary): ✅ PASS — Test at 1821-1832 verifies `- Missing request validation` appended to Rules section, existing rule preserved.
+- **AC3** (custom --text): ✅ PASS — Test at 1837-1857 verifies custom text in skill file and JSON `rule_text` field.
+- **AC4** (--skill required): ✅ PASS — Tests at 1861-1881 verify: non-zero exit code, stderr contains `coding-standards` (available skill name), and JSON mode returns `SKILL_REQUIRED` error code. The `option()` + manual validation approach satisfies all three contract assertions (A008, A009, A010).
+- **AC5** (skill not found): ✅ PASS — Test at 1884-1903 verifies SKILL_NOT_FOUND in JSON and human error message.
+- **AC6** (--section gotchas): ✅ PASS — Test at 1907-1928 verifies rule lands in Gotchas section between headings, not in Rules.
+- **AC7** (already promoted): ✅ PASS — Test at 1932-1947 verifies ALREADY_PROMOTED with promoted_to path in stderr.
+- **AC8** (already closed + --force): ✅ PASS — Tests at 1951-1988 verify ALREADY_CLOSED without force, success with --force, status transitions to promoted.
+- **AC9** (JSON envelope): ✅ PASS — Test at 1992-2007 verifies four-key envelope: command, timestamp, results.promoted_to, meta.chain_runs.
+- **AC10** (duplicate detection): ✅ PASS — Tests at 2011-2051 verify warning emitted on >50% word overlap, exit code 0, and JSON mode includes duplicate_warning field.
+- **AC11** (placeholder replacement): ✅ PASS — Test at 2055-2074 verifies `*Not yet captured*` replaced, rule appears in its place.
+- **AC12** (commit message format): ✅ PASS — Test at 1814-1815 verifies `[proof] Promote F001 to coding-standards`.
+- **AC13** (branch check): ✅ PASS — Test at 2078-2088 verifies WRONG_BRANCH error code.
 - **AC14** (tests pass): ✅ PASS — 1733 passed, 0 failed, 2 skipped.
-- **AC15** (no build errors): ✅ PASS — `pnpm run build` succeeds.
-- **AC16** (empty text): ✅ PASS — `--text "  "` (whitespace-only) produces TEXT_EMPTY.
-- **AC17** (missing section): ✅ PASS — Skill file without `## Rules` produces SECTION_NOT_FOUND.
+- **AC15** (no build errors): ✅ PASS — `pnpm run build` succeeds with full TURBO cache.
+- **AC16** (empty text): ✅ PASS — Test at 2092-2103 verifies TEXT_EMPTY error code with whitespace-only text.
+- **AC17** (missing section): ✅ PASS — Test at 2107-2122 verifies SECTION_NOT_FOUND error code.
 
 ## Blockers
 
-AC4 fails because Commander's `requiredOption` intercepts the missing `--skill` error before the action handler runs, making contract assertions A009 and A010 mechanically unsatisfiable. The fix is a one-line change: replace `.requiredOption('--skill <skill>', ...)` with `.option('--skill <skill>', ...)` so the manual validation at line 624-628 handles it instead. The SKILL_REQUIRED error path is already fully implemented — it just never fires.
+No blockers. All 30 contract assertions satisfied, all 17 acceptance criteria pass. The two previously-UNSATISFIED assertions (A009, A010) are now SATISFIED after the `requiredOption → option` fix. Checked for: unused exports in new code (none — promote is registered via `addCommand`), unhandled error paths (all error codes have test coverage), sentinel tests (every tagged test asserts specific values matching contract matchers), unused parameters in the action handler (all used), and assumptions about external state (git remote check handles no-remote case gracefully).
 
 ## Findings
 
-- **Code — Dead SKILL_REQUIRED error path:** `packages/cli/src/commands/proof.ts:601-603,624-628` — The exitError handler for SKILL_REQUIRED (lists available skills, outputs JSON) and the belt-and-suspenders `if (!options.skill)` check are unreachable because `requiredOption` guarantees the option is present. Change `requiredOption` to `option` to activate this code path and satisfy A009/A010.
+- **Code — `options.skill` typed as non-optional string despite being optional:** `packages/cli/src/commands/proof.ts:578` — The action handler signature types `skill` as `string`, but after changing from `requiredOption` to `option`, it can be `undefined`. The `if (!options.skill)` guard at line 625 catches this at runtime, but TypeScript's type system doesn't know — `skill` should be typed as `string | undefined` for correctness. Currently safe because the guard fires before any use, but a future refactor that moves the guard could introduce a runtime error without a type error.
 
-- **Test — A009 test asserts wrong value:** `packages/cli/tests/commands/proof.test.ts:1870` — asserts `stderr.toContain('skill')` but contract A009 requires `stderr` to contain `coding-standards`. Even after the `requiredOption` → `option` fix, the test assertion needs updating to check for the available skill name, not just the word "skill".
+- **Code — `rule_text` includes `- ` markdown prefix in JSON output:** `packages/cli/src/commands/proof.ts:841` — `rule_text` is set to `ruleLine` which includes the `- ` bullet prefix. The spec mockup shows this format (`"rule_text": "- Missing request validation"`), so it matches intent. Downstream consumers that want the raw text will need to strip the prefix. Design choice, not a bug — noted for API documentation. Still present from previous verification.
 
-- **Test — A010 test doesn't verify JSON:** `packages/cli/tests/commands/proof.test.ts:1878` — Only checks `exitCode !== 0`. Contract A010 requires `json.error.code === 'SKILL_REQUIRED'`. After the `requiredOption` → `option` fix, this test needs to parse stdout and assert on the error code.
+- **Test — A006 custom text test uses shell-escaped quotes:** `packages/cli/tests/commands/proof.test.ts:1841` — The `--text` value is passed as `'"Always validate request bodies before processing"'`, wrapping the text in double quotes that survive into the assertion. The test still satisfies A006 because the contract matcher is `contains` and the value matches. But it means the test exercises the quoted-string path rather than raw text. Minor — the assertion is correct.
 
-- **Code — `rule_text` includes formatting prefix:** `packages/cli/src/commands/proof.ts:842` — `rule_text` is set to `ruleLine` which is `- {text}`, including the markdown bullet prefix. The spec mockup shows `"rule_text": "- Missing request validation"` so this matches spec intent, but downstream consumers will need to strip the `- ` prefix to get the raw text. This is a design choice, not a bug — noting it for the next cycle.
+- **Code — No summary truncation in human-readable promote output:** `packages/cli/src/commands/proof.ts:853` — Long finding summaries (up to 1000 chars) render untruncated in the `✓ Promoted {id}` output line. Known issue from proof chain context (also affects audit and health commands). Not a crash risk but degrades terminal readability for verbose findings.
 
-- **Upstream — Contract A009/A010 assume manual validation:** The contract specifies that omitting `--skill` produces contextual help listing available skills and a SKILL_REQUIRED JSON code. This assumes the command handles the missing option manually. When `requiredOption` is used, Commander produces a different (and arguably cleaner) error. The contract and spec should note that Commander integration changes the error surface.
-
-- **Code — Proof chain JSON has cosmetic diff:** `.ana/proof_chain.json` diff shows unicode em-dash normalization (`\u2014` → `—`). Not introduced by the promote feature — likely an artifact of JSON parse/serialize through a different locale or tool version. Harmless but produces noise in the diff.
+- **Upstream — Proof chain JSON cosmetic diff from unicode em-dash normalization:** `.ana/proof_chain.json` — Still present from previous verification. Pre-existing artifact from JSON parse/serialize, not introduced by promote. Produces diff noise but no functional impact.
 
 ## Deployer Handoff
 
-The promote subcommand works correctly for all paths except the missing-`--skill` error case, which is handled by Commander instead of the custom error handler. The fix is small (one-line command definition change + two test assertion updates). After fix:
+The promote subcommand is complete and all contract assertions are satisfied. The `requiredOption → option` fix from the previous rejection is clean — one command definition change and two test assertion updates, no side effects.
 
-1. The `requiredOption` → `option` change activates the SKILL_REQUIRED code path
-2. Test for A009 needs `expect(stderr).toContain('coding-standards')`
-3. Test for A010 needs `const json = JSON.parse(stdout); expect(json.error.code).toBe('SKILL_REQUIRED')`
+Test count: 1733 passed (up from 1657 baseline — 76 new tests for promote). No regressions. Build and lint clean.
 
-Test count: 1733 passed (up from 1657 baseline — 76 new tests). No regressions detected. Build clean, lint clean.
+The `options.skill` type mismatch (typed as `string` but can be `undefined`) is worth a follow-up type fix but doesn't affect runtime safety — the guard at line 625 catches it before any use.
 
 ## Verdict
 
-**Shippable:** NO
+**Shippable:** YES
 
-2 of 30 contract assertions unsatisfied (A009, A010). 1 of 17 acceptance criteria failed (AC4). The root cause is a one-line command definition choice (`requiredOption` vs `option`). The correct error handling code exists but is unreachable. Fix is mechanical.
+30 of 30 contract assertions satisfied. 17 of 17 acceptance criteria pass. Both previously-UNSATISFIED assertions (A009, A010) now satisfied after the builder's fix. Tests pass, build clean, lint clean. No regressions. The implementation faithfully follows the close subcommand's lifecycle pattern with clean additions for skill file mutation and duplicate detection.
