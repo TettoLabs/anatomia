@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-28 runs · 66 active · 26 lessons · 0 promoted · 45 closed
+28 runs · 65 active · 26 lessons · 0 promoted · 46 closed
 
 ## Hot Modules
 
@@ -8,7 +8,7 @@
 |------|--------|--------|
 | packages/cli/src/utils/proofSummary.ts | 11 | 7 |
 | packages/cli/tests/commands/work.test.ts | 9 | 6 |
-| packages/cli/tests/utils/proofSummary.test.ts | 8 | 4 |
+| packages/cli/tests/utils/proofSummary.test.ts | 7 | 4 |
 | packages/cli/src/commands/proof.ts | 5 | 4 |
 | packages/cli/src/commands/work.ts | 5 | 4 |
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 66 total)
+## Active Findings (30 shown of 65 total)
 
 ### packages/cli/src/commands/artifact.ts
 
@@ -72,9 +72,9 @@
 - **test:** Test name 'shows maintenance line when findings were auto-closed' is now inverted — assertions check not.toContain('Maintenance:') but name says 'shows' — *Harden git commit calls*
 - **test:** @ana tag collision: A001-A005 tags in work.test.ts match previous features' contracts, not this one. Pre-check reports COVERED for spawnSync assertions but no tagged test actually verifies spawnSync usage. Spec says no new unit tests needed; source verification confirms correctness. — *Harden git commit calls*
 - **test:** A011 assertion checks one value not cleared state: `packages/cli/tests/commands/work.test.ts:1447` — asserts `closed_reason` is not `'superseded by new-C1'` but doesn't assert `closed_at` or `closed_by` are also cleared. The test proves the specific contract assertion (matcher: `not_equals`, value: `'superseded by new-C1'`) but a stronger test would verify all three closure fields are absent. — *Fix Proof Chain Mechanical Accuracy*
+- **test:** A020 uses source-code reading instead of behavioral test: `packages/cli/tests/commands/work.test.ts:1736` — reads `work.ts` source and asserts the retry string exists. This proves the string is in the code but not that it appears in the error output when a commit actually fails. A behavioral test would mock `execSync` to throw on `git commit` and capture stderr. Low risk — the error path is straightforward (`catch` → `console.error` → `process.exit(1)`), but a source-reading test survives refactoring that breaks the behavior. — *Fix artifact save bypass, cwd bug, and work complete crash recovery*
 
 ### packages/cli/tests/utils/proofSummary.test.ts
 
-- **test:** Pre-check tag collision — A001-A009 COVERED via tags from prior contracts, not new tags — *Clean Ground for Foundation 3*
 - **test:** vi.mock('glob') adds file-level module mock — correct for spying but implicit coupling to all glob-using tests — *Clean Ground for Foundation 3*
 
