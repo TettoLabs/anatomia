@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-35 runs · 70 active · 30 lessons · 0 promoted · 69 closed
+35 runs · 69 active · 30 lessons · 0 promoted · 70 closed
 
 ## Hot Modules
 
@@ -16,11 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 70 total)
-
-### packages/cli/src/commands/artifact.ts
-
-- **code:** captureModulesTouched warning includes raw error message in output — could leak internal paths or stack traces to terminal — *Harden Hot Files*
+## Active Findings (30 shown of 69 total)
 
 ### packages/cli/src/commands/proof.ts
 
@@ -44,6 +40,7 @@
 - **code:** Stale comment references deleted reopen loop — *Delete backward-compatibility code*
 - **code:** Recovery path console.log on line 1078 leaks non-JSON text to stdout before JSON envelope — CI consumers doing JSON.parse(stdout) will fail — *Work Complete JSON + Proof Card Findings*
 - **code:** Main path re-reads proof_chain.json from disk for computeChainHealth after writeProofChain just wrote it — matches known build concern about nudge re-read pattern — *Work Complete JSON + Proof Card Findings*
+- **code:** Severity migration does not handle unexpected old values beyond blocker/note — if a future writer introduces an unknown severity value (e.g. from a malformed manual edit), the migration loop silently ignores it. Not blocking since validation prevents new bad values, but the migration is only protective for known old values. — *Finding Enrichment Schema*
 
 ### packages/cli/src/utils/proofSummary.ts
 
