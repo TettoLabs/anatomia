@@ -30,16 +30,16 @@ Promote follows the close command's pattern exactly — branch check, pull, read
 **Duplicate detection.** Before appending, check existing rules in the target section for word overlap. If any existing rule shares >50% of words with the new rule text, warn but don't block. The developer decides whether to proceed. In `--json` mode, the warning appears as a `duplicate_warning` field in results, not as a stderr message.
 
 ## Acceptance Criteria
-- AC1: `ana proof promote {id} --skill {name}` transitions the finding's status to `promoted`, sets `promoted_to` to the skill file path, regenerates the dashboard, and commits proof_chain.json + PROOF_CHAIN.md + the skill file
+- AC1: `ana proof promote {id} --skill {name}` transitions the finding's status to `promoted`, sets `promoted_to` to the skill file path, regenerates the dashboard, and stages three files explicitly: `git add .ana/proof_chain.json .ana/PROOF_CHAIN.md .claude/skills/{name}/SKILL.md`. The skill file is outside `.ana/` — this is intentional, the promoted rule is a real code change
 - AC2: Without `--text`, the finding's summary is appended verbatim as a bulleted rule (`- {summary}`) to the target section
 - AC3: With `--text "..."`, the provided text is appended instead of the summary. The `rule_text` field in `--json` output shows what was actually written
-- AC4: `--skill` is required. Omitting it produces a `SKILL_REQUIRED` error with contextual help listing available skills
+- AC4: `--skill` is required. Omitting it produces a `SKILL_REQUIRED` error with contextual help listing available skills (discovered by globbing `.claude/skills/*/SKILL.md` at the project root)
 - AC5: `--skill {name}` resolves to `.claude/skills/{name}/SKILL.md`. If the file doesn't exist, produces `SKILL_NOT_FOUND` error
 - AC6: `--section gotchas` appends to `## Gotchas` instead of `## Rules`. Default is Rules. Only `rules` and `gotchas` are valid values
 - AC7: Promoting a finding with `status: promoted` produces `ALREADY_PROMOTED` error showing the previous `promoted_to` path
 - AC8: Promoting a finding with `status: closed` produces `ALREADY_CLOSED` error. `--force` overrides and allows promotion of a closed finding (the observation may still be worth encoding even though the specific instance was resolved)
 - AC9: `--json` output follows the four-key envelope: `command: "proof promote"`, `results` containing `finding` (id, category, summary, file, severity, suggested_action), `promoted_to`, `rule_text`, and optionally `duplicate_warning`
-- AC10: Duplicate detection — if an existing rule in the target section shares >50% of words (case-insensitive, after splitting on whitespace) with the new rule text, a warning is emitted but the promotion proceeds. The developer decides
+- AC10: Duplicate detection — if an existing rule in the target section shares >50% of words (case-insensitive, after stripping markdown formatting — backticks, `*`, `**` — then splitting on whitespace) with the new rule text, a warning is emitted but the promotion proceeds. The developer decides
 - AC11: If the target section contains only a placeholder line matching `*Not yet captured*`, the placeholder is replaced by the new rule. Otherwise the rule is appended after existing content
 - AC12: The git commit message is `[proof] Promote {id} to {skill-name}` — consistent with the `[proof] Close` format
 - AC13: Branch check, pull, and push follow the same pattern as `ana proof close` — require artifact branch, pull before read, push after commit, same error handling
@@ -56,7 +56,7 @@ Promote follows the close command's pattern exactly — branch check, pull, read
 
 **Very long rule text.** No length limit. Skill rules can be multi-sentence paragraphs (see coding-standards and troubleshooting). The command writes what it's told.
 
-**`--force` on a promoted finding.** Double promotion doesn't make sense. `ALREADY_PROMOTED` doesn't honor `--force`. Only `ALREADY_CLOSED` does. If the developer wants to promote to a second skill, they should close the finding first and re-promote (or just manually add the rule to the second skill).
+**`--force` on a promoted finding.** Double promotion doesn't make sense. `ALREADY_PROMOTED` doesn't honor `--force`. Only `ALREADY_CLOSED` does. If the developer wants the same observation as a rule in a second skill, they add it manually — the proof chain records one promotion per finding as the lifecycle transition. `promoted_to` is a string, not an array. The finding's promotion to the first skill is the permanent record. Making `promoted_to` an array adds schema complexity for a scenario that's better handled by a manual edit to the second skill file.
 
 **Concurrent promotes.** Two simultaneous `ana proof promote` calls on different findings. The pull-before-read pattern handles this — the second call sees the first's committed changes. Same concurrency model as close.
 
@@ -119,4 +119,4 @@ Design decisions resolved in the F4 requirements session. No open questions for 
 
 ### Things to Investigate
 - Whether the `--section` flag should support arbitrary section names or only `rules` and `gotchas`. The F4 doc says only these two. Plan should validate that no skill file has a section that would be a natural promotion target beyond Rules and Gotchas. (Examples is not a promotion target — it's for code snippets.)
-- Whether the duplicate detection word-overlap calculation should strip markdown formatting (backticks, bold markers) before comparing. A rule about `` `globSync` `` and a finding about `globSync` (no backticks) should match. Stripping `` ` `` and `*` and `**` before splitting on whitespace is probably right.
+- Resolved: duplicate detection strips markdown formatting (backticks, `*`, `**`) before word comparison. Moved to AC10.
