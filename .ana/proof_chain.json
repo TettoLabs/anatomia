@@ -5419,7 +5419,10 @@
             "A032"
           ],
           "id": "finding-enrichment-schema-C8",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Weak assertion pattern. Known and accepted. toBeDefined on a field that flows through from chain data.",
+          "closed_at": "2026-04-30T00:11:26.944Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
