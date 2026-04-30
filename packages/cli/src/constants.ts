@@ -155,6 +155,7 @@ export const AGENT_FILES = [
   'ana-setup.md',
   'ana-build.md',
   'ana-verify.md',
+  'ana-learn.md',
 ] as const;
 
 
