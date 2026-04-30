@@ -2453,9 +2453,12 @@
           "file": "packages/cli/tests/utils/proofSummary.test.ts",
           "anchor": "@ana A007",
           "id": "proof-context-query-C4",
-          "status": "active",
+          "status": "closed",
           "severity": "observation",
-          "suggested_action": "accept"
+          "suggested_action": "accept",
+          "closed_reason": "accept: redundant tag, cosmetic",
+          "closed_at": "2026-04-30T22:43:29.271Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
