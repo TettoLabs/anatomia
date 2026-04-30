@@ -22,6 +22,7 @@ import chalk from 'chalk';
 import * as path from 'node:path';
 import * as fs from 'node:fs';
 import { execSync, spawnSync } from 'node:child_process';
+import { globSync } from 'glob';
 import type { ProofChainEntry, ProofChain } from '../types/proof.js';
 import { findProjectRoot } from '../utils/validators.js';
 import { getProofContext, wrapJsonResponse, wrapJsonError, generateDashboard, computeChainHealth, computeHealthReport } from '../utils/proofSummary.js';
@@ -564,6 +565,302 @@ export function registerProofCommand(program: Command): void {
     });
 
   proofCommand.addCommand(closeCommand);
+
+  // Register promote subcommand
+  const promoteCommand = new Command('promote')
+    .description('Promote a finding to a skill rule')
+    .argument('<id>', 'Finding ID to promote (e.g., F001)')
+    .requiredOption('--skill <skill>', 'Skill to promote to (e.g., coding-standards)')
+    .option('--text <text>', 'Custom rule text (defaults to finding summary)')
+    .option('--section <section>', 'Target section: rules or gotchas (default: rules)')
+    .option('--force', 'Allow promoting a closed finding')
+    .option('--json', 'Output JSON format')
+    .action(async (id: string, options: { skill: string; text?: string; section?: string; force?: boolean; json?: boolean }) => {
+      const proofRoot = findProjectRoot();
+      const proofChainPath = path.join(proofRoot, '.ana', 'proof_chain.json');
+      const parentOpts = proofCommand.opts();
+      const useJson = options.json || parentOpts['json'];
+
+      // Discover available skills for contextual help
+      const skillGlobs = globSync('.claude/skills/*/SKILL.md', { cwd: proofRoot });
+      const availableSkills = skillGlobs.map(p => path.basename(path.dirname(p)));
+
+      // Helper: output error and exit
+      const exitError = (code: string, message: string, context: Record<string, unknown> = {}): void => {
+        let chain: ProofChain | null = null;
+        try {
+          if (fs.existsSync(proofChainPath)) {
+            chain = JSON.parse(fs.readFileSync(proofChainPath, 'utf-8'));
+          }
+        } catch { /* use null */ }
+
+        if (useJson) {
+          console.log(JSON.stringify(wrapJsonError('proof promote', code, message, context, chain), null, 2));
+        } else {
+          console.error(chalk.red(`Error: ${message}`));
+          if (code === 'SKILL_REQUIRED') {
+            console.error(`  Available skills: ${availableSkills.join(', ')}`);
+            console.error('  Usage: ana proof promote {id} --skill {name}');
+          } else if (code === 'SKILL_NOT_FOUND') {
+            console.error(`  Available skills: ${availableSkills.join(', ')}`);
+          } else if (code === 'FINDING_NOT_FOUND') {
+            console.error('  Run `ana proof audit` to see active findings.');
+          } else if (code === 'ALREADY_PROMOTED' && context['promoted_to']) {
+            console.error(`  Promoted to: ${context['promoted_to']}`);
+          } else if (code === 'ALREADY_CLOSED' && context['closed_by']) {
+            console.error(`  Closed by: ${context['closed_by']} on ${context['closed_at'] ?? 'unknown'}`);
+            if (context['closed_reason']) {
+              console.error(`  Reason: ${context['closed_reason']}`);
+            }
+            console.error('  Use --force to promote a closed finding.');
+          } else if (code === 'WRONG_BRANCH') {
+            const artifactBranch = readArtifactBranch(proofRoot);
+            console.error(`  Run: git checkout ${artifactBranch}`);
+          }
+        }
+        process.exit(1);
+      };
+
+      // Validate --skill is provided (commander handles requiredOption, but belt-and-suspenders)
+      if (!options.skill) {
+        exitError('SKILL_REQUIRED', '--skill is required.');
+        return;
+      }
+
+      // Validate --text is not empty when provided
+      if (options.text !== undefined && options.text.trim() === '') {
+        exitError('TEXT_EMPTY', '--text cannot be empty.');
+        return;
+      }
+
+      // Validate --section
+      const sectionName = options.section ?? 'rules';
+      if (sectionName !== 'rules' && sectionName !== 'gotchas') {
+        exitError('INVALID_SECTION', `Invalid section "${sectionName}". Valid values: rules, gotchas`);
+        return;
+      }
+      const sectionHeading = sectionName === 'gotchas' ? '## Gotchas' : '## Rules';
+
+      // Validate skill exists
+      const skillName = options.skill;
+      const skillRelPath = `.claude/skills/${skillName}/SKILL.md`;
+      const skillAbsPath = path.join(proofRoot, '.claude', 'skills', skillName, 'SKILL.md');
+      if (!fs.existsSync(skillAbsPath)) {
+        exitError('SKILL_NOT_FOUND', `Skill "${skillName}" not found.`);
+        return;
+      }
+
+      // Branch check: must be on artifact branch
+      const artifactBranch = readArtifactBranch(proofRoot);
+      const currentBranch = getCurrentBranch();
+      if (currentBranch !== artifactBranch) {
+        exitError('WRONG_BRANCH', `Wrong branch. Switch to \`${artifactBranch}\` to promote findings.`);
+        return;
+      }
+
+      // Pull before reading chain
+      try {
+        const remotes = execSync('git remote', { stdio: 'pipe', encoding: 'utf-8', cwd: proofRoot }).trim();
+        if (remotes) {
+          execSync('git pull --rebase', { stdio: 'pipe', encoding: 'utf-8', cwd: proofRoot });
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : '';
+        if (errorMessage.includes('conflict') || errorMessage.includes('Cannot rebase')) {
+          console.error(chalk.red('Error: Pull failed due to conflicts. Resolve conflicts and try again.'));
+          process.exit(1);
+        }
+        console.error(chalk.yellow('⚠ Warning: Pull failed (network error). Continuing with local data.'));
+      }
+
+      // Read chain
+      if (!fs.existsSync(proofChainPath)) {
+        exitError('NO_PROOF_CHAIN', 'No proof chain found.');
+        return;
+      }
+
+      let chain: ProofChain;
+      try {
+        chain = JSON.parse(fs.readFileSync(proofChainPath, 'utf-8'));
+      } catch {
+        exitError('PARSE_ERROR', 'Failed to parse proof_chain.json.');
+        return;
+      }
+
+      // Find the finding across all entries
+      let foundFinding: ProofChainEntry['findings'][0] | null = null;
+      let foundEntry: ProofChainEntry | null = null;
+
+      for (const entry of chain.entries) {
+        for (const finding of entry.findings || []) {
+          if (finding.id === id) {
+            foundFinding = finding;
+            foundEntry = entry;
+            break;
+          }
+        }
+        if (foundFinding) break;
+      }
+
+      if (!foundFinding || !foundEntry) {
+        exitError('FINDING_NOT_FOUND', `Finding "${id}" not found.`);
+        return;
+      }
+
+      // Check if already promoted
+      if (foundFinding.status === 'promoted') {
+        exitError('ALREADY_PROMOTED', `Finding "${id}" is already promoted.`, {
+          promoted_to: foundFinding.promoted_to ?? 'unknown',
+        });
+        return;
+      }
+
+      // Check if already closed (allow with --force)
+      if (foundFinding.status === 'closed' && !options.force) {
+        exitError('ALREADY_CLOSED', `Finding "${id}" is already closed.`, {
+          closed_by: foundFinding.closed_by ?? 'unknown',
+          closed_at: foundFinding.closed_at ?? 'unknown',
+          closed_reason: foundFinding.closed_reason ?? '',
+        });
+        return;
+      }
+
+      // Read skill file and validate section exists
+      let skillContent = fs.readFileSync(skillAbsPath, 'utf-8');
+      const sectionIdx = skillContent.indexOf(sectionHeading);
+      if (sectionIdx === -1) {
+        exitError('SECTION_NOT_FOUND', `Skill file ${skillRelPath} has no ${sectionHeading} section.`);
+        return;
+      }
+
+      // Determine rule text
+      const ruleText = options.text ?? foundFinding.summary;
+      const ruleLine = `- ${ruleText}`;
+
+      // Find section boundaries
+      const sectionStart = sectionIdx + sectionHeading.length;
+      const nextSectionIdx = skillContent.indexOf('\n## ', sectionStart);
+      const sectionEnd = nextSectionIdx === -1 ? skillContent.length : nextSectionIdx;
+      const sectionBody = skillContent.slice(sectionStart, sectionEnd);
+
+      // Duplicate detection: check existing rules in section
+      let duplicateWarning: string | null = null;
+      const newWords = new Set(ruleText.replace(/[`*]/g, '').toLowerCase().split(/\s+/).filter(Boolean));
+      const existingLines = sectionBody.split('\n').filter(l => l.trim().startsWith('-'));
+      for (const line of existingLines) {
+        const lineText = line.trim().replace(/^-\s*/, '').replace(/[`*]/g, '');
+        const existingWords = new Set(lineText.toLowerCase().split(/\s+/).filter(Boolean));
+        const intersection = new Set([...newWords].filter(w => existingWords.has(w)));
+        const smallerSize = Math.min(newWords.size, existingWords.size);
+        if (smallerSize > 0 && intersection.size / smallerSize > 0.5) {
+          duplicateWarning = `Similar rule exists: "${lineText}"`;
+          break;
+        }
+      }
+
+      // Check for placeholder line and handle replacement vs append
+      const placeholderRegex = /^[ \t]*\*Not yet captured[^*]*\*/m;
+      const placeholderMatch = sectionBody.match(placeholderRegex);
+
+      if (placeholderMatch) {
+        // Replace placeholder with rule
+        const placeholderIdx = sectionStart + sectionBody.indexOf(placeholderMatch[0]);
+        skillContent = skillContent.slice(0, placeholderIdx) + ruleLine + skillContent.slice(placeholderIdx + placeholderMatch[0].length);
+      } else {
+        // Append after last non-empty line in section
+        const sectionLines = sectionBody.split('\n');
+        let lastNonEmptyIdx = sectionLines.length - 1;
+        while (lastNonEmptyIdx >= 0 && sectionLines[lastNonEmptyIdx]!.trim() === '') {
+          lastNonEmptyIdx--;
+        }
+
+        // Build the new section content
+        const beforeSection = skillContent.slice(0, sectionStart);
+        const afterSection = skillContent.slice(sectionEnd);
+        const contentLines = sectionLines.slice(0, lastNonEmptyIdx + 1);
+        contentLines.push(ruleLine);
+        const trailingNewlines = sectionLines.slice(lastNonEmptyIdx + 1);
+        const newSection = [...contentLines, ...trailingNewlines].join('\n');
+        skillContent = beforeSection + newSection + afterSection;
+      }
+
+      // Write updated skill file
+      fs.writeFileSync(skillAbsPath, skillContent);
+
+      // Record previous status for output
+      const previousStatus = foundFinding.status ?? 'active';
+
+      // Mutate the finding
+      foundFinding.status = 'promoted';
+      foundFinding.promoted_to = skillRelPath;
+
+      // Write updated chain
+      fs.writeFileSync(proofChainPath, JSON.stringify(chain, null, 2));
+
+      // Regenerate PROOF_CHAIN.md
+      const health = computeChainHealth(chain);
+      const dashboardMd = generateDashboard(chain.entries, {
+        runs: health.chain_runs,
+        active: health.findings.active,
+        lessons: health.findings.lesson,
+        promoted: health.findings.promoted,
+        closed: health.findings.closed,
+      });
+      const chainMdPath = path.join(proofRoot, '.ana', 'PROOF_CHAIN.md');
+      fs.writeFileSync(chainMdPath, dashboardMd);
+
+      // Git: stage, commit, push
+      try {
+        execSync(`git add .ana/proof_chain.json .ana/PROOF_CHAIN.md ${skillRelPath}`, { stdio: 'pipe', cwd: proofRoot });
+        const commitMessage = `[proof] Promote ${id} to ${skillName}`;
+        const commitResult = spawnSync('git', ['commit', '-m', commitMessage], { stdio: 'pipe', cwd: proofRoot });
+        if (commitResult.status !== 0) throw new Error(commitResult.stderr?.toString() || 'Commit failed');
+      } catch {
+        console.error(chalk.red('Error: Failed to commit. Changes saved but not committed.'));
+        process.exit(1);
+      }
+
+      try {
+        execSync('git push', { stdio: 'pipe', cwd: proofRoot });
+      } catch {
+        console.error(chalk.yellow('Warning: Push failed. Changes committed locally. Run `git push` manually.'));
+      }
+
+      // Output
+      if (useJson) {
+        const results: Record<string, unknown> = {
+          finding: {
+            id: foundFinding.id,
+            category: foundFinding.category,
+            summary: foundFinding.summary,
+            file: foundFinding.file,
+            severity: foundFinding.severity ?? null,
+            suggested_action: foundFinding.suggested_action ?? null,
+          },
+          promoted_to: skillRelPath,
+          rule_text: ruleLine,
+          section: sectionHeading,
+        };
+        if (duplicateWarning) {
+          results['duplicate_warning'] = duplicateWarning;
+        }
+        console.log(JSON.stringify(wrapJsonResponse('proof promote', results, chain), null, 2));
+      } else {
+        if (duplicateWarning) {
+          console.log(chalk.yellow(`⚠ ${duplicateWarning}`));
+        }
+        console.log(`✓ Promoted ${id} to ${skillName}`);
+        console.log(`  ${chalk.dim(`[${foundFinding.category}]`)} ${foundFinding.summary} — ${foundFinding.file ?? 'no file'}`);
+        console.log(`  ${previousStatus} → promoted`);
+        console.log(`  Rule: ${ruleLine}`);
+        console.log(`  Section: ${sectionHeading}`);
+        console.log(`  File: ${skillRelPath}`);
+        console.log('');
+        console.log(chalk.gray(`Chain: ${health.chain_runs} ${health.chain_runs !== 1 ? 'runs' : 'run'} · ${health.findings.active} active finding${health.findings.active !== 1 ? 's' : ''}`));
+      }
+    });
+
+  proofCommand.addCommand(promoteCommand);
 
   // Register audit subcommand
   const auditCommand = new Command('audit')

@@ -1713,4 +1713,441 @@ describe('ana proof', () => {
       expect(json.results.trajectory.trend).toBe('insufficient_data');
     });
   });
+
+  // ─── Promote Subcommand Tests ──────────────────────────────────────────
+
+  /**
+   * Helper to create a git-initialized project with proof chain and skill files for promote testing.
+   */
+  async function createPromoteTestProject(entries: unknown[], options?: { branch?: string; skillContent?: string; skillName?: string; noSkill?: boolean }): Promise<void> {
+    const branch = options?.branch ?? 'main';
+    const skillName = options?.skillName ?? 'coding-standards';
+    const skillContent = options?.skillContent ?? `# coding-standards
+
+## Rules
+- Existing rule about naming conventions
+
+## Gotchas
+- Watch out for circular imports
+
+## Examples
+*Not yet captured. Add short snippets showing the RIGHT way.*
+`;
+
+    // Init git
+    execSync('git init', { cwd: tempDir, stdio: 'ignore' });
+    execSync('git config user.email "test@test.com"', { cwd: tempDir, stdio: 'ignore' });
+    execSync('git config user.name "Test"', { cwd: tempDir, stdio: 'ignore' });
+
+    // Create .ana/ana.json
+    const anaDir = path.join(tempDir, '.ana');
+    await fs.mkdir(anaDir, { recursive: true });
+    await fs.writeFile(
+      path.join(anaDir, 'ana.json'),
+      JSON.stringify({ artifactBranch: 'main' }),
+    );
+
+    // Write proof chain
+    await fs.writeFile(
+      path.join(anaDir, 'proof_chain.json'),
+      JSON.stringify({ entries }, null, 2),
+    );
+
+    // Create skill file (unless noSkill is set)
+    if (!options?.noSkill) {
+      const skillDir = path.join(tempDir, '.claude', 'skills', skillName);
+      await fs.mkdir(skillDir, { recursive: true });
+      await fs.writeFile(path.join(skillDir, 'SKILL.md'), skillContent);
+    }
+
+    // Initial commit and set branch
+    execSync('git add -A && git commit -m "init"', { cwd: tempDir, stdio: 'ignore' });
+    execSync(`git branch -M ${branch}`, { cwd: tempDir, stdio: 'ignore' });
+  }
+
+  /** Entry with active findings for promote testing */
+  const promoteEntry = {
+    slug: 'fix-validation',
+    feature: 'Fix Input Validation',
+    result: 'PASS',
+    author: { name: 'Developer', email: 'dev@example.com' },
+    contract: { total: 5, covered: 5, uncovered: 0, satisfied: 5, unsatisfied: 0, deviated: 0 },
+    assertions: [{ id: 'A001', says: 'Validates input', status: 'SATISFIED' }],
+    acceptance_criteria: { total: 3, met: 3 },
+    timing: { total_minutes: 30 },
+    hashes: {},
+    completed_at: '2026-04-20T10:00:00Z',
+    modules_touched: ['src/api/payments.ts'],
+    findings: [
+      { id: 'F001', category: 'validation', summary: 'Missing request validation', file: 'src/api/payments.ts', anchor: 'validateInput', status: 'active', severity: 'risk', suggested_action: 'promote' },
+      { id: 'F002', category: 'testing', summary: 'No test for edge case', file: 'src/api/payments.ts', anchor: null, status: 'active' },
+      { id: 'F003', category: 'code', summary: 'Redundant import', file: 'src/utils/helpers.ts', anchor: null, status: 'closed', closed_by: 'mechanical', closed_at: '2026-04-22T10:00:00Z', closed_reason: 'auto-closed' },
+      { id: 'F004', category: 'code', summary: 'Already promoted item', file: 'src/api.ts', anchor: null, status: 'promoted', promoted_to: '.claude/skills/coding-standards/SKILL.md' },
+    ],
+    rejection_cycles: 0,
+    previous_failures: [],
+    build_concerns: [],
+  };
+
+  // @ana A001, A002, A003, A004, A005
+  describe('promotes finding successfully', () => {
+    it('marks finding as promoted with skill path', async () => {
+      await createPromoteTestProject([promoteEntry]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['promote', 'F001', '--skill', 'coding-standards']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('Promoted F001');
+      expect(stdout).toContain('coding-standards');
+
+      // Verify chain was mutated
+      const chain = JSON.parse(await fs.readFile(path.join(tempDir, '.ana', 'proof_chain.json'), 'utf-8'));
+      const finding = chain.entries[0].findings.find((f: { id: string }) => f.id === 'F001');
+      expect(finding.status).toBe('promoted');
+      expect(finding.promoted_to).toBe('.claude/skills/coding-standards/SKILL.md');
+
+      // Verify PROOF_CHAIN.md was regenerated
+      const dashboard = await fs.readFile(path.join(tempDir, '.ana', 'PROOF_CHAIN.md'), 'utf-8');
+      expect(dashboard).toContain('Proof Chain Dashboard');
+
+      // Verify commit was created
+      const lastCommit = execSync('git log -1 --pretty=%s', { cwd: tempDir, encoding: 'utf-8' }).trim();
+      expect(lastCommit).toContain('[proof] Promote F001 to coding-standards');
+    });
+  });
+
+  // @ana A005
+  describe('appends finding summary as rule', () => {
+    it('appends summary as bulleted rule to Rules section', async () => {
+      await createPromoteTestProject([promoteEntry]);
+      process.chdir(tempDir);
+
+      const { exitCode } = runProof(['promote', 'F001', '--skill', 'coding-standards']);
+      expect(exitCode).toBe(0);
+
+      const skillContent = await fs.readFile(path.join(tempDir, '.claude', 'skills', 'coding-standards', 'SKILL.md'), 'utf-8');
+      expect(skillContent).toContain('- Missing request validation');
+      // Existing rule still present
+      expect(skillContent).toContain('- Existing rule about naming conventions');
+    });
+  });
+
+  // @ana A006, A007
+  describe('uses custom text when provided', () => {
+    it('appends custom text instead of summary', async () => {
+      await createPromoteTestProject([promoteEntry]);
+      process.chdir(tempDir);
+
+      const { exitCode } = runProof(['promote', 'F001', '--skill', 'coding-standards', '--text', '"Always validate request bodies before processing"']);
+      expect(exitCode).toBe(0);
+
+      const skillContent = await fs.readFile(path.join(tempDir, '.claude', 'skills', 'coding-standards', 'SKILL.md'), 'utf-8');
+      expect(skillContent).toContain('- Always validate request bodies before processing');
+    });
+
+    it('JSON output shows custom rule text', async () => {
+      await createPromoteTestProject([promoteEntry]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['promote', 'F001', '--skill', 'coding-standards', '--json', '--text', '"Always validate request bodies before processing"']);
+      expect(exitCode).toBe(0);
+
+      const json = JSON.parse(stdout);
+      expect(json.results.rule_text).toContain('Always validate request bodies');
+    });
+  });
+
+  // @ana A008, A009, A010
+  describe('rejects promote without skill flag', () => {
+    it('shows error listing available skills', async () => {
+      await createPromoteTestProject([promoteEntry]);
+      process.chdir(tempDir);
+
+      // commander requiredOption will exit with error when --skill is missing
+      const { stderr, exitCode } = runProof(['promote', 'F001']);
+      expect(exitCode).not.toBe(0);
+      // commander prints missing required option error
+      expect(stderr).toContain('skill');
+    });
+
+    it('returns SKILL_REQUIRED or error in JSON mode', async () => {
+      await createPromoteTestProject([promoteEntry]);
+      process.chdir(tempDir);
+
+      // commander exits before action handler for requiredOption
+      const { exitCode } = runProof(['promote', 'F001', '--json']);
+      expect(exitCode).not.toBe(0);
+    });
+  });
+
+  // @ana A011
+  describe('rejects nonexistent skill', () => {
+    it('returns SKILL_NOT_FOUND code in JSON', async () => {
+      await createPromoteTestProject([promoteEntry]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['promote', 'F001', '--skill', 'data-access', '--json']);
+      expect(exitCode).not.toBe(0);
+
+      const json = JSON.parse(stdout);
+      expect(json.error.code).toBe('SKILL_NOT_FOUND');
+    });
+
+    it('shows error in human mode', async () => {
+      await createPromoteTestProject([promoteEntry]);
+      process.chdir(tempDir);
+
+      const { stderr, exitCode } = runProof(['promote', 'F001', '--skill', 'data-access']);
+      expect(exitCode).not.toBe(0);
+      expect(stderr).toContain('not found');
+    });
+  });
+
+  // @ana A012, A013
+  describe('appends to gotchas section', () => {
+    it('appends rule to Gotchas section when --section gotchas', async () => {
+      await createPromoteTestProject([promoteEntry]);
+      process.chdir(tempDir);
+
+      const { exitCode } = runProof(['promote', 'F001', '--skill', 'coding-standards', '--section', 'gotchas']);
+      expect(exitCode).toBe(0);
+
+      const skillContent = await fs.readFile(path.join(tempDir, '.claude', 'skills', 'coding-standards', 'SKILL.md'), 'utf-8');
+
+      // Rule should be in Gotchas section
+      const gotchasIdx = skillContent.indexOf('## Gotchas');
+      const examplesIdx = skillContent.indexOf('## Examples');
+      const ruleIdx = skillContent.indexOf('- Missing request validation');
+      expect(ruleIdx).toBeGreaterThan(gotchasIdx);
+      expect(ruleIdx).toBeLessThan(examplesIdx);
+
+      // Rules section should NOT have the new rule
+      const rulesIdx = skillContent.indexOf('## Rules');
+      const rulesSection = skillContent.slice(rulesIdx, gotchasIdx);
+      expect(rulesSection).not.toContain('Missing request validation');
+    });
+  });
+
+  // @ana A014, A015
+  describe('rejects already-promoted finding', () => {
+    it('returns ALREADY_PROMOTED with promoted_to path', async () => {
+      await createPromoteTestProject([promoteEntry]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['promote', 'F004', '--skill', 'coding-standards', '--json']);
+      expect(exitCode).not.toBe(0);
+
+      const json = JSON.parse(stdout);
+      expect(json.error.code).toBe('ALREADY_PROMOTED');
+
+      // Human mode shows promoted_to path
+      const { stderr } = runProof(['promote', 'F004', '--skill', 'coding-standards']);
+      const output = stderr;
+      expect(output).toContain('.claude/skills/');
+    });
+  });
+
+  // @ana A016
+  describe('rejects closed finding without force', () => {
+    it('returns ALREADY_CLOSED code in JSON', async () => {
+      await createPromoteTestProject([promoteEntry]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['promote', 'F003', '--skill', 'coding-standards', '--json']);
+      expect(exitCode).not.toBe(0);
+
+      const json = JSON.parse(stdout);
+      expect(json.error.code).toBe('ALREADY_CLOSED');
+    });
+
+    it('shows closed-by info in human mode', async () => {
+      await createPromoteTestProject([promoteEntry]);
+      process.chdir(tempDir);
+
+      const { stderr, exitCode } = runProof(['promote', 'F003', '--skill', 'coding-standards']);
+      expect(exitCode).not.toBe(0);
+      expect(stderr).toContain('already closed');
+      expect(stderr).toContain('--force');
+    });
+  });
+
+  // @ana A017, A018
+  describe('promotes closed finding with force', () => {
+    it('succeeds with --force flag', async () => {
+      await createPromoteTestProject([promoteEntry]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['promote', 'F003', '--skill', 'coding-standards', '--force']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('Promoted F003');
+
+      // Verify chain mutation
+      const chain = JSON.parse(await fs.readFile(path.join(tempDir, '.ana', 'proof_chain.json'), 'utf-8'));
+      const finding = chain.entries[0].findings.find((f: { id: string }) => f.id === 'F003');
+      expect(finding.status).toBe('promoted');
+    });
+  });
+
+  // @ana A019, A020, A021
+  describe('returns valid JSON envelope', () => {
+    it('has four-key envelope with results and meta', async () => {
+      await createPromoteTestProject([promoteEntry]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['promote', 'F001', '--skill', 'coding-standards', '--json']);
+      expect(exitCode).toBe(0);
+
+      const json = JSON.parse(stdout);
+      expect(json.command).toBe('proof promote');
+      expect(json.timestamp).toBeDefined();
+      expect(json.results).toBeDefined();
+      expect(json.results.promoted_to).toBeDefined();
+      expect(json.meta).toBeDefined();
+      expect(json.meta.chain_runs).toBeDefined();
+    });
+  });
+
+  // @ana A022, A023
+  describe('warns on duplicate rule', () => {
+    it('emits warning when existing rule has word overlap', async () => {
+      // F001 summary is "Missing request validation" — need >50% overlap with existing rule
+      // "Missing request validation check" shares 3/4 words with "Missing request validation"
+      const skillContent = `# coding-standards
+
+## Rules
+- Missing request validation check
+
+## Gotchas
+- Watch out for circular imports
+`;
+      await createPromoteTestProject([promoteEntry], { skillContent });
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['promote', 'F001', '--skill', 'coding-standards']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('Similar rule exists');
+    });
+  });
+
+  // @ana A024
+  describe('warns on duplicate rule in JSON mode', () => {
+    it('includes duplicate_warning in JSON results', async () => {
+      const skillContent = `# coding-standards
+
+## Rules
+- Missing request validation check
+
+## Gotchas
+- Watch out for circular imports
+`;
+      await createPromoteTestProject([promoteEntry], { skillContent });
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['promote', 'F001', '--skill', 'coding-standards', '--json']);
+      expect(exitCode).toBe(0);
+
+      const json = JSON.parse(stdout);
+      expect(json.results.duplicate_warning).toBeDefined();
+    });
+  });
+
+  // @ana A025, A026
+  describe('replaces placeholder in empty section', () => {
+    it('replaces Not yet captured placeholder with rule', async () => {
+      const skillContent = `# coding-standards
+
+## Rules
+*Not yet captured. Add as you discover them during development.*
+
+## Gotchas
+- Watch out for circular imports
+`;
+      await createPromoteTestProject([promoteEntry], { skillContent });
+      process.chdir(tempDir);
+
+      const { exitCode } = runProof(['promote', 'F001', '--skill', 'coding-standards']);
+      expect(exitCode).toBe(0);
+
+      const updatedSkill = await fs.readFile(path.join(tempDir, '.claude', 'skills', 'coding-standards', 'SKILL.md'), 'utf-8');
+      expect(updatedSkill).not.toContain('*Not yet captured');
+      expect(updatedSkill).toContain('- Missing request validation');
+    });
+  });
+
+  // @ana A027
+  describe('rejects promote from wrong branch', () => {
+    it('returns WRONG_BRANCH code in JSON', async () => {
+      await createPromoteTestProject([promoteEntry], { branch: 'feature/other' });
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['promote', 'F001', '--skill', 'coding-standards', '--json']);
+      expect(exitCode).not.toBe(0);
+
+      const json = JSON.parse(stdout);
+      expect(json.error.code).toBe('WRONG_BRANCH');
+    });
+  });
+
+  // @ana A028
+  describe('rejects empty text', () => {
+    it('returns TEXT_EMPTY code in JSON', async () => {
+      await createPromoteTestProject([promoteEntry]);
+      process.chdir(tempDir);
+
+      // Use a space-only string which trims to empty
+      const { stdout, exitCode } = runProof(['promote', 'F001', '--skill', 'coding-standards', '--json', '--text', '"  "']);
+      expect(exitCode).not.toBe(0);
+
+      const json = JSON.parse(stdout);
+      expect(json.error.code).toBe('TEXT_EMPTY');
+    });
+  });
+
+  // @ana A029
+  describe('rejects skill file without target section', () => {
+    it('returns SECTION_NOT_FOUND code in JSON', async () => {
+      const skillContent = `# coding-standards
+
+## Examples
+- Some example
+`;
+      await createPromoteTestProject([promoteEntry], { skillContent });
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['promote', 'F001', '--skill', 'coding-standards', '--json']);
+      expect(exitCode).not.toBe(0);
+
+      const json = JSON.parse(stdout);
+      expect(json.error.code).toBe('SECTION_NOT_FOUND');
+    });
+  });
+
+  // @ana A030
+  describe('promotes lesson finding', () => {
+    it('transitions lesson to promoted', async () => {
+      await createPromoteTestProject([lessonEntry]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['promote', 'L001', '--skill', 'coding-standards']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('Promoted L001');
+
+      const chain = JSON.parse(await fs.readFile(path.join(tempDir, '.ana', 'proof_chain.json'), 'utf-8'));
+      const finding = chain.entries[0].findings.find((f: { id: string }) => f.id === 'L001');
+      expect(finding.status).toBe('promoted');
+    });
+  });
+
+  describe('promotes finding that is not found', () => {
+    it('returns FINDING_NOT_FOUND code in JSON', async () => {
+      await createPromoteTestProject([promoteEntry]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['promote', 'F999', '--skill', 'coding-standards', '--json']);
+      expect(exitCode).not.toBe(0);
+
+      const json = JSON.parse(stdout);
+      expect(json.error.code).toBe('FINDING_NOT_FOUND');
+    });
+  });
 });
