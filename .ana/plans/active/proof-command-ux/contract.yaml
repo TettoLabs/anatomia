@@ -1,0 +1,162 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Proof Command UX"
+
+assertions:
+  # Fix 1: Audit severity summary line
+  - id: A001
+    says: "Audit shows a severity breakdown of active findings"
+    block: "displays severity summary after audit header"
+    target: "stdout"
+    matcher: "contains"
+    value: "risk"
+
+  - id: A002
+    says: "Audit severity counts only come from active findings"
+    block: "severity counts match active findings only"
+    target: "severity_counts"
+    matcher: "equals"
+    value: "active_only"
+
+  - id: A003
+    says: "Severity summary shows zero-count buckets as absent, not zero"
+    block: "omits zero-count severity buckets"
+    target: "stdout"
+    matcher: "not_contains"
+    value: "0 debt"
+
+  # Fix 1: Audit action summary line
+  - id: A004
+    says: "Audit shows an action breakdown of active findings"
+    block: "displays action summary after severity line"
+    target: "stdout"
+    matcher: "contains"
+    value: "accept (closeable)"
+
+  - id: A005
+    says: "Action summary uses the correct label format with closeable hint"
+    block: "displays action summary after severity line"
+    target: "stdout"
+    matcher: "contains"
+    value: "(closeable)"
+
+  # Fix 1: Unclassified handling
+  - id: A006
+    says: "Findings with unknown severity show as unclassified in the summary"
+    block: "includes unclassified bucket for dash severity"
+    target: "stdout"
+    matcher: "contains"
+    value: "unclassified"
+
+  - id: A007
+    says: "When all findings are unclassified, the summary lines are hidden"
+    block: "skips both summary lines when all findings unclassified"
+    target: "stdout"
+    matcher: "not_contains"
+    value: "unclassified"
+
+  - id: A008
+    says: "Skipping summary lines does not break the rest of the audit output"
+    block: "skips both summary lines when all findings unclassified"
+    target: "stdout"
+    matcher: "contains"
+    value: "active finding"
+
+  # Fix 1: Zero findings
+  - id: A009
+    says: "Zero findings shows the clean message without summary lines"
+    block: "no summary lines with zero active findings"
+    target: "stdout"
+    matcher: "contains"
+    value: "clean"
+
+  # Fix 1: JSON unchanged
+  - id: A010
+    says: "Audit JSON output is not affected by the summary line feature"
+    block: "audit JSON has no summary field"
+    target: "json.results"
+    matcher: "not_contains"
+    value: "severity_summary"
+
+  # Fix 2: Health nudge terminal
+  - id: A011
+    says: "New promotion candidates trigger a nudge to run the learn agent"
+    block: "appends learn nudge when new_candidates fires"
+    target: "stdout"
+    matcher: "contains"
+    value: "claude --agent ana-learn"
+
+  - id: A012
+    says: "Worsening trend triggers a nudge to run proof audit"
+    block: "appends audit nudge when trend_worsened fires"
+    target: "stdout"
+    matcher: "contains"
+    value: "ana proof audit"
+
+  - id: A013
+    says: "Informational triggers like improvement do not show a nudge"
+    block: "no nudge for informational triggers"
+    target: "stdout"
+    matcher: "not_contains"
+    value: "→"
+
+  - id: A014
+    says: "When both candidates and worsening fire, only the learn nudge appears"
+    block: "highest priority nudge wins when multiple triggers fire"
+    target: "stdout"
+    matcher: "contains"
+    value: "claude --agent ana-learn"
+
+  - id: A015
+    says: "Multiple nudges never appear on the same health line"
+    block: "highest priority nudge wins when multiple triggers fire"
+    target: "stdout"
+    matcher: "not_contains"
+    value: "ana proof audit"
+
+  # Fix 2: JSON suggested_action
+  - id: A016
+    says: "JSON output includes a suggested action when candidates exist"
+    block: "suggested_action is run_learn for new_candidates"
+    target: "json.results.quality.suggested_action"
+    matcher: "equals"
+    value: "run_learn"
+
+  - id: A017
+    says: "JSON output suggests audit when trend worsens"
+    block: "suggested_action is run_audit for trend_worsened"
+    target: "json.results.quality.suggested_action"
+    matcher: "equals"
+    value: "run_audit"
+
+  - id: A018
+    says: "JSON output has null suggested action when no actionable trigger fires"
+    block: "suggested_action is null for informational triggers"
+    target: "json.results.quality.suggested_action"
+    matcher: "equals"
+    value: null
+
+  # Regression
+  - id: A019
+    says: "All existing tests continue to pass"
+    block: "full test suite passes"
+    target: "test_result"
+    matcher: "equals"
+    value: "pass"
+
+  - id: A020
+    says: "Lint passes with no new violations"
+    block: "lint passes"
+    target: "lint_result"
+    matcher: "equals"
+    value: "pass"
+
+file_changes:
+  - path: "packages/cli/src/commands/proof.ts"
+    action: modify
+  - path: "packages/cli/src/commands/work.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/proof.test.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/work.test.ts"
+    action: modify
