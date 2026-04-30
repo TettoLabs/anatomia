@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-35 runs · 69 active · 30 lessons · 0 promoted · 70 closed
+35 runs · 68 active · 30 lessons · 0 promoted · 71 closed
 
 ## Hot Modules
 
@@ -9,14 +9,14 @@
 | packages/cli/src/commands/proof.ts | 11 | 7 |
 | packages/cli/tests/commands/work.test.ts | 10 | 8 |
 | packages/cli/src/utils/proofSummary.ts | 9 | 7 |
-| packages/cli/tests/utils/proofSummary.test.ts | 8 | 5 |
 | packages/cli/src/commands/work.ts | 8 | 7 |
+| packages/cli/tests/utils/proofSummary.test.ts | 7 | 4 |
 
 ## Promoted Rules
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 69 total)
+## Active Findings (30 shown of 68 total)
 
 ### packages/cli/src/commands/proof.ts
 
@@ -68,10 +68,10 @@
 - **test:** A003 tagged test exercises normal completion, not recovery — does not assert 'Recovering' in output — *Harden Hot Files*
 - **test:** Pre-check COVERED status for A004-A010 comes from other features' tag collisions, not from harden-hot-files-specific tests — *Harden Hot Files*
 - **test:** Recovery path JSON test uses output.indexOf('{') to skip non-JSON output — fragile parsing that masks the stdout pollution issue — *Work Complete JSON + Proof Card Findings*
+- **test:** Severity migration tests (A019, A020, A021) don't have dedicated tagged tests in the changed test files — they're covered indirectly through the backfill loop in work.test.ts existing tests and by type-level evidence. No test explicitly creates a finding with severity 'blocker', runs the migration loop, and asserts severity is now 'risk'. The behavior is exercised but not directly asserted. — *Finding Enrichment Schema*
 
 ### packages/cli/tests/utils/proofSummary.test.ts
 
-- **test:** No negative test for Callouts heading rejection — parseFindings tests verify Findings works but don't assert Callouts is rejected — *Delete backward-compatibility code*
 - **test:** detectHealthChange 'detects trend improvement' unit test uses conditional assertion (if change.changed) — if change.changed is false, the expect on triggers never executes. This masks a potential false pass. — *Proof Health V1*
 - **test:** Promotion effectiveness test covers only the extremes (0% reduction, 100% reduction, tracking). No test for intermediate reduction (e.g., 40%) or negative reduction (more matches than baseline). — *Proof Health V1*
 
