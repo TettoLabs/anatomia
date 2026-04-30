@@ -1,22 +1,22 @@
 # Proof Chain Dashboard
 
-34 runs · 79 active · 33 lessons · 0 promoted · 53 closed
+35 runs · 81 active · 33 lessons · 0 promoted · 55 closed
 
 ## Hot Modules
 
 | File | Active | Entries |
 |------|--------|--------|
+| packages/cli/src/utils/proofSummary.ts | 12 | 8 |
 | packages/cli/src/commands/proof.ts | 12 | 7 |
 | packages/cli/tests/utils/proofSummary.test.ts | 10 | 6 |
-| packages/cli/src/utils/proofSummary.ts | 10 | 7 |
 | packages/cli/tests/commands/work.test.ts | 10 | 8 |
-| packages/cli/src/commands/work.ts | 7 | 6 |
+| packages/cli/src/commands/work.ts | 8 | 7 |
 
 ## Promoted Rules
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 79 total)
+## Active Findings (30 shown of 81 total)
 
 ### packages/cli/src/commands/artifact.ts
 
@@ -36,20 +36,20 @@
 ### packages/cli/src/commands/verify.ts
 
 - **code:** Comment filter only matches // and # — block comments (/* @ana A001 */) in added lines are silently ignored — *Diff-Scoped Tag Search*
-- **code:** No size guard on git diff output — very large diffs loaded entirely into memory before parsing — *Diff-Scoped Tag Search*
 
 ### packages/cli/src/commands/work.ts
 
+- **test:** No tests for UNVERIFIED fallback — A014-A018 verified by source inspection only; work.ts, pr.ts, proof.ts UNVERIFIED paths have zero test coverage — *Remove Pre-Check Tag Coverage*
 - **code:** Catch block indentation inconsistent — body at 10-space indent vs surrounding 8-space convention — *Harden Hot Files*
 - **code:** Stale comment references deleted reopen loop — *Delete backward-compatibility code*
 - **code:** Recovery path console.log on line 1078 leaks non-JSON text to stdout before JSON envelope — CI consumers doing JSON.parse(stdout) will fail — *Work Complete JSON + Proof Card Findings*
 - **code:** Main path re-reads proof_chain.json from disk for computeChainHealth after writeProofChain just wrote it — matches known build concern about nudge re-read pattern — *Work Complete JSON + Proof Card Findings*
-- **code:** Severity migration does not handle unexpected old values beyond blocker/note — if a future writer introduces an unknown severity value (e.g. from a malformed manual edit), the migration loop silently ignores it. Not blocking since validation prevents new bad values, but the migration is only protective for known old values. — *Finding Enrichment Schema*
 
 ### packages/cli/src/utils/proofSummary.ts
 
+- **code:** PreCheckData interface vestigial — retains assertions/covered/uncovered fields for reading old .saves.json but the code path that used them for assertion bootstrap is deleted — *Remove Pre-Check Tag Coverage*
+- **code:** parseComplianceTable regex omits UNVERIFIED — regex at line 171 matches SATISFIED|UNSATISFIED|DEVIATED|UNCOVERED but not UNVERIFIED. Correct behavior since verify reports never contain UNVERIFIED rows, but the omission could confuse future maintainers who see UNVERIFIED in the type union — *Remove Pre-Check Tag Coverage*
 - **code:** Trajectory 'worsening' label can be counterintuitive with sparse classification — reports worsening on 0.1 risks/run when most findings lack severity. Algorithm is correct but label may mislead operators. — *Proof Health V1*
-- **code:** ProofSummary.result still typed as string, not union — spec says to tighten to match ProofChainEntry ('PASS' | 'FAIL' | 'UNKNOWN') but builder left it as open string. Contract A004 only targets ProofChainEntry.result so not a contract violation, but consumers of ProofSummary.result don't get compiler protection. — *Finding Enrichment Schema*
 
 ### packages/cli/templates/.claude/agents/ana-learn.md
 
@@ -62,7 +62,7 @@
 
 ### packages/cli/tests/commands/verify.test.ts
 
-- **test:** Substantial test setup duplication across 8 integration tests — each creates git repo, contract, hash, saves from scratch — *Diff-Scoped Tag Search*
+- **test:** A006 @ana tag on wrong test — tagged on UNVERIFIABLE test (line 241) instead of parseDiffAddedCommentLines removal test — *Remove Pre-Check Tag Coverage*
 
 ### packages/cli/tests/commands/work.test.ts
 
