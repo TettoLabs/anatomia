@@ -1,0 +1,197 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Remove Pre-Check Tag Coverage"
+
+assertions:
+  # AC1: Pre-check output is seal-only
+  - id: A001
+    says: "Pre-check reports seal status only, with no per-assertion output"
+    block: "pre-check returns seal-only result"
+    target: "result.seal"
+    matcher: "exists"
+
+  - id: A002
+    says: "Pre-check with intact contract returns INTACT seal"
+    block: "pre-check returns seal-only result"
+    target: "result.seal"
+    matcher: "equals"
+    value: "INTACT"
+
+  - id: A003
+    says: "Pre-check with modified contract returns TAMPERED seal"
+    block: "pre-check detects tampered contract"
+    target: "result.seal"
+    matcher: "equals"
+    value: "TAMPERED"
+
+  # AC2: ContractPreCheckResult interface is slimmed
+  - id: A004
+    says: "Pre-check result has no assertions array"
+    block: "pre-check returns seal-only result"
+    target: "result.assertions"
+    matcher: "not_equals"
+    value: "defined"
+
+  - id: A005
+    says: "Pre-check result has no summary object"
+    block: "pre-check returns seal-only result"
+    target: "result.summary"
+    matcher: "not_equals"
+    value: "defined"
+
+  # AC3: parseDiffAddedCommentLines deleted
+  - id: A006
+    says: "The diff comment parser is no longer exported from verify"
+    block: "tag coverage mechanism is removed"
+    target: "verify.exports.parseDiffAddedCommentLines"
+    matcher: "not_equals"
+    value: "defined"
+
+  # AC4: Tag-coverage imports removed
+  - id: A007
+    says: "Tag coverage imports are removed from verify module"
+    block: "tag coverage mechanism is removed"
+    target: "verify.imports.execSync"
+    matcher: "not_equals"
+    value: "defined"
+
+  # AC5: runPreCheckAndStore stores seal-only data
+  - id: A008
+    says: "Saving a verify report stores only seal data in saves file"
+    block: "pre-check store writes seal-only data"
+    target: "saves.pre-check.seal"
+    matcher: "exists"
+
+  - id: A009
+    says: "Saved pre-check data has no assertions array"
+    block: "pre-check store writes seal-only data"
+    target: "saves.pre-check.assertions"
+    matcher: "not_equals"
+    value: "defined"
+
+  # AC6: Assertions bootstrap from contract.yaml
+  - id: A010
+    says: "Proof summary builds its assertion list from the contract file"
+    block: "assertions bootstrap from contract"
+    target: "summary.assertions.length"
+    matcher: "greater"
+    value: 0
+
+  - id: A011
+    says: "Bootstrapped assertions have no pre-check status field"
+    block: "assertions bootstrap from contract"
+    target: "summary.assertions[0].preCheckStatus"
+    matcher: "not_equals"
+    value: "defined"
+
+  # AC7: ProofAssertion type changes
+  - id: A012
+    says: "Verify status type accepts UNCOVERED for backward compatibility"
+    block: "old verify reports parse correctly"
+    target: "assertion.verifyStatus"
+    matcher: "equals"
+    value: "UNCOVERED"
+
+  # AC8: ProofSummary contract shape
+  - id: A013
+    says: "Proof summary contract section has no covered count"
+    block: "assertions bootstrap from contract"
+    target: "summary.contract.covered"
+    matcher: "not_equals"
+    value: "defined"
+
+  # AC9 + AC10: Status fallback in proof chain and PR
+  - id: A014
+    says: "Proof chain entry uses UNVERIFIED when verify hasn't assessed an assertion"
+    block: "unverified assertions get correct status"
+    target: "entry.assertions[0].status"
+    matcher: "equals"
+    value: "UNVERIFIED"
+
+  - id: A015
+    says: "PR body uses UNVERIFIED when verify hasn't assessed an assertion"
+    block: "PR body shows UNVERIFIED for unassessed assertions"
+    target: "prBody"
+    matcher: "contains"
+    value: "UNVERIFIED"
+
+  # AC11: ProofChainEntry status union
+  - id: A016
+    says: "Proof chain status type accepts both UNVERIFIED and UNCOVERED"
+    block: "proof chain entry accepts both statuses"
+    target: "statusUnion"
+    matcher: "contains"
+    value: "UNVERIFIED"
+
+  # AC12: Display handles both statuses
+  - id: A017
+    says: "UNVERIFIED assertions display with question mark icon"
+    block: "status icon handles UNVERIFIED"
+    target: "icon"
+    matcher: "contains"
+    value: "?"
+
+  - id: A018
+    says: "UNCOVERED assertions still display with question mark icon"
+    block: "status icon handles UNCOVERED"
+    target: "icon"
+    matcher: "contains"
+    value: "?"
+
+  # AC13: parseComplianceTable backward compat
+  - id: A019
+    says: "Old verify reports with UNCOVERED status parse correctly"
+    block: "old verify reports parse correctly"
+    target: "parsed[0].status"
+    matcher: "equals"
+    value: "UNCOVERED"
+
+  # AC17: Tag coverage tests deleted
+  - id: A020
+    says: "Tag coverage tests are removed from the verify test file"
+    block: "tag coverage tests are deleted"
+    target: "verifyTestLineCount"
+    matcher: "not_contains"
+    value: "parseDiffAddedCommentLines"
+
+  # AC18: All tests pass
+  - id: A021
+    says: "All remaining tests pass after the removal"
+    block: "full test suite passes"
+    target: "testResult"
+    matcher: "equals"
+    value: "pass"
+
+file_changes:
+  - path: "packages/cli/src/commands/verify.ts"
+    action: modify
+  - path: "packages/cli/src/commands/artifact.ts"
+    action: modify
+  - path: "packages/cli/src/utils/proofSummary.ts"
+    action: modify
+  - path: "packages/cli/src/commands/work.ts"
+    action: modify
+  - path: "packages/cli/src/commands/pr.ts"
+    action: modify
+  - path: "packages/cli/src/types/proof.ts"
+    action: modify
+  - path: "packages/cli/src/commands/proof.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/verify.test.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/artifact.test.ts"
+    action: modify
+  - path: "packages/cli/tests/utils/proofSummary.test.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/work.test.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/pr.test.ts"
+    action: modify
+  - path: "packages/cli/templates/.claude/agents/ana-build.md"
+    action: modify
+  - path: "packages/cli/templates/.claude/agents/ana-verify.md"
+    action: modify
+  - path: ".claude/agents/ana-build.md"
+    action: modify
+  - path: ".claude/agents/ana-verify.md"
+    action: modify
