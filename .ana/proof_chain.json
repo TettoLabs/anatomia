@@ -3127,7 +3127,10 @@
           "file": "packages/cli/src/commands/proof.ts",
           "anchor": "formatContextResult",
           "id": "clear-the-deck-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Root cause fixed by diff-scoped-tag-search (entry #27). Pre-check now searches added lines only.",
+          "closed_at": "2026-04-30T00:10:20.859Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
