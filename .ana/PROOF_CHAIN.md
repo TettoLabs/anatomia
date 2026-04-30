@@ -1,22 +1,22 @@
 # Proof Chain Dashboard
 
-33 runs · 75 active · 32 lessons · 0 promoted · 53 closed
+34 runs · 79 active · 33 lessons · 0 promoted · 53 closed
 
 ## Hot Modules
 
 | File | Active | Entries |
 |------|--------|--------|
+| packages/cli/src/commands/proof.ts | 12 | 7 |
 | packages/cli/tests/utils/proofSummary.test.ts | 10 | 6 |
 | packages/cli/src/utils/proofSummary.ts | 10 | 7 |
-| packages/cli/src/commands/proof.ts | 10 | 6 |
-| packages/cli/tests/commands/work.test.ts | 9 | 7 |
+| packages/cli/tests/commands/work.test.ts | 10 | 8 |
 | packages/cli/src/commands/work.ts | 7 | 6 |
 
 ## Promoted Rules
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 75 total)
+## Active Findings (30 shown of 79 total)
 
 ### packages/cli/src/commands/artifact.ts
 
@@ -24,14 +24,14 @@
 
 ### packages/cli/src/commands/proof.ts
 
+- **code:** Unknown severity values get own bucket instead of 'unclassified' as spec says — only '—' maps to unclassified, other unknowns display raw — *Proof Command UX*
+- **code:** SEVERITY_ORDER duplication still present — sevOrder inline array at line 1026 is correct local choice but broader duplication across audit/findings blocks remains — *Proof Command UX*
 - **code:** rule_text includes markdown bullet prefix '- ' in JSON output — *Proof Promote*
 - **code:** options.skill typed as non-optional string but can be undefined after requiredOption→option change — *Proof Promote*
 - **code:** No summary truncation for promoted finding display — long summaries break terminal formatting — *Proof Promote*
 - **code:** Hardcoded 10 in trend display instead of using MIN_ENTRIES_FOR_TREND constant. Template literal uses ${10} rather than importing and using the named constant, creating drift risk if threshold changes. — *Proof Health V1*
 - **code:** Promotion candidate display has no summary truncation. Long summaries from findings (up to 1000 chars) render untruncated in terminal output. Not a crash risk but degrades terminal readability. — *Proof Health V1*
 - **code:** SEVERITY_ORDER lookup duplicated identically in Findings block and Build Concerns block — extract to module-level constant — *Work Complete JSON + Proof Card Findings*
-- **code:** Duplicate 'from:' line in audit human-readable display — line 660 already has 'from: {feature}' in metadata, line 661 repeats it standalone — *Finding Enrichment Schema*
-- **code:** SEVERITY_WEIGHT map is local to audit command block — if severity sort is needed elsewhere, it will be duplicated — *Finding Enrichment Schema*
 
 ### packages/cli/src/commands/verify.ts
 
@@ -57,8 +57,8 @@
 
 ### packages/cli/tests/commands/proof.test.ts
 
+- **test:** A002 lacks negative proof of active-only counting — fixture has only active findings, no closed finding to prove exclusion — *Proof Command UX*
 - **test:** A006 test passes text with shell-escaped double quotes wrapping — tests quoted-string path not raw text — *Proof Promote*
-- **test:** createAuditChain helper never generates 'debt' severity — badge display for [debt · X] is untested in human-readable audit output — *Finding Enrichment Schema*
 
 ### packages/cli/tests/commands/verify.test.ts
 
@@ -66,10 +66,10 @@
 
 ### packages/cli/tests/commands/work.test.ts
 
+- **test:** A013 conditional assertion passes vacuously when health line absent — if (output.includes('Health:')) guard means zero assertions fire when improving trend doesn't produce a health line — *Proof Command UX*
 - **test:** A003 tagged test exercises normal completion, not recovery — does not assert 'Recovering' in output — *Harden Hot Files*
 - **test:** Pre-check COVERED status for A004-A010 comes from other features' tag collisions, not from harden-hot-files-specific tests — *Harden Hot Files*
 - **test:** Recovery path JSON test uses output.indexOf('{') to skip non-JSON output — fragile parsing that masks the stdout pollution issue — *Work Complete JSON + Proof Card Findings*
-- **test:** Severity migration tests (A019, A020, A021) don't have dedicated tagged tests in the changed test files — they're covered indirectly through the backfill loop in work.test.ts existing tests and by type-level evidence. No test explicitly creates a finding with severity 'blocker', runs the migration loop, and asserts severity is now 'risk'. The behavior is exercised but not directly asserted. — *Finding Enrichment Schema*
 
 ### packages/cli/tests/utils/proofSummary.test.ts
 

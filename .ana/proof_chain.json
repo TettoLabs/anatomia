@@ -7319,6 +7319,235 @@
           "suggested_action": "accept"
         }
       ]
+    },
+    {
+      "slug": "proof-command-ux",
+      "feature": "Proof Command UX",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 20,
+        "covered": 18,
+        "uncovered": 2,
+        "satisfied": 20,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Audit shows a severity breakdown of active findings",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "Audit severity counts only come from active findings",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Severity summary shows zero-count buckets as absent, not zero",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "Audit shows an action breakdown of active findings",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "Action summary uses the correct label format with closeable hint",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "Findings with unknown severity show as unclassified in the summary",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "When all findings are unclassified, the summary lines are hidden",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "Skipping summary lines does not break the rest of the audit output",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "Zero findings shows the clean message without summary lines",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "Audit JSON output is not affected by the summary line feature",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "New promotion candidates trigger a nudge to run the learn agent",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "Worsening trend triggers a nudge to run proof audit",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "Informational triggers like improvement do not show a nudge",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "When both candidates and worsening fire, only the learn nudge appears",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "Multiple nudges never appear on the same health line",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "JSON output includes a suggested action when candidates exist",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A017",
+          "says": "JSON output suggests audit when trend worsens",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A018",
+          "says": "JSON output has null suggested action when no actionable trigger fires",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A019",
+          "says": "All existing tests continue to pass",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A020",
+          "says": "Lint passes with no new violations",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 0,
+        "met": 0
+      },
+      "timing": {
+        "total_minutes": 150,
+        "think": 25,
+        "plan": 25,
+        "build": 117,
+        "verify": 7
+      },
+      "hashes": {
+        "scope": "sha256:d4141207162a0cfe3caec7be98c267254a73e73edf74c24ca5659c36db5f7cc9",
+        "contract": "sha256:fcb0a19b6b9131921312a5b825bead323fbefeb1fe0c1658422afb1b4d80f073",
+        "plan": "sha256:d0813a350687b43e12d467ea37f7bbf046616a34e1d3c52dc57422fa28fd10ce",
+        "spec": "sha256:892e2f0df23f60ab07d830786856f15b751ba89c6beb9956d18e3096f51c07ed",
+        "build-report": "sha256:caec4d9cf7b47c95f6c1eaebc303cd14f2054f39a75533d29cb37931daf1336d",
+        "build-data": "sha256:f50136efe30de9d3ae278c403d1d94d77d0b587495b7f5993c15cc01b5a555da",
+        "verify-report": "sha256:fac04d46aef11a32836811d94b0305c61193732a458780ec14bfbaf1cabc990a",
+        "verify-data": "sha256:16b0aafda85794daa1f924ac1708ccecfc39f978941a21d5519ee61c9a6106a6"
+      },
+      "completed_at": "2026-04-30T20:08:50.594Z",
+      "modules_touched": [
+        "packages/cli/src/commands/proof.ts",
+        "packages/cli/src/commands/work.ts",
+        "packages/cli/tests/commands/proof.test.ts",
+        "packages/cli/tests/commands/work.test.ts"
+      ],
+      "scope_summary": "The proof system computes quality intelligence — severity classifications, suggested actions, promotion candidates, trend trajectories. The CLI commands that surface this data (`ana proof audit`, `work complete`) show the data but don't tell developers what to do with it. \"71 active findings across 23 files\" is a number. \"5 risk, 4 promote, 9 closeable\" is a decision surface. \"Health: trend worsened\" is a fact. \"Health: trend worsened → ana proof audit\" is a nudge. Two display additions (~25 lines of production code) that transform proof output from data dumps into action surfaces.",
+      "findings": [
+        {
+          "category": "test",
+          "summary": "A013 conditional assertion passes vacuously when health line absent — if (output.includes('Health:')) guard means zero assertions fire when improving trend doesn't produce a health line",
+          "file": "packages/cli/tests/commands/work.test.ts",
+          "anchor": null,
+          "line": 2313,
+          "severity": "debt",
+          "suggested_action": "scope",
+          "related_assertions": [
+            "A013"
+          ],
+          "id": "proof-command-ux-C1",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "A002 lacks negative proof of active-only counting — fixture has only active findings, no closed finding to prove exclusion",
+          "file": "packages/cli/tests/commands/proof.test.ts",
+          "anchor": null,
+          "line": 1432,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "related_assertions": [
+            "A002"
+          ],
+          "id": "proof-command-ux-C2",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Unknown severity values get own bucket instead of 'unclassified' as spec says — only '—' maps to unclassified, other unknowns display raw",
+          "file": "packages/cli/src/commands/proof.ts",
+          "anchor": null,
+          "line": 1031,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "proof-command-ux-C3",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "SEVERITY_ORDER duplication still present — sevOrder inline array at line 1026 is correct local choice but broader duplication across audit/findings blocks remains",
+          "file": "packages/cli/src/commands/proof.ts",
+          "anchor": null,
+          "line": 1026,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "proof-command-ux-C4",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "Contract A013 assertion weaker than intent — not_contains '→' on stdout is trivially true when health line absent, doesn't prove nudge suppression on informational triggers",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "related_assertions": [
+            "A013"
+          ],
+          "id": "proof-command-ux-C5",
+          "status": "lesson"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "Work test findings use file: null to avoid staleness auto-close; real verify_data.yaml findings with file references would be auto-closed in test environments without matching source files",
+          "file": null,
+          "severity": "observation",
+          "suggested_action": "accept"
+        },
+        {
+          "summary": "Trend_worsened test uses monitor (not scope) for verify_data.yaml findings to avoid scope recurrence triggering new_candidates — test accurately isolates trend_worsened but doesn't test scope+worsened combo",
+          "file": null,
+          "severity": "observation",
+          "suggested_action": "accept"
+        }
+      ]
     }
   ],
   "schema": 1
