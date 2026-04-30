@@ -1286,6 +1286,11 @@ export async function completeWork(slug: string, options?: { json?: boolean }): 
         changed: healthChange.changed,
         trajectory: healthChange.trajectory,
         triggers: healthChange.triggers,
+        suggested_action: healthChange.triggers.includes('new_candidates')
+          ? 'run_learn'
+          : healthChange.triggers.includes('trend_worsened')
+            ? 'run_audit'
+            : null,
       },
     };
     console.log(JSON.stringify(wrapJsonResponse('work complete', jsonResults, mainChain), null, 2));
@@ -1300,7 +1305,12 @@ export async function completeWork(slug: string, options?: { json?: boolean }): 
 
     // Fourth line: health change notification
     if (healthChange.changed && healthChange.details.length > 0) {
-      const healthLine = `  Health: ${healthChange.details.join(' · ')}`;
+      let healthLine = `  Health: ${healthChange.details.join(' · ')}`;
+      if (healthChange.triggers.includes('new_candidates')) {
+        healthLine += ' → claude --agent ana-learn';
+      } else if (healthChange.triggers.includes('trend_worsened')) {
+        healthLine += ' → ana proof audit';
+      }
       console.log(chalk.gray(healthLine));
     }
   }
