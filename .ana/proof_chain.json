@@ -4378,7 +4378,10 @@
             "A029"
           ],
           "id": "structured-findings-companion-C4",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Root cause fixed by diff-scoped-tag-search (entry #27). Pre-check now searches added lines only.",
+          "closed_at": "2026-04-30T00:10:39.688Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
