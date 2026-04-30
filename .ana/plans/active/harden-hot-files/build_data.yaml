@@ -1,0 +1,8 @@
+schema: 1
+concerns:
+  - summary: "A004-A010 contract assertions are structural/behavioral with no dedicated tests — verified by code inspection only"
+    severity: observation
+    suggested_action: monitor
+  - summary: "14 pre-existing @typescript-eslint/no-explicit-any lint warnings in test files outside spec scope"
+    severity: observation
+    suggested_action: accept
