@@ -1,0 +1,23 @@
+schema: 1
+findings:
+  - category: upstream
+    summary: "Contract A001 specifies model: sonnet but developer overrode to opus[1m] — human decision, not a defect"
+    file: "packages/cli/templates/.claude/agents/ana-learn.md"
+    line: 2
+    severity: observation
+    suggested_action: accept
+    related_assertions: ["A001"]
+  - category: upstream
+    summary: "Scope lists registration file as init/assets.ts but AGENT_FILES lives in constants.ts — spec corrected this but scope is stale"
+    severity: observation
+    suggested_action: accept
+  - category: code
+    summary: "Template instructs Learn to read .claude/skills/{name}/SKILL.md but actual skill files use different naming (e.g., coding-standards.md not SKILL.md) — agent will adapt at runtime but the path hint is misleading"
+    file: "packages/cli/templates/.claude/agents/ana-learn.md"
+    line: 201
+    severity: debt
+    suggested_action: monitor
+  - category: test
+    summary: "All 24 contract assertions are UNCOVERED by tagged tests — spec says templates are markdown verified by reading not unit tests, so pre-check shows 0 covered. Mechanical verification was done manually in this report."
+    severity: observation
+    suggested_action: accept
