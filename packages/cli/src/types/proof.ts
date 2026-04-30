@@ -41,7 +41,6 @@ export interface ProofChainStats {
   newFindings: number;
   maintenance?: {
     auto_closed: number;
-    lessons_classified: number;
   };
 }
 
