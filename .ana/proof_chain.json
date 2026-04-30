@@ -6001,7 +6001,10 @@
           "severity": "risk",
           "suggested_action": "scope",
           "id": "work-complete-json-proof-card-C1",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "resolved: harden-hot-files guarded recovery log for JSON mode (9ac6644)",
+          "closed_at": "2026-04-30T23:02:55.812Z",
+          "closed_by": "human"
         },
         {
           "category": "code",

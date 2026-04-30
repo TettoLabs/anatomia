@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-35 runs · 63 active · 30 lessons · 0 promoted · 76 closed
+35 runs · 62 active · 30 lessons · 0 promoted · 77 closed
 
 ## Hot Modules
 
@@ -10,13 +10,13 @@
 | packages/cli/tests/commands/work.test.ts | 10 | 8 |
 | packages/cli/src/utils/proofSummary.ts | 8 | 7 |
 | packages/cli/tests/utils/proofSummary.test.ts | 7 | 4 |
-| packages/cli/src/commands/work.ts | 7 | 6 |
+| packages/cli/src/commands/work.ts | 6 | 6 |
 
 ## Promoted Rules
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 63 total)
+## Active Findings (30 shown of 62 total)
 
 ### packages/cli/src/commands/proof.ts
 
@@ -38,9 +38,9 @@
 
 - **test:** No tests for UNVERIFIED fallback — A014-A018 verified by source inspection only; work.ts, pr.ts, proof.ts UNVERIFIED paths have zero test coverage — *Remove Pre-Check Tag Coverage*
 - **code:** Stale comment references deleted reopen loop — *Delete backward-compatibility code*
-- **code:** Recovery path console.log on line 1078 leaks non-JSON text to stdout before JSON envelope — CI consumers doing JSON.parse(stdout) will fail — *Work Complete JSON + Proof Card Findings*
 - **code:** Main path re-reads proof_chain.json from disk for computeChainHealth after writeProofChain just wrote it — matches known build concern about nudge re-read pattern — *Work Complete JSON + Proof Card Findings*
 - **code:** Severity migration does not handle unexpected old values beyond blocker/note — if a future writer introduces an unknown severity value (e.g. from a malformed manual edit), the migration loop silently ignores it. Not blocking since validation prevents new bad values, but the migration is only protective for known old values. — *Finding Enrichment Schema*
+- **code:** Recovery path counts total findings via loop but main path uses stats.findings — two different counting mechanisms for the same display. If totalFindings computation in writeProofChain diverges from the simple loop, recovery output could drift. — *Harden git commit calls*
 
 ### packages/cli/src/utils/proofSummary.ts
 
