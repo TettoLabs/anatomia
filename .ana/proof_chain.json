@@ -7821,7 +7821,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "remove-tag-coverage-C4",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "accept: known regex limitation",
+          "closed_at": "2026-04-30T22:47:28.405Z",
+          "closed_by": "human"
         }
       ],
       "rejection_cycles": 0,

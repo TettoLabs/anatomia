@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-35 runs · 67 active · 30 lessons · 0 promoted · 72 closed
+35 runs · 66 active · 30 lessons · 0 promoted · 73 closed
 
 ## Hot Modules
 
@@ -8,7 +8,7 @@
 |------|--------|--------|
 | packages/cli/src/commands/proof.ts | 10 | 7 |
 | packages/cli/tests/commands/work.test.ts | 10 | 8 |
-| packages/cli/src/utils/proofSummary.ts | 9 | 7 |
+| packages/cli/src/utils/proofSummary.ts | 8 | 7 |
 | packages/cli/src/commands/work.ts | 8 | 7 |
 | packages/cli/tests/utils/proofSummary.test.ts | 7 | 4 |
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 67 total)
+## Active Findings (30 shown of 66 total)
 
 ### packages/cli/src/commands/proof.ts
 
@@ -45,7 +45,6 @@
 ### packages/cli/src/utils/proofSummary.ts
 
 - **code:** PreCheckData interface vestigial — retains assertions/covered/uncovered fields for reading old .saves.json but the code path that used them for assertion bootstrap is deleted — *Remove Pre-Check Tag Coverage*
-- **code:** parseComplianceTable regex omits UNVERIFIED — regex at line 171 matches SATISFIED|UNSATISFIED|DEVIATED|UNCOVERED but not UNVERIFIED. Correct behavior since verify reports never contain UNVERIFIED rows, but the omission could confuse future maintainers who see UNVERIFIED in the type union — *Remove Pre-Check Tag Coverage*
 - **code:** Trajectory 'worsening' label can be counterintuitive with sparse classification — reports worsening on 0.1 risks/run when most findings lack severity. Algorithm is correct but label may mislead operators. — *Proof Health V1*
 - **code:** ProofSummary.result still typed as string, not union — spec says to tighten to match ProofChainEntry ('PASS' | 'FAIL' | 'UNKNOWN') but builder left it as open string. Contract A004 only targets ProofChainEntry.result so not a contract violation, but consumers of ProofSummary.result don't get compiler protection. — *Finding Enrichment Schema*
 
@@ -56,6 +55,7 @@
 ### packages/cli/tests/commands/proof.test.ts
 
 - **test:** A002 lacks negative proof of active-only counting — fixture has only active findings, no closed finding to prove exclusion — *Proof Command UX*
+- **test:** createAuditChain helper never generates 'debt' severity — badge display for [debt · X] is untested in human-readable audit output — *Finding Enrichment Schema*
 
 ### packages/cli/tests/commands/verify.test.ts
 
