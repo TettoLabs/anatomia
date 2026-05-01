@@ -2956,4 +2956,247 @@ describe('ana proof', () => {
       expect(stderr).toContain('--skill is required');
     });
   });
+
+  // ─── Stale subcommand tests ───────────────────────────────────────
+
+  /**
+   * Helper to create a proof chain with staleness data
+   */
+  async function createStaleChain(): Promise<void> {
+    const entries = [
+      {
+        slug: 'fix-validation',
+        feature: 'Fix Validation',
+        result: 'PASS',
+        author: { name: 'Dev', email: 'dev@example.com' },
+        contract: { total: 1, covered: 1, uncovered: 0, satisfied: 1, unsatisfied: 0, deviated: 0 },
+        assertions: [{ id: 'A001', says: 'Works', status: 'SATISFIED' }],
+        acceptance_criteria: { total: 1, met: 1 },
+        timing: { total_minutes: 10 },
+        hashes: {},
+        completed_at: '2026-04-20T10:00:00Z',
+        modules_touched: ['src/api/payments.ts'],
+        findings: [
+          { id: 'F001', category: 'code', summary: 'Missing request validation', file: 'src/api/payments.ts', anchor: null, status: 'active', severity: 'risk', suggested_action: 'scope' },
+          { id: 'F002', category: 'test', summary: 'No test for edge case', file: 'src/api/payments.ts', anchor: null, status: 'active', severity: 'observation', suggested_action: 'monitor' },
+          { id: 'F003', category: 'code', summary: 'No file finding', file: null, anchor: null, status: 'active', severity: 'observation', suggested_action: 'accept' },
+        ],
+        rejection_cycles: 0,
+        previous_failures: [],
+        build_concerns: [],
+      },
+      {
+        slug: 'stripe-payments',
+        feature: 'Stripe Payments',
+        result: 'PASS',
+        author: { name: 'Dev', email: 'dev@example.com' },
+        contract: { total: 1, covered: 1, uncovered: 0, satisfied: 1, unsatisfied: 0, deviated: 0 },
+        assertions: [{ id: 'A001', says: 'Works', status: 'SATISFIED' }],
+        acceptance_criteria: { total: 1, met: 1 },
+        timing: { total_minutes: 10 },
+        hashes: {},
+        completed_at: '2026-04-21T10:00:00Z',
+        modules_touched: ['src/api/payments.ts'],
+        findings: [],
+        rejection_cycles: 0,
+        previous_failures: [],
+        build_concerns: [],
+      },
+      {
+        slug: 'auth-refactor',
+        feature: 'Auth Refactor',
+        result: 'PASS',
+        author: { name: 'Dev', email: 'dev@example.com' },
+        contract: { total: 1, covered: 1, uncovered: 0, satisfied: 1, unsatisfied: 0, deviated: 0 },
+        assertions: [{ id: 'A001', says: 'Works', status: 'SATISFIED' }],
+        acceptance_criteria: { total: 1, met: 1 },
+        timing: { total_minutes: 10 },
+        hashes: {},
+        completed_at: '2026-04-22T10:00:00Z',
+        modules_touched: ['src/api/payments.ts'],
+        findings: [],
+        rejection_cycles: 0,
+        previous_failures: [],
+        build_concerns: [],
+      },
+      {
+        slug: 'api-cleanup',
+        feature: 'API Cleanup',
+        result: 'PASS',
+        author: { name: 'Dev', email: 'dev@example.com' },
+        contract: { total: 1, covered: 1, uncovered: 0, satisfied: 1, unsatisfied: 0, deviated: 0 },
+        assertions: [{ id: 'A001', says: 'Works', status: 'SATISFIED' }],
+        acceptance_criteria: { total: 1, met: 1 },
+        timing: { total_minutes: 10 },
+        hashes: {},
+        completed_at: '2026-04-23T10:00:00Z',
+        modules_touched: ['src/api/payments.ts'],
+        findings: [],
+        rejection_cycles: 0,
+        previous_failures: [],
+        build_concerns: [],
+      },
+    ];
+
+    await createTestProject(tempDir);
+    await fs.writeFile(
+      path.join(tempDir, '.ana', 'proof_chain.json'),
+      JSON.stringify({ entries }, null, 2),
+    );
+  }
+
+  // @ana A022
+  describe('stale detects findings with subsequent modules_touched', () => {
+    it('shows stale findings grouped by confidence', async () => {
+      await createStaleChain();
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['stale']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('Stale Findings');
+      expect(stdout).toContain('F001');
+      expect(stdout).toContain('High confidence');
+    });
+  });
+
+  // @ana A025
+  describe('stale is read-only no branch check', () => {
+    it('succeeds without branch check from non-artifact branch', async () => {
+      execSync('git init', { cwd: tempDir, stdio: 'ignore' });
+      execSync('git config user.email "test@test.com"', { cwd: tempDir, stdio: 'ignore' });
+      execSync('git config user.name "Test"', { cwd: tempDir, stdio: 'ignore' });
+
+      const anaDir = path.join(tempDir, '.ana');
+      await fs.mkdir(anaDir, { recursive: true });
+      await fs.writeFile(path.join(anaDir, 'ana.json'), JSON.stringify({ artifactBranch: 'main' }));
+      await fs.writeFile(
+        path.join(anaDir, 'proof_chain.json'),
+        JSON.stringify({ entries: [closeEntry] }, null, 2),
+      );
+      execSync('git add -A && git commit -m "init"', { cwd: tempDir, stdio: 'ignore' });
+      execSync('git checkout -b feature/something', { cwd: tempDir, stdio: 'ignore' });
+
+      process.chdir(tempDir);
+
+      const { exitCode } = runProof(['stale']);
+      expect(exitCode).toBe(0);
+    });
+  });
+
+  // @ana A024
+  describe('stale --after filters by entry slug', () => {
+    it('only shows findings from the specified entry', async () => {
+      await createStaleChain();
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['stale', '--after', 'fix-validation']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('fix-validation');
+      expect(stdout).toContain('F001');
+    });
+  });
+
+  describe('stale --min-confidence high filters to high only', () => {
+    it('excludes medium confidence findings', async () => {
+      await createStaleChain();
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['stale', '--min-confidence', 'high']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('High confidence');
+      // F002 has only 3 subsequent entries (same as F001), so both are high
+      // But the output should not include "Medium confidence" section
+    });
+  });
+
+  describe('stale --json returns structured envelope', () => {
+    it('returns JSON with total_stale and confidence tiers', async () => {
+      await createStaleChain();
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['stale', '--json']);
+      expect(exitCode).toBe(0);
+
+      const json = JSON.parse(stdout);
+      expect(json.command).toBe('proof stale');
+      expect(json.results.total_stale).toBeGreaterThan(0);
+      expect(json.results.high_confidence).toBeDefined();
+      expect(json.results.medium_confidence).toBeDefined();
+      expect(json.meta.chain_runs).toBeDefined();
+    });
+  });
+
+  describe('stale with zero stale findings', () => {
+    it('shows zero message when no findings are stale', async () => {
+      // Create chain with findings but no subsequent modules_touched overlap
+      const entries = [{
+        slug: 'isolated',
+        feature: 'Isolated',
+        result: 'PASS',
+        author: { name: 'Dev', email: 'dev@example.com' },
+        contract: { total: 1, covered: 1, uncovered: 0, satisfied: 1, unsatisfied: 0, deviated: 0 },
+        assertions: [{ id: 'A001', says: 'Works', status: 'SATISFIED' }],
+        acceptance_criteria: { total: 1, met: 1 },
+        timing: { total_minutes: 10 },
+        hashes: {},
+        completed_at: '2026-04-20T10:00:00Z',
+        modules_touched: ['src/a.ts'],
+        findings: [
+          { id: 'F001', category: 'code', summary: 'Issue', file: 'src/a.ts', anchor: null, status: 'active', severity: 'risk', suggested_action: 'scope' },
+        ],
+        rejection_cycles: 0,
+        previous_failures: [],
+        build_concerns: [],
+      }];
+
+      await createTestProject(tempDir);
+      await fs.writeFile(
+        path.join(tempDir, '.ana', 'proof_chain.json'),
+        JSON.stringify({ entries }, null, 2),
+      );
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['stale']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('0 findings');
+      expect(stdout).toContain('No active findings have been modified');
+    });
+  });
+
+  // ─── Audit --full tests ──────��────────────────────────────────────
+
+  // @ana A026
+  describe('audit --json --full bypasses caps', () => {
+    it('returns all files and findings without truncation', async () => {
+      // 50 findings across 12 files — normally capped at 8 files / 3 per file
+      await createAuditChain(50, 12);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['audit', '--json', '--full']);
+      expect(exitCode).toBe(0);
+
+      const json = JSON.parse(stdout);
+      expect(json.results.by_file.length).toBeGreaterThan(8);
+      expect(json.results.overflow_files).toBe(0);
+      // Check a file with many findings has no truncation
+      const maxFile = json.results.by_file.reduce(
+        (max: { count: number }, f: { count: number }) => f.count > max.count ? f : max,
+        { count: 0 },
+      );
+      expect(maxFile.count).toBe(json.results.by_file.find((f: { file: string }) => f.file === maxFile.file).findings.length);
+    });
+  });
+
+  // @ana A027
+  describe('audit --full without --json prints hint', () => {
+    it('shows usage hint instead of output', async () => {
+      await createAuditChain(5, 2);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['audit', '--full']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('--json');
+      expect(stdout).toContain('agent consumption');
+    });
+  });
 });

@@ -25,7 +25,7 @@ import { execSync, spawnSync } from 'node:child_process';
 import { globSync } from 'glob';
 import type { ProofChainEntry, ProofChain } from '../types/proof.js';
 import { findProjectRoot } from '../utils/validators.js';
-import { getProofContext, wrapJsonResponse, wrapJsonError, generateDashboard, computeChainHealth, computeHealthReport } from '../utils/proofSummary.js';
+import { getProofContext, wrapJsonResponse, wrapJsonError, generateDashboard, computeChainHealth, computeHealthReport, computeStaleness } from '../utils/proofSummary.js';
 import type { ProofContextResult } from '../utils/proofSummary.js';
 import { readArtifactBranch, getCurrentBranch, readCoAuthor } from '../utils/git-operations.js';
 
@@ -1330,11 +1330,19 @@ export function registerProofCommand(program: Command): void {
   const auditCommand = new Command('audit')
     .description('List active findings grouped by file')
     .option('--json', 'Output JSON format')
-    .action(async (options: { json?: boolean }) => {
+    .option('--full', 'Return all findings without truncation (requires --json)')
+    .action(async (options: { json?: boolean; full?: boolean }) => {
       const proofRoot = findProjectRoot();
       const proofChainPath = path.join(proofRoot, '.ana', 'proof_chain.json');
       const parentOpts = proofCommand.opts();
       const useJson = options.json || parentOpts['json'];
+
+      // --full without --json: print usage hint and return
+      if (options.full && !useJson) {
+        console.log('The --full flag is designed for agent consumption. Use with --json:');
+        console.log('  ana proof audit --json --full');
+        return;
+      }
 
       // Read chain (no branch check — audit is read-only)
       if (!fs.existsSync(proofChainPath)) {
@@ -1432,12 +1440,13 @@ export function registerProofCommand(program: Command): void {
         fileGroups.set(key, existing);
       }
 
-      // Sort files by count descending, cap at 8
+      // Sort files by count descending, cap at 8 (unless --full)
       const MAX_FILES = 8;
       const MAX_PER_FILE = 3;
+      const useFull = options.full && useJson;
       const sortedFiles = Array.from(fileGroups.entries())
         .sort((a, b) => b[1].length - a[1].length)
-        .slice(0, MAX_FILES);
+        .slice(0, useFull ? undefined : MAX_FILES);
 
       // Sort findings within each file group by severity (risk → debt → observation → unclassified)
       for (const [, findings] of sortedFiles) {
@@ -1452,11 +1461,11 @@ export function registerProofCommand(program: Command): void {
         const byFile = sortedFiles.map(([file, findings]) => ({
           file,
           count: findings.length,
-          findings: findings.slice(0, MAX_PER_FILE),
-          overflow: Math.max(0, findings.length - MAX_PER_FILE),
+          findings: useFull ? findings : findings.slice(0, MAX_PER_FILE),
+          overflow: useFull ? 0 : Math.max(0, findings.length - MAX_PER_FILE),
         }));
         const totalFiles = fileGroups.size;
-        const overflowFiles = Math.max(0, totalFiles - MAX_FILES);
+        const overflowFiles = useFull ? 0 : Math.max(0, totalFiles - MAX_FILES);
         const result = {
           total_active: activeFindings.length,
           by_file: byFile,
@@ -1668,6 +1677,103 @@ export function registerProofCommand(program: Command): void {
     });
 
   proofCommand.addCommand(healthCommand);
+
+  // Register stale subcommand
+  const staleCommand = new Command('stale')
+    .description('Show findings with staleness signals from subsequent pipeline runs')
+    .option('--after <slug>', 'Filter to findings from a specific pipeline entry')
+    .option('--min-confidence <level>', 'Minimum confidence tier (high or medium)')
+    .option('--json', 'Output JSON format')
+    .action(async (options: { after?: string; minConfidence?: string; json?: boolean }) => {
+      const proofRoot = findProjectRoot();
+      const proofChainPath = path.join(proofRoot, '.ana', 'proof_chain.json');
+      const parentOpts = proofCommand.opts();
+      const useJson = options.json || parentOpts['json'];
+
+      // Read chain (no branch check — stale is read-only)
+      if (!fs.existsSync(proofChainPath)) {
+        if (useJson) {
+          console.log(JSON.stringify(wrapJsonResponse('proof stale', {
+            total_stale: 0,
+            high_confidence: [],
+            medium_confidence: [],
+            filter: options.after || null,
+          }, { entries: [] }), null, 2));
+        } else {
+          console.log('Stale Findings: 0 findings with staleness signals');
+          console.log('');
+          console.log('No proof chain found. Complete pipeline cycles to build proof data.');
+        }
+        return;
+      }
+
+      let chain: ProofChain;
+      try {
+        chain = JSON.parse(fs.readFileSync(proofChainPath, 'utf-8'));
+      } catch {
+        console.error(chalk.red('Error: Failed to parse proof_chain.json'));
+        process.exit(1);
+        return;
+      }
+
+      const stalenessOpts: { afterSlug?: string; minConfidence?: 'high' | 'medium' } = {};
+      if (options.after) stalenessOpts.afterSlug = options.after;
+      if (options.minConfidence === 'high') stalenessOpts.minConfidence = 'high';
+      const result = computeStaleness(chain, stalenessOpts);
+
+      if (useJson) {
+        console.log(JSON.stringify(wrapJsonResponse('proof stale', result, chain), null, 2));
+        return;
+      }
+
+      // Human-readable output
+      if (options.after) {
+        console.log(`Stale Findings: ${result.total_stale} finding${result.total_stale !== 1 ? 's' : ''} from ${options.after} with staleness signals`);
+      } else {
+        console.log(`Stale Findings: ${result.total_stale} finding${result.total_stale !== 1 ? 's' : ''} with staleness signals`);
+      }
+
+      if (result.total_stale === 0) {
+        console.log('');
+        console.log('No active findings have been modified by subsequent pipeline runs.');
+        return;
+      }
+
+      // High confidence tier
+      if (result.high_confidence.length > 0) {
+        console.log('');
+        console.log('High confidence (3+ subsequent entries modified the file):');
+        for (const f of result.high_confidence) {
+          console.log(`  ${f.id} [${f.severity}] ${f.summary} — ${f.file}`);
+          const slugList = f.subsequent_slugs.length <= 3
+            ? f.subsequent_slugs.join(', ')
+            : `${f.subsequent_slugs.slice(0, 3).join(', ')}, ... (${f.subsequent_count} entries)`;
+          console.log(`    Modified by: ${slugList} (${f.subsequent_count} ${f.subsequent_count !== 1 ? 'entries' : 'entry'})`);
+          if (f.completed_at) {
+            const date = f.completed_at.split('T')[0] ?? f.completed_at;
+            console.log(`    Created in: ${f.entry_slug} (${date})`);
+          }
+          console.log('');
+        }
+      }
+
+      // Medium confidence tier
+      if (result.medium_confidence.length > 0) {
+        console.log('Medium confidence (1-2 subsequent entries modified the file):');
+        for (const f of result.medium_confidence) {
+          console.log(`  ${f.id} [${f.severity}] ${f.summary} — ${f.file}`);
+          const slugList = f.subsequent_slugs.join(', ');
+          console.log(`    Modified by: ${slugList} (${f.subsequent_count} ${f.subsequent_count !== 1 ? 'entries' : 'entry'})`);
+          if (f.completed_at) {
+            const date = f.completed_at.split('T')[0] ?? f.completed_at;
+            console.log(`    Created in: ${f.entry_slug} (${date})`);
+          }
+          console.log('');
+        }
+      }
+    });
+
+  proofCommand.addCommand(staleCommand);
 
   program.addCommand(proofCommand);
 }
