@@ -1,0 +1,35 @@
+schema: 1
+findings:
+  - category: code
+    summary: "Inline import type for HealthReport instead of adding to existing type import at line 26"
+    file: "packages/cli/src/commands/proof.ts"
+    line: 233
+    severity: debt
+    suggested_action: accept
+    related_assertions: []
+  - category: test
+    summary: "A029 asserts on source code content — matches contract target but violates testing-standards skill rule"
+    file: "packages/cli/tests/commands/proof.test.ts"
+    line: 2393
+    severity: observation
+    suggested_action: accept
+    related_assertions: ["A029"]
+  - category: upstream
+    summary: "Contract A011 value '[obs' is substring of '[observation' — literal not_contains would always fail when observation-severity promote candidates exist"
+    severity: observation
+    suggested_action: monitor
+    related_assertions: ["A011"]
+  - category: code
+    summary: "MAX_SUMMARY constant (100) defined twice in adjacent loops — could be extracted to function-level const"
+    file: "packages/cli/src/commands/proof.ts"
+    line: 333
+    severity: debt
+    suggested_action: accept
+    related_assertions: []
+  - category: test
+    summary: "A019 not.toContain('Promote') works by coincidence — test data has no promoted findings so 'Promotions' heading also absent; a more targeted regex or exact heading match would be more robust"
+    file: "packages/cli/tests/commands/proof.test.ts"
+    line: 2196
+    severity: observation
+    suggested_action: accept
+    related_assertions: ["A019"]
