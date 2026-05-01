@@ -1,0 +1,14 @@
+schema: 1
+concerns:
+  - summary: "Contract A011 not_contains '[obs' matches substring of '[observation' — mechanical check may false-positive"
+    file: "packages/cli/tests/commands/proof.test.ts"
+    severity: observation
+    suggested_action: monitor
+  - summary: "Hot module column widths hardcoded at padEnd(24)/padEnd(35) — long names could overflow"
+    file: "packages/cli/src/commands/proof.ts"
+    severity: debt
+    suggested_action: monitor
+  - summary: "formatHealthDisplay date uses runtime new Date() — tests are time-dependent (same as formatHumanReadable)"
+    file: "packages/cli/src/commands/proof.ts"
+    severity: observation
+    suggested_action: accept
