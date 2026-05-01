@@ -1,0 +1,50 @@
+schema: 1
+findings:
+  - category: test
+    summary: "Weak assertions in stale integration tests — toBeGreaterThan(0) instead of specific counts"
+    file: "packages/cli/tests/commands/proof.test.ts"
+    line: 3122
+    severity: debt
+    suggested_action: monitor
+    related_assertions: ["A022"]
+
+  - category: test
+    summary: "toBeDefined() on JSON confidence tiers — verifies existence not structure"
+    file: "packages/cli/tests/commands/proof.test.ts"
+    line: 3123
+    severity: debt
+    suggested_action: monitor
+    related_assertions: ["A022"]
+
+  - category: code
+    summary: "--min-confidence accepts invalid values silently — no validation or Commander .choices()"
+    file: "packages/cli/src/commands/proof.ts"
+    line: 1721
+    severity: observation
+    suggested_action: accept
+
+  - category: test
+    summary: "No tagged test for template assertions A028-A033 — all verified by source inspection"
+    severity: observation
+    suggested_action: accept
+
+  - category: code
+    summary: "StaleFinding/StalenessResult types exported but never imported by name — consumed only via inline import() in proofSummary.ts"
+    file: "packages/cli/src/types/proof.ts"
+    line: 177
+    severity: observation
+    suggested_action: accept
+
+  - category: upstream
+    summary: "Dogfood test (agent-proof-context.test.ts:68) still excludes ana-learn.md from sync check"
+    file: "packages/cli/tests/templates/agent-proof-context.test.ts"
+    line: 68
+    severity: debt
+    suggested_action: scope
+
+  - category: code
+    summary: "O(n*m) traversal in computeStaleness — nested loop over entries × findings"
+    file: "packages/cli/src/utils/proofSummary.ts"
+    line: 1100
+    severity: observation
+    suggested_action: monitor

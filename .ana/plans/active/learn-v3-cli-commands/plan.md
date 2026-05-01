@@ -9,6 +9,6 @@
 - [x] New `strengthen` subcommand for skill file commit ceremony
   - Spec: spec-2.md
   - Depends on: Phase 1
-- [ ] New `stale` subcommand + `audit --full` flag + template cleanups
+- [x] New `stale` subcommand + `audit --full` flag + template cleanups
   - Spec: spec-3.md
   - Depends on: Phase 2
