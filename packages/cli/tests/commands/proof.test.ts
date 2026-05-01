@@ -1909,7 +1909,7 @@ describe('ana proof', () => {
     }
 
     // @ana A001
-    it('displays run count in terminal', async () => {
+    it('displays box header with command name', async () => {
       const entries = Array.from({ length: 28 }, (_, i) =>
         makeHealthEntry({ slug: `slug-${i}`, risks: 1 })
       );
@@ -1918,36 +1918,23 @@ describe('ana proof', () => {
 
       const { stdout, exitCode } = runProof(['health']);
       expect(exitCode).toBe(0);
-      expect(stdout).toContain('Proof Health:');
-      expect(stdout).toContain('28');
+      expect(stdout).toContain('ana proof health');
     });
 
     // @ana A002
-    it('displays trajectory with risks per run last 5', async () => {
-      const entries = Array.from({ length: 10 }, (_, i) =>
-        makeHealthEntry({ slug: `slug-${i}`, risks: i < 5 ? 3 : 1 })
+    it('displays box header with run count', async () => {
+      const entries = Array.from({ length: 28 }, (_, i) =>
+        makeHealthEntry({ slug: `slug-${i}`, risks: 1 })
       );
       await createProofChain(entries);
       process.chdir(tempDir);
 
       const { stdout } = runProof(['health']);
-      expect(stdout).toContain('Risks/run (last 5):');
+      expect(stdout).toContain('28 runs');
     });
 
     // @ana A003
-    it('displays trajectory with risks per run all', async () => {
-      const entries = Array.from({ length: 10 }, (_, i) =>
-        makeHealthEntry({ slug: `slug-${i}`, risks: 2 })
-      );
-      await createProofChain(entries);
-      process.chdir(tempDir);
-
-      const { stdout } = runProof(['health']);
-      expect(stdout).toContain('Risks/run (all):');
-    });
-
-    // @ana A004
-    it('displays trajectory with trend', async () => {
+    it('displays box header with date', async () => {
       const entries = Array.from({ length: 10 }, (_, i) =>
         makeHealthEntry({ slug: `slug-${i}`, risks: 1 })
       );
@@ -1955,11 +1942,76 @@ describe('ana proof', () => {
       process.chdir(tempDir);
 
       const { stdout } = runProof(['health']);
-      expect(stdout).toContain('Trend:');
+      expect(stdout).toContain('2026-');
+    });
+
+    // @ana A004
+    it('displays trajectory with trend first', async () => {
+      const entries = Array.from({ length: 10 }, (_, i) =>
+        makeHealthEntry({ slug: `slug-${i}`, risks: 1 })
+      );
+      await createProofChain(entries);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health']);
+      const trendLineIndex = stdout.split('\n').findIndex(l => l.includes('Trend:'));
+      expect(trendLineIndex).toBeGreaterThan(0);
+      const risksLineIndex = stdout.split('\n').findIndex(l => l.includes('Risks/run:'));
+      expect(trendLineIndex).toBeLessThan(risksLineIndex);
     });
 
     // @ana A005
-    it('displays hot modules section', async () => {
+    it('displays condensed risks per run', async () => {
+      const entries = Array.from({ length: 10 }, (_, i) =>
+        makeHealthEntry({ slug: `slug-${i}`, risks: i < 5 ? 3 : 1 })
+      );
+      await createProofChain(entries);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health']);
+      expect(stdout).toContain('(last 5)');
+      expect(stdout).toContain('(all)');
+    });
+
+    // @ana A006
+    it('displays unclassified as inline parenthetical', async () => {
+      // Create entries with unclassified findings (no severity)
+      const entries = Array.from({ length: 10 }, (_, i) => {
+        const entry = makeHealthEntry({ slug: `slug-${i}`, risks: 1 });
+        // Add an unclassified finding (no severity field)
+        (entry['findings'] as Array<Record<string, unknown>>).push({
+          id: `U${i}`,
+          category: 'code',
+          summary: `unclassified finding ${i}`,
+          file: 'src/test.ts',
+          anchor: null,
+          severity: null,
+          suggested_action: 'scope',
+          status: 'active',
+        });
+        return entry;
+      });
+      await createProofChain(entries);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health']);
+      expect(stdout).toContain('unclassified excluded');
+    });
+
+    // @ana A007
+    it('omits unclassified when zero', async () => {
+      const entries = Array.from({ length: 10 }, (_, i) =>
+        makeHealthEntry({ slug: `slug-${i}`, risks: 1 })
+      );
+      await createProofChain(entries);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health']);
+      expect(stdout).not.toContain('unclassified');
+    });
+
+    // @ana A008
+    it('truncates hot module paths to basename', async () => {
       const entries = [
         makeHealthEntry({ slug: 'e1', risks: 2, file: 'src/hot.ts' }),
         makeHealthEntry({ slug: 'e2', risks: 1, file: 'src/hot.ts' }),
@@ -1969,25 +2021,194 @@ describe('ana proof', () => {
 
       const { stdout } = runProof(['health']);
       expect(stdout).toContain('Hot Modules');
+      expect(stdout).toContain('hot.ts');
+      // Should NOT show full path when basename is unique
+      expect(stdout).not.toContain('src/hot.ts');
     });
 
-    // @ana A006
-    it('displays promotion candidates section', async () => {
-      await createProofChain([makeHealthEntry({ slug: 'e1', risks: 1, action: 'promote' })]);
+    // @ana A009
+    it('disambiguates colliding basenames', async () => {
+      const entries = [
+        makeHealthEntry({ slug: 'e1', risks: 2, file: 'src/commands/proof.ts' }),
+        makeHealthEntry({ slug: 'e2', risks: 2, file: 'src/commands/proof.ts' }),
+        makeHealthEntry({ slug: 'e3', risks: 2, file: 'src/engine/proof.ts' }),
+        makeHealthEntry({ slug: 'e4', risks: 2, file: 'src/engine/proof.ts' }),
+      ];
+      await createProofChain(entries);
       process.chdir(tempDir);
 
       const { stdout } = runProof(['health']);
-      expect(stdout).toContain('Promotion Candidates');
+      expect(stdout).toContain('commands/proof.ts');
+      expect(stdout).toContain('engine/proof.ts');
     });
 
-    // @ana A019, A020
-    it('handles empty chain without errors', async () => {
+    // @ana A010
+    it('abbreviates observation to obs in hot modules', async () => {
+      const entries = [
+        makeHealthEntry({ slug: 'e1', risks: 1, observations: 2, file: 'src/hot.ts' }),
+        makeHealthEntry({ slug: 'e2', observations: 1, file: 'src/hot.ts' }),
+      ];
+      await createProofChain(entries);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health']);
+      // Hot modules line should use "obs" not "observation"
+      const hotModulesLines = stdout.split('\n').filter(l => l.includes('findings'));
+      expect(hotModulesLines.length).toBeGreaterThan(0);
+      expect(hotModulesLines[0]).toContain('obs');
+      expect(hotModulesLines[0]).not.toContain('observation');
+    });
+
+    // @ana A011
+    it('keeps full observation in promote badges', async () => {
+      await createProofChain([
+        makeHealthEntry({ slug: 'e1', observations: 1, action: 'promote' }),
+      ]);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health']);
+      // Promote section uses full "observation" severity, not abbreviated "obs"
+      expect(stdout).toContain('[observation');
+      // Should NOT use the abbreviated form in promote badges
+      const promoteLines = stdout.split('\n').filter(l => l.includes('promote]'));
+      expect(promoteLines.length).toBeGreaterThan(0);
+      expect(promoteLines[0]).toContain('[observation');
+    });
+
+    // @ana A012
+    it('shows promote section for promote-action candidates', async () => {
+      await createProofChain([
+        makeHealthEntry({ slug: 'e1', risks: 1, action: 'promote' }),
+      ]);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health']);
+      expect(stdout).toContain('Promote');
+      expect(stdout).toContain('promote]');
+    });
+
+    // @ana A013
+    it('truncates promote candidate summaries', async () => {
+      const entry = makeHealthEntry({ slug: 'e1', risks: 0, action: 'promote' });
+      // Add a finding with a very long summary
+      (entry['findings'] as Array<Record<string, unknown>>).push({
+        id: 'F99',
+        category: 'code',
+        summary: 'A'.repeat(120),
+        file: 'src/test.ts',
+        anchor: null,
+        severity: 'debt',
+        suggested_action: 'promote',
+        status: 'active',
+      });
+      await createProofChain([entry]);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health']);
+      expect(stdout).toContain('...');
+    });
+
+    // @ana A014
+    it('shows severity badge on promote candidates', async () => {
+      await createProofChain([
+        makeHealthEntry({ slug: 'e1', risks: 1, action: 'promote' }),
+      ]);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health']);
+      expect(stdout).toContain('promote]');
+    });
+
+    // @ana A015
+    it('shows recurring section for scope-action candidates', async () => {
+      // Need same finding recurring across entries
+      const entries = [
+        makeHealthEntry({ slug: 'e1', debts: 1, action: 'scope' }),
+        makeHealthEntry({ slug: 'e2', debts: 1, action: 'scope' }),
+        makeHealthEntry({ slug: 'e3', debts: 1, action: 'scope' }),
+      ];
+      await createProofChain(entries);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health']);
+      expect(stdout).toContain('Recurring');
+    });
+
+    // @ana A016
+    it('shows entry count on recurring candidates', async () => {
+      const entries = [
+        makeHealthEntry({ slug: 'e1', debts: 1, action: 'scope' }),
+        makeHealthEntry({ slug: 'e2', debts: 1, action: 'scope' }),
+        makeHealthEntry({ slug: 'e3', debts: 1, action: 'scope' }),
+      ];
+      await createProofChain(entries);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health']);
+      expect(stdout).toContain('entries)');
+    });
+
+    // @ana A017
+    it('shows severity-only badge on recurring candidates', async () => {
+      const entries = [
+        makeHealthEntry({ slug: 'e1', debts: 1, action: 'scope' }),
+        makeHealthEntry({ slug: 'e2', debts: 1, action: 'scope' }),
+        makeHealthEntry({ slug: 'e3', debts: 1, action: 'scope' }),
+      ];
+      await createProofChain(entries);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health']);
+      expect(stdout).toContain('[debt]');
+    });
+
+    // @ana A018
+    it('omits empty sections', async () => {
+      // Only scope candidates, no promote, no hot modules
+      await createProofChain([
+        makeHealthEntry({ slug: 'e1', risks: 0 }),
+      ]);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health']);
+      expect(stdout).not.toContain('No candidates');
+      expect(stdout).not.toContain('No hot modules');
+    });
+
+    // @ana A019
+    it('omits promote section when empty', async () => {
+      // Only scope candidates, no promote action
+      await createProofChain([
+        makeHealthEntry({ slug: 'e1', risks: 1, action: 'scope' }),
+      ]);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health']);
+      expect(stdout).not.toContain('Promote');
+    });
+
+    // @ana A020, A021
+    it('shows box header for zero runs', async () => {
       await createProofChain([]);
       process.chdir(tempDir);
 
       const { stdout, exitCode } = runProof(['health']);
       expect(exitCode).toBe(0);
       expect(stdout).toContain('0 runs');
+      expect(stdout).toContain('No data.');
+      expect(stdout).toContain('ana proof health');
+    });
+
+    // @ana A022
+    it('shows section dividers', async () => {
+      const entries = Array.from({ length: 10 }, (_, i) =>
+        makeHealthEntry({ slug: `slug-${i}`, risks: 1 })
+      );
+      await createProofChain(entries);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health']);
+      expect(stdout).toContain('\u2500\u2500\u2500\u2500\u2500\u2500');
     });
 
     it('handles missing proof chain', async () => {
@@ -1997,6 +2218,94 @@ describe('ana proof', () => {
       const { stdout, exitCode } = runProof(['health']);
       expect(exitCode).toBe(0);
       expect(stdout).toContain('0 runs');
+      expect(stdout).toContain('No data.');
+      expect(stdout).toContain('ana proof health');
+    });
+
+    // @ana A027
+    it('displays insufficient data trend', async () => {
+      // Fewer than 10 entries → insufficient_data
+      const entries = Array.from({ length: 3 }, (_, i) =>
+        makeHealthEntry({ slug: `slug-${i}`, risks: 1 })
+      );
+      await createProofChain(entries);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health']);
+      expect(stdout).toContain('insufficient data');
+    });
+
+    // @ana A028
+    it('displays no classified data trend', async () => {
+      // All findings have null severity → no_classified_data
+      const entries = Array.from({ length: 10 }, (_, i) => {
+        const entry = makeHealthEntry({ slug: `slug-${i}` });
+        entry['findings'] = [{
+          id: 'F1',
+          category: 'code',
+          summary: 'unclassified',
+          file: 'src/test.ts',
+          anchor: null,
+          severity: null,
+          suggested_action: 'scope',
+          status: 'active',
+        }];
+        return entry;
+      });
+      await createProofChain(entries);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health']);
+      expect(stdout).toContain('no classified data');
+    });
+
+    // @ana A023
+    it('shows promotions effectiveness section', async () => {
+      // First entry has a promoted finding; subsequent entries have matching findings
+      const entries = Array.from({ length: 6 }, (_, i) => {
+        const entry = makeHealthEntry({ slug: `slug-${i}`, debts: 1 });
+        const findings = entry['findings'] as Array<Record<string, unknown>>;
+        const finding = findings[0]!;
+        if (i === 0) {
+          // First entry: the promoted finding
+          finding['status'] = 'promoted';
+          finding['promoted_to'] = 'coding-standards';
+        }
+        return entry;
+      });
+      await createProofChain(entries);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health']);
+      expect(stdout).toContain('Promotions');
+    });
+
+    // @ana A024
+    it('omits promotions when empty', async () => {
+      await createProofChain([
+        makeHealthEntry({ slug: 'e1', risks: 1, action: 'scope' }),
+      ]);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health']);
+      expect(stdout).not.toContain('Promotions');
+    });
+
+    // @ana A025, A026
+    it('preserves JSON output structure', async () => {
+      const entries = Array.from({ length: 10 }, (_, i) =>
+        makeHealthEntry({ slug: `slug-${i}`, risks: 1 })
+      );
+      await createProofChain(entries);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health', '--json']);
+      const json = JSON.parse(stdout);
+      expect(json.command).toBe('proof health');
+      expect(json.results.trajectory).toBeDefined();
+      expect(json.results.hot_modules).toBeDefined();
+      expect(json.results.promotion_candidates).toBeDefined();
+      expect(json.results.promotions).toBeDefined();
     });
 
     // JSON tests
@@ -2076,6 +2385,17 @@ describe('ana proof', () => {
       const { stdout } = runProof(['--json', 'health']);
       const json = JSON.parse(stdout);
       expect(json.command).toBe('proof health');
+    });
+
+    // @ana A029
+    it('uses MIN_ENTRIES_FOR_TREND constant', async () => {
+      // Verify source code uses the constant instead of hardcoded 10
+      const { readFileSync } = await import('node:fs');
+      const sourcePath = path.join(__dirname, '../../src/commands/proof.ts');
+      const source = readFileSync(sourcePath, 'utf-8');
+      expect(source).toContain('MIN_ENTRIES_FOR_TREND');
+      // Verify the old hardcoded pattern is not present
+      expect(source).not.toContain('need ${10}');
     });
 
     it('empty chain JSON output', async () => {

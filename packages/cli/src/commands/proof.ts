@@ -25,7 +25,7 @@ import { execSync, spawnSync } from 'node:child_process';
 import { globSync } from 'glob';
 import type { ProofChainEntry, ProofChain } from '../types/proof.js';
 import { findProjectRoot } from '../utils/validators.js';
-import { getProofContext, wrapJsonResponse, wrapJsonError, generateDashboard, computeChainHealth, computeHealthReport, computeStaleness } from '../utils/proofSummary.js';
+import { getProofContext, wrapJsonResponse, wrapJsonError, generateDashboard, computeChainHealth, computeHealthReport, computeStaleness, MIN_ENTRIES_FOR_TREND } from '../utils/proofSummary.js';
 import type { ProofContextResult } from '../utils/proofSummary.js';
 import { readArtifactBranch, getCurrentBranch, readCoAuthor } from '../utils/git-operations.js';
 
@@ -212,6 +212,165 @@ function formatHumanReadable(entry: ProofChainEntry): string {
     for (const assertion of deviatedAssertions) {
       lines.push(`  ${assertion.id}: ${assertion.says}`);
       lines.push(`        → ${assertion.deviation}`);
+    }
+  }
+
+  lines.push('');
+
+  return lines.join('\n');
+}
+
+/**
+ * Format health display for terminal output.
+ *
+ * Accepts either a HealthReport object or `0` for the zero-runs case
+ * (chain missing or empty). Produces a box-header display matching
+ * the proof card pattern from formatHumanReadable.
+ *
+ * @param reportOrZero - HealthReport or 0 for zero-runs
+ * @returns Formatted terminal output string
+ */
+function formatHealthDisplay(reportOrZero: import('../types/proof.js').HealthReport | 0): string {
+  const lines: string[] = [];
+  const isZero = reportOrZero === 0;
+  const runs = isZero ? 0 : reportOrZero.runs;
+
+  // Date for header
+  const dateStr = new Date().toISOString().split('T')[0] ?? '';
+
+  // Box header — same dimensions as formatHumanReadable
+  const boxWidth = 71;
+  const innerWidth = boxWidth - 2;
+
+  const titleLine = '  ana proof health';
+  const runLabel = `${runs} ${runs !== 1 ? 'runs' : 'run'}`;
+  const secondLine = `  ${runLabel}`;
+  const padding = innerWidth - secondLine.length - dateStr.length;
+  const secondWithDate = `${secondLine}${' '.repeat(Math.max(1, padding))}${dateStr}`;
+
+  lines.push(chalk.cyan(BOX.topLeft + BOX.horizontal.repeat(innerWidth) + BOX.topRight));
+  lines.push(chalk.cyan(BOX.vertical) + chalk.bold(titleLine.padEnd(innerWidth)) + chalk.cyan(BOX.vertical));
+  lines.push(chalk.cyan(BOX.vertical) + secondWithDate.padEnd(innerWidth) + chalk.cyan(BOX.vertical));
+  lines.push(chalk.cyan(BOX.bottomLeft + BOX.horizontal.repeat(innerWidth) + BOX.bottomRight));
+
+  // Zero-runs: just show "No data." and return
+  if (isZero || runs === 0) {
+    lines.push('');
+    lines.push('  No data.');
+    lines.push('');
+    return lines.join('\n');
+  }
+
+  const report = reportOrZero;
+
+  // Trajectory section
+  lines.push('');
+  lines.push(chalk.bold('  Trajectory'));
+  lines.push(chalk.gray('  ' + BOX.horizontal.repeat(10)));
+
+  if (report.trajectory.trend === 'no_classified_data') {
+    lines.push('  Trend:      no classified data');
+    lines.push('  Risks/run:  no classified data');
+  } else {
+    const trendDisplay = report.trajectory.trend === 'insufficient_data'
+      ? `insufficient data (need ${MIN_ENTRIES_FOR_TREND}+ runs)`
+      : report.trajectory.trend;
+    lines.push(`  Trend:      ${trendDisplay}`);
+
+    const last5 = report.trajectory.risks_per_run_last5 !== null
+      ? String(report.trajectory.risks_per_run_last5)
+      : 'no data';
+    const all = report.trajectory.risks_per_run_all !== null
+      ? String(report.trajectory.risks_per_run_all)
+      : 'no data';
+
+    let risksLine = `  Risks/run:  ${last5} (last 5) \u00b7 ${all} (all)`;
+    if (report.trajectory.unclassified_count > 0) {
+      risksLine += `  (${report.trajectory.unclassified_count} unclassified excluded)`;
+    }
+    lines.push(risksLine);
+  }
+
+  // Hot Modules section — omit when empty
+  if (report.hot_modules.length > 0) {
+    // Build basename map for disambiguation
+    const basenameCounts = new Map<string, number>();
+    for (const mod of report.hot_modules) {
+      const base = path.basename(mod.file);
+      basenameCounts.set(base, (basenameCounts.get(base) ?? 0) + 1);
+    }
+
+    lines.push('');
+    lines.push(chalk.bold('  Hot Modules'));
+    lines.push(chalk.gray('  ' + BOX.horizontal.repeat(11)));
+
+    for (const mod of report.hot_modules) {
+      const base = path.basename(mod.file);
+      const displayName = (basenameCounts.get(base) ?? 0) > 1
+        ? `${path.basename(path.dirname(mod.file))}/${base}`
+        : base;
+
+      const sevParts: string[] = [];
+      if (mod.by_severity.risk > 0) sevParts.push(`${mod.by_severity.risk} risk`);
+      if (mod.by_severity.debt > 0) sevParts.push(`${mod.by_severity.debt} debt`);
+      if (mod.by_severity.observation > 0) sevParts.push(`${mod.by_severity.observation} obs`);
+      if (mod.by_severity.unclassified > 0) sevParts.push(`${mod.by_severity.unclassified} unclassified`);
+
+      const nameCol = displayName.padEnd(24);
+      const findingsCol = `${mod.finding_count} findings (${sevParts.join(', ')})`;
+      lines.push(`  ${nameCol}${findingsCol.padEnd(35)}${mod.entry_count} runs`);
+    }
+  }
+
+  // Promote section — only promote-action candidates
+  const promoteCandidates = report.promotion_candidates.filter(c => c.suggested_action === 'promote');
+  if (promoteCandidates.length > 0) {
+    lines.push('');
+    lines.push(chalk.bold('  Promote'));
+    lines.push(chalk.gray('  ' + BOX.horizontal.repeat(7)));
+
+    for (const c of promoteCandidates) {
+      const MAX_SUMMARY = 100;
+      const summary = c.summary.length > MAX_SUMMARY
+        ? c.summary.slice(0, MAX_SUMMARY) + '...'
+        : c.summary;
+      const fileSuffix = c.file ? ` \u2014 ${path.basename(c.file)}` : '';
+      lines.push(`  [${c.severity} \u00b7 promote] ${summary}${fileSuffix}`);
+    }
+  }
+
+  // Recurring section — scope-action candidates with recurrence_count >= 2
+  const recurringCandidates = report.promotion_candidates.filter(
+    c => c.suggested_action === 'scope' && (c.recurrence_count ?? 0) >= 2
+  );
+  if (recurringCandidates.length > 0) {
+    lines.push('');
+    lines.push(chalk.bold('  Recurring'));
+    lines.push(chalk.gray('  ' + BOX.horizontal.repeat(9)));
+
+    for (const c of recurringCandidates) {
+      const MAX_SUMMARY = 100;
+      const summary = c.summary.length > MAX_SUMMARY
+        ? c.summary.slice(0, MAX_SUMMARY) + '...'
+        : c.summary;
+      const fileSuffix = c.file ? ` \u2014 ${path.basename(c.file)}` : '';
+      lines.push(`  [${c.severity}] ${summary}${fileSuffix} (${c.recurrence_count} entries)`);
+    }
+  }
+
+  // Promotions effectiveness section — only when promoted findings exist
+  if (report.promotions.length > 0) {
+    lines.push('');
+    lines.push(chalk.bold('  Promotions'));
+    lines.push(chalk.gray('  ' + BOX.horizontal.repeat(10)));
+
+    for (const p of report.promotions) {
+      if (p.status === 'tracking') {
+        lines.push(`  [${p.severity}] ${p.summary}  tracking... (${p.subsequent_entries} entries, need 5)`);
+      } else {
+        const pct = p.reduction_pct !== null ? `${p.reduction_pct}%` : '\u2014';
+        lines.push(`  [${p.severity}] ${p.summary}  ${p.status} (${pct} reduction)`);
+      }
     }
   }
 
@@ -1572,10 +1731,7 @@ export function registerProofCommand(program: Command): void {
             promotions: [],
           }, { entries: [] }), null, 2));
         } else {
-          console.log('Proof Health: 0 runs');
-          console.log('');
-          console.log('Trajectory');
-          console.log('  No data.');
+          console.log(formatHealthDisplay(0));
         }
         return;
       }
@@ -1597,83 +1753,7 @@ export function registerProofCommand(program: Command): void {
       }
 
       // Terminal display
-      console.log(`Proof Health: ${report.runs} ${report.runs !== 1 ? 'runs' : 'run'}`);
-      console.log('');
-
-      if (report.runs === 0) {
-        console.log('Trajectory');
-        console.log('  No data.');
-        return;
-      }
-
-      // Trajectory section
-      console.log('Trajectory');
-      if (report.trajectory.trend === 'no_classified_data') {
-        console.log('  Risks/run (last 5):  no classified data');
-        console.log('  Risks/run (all):     no classified data');
-        console.log('  Trend:               no classified data');
-      } else {
-        const last5 = report.trajectory.risks_per_run_last5 !== null
-          ? String(report.trajectory.risks_per_run_last5)
-          : 'no data';
-        const all = report.trajectory.risks_per_run_all !== null
-          ? String(report.trajectory.risks_per_run_all)
-          : 'no data';
-        console.log(`  Risks/run (last 5):  ${last5}`);
-        console.log(`  Risks/run (all):     ${all}`);
-
-        const trendDisplay = report.trajectory.trend === 'insufficient_data'
-          ? `insufficient data (need ${10}+ runs)`
-          : report.trajectory.trend;
-        console.log(`  Trend:               ${trendDisplay}`);
-      }
-      if (report.trajectory.unclassified_count > 0) {
-        console.log(`  Unclassified:        ${report.trajectory.unclassified_count} findings (excluded from trajectory)`);
-      } else {
-        console.log(`  Unclassified:        ${report.trajectory.unclassified_count}`);
-      }
-      console.log('');
-
-      // Hot Modules section
-      console.log(`Hot Modules (3+ findings from 2+ runs)`);
-      if (report.hot_modules.length === 0) {
-        console.log('  No hot modules.');
-      } else {
-        for (const mod of report.hot_modules) {
-          const sevParts: string[] = [];
-          if (mod.by_severity.risk > 0) sevParts.push(`${mod.by_severity.risk} risk`);
-          if (mod.by_severity.debt > 0) sevParts.push(`${mod.by_severity.debt} debt`);
-          if (mod.by_severity.observation > 0) sevParts.push(`${mod.by_severity.observation} observation`);
-          if (mod.by_severity.unclassified > 0) sevParts.push(`${mod.by_severity.unclassified} unclassified`);
-          console.log(`  ${mod.file}    ${mod.finding_count} findings (${sevParts.join(', ')})  from ${mod.entry_count} runs`);
-        }
-      }
-      console.log('');
-
-      // Promotion Candidates section
-      console.log('Promotion Candidates');
-      if (report.promotion_candidates.length === 0) {
-        console.log('  No candidates.');
-      } else {
-        for (const c of report.promotion_candidates) {
-          const recurrence = c.recurrence_count ? `  (recurring: ${c.recurrence_count} entries)` : '';
-          console.log(`  ${c.id}  [${c.severity} · ${c.suggested_action}]  ${c.summary}${recurrence}`);
-        }
-      }
-
-      // Promotions section — only show if there are promoted findings
-      if (report.promotions.length > 0) {
-        console.log('');
-        console.log('Promotion Effectiveness');
-        for (const p of report.promotions) {
-          if (p.status === 'tracking') {
-            console.log(`  ${p.id}  ${p.summary}  tracking... (${p.subsequent_entries} entries, need 5)`);
-          } else {
-            const pct = p.reduction_pct !== null ? `${p.reduction_pct}%` : '—';
-            console.log(`  ${p.id}  ${p.summary}  ${p.status} (${pct} reduction)`);
-          }
-        }
-      }
+      console.log(formatHealthDisplay(report));
     });
 
   proofCommand.addCommand(healthCommand);
