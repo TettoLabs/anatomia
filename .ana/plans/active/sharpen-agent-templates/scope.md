@@ -18,15 +18,50 @@ The Verify mandate reword is the highest-value change — it determines what ent
 
 ## Approach
 
-Four surgical text edits. Full requirements with exact current/proposed text, rationale, and 90/90 customer test for each change are in `anatomia_reference/PROOF_SYSTEM/SHARPEN_AGENT_TEMPLATES_REQUIREMENTS.md`.
+Four surgical text edits. Exact text for each change below.
 
-**Change 1:** Reword Verify's quantity mandate (ana-verify.md line 11). Drop dirt-producing examples ("unclear names, inconsistent patterns"), add gold-producing examples ("assertions that pass on broken AND working code, patterns that work now but break at scale"). Add conviction line ("every codebase carries tech debt... if you found none, you didn't look deep enough") and consequence test ("what goes wrong, and for whom?").
+**Change 1: Reword Verify's quantity mandate (ana-verify.md line 11)**
 
-**Change 2:** Delete the minimum finding count (ana-verify.md line 367). "Minimum: one Code finding, one Test finding. Upstream when applicable." — replaced by the conviction in Change 1. The count was a checkbox. The conviction can't be satisfied with dirt.
+Current:
+```
+Finding problems is success. A report with zero findings means you didn't look hard enough. There are ALWAYS observations — unclear names, missing edge cases, weak error messages, untested paths, inconsistent patterns. The question is whether findings are blockers (prevent shipping) or observations (worth knowing). The answer is never "nothing to report."
+```
 
-**Change 3:** Add proof surface awareness to Think (ana.md, after line 293). Three lines: `ana proof health`, `ana proof audit`, route to Learn for management. Think can answer "how's our quality?" and route proof chain management questions.
+Replace with:
+```
+Finding problems is success. A report with zero findings means you didn't look hard enough. There are ALWAYS observations — missing edge cases, untested error paths, assertions that pass on broken AND working code, patterns that work now but break at scale. Every codebase carries tech debt, weak tests, and architectural shortcuts. If you found none, you didn't look deep enough. Each finding should answer: what goes wrong, and for whom? The question is whether findings are blockers (prevent shipping) or observations (worth knowing for the next engineer). The answer is never "nothing to report."
+```
 
-**Change 4:** Fold quality posture check into Think's step 3 (ana.md line 108). "If the scope touches hot modules, run `ana proof health` to check trajectory — a worsening trend changes what the scope should prioritize." One sentence added to existing step 3, no renumbering.
+**Change 2: Delete the minimum finding count (ana-verify.md line 367)**
+
+Delete this entire line:
+```
+Minimum: one Code finding, one Test finding. Upstream when applicable.
+```
+
+The conviction in Change 1 replaces the count. "Upstream when applicable" is defined in 4 other template locations (lines 125, 131, 359, 364).
+
+**Change 3: Add proof surface awareness to Think (ana.md, insert after line 293)**
+
+Insert before the `---` separator that precedes Conversation Style:
+```
+**Proof surface** (for scoping context):
+- `ana proof health` — quality trajectory, hot modules, trends
+- `ana proof audit` — all active findings with severity and action classification
+- For proof chain management (promote, close, triage): route to `claude --agent ana-learn`
+```
+
+**Change 4: Fold quality posture check into Think's step 3 (ana.md line 108)**
+
+Current:
+```
+3. **Check proof chain** — run `ana proof context {files}` to surface relevant lessons for the affected modules
+```
+
+Replace with:
+```
+3. **Check proof chain** — run `ana proof context {files}` to surface relevant lessons for the affected modules. If the scope touches hot modules, run `ana proof health` to check trajectory — a worsening trend changes what the scope should prioritize.
+```
 
 ## Acceptance Criteria
 
@@ -81,7 +116,7 @@ No code analog — this is template text editing. The closest analog is the Lear
 - `.claude/agents/ana.md` — dogfood copy, must match template
 
 ### Patterns to Follow
-- The requirements file has exact current and proposed text for every change. The builder should use the proposed text verbatim.
+- The scope's Approach section has exact current and proposed text for every change. The builder should use the proposed text verbatim.
 
 ### Known Gotchas
 - The mandate reword at line 11 is a single paragraph. Don't accidentally split it into multiple paragraphs — the line breaks matter for how the LLM reads it.
@@ -90,4 +125,4 @@ No code analog — this is template text editing. The closest analog is the Lear
 - Dogfood sync: after editing templates, copy to `.claude/agents/` and verify with `diff`. The V3 scope did this correctly — follow the same pattern.
 
 ### Things to Investigate
-None — the requirements have exact text for every change.
+None — the scope has exact text for every change.
