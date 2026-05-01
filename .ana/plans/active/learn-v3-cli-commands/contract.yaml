@@ -1,0 +1,270 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Learn V3 — CLI Commands + Template Finalization"
+
+assertions:
+  # ─── Phase 1: readCoAuthor + Variadic Close/Promote ───────────────
+
+  # readCoAuthor
+  - id: A001
+    says: "A shared utility reads the co-author name from project config"
+    block: "readCoAuthor reads from ana.json"
+    target: "readCoAuthor.return"
+    matcher: "equals"
+    value: "Custom Bot <bot@example.com>"
+
+  - id: A002
+    says: "Co-author utility falls back to the default when config is missing"
+    block: "readCoAuthor falls back on missing file"
+    target: "readCoAuthor.return"
+    matcher: "equals"
+    value: "Ana <build@anatomia.dev>"
+
+  - id: A003
+    says: "Inline co-author reads are replaced with the shared utility"
+    block: "dedup removes inline coAuthor reads"
+    target: "inlineCoAuthorCount"
+    matcher: "equals"
+    value: 0
+
+  # Variadic close
+  - id: A004
+    says: "Closing a single finding still works after the variadic change"
+    block: "close single ID backward compatible"
+    target: "exitCode"
+    matcher: "equals"
+    value: 0
+
+  - id: A005
+    says: "Multiple findings can be closed in a single command"
+    block: "close variadic closes multiple findings"
+    target: "closedCount"
+    matcher: "equals"
+    value: 2
+
+  - id: A006
+    says: "Closing multiple findings produces only one git commit"
+    block: "close variadic one commit"
+    target: "commitCount"
+    matcher: "equals"
+    value: 1
+
+  - id: A007
+    says: "Invalid finding IDs are skipped without blocking valid ones"
+    block: "close partial failure skips invalid IDs"
+    target: "results.skipped"
+    matcher: "contains"
+    value: "F999"
+
+  - id: A008
+    says: "Dry run shows what would happen without making changes"
+    block: "close dry-run makes no changes"
+    target: "finding.status"
+    matcher: "equals"
+    value: "active"
+
+  - id: A009
+    says: "Close commits include the co-author trailer"
+    block: "close commit has co-author trailer"
+    target: "commitBody"
+    matcher: "contains"
+    value: "Co-authored-by:"
+
+  # Variadic promote
+  - id: A010
+    says: "Promoting a single finding still works after the variadic change"
+    block: "promote single ID backward compatible"
+    target: "exitCode"
+    matcher: "equals"
+    value: 0
+
+  - id: A011
+    says: "Multiple findings can be promoted in a single command"
+    block: "promote variadic promotes multiple findings"
+    target: "promotedCount"
+    matcher: "equals"
+    value: 2
+
+  - id: A012
+    says: "Promoting multiple findings appends only one rule to the skill file"
+    block: "promote variadic one rule appended"
+    target: "ruleCount"
+    matcher: "equals"
+    value: 1
+
+  - id: A013
+    says: "Promote commits include the co-author trailer"
+    block: "promote commit has co-author trailer"
+    target: "commitBody"
+    matcher: "contains"
+    value: "Co-authored-by:"
+
+  # ─── Phase 2: Strengthen ─────────────────────────────────────────
+
+  - id: A014
+    says: "Strengthen commits a skill file edit and marks findings as promoted"
+    block: "strengthen succeeds with uncommitted changes"
+    target: "finding.status"
+    matcher: "equals"
+    value: "promoted"
+
+  - id: A015
+    says: "Strengthen links the finding to the specific skill file"
+    block: "strengthen sets promoted_to"
+    target: "finding.promoted_to"
+    matcher: "contains"
+    value: ".claude/skills/coding-standards/SKILL.md"
+
+  - id: A016
+    says: "Strengthen refuses to run when the skill file has no pending edits"
+    block: "strengthen rejects when no uncommitted changes"
+    target: "exitCode"
+    matcher: "not_equals"
+    value: 0
+
+  - id: A017
+    says: "Strengthen error clearly tells the user to edit the skill file first"
+    block: "strengthen no-changes error message"
+    target: "errorOutput"
+    matcher: "contains"
+    value: "No uncommitted changes"
+
+  - id: A018
+    says: "Strengthen uses the learn commit prefix, not proof"
+    block: "strengthen commit message format"
+    target: "commitSubject"
+    matcher: "contains"
+    value: "[learn] Strengthen"
+
+  - id: A019
+    says: "Strengthen commits include the co-author trailer"
+    block: "strengthen commit has co-author trailer"
+    target: "commitBody"
+    matcher: "contains"
+    value: "Co-authored-by:"
+
+  - id: A020
+    says: "Already-closed findings can be strengthened with the force flag"
+    block: "strengthen --force on closed finding"
+    target: "exitCode"
+    matcher: "equals"
+    value: 0
+
+  - id: A021
+    says: "Multiple findings can be strengthened in a single command"
+    block: "strengthen variadic"
+    target: "strengthenedCount"
+    matcher: "equals"
+    value: 2
+
+  # ─── Phase 3: Stale + Audit Full + Templates ─────────────────────
+
+  - id: A022
+    says: "Stale command identifies findings whose files were modified by later pipeline runs"
+    block: "stale detects findings with subsequent modules_touched"
+    target: "results.total_stale"
+    matcher: "greater"
+    value: 0
+
+  - id: A023
+    says: "High-confidence stale findings have three or more subsequent entries modifying the file"
+    block: "stale high confidence tier"
+    target: "results.high_confidence[0].subsequent_count"
+    matcher: "greater"
+    value: 2
+
+  - id: A024
+    says: "Stale findings can be filtered to a specific pipeline run"
+    block: "stale --after filters by entry slug"
+    target: "results.total_stale"
+    matcher: "greater"
+    value: 0
+
+  - id: A025
+    says: "Stale command works without checking out a specific branch"
+    block: "stale is read-only no branch check"
+    target: "exitCode"
+    matcher: "equals"
+    value: 0
+
+  - id: A026
+    says: "Full audit returns all findings without truncation for agent consumption"
+    block: "audit --json --full bypasses caps"
+    target: "results.by_file.length"
+    matcher: "greater"
+    value: 8
+
+  - id: A027
+    says: "Full audit without JSON mode shows a usage hint instead of raw output"
+    block: "audit --full without --json prints hint"
+    target: "stdout"
+    matcher: "contains"
+    value: "--json"
+
+  - id: A028
+    says: "The Learn template assumes all CLI commands exist with no fallback instructions"
+    block: "learn template has zero degradation paths"
+    target: "degradationCount"
+    matcher: "equals"
+    value: 0
+
+  - id: A029
+    says: "The Learn template shows variadic ID examples for batch operations"
+    block: "learn template has variadic examples"
+    target: "templateContent"
+    matcher: "contains"
+    value: "F001 F002"
+
+  - id: A030
+    says: "The Learn template references the stale command instead of manual analysis"
+    block: "learn template uses ana proof stale"
+    target: "templateContent"
+    matcher: "contains"
+    value: "ana proof stale"
+
+  - id: A031
+    says: "The dogfood Learn template matches the shipped template exactly"
+    block: "learn template dogfood matches template"
+    target: "contentMatch"
+    matcher: "truthy"
+
+  - id: A032
+    says: "The dogfood Verify template matches the shipped template exactly"
+    block: "verify template dogfood matches template"
+    target: "contentMatch"
+    matcher: "truthy"
+
+file_changes:
+  # Phase 1
+  - path: "packages/cli/src/utils/git-operations.ts"
+    action: modify
+  - path: "packages/cli/src/commands/proof.ts"
+    action: modify
+  - path: "packages/cli/src/commands/artifact.ts"
+    action: modify
+  - path: "packages/cli/src/commands/work.ts"
+    action: modify
+  - path: "packages/cli/src/commands/pr.ts"
+    action: modify
+  - path: "packages/cli/tests/utils/git-operations.test.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/proof.test.ts"
+    action: modify
+
+  # Phase 2 (proof.ts and proof.test.ts already listed)
+
+  # Phase 3
+  - path: "packages/cli/src/utils/proofSummary.ts"
+    action: modify
+  - path: "packages/cli/src/types/proof.ts"
+    action: modify
+  - path: "packages/cli/templates/.claude/agents/ana-learn.md"
+    action: modify
+  - path: ".claude/agents/ana-learn.md"
+    action: modify
+  - path: "packages/cli/templates/.claude/agents/ana-verify.md"
+    action: modify
+  - path: ".claude/agents/ana-verify.md"
+    action: modify
+  - path: "packages/cli/tests/utils/proofSummary.test.ts"
+    action: modify
