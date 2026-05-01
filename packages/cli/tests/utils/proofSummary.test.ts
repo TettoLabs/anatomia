@@ -22,6 +22,7 @@ import {
   computeChainHealth,
   computeHealthReport,
   detectHealthChange,
+  computeStaleness,
   MIN_FINDINGS_HOT,
   MIN_ENTRIES_HOT,
   TRAJECTORY_WINDOW,
@@ -2711,5 +2712,282 @@ describe('detectHealthChange', () => {
     });
     expect(change.trajectory).toBeDefined();
     expect(change.trajectory.risks_per_run_all).toBeDefined();
+  });
+});
+
+describe('computeStaleness', () => {
+  // @ana A022
+  it('detects findings whose files were modified by subsequent entries', () => {
+    const chain = {
+      entries: [
+        {
+          slug: 'entry-1',
+          completed_at: '2026-04-20T10:00:00Z',
+          modules_touched: ['src/api/payments.ts'],
+          findings: [
+            { id: 'F001', status: 'active', severity: 'risk', category: 'code', summary: 'Missing validation', file: 'src/api/payments.ts' },
+          ],
+        },
+        {
+          slug: 'entry-2',
+          completed_at: '2026-04-21T10:00:00Z',
+          modules_touched: ['src/api/payments.ts'],
+          findings: [],
+        },
+        {
+          slug: 'entry-3',
+          completed_at: '2026-04-22T10:00:00Z',
+          modules_touched: ['src/api/payments.ts'],
+          findings: [],
+        },
+        {
+          slug: 'entry-4',
+          completed_at: '2026-04-23T10:00:00Z',
+          modules_touched: ['src/api/payments.ts'],
+          findings: [],
+        },
+      ],
+    };
+    const result = computeStaleness(chain);
+    expect(result.total_stale).toBeGreaterThan(0);
+    expect(result.high_confidence.length).toBe(1);
+    expect(result.high_confidence[0]!.id).toBe('F001');
+    expect(result.high_confidence[0]!.subsequent_count).toBe(3);
+    expect(result.high_confidence[0]!.subsequent_slugs).toEqual(['entry-2', 'entry-3', 'entry-4']);
+  });
+
+  // @ana A023
+  it('assigns high confidence when 3+ subsequent entries modified the file', () => {
+    const chain = {
+      entries: [
+        {
+          slug: 'entry-1',
+          completed_at: '2026-04-20T10:00:00Z',
+          modules_touched: [],
+          findings: [
+            { id: 'F001', status: 'active', severity: 'risk', category: 'code', summary: 'Issue', file: 'src/app.ts' },
+          ],
+        },
+        { slug: 'entry-2', completed_at: '2026-04-21T10:00:00Z', modules_touched: ['src/app.ts'], findings: [] },
+        { slug: 'entry-3', completed_at: '2026-04-22T10:00:00Z', modules_touched: ['src/app.ts'], findings: [] },
+        { slug: 'entry-4', completed_at: '2026-04-23T10:00:00Z', modules_touched: ['src/app.ts'], findings: [] },
+      ],
+    };
+    const result = computeStaleness(chain);
+    expect(result.high_confidence.length).toBe(1);
+    expect(result.high_confidence[0]!.subsequent_count).toBeGreaterThan(2);
+    expect(result.high_confidence[0]!.confidence).toBe('high');
+  });
+
+  it('assigns medium confidence when 1-2 subsequent entries modified the file', () => {
+    const chain = {
+      entries: [
+        {
+          slug: 'entry-1',
+          completed_at: '2026-04-20T10:00:00Z',
+          modules_touched: [],
+          findings: [
+            { id: 'F001', status: 'active', severity: 'debt', category: 'code', summary: 'Debt issue', file: 'src/utils.ts' },
+          ],
+        },
+        { slug: 'entry-2', completed_at: '2026-04-21T10:00:00Z', modules_touched: ['src/utils.ts'], findings: [] },
+      ],
+    };
+    const result = computeStaleness(chain);
+    expect(result.medium_confidence.length).toBe(1);
+    expect(result.medium_confidence[0]!.confidence).toBe('medium');
+    expect(result.medium_confidence[0]!.subsequent_count).toBe(1);
+  });
+
+  // @ana A024
+  it('filters by afterSlug to only show findings from that entry', () => {
+    const chain = {
+      entries: [
+        {
+          slug: 'entry-1',
+          completed_at: '2026-04-20T10:00:00Z',
+          modules_touched: [],
+          findings: [
+            { id: 'F001', status: 'active', severity: 'risk', category: 'code', summary: 'First', file: 'src/a.ts' },
+          ],
+        },
+        {
+          slug: 'entry-2',
+          completed_at: '2026-04-21T10:00:00Z',
+          modules_touched: ['src/a.ts'],
+          findings: [
+            { id: 'F002', status: 'active', severity: 'debt', category: 'code', summary: 'Second', file: 'src/b.ts' },
+          ],
+        },
+        {
+          slug: 'entry-3',
+          completed_at: '2026-04-22T10:00:00Z',
+          modules_touched: ['src/a.ts', 'src/b.ts'],
+          findings: [],
+        },
+      ],
+    };
+    const result = computeStaleness(chain, { afterSlug: 'entry-1' });
+    expect(result.total_stale).toBeGreaterThan(0);
+    // Only F001 from entry-1 should appear
+    const allIds = [...result.high_confidence, ...result.medium_confidence].map(f => f.id);
+    expect(allIds).toContain('F001');
+    expect(allIds).not.toContain('F002');
+  });
+
+  it('filters by minConfidence high to exclude medium', () => {
+    const chain = {
+      entries: [
+        {
+          slug: 'entry-1',
+          completed_at: '2026-04-20T10:00:00Z',
+          modules_touched: [],
+          findings: [
+            { id: 'F001', status: 'active', severity: 'risk', category: 'code', summary: 'High', file: 'src/a.ts' },
+            { id: 'F002', status: 'active', severity: 'debt', category: 'code', summary: 'Medium', file: 'src/b.ts' },
+          ],
+        },
+        { slug: 'e2', completed_at: '2026-04-21T10:00:00Z', modules_touched: ['src/a.ts', 'src/b.ts'], findings: [] },
+        { slug: 'e3', completed_at: '2026-04-22T10:00:00Z', modules_touched: ['src/a.ts'], findings: [] },
+        { slug: 'e4', completed_at: '2026-04-23T10:00:00Z', modules_touched: ['src/a.ts'], findings: [] },
+      ],
+    };
+    const result = computeStaleness(chain, { minConfidence: 'high' });
+    expect(result.high_confidence.length).toBe(1);
+    expect(result.medium_confidence.length).toBe(0);
+    expect(result.total_stale).toBe(1);
+  });
+
+  it('returns empty result when no findings are stale', () => {
+    const chain = {
+      entries: [
+        {
+          slug: 'entry-1',
+          completed_at: '2026-04-20T10:00:00Z',
+          modules_touched: ['src/a.ts'],
+          findings: [
+            { id: 'F001', status: 'active', severity: 'risk', category: 'code', summary: 'Issue', file: 'src/a.ts' },
+          ],
+        },
+        {
+          slug: 'entry-2',
+          completed_at: '2026-04-21T10:00:00Z',
+          modules_touched: ['src/other.ts'],
+          findings: [],
+        },
+      ],
+    };
+    const result = computeStaleness(chain);
+    expect(result.total_stale).toBe(0);
+    expect(result.high_confidence).toEqual([]);
+    expect(result.medium_confidence).toEqual([]);
+  });
+
+  it('skips findings with no file', () => {
+    const chain = {
+      entries: [
+        {
+          slug: 'entry-1',
+          completed_at: '2026-04-20T10:00:00Z',
+          modules_touched: [],
+          findings: [
+            { id: 'F001', status: 'active', severity: 'risk', category: 'upstream', summary: 'No file ref', file: null },
+          ],
+        },
+        { slug: 'entry-2', completed_at: '2026-04-21T10:00:00Z', modules_touched: ['src/a.ts'], findings: [] },
+      ],
+    };
+    const result = computeStaleness(chain);
+    expect(result.total_stale).toBe(0);
+  });
+
+  it('skips non-active findings', () => {
+    const chain = {
+      entries: [
+        {
+          slug: 'entry-1',
+          completed_at: '2026-04-20T10:00:00Z',
+          modules_touched: [],
+          findings: [
+            { id: 'F001', status: 'closed', severity: 'risk', category: 'code', summary: 'Closed', file: 'src/a.ts' },
+            { id: 'F002', status: 'promoted', severity: 'debt', category: 'code', summary: 'Promoted', file: 'src/a.ts' },
+          ],
+        },
+        { slug: 'entry-2', completed_at: '2026-04-21T10:00:00Z', modules_touched: ['src/a.ts'], findings: [] },
+      ],
+    };
+    const result = computeStaleness(chain);
+    expect(result.total_stale).toBe(0);
+  });
+
+  it('does not count the finding own entry modules_touched as subsequent', () => {
+    const chain = {
+      entries: [
+        {
+          slug: 'entry-1',
+          completed_at: '2026-04-20T10:00:00Z',
+          modules_touched: ['src/a.ts'],
+          findings: [
+            { id: 'F001', status: 'active', severity: 'risk', category: 'code', summary: 'In own entry', file: 'src/a.ts' },
+          ],
+        },
+      ],
+    };
+    const result = computeStaleness(chain);
+    expect(result.total_stale).toBe(0);
+  });
+
+  it('only counts entries AFTER the finding entry, not before', () => {
+    const chain = {
+      entries: [
+        { slug: 'before', completed_at: '2026-04-19T10:00:00Z', modules_touched: ['src/a.ts'], findings: [] },
+        {
+          slug: 'entry-1',
+          completed_at: '2026-04-20T10:00:00Z',
+          modules_touched: [],
+          findings: [
+            { id: 'F001', status: 'active', severity: 'risk', category: 'code', summary: 'Issue', file: 'src/a.ts' },
+          ],
+        },
+      ],
+    };
+    const result = computeStaleness(chain);
+    expect(result.total_stale).toBe(0);
+  });
+
+  it('returns zero findings for afterSlug that does not exist', () => {
+    const chain = {
+      entries: [
+        {
+          slug: 'entry-1',
+          completed_at: '2026-04-20T10:00:00Z',
+          modules_touched: [],
+          findings: [
+            { id: 'F001', status: 'active', severity: 'risk', category: 'code', summary: 'Issue', file: 'src/a.ts' },
+          ],
+        },
+        { slug: 'entry-2', completed_at: '2026-04-21T10:00:00Z', modules_touched: ['src/a.ts'], findings: [] },
+      ],
+    };
+    const result = computeStaleness(chain, { afterSlug: 'nonexistent' });
+    expect(result.total_stale).toBe(0);
+  });
+
+  it('handles entries with empty modules_touched', () => {
+    const chain = {
+      entries: [
+        {
+          slug: 'entry-1',
+          completed_at: '2026-04-20T10:00:00Z',
+          modules_touched: [],
+          findings: [
+            { id: 'F001', status: 'active', severity: 'risk', category: 'code', summary: 'Issue', file: 'src/a.ts' },
+          ],
+        },
+        { slug: 'entry-2', completed_at: '2026-04-21T10:00:00Z', modules_touched: [], findings: [] },
+      ],
+    };
+    const result = computeStaleness(chain);
+    expect(result.total_stale).toBe(0);
   });
 });

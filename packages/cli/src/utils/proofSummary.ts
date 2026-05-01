@@ -1061,6 +1061,100 @@ export function detectHealthChange(chain: {
 }
 
 /**
+ * Compute staleness analysis for active findings in the proof chain.
+ *
+ * Cross-references each active finding's `file` against `modules_touched`
+ * in subsequent entries. A finding is "stale" if the file it references
+ * was modified by a later pipeline run — the code may have changed.
+ *
+ * Pure synchronous function — caller handles file I/O.
+ *
+ * @param chain - Parsed proof chain with entries containing findings and modules_touched
+ * @param chain.entries - Array of proof chain entries with findings and modules_touched
+ * @param options - Optional filters: afterSlug (only findings from that entry), minConfidence ('high' | 'medium')
+ * @param options.afterSlug - Only include findings from the entry with this slug
+ * @param options.minConfidence - Minimum confidence tier to include ('high' excludes medium)
+ * @returns StalenessResult with findings grouped by confidence tier
+ */
+export function computeStaleness(
+  chain: {
+    entries: Array<{
+      slug?: string;
+      completed_at?: string;
+      modules_touched?: string[];
+      findings?: Array<{
+        id?: string;
+        status?: string;
+        severity?: string;
+        category?: string;
+        summary?: string;
+        file?: string | null;
+      }>;
+    }>;
+  },
+  options?: { afterSlug?: string; minConfidence?: 'high' | 'medium' },
+): import('../types/proof.js').StalenessResult {
+  const highConfidence: import('../types/proof.js').StaleFinding[] = [];
+  const mediumConfidence: import('../types/proof.js').StaleFinding[] = [];
+
+  for (let i = 0; i < chain.entries.length; i++) {
+    const entry = chain.entries[i]!;
+
+    // If --after filter, only consider findings from that entry
+    if (options?.afterSlug && entry.slug !== options.afterSlug) continue;
+
+    for (const f of entry.findings || []) {
+      // Only active findings
+      if (f.status && f.status !== 'active') continue;
+      // Must have a file to cross-reference
+      if (!f.file) continue;
+
+      // Check subsequent entries for modules_touched overlap
+      const subsequentSlugs: string[] = [];
+      for (let j = i + 1; j < chain.entries.length; j++) {
+        const laterEntry = chain.entries[j]!;
+        const touched = laterEntry.modules_touched || [];
+        if (touched.includes(f.file)) {
+          subsequentSlugs.push(laterEntry.slug || `entry-${j}`);
+        }
+      }
+
+      if (subsequentSlugs.length === 0) continue;
+
+      const staleFinding: import('../types/proof.js').StaleFinding = {
+        id: f.id || 'unknown',
+        category: f.category || 'code',
+        summary: f.summary || '',
+        file: f.file,
+        severity: f.severity || 'unclassified',
+        entry_slug: entry.slug || '',
+        completed_at: entry.completed_at || '',
+        subsequent_slugs: subsequentSlugs,
+        subsequent_count: subsequentSlugs.length,
+        confidence: subsequentSlugs.length >= 3 ? 'high' : 'medium',
+      };
+
+      if (staleFinding.confidence === 'high') {
+        highConfidence.push(staleFinding);
+      } else {
+        mediumConfidence.push(staleFinding);
+      }
+    }
+  }
+
+  // Apply minConfidence filter
+  const filteredHigh = highConfidence;
+  const filteredMedium = options?.minConfidence === 'high' ? [] : mediumConfidence;
+
+  return {
+    total_stale: filteredHigh.length + filteredMedium.length,
+    high_confidence: filteredHigh,
+    medium_confidence: filteredMedium,
+    filter: options?.afterSlug || null,
+  };
+}
+
+/**
  * Compute chain health counts from a parsed ProofChain object.
  *
  * Pure synchronous function — caller handles file I/O.
