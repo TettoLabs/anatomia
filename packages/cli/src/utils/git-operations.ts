@@ -83,6 +83,40 @@ export function readBranchPrefix(projectRoot?: string): string {
 }
 
 /**
+ * Read the co-author trailer value from .ana/ana.json. Returns the default
+ * `'Ana <build@anatomia.dev>'` when the file is missing, corrupted, or
+ * lacks the field.
+ *
+ * The fallback behavior is intentional — every command that commits should
+ * include a trailer, and the default is always safe to use.
+ *
+ * @param projectRoot - Project root path (defaults to cwd)
+ * @returns The configured co-author string, or the default
+ */
+export function readCoAuthor(projectRoot?: string): string {
+  const anaJsonPath = path.join(projectRoot ?? process.cwd(), '.ana', 'ana.json');
+
+  if (!fs.existsSync(anaJsonPath)) {
+    return 'Ana <build@anatomia.dev>';
+  }
+
+  let config: Record<string, unknown>;
+  try {
+    const content = fs.readFileSync(anaJsonPath, 'utf-8');
+    config = JSON.parse(content);
+  } catch {
+    return 'Ana <build@anatomia.dev>';
+  }
+
+  const coAuthor = config['coAuthor'];
+  if (typeof coAuthor !== 'string') {
+    return 'Ana <build@anatomia.dev>';
+  }
+
+  return coAuthor;
+}
+
+/**
  * Get the current git branch name, or null if not in a git repo.
  *
  * @returns Current branch name, or null on failure

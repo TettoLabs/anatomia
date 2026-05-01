@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import * as os from 'node:os';
-import { readBranchPrefix } from '../../src/utils/git-operations.js';
+import { readBranchPrefix, readCoAuthor } from '../../src/utils/git-operations.js';
 import { AnaJsonSchema } from '../../src/commands/init/anaJsonSchema.js';
 
 /**
@@ -78,6 +78,56 @@ describe('readBranchPrefix', () => {
     await fs.writeFile(path.join(anaDir, 'ana.json'), '{invalid json', 'utf-8');
     const result = readBranchPrefix(tempDir);
     expect(result).toBe('feature/');
+  });
+});
+
+describe('readCoAuthor', () => {
+  let tempDir: string;
+
+  beforeEach(async () => {
+    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'git-ops-coauthor-'));
+  });
+
+  afterEach(async () => {
+    await fs.rm(tempDir, { recursive: true, force: true });
+  });
+
+  /** Helper to write an ana.json fixture */
+  async function writeAnaJson(config: Record<string, unknown>): Promise<void> {
+    const anaDir = path.join(tempDir, '.ana');
+    await fs.mkdir(anaDir, { recursive: true });
+    await fs.writeFile(
+      path.join(anaDir, 'ana.json'),
+      JSON.stringify(config, null, 2),
+      'utf-8'
+    );
+  }
+
+  // @ana A001
+  it('reads coAuthor from ana.json when present', async () => {
+    await writeAnaJson({ coAuthor: 'Custom Bot <bot@example.com>' });
+    const result = readCoAuthor(tempDir);
+    expect(result).toBe('Custom Bot <bot@example.com>');
+  });
+
+  // @ana A002
+  it('returns default when ana.json is missing', () => {
+    const result = readCoAuthor(tempDir);
+    expect(result).toBe('Ana <build@anatomia.dev>');
+  });
+
+  it('returns default when coAuthor field is absent', async () => {
+    await writeAnaJson({ artifactBranch: 'main' });
+    const result = readCoAuthor(tempDir);
+    expect(result).toBe('Ana <build@anatomia.dev>');
+  });
+
+  it('returns default when ana.json is corrupted', async () => {
+    const anaDir = path.join(tempDir, '.ana');
+    await fs.mkdir(anaDir, { recursive: true });
+    await fs.writeFile(path.join(anaDir, 'ana.json'), '{invalid json', 'utf-8');
+    const result = readCoAuthor(tempDir);
+    expect(result).toBe('Ana <build@anatomia.dev>');
   });
 });
 
