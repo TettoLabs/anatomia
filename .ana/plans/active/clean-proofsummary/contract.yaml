@@ -1,0 +1,120 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Clean proofSummary.ts"
+
+assertions:
+  # Fix 1: Dead code deletion
+  - id: A001
+    says: "The dead generateActiveIssuesMarkdown function is removed from the codebase"
+    block: "dead code deletion removes generateActiveIssuesMarkdown"
+    target: "grep.generateActiveIssuesMarkdown.sourceCount"
+    matcher: "equals"
+    value: 0
+
+  - id: A002
+    says: "The dead ProofChainEntryForIndex interface is removed"
+    block: "dead code deletion removes ProofChainEntryForIndex"
+    target: "grep.ProofChainEntryForIndex.count"
+    matcher: "equals"
+    value: 0
+
+  - id: A003
+    says: "The dead MAX_ACTIVE_ISSUES constant is removed"
+    block: "dead code deletion removes MAX_ACTIVE_ISSUES"
+    target: "grep.MAX_ACTIVE_ISSUES.count"
+    matcher: "equals"
+    value: 0
+
+  - id: A004
+    says: "FindingWithFeature interface is preserved for generateDashboard"
+    block: "dead code deletion preserves FindingWithFeature"
+    target: "grep.FindingWithFeature.sourceCount"
+    matcher: "greater"
+    value: 0
+
+  - id: A005
+    says: "The dashboard function is unchanged except for a comment update"
+    block: "dead code deletion preserves generateDashboard"
+    target: "export.generateDashboard"
+    matcher: "exists"
+
+  # Fix 2: Type tightening
+  - id: A006
+    says: "Proof result type only allows PASS, FAIL, or UNKNOWN — not any string"
+    block: "ProofSummary result type is union"
+    target: "ProofSummary.result.type"
+    matcher: "equals"
+    value: "'PASS' | 'FAIL' | 'UNKNOWN'"
+
+  - id: A007
+    says: "The parseResult function return type matches the tightened union"
+    block: "parseResult return type is union"
+    target: "parseResult.returnType"
+    matcher: "equals"
+    value: "'PASS' | 'FAIL' | 'UNKNOWN'"
+
+  - id: A008
+    says: "The type cast workaround in work.ts is no longer needed"
+    block: "work.ts cast is removed"
+    target: "grep.asProofChainEntryResult.work.count"
+    matcher: "equals"
+    value: 0
+
+  # Fix 3: fileMatches false positive fix
+  - id: A009
+    says: "Files in different directories with the same name no longer falsely match"
+    block: "fileMatches rejects different-directory same-basename"
+    target: "getProofContext.findings.length"
+    matcher: "equals"
+    value: 0
+
+  - id: A010
+    says: "Files where one path is a suffix of the other still match correctly"
+    block: "fileMatches accepts suffix match with both directories"
+    target: "getProofContext.findings.length"
+    matcher: "greater"
+    value: 0
+
+  - id: A011
+    says: "A bare filename still matches against a full path for backward compatibility"
+    block: "fileMatches accepts bare basename query"
+    target: "getProofContext.findings.length"
+    matcher: "greater"
+    value: 0
+
+  - id: A012
+    says: "A full path query still matches a bare stored filename for legacy data"
+    block: "fileMatches accepts full query against bare stored"
+    target: "getProofContext.findings.length"
+    matcher: "greater"
+    value: 0
+
+  # Test hygiene
+  - id: A013
+    says: "Dead function tests are removed alongside the dead function"
+    block: "generateActiveIssuesMarkdown tests are deleted"
+    target: "grep.generateActiveIssuesMarkdown.testCount"
+    matcher: "equals"
+    value: 0
+
+  - id: A014
+    says: "All tests pass after the cleanup"
+    block: "full test suite passes"
+    target: "vitest.result"
+    matcher: "equals"
+    value: "pass"
+
+  - id: A015
+    says: "The project compiles without type errors"
+    block: "tsc --noEmit passes"
+    target: "tsc.exitCode"
+    matcher: "equals"
+    value: 0
+
+file_changes:
+  - path: "packages/cli/src/utils/proofSummary.ts"
+    action: modify
+  - path: "packages/cli/src/commands/work.ts"
+    action: modify
+  - path: "packages/cli/tests/utils/proofSummary.test.ts"
+    action: modify
