@@ -1,0 +1,10 @@
+schema: 1
+concerns:
+  - summary: "stale command uses direct string comparison on file paths — inconsistent formats (./src vs src) would miss matches"
+    file: "packages/cli/src/utils/proofSummary.ts"
+    severity: observation
+    suggested_action: monitor
+  - summary: "Verify template retains If the command is not available fallback — preserved to avoid breaking existing test, but inconsistent with Learn cleanup"
+    file: "packages/cli/templates/.claude/agents/ana-verify.md"
+    severity: observation
+    suggested_action: accept

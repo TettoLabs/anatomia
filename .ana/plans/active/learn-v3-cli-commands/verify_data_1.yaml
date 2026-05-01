@@ -1,0 +1,32 @@
+schema: 1
+findings:
+  - category: test
+    summary: "Dry-run test verifies no mutation but does not verify no commit was created"
+    file: "packages/cli/tests/commands/proof.test.ts"
+    line: 1243
+    severity: debt
+    suggested_action: accept
+    related_assertions: ["A008"]
+  - category: test
+    summary: "No @ana A003 tag or regression test for inline coAuthor absence — verified by source inspection only"
+    severity: observation
+    suggested_action: accept
+    related_assertions: ["A003"]
+  - category: code
+    summary: "SEVERITY_ORDER constant at proof.ts:49 still duplicated across audit/findings blocks — pre-existing, still present"
+    file: "packages/cli/src/commands/proof.ts"
+    line: 49
+    severity: debt
+    suggested_action: monitor
+  - category: code
+    summary: "exitError helper duplicated inline in close (~30 lines) and promote (~30 lines) action handlers"
+    file: "packages/cli/src/commands/proof.ts"
+    line: 402
+    severity: observation
+    suggested_action: monitor
+  - category: code
+    summary: "Close variadic partial success exits 0 — correct per spec but could mask failures in automation pipelines"
+    file: "packages/cli/src/commands/proof.ts"
+    line: 529
+    severity: observation
+    suggested_action: accept

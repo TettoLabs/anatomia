@@ -24,7 +24,7 @@ import { findProjectRoot } from '../utils/validators.js';
 // readArtifactBranch + getCurrentBranch moved to utils/git-operations.ts (Item 13).
 // artifact.ts still uses them internally; pr.ts and work.ts now import directly
 // from utils/ instead of cross-command-importing from here.
-import { readArtifactBranch, readBranchPrefix, getCurrentBranch } from '../utils/git-operations.js';
+import { readArtifactBranch, readBranchPrefix, getCurrentBranch, readCoAuthor } from '../utils/git-operations.js';
 import type { ContractSchema } from '../types/contract.js';
 
 /**
@@ -1043,16 +1043,7 @@ export function saveArtifact(type: string, slug: string): void {
   }
 
   // 9. Commit
-  // Read coAuthor from ana.json
-  const anaJsonPath = path.join(projectRoot, '.ana', 'ana.json');
-  let coAuthor = 'Ana <build@anatomia.dev>';
-  try {
-    const anaJsonContent = fs.readFileSync(anaJsonPath, 'utf-8');
-    const config: { coAuthor?: string } = JSON.parse(anaJsonContent);
-    coAuthor = config.coAuthor || 'Ana <build@anatomia.dev>';
-  } catch {
-    // Use fallback if ana.json can't be read
-  }
+  const coAuthor = readCoAuthor(projectRoot);
 
   const prefix = isTracked ? 'Update: ' : '';
   const commitMessage = `[${slug}] ${prefix}${typeInfo.displayName}\n\nCo-authored-by: ${coAuthor}`;
@@ -1304,16 +1295,8 @@ export function saveAllArtifacts(slug: string): void {
     process.exit(1);
   }
 
-  // 5. Read ana.json for coAuthor
-  const anaJsonPath = path.join(projectRoot, '.ana', 'ana.json');
-  let coAuthor = 'Ana <build@anatomia.dev>';
-  try {
-    const anaJsonContent = fs.readFileSync(anaJsonPath, 'utf-8');
-    const config: { coAuthor?: string } = JSON.parse(anaJsonContent);
-    coAuthor = config.coAuthor || 'Ana <build@anatomia.dev>';
-  } catch {
-    // Use fallback
-  }
+  // 5. Read coAuthor
+  const coAuthor = readCoAuthor(projectRoot);
 
   // 5. Check if any artifacts are new (for create vs update message)
   const artifactPaths = artifacts.map(a => path.relative(projectRoot, a.path));

@@ -14,5 +14,42 @@
   "spec": {
     "saved_at": "2026-05-01T06:52:26.696Z",
     "hash": "sha256:f48e55b65555536cfed75744f439e8c98ed33e9e2eed4d7847f4bcf0fd652604"
+  },
+  "build-report": {
+    "saved_at": "2026-05-01T19:16:13.578Z",
+    "hash": "sha256:56f6e195fb6444ff58a4c6aac8d460a137d7c5994d5e7542334c27e32b177f69"
+  },
+  "build-data": {
+    "saved_at": "2026-05-01T19:16:13.578Z",
+    "hash": "sha256:9ea90241629a2c1cfae3c824c913b7e0cf9590c369498c271c9505e17a1f632b"
+  },
+  "modules_touched": [
+    ".claude/agents/ana-learn.md",
+    ".claude/agents/ana-verify.md",
+    "packages/cli/src/commands/artifact.ts",
+    "packages/cli/src/commands/pr.ts",
+    "packages/cli/src/commands/proof.ts",
+    "packages/cli/src/commands/work.ts",
+    "packages/cli/src/types/proof.ts",
+    "packages/cli/src/utils/git-operations.ts",
+    "packages/cli/src/utils/proofSummary.ts",
+    "packages/cli/templates/.claude/agents/ana-learn.md",
+    "packages/cli/templates/.claude/agents/ana-verify.md",
+    "packages/cli/tests/commands/proof.test.ts",
+    "packages/cli/tests/utils/git-operations.test.ts",
+    "packages/cli/tests/utils/proofSummary.test.ts"
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:9782624f74d9b13ee1370256b2bd35daf1998bdbc297e37819d9229a4dc85228",
+    "run_at": "2026-05-01T19:30:55.384Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-01T19:30:55.412Z",
+    "hash": "sha256:80cd9dd7ef3f88e724e68d452ee6c7710cf5021a3b9e91a0c6668564c98e33dc"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-01T19:30:55.412Z",
+    "hash": "sha256:f53671584ff84e69aa340f57c377418bc6051e79bcf389864abeabf2b07f5db8"
   }
 }

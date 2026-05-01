@@ -65,15 +65,13 @@ When promoting, route to the skill that covers the finding's domain. If the righ
 
 Run `ana proof health --json` to get the overview — runs, trajectory, hot modules, promotion candidates.
 
-Run `ana proof audit --json` to see active findings. **Note:** audit truncates to 3 findings per file group with an `overflow` count. When you need the full picture (all accept-action findings, all findings for a specific module), fall back to reading `.ana/proof_chain.json` directly and filtering for `status: 'active'` or missing `status` field.
-
-**If either command fails:** fall back to reading `.ana/proof_chain.json` directly. Parse the `entries` array. Count active findings (those with `status: 'active'` or no `status` field).
+Run `ana proof audit --json` to see active findings. **Note:** audit truncates to 3 findings per file group with an `overflow` count. When you need the full picture (all accept-action findings, all findings for a specific module), use `ana proof audit --json --full` to bypass truncation caps.
 
 **If the proof chain file doesn't exist or has 0 runs:** "No proof chain data yet. Run a pipeline cycle (scope → plan → build → verify) to generate findings. Learn works with the output — without runs, there's nothing to triage."
 
 Check the last 3 entries to understand what shipped recently. Recent entries contain the freshest findings and the most likely staleness candidates.
 
-**Pre-scan for staleness.** Before presenting the state summary, cross-reference `modules_touched` from recent entries against active findings' files. This gives you the shape before you present it: "57 active findings, 8 have staleness signals from recent builds." That sentence changes the developer's choices. Without it, 57 findings is a flat number — with it, the developer knows 8 of those are likely quick closures.
+**Pre-scan for staleness.** Run `ana proof stale --json` to detect findings whose files were modified by subsequent pipeline runs. This gives you the shape before you present it: "57 active findings, 8 have staleness signals from recent builds." That sentence changes the developer's choices. Without it, 57 findings is a flat number — with it, the developer knows 8 of those are likely quick closures.
 
 ### 3. Calibrate
 
@@ -166,15 +164,20 @@ When reading findings, these fields inform your triage decisions:
 
 ### Staleness Detection
 
-The proof chain contains the data to detect stale findings without a dedicated CLI command:
+Use `ana proof stale` to detect findings whose files were modified by subsequent pipeline runs:
 
-1. **Cross-reference `modules_touched`.** For each active finding with a `file`, check whether that file appears in `modules_touched` of any entry completed AFTER the finding's entry. If yes, the file was modified by a subsequent scope — the finding may be resolved.
+```bash
+ana proof stale              # Show all stale findings grouped by confidence
+ana proof stale --json       # Structured output for programmatic use
+ana proof stale --after {slug}  # Filter to findings from a specific entry
+ana proof stale --min-confidence high  # Only high-confidence (3+ subsequent entries)
+```
 
-2. **Check git history.** For each finding's file, run `git log --oneline --since={entry_completed_at} -- {file}`. Recent modifications suggest the code changed since the finding was created.
+Two confidence tiers:
+- **High confidence:** 3+ subsequent entries modified the file. The finding is very likely resolved.
+- **Medium confidence:** 1-2 subsequent entries modified the file. Worth verifying.
 
-3. **Priority ordering.** Findings whose files were modified by 3+ subsequent entries are high-confidence stale candidates. 1-2 modifications are medium-confidence. No modifications means the code hasn't been touched — the finding is likely still valid.
-
-If `ana proof stale` exists as a CLI command, use it. Otherwise, perform this analysis manually for risk and debt findings.
+After identifying stale candidates, verify with a targeted code read before closing — staleness is a signal, not proof of resolution.
 
 ---
 
@@ -314,7 +317,7 @@ If no patterns are worth promoting, say what you checked: "Reviewed {N} active f
 Observations that weren't covered by Phases 1-3. Most observations are correctly parked — they were classified as `monitor` because they're real but not actionable yet.
 
 Don't read code for every observation. Batch-assess:
-1. Run the staleness cross-reference from the Staleness Detection section against remaining observations.
+1. Run `ana proof stale` to identify observations with staleness signals.
 2. Spot-check the ones with staleness signals (file modified since the finding was created).
 3. For the rest, confirm the parking is still correct: "Scanned {N} remaining observations. {X} are stable (no changes to referenced files). Spot-checked {Y} with staleness signals — {results}."
 
@@ -345,32 +348,24 @@ If the target section contains placeholder text (`*Not yet captured...*`), your 
 
 Use the promote command:
 ```bash
-ana proof promote {ID} --skill {skill-name} --text "{drafted rule}"
+ana proof promote C1 --skill {skill-name} --text "{drafted rule}"
+ana proof promote C1 C2 C3 --skill {skill-name} --text "{drafted rule}"
 ```
 
-The promote command handles the full workflow: appends the rule to the skill file, stages the skill file + proof chain + dashboard, commits, pushes.
-
-**If the promote command is not available:** Fall back to the manual workflow — edit the skill file, stage it, commit with `[learn] Add {skill-name} rule: {summary}`, then close the finding with `ana proof close`.
+The promote command handles the full workflow: appends the rule to the skill file, stages the skill file + proof chain + dashboard, commits, pushes. Multiple finding IDs can be promoted in a single command when they share the same root pattern.
 
 ### Step 2b: Strengthen Existing Rule
 
 Edit the skill file directly — add specificity (an example, a callout, a clarification) to the existing rule. Do NOT add a second rule that says the same thing differently. One rule with two examples beats two rules saying the same thing.
 
-**After editing the skill file, you MUST handle the git workflow yourself.** If `ana proof strengthen` exists, use it — it bundles the skill commit and finding closure atomically. If not, do it manually:
+**After editing the skill file, use `ana proof strengthen` to atomically commit the skill edit and mark findings as promoted:**
 
 ```bash
-git add .claude/skills/{name}/SKILL.md
-git commit -m "[learn] Strengthen {skill-name}: {what was added}
-
-Co-authored-by: {coAuthor from ana.json}"
+ana proof strengthen C1 --skill {skill-name} --reason "{what was added}"
+ana proof strengthen C1 C2 C3 --skill {skill-name} --reason "{what was added}"
 ```
 
-Then close the finding:
-```bash
-ana proof close {ID} --reason "strengthened {skill-name} rule: {what was added}"
-```
-
-**Critical:** `ana proof close` only commits proof chain files (`.ana/proof_chain.json` and `.ana/PROOF_CHAIN.md`). It does NOT stage or commit skill files. If you edit a skill file and only run `close`, the skill change is uncommitted — the proof chain claims a rule was strengthened while the change exists only as a local modification. This is the worst possible outcome. Persist the skill change BEFORE closing the finding.
+The strengthen command verifies uncommitted changes exist in the skill file, commits the skill edit + proof chain update in one atomic commit, and pushes. Multiple finding IDs can be strengthened in a single command.
 
 ### Step 3: Verify and note curation path
 
@@ -414,7 +409,10 @@ Present all suggestions as a complete list. Wait for explicit developer approval
 ### 2. Execute Commands Sequentially
 Every `close` and `promote` command modifies `proof_chain.json`. Running them in parallel (background tasks, concurrent batches) causes git commit conflicts and data corruption. Execute one command at a time. Wait for it to complete before starting the next. Don't chain commands with `&&` — a failure on one shouldn't block the rest. Run each independently, collect results, report: "{N} succeeded, {M} failed (retry these: ...)."
 
-If `ana proof close --batch` exists, use it for batch closures. Otherwise, execute sequentially.
+For batch closures, use variadic IDs:
+```bash
+ana proof close C1 C2 C3 --reason "{shared reason}"
+```
 
 Before executing the first approved command, run `git pull` once to ensure you're current. Individual commands also pull, but one upfront pull avoids N individual pulls.
 
@@ -429,7 +427,7 @@ For accept-action observations: file existence + anchor presence is sufficient v
 Before drafting a new rule, read the target skill file. If an existing rule covers the same principle, strengthen it — don't duplicate it. Redundant rules dilute signal.
 
 ### 5. Persist Skill Changes Before Closing Findings
-If you edit a skill file directly (strengthening), stage and commit the skill file BEFORE running `ana proof close`. The close command only commits proof chain files. An uncommitted skill edit with a closed finding is a data integrity failure — the proof chain claims a rule exists that was never persisted.
+When strengthening, always use `ana proof strengthen` to atomically commit the skill edit and update the proof chain. Never edit a skill file and then only run `ana proof close` — that leaves the skill change uncommitted while the proof chain claims it was promoted.
 
 ### 6. Recalibrate on Rejection
 If the developer rejects 5+ suggestions: stop suggesting in the same vein. "Several rejections — what's off? Tell me and I'll adjust." Don't continue with the same judgment pattern.
@@ -472,7 +470,7 @@ No self-assessment. No sycophancy. No "Great question!" No "Good challenge!" No 
 
 - **All findings already actioned:** "All {N} findings are closed or promoted. The garden is clean. Run another pipeline cycle to generate new findings, or share an observation to route."
 
-- **Promote command unavailable:** Fall back to the manual workflow — edit the skill file directly, stage and commit with `[learn] Add {skill-name} rule: {summary}`, then close the finding with `ana proof close`.
+- **Promote fails on specific finding:** Check the error. `ALREADY_PROMOTED` means someone else promoted it — verify the rule exists. `ALREADY_CLOSED` means the finding was closed — use `--force` if the promotion is still needed.
 
 - **Very large active set (200+ findings):** Cap at ~30 per session. Negotiate scope: "You have {N} active findings. Want me to focus on a specific module, the oldest, or the highest-severity?" Prioritize risk severity, then debt, then observations.
 
@@ -517,8 +515,12 @@ The developer should see what the session accomplished in three lines.
 **Commands:**
 - `ana proof health --json` — proof chain overview (trajectory, hot modules, candidates)
 - `ana proof audit --json` — active findings list (truncated to 3 per file group)
-- `ana proof close {ID} --reason "{reason}"` — close a finding
-- `ana proof promote {ID} --skill {name} --text "{rule}"` — promote to skill rule
+- `ana proof audit --json --full` — all active findings without truncation
+- `ana proof stale` — findings with staleness signals from subsequent pipeline runs
+- `ana proof stale --json` — structured staleness output
+- `ana proof close C1 C2 C3 --reason "{reason}"` — close findings (variadic)
+- `ana proof promote C1 C2 --skill {name} --text "{rule}"` — promote to skill rule (variadic)
+- `ana proof strengthen C1 C2 --skill {name} --reason "{reason}"` — commit skill edit + mark promoted (variadic)
 - `ana work status` — pipeline state check
 
 **Skill locations:**

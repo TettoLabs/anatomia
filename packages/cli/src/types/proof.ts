@@ -170,3 +170,29 @@ export interface HealthChange {
   triggers: Array<'trend_improved' | 'trend_worsened' | 'new_hot_module' | 'new_candidates'>;
   details: string[];
 }
+
+/**
+ * A finding with staleness signals — its file was modified by subsequent pipeline runs.
+ */
+export interface StaleFinding {
+  id: string;
+  category: string;
+  summary: string;
+  file: string;
+  severity: string;
+  entry_slug: string;
+  completed_at: string;
+  subsequent_slugs: string[];
+  subsequent_count: number;
+  confidence: 'high' | 'medium';
+}
+
+/**
+ * Result of staleness analysis across the proof chain.
+ */
+export interface StalenessResult {
+  total_stale: number;
+  high_confidence: StaleFinding[];
+  medium_confidence: StaleFinding[];
+  filter: string | null;
+}

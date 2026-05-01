@@ -25,9 +25,9 @@ import { execSync, spawnSync } from 'node:child_process';
 import { globSync } from 'glob';
 import type { ProofChainEntry, ProofChain } from '../types/proof.js';
 import { findProjectRoot } from '../utils/validators.js';
-import { getProofContext, wrapJsonResponse, wrapJsonError, generateDashboard, computeChainHealth, computeHealthReport } from '../utils/proofSummary.js';
+import { getProofContext, wrapJsonResponse, wrapJsonError, generateDashboard, computeChainHealth, computeHealthReport, computeStaleness } from '../utils/proofSummary.js';
 import type { ProofContextResult } from '../utils/proofSummary.js';
-import { readArtifactBranch, getCurrentBranch } from '../utils/git-operations.js';
+import { readArtifactBranch, getCurrentBranch, readCoAuthor } from '../utils/git-operations.js';
 
 /**
  * Box-drawing characters for terminal output
@@ -387,11 +387,12 @@ export function registerProofCommand(program: Command): void {
 
   // Register close subcommand
   const closeCommand = new Command('close')
-    .description('Close an active finding with a reason')
-    .argument('<id>', 'Finding ID to close (e.g., F003)')
-    .option('--reason <reason>', 'Why this finding no longer applies')
+    .description('Close active findings with a reason')
+    .argument('<ids...>', 'Finding IDs to close (e.g., F003 or F001 F002 F003)')
+    .option('--reason <reason>', 'Why these findings no longer apply')
+    .option('--dry-run', 'Show what would happen without making changes')
     .option('--json', 'Output JSON format')
-    .action(async (id: string, options: { reason?: string; json?: boolean }) => {
+    .action(async (ids: string[], options: { reason?: string; dryRun?: boolean; json?: boolean }) => {
       const proofRoot = findProjectRoot();
       const proofChainPath = path.join(proofRoot, '.ana', 'proof_chain.json');
       const parentOpts = proofCommand.opts();
@@ -410,7 +411,6 @@ export function registerProofCommand(program: Command): void {
           console.log(JSON.stringify(wrapJsonError('proof close', code, message, context, chain), null, 2));
         } else {
           console.error(chalk.red(`Error: ${message}`));
-          // Print contextual help for specific error codes
           if (code === 'REASON_REQUIRED') {
             console.error('  Proof closures must explain why the finding no longer applies.');
             console.error('  Usage: ana proof close {id} --reason "explanation"');
@@ -435,28 +435,29 @@ export function registerProofCommand(program: Command): void {
         return;
       }
 
-      // Branch check: must be on artifact branch
-      const artifactBranch = readArtifactBranch(proofRoot);
-      const currentBranch = getCurrentBranch();
-      if (currentBranch !== artifactBranch) {
-        exitError('WRONG_BRANCH', `Wrong branch. Switch to \`${artifactBranch}\` to close findings.`);
-        return;
-      }
+      // Branch check: must be on artifact branch (skip for dry-run — it's read-only)
+      if (!options.dryRun) {
+        const artifactBranch = readArtifactBranch(proofRoot);
+        const currentBranch = getCurrentBranch();
+        if (currentBranch !== artifactBranch) {
+          exitError('WRONG_BRANCH', `Wrong branch. Switch to \`${artifactBranch}\` to close findings.`);
+          return;
+        }
 
-      // Pull before reading chain
-      try {
-        const remotes = execSync('git remote', { stdio: 'pipe', encoding: 'utf-8', cwd: proofRoot }).trim();
-        if (remotes) {
-          execSync('git pull --rebase', { stdio: 'pipe', encoding: 'utf-8', cwd: proofRoot });
+        // Pull before reading chain
+        try {
+          const remotes = execSync('git remote', { stdio: 'pipe', encoding: 'utf-8', cwd: proofRoot }).trim();
+          if (remotes) {
+            execSync('git pull --rebase', { stdio: 'pipe', encoding: 'utf-8', cwd: proofRoot });
+          }
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : '';
+          if (errorMessage.includes('conflict') || errorMessage.includes('Cannot rebase')) {
+            console.error(chalk.red('Error: Pull failed due to conflicts. Resolve conflicts and try again.'));
+            process.exit(1);
+          }
+          console.error(chalk.yellow('⚠ Warning: Pull failed (network error). Continuing with local data.'));
         }
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : '';
-        if (errorMessage.includes('conflict') || errorMessage.includes('Cannot rebase')) {
-          console.error(chalk.red('Error: Pull failed due to conflicts. Resolve conflicts and try again.'));
-          process.exit(1);
-        }
-        // Non-conflict failures: warn and continue
-        console.error(chalk.yellow('⚠ Warning: Pull failed (network error). Continuing with local data.'));
       }
 
       // Read chain
@@ -473,44 +474,112 @@ export function registerProofCommand(program: Command): void {
         return;
       }
 
-      // Find the finding across all entries
-      let foundFinding: ProofChainEntry['findings'][0] | null = null;
-      let foundEntry: ProofChainEntry | null = null;
+      // Process each ID — collect results
+      const closed: Array<{ id: string; category: string; summary: string; file: string | null; severity: string | null; previous_status: string; entry_slug: string; entry_feature: string }> = [];
+      const skipped: Array<{ id: string; reason: string }> = [];
 
-      for (const entry of chain.entries) {
-        for (const finding of entry.findings || []) {
-          if (finding.id === id) {
-            foundFinding = finding;
-            foundEntry = entry;
-            break;
+      for (const id of ids) {
+        // Find the finding across all entries
+        let foundFinding: ProofChainEntry['findings'][0] | null = null;
+        let foundEntry: ProofChainEntry | null = null;
+
+        for (const entry of chain.entries) {
+          for (const finding of entry.findings || []) {
+            if (finding.id === id) {
+              foundFinding = finding;
+              foundEntry = entry;
+              break;
+            }
+          }
+          if (foundFinding) break;
+        }
+
+        if (!foundFinding || !foundEntry) {
+          skipped.push({ id, reason: 'not found' });
+          continue;
+        }
+
+        if (foundFinding.status === 'closed') {
+          skipped.push({ id, reason: 'already closed' });
+          continue;
+        }
+
+        const previousStatus = foundFinding.status ?? 'active';
+
+        if (!options.dryRun) {
+          foundFinding.status = 'closed';
+          foundFinding.closed_reason = options.reason;
+          foundFinding.closed_at = new Date().toISOString();
+          foundFinding.closed_by = 'human';
+        }
+
+        closed.push({
+          id: foundFinding.id,
+          category: foundFinding.category,
+          summary: foundFinding.summary,
+          file: foundFinding.file,
+          severity: foundFinding.severity ?? null,
+          previous_status: previousStatus,
+          entry_slug: foundEntry.slug,
+          entry_feature: foundEntry.feature,
+        });
+      }
+
+      // All IDs failed — exit with error
+      if (closed.length === 0) {
+        if (ids.length === 1 && skipped.length === 1) {
+          const skip = skipped[0]!;
+          if (skip.reason === 'not found') {
+            exitError('FINDING_NOT_FOUND', `Finding "${skip.id}" not found.`);
+          } else {
+            // Find the original finding for context
+            let originalFinding: ProofChainEntry['findings'][0] | null = null;
+            for (const entry of chain.entries) {
+              for (const finding of entry.findings || []) {
+                if (finding.id === skip.id) { originalFinding = finding; break; }
+              }
+              if (originalFinding) break;
+            }
+            exitError('ALREADY_CLOSED', `Finding "${skip.id}" is already closed.`, {
+              closed_by: originalFinding?.closed_by ?? 'unknown',
+              closed_at: originalFinding?.closed_at ?? 'unknown',
+              closed_reason: originalFinding?.closed_reason ?? '',
+            });
+          }
+        } else {
+          exitError('ALL_FAILED', `All ${ids.length} finding IDs failed to close.`);
+        }
+        return;
+      }
+
+      // Dry run — report without mutating
+      if (options.dryRun) {
+        if (useJson) {
+          console.log(JSON.stringify(wrapJsonResponse('proof close', {
+            reason: options.reason,
+            closed: closed.map(c => ({ id: c.id, category: c.category, summary: c.summary, file: c.file, previous_status: c.previous_status })),
+            skipped,
+            dry_run: true,
+          }, chain), null, 2));
+        } else {
+          console.log('Dry run — no changes will be made.');
+          console.log('');
+          if (closed.length > 0) {
+            console.log(`Would close ${closed.length} finding${closed.length !== 1 ? 's' : ''}:`);
+            for (const c of closed) {
+              console.log(`  ${c.id} ${chalk.dim(`[${c.category}]`)} ${c.summary} — ${c.file ?? 'no file'} (${c.previous_status} → closed)`);
+            }
+          }
+          if (skipped.length > 0) {
+            console.log('');
+            console.log(`Would skip ${skipped.length}:`);
+            for (const s of skipped) {
+              console.log(`  ${s.id} — ${s.reason}`);
+            }
           }
         }
-        if (foundFinding) break;
-      }
-
-      if (!foundFinding || !foundEntry) {
-        exitError('FINDING_NOT_FOUND', `Finding "${id}" not found.`);
         return;
       }
-
-      // Check if already closed
-      if (foundFinding.status === 'closed') {
-        exitError('ALREADY_CLOSED', `Finding "${id}" is already closed.`, {
-          closed_by: foundFinding.closed_by ?? 'unknown',
-          closed_at: foundFinding.closed_at ?? 'unknown',
-          closed_reason: foundFinding.closed_reason ?? '',
-        });
-        return;
-      }
-
-      // Record previous status for output
-      const previousStatus = foundFinding.status ?? 'active';
-
-      // Mutate the finding
-      foundFinding.status = 'closed';
-      foundFinding.closed_reason = options.reason;
-      foundFinding.closed_at = new Date().toISOString();
-      foundFinding.closed_by = 'human';
 
       // Write updated chain
       fs.writeFileSync(proofChainPath, JSON.stringify(chain, null, 2));
@@ -527,10 +596,14 @@ export function registerProofCommand(program: Command): void {
       const chainMdPath = path.join(proofRoot, '.ana', 'PROOF_CHAIN.md');
       fs.writeFileSync(chainMdPath, dashboardMd);
 
-      // Git: stage, commit, push
+      // Git: stage, commit, push — one commit for the batch
+      const coAuthor = readCoAuthor(proofRoot);
       try {
         execSync('git add .ana/proof_chain.json .ana/PROOF_CHAIN.md', { stdio: 'pipe', cwd: proofRoot });
-        const commitMessage = `[proof] Close ${id}: ${options.reason}`;
+        const idList = closed.length <= 3
+          ? closed.map(c => c.id).join(', ')
+          : `${closed.slice(0, 2).map(c => c.id).join(', ')}, ... (${closed.length} total)`;
+        const commitMessage = `[proof] Close ${idList}: ${options.reason}\n\nCo-authored-by: ${coAuthor}`;
         const commitResult = spawnSync('git', ['commit', '-m', commitMessage], { stdio: 'pipe', cwd: proofRoot });
         if (commitResult.status !== 0) throw new Error(commitResult.stderr?.toString() || 'Commit failed');
       } catch {
@@ -546,25 +619,50 @@ export function registerProofCommand(program: Command): void {
 
       // Output
       if (useJson) {
-        console.log(JSON.stringify(wrapJsonResponse('proof close', {
-          finding: {
-            id: foundFinding.id,
-            category: foundFinding.category,
-            summary: foundFinding.summary,
-            file: foundFinding.file,
-            severity: foundFinding.severity ?? null,
-            entry_slug: foundEntry.slug,
-            entry_feature: foundEntry.feature,
-          },
-          previous_status: previousStatus,
-          new_status: 'closed',
-          reason: options.reason,
-          closed_by: 'human',
-        }, chain), null, 2));
+        if (ids.length === 1 && closed.length === 1 && skipped.length === 0) {
+          // Single-ID backward-compatible JSON
+          const c = closed[0]!;
+          console.log(JSON.stringify(wrapJsonResponse('proof close', {
+            finding: {
+              id: c.id,
+              category: c.category,
+              summary: c.summary,
+              file: c.file,
+              severity: c.severity,
+              entry_slug: c.entry_slug,
+              entry_feature: c.entry_feature,
+            },
+            previous_status: c.previous_status,
+            new_status: 'closed',
+            reason: options.reason,
+            closed_by: 'human',
+          }, chain), null, 2));
+        } else {
+          console.log(JSON.stringify(wrapJsonResponse('proof close', {
+            reason: options.reason,
+            closed: closed.map(c => ({ id: c.id, category: c.category, summary: c.summary, file: c.file, previous_status: c.previous_status })),
+            skipped,
+            dry_run: false,
+          }, chain), null, 2));
+        }
+      } else if (closed.length === 1 && skipped.length === 0) {
+        // Single-ID backward-compatible output
+        const c = closed[0]!;
+        console.log(`✓ Closed ${c.id}: ${options.reason}`);
+        console.log(`  ${chalk.dim(`[${c.category}]`)} ${c.summary} — ${c.file ?? 'no file'}`);
+        console.log(`  ${c.previous_status} → closed (by: human)`);
+        console.log('');
+        console.log(chalk.gray(`Chain: ${health.chain_runs} ${health.chain_runs !== 1 ? 'runs' : 'run'} · ${health.findings.active} active finding${health.findings.active !== 1 ? 's' : ''}`));
       } else {
-        console.log(`✓ Closed ${id}: ${options.reason}`);
-        console.log(`  ${chalk.dim(`[${foundFinding.category}]`)} ${foundFinding.summary} — ${foundFinding.file ?? 'no file'}`);
-        console.log(`  ${previousStatus} → closed (by: human)`);
+        // Multi-ID output
+        const total = closed.length + skipped.length;
+        console.log(`✓ Closed ${closed.length} of ${total} findings: ${options.reason}`);
+        for (const c of closed) {
+          console.log(`  ${c.id} ${chalk.dim(`[${c.category}]`)} ${c.summary} — ${c.file ?? 'no file'} (${c.previous_status} → closed)`);
+        }
+        for (const s of skipped) {
+          console.log(`  ✗ ${s.id} — ${s.reason} (skipped)`);
+        }
         console.log('');
         console.log(chalk.gray(`Chain: ${health.chain_runs} ${health.chain_runs !== 1 ? 'runs' : 'run'} · ${health.findings.active} active finding${health.findings.active !== 1 ? 's' : ''}`));
       }
@@ -574,14 +672,14 @@ export function registerProofCommand(program: Command): void {
 
   // Register promote subcommand
   const promoteCommand = new Command('promote')
-    .description('Promote a finding to a skill rule')
-    .argument('<id>', 'Finding ID to promote (e.g., F001)')
+    .description('Promote findings to a skill rule')
+    .argument('<ids...>', 'Finding IDs to promote (e.g., F001 or F001 F002)')
     .option('--skill <skill>', 'Skill to promote to (e.g., coding-standards)')
-    .option('--text <text>', 'Custom rule text (defaults to finding summary)')
+    .option('--text <text>', 'Custom rule text (defaults to first finding\'s summary)')
     .option('--section <section>', 'Target section: rules or gotchas (default: rules)')
     .option('--force', 'Allow promoting a closed finding')
     .option('--json', 'Output JSON format')
-    .action(async (id: string, options: { skill: string; text?: string; section?: string; force?: boolean; json?: boolean }) => {
+    .action(async (ids: string[], options: { skill: string; text?: string; section?: string; force?: boolean; json?: boolean }) => {
       const proofRoot = findProjectRoot();
       const proofChainPath = path.join(proofRoot, '.ana', 'proof_chain.json');
       const parentOpts = proofCommand.opts();
@@ -693,45 +791,92 @@ export function registerProofCommand(program: Command): void {
         return;
       }
 
-      // Find the finding across all entries
-      let foundFinding: ProofChainEntry['findings'][0] | null = null;
-      let foundEntry: ProofChainEntry | null = null;
+      // Process each ID — collect results
+      const promoted: Array<{ id: string; category: string; summary: string; file: string | null; severity: string | null; previous_status: string }> = [];
+      const skipped: Array<{ id: string; reason: string }> = [];
 
-      for (const entry of chain.entries) {
-        for (const finding of entry.findings || []) {
-          if (finding.id === id) {
-            foundFinding = finding;
-            foundEntry = entry;
-            break;
+      for (const id of ids) {
+        let foundFinding: ProofChainEntry['findings'][0] | null = null;
+
+        for (const entry of chain.entries) {
+          for (const finding of entry.findings || []) {
+            if (finding.id === id) {
+              foundFinding = finding;
+              break;
+            }
           }
+          if (foundFinding) break;
         }
-        if (foundFinding) break;
-      }
 
-      if (!foundFinding || !foundEntry) {
-        exitError('FINDING_NOT_FOUND', `Finding "${id}" not found.`);
-        return;
-      }
+        if (!foundFinding) {
+          skipped.push({ id, reason: 'not found' });
+          continue;
+        }
 
-      // Check if already promoted
-      if (foundFinding.status === 'promoted') {
-        exitError('ALREADY_PROMOTED', `Finding "${id}" is already promoted.`, {
-          promoted_to: foundFinding.promoted_to ?? 'unknown',
+        if (foundFinding.status === 'promoted') {
+          skipped.push({ id, reason: 'already promoted' });
+          continue;
+        }
+
+        if (foundFinding.status === 'closed' && !options.force) {
+          skipped.push({ id, reason: 'already closed (use --force)' });
+          continue;
+        }
+
+        const previousStatus = foundFinding.status ?? 'active';
+
+        // Mutate the finding
+        foundFinding.status = 'promoted';
+        foundFinding.promoted_to = skillRelPath;
+
+        promoted.push({
+          id: foundFinding.id,
+          category: foundFinding.category,
+          summary: foundFinding.summary,
+          file: foundFinding.file,
+          severity: foundFinding.severity ?? null,
+          previous_status: previousStatus,
         });
+      }
+
+      // All IDs failed — exit with error
+      if (promoted.length === 0) {
+        if (ids.length === 1 && skipped.length === 1) {
+          const skip = skipped[0]!;
+          if (skip.reason === 'not found') {
+            exitError('FINDING_NOT_FOUND', `Finding "${skip.id}" not found.`);
+          } else if (skip.reason === 'already promoted') {
+            let originalFinding: ProofChainEntry['findings'][0] | null = null;
+            for (const entry of chain.entries) {
+              for (const finding of entry.findings || []) {
+                if (finding.id === skip.id) { originalFinding = finding; break; }
+              }
+              if (originalFinding) break;
+            }
+            exitError('ALREADY_PROMOTED', `Finding "${skip.id}" is already promoted.`, {
+              promoted_to: originalFinding?.promoted_to ?? 'unknown',
+            });
+          } else {
+            let originalFinding: ProofChainEntry['findings'][0] | null = null;
+            for (const entry of chain.entries) {
+              for (const finding of entry.findings || []) {
+                if (finding.id === skip.id) { originalFinding = finding; break; }
+              }
+              if (originalFinding) break;
+            }
+            exitError('ALREADY_CLOSED', `Finding "${skip.id}" is already closed.`, {
+              closed_by: originalFinding?.closed_by ?? 'unknown',
+              closed_at: originalFinding?.closed_at ?? 'unknown',
+              closed_reason: originalFinding?.closed_reason ?? '',
+            });
+          }
+        } else {
+          exitError('ALL_FAILED', `All ${ids.length} finding IDs failed to promote.`);
+        }
         return;
       }
 
-      // Check if already closed (allow with --force)
-      if (foundFinding.status === 'closed' && !options.force) {
-        exitError('ALREADY_CLOSED', `Finding "${id}" is already closed.`, {
-          closed_by: foundFinding.closed_by ?? 'unknown',
-          closed_at: foundFinding.closed_at ?? 'unknown',
-          closed_reason: foundFinding.closed_reason ?? '',
-        });
-        return;
-      }
-
-      // Read skill file and validate section exists
+      // Read skill file and append one rule
       let skillContent = fs.readFileSync(skillAbsPath, 'utf-8');
       const sectionIdx = skillContent.indexOf(sectionHeading);
       if (sectionIdx === -1) {
@@ -739,8 +884,9 @@ export function registerProofCommand(program: Command): void {
         return;
       }
 
-      // Determine rule text
-      const ruleText = options.text ?? foundFinding.summary;
+      // Determine rule text — use --text or first promoted finding's summary
+      const firstPromoted = promoted[0]!;
+      const ruleText = options.text ?? firstPromoted.summary;
       const ruleLine = `- ${ruleText}`;
 
       // Find section boundaries
@@ -749,7 +895,7 @@ export function registerProofCommand(program: Command): void {
       const sectionEnd = nextSectionIdx === -1 ? skillContent.length : nextSectionIdx;
       const sectionBody = skillContent.slice(sectionStart, sectionEnd);
 
-      // Duplicate detection: check existing rules in section
+      // Duplicate detection
       let duplicateWarning: string | null = null;
       const newWords = new Set(ruleText.replace(/[`*]/g, '').toLowerCase().split(/\s+/).filter(Boolean));
       const existingLines = sectionBody.split('\n').filter(l => l.trim().startsWith('-'));
@@ -769,18 +915,15 @@ export function registerProofCommand(program: Command): void {
       const placeholderMatch = sectionBody.match(placeholderRegex);
 
       if (placeholderMatch) {
-        // Replace placeholder with rule
         const placeholderIdx = sectionStart + sectionBody.indexOf(placeholderMatch[0]);
         skillContent = skillContent.slice(0, placeholderIdx) + ruleLine + skillContent.slice(placeholderIdx + placeholderMatch[0].length);
       } else {
-        // Append after last non-empty line in section
         const sectionLines = sectionBody.split('\n');
         let lastNonEmptyIdx = sectionLines.length - 1;
         while (lastNonEmptyIdx >= 0 && sectionLines[lastNonEmptyIdx]!.trim() === '') {
           lastNonEmptyIdx--;
         }
 
-        // Build the new section content
         const beforeSection = skillContent.slice(0, sectionStart);
         const afterSection = skillContent.slice(sectionEnd);
         const contentLines = sectionLines.slice(0, lastNonEmptyIdx + 1);
@@ -792,13 +935,6 @@ export function registerProofCommand(program: Command): void {
 
       // Write updated skill file
       fs.writeFileSync(skillAbsPath, skillContent);
-
-      // Record previous status for output
-      const previousStatus = foundFinding.status ?? 'active';
-
-      // Mutate the finding
-      foundFinding.status = 'promoted';
-      foundFinding.promoted_to = skillRelPath;
 
       // Write updated chain
       fs.writeFileSync(proofChainPath, JSON.stringify(chain, null, 2));
@@ -815,10 +951,14 @@ export function registerProofCommand(program: Command): void {
       const chainMdPath = path.join(proofRoot, '.ana', 'PROOF_CHAIN.md');
       fs.writeFileSync(chainMdPath, dashboardMd);
 
-      // Git: stage, commit, push
+      // Git: stage, commit, push — one commit for the batch
+      const coAuthor = readCoAuthor(proofRoot);
       try {
         execSync(`git add .ana/proof_chain.json .ana/PROOF_CHAIN.md ${skillRelPath}`, { stdio: 'pipe', cwd: proofRoot });
-        const commitMessage = `[proof] Promote ${id} to ${skillName}`;
+        const idList = promoted.length <= 3
+          ? promoted.map(p => p.id).join(', ')
+          : `${promoted.slice(0, 2).map(p => p.id).join(', ')}, ... (${promoted.length} total)`;
+        const commitMessage = `[proof] Promote ${idList} to ${skillName}\n\nCo-authored-by: ${coAuthor}`;
         const commitResult = spawnSync('git', ['commit', '-m', commitMessage], { stdio: 'pipe', cwd: proofRoot });
         if (commitResult.status !== 0) throw new Error(commitResult.stderr?.toString() || 'Commit failed');
       } catch {
@@ -834,30 +974,62 @@ export function registerProofCommand(program: Command): void {
 
       // Output
       if (useJson) {
-        const results: Record<string, unknown> = {
-          finding: {
-            id: foundFinding.id,
-            category: foundFinding.category,
-            summary: foundFinding.summary,
-            file: foundFinding.file,
-            severity: foundFinding.severity ?? null,
-            suggested_action: foundFinding.suggested_action ?? null,
-          },
-          promoted_to: skillRelPath,
-          rule_text: ruleLine,
-          section: sectionHeading,
-        };
-        if (duplicateWarning) {
-          results['duplicate_warning'] = duplicateWarning;
+        if (ids.length === 1 && promoted.length === 1 && skipped.length === 0) {
+          // Single-ID backward-compatible JSON
+          const p = promoted[0]!;
+          const results: Record<string, unknown> = {
+            finding: {
+              id: p.id,
+              category: p.category,
+              summary: p.summary,
+              file: p.file,
+              severity: p.severity,
+              suggested_action: null,
+            },
+            promoted_to: skillRelPath,
+            rule_text: ruleLine,
+            section: sectionHeading,
+          };
+          if (duplicateWarning) {
+            results['duplicate_warning'] = duplicateWarning;
+          }
+          console.log(JSON.stringify(wrapJsonResponse('proof promote', results, chain), null, 2));
+        } else {
+          console.log(JSON.stringify(wrapJsonResponse('proof promote', {
+            promoted: promoted.map(p => ({ id: p.id, category: p.category, summary: p.summary, file: p.file, previous_status: p.previous_status })),
+            skipped,
+            promoted_to: skillRelPath,
+            rule_text: ruleLine,
+            section: sectionHeading,
+            duplicate_warning: duplicateWarning,
+          }, chain), null, 2));
         }
-        console.log(JSON.stringify(wrapJsonResponse('proof promote', results, chain), null, 2));
-      } else {
+      } else if (promoted.length === 1 && skipped.length === 0) {
+        // Single-ID backward-compatible output
+        const p = promoted[0]!;
         if (duplicateWarning) {
           console.log(chalk.yellow(`⚠ ${duplicateWarning}`));
         }
-        console.log(`✓ Promoted ${id} to ${skillName}`);
-        console.log(`  ${chalk.dim(`[${foundFinding.category}]`)} ${foundFinding.summary} — ${foundFinding.file ?? 'no file'}`);
-        console.log(`  ${previousStatus} → promoted`);
+        console.log(`✓ Promoted ${p.id} to ${skillName}`);
+        console.log(`  ${chalk.dim(`[${p.category}]`)} ${p.summary} — ${p.file ?? 'no file'}`);
+        console.log(`  ${p.previous_status} → promoted`);
+        console.log(`  Rule: ${ruleLine}`);
+        console.log(`  Section: ${sectionHeading}`);
+        console.log(`  File: ${skillRelPath}`);
+        console.log('');
+        console.log(chalk.gray(`Chain: ${health.chain_runs} ${health.chain_runs !== 1 ? 'runs' : 'run'} · ${health.findings.active} active finding${health.findings.active !== 1 ? 's' : ''}`));
+      } else {
+        // Multi-ID output
+        if (duplicateWarning) {
+          console.log(chalk.yellow(`⚠ ${duplicateWarning}`));
+        }
+        console.log(`✓ Promoted ${promoted.length} findings to ${skillName}`);
+        for (const p of promoted) {
+          console.log(`  ${p.id} ${chalk.dim(`[${p.category}]`)} ${p.summary} — ${p.file ?? 'no file'} (${p.previous_status} → promoted)`);
+        }
+        for (const s of skipped) {
+          console.log(`  ✗ ${s.id} — ${s.reason} (skipped)`);
+        }
         console.log(`  Rule: ${ruleLine}`);
         console.log(`  Section: ${sectionHeading}`);
         console.log(`  File: ${skillRelPath}`);
@@ -868,15 +1040,309 @@ export function registerProofCommand(program: Command): void {
 
   proofCommand.addCommand(promoteCommand);
 
-  // Register audit subcommand
-  const auditCommand = new Command('audit')
-    .description('List active findings grouped by file')
+  // Register strengthen subcommand
+  const strengthenCommand = new Command('strengthen')
+    .description('Commit a skill file edit and mark findings as promoted')
+    .argument('<ids...>', 'Finding IDs to strengthen (e.g., F001 or F001 F002)')
+    .option('--skill <skill>', 'Skill whose file was edited (e.g., coding-standards)')
+    .option('--reason <reason>', 'Why this skill was strengthened')
+    .option('--force', 'Allow strengthening a closed finding')
     .option('--json', 'Output JSON format')
-    .action(async (options: { json?: boolean }) => {
+    .action(async (ids: string[], options: { skill?: string; reason?: string; force?: boolean; json?: boolean }) => {
       const proofRoot = findProjectRoot();
       const proofChainPath = path.join(proofRoot, '.ana', 'proof_chain.json');
       const parentOpts = proofCommand.opts();
       const useJson = options.json || parentOpts['json'];
+
+      // Helper: output error and exit
+      const exitError = (code: string, message: string, context: Record<string, unknown> = {}): void => {
+        let chain: ProofChain | null = null;
+        try {
+          if (fs.existsSync(proofChainPath)) {
+            chain = JSON.parse(fs.readFileSync(proofChainPath, 'utf-8'));
+          }
+        } catch { /* use null */ }
+
+        if (useJson) {
+          console.log(JSON.stringify(wrapJsonError('proof strengthen', code, message, context, chain), null, 2));
+        } else {
+          console.error(chalk.red(`Error: ${message}`));
+          if (code === 'SKILL_REQUIRED') {
+            console.error('  Usage: ana proof strengthen <ids...> --skill <name> --reason "..."');
+          } else if (code === 'REASON_REQUIRED') {
+            console.error('  Usage: ana proof strengthen <ids...> --skill <name> --reason "..."');
+          } else if (code === 'SKILL_NOT_FOUND') {
+            const skillsDir = path.join(proofRoot, '.claude', 'skills');
+            if (fs.existsSync(skillsDir)) {
+              const available = fs.readdirSync(skillsDir).filter(d => fs.statSync(path.join(skillsDir, d)).isDirectory());
+              if (available.length > 0) {
+                console.error(`  Available skills: ${available.join(', ')}`);
+              }
+            }
+          } else if (code === 'NO_UNCOMMITTED_CHANGES') {
+            console.error('  Edit the skill file first, then run this command to commit the changes.');
+            console.error(`  Usage: ana proof strengthen <ids...> --skill ${options.skill ?? '<name>'} --reason "..."`);
+          } else if (code === 'FINDING_NOT_FOUND') {
+            console.error('  Run `ana proof audit` to see active findings.');
+          } else if (code === 'ALREADY_PROMOTED' && context['promoted_to']) {
+            console.error(`  Promoted to: ${context['promoted_to']}`);
+          } else if (code === 'ALREADY_CLOSED' && context['closed_by']) {
+            console.error(`  Closed by: ${context['closed_by']} on ${context['closed_at'] ?? 'unknown'}`);
+            if (context['closed_reason']) {
+              console.error(`  Reason: ${context['closed_reason']}`);
+            }
+            console.error('  Use --force to strengthen a closed finding.');
+          } else if (code === 'WRONG_BRANCH') {
+            const artifactBranch = readArtifactBranch(proofRoot);
+            console.error(`  Run: git checkout ${artifactBranch}`);
+          }
+        }
+        process.exit(1);
+      };
+
+      // Validate --skill is provided
+      if (!options.skill) {
+        exitError('SKILL_REQUIRED', '--skill is required.');
+        return;
+      }
+
+      // Validate --reason is provided
+      if (!options.reason) {
+        exitError('REASON_REQUIRED', '--reason is required.');
+        return;
+      }
+
+      // Validate skill exists
+      const skillName = options.skill;
+      const skillRelPath = `.claude/skills/${skillName}/SKILL.md`;
+      const skillAbsPath = path.join(proofRoot, '.claude', 'skills', skillName, 'SKILL.md');
+      if (!fs.existsSync(skillAbsPath)) {
+        exitError('SKILL_NOT_FOUND', `Skill "${skillName}" not found.`);
+        return;
+      }
+
+      // Branch check: must be on artifact branch
+      const artifactBranch = readArtifactBranch(proofRoot);
+      const currentBranch = getCurrentBranch();
+      if (currentBranch !== artifactBranch) {
+        exitError('WRONG_BRANCH', `Wrong branch. Switch to \`${artifactBranch}\` to strengthen findings.`);
+        return;
+      }
+
+      // Verify uncommitted changes exist for the skill file
+      // Check both unstaged and staged changes
+      let hasUncommittedChanges = false;
+      try {
+        const unstaged = execSync(`git diff --name-only -- ${skillRelPath}`, { stdio: 'pipe', encoding: 'utf-8', cwd: proofRoot }).trim();
+        const staged = execSync(`git diff --name-only --cached -- ${skillRelPath}`, { stdio: 'pipe', encoding: 'utf-8', cwd: proofRoot }).trim();
+        hasUncommittedChanges = unstaged.length > 0 || staged.length > 0;
+      } catch {
+        // git diff failed — treat as no changes
+      }
+
+      if (!hasUncommittedChanges) {
+        exitError('NO_UNCOMMITTED_CHANGES', `No uncommitted changes to ${skillRelPath}`);
+        return;
+      }
+
+      // Pull before reading chain
+      try {
+        const remotes = execSync('git remote', { stdio: 'pipe', encoding: 'utf-8', cwd: proofRoot }).trim();
+        if (remotes) {
+          execSync('git pull --rebase', { stdio: 'pipe', encoding: 'utf-8', cwd: proofRoot });
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : '';
+        if (errorMessage.includes('conflict') || errorMessage.includes('Cannot rebase')) {
+          console.error(chalk.red('Error: Pull failed due to conflicts. Resolve conflicts and try again.'));
+          process.exit(1);
+        }
+        console.error(chalk.yellow('⚠ Warning: Pull failed (network error). Continuing with local data.'));
+      }
+
+      // Read chain
+      if (!fs.existsSync(proofChainPath)) {
+        exitError('NO_PROOF_CHAIN', 'No proof chain found.');
+        return;
+      }
+
+      let chain: ProofChain;
+      try {
+        chain = JSON.parse(fs.readFileSync(proofChainPath, 'utf-8'));
+      } catch {
+        exitError('PARSE_ERROR', 'Failed to parse proof_chain.json.');
+        return;
+      }
+
+      // Process each ID — collect results
+      const strengthened: Array<{ id: string; category: string; summary: string; file: string | null; severity: string | null; previous_status: string }> = [];
+      const skipped: Array<{ id: string; reason: string }> = [];
+
+      for (const id of ids) {
+        let foundFinding: ProofChainEntry['findings'][0] | null = null;
+
+        for (const entry of chain.entries) {
+          for (const finding of entry.findings || []) {
+            if (finding.id === id) {
+              foundFinding = finding;
+              break;
+            }
+          }
+          if (foundFinding) break;
+        }
+
+        if (!foundFinding) {
+          skipped.push({ id, reason: 'not found' });
+          continue;
+        }
+
+        if (foundFinding.status === 'promoted') {
+          skipped.push({ id, reason: 'already promoted' });
+          continue;
+        }
+
+        if (foundFinding.status === 'closed' && !options.force) {
+          skipped.push({ id, reason: 'already closed (use --force)' });
+          continue;
+        }
+
+        const previousStatus = foundFinding.status ?? 'active';
+
+        // Mutate the finding
+        foundFinding.status = 'promoted';
+        foundFinding.promoted_to = skillRelPath;
+
+        strengthened.push({
+          id: foundFinding.id,
+          category: foundFinding.category,
+          summary: foundFinding.summary,
+          file: foundFinding.file,
+          severity: foundFinding.severity ?? null,
+          previous_status: previousStatus,
+        });
+      }
+
+      // All IDs failed — exit with error
+      if (strengthened.length === 0) {
+        if (ids.length === 1 && skipped.length === 1) {
+          const skip = skipped[0]!;
+          if (skip.reason === 'not found') {
+            exitError('FINDING_NOT_FOUND', `Finding "${skip.id}" not found.`);
+          } else if (skip.reason === 'already promoted') {
+            let originalFinding: ProofChainEntry['findings'][0] | null = null;
+            for (const entry of chain.entries) {
+              for (const finding of entry.findings || []) {
+                if (finding.id === skip.id) { originalFinding = finding; break; }
+              }
+              if (originalFinding) break;
+            }
+            exitError('ALREADY_PROMOTED', `Finding "${skip.id}" is already promoted.`, {
+              promoted_to: originalFinding?.promoted_to ?? 'unknown',
+            });
+          } else {
+            let originalFinding: ProofChainEntry['findings'][0] | null = null;
+            for (const entry of chain.entries) {
+              for (const finding of entry.findings || []) {
+                if (finding.id === skip.id) { originalFinding = finding; break; }
+              }
+              if (originalFinding) break;
+            }
+            exitError('ALREADY_CLOSED', `Finding "${skip.id}" is already closed.`, {
+              closed_by: originalFinding?.closed_by ?? 'unknown',
+              closed_at: originalFinding?.closed_at ?? 'unknown',
+              closed_reason: originalFinding?.closed_reason ?? '',
+            });
+          }
+        } else {
+          exitError('ALL_FAILED', `All ${ids.length} finding IDs failed to strengthen.`);
+        }
+        return;
+      }
+
+      // Write updated chain
+      fs.writeFileSync(proofChainPath, JSON.stringify(chain, null, 2));
+
+      // Regenerate PROOF_CHAIN.md
+      const health = computeChainHealth(chain);
+      const dashboardMd = generateDashboard(chain.entries, {
+        runs: health.chain_runs,
+        active: health.findings.active,
+        lessons: health.findings.lesson,
+        promoted: health.findings.promoted,
+        closed: health.findings.closed,
+      });
+      const chainMdPath = path.join(proofRoot, '.ana', 'PROOF_CHAIN.md');
+      fs.writeFileSync(chainMdPath, dashboardMd);
+
+      // Git: stage skill file + proof chain files, commit, push — one commit for the batch
+      const coAuthor = readCoAuthor(proofRoot);
+      try {
+        execSync(`git add ${skillRelPath} .ana/proof_chain.json .ana/PROOF_CHAIN.md`, { stdio: 'pipe', cwd: proofRoot });
+        const commitMessage = `[learn] Strengthen ${skillName}: ${options.reason}\n\nCo-authored-by: ${coAuthor}`;
+        const commitResult = spawnSync('git', ['commit', '-m', commitMessage], { stdio: 'pipe', cwd: proofRoot });
+        if (commitResult.status !== 0) throw new Error(commitResult.stderr?.toString() || 'Commit failed');
+      } catch {
+        console.error(chalk.red('Error: Failed to commit. Changes saved but not committed.'));
+        process.exit(1);
+      }
+
+      try {
+        execSync('git push', { stdio: 'pipe', cwd: proofRoot });
+      } catch {
+        console.error(chalk.yellow('Warning: Push failed. Changes committed locally. Run `git push` manually.'));
+      }
+
+      // Output
+      if (useJson) {
+        console.log(JSON.stringify(wrapJsonResponse('proof strengthen', {
+          skill: skillName,
+          skill_path: skillRelPath,
+          reason: options.reason,
+          strengthened: strengthened.map(s => ({ id: s.id, category: s.category, summary: s.summary, file: s.file, previous_status: s.previous_status })),
+          skipped,
+        }, chain), null, 2));
+      } else if (strengthened.length === 1 && skipped.length === 0) {
+        const s = strengthened[0]!;
+        console.log(`✓ Strengthened 1 finding → ${skillName}`);
+        console.log(`  ${s.id} ${chalk.dim(`[${s.category}]`)} ${s.summary} — ${s.file ?? 'no file'} (${s.previous_status} → promoted)`);
+        console.log(`  Skill: ${skillRelPath}`);
+        console.log(`  Reason: ${options.reason}`);
+        console.log('');
+        console.log(chalk.gray(`Chain: ${health.chain_runs} ${health.chain_runs !== 1 ? 'runs' : 'run'} · ${health.findings.active} active finding${health.findings.active !== 1 ? 's' : ''}`));
+      } else {
+        console.log(`✓ Strengthened ${strengthened.length} findings → ${skillName}`);
+        for (const s of strengthened) {
+          console.log(`  ${s.id} ${chalk.dim(`[${s.category}]`)} ${s.summary} — ${s.file ?? 'no file'} (${s.previous_status} → promoted)`);
+        }
+        for (const sk of skipped) {
+          console.log(`  ✗ ${sk.id} — ${sk.reason} (skipped)`);
+        }
+        console.log(`  Skill: ${skillRelPath}`);
+        console.log(`  Reason: ${options.reason}`);
+        console.log('');
+        console.log(chalk.gray(`Chain: ${health.chain_runs} ${health.chain_runs !== 1 ? 'runs' : 'run'} · ${health.findings.active} active finding${health.findings.active !== 1 ? 's' : ''}`));
+      }
+    });
+
+  proofCommand.addCommand(strengthenCommand);
+
+  // Register audit subcommand
+  const auditCommand = new Command('audit')
+    .description('List active findings grouped by file')
+    .option('--json', 'Output JSON format')
+    .option('--full', 'Return all findings without truncation (requires --json)')
+    .action(async (options: { json?: boolean; full?: boolean }) => {
+      const proofRoot = findProjectRoot();
+      const proofChainPath = path.join(proofRoot, '.ana', 'proof_chain.json');
+      const parentOpts = proofCommand.opts();
+      const useJson = options.json || parentOpts['json'];
+
+      // --full without --json: print usage hint and return
+      if (options.full && !useJson) {
+        console.log('The --full flag is designed for agent consumption. Use with --json:');
+        console.log('  ana proof audit --json --full');
+        return;
+      }
 
       // Read chain (no branch check — audit is read-only)
       if (!fs.existsSync(proofChainPath)) {
@@ -974,12 +1440,13 @@ export function registerProofCommand(program: Command): void {
         fileGroups.set(key, existing);
       }
 
-      // Sort files by count descending, cap at 8
+      // Sort files by count descending, cap at 8 (unless --full)
       const MAX_FILES = 8;
       const MAX_PER_FILE = 3;
+      const useFull = options.full && useJson;
       const sortedFiles = Array.from(fileGroups.entries())
         .sort((a, b) => b[1].length - a[1].length)
-        .slice(0, MAX_FILES);
+        .slice(0, useFull ? undefined : MAX_FILES);
 
       // Sort findings within each file group by severity (risk → debt → observation → unclassified)
       for (const [, findings] of sortedFiles) {
@@ -994,11 +1461,11 @@ export function registerProofCommand(program: Command): void {
         const byFile = sortedFiles.map(([file, findings]) => ({
           file,
           count: findings.length,
-          findings: findings.slice(0, MAX_PER_FILE),
-          overflow: Math.max(0, findings.length - MAX_PER_FILE),
+          findings: useFull ? findings : findings.slice(0, MAX_PER_FILE),
+          overflow: useFull ? 0 : Math.max(0, findings.length - MAX_PER_FILE),
         }));
         const totalFiles = fileGroups.size;
-        const overflowFiles = Math.max(0, totalFiles - MAX_FILES);
+        const overflowFiles = useFull ? 0 : Math.max(0, totalFiles - MAX_FILES);
         const result = {
           total_active: activeFindings.length,
           by_file: byFile,
@@ -1210,6 +1677,103 @@ export function registerProofCommand(program: Command): void {
     });
 
   proofCommand.addCommand(healthCommand);
+
+  // Register stale subcommand
+  const staleCommand = new Command('stale')
+    .description('Show findings with staleness signals from subsequent pipeline runs')
+    .option('--after <slug>', 'Filter to findings from a specific pipeline entry')
+    .option('--min-confidence <level>', 'Minimum confidence tier (high or medium)')
+    .option('--json', 'Output JSON format')
+    .action(async (options: { after?: string; minConfidence?: string; json?: boolean }) => {
+      const proofRoot = findProjectRoot();
+      const proofChainPath = path.join(proofRoot, '.ana', 'proof_chain.json');
+      const parentOpts = proofCommand.opts();
+      const useJson = options.json || parentOpts['json'];
+
+      // Read chain (no branch check — stale is read-only)
+      if (!fs.existsSync(proofChainPath)) {
+        if (useJson) {
+          console.log(JSON.stringify(wrapJsonResponse('proof stale', {
+            total_stale: 0,
+            high_confidence: [],
+            medium_confidence: [],
+            filter: options.after || null,
+          }, { entries: [] }), null, 2));
+        } else {
+          console.log('Stale Findings: 0 findings with staleness signals');
+          console.log('');
+          console.log('No proof chain found. Complete pipeline cycles to build proof data.');
+        }
+        return;
+      }
+
+      let chain: ProofChain;
+      try {
+        chain = JSON.parse(fs.readFileSync(proofChainPath, 'utf-8'));
+      } catch {
+        console.error(chalk.red('Error: Failed to parse proof_chain.json'));
+        process.exit(1);
+        return;
+      }
+
+      const stalenessOpts: { afterSlug?: string; minConfidence?: 'high' | 'medium' } = {};
+      if (options.after) stalenessOpts.afterSlug = options.after;
+      if (options.minConfidence === 'high') stalenessOpts.minConfidence = 'high';
+      const result = computeStaleness(chain, stalenessOpts);
+
+      if (useJson) {
+        console.log(JSON.stringify(wrapJsonResponse('proof stale', result, chain), null, 2));
+        return;
+      }
+
+      // Human-readable output
+      if (options.after) {
+        console.log(`Stale Findings: ${result.total_stale} finding${result.total_stale !== 1 ? 's' : ''} from ${options.after} with staleness signals`);
+      } else {
+        console.log(`Stale Findings: ${result.total_stale} finding${result.total_stale !== 1 ? 's' : ''} with staleness signals`);
+      }
+
+      if (result.total_stale === 0) {
+        console.log('');
+        console.log('No active findings have been modified by subsequent pipeline runs.');
+        return;
+      }
+
+      // High confidence tier
+      if (result.high_confidence.length > 0) {
+        console.log('');
+        console.log('High confidence (3+ subsequent entries modified the file):');
+        for (const f of result.high_confidence) {
+          console.log(`  ${f.id} [${f.severity}] ${f.summary} — ${f.file}`);
+          const slugList = f.subsequent_slugs.length <= 3
+            ? f.subsequent_slugs.join(', ')
+            : `${f.subsequent_slugs.slice(0, 3).join(', ')}, ... (${f.subsequent_count} entries)`;
+          console.log(`    Modified by: ${slugList} (${f.subsequent_count} ${f.subsequent_count !== 1 ? 'entries' : 'entry'})`);
+          if (f.completed_at) {
+            const date = f.completed_at.split('T')[0] ?? f.completed_at;
+            console.log(`    Created in: ${f.entry_slug} (${date})`);
+          }
+          console.log('');
+        }
+      }
+
+      // Medium confidence tier
+      if (result.medium_confidence.length > 0) {
+        console.log('Medium confidence (1-2 subsequent entries modified the file):');
+        for (const f of result.medium_confidence) {
+          console.log(`  ${f.id} [${f.severity}] ${f.summary} — ${f.file}`);
+          const slugList = f.subsequent_slugs.join(', ');
+          console.log(`    Modified by: ${slugList} (${f.subsequent_count} ${f.subsequent_count !== 1 ? 'entries' : 'entry'})`);
+          if (f.completed_at) {
+            const date = f.completed_at.split('T')[0] ?? f.completed_at;
+            console.log(`    Created in: ${f.entry_slug} (${date})`);
+          }
+          console.log('');
+        }
+      }
+    });
+
+  proofCommand.addCommand(staleCommand);
 
   program.addCommand(proofCommand);
 }

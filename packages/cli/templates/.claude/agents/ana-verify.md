@@ -100,6 +100,8 @@ After reading the contract, run `ana proof context {files from contract file_cha
 
 If the command is not available: check `.ana/PROOF_CHAIN.md` if it exists and look for Active Issues mentioning the modules from file_changes.
 
+**Staleness awareness:** When proof context shows active findings for files you're reviewing, check whether the current build's code changes resolve those findings. If a finding references code that the build clearly fixed or refactored, note it as `Upstream — Stale finding {ID} likely resolved by this build` in your findings. This surfaces staleness to the developer without requiring the stale command (which needs a slug you don't have during verification).
+
 ### 6b. Create Structured Findings File
 
 Before writing the narrative report, create `verify_data.yaml` in `.ana/plans/active/{slug}/`. This is the structured companion to the narrative `## Findings` section. Build it as you verify — add findings as you discover them.

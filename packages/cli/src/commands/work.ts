@@ -17,7 +17,7 @@ import * as fs from 'node:fs';
 import * as fsPromises from 'node:fs/promises';
 import * as path from 'node:path';
 import { globSync } from 'glob';
-import { readArtifactBranch, readBranchPrefix, getCurrentBranch } from '../utils/git-operations.js';
+import { readArtifactBranch, readBranchPrefix, getCurrentBranch, readCoAuthor } from '../utils/git-operations.js';
 import { generateProofSummary, resolveFindingPaths, generateDashboard, computeChainHealth, wrapJsonResponse, detectHealthChange, type ProofSummary } from '../utils/proofSummary.js';
 import { findProjectRoot } from '../utils/validators.js';
 import type { ProofChainEntry, ProofChain, ProofChainStats } from '../types/proof.js';
@@ -956,13 +956,7 @@ export async function completeWork(slug: string, options?: { json?: boolean }): 
   const branchPrefix = readBranchPrefix(projectRoot);
 
   // Hoist coAuthor read — shared by recovery path (step 5) and main commit path (step 10)
-  const anaJsonPath = path.join(projectRoot, '.ana', 'ana.json');
-  let coAuthor = 'Ana <build@anatomia.dev>';
-  try {
-    const anaJsonContent = fs.readFileSync(anaJsonPath, 'utf-8');
-    const config: { coAuthor?: string } = JSON.parse(anaJsonContent);
-    coAuthor = config.coAuthor || 'Ana <build@anatomia.dev>';
-  } catch { /* fallback to default */ }
+  const coAuthor = readCoAuthor(projectRoot);
 
   // 2. Get current branch
   const currentBranch = getCurrentBranch();

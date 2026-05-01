@@ -14,7 +14,7 @@ import chalk from 'chalk';
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { readArtifactBranch, readBranchPrefix, getCurrentBranch } from '../utils/git-operations.js';
+import { readArtifactBranch, readBranchPrefix, getCurrentBranch, readCoAuthor } from '../utils/git-operations.js';
 import { generateProofSummary, type ProofSummary } from '../utils/proofSummary.js';
 import { findProjectRoot } from '../utils/validators.js';
 
@@ -244,16 +244,8 @@ export function createPr(slug: string): void {
     title = extractTitle(scopeContent);
   }
 
-  // 8. Read coAuthor from ana.json
-  const anaJsonPath = path.join(projectRoot, '.ana', 'ana.json');
-  let coAuthor = 'Ana <build@anatomia.dev>';
-  try {
-    const anaJsonContent = fs.readFileSync(anaJsonPath, 'utf-8');
-    const config: { coAuthor?: string } = JSON.parse(anaJsonContent);
-    coAuthor = config.coAuthor || 'Ana <build@anatomia.dev>';
-  } catch {
-    // Use fallback
-  }
+  // 8. Read coAuthor
+  const coAuthor = readCoAuthor(projectRoot);
 
   // 9. Generate proof summary and render PR body
   const activeDir = path.join(projectRoot, '.ana/plans/active', slug);
