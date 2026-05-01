@@ -213,7 +213,7 @@ assertions:
     block: "learn template has variadic examples"
     target: "templateContent"
     matcher: "contains"
-    value: "F001 F002"
+    value: "C1 C2"
 
   - id: A030
     says: "The Learn template references the stale command instead of manual analysis"
@@ -229,6 +229,13 @@ assertions:
     matcher: "truthy"
 
   - id: A032
+    says: "The Verify template notes stale findings from proof context, not from the stale command"
+    block: "verify template staleness awareness"
+    target: "templateContent"
+    matcher: "contains"
+    value: "Stale finding"
+
+  - id: A033
     says: "The dogfood Verify template matches the shipped template exactly"
     block: "verify template dogfood matches template"
     target: "contentMatch"

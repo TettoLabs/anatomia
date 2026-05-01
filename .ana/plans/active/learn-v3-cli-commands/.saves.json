@@ -4,15 +4,15 @@
     "hash": "sha256:5b5c3c67e23a33f8d2c45097adf094c210c92dd730cbf39b66f4be278b4e7bf8"
   },
   "contract": {
-    "saved_at": "2026-05-01T06:47:52.301Z",
-    "hash": "sha256:9465e4478ec971883c176a0f0048f00a9dda050f0561040507bb335c7c707bb3"
+    "saved_at": "2026-05-01T06:52:26.695Z",
+    "hash": "sha256:9782624f74d9b13ee1370256b2bd35daf1998bdbc297e37819d9229a4dc85228"
   },
   "plan": {
     "saved_at": "2026-05-01T06:47:52.302Z",
     "hash": "sha256:b7d49b8be17cadd53d7c72bcc39da894dedbee31bbbabe4440114d96845fb0da"
   },
   "spec": {
-    "saved_at": "2026-05-01T06:47:52.302Z",
-    "hash": "sha256:cf6f2bf815126eea01072a7896a1065faa4200702817a99a4284849c51228213"
+    "saved_at": "2026-05-01T06:52:26.696Z",
+    "hash": "sha256:f48e55b65555536cfed75744f439e8c98ed33e9e2eed4d7847f4bcf0fd652604"
   }
 }

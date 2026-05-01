@@ -12,7 +12,7 @@ Four changes, all safe to ship together because the template updates reference t
 
 2. **`ana proof audit --full`** — removes the MAX_FILES (8) and MAX_PER_FILE (3) truncation caps when used with `--json`. `--full` without `--json` prints a hint: "The --full flag is designed for agent consumption. Use with --json: ana proof audit --json --full". This avoids dumping hundreds of findings to the terminal.
 
-3. **Verify template update** — add staleness checking instruction to the Verify template. When reviewing files that have active findings, Verify should check `ana proof stale --after {slug}` for staleness signals. This is a 3-5 line addition.
+3. **Verify template update** — add staleness awareness to the Verify template. When Verify reads `ana proof context` for files it's reviewing and sees active findings, it should check whether the current build's code changes resolve those findings. If a finding references code that the build clearly fixed or refactored, Verify notes it as `Upstream — Stale finding {ID} likely resolved by this build`. No `ana proof stale` command reference — Verify doesn't have a slug to pass, and the judgment is contextual (does THIS code change resolve THIS finding?).
 
 4. **Learn template cleanup** — strip all V2 graceful degradation paths ("if command doesn't exist", "perform this analysis manually"). Replace with direct command references using variadic ID examples. Update the staleness detection section to use `ana proof stale` instead of manual cross-referencing. Ensure dogfood copy (`.claude/agents/ana-learn.md`) matches template copy (`packages/cli/templates/.claude/agents/ana-learn.md`). Same for Verify.
 
@@ -143,9 +143,9 @@ The --full flag is designed for agent consumption. Use with --json:
 **Why:** Dogfood copy must match template copy.
 
 ### `packages/cli/templates/.claude/agents/ana-verify.md` (modify)
-**What changes:** Add staleness check instruction. When Verify reviews files that have active findings, it should run `ana proof stale --after {slug} --json` to check for staleness signals. This is a small addition to the verification workflow section.
-**Pattern to follow:** Existing tool-usage instructions in the Verify template.
-**Why:** Verify gains awareness of staleness signals for reviewed files.
+**What changes:** Add staleness awareness instruction. When Verify reads proof context for files it's reviewing and sees active findings, it should check whether the current build's changes resolve those findings. If resolved, note as `Upstream — Stale finding {ID} likely resolved by this build`. No `ana proof stale` command reference — Verify works from proof context it already reads and applies judgment about the current code changes.
+**Pattern to follow:** Existing finding-awareness instructions in the Verify template.
+**Why:** Verify gains awareness that active findings may be stale, surfacing this to the developer without requiring a command that needs a slug Verify doesn't have.
 
 ### `.claude/agents/ana-verify.md` (modify)
 **What changes:** Must match the template copy after edits.
@@ -173,9 +173,9 @@ The --full flag is designed for agent consumption. Use with --json:
 - [ ] Medium confidence = 1-2 subsequent entries matching
 - [ ] `ana proof audit --json --full` returns all active findings without truncation
 - [ ] `ana proof audit --full` (without --json) prints usage hint and exits
-- [ ] Verify template instructs staleness checking on reviewed files
+- [ ] Verify template instructs noting stale findings when proof context shows active findings resolved by the current build
 - [ ] Learn template has zero "if command doesn't exist" or "perform manually" fallback language
-- [ ] Learn template shows variadic ID examples for close, promote, strengthen
+- [ ] Learn template shows variadic ID examples (C-prefixed IDs like `C1 C2 C3`) for close, promote, strengthen
 - [ ] Learn template uses `ana proof stale` instead of manual cross-referencing
 - [ ] Dogfood copy (`.claude/agents/ana-learn.md`) matches template copy (`packages/cli/templates/.claude/agents/ana-learn.md`)
 - [ ] Dogfood copy (`.claude/agents/ana-verify.md`) matches template copy (`packages/cli/templates/.claude/agents/ana-verify.md`)
