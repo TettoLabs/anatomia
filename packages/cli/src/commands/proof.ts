@@ -27,7 +27,7 @@ import type { ProofChainEntry, ProofChain } from '../types/proof.js';
 import { findProjectRoot } from '../utils/validators.js';
 import { getProofContext, wrapJsonResponse, wrapJsonError, generateDashboard, computeChainHealth, computeHealthReport } from '../utils/proofSummary.js';
 import type { ProofContextResult } from '../utils/proofSummary.js';
-import { readArtifactBranch, getCurrentBranch } from '../utils/git-operations.js';
+import { readArtifactBranch, getCurrentBranch, readCoAuthor } from '../utils/git-operations.js';
 
 /**
  * Box-drawing characters for terminal output
@@ -387,11 +387,12 @@ export function registerProofCommand(program: Command): void {
 
   // Register close subcommand
   const closeCommand = new Command('close')
-    .description('Close an active finding with a reason')
-    .argument('<id>', 'Finding ID to close (e.g., F003)')
-    .option('--reason <reason>', 'Why this finding no longer applies')
+    .description('Close active findings with a reason')
+    .argument('<ids...>', 'Finding IDs to close (e.g., F003 or F001 F002 F003)')
+    .option('--reason <reason>', 'Why these findings no longer apply')
+    .option('--dry-run', 'Show what would happen without making changes')
     .option('--json', 'Output JSON format')
-    .action(async (id: string, options: { reason?: string; json?: boolean }) => {
+    .action(async (ids: string[], options: { reason?: string; dryRun?: boolean; json?: boolean }) => {
       const proofRoot = findProjectRoot();
       const proofChainPath = path.join(proofRoot, '.ana', 'proof_chain.json');
       const parentOpts = proofCommand.opts();
@@ -410,7 +411,6 @@ export function registerProofCommand(program: Command): void {
           console.log(JSON.stringify(wrapJsonError('proof close', code, message, context, chain), null, 2));
         } else {
           console.error(chalk.red(`Error: ${message}`));
-          // Print contextual help for specific error codes
           if (code === 'REASON_REQUIRED') {
             console.error('  Proof closures must explain why the finding no longer applies.');
             console.error('  Usage: ana proof close {id} --reason "explanation"');
@@ -435,28 +435,29 @@ export function registerProofCommand(program: Command): void {
         return;
       }
 
-      // Branch check: must be on artifact branch
-      const artifactBranch = readArtifactBranch(proofRoot);
-      const currentBranch = getCurrentBranch();
-      if (currentBranch !== artifactBranch) {
-        exitError('WRONG_BRANCH', `Wrong branch. Switch to \`${artifactBranch}\` to close findings.`);
-        return;
-      }
+      // Branch check: must be on artifact branch (skip for dry-run — it's read-only)
+      if (!options.dryRun) {
+        const artifactBranch = readArtifactBranch(proofRoot);
+        const currentBranch = getCurrentBranch();
+        if (currentBranch !== artifactBranch) {
+          exitError('WRONG_BRANCH', `Wrong branch. Switch to \`${artifactBranch}\` to close findings.`);
+          return;
+        }
 
-      // Pull before reading chain
-      try {
-        const remotes = execSync('git remote', { stdio: 'pipe', encoding: 'utf-8', cwd: proofRoot }).trim();
-        if (remotes) {
-          execSync('git pull --rebase', { stdio: 'pipe', encoding: 'utf-8', cwd: proofRoot });
+        // Pull before reading chain
+        try {
+          const remotes = execSync('git remote', { stdio: 'pipe', encoding: 'utf-8', cwd: proofRoot }).trim();
+          if (remotes) {
+            execSync('git pull --rebase', { stdio: 'pipe', encoding: 'utf-8', cwd: proofRoot });
+          }
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : '';
+          if (errorMessage.includes('conflict') || errorMessage.includes('Cannot rebase')) {
+            console.error(chalk.red('Error: Pull failed due to conflicts. Resolve conflicts and try again.'));
+            process.exit(1);
+          }
+          console.error(chalk.yellow('⚠ Warning: Pull failed (network error). Continuing with local data.'));
         }
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : '';
-        if (errorMessage.includes('conflict') || errorMessage.includes('Cannot rebase')) {
-          console.error(chalk.red('Error: Pull failed due to conflicts. Resolve conflicts and try again.'));
-          process.exit(1);
-        }
-        // Non-conflict failures: warn and continue
-        console.error(chalk.yellow('⚠ Warning: Pull failed (network error). Continuing with local data.'));
       }
 
       // Read chain
@@ -473,44 +474,112 @@ export function registerProofCommand(program: Command): void {
         return;
       }
 
-      // Find the finding across all entries
-      let foundFinding: ProofChainEntry['findings'][0] | null = null;
-      let foundEntry: ProofChainEntry | null = null;
+      // Process each ID — collect results
+      const closed: Array<{ id: string; category: string; summary: string; file: string | null; severity: string | null; previous_status: string; entry_slug: string; entry_feature: string }> = [];
+      const skipped: Array<{ id: string; reason: string }> = [];
 
-      for (const entry of chain.entries) {
-        for (const finding of entry.findings || []) {
-          if (finding.id === id) {
-            foundFinding = finding;
-            foundEntry = entry;
-            break;
+      for (const id of ids) {
+        // Find the finding across all entries
+        let foundFinding: ProofChainEntry['findings'][0] | null = null;
+        let foundEntry: ProofChainEntry | null = null;
+
+        for (const entry of chain.entries) {
+          for (const finding of entry.findings || []) {
+            if (finding.id === id) {
+              foundFinding = finding;
+              foundEntry = entry;
+              break;
+            }
+          }
+          if (foundFinding) break;
+        }
+
+        if (!foundFinding || !foundEntry) {
+          skipped.push({ id, reason: 'not found' });
+          continue;
+        }
+
+        if (foundFinding.status === 'closed') {
+          skipped.push({ id, reason: 'already closed' });
+          continue;
+        }
+
+        const previousStatus = foundFinding.status ?? 'active';
+
+        if (!options.dryRun) {
+          foundFinding.status = 'closed';
+          foundFinding.closed_reason = options.reason;
+          foundFinding.closed_at = new Date().toISOString();
+          foundFinding.closed_by = 'human';
+        }
+
+        closed.push({
+          id: foundFinding.id,
+          category: foundFinding.category,
+          summary: foundFinding.summary,
+          file: foundFinding.file,
+          severity: foundFinding.severity ?? null,
+          previous_status: previousStatus,
+          entry_slug: foundEntry.slug,
+          entry_feature: foundEntry.feature,
+        });
+      }
+
+      // All IDs failed — exit with error
+      if (closed.length === 0) {
+        if (ids.length === 1 && skipped.length === 1) {
+          const skip = skipped[0]!;
+          if (skip.reason === 'not found') {
+            exitError('FINDING_NOT_FOUND', `Finding "${skip.id}" not found.`);
+          } else {
+            // Find the original finding for context
+            let originalFinding: ProofChainEntry['findings'][0] | null = null;
+            for (const entry of chain.entries) {
+              for (const finding of entry.findings || []) {
+                if (finding.id === skip.id) { originalFinding = finding; break; }
+              }
+              if (originalFinding) break;
+            }
+            exitError('ALREADY_CLOSED', `Finding "${skip.id}" is already closed.`, {
+              closed_by: originalFinding?.closed_by ?? 'unknown',
+              closed_at: originalFinding?.closed_at ?? 'unknown',
+              closed_reason: originalFinding?.closed_reason ?? '',
+            });
+          }
+        } else {
+          exitError('ALL_FAILED', `All ${ids.length} finding IDs failed to close.`);
+        }
+        return;
+      }
+
+      // Dry run — report without mutating
+      if (options.dryRun) {
+        if (useJson) {
+          console.log(JSON.stringify(wrapJsonResponse('proof close', {
+            reason: options.reason,
+            closed: closed.map(c => ({ id: c.id, category: c.category, summary: c.summary, file: c.file, previous_status: c.previous_status })),
+            skipped,
+            dry_run: true,
+          }, chain), null, 2));
+        } else {
+          console.log('Dry run — no changes will be made.');
+          console.log('');
+          if (closed.length > 0) {
+            console.log(`Would close ${closed.length} finding${closed.length !== 1 ? 's' : ''}:`);
+            for (const c of closed) {
+              console.log(`  ${c.id} ${chalk.dim(`[${c.category}]`)} ${c.summary} — ${c.file ?? 'no file'} (${c.previous_status} → closed)`);
+            }
+          }
+          if (skipped.length > 0) {
+            console.log('');
+            console.log(`Would skip ${skipped.length}:`);
+            for (const s of skipped) {
+              console.log(`  ${s.id} — ${s.reason}`);
+            }
           }
         }
-        if (foundFinding) break;
-      }
-
-      if (!foundFinding || !foundEntry) {
-        exitError('FINDING_NOT_FOUND', `Finding "${id}" not found.`);
         return;
       }
-
-      // Check if already closed
-      if (foundFinding.status === 'closed') {
-        exitError('ALREADY_CLOSED', `Finding "${id}" is already closed.`, {
-          closed_by: foundFinding.closed_by ?? 'unknown',
-          closed_at: foundFinding.closed_at ?? 'unknown',
-          closed_reason: foundFinding.closed_reason ?? '',
-        });
-        return;
-      }
-
-      // Record previous status for output
-      const previousStatus = foundFinding.status ?? 'active';
-
-      // Mutate the finding
-      foundFinding.status = 'closed';
-      foundFinding.closed_reason = options.reason;
-      foundFinding.closed_at = new Date().toISOString();
-      foundFinding.closed_by = 'human';
 
       // Write updated chain
       fs.writeFileSync(proofChainPath, JSON.stringify(chain, null, 2));
@@ -527,10 +596,14 @@ export function registerProofCommand(program: Command): void {
       const chainMdPath = path.join(proofRoot, '.ana', 'PROOF_CHAIN.md');
       fs.writeFileSync(chainMdPath, dashboardMd);
 
-      // Git: stage, commit, push
+      // Git: stage, commit, push — one commit for the batch
+      const coAuthor = readCoAuthor(proofRoot);
       try {
         execSync('git add .ana/proof_chain.json .ana/PROOF_CHAIN.md', { stdio: 'pipe', cwd: proofRoot });
-        const commitMessage = `[proof] Close ${id}: ${options.reason}`;
+        const idList = closed.length <= 3
+          ? closed.map(c => c.id).join(', ')
+          : `${closed.slice(0, 2).map(c => c.id).join(', ')}, ... (${closed.length} total)`;
+        const commitMessage = `[proof] Close ${idList}: ${options.reason}\n\nCo-authored-by: ${coAuthor}`;
         const commitResult = spawnSync('git', ['commit', '-m', commitMessage], { stdio: 'pipe', cwd: proofRoot });
         if (commitResult.status !== 0) throw new Error(commitResult.stderr?.toString() || 'Commit failed');
       } catch {
@@ -546,25 +619,50 @@ export function registerProofCommand(program: Command): void {
 
       // Output
       if (useJson) {
-        console.log(JSON.stringify(wrapJsonResponse('proof close', {
-          finding: {
-            id: foundFinding.id,
-            category: foundFinding.category,
-            summary: foundFinding.summary,
-            file: foundFinding.file,
-            severity: foundFinding.severity ?? null,
-            entry_slug: foundEntry.slug,
-            entry_feature: foundEntry.feature,
-          },
-          previous_status: previousStatus,
-          new_status: 'closed',
-          reason: options.reason,
-          closed_by: 'human',
-        }, chain), null, 2));
+        if (ids.length === 1 && closed.length === 1 && skipped.length === 0) {
+          // Single-ID backward-compatible JSON
+          const c = closed[0]!;
+          console.log(JSON.stringify(wrapJsonResponse('proof close', {
+            finding: {
+              id: c.id,
+              category: c.category,
+              summary: c.summary,
+              file: c.file,
+              severity: c.severity,
+              entry_slug: c.entry_slug,
+              entry_feature: c.entry_feature,
+            },
+            previous_status: c.previous_status,
+            new_status: 'closed',
+            reason: options.reason,
+            closed_by: 'human',
+          }, chain), null, 2));
+        } else {
+          console.log(JSON.stringify(wrapJsonResponse('proof close', {
+            reason: options.reason,
+            closed: closed.map(c => ({ id: c.id, category: c.category, summary: c.summary, file: c.file, previous_status: c.previous_status })),
+            skipped,
+            dry_run: false,
+          }, chain), null, 2));
+        }
+      } else if (closed.length === 1 && skipped.length === 0) {
+        // Single-ID backward-compatible output
+        const c = closed[0]!;
+        console.log(`✓ Closed ${c.id}: ${options.reason}`);
+        console.log(`  ${chalk.dim(`[${c.category}]`)} ${c.summary} — ${c.file ?? 'no file'}`);
+        console.log(`  ${c.previous_status} → closed (by: human)`);
+        console.log('');
+        console.log(chalk.gray(`Chain: ${health.chain_runs} ${health.chain_runs !== 1 ? 'runs' : 'run'} · ${health.findings.active} active finding${health.findings.active !== 1 ? 's' : ''}`));
       } else {
-        console.log(`✓ Closed ${id}: ${options.reason}`);
-        console.log(`  ${chalk.dim(`[${foundFinding.category}]`)} ${foundFinding.summary} — ${foundFinding.file ?? 'no file'}`);
-        console.log(`  ${previousStatus} → closed (by: human)`);
+        // Multi-ID output
+        const total = closed.length + skipped.length;
+        console.log(`✓ Closed ${closed.length} of ${total} findings: ${options.reason}`);
+        for (const c of closed) {
+          console.log(`  ${c.id} ${chalk.dim(`[${c.category}]`)} ${c.summary} — ${c.file ?? 'no file'} (${c.previous_status} → closed)`);
+        }
+        for (const s of skipped) {
+          console.log(`  ✗ ${s.id} — ${s.reason} (skipped)`);
+        }
         console.log('');
         console.log(chalk.gray(`Chain: ${health.chain_runs} ${health.chain_runs !== 1 ? 'runs' : 'run'} · ${health.findings.active} active finding${health.findings.active !== 1 ? 's' : ''}`));
       }

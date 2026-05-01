@@ -1173,6 +1173,164 @@ describe('ana proof', () => {
     });
   });
 
+  // ─── Close Variadic Tests ───────────────────────────────────────────
+
+  // @ana A004
+  describe('close single ID backward compatible', () => {
+    it('single ID still works after variadic change', async () => {
+      await createCloseTestProject([closeEntry]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['close', 'F001', '--reason', 'backward-compat']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('Closed F001');
+      expect(stdout).toContain('backward-compat');
+    });
+  });
+
+  // @ana A005, A006
+  describe('close variadic closes multiple findings', () => {
+    it('closes two findings with one command and one commit', async () => {
+      await createCloseTestProject([closeEntry]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['close', 'F001', 'F002', '--reason', 'batch cleanup']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('Closed 2');
+
+      // Verify both findings closed in chain
+      const chain = JSON.parse(await fs.readFile(path.join(tempDir, '.ana', 'proof_chain.json'), 'utf-8'));
+      const f1 = chain.entries[0].findings.find((f: { id: string }) => f.id === 'F001');
+      const f2 = chain.entries[0].findings.find((f: { id: string }) => f.id === 'F002');
+      expect(f1.status).toBe('closed');
+      expect(f2.status).toBe('closed');
+
+      // One commit for the batch
+      const commitCount = execSync('git log --oneline | wc -l', { cwd: tempDir, encoding: 'utf-8' }).trim();
+      expect(parseInt(commitCount)).toBe(2); // init + close
+    });
+  });
+
+  // @ana A007
+  describe('close partial failure skips invalid IDs', () => {
+    it('closes valid IDs and skips invalid ones', async () => {
+      await createCloseTestProject([closeEntry]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['close', 'F001', 'F999', '--reason', 'partial']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('F001');
+      expect(stdout).toContain('F999');
+      expect(stdout).toContain('skipped');
+
+      // Valid finding closed
+      const chain = JSON.parse(await fs.readFile(path.join(tempDir, '.ana', 'proof_chain.json'), 'utf-8'));
+      const f1 = chain.entries[0].findings.find((f: { id: string }) => f.id === 'F001');
+      expect(f1.status).toBe('closed');
+    });
+  });
+
+  describe('close all IDs invalid exits with error', () => {
+    it('exits 1 when all IDs are invalid', async () => {
+      await createCloseTestProject([closeEntry]);
+      process.chdir(tempDir);
+
+      const { exitCode } = runProof(['close', 'F998', 'F999', '--reason', 'bad']);
+      expect(exitCode).not.toBe(0);
+    });
+  });
+
+  // @ana A008
+  describe('close dry-run makes no changes', () => {
+    it('shows what would happen without mutating', async () => {
+      await createCloseTestProject([closeEntry]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['close', 'F001', '--reason', 'test', '--dry-run']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('Dry run');
+      expect(stdout).toContain('Would close');
+      expect(stdout).toContain('F001');
+
+      // Finding should still be active
+      const chain = JSON.parse(await fs.readFile(path.join(tempDir, '.ana', 'proof_chain.json'), 'utf-8'));
+      const f1 = chain.entries[0].findings.find((f: { id: string }) => f.id === 'F001');
+      expect(f1.status).toBe('active');
+    });
+  });
+
+  describe('close dry-run with --json', () => {
+    it('returns dry_run: true in JSON envelope', async () => {
+      await createCloseTestProject([closeEntry]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['close', 'F001', 'F999', '--reason', 'test', '--dry-run', '--json']);
+      expect(exitCode).toBe(0);
+
+      const json = JSON.parse(stdout);
+      expect(json.results.dry_run).toBe(true);
+      expect(json.results.closed).toHaveLength(1);
+      expect(json.results.skipped).toHaveLength(1);
+    });
+  });
+
+  // @ana A009
+  describe('close commit has co-author trailer', () => {
+    it('includes co-author in commit body', async () => {
+      // Create project with coAuthor in ana.json
+      execSync('git init', { cwd: tempDir, stdio: 'ignore' });
+      execSync('git config user.email "test@test.com"', { cwd: tempDir, stdio: 'ignore' });
+      execSync('git config user.name "Test"', { cwd: tempDir, stdio: 'ignore' });
+
+      const anaDir = path.join(tempDir, '.ana');
+      await fs.mkdir(anaDir, { recursive: true });
+      await fs.writeFile(
+        path.join(anaDir, 'ana.json'),
+        JSON.stringify({ artifactBranch: 'main', coAuthor: 'Custom Bot <bot@test.com>' }),
+      );
+      await fs.writeFile(
+        path.join(anaDir, 'proof_chain.json'),
+        JSON.stringify({ entries: [closeEntry] }, null, 2),
+      );
+      execSync('git add -A && git commit -m "init"', { cwd: tempDir, stdio: 'ignore' });
+      execSync('git branch -M main', { cwd: tempDir, stdio: 'ignore' });
+      process.chdir(tempDir);
+
+      runProof(['close', 'F001', '--reason', 'trailer-test']);
+
+      const body = execSync('git log -1 --pretty=%B', { cwd: tempDir, encoding: 'utf-8' });
+      expect(body).toContain('Co-authored-by: Custom Bot <bot@test.com>');
+    });
+  });
+
+  describe('close variadic JSON envelope', () => {
+    it('returns per-finding results in JSON', async () => {
+      await createCloseTestProject([closeEntry]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['close', 'F001', 'F002', '--reason', 'batch', '--json']);
+      expect(exitCode).toBe(0);
+
+      const json = JSON.parse(stdout);
+      expect(json.results.closed).toHaveLength(2);
+      expect(json.results.skipped).toHaveLength(0);
+      expect(json.results.dry_run).toBe(false);
+      expect(json.results.reason).toBe('batch');
+    });
+  });
+
+  describe('close skips already-closed findings in variadic', () => {
+    it('skips closed finding F003 and closes active F001', async () => {
+      await createCloseTestProject([closeEntry]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['close', 'F001', 'F003', '--reason', 'mix']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('F001');
+      expect(stdout).toContain('already closed');
+    });
+  });
+
   // ─── Audit Subcommand Tests ──────────────────────────────────────────
 
   /**
