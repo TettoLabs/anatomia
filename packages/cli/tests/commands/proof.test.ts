@@ -2609,4 +2609,351 @@ describe('ana proof', () => {
       expect(exitCode).not.toBe(0);
     });
   });
+
+  // ─── Strengthen Subcommand Tests ──────────────────────────────────────
+
+  /**
+   * Helper to create a git-initialized project with proof chain, skill files,
+   * and uncommitted skill file edits for strengthen testing.
+   * Extends createPromoteTestProject: after initial commit, modifies the skill file
+   * to create uncommitted changes.
+   */
+  async function createStrengthenTestProject(entries: unknown[], options?: { branch?: string; skillContent?: string; skillName?: string; noSkill?: boolean; noUncommittedChanges?: boolean; coAuthor?: string }): Promise<void> {
+    const branch = options?.branch ?? 'main';
+    const skillName = options?.skillName ?? 'coding-standards';
+    const skillContent = options?.skillContent ?? `# coding-standards
+
+## Rules
+- Existing rule about naming conventions
+
+## Gotchas
+- Watch out for circular imports
+
+## Examples
+*Not yet captured. Add short snippets showing the RIGHT way.*
+`;
+
+    // Init git
+    execSync('git init', { cwd: tempDir, stdio: 'ignore' });
+    execSync('git config user.email "test@test.com"', { cwd: tempDir, stdio: 'ignore' });
+    execSync('git config user.name "Test"', { cwd: tempDir, stdio: 'ignore' });
+
+    // Create .ana/ana.json
+    const anaDir = path.join(tempDir, '.ana');
+    await fs.mkdir(anaDir, { recursive: true });
+    const anaJson: Record<string, unknown> = { artifactBranch: 'main' };
+    if (options?.coAuthor) {
+      anaJson['coAuthor'] = options.coAuthor;
+    }
+    await fs.writeFile(
+      path.join(anaDir, 'ana.json'),
+      JSON.stringify(anaJson),
+    );
+
+    // Write proof chain
+    await fs.writeFile(
+      path.join(anaDir, 'proof_chain.json'),
+      JSON.stringify({ entries }, null, 2),
+    );
+
+    // Create skill file (unless noSkill is set)
+    if (!options?.noSkill) {
+      const skillDir = path.join(tempDir, '.claude', 'skills', skillName);
+      await fs.mkdir(skillDir, { recursive: true });
+      await fs.writeFile(path.join(skillDir, 'SKILL.md'), skillContent);
+    }
+
+    // Initial commit and set branch
+    execSync('git add -A && git commit -m "init"', { cwd: tempDir, stdio: 'ignore' });
+    execSync(`git branch -M ${branch}`, { cwd: tempDir, stdio: 'ignore' });
+
+    // Add uncommitted changes to the skill file (unless noUncommittedChanges)
+    if (!options?.noSkill && !options?.noUncommittedChanges) {
+      const skillFilePath = path.join(tempDir, '.claude', 'skills', skillName, 'SKILL.md');
+      const currentContent = await fs.readFile(skillFilePath, 'utf-8');
+      await fs.writeFile(skillFilePath, currentContent + '- New rule added by Learn\n');
+    }
+  }
+
+  /** Entry with active findings for strengthen testing (same shape as promoteEntry) */
+  const strengthenEntry = {
+    slug: 'fix-validation',
+    feature: 'Fix Input Validation',
+    result: 'PASS',
+    author: { name: 'Developer', email: 'dev@example.com' },
+    contract: { total: 5, covered: 5, uncovered: 0, satisfied: 5, unsatisfied: 0, deviated: 0 },
+    assertions: [{ id: 'A001', says: 'Validates input', status: 'SATISFIED' }],
+    acceptance_criteria: { total: 3, met: 3 },
+    timing: { total_minutes: 30 },
+    hashes: {},
+    completed_at: '2026-04-20T10:00:00Z',
+    modules_touched: ['src/api/payments.ts'],
+    findings: [
+      { id: 'F001', category: 'validation', summary: 'Missing request validation', file: 'src/api/payments.ts', anchor: 'validateInput', status: 'active', severity: 'risk', suggested_action: 'promote' },
+      { id: 'F002', category: 'testing', summary: 'No test for edge case', file: 'src/api/payments.ts', anchor: null, status: 'active' },
+      { id: 'F003', category: 'code', summary: 'Redundant import', file: 'src/utils/helpers.ts', anchor: null, status: 'closed', closed_by: 'mechanical', closed_at: '2026-04-22T10:00:00Z', closed_reason: 'auto-closed' },
+      { id: 'F004', category: 'code', summary: 'Already promoted item', file: 'src/api.ts', anchor: null, status: 'promoted', promoted_to: '.claude/skills/coding-standards/SKILL.md' },
+    ],
+    rejection_cycles: 0,
+    previous_failures: [],
+    build_concerns: [],
+  };
+
+  // @ana A014, A015
+  describe('strengthen succeeds with uncommitted changes', () => {
+    it('marks finding as promoted with skill path', async () => {
+      await createStrengthenTestProject([strengthenEntry]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['strengthen', 'F001', '--skill', 'coding-standards', '--reason', '"Added validation rule after recurring pattern"']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('Strengthened');
+      expect(stdout).toContain('coding-standards');
+
+      // Verify chain was mutated
+      const chain = JSON.parse(await fs.readFile(path.join(tempDir, '.ana', 'proof_chain.json'), 'utf-8'));
+      const finding = chain.entries[0].findings.find((f: { id: string }) => f.id === 'F001');
+      expect(finding.status).toBe('promoted');
+      expect(finding.promoted_to).toBe('.claude/skills/coding-standards/SKILL.md');
+
+      // Verify PROOF_CHAIN.md was regenerated
+      const dashboard = await fs.readFile(path.join(tempDir, '.ana', 'PROOF_CHAIN.md'), 'utf-8');
+      expect(dashboard).toContain('Proof Chain Dashboard');
+    });
+  });
+
+  // @ana A016, A017
+  describe('strengthen rejects when no uncommitted changes', () => {
+    it('exits with NO_UNCOMMITTED_CHANGES error', async () => {
+      await createStrengthenTestProject([strengthenEntry], { noUncommittedChanges: true });
+      process.chdir(tempDir);
+
+      const { exitCode, stderr } = runProof(['strengthen', 'F001', '--skill', 'coding-standards', '--reason', 'test']);
+      expect(exitCode).not.toBe(0);
+      expect(stderr).toContain('No uncommitted changes');
+    });
+
+    it('returns NO_UNCOMMITTED_CHANGES code in JSON', async () => {
+      await createStrengthenTestProject([strengthenEntry], { noUncommittedChanges: true });
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['strengthen', 'F001', '--skill', 'coding-standards', '--reason', 'test', '--json']);
+      expect(exitCode).not.toBe(0);
+
+      const json = JSON.parse(stdout);
+      expect(json.error.code).toBe('NO_UNCOMMITTED_CHANGES');
+    });
+  });
+
+  describe('strengthen rejects nonexistent skill', () => {
+    it('returns SKILL_NOT_FOUND code in JSON', async () => {
+      await createStrengthenTestProject([strengthenEntry]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['strengthen', 'F001', '--skill', 'nonexistent', '--reason', 'test', '--json']);
+      expect(exitCode).not.toBe(0);
+
+      const json = JSON.parse(stdout);
+      expect(json.error.code).toBe('SKILL_NOT_FOUND');
+    });
+  });
+
+  describe('strengthen rejects finding not found', () => {
+    it('returns FINDING_NOT_FOUND code in JSON', async () => {
+      await createStrengthenTestProject([strengthenEntry]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['strengthen', 'F999', '--skill', 'coding-standards', '--reason', 'test', '--json']);
+      expect(exitCode).not.toBe(0);
+
+      const json = JSON.parse(stdout);
+      expect(json.error.code).toBe('FINDING_NOT_FOUND');
+    });
+  });
+
+  describe('strengthen rejects already-promoted finding', () => {
+    it('returns ALREADY_PROMOTED code in JSON', async () => {
+      await createStrengthenTestProject([strengthenEntry]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['strengthen', 'F004', '--skill', 'coding-standards', '--reason', 'test', '--json']);
+      expect(exitCode).not.toBe(0);
+
+      const json = JSON.parse(stdout);
+      expect(json.error.code).toBe('ALREADY_PROMOTED');
+    });
+  });
+
+  // @ana A020
+  describe('strengthen --force on closed finding', () => {
+    it('rejects closed finding without --force', async () => {
+      await createStrengthenTestProject([strengthenEntry]);
+      process.chdir(tempDir);
+
+      const { exitCode, stderr } = runProof(['strengthen', 'F003', '--skill', 'coding-standards', '--reason', 'test']);
+      expect(exitCode).not.toBe(0);
+      expect(stderr).toContain('already closed');
+    });
+
+    it('succeeds with --force flag', async () => {
+      await createStrengthenTestProject([strengthenEntry]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['strengthen', 'F003', '--skill', 'coding-standards', '--reason', 'test', '--force']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('Strengthened');
+
+      // Verify chain mutation
+      const chain = JSON.parse(await fs.readFile(path.join(tempDir, '.ana', 'proof_chain.json'), 'utf-8'));
+      const finding = chain.entries[0].findings.find((f: { id: string }) => f.id === 'F003');
+      expect(finding.status).toBe('promoted');
+    });
+  });
+
+  // @ana A021
+  describe('strengthen variadic', () => {
+    it('strengthens multiple findings in one commit', async () => {
+      await createStrengthenTestProject([strengthenEntry]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['strengthen', 'F001', 'F002', '--skill', 'coding-standards', '--reason', '"Added validation rules"']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('Strengthened 2');
+
+      // Verify both findings promoted
+      const chain = JSON.parse(await fs.readFile(path.join(tempDir, '.ana', 'proof_chain.json'), 'utf-8'));
+      const f1 = chain.entries[0].findings.find((f: { id: string }) => f.id === 'F001');
+      const f2 = chain.entries[0].findings.find((f: { id: string }) => f.id === 'F002');
+      expect(f1.status).toBe('promoted');
+      expect(f2.status).toBe('promoted');
+
+      // One commit for the batch (init + strengthen = 2)
+      const commitCount = execSync('git log --oneline | wc -l', { cwd: tempDir, encoding: 'utf-8' }).trim();
+      expect(parseInt(commitCount)).toBe(2);
+    });
+  });
+
+  describe('strengthen wrong branch', () => {
+    it('returns WRONG_BRANCH code in JSON', async () => {
+      await createStrengthenTestProject([strengthenEntry], { branch: 'feature/other' });
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['strengthen', 'F001', '--skill', 'coding-standards', '--reason', 'test', '--json']);
+      expect(exitCode).not.toBe(0);
+
+      const json = JSON.parse(stdout);
+      expect(json.error.code).toBe('WRONG_BRANCH');
+    });
+  });
+
+  describe('strengthen JSON output', () => {
+    it('returns valid JSON envelope', async () => {
+      await createStrengthenTestProject([strengthenEntry]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['strengthen', 'F001', '--skill', 'coding-standards', '--reason', '"Added rule"', '--json']);
+      expect(exitCode).toBe(0);
+
+      const json = JSON.parse(stdout);
+      expect(json.command).toBe('proof strengthen');
+      expect(json.timestamp).toBeDefined();
+      expect(json.results).toBeDefined();
+      expect(json.results.skill).toBe('coding-standards');
+      expect(json.results.skill_path).toBe('.claude/skills/coding-standards/SKILL.md');
+      expect(json.results.reason).toBe('Added rule');
+      expect(json.results.strengthened).toHaveLength(1);
+      expect(json.meta).toBeDefined();
+    });
+  });
+
+  // @ana A018
+  describe('strengthen commit message format', () => {
+    it('uses [learn] prefix, not [proof]', async () => {
+      await createStrengthenTestProject([strengthenEntry]);
+      process.chdir(tempDir);
+
+      runProof(['strengthen', 'F001', '--skill', 'coding-standards', '--reason', '"Added validation rule"']);
+
+      const lastCommit = execSync('git log -1 --pretty=%s', { cwd: tempDir, encoding: 'utf-8' }).trim();
+      expect(lastCommit).toContain('[learn] Strengthen');
+      expect(lastCommit).toContain('coding-standards');
+      expect(lastCommit).toContain('Added validation rule');
+      expect(lastCommit).not.toContain('[proof]');
+    });
+  });
+
+  // @ana A019
+  describe('strengthen commit has co-author trailer', () => {
+    it('includes co-author in commit body', async () => {
+      await createStrengthenTestProject([strengthenEntry], { coAuthor: 'Custom Bot <bot@test.com>' });
+      process.chdir(tempDir);
+
+      runProof(['strengthen', 'F001', '--skill', 'coding-standards', '--reason', 'test']);
+
+      const body = execSync('git log -1 --pretty=%B', { cwd: tempDir, encoding: 'utf-8' });
+      expect(body).toContain('Co-authored-by: Custom Bot <bot@test.com>');
+    });
+  });
+
+  describe('strengthen stages skill file in commit', () => {
+    it('commit includes the skill file, proof chain, and dashboard', async () => {
+      await createStrengthenTestProject([strengthenEntry]);
+      process.chdir(tempDir);
+
+      runProof(['strengthen', 'F001', '--skill', 'coding-standards', '--reason', 'test']);
+
+      const files = execSync('git diff --name-only HEAD~1', { cwd: tempDir, encoding: 'utf-8' });
+      expect(files).toContain('.claude/skills/coding-standards/SKILL.md');
+      expect(files).toContain('.ana/proof_chain.json');
+      expect(files).toContain('.ana/PROOF_CHAIN.md');
+    });
+  });
+
+  describe('strengthen all IDs invalid exits with error', () => {
+    it('exits 1 when all IDs are invalid', async () => {
+      await createStrengthenTestProject([strengthenEntry]);
+      process.chdir(tempDir);
+
+      const { exitCode } = runProof(['strengthen', 'F998', 'F999', '--skill', 'coding-standards', '--reason', 'test']);
+      expect(exitCode).not.toBe(0);
+    });
+  });
+
+  describe('strengthen mix of valid and invalid IDs', () => {
+    it('strengthens valid, skips invalid, still commits', async () => {
+      await createStrengthenTestProject([strengthenEntry]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['strengthen', 'F001', 'F999', '--skill', 'coding-standards', '--reason', 'test']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('Strengthened 1');
+
+      // Verify valid finding promoted
+      const chain = JSON.parse(await fs.readFile(path.join(tempDir, '.ana', 'proof_chain.json'), 'utf-8'));
+      const f1 = chain.entries[0].findings.find((f: { id: string }) => f.id === 'F001');
+      expect(f1.status).toBe('promoted');
+    });
+  });
+
+  describe('strengthen requires --reason', () => {
+    it('exits with error when --reason is missing', async () => {
+      await createStrengthenTestProject([strengthenEntry]);
+      process.chdir(tempDir);
+
+      const { exitCode, stderr } = runProof(['strengthen', 'F001', '--skill', 'coding-standards']);
+      expect(exitCode).not.toBe(0);
+      expect(stderr).toContain('--reason is required');
+    });
+  });
+
+  describe('strengthen requires --skill', () => {
+    it('exits with error when --skill is missing', async () => {
+      await createStrengthenTestProject([strengthenEntry]);
+      process.chdir(tempDir);
+
+      const { exitCode, stderr } = runProof(['strengthen', 'F001', '--reason', 'test']);
+      expect(exitCode).not.toBe(0);
+      expect(stderr).toContain('--skill is required');
+    });
+  });
 });
