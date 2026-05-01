@@ -16,12 +16,12 @@
     "hash": "sha256:f48e55b65555536cfed75744f439e8c98ed33e9e2eed4d7847f4bcf0fd652604"
   },
   "build-report": {
-    "saved_at": "2026-05-01T07:06:19.064Z",
-    "hash": "sha256:4a198066ec1c08fc5e7edac1a2279ed6a18ae03a218463397d59d515a8b415cc"
+    "saved_at": "2026-05-01T18:18:32.061Z",
+    "hash": "sha256:78eda7543157f5d4415054e012604a25cec61b2c141ebc7581c60388f2f3b6d0"
   },
   "build-data": {
-    "saved_at": "2026-05-01T07:06:19.065Z",
-    "hash": "sha256:8c0a4e2355553b90a0e1c5333b06efa13892352f9393aee2421d6ed8fa0b0b10"
+    "saved_at": "2026-05-01T18:18:32.062Z",
+    "hash": "sha256:7b7fe5f4f09e1fd91fc1eefc3fdd147de3411cf16ca992522bb97bd69730b253"
   },
   "modules_touched": [
     "packages/cli/src/commands/artifact.ts",
