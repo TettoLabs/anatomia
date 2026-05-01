@@ -28,15 +28,16 @@ Three phases, building on each other:
 
 Full acceptance criteria are in `anatomia_reference/LEARN_V3_REQUIREMENTS.md` (V3-AC0a through V3-AC25). Summary:
 
-- AC1: `readCoAuthor()` exists in git-operations.ts, all 5 inline coAuthor reads deduplicated
-- AC2: `ana proof close` and `ana proof promote` accept variadic `<ids...>`, single-ID backward compatible
-- AC3: Existing close and promote commits include co-author trailers (bug fix)
-- AC4: `ana proof strengthen` exists — verifies uncommitted skill changes, stages atomically, accepts multiple finding IDs
-- AC5: `ana proof stale` exists — cross-references modules_touched, reports high/medium confidence tiers
-- AC6: `ana proof audit --json --full` returns all active findings without truncation
-- AC7: Verify template instructs staleness checking on reviewed files with active findings
-- AC8: Learn template has zero fallback language — assumes all commands exist, shows variadic ID examples everywhere
-- AC9: All new/modified commands have tests
+- AC1: `readCoAuthor()` exists in git-operations.ts, all 5 inline coAuthor reads deduplicated across artifact.ts (2), work.ts (1), pr.ts (1)
+- AC2: `ana proof close` accepts variadic `<ids...>`, single-ID backward compatible, adds `--dry-run` flag (new — doesn't exist on current close)
+- AC3: `ana proof promote` accepts variadic `<ids...>`, single-ID backward compatible, one rule appended regardless of ID count, first ID's summary used as default `--text`
+- AC4: Existing close and promote commits include co-author trailers (bug fix — currently missing)
+- AC5: `ana proof strengthen <ids...> --skill <name> --reason "..."` exists — verifies uncommitted skill changes via `git diff`, stages atomically, `--force` flag for closed findings
+- AC6: `ana proof stale` exists — cross-references modules_touched, high/medium confidence tiers, `--after <slug>` filter, `--json` output
+- AC7: `ana proof audit --json --full` returns all active findings without truncation. `--full` without `--json` prints usage hint
+- AC8: Verify template instructs staleness checking on reviewed files with active findings
+- AC9: Learn template has zero fallback language — assumes all commands exist, shows variadic ID examples everywhere. Dogfood copy (`.claude/agents/`) matches template copy (`templates/.claude/agents/`) for both ana-learn.md and ana-verify.md
+- AC10: All new/modified commands have tests
 
 ## Edge Cases & Risks
 
