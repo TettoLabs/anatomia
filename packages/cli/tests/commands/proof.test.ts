@@ -2525,4 +2525,88 @@ describe('ana proof', () => {
       expect(json.error.code).toBe('FINDING_NOT_FOUND');
     });
   });
+
+  // ─── Promote Variadic Tests ──────────────────────────────────────────
+
+  // @ana A010
+  describe('promote single ID backward compatible', () => {
+    it('single ID still works after variadic change', async () => {
+      await createPromoteTestProject([promoteEntry]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['promote', 'F001', '--skill', 'coding-standards']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('Promoted F001');
+    });
+  });
+
+  // @ana A011, A012
+  describe('promote variadic promotes multiple findings', () => {
+    it('promotes two findings with one rule appended', async () => {
+      await createPromoteTestProject([promoteEntry]);
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['promote', 'F001', 'F002', '--skill', 'coding-standards']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('Promoted 2');
+
+      // Verify both findings promoted
+      const chain = JSON.parse(await fs.readFile(path.join(tempDir, '.ana', 'proof_chain.json'), 'utf-8'));
+      const f1 = chain.entries[0].findings.find((f: { id: string }) => f.id === 'F001');
+      const f2 = chain.entries[0].findings.find((f: { id: string }) => f.id === 'F002');
+      expect(f1.status).toBe('promoted');
+      expect(f2.status).toBe('promoted');
+
+      // Only one rule appended (first finding's summary)
+      const skillContent = await fs.readFile(path.join(tempDir, '.claude', 'skills', 'coding-standards', 'SKILL.md'), 'utf-8');
+      const ruleMatches = skillContent.match(/- Missing request validation/g);
+      expect(ruleMatches).toHaveLength(1);
+
+      // One commit for the batch
+      const commitCount = execSync('git log --oneline | wc -l', { cwd: tempDir, encoding: 'utf-8' }).trim();
+      expect(parseInt(commitCount)).toBe(2); // init + promote
+    });
+  });
+
+  // @ana A013
+  describe('promote commit has co-author trailer', () => {
+    it('includes co-author in commit body', async () => {
+      execSync('git init', { cwd: tempDir, stdio: 'ignore' });
+      execSync('git config user.email "test@test.com"', { cwd: tempDir, stdio: 'ignore' });
+      execSync('git config user.name "Test"', { cwd: tempDir, stdio: 'ignore' });
+
+      const anaDir = path.join(tempDir, '.ana');
+      await fs.mkdir(anaDir, { recursive: true });
+      await fs.writeFile(
+        path.join(anaDir, 'ana.json'),
+        JSON.stringify({ artifactBranch: 'main', coAuthor: 'Custom Bot <bot@test.com>' }),
+      );
+      await fs.writeFile(
+        path.join(anaDir, 'proof_chain.json'),
+        JSON.stringify({ entries: [promoteEntry] }, null, 2),
+      );
+      const skillDir = path.join(tempDir, '.claude', 'skills', 'coding-standards');
+      await fs.mkdir(skillDir, { recursive: true });
+      await fs.writeFile(path.join(skillDir, 'SKILL.md'), `# coding-standards\n\n## Rules\n- Existing rule\n\n## Gotchas\n- Watch out\n`);
+
+      execSync('git add -A && git commit -m "init"', { cwd: tempDir, stdio: 'ignore' });
+      execSync('git branch -M main', { cwd: tempDir, stdio: 'ignore' });
+      process.chdir(tempDir);
+
+      runProof(['promote', 'F001', '--skill', 'coding-standards']);
+
+      const body = execSync('git log -1 --pretty=%B', { cwd: tempDir, encoding: 'utf-8' });
+      expect(body).toContain('Co-authored-by: Custom Bot <bot@test.com>');
+    });
+  });
+
+  describe('promote all IDs invalid exits with error', () => {
+    it('exits 1 when all IDs are invalid', async () => {
+      await createPromoteTestProject([promoteEntry]);
+      process.chdir(tempDir);
+
+      const { exitCode } = runProof(['promote', 'F998', 'F999', '--skill', 'coding-standards']);
+      expect(exitCode).not.toBe(0);
+    });
+  });
 });
