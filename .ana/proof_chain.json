@@ -7873,6 +7873,456 @@
           "suggested_action": "accept"
         }
       ]
+    },
+    {
+      "slug": "learn-v3-cli-commands",
+      "feature": "Learn V3 — CLI Commands + Template Finalization",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 33,
+        "satisfied": 33,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "A shared utility reads the co-author name from project config",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "Co-author utility falls back to the default when config is missing",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Inline co-author reads are replaced with the shared utility",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "Closing a single finding still works after the variadic change",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "Multiple findings can be closed in a single command",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "Closing multiple findings produces only one git commit",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "Invalid finding IDs are skipped without blocking valid ones",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "Dry run shows what would happen without making changes",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "Close commits include the co-author trailer",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "Promoting a single finding still works after the variadic change",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "Multiple findings can be promoted in a single command",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "Promoting multiple findings appends only one rule to the skill file",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "Promote commits include the co-author trailer",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "Strengthen commits a skill file edit and marks findings as promoted",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "Strengthen links the finding to the specific skill file",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "Strengthen refuses to run when the skill file has no pending edits",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A017",
+          "says": "Strengthen error clearly tells the user to edit the skill file first",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A018",
+          "says": "Strengthen uses the learn commit prefix, not proof",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A019",
+          "says": "Strengthen commits include the co-author trailer",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A020",
+          "says": "Already-closed findings can be strengthened with the force flag",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A021",
+          "says": "Multiple findings can be strengthened in a single command",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A022",
+          "says": "Stale command identifies findings whose files were modified by later pipeline runs",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A023",
+          "says": "High-confidence stale findings have three or more subsequent entries modifying the file",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A024",
+          "says": "Stale findings can be filtered to a specific pipeline run",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A025",
+          "says": "Stale command works without checking out a specific branch",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A026",
+          "says": "Full audit returns all findings without truncation for agent consumption",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A027",
+          "says": "Full audit without JSON mode shows a usage hint instead of raw output",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A028",
+          "says": "The Learn template assumes all CLI commands exist with no fallback instructions",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A029",
+          "says": "The Learn template shows variadic ID examples for batch operations",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A030",
+          "says": "The Learn template references the stale command instead of manual analysis",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A031",
+          "says": "The dogfood Learn template matches the shipped template exactly",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A032",
+          "says": "The Verify template notes stale findings from proof context, not from the stale command",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A033",
+          "says": "The dogfood Verify template matches the shipped template exactly",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 18,
+        "met": 18
+      },
+      "timing": {
+        "total_minutes": 774,
+        "think": 15,
+        "plan": 15,
+        "build": 744,
+        "verify": 15
+      },
+      "hashes": {
+        "scope": "sha256:5b5c3c67e23a33f8d2c45097adf094c210c92dd730cbf39b66f4be278b4e7bf8",
+        "contract": "sha256:9782624f74d9b13ee1370256b2bd35daf1998bdbc297e37819d9229a4dc85228",
+        "plan": "sha256:b7d49b8be17cadd53d7c72bcc39da894dedbee31bbbabe4440114d96845fb0da",
+        "spec": "sha256:f48e55b65555536cfed75744f439e8c98ed33e9e2eed4d7847f4bcf0fd652604",
+        "build-report": "sha256:56f6e195fb6444ff58a4c6aac8d460a137d7c5994d5e7542334c27e32b177f69",
+        "build-data": "sha256:9ea90241629a2c1cfae3c824c913b7e0cf9590c369498c271c9505e17a1f632b",
+        "verify-report": "sha256:80cd9dd7ef3f88e724e68d452ee6c7710cf5021a3b9e91a0c6668564c98e33dc",
+        "verify-data": "sha256:f53671584ff84e69aa340f57c377418bc6051e79bcf389864abeabf2b07f5db8"
+      },
+      "completed_at": "2026-05-01T19:40:57.105Z",
+      "modules_touched": [
+        ".claude/agents/ana-learn.md",
+        ".claude/agents/ana-verify.md",
+        "packages/cli/src/commands/artifact.ts",
+        "packages/cli/src/commands/pr.ts",
+        "packages/cli/src/commands/proof.ts",
+        "packages/cli/src/commands/work.ts",
+        "packages/cli/src/types/proof.ts",
+        "packages/cli/src/utils/git-operations.ts",
+        "packages/cli/src/utils/proofSummary.ts",
+        "packages/cli/templates/.claude/agents/ana-learn.md",
+        "packages/cli/templates/.claude/agents/ana-verify.md",
+        "packages/cli/tests/commands/proof.test.ts",
+        "packages/cli/tests/utils/git-operations.test.ts",
+        "packages/cli/tests/utils/proofSummary.test.ts"
+      ],
+      "scope_summary": "Build the CLI commands that Ana Learn needs to operate deterministically, then strip the graceful degradation from the Learn template. V2 shipped the Learn template with manual workarounds for commands that didn't exist. V3 makes those commands real and removes the workarounds. After V3, every proof chain operation Learn performs goes through a CLI command — no manual git ceremonies, no raw JSON parsing, no fallback instructions.",
+      "findings": [
+        {
+          "category": "test",
+          "summary": "Dry-run test verifies no mutation but does not verify no commit was created",
+          "file": "packages/cli/tests/commands/proof.test.ts",
+          "anchor": null,
+          "line": 1243,
+          "severity": "debt",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A008"
+          ],
+          "id": "learn-v3-cli-commands-C1",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "No @ana A003 tag or regression test for inline coAuthor absence — verified by source inspection only",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A003"
+          ],
+          "id": "learn-v3-cli-commands-C2",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "SEVERITY_ORDER constant at proof.ts:49 still duplicated across audit/findings blocks — pre-existing, still present",
+          "file": "packages/cli/src/commands/proof.ts",
+          "anchor": null,
+          "line": 49,
+          "severity": "debt",
+          "suggested_action": "monitor",
+          "id": "learn-v3-cli-commands-C3",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "exitError helper duplicated inline in close (~30 lines) and promote (~30 lines) action handlers",
+          "file": "packages/cli/src/commands/proof.ts",
+          "anchor": null,
+          "line": 402,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "learn-v3-cli-commands-C4",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Close variadic partial success exits 0 — correct per spec but could mask failures in automation pipelines",
+          "file": "packages/cli/src/commands/proof.ts",
+          "anchor": null,
+          "line": 529,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "learn-v3-cli-commands-C5",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "Variadic strengthen test checks status but not promoted_to on each finding",
+          "file": "packages/cli/tests/commands/proof.test.ts",
+          "anchor": null,
+          "line": 2823,
+          "severity": "debt",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A021"
+          ],
+          "id": "learn-v3-cli-commands-C6",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "exitError re-searches chain for finding details in ALREADY_PROMOTED and ALREADY_CLOSED single-ID paths — duplicates the earlier loop",
+          "file": "packages/cli/src/commands/proof.ts",
+          "anchor": null,
+          "line": 1232,
+          "severity": "debt",
+          "suggested_action": "accept",
+          "id": "learn-v3-cli-commands-C7",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Available skills listing in SKILL_NOT_FOUND error is unspecified UX — reasonable but untested",
+          "file": "packages/cli/src/commands/proof.ts",
+          "anchor": null,
+          "line": 1075,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "learn-v3-cli-commands-C8",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "No test for the staged-only changes path (git diff --cached) — only unstaged changes tested via helper",
+          "file": "packages/cli/tests/commands/proof.test.ts",
+          "anchor": null,
+          "line": 2670,
+          "severity": "debt",
+          "suggested_action": "scope",
+          "id": "learn-v3-cli-commands-C9",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "SEVERITY_ORDER duplication still present across proof.ts — known from proof context, not addressed by this phase",
+          "file": "packages/cli/src/commands/proof.ts",
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "learn-v3-cli-commands-C10",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "Weak assertions in stale integration tests — toBeGreaterThan(0) instead of specific counts",
+          "file": "packages/cli/tests/commands/proof.test.ts",
+          "anchor": null,
+          "line": 3122,
+          "severity": "debt",
+          "suggested_action": "monitor",
+          "related_assertions": [
+            "A022"
+          ],
+          "id": "learn-v3-cli-commands-C11",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "toBeDefined() on JSON confidence tiers — verifies existence not structure",
+          "file": "packages/cli/tests/commands/proof.test.ts",
+          "anchor": null,
+          "line": 3123,
+          "severity": "debt",
+          "suggested_action": "monitor",
+          "related_assertions": [
+            "A022"
+          ],
+          "id": "learn-v3-cli-commands-C12",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "--min-confidence accepts invalid values silently — no validation or Commander .choices()",
+          "file": "packages/cli/src/commands/proof.ts",
+          "anchor": null,
+          "line": 1721,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "learn-v3-cli-commands-C13",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "No tagged test for template assertions A028-A033 — all verified by source inspection",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "learn-v3-cli-commands-C14",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "StaleFinding/StalenessResult types exported but never imported by name — consumed only via inline import() in proofSummary.ts",
+          "file": "packages/cli/src/types/proof.ts",
+          "anchor": null,
+          "line": 177,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "learn-v3-cli-commands-C15",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "Dogfood test (agent-proof-context.test.ts:68) still excludes ana-learn.md from sync check",
+          "file": "packages/cli/tests/templates/agent-proof-context.test.ts",
+          "anchor": null,
+          "line": 68,
+          "severity": "debt",
+          "suggested_action": "scope",
+          "id": "learn-v3-cli-commands-C16",
+          "status": "lesson"
+        },
+        {
+          "category": "code",
+          "summary": "O(n*m) traversal in computeStaleness — nested loop over entries × findings",
+          "file": "packages/cli/src/utils/proofSummary.ts",
+          "anchor": null,
+          "line": 1100,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "learn-v3-cli-commands-C17",
+          "status": "active"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "Close dry-run skips branch check — intentional for usability but deviates from close's normal branch enforcement",
+          "file": null,
+          "severity": "observation",
+          "suggested_action": "accept"
+        },
+        {
+          "summary": "Promote variadic uses first finding's summary for single rule — may not represent all promoted findings",
+          "file": null,
+          "severity": "observation",
+          "suggested_action": "accept"
+        },
+        {
+          "summary": "stale command uses direct string comparison on file paths — inconsistent formats (./src vs src) would miss matches",
+          "file": "packages/cli/src/utils/proofSummary.ts",
+          "severity": "observation",
+          "suggested_action": "monitor"
+        },
+        {
+          "summary": "Verify template retains If the command is not available fallback — preserved to avoid breaking existing test, but inconsistent with Learn cleanup",
+          "file": "packages/cli/templates/.claude/agents/ana-verify.md",
+          "severity": "observation",
+          "suggested_action": "accept"
+        }
+      ]
     }
   ],
   "schema": 1
