@@ -1,25 +1,27 @@
 # Proof Chain Dashboard
 
-36 runs · 73 active · 30 lessons · 0 promoted · 83 closed
+37 runs · 77 active · 31 lessons · 0 promoted · 83 closed
 
 ## Hot Modules
 
 | File | Active | Entries |
 |------|--------|--------|
-| packages/cli/src/commands/proof.ts | 17 | 8 |
+| packages/cli/src/commands/proof.ts | 19 | 9 |
 | packages/cli/src/utils/proofSummary.ts | 9 | 8 |
 | packages/cli/tests/commands/work.test.ts | 9 | 7 |
-| packages/cli/tests/commands/proof.test.ts | 7 | 3 |
+| packages/cli/tests/commands/proof.test.ts | 9 | 4 |
 | packages/cli/tests/utils/proofSummary.test.ts | 6 | 4 |
 
 ## Promoted Rules
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 73 total)
+## Active Findings (30 shown of 77 total)
 
 ### packages/cli/src/commands/proof.ts
 
+- **code:** Inline import type for HealthReport instead of adding to existing type import at line 26 — *Health Display Polish*
+- **code:** MAX_SUMMARY constant (100) defined twice in adjacent loops — could be extracted to function-level const — *Health Display Polish*
 - **code:** SEVERITY_ORDER constant at proof.ts:49 still duplicated across audit/findings blocks — pre-existing, still present — *Learn V3 — CLI Commands + Template Finalization*
 - **code:** exitError helper duplicated inline in close (~30 lines) and promote (~30 lines) action handlers — *Learn V3 — CLI Commands + Template Finalization*
 - **code:** Close variadic partial success exits 0 — correct per spec but could mask failures in automation pipelines — *Learn V3 — CLI Commands + Template Finalization*
@@ -29,9 +31,6 @@
 - **code:** --min-confidence accepts invalid values silently — no validation or Commander .choices() — *Learn V3 — CLI Commands + Template Finalization*
 - **code:** SEVERITY_ORDER duplication still present — sevOrder inline array at line 1026 is correct local choice but broader duplication across audit/findings blocks remains — *Proof Command UX*
 - **code:** options.skill typed as non-optional string but can be undefined after requiredOption→option change — *Proof Promote*
-- **code:** No summary truncation for promoted finding display — long summaries break terminal formatting — *Proof Promote*
-- **code:** Hardcoded 10 in trend display instead of using MIN_ENTRIES_FOR_TREND constant. Template literal uses ${10} rather than importing and using the named constant, creating drift risk if threshold changes. — *Proof Health V1*
-- **code:** Promotion candidate display has no summary truncation. Long summaries from findings (up to 1000 chars) render untruncated in terminal output. Not a crash risk but degrades terminal readability. — *Proof Health V1*
 
 ### packages/cli/src/commands/work.ts
 
@@ -53,6 +52,8 @@
 
 ### packages/cli/tests/commands/proof.test.ts
 
+- **test:** A029 asserts on source code content — matches contract target but violates testing-standards skill rule — *Health Display Polish*
+- **test:** A019 not.toContain('Promote') works by coincidence — test data has no promoted findings so 'Promotions' heading also absent; a more targeted regex or exact heading match would be more robust — *Health Display Polish*
 - **test:** Dry-run test verifies no mutation but does not verify no commit was created — *Learn V3 — CLI Commands + Template Finalization*
 - **test:** Variadic strengthen test checks status but not promoted_to on each finding — *Learn V3 — CLI Commands + Template Finalization*
 - **test:** No test for the staged-only changes path (git diff --cached) — only unstaged changes tested via helper — *Learn V3 — CLI Commands + Template Finalization*
@@ -65,10 +66,6 @@
 - **test:** A013 conditional assertion passes vacuously when health line absent — if (output.includes('Health:')) guard means zero assertions fire when improving trend doesn't produce a health line — *Proof Command UX*
 - **test:** A003 tagged test exercises normal completion, not recovery — does not assert 'Recovering' in output — *Harden Hot Files*
 - **test:** Pre-check COVERED status for A004-A010 comes from other features' tag collisions, not from harden-hot-files-specific tests — *Harden Hot Files*
-
-### packages/cli/tests/utils/proofSummary.test.ts
-
-- **test:** detectHealthChange 'detects trend improvement' unit test uses conditional assertion (if change.changed) — if change.changed is false, the expect on triggers never executes. This masks a potential false pass. — *Proof Health V1*
 
 ### General
 

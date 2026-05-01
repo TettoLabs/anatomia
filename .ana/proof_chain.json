@@ -8323,6 +8323,284 @@
           "suggested_action": "accept"
         }
       ]
+    },
+    {
+      "slug": "health-display-polish",
+      "feature": "Health Display Polish",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 29,
+        "satisfied": 29,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Health output starts with a box-drawn header showing the command name",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "Health header shows the run count",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Health header shows today's date",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "Trajectory section shows trend before risks per run",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "Trajectory condenses risks per run into a single line",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "Unclassified count appears as inline parenthetical only when greater than zero",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "Unclassified line is absent when count is zero",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "Hot module paths show basename instead of full path",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "Hot module paths disambiguate when basenames collide",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "Observation severity is abbreviated to obs in hot modules",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "Observation severity is not abbreviated outside hot modules",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "Promote section shows only findings with promote action",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "Promote candidates display as one-line truncated summaries",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "Promote candidates have severity badges with promote action",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "Recurring section shows scope-action findings with two or more entries",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "Recurring candidates show entry count suffix",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A017",
+          "says": "Recurring candidates have severity-only badges without action",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A018",
+          "says": "Sections with no content are omitted entirely",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A019",
+          "says": "Promote heading is absent when no promote candidates exist",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A020",
+          "says": "Zero-runs case shows box header with zero runs",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A021",
+          "says": "Zero-runs case shows No data message",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A022",
+          "says": "Sections have horizontal line dividers",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A023",
+          "says": "Promotions effectiveness section appears when promoted findings exist",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A024",
+          "says": "Promotions effectiveness section is omitted when no promotions exist",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A025",
+          "says": "JSON output structure is completely unchanged",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A026",
+          "says": "JSON output includes trajectory data unchanged",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A027",
+          "says": "Insufficient data trend displays with run threshold",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A028",
+          "says": "No classified data trend displays correctly",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A029",
+          "says": "Trend threshold uses imported constant instead of hardcoded value",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 16,
+        "met": 15
+      },
+      "timing": {
+        "total_minutes": 50,
+        "think": 12,
+        "plan": 12,
+        "build": 18,
+        "verify": 21
+      },
+      "hashes": {
+        "scope": "sha256:22d844b4acfdc97f5e12ccaacb4ad81b7aff2ff354cd24bd5aef0c6ff6f97830",
+        "contract": "sha256:7327fdcdcc3aec26443e879163a8155dac2db751d37df7b8a1139fbffcfd5771",
+        "plan": "sha256:20c3619ac0f3df78642c860bdef483d22f219f2869ef503dbf97d048d43b4036",
+        "spec": "sha256:0d17e5c75819f55e3e8e5154a6eab0ca974d0fa5048cac03c3e0a59abe8874d1",
+        "build-report": "sha256:738fb47086dc949894649def4629df40e76119989702fe90ad39cea45302d798",
+        "build-data": "sha256:cdc130a8f9cbadb752b8a207cf8fe73a205815801adfb78b59d437037c2f0d0d",
+        "verify-report": "sha256:02ff68cc0d2f7ed8ce071994a5e7b08e5b20dc781da27eab9e1060bbea67847a",
+        "verify-data": "sha256:3bf49c5e10aaf09533b00cd85b6f8a0b2ca37180abb307fe3fc54236a6682b0a"
+      },
+      "completed_at": "2026-05-01T23:26:24.774Z",
+      "modules_touched": [
+        "packages/cli/src/commands/proof.ts",
+        "packages/cli/tests/commands/proof.test.ts"
+      ],
+      "scope_summary": "Make `ana proof health` match the design language of every other proof command. The data is correct — `computeHealthReport` is solid. The terminal display is debug output next to the proof card's designed surface. This is pure craft: box header, section dividers, truncated paths, one-line summaries, trend-first hierarchy. The developer who runs `ana proof health` should see a dashboard, not a data dump.",
+      "findings": [
+        {
+          "category": "code",
+          "summary": "Inline import type for HealthReport instead of adding to existing type import at line 26",
+          "file": "packages/cli/src/commands/proof.ts",
+          "anchor": null,
+          "line": 233,
+          "severity": "debt",
+          "suggested_action": "accept",
+          "related_assertions": [],
+          "id": "health-display-polish-C1",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "A029 asserts on source code content — matches contract target but violates testing-standards skill rule",
+          "file": "packages/cli/tests/commands/proof.test.ts",
+          "anchor": null,
+          "line": 2393,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A029"
+          ],
+          "id": "health-display-polish-C2",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "Contract A011 value '[obs' is substring of '[observation' — literal not_contains would always fail when observation-severity promote candidates exist",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "related_assertions": [
+            "A011"
+          ],
+          "id": "health-display-polish-C3",
+          "status": "lesson"
+        },
+        {
+          "category": "code",
+          "summary": "MAX_SUMMARY constant (100) defined twice in adjacent loops — could be extracted to function-level const",
+          "file": "packages/cli/src/commands/proof.ts",
+          "anchor": null,
+          "line": 333,
+          "severity": "debt",
+          "suggested_action": "accept",
+          "related_assertions": [],
+          "id": "health-display-polish-C4",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "A019 not.toContain('Promote') works by coincidence — test data has no promoted findings so 'Promotions' heading also absent; a more targeted regex or exact heading match would be more robust",
+          "file": "packages/cli/tests/commands/proof.test.ts",
+          "anchor": null,
+          "line": 2196,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A019"
+          ],
+          "id": "health-display-polish-C5",
+          "status": "active"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "Contract A011 not_contains '[obs' matches substring of '[observation' — mechanical check may false-positive",
+          "file": "packages/cli/tests/commands/proof.test.ts",
+          "severity": "observation",
+          "suggested_action": "monitor"
+        },
+        {
+          "summary": "Hot module column widths hardcoded at padEnd(24)/padEnd(35) — long names could overflow",
+          "file": "packages/cli/src/commands/proof.ts",
+          "severity": "debt",
+          "suggested_action": "monitor"
+        },
+        {
+          "summary": "formatHealthDisplay date uses runtime new Date() — tests are time-dependent (same as formatHumanReadable)",
+          "file": "packages/cli/src/commands/proof.ts",
+          "severity": "observation",
+          "suggested_action": "accept"
+        }
+      ]
     }
   ],
   "schema": 1
