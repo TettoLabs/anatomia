@@ -1,0 +1,8 @@
+schema: 1
+concerns:
+  - summary: "Close dry-run skips branch check — intentional for usability but deviates from close's normal branch enforcement"
+    severity: observation
+    suggested_action: accept
+  - summary: "Promote variadic uses first finding's summary for single rule — may not represent all promoted findings"
+    severity: observation
+    suggested_action: accept
