@@ -31,5 +31,18 @@
     "packages/cli/src/utils/git-operations.ts",
     "packages/cli/tests/commands/proof.test.ts",
     "packages/cli/tests/utils/git-operations.test.ts"
-  ]
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:9782624f74d9b13ee1370256b2bd35daf1998bdbc297e37819d9229a4dc85228",
+    "run_at": "2026-05-01T07:14:30.442Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-01T07:14:30.469Z",
+    "hash": "sha256:191620e5d64c7230c66ba51b2c9076d6edce67b0f4c6e9c14eb465b6957cab82"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-01T07:14:30.469Z",
+    "hash": "sha256:b85fecdd4a05493bafcaacabd9c53ed1cec1731be2c9309bd644c2317fa08310"
+  }
 }
