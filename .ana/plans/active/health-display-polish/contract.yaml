@@ -1,0 +1,224 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Health Display Polish"
+
+assertions:
+  # Box header
+  - id: A001
+    says: "Health output starts with a box-drawn header showing the command name"
+    block: "displays box header with command name"
+    target: "stdout"
+    matcher: "contains"
+    value: "ana proof health"
+
+  - id: A002
+    says: "Health header shows the run count"
+    block: "displays box header with run count"
+    target: "stdout"
+    matcher: "contains"
+    value: "28 runs"
+
+  - id: A003
+    says: "Health header shows today's date"
+    block: "displays box header with date"
+    target: "stdout"
+    matcher: "contains"
+    value: "2026-"
+
+  # Trajectory
+  - id: A004
+    says: "Trajectory section shows trend before risks per run"
+    block: "displays trajectory with trend first"
+    target: "stdout.trendLineIndex"
+    matcher: "greater"
+    value: 0
+
+  - id: A005
+    says: "Trajectory condenses risks per run into a single line"
+    block: "displays condensed risks per run"
+    target: "stdout"
+    matcher: "contains"
+    value: "(last 5)"
+
+  - id: A006
+    says: "Unclassified count appears as inline parenthetical only when greater than zero"
+    block: "displays unclassified as inline parenthetical"
+    target: "stdout"
+    matcher: "contains"
+    value: "unclassified excluded"
+
+  - id: A007
+    says: "Unclassified line is absent when count is zero"
+    block: "omits unclassified when zero"
+    target: "stdout"
+    matcher: "not_contains"
+    value: "unclassified"
+
+  # Hot modules
+  - id: A008
+    says: "Hot module paths show basename instead of full path"
+    block: "truncates hot module paths to basename"
+    target: "stdout"
+    matcher: "contains"
+    value: "hot.ts"
+
+  - id: A009
+    says: "Hot module paths disambiguate when basenames collide"
+    block: "disambiguates colliding basenames"
+    target: "stdout"
+    matcher: "contains"
+    value: "commands/proof.ts"
+
+  - id: A010
+    says: "Observation severity is abbreviated to obs in hot modules"
+    block: "abbreviates observation to obs"
+    target: "stdout"
+    matcher: "contains"
+    value: "obs"
+
+  - id: A011
+    says: "Observation severity is not abbreviated outside hot modules"
+    block: "keeps full observation in promote badges"
+    target: "stdout"
+    matcher: "not_contains"
+    value: "[obs"
+
+  # Promote section
+  - id: A012
+    says: "Promote section shows only findings with promote action"
+    block: "shows promote section for promote-action candidates"
+    target: "stdout"
+    matcher: "contains"
+    value: "Promote"
+
+  - id: A013
+    says: "Promote candidates display as one-line truncated summaries"
+    block: "truncates promote candidate summaries"
+    target: "stdout"
+    matcher: "contains"
+    value: "..."
+
+  - id: A014
+    says: "Promote candidates have severity badges with promote action"
+    block: "shows severity badge on promote candidates"
+    target: "stdout"
+    matcher: "contains"
+    value: "promote]"
+
+  # Recurring section
+  - id: A015
+    says: "Recurring section shows scope-action findings with two or more entries"
+    block: "shows recurring section for scope-action candidates"
+    target: "stdout"
+    matcher: "contains"
+    value: "Recurring"
+
+  - id: A016
+    says: "Recurring candidates show entry count suffix"
+    block: "shows entry count on recurring candidates"
+    target: "stdout"
+    matcher: "contains"
+    value: "entries)"
+
+  - id: A017
+    says: "Recurring candidates have severity-only badges without action"
+    block: "shows severity-only badge on recurring candidates"
+    target: "stdout"
+    matcher: "contains"
+    value: "[debt]"
+
+  # Empty section omission
+  - id: A018
+    says: "Sections with no content are omitted entirely"
+    block: "omits empty sections"
+    target: "stdout"
+    matcher: "not_contains"
+    value: "No candidates"
+
+  - id: A019
+    says: "Promote heading is absent when no promote candidates exist"
+    block: "omits promote section when empty"
+    target: "stdout"
+    matcher: "not_contains"
+    value: "Promote"
+
+  # Zero runs
+  - id: A020
+    says: "Zero-runs case shows box header with zero runs"
+    block: "shows box header for zero runs"
+    target: "stdout"
+    matcher: "contains"
+    value: "0 runs"
+
+  - id: A021
+    says: "Zero-runs case shows No data message"
+    block: "shows no data for zero runs"
+    target: "stdout"
+    matcher: "contains"
+    value: "No data."
+
+  # Section dividers
+  - id: A022
+    says: "Sections have horizontal line dividers"
+    block: "shows section dividers"
+    target: "stdout"
+    matcher: "contains"
+    value: "──────"
+
+  # Promotions effectiveness
+  - id: A023
+    says: "Promotions effectiveness section appears when promoted findings exist"
+    block: "shows promotions effectiveness section"
+    target: "stdout"
+    matcher: "contains"
+    value: "Promotions"
+
+  - id: A024
+    says: "Promotions effectiveness section is omitted when no promotions exist"
+    block: "omits promotions when empty"
+    target: "stdout"
+    matcher: "not_contains"
+    value: "Promotions"
+
+  # JSON unchanged
+  - id: A025
+    says: "JSON output structure is completely unchanged"
+    block: "preserves JSON output structure"
+    target: "json.command"
+    matcher: "equals"
+    value: "proof health"
+
+  - id: A026
+    says: "JSON output includes trajectory data unchanged"
+    block: "preserves JSON trajectory"
+    target: "json.results.trajectory"
+    matcher: "exists"
+
+  # Trend edge cases
+  - id: A027
+    says: "Insufficient data trend displays with run threshold"
+    block: "displays insufficient data trend"
+    target: "stdout"
+    matcher: "contains"
+    value: "insufficient data"
+
+  - id: A028
+    says: "No classified data trend displays correctly"
+    block: "displays no classified data trend"
+    target: "stdout"
+    matcher: "contains"
+    value: "no classified data"
+
+  # MIN_ENTRIES_FOR_TREND fix
+  - id: A029
+    says: "Trend threshold uses imported constant instead of hardcoded value"
+    block: "uses MIN_ENTRIES_FOR_TREND constant"
+    target: "source"
+    matcher: "contains"
+    value: "MIN_ENTRIES_FOR_TREND"
+
+file_changes:
+  - path: "packages/cli/src/commands/proof.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/proof.test.ts"
+    action: modify
