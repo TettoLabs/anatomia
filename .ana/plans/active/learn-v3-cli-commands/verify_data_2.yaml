@@ -1,0 +1,32 @@
+schema: 1
+findings:
+  - category: test
+    summary: "Variadic strengthen test checks status but not promoted_to on each finding"
+    file: "packages/cli/tests/commands/proof.test.ts"
+    line: 2823
+    severity: debt
+    suggested_action: accept
+    related_assertions: ["A021"]
+  - category: code
+    summary: "exitError re-searches chain for finding details in ALREADY_PROMOTED and ALREADY_CLOSED single-ID paths — duplicates the earlier loop"
+    file: "packages/cli/src/commands/proof.ts"
+    line: 1232
+    severity: debt
+    suggested_action: accept
+  - category: code
+    summary: "Available skills listing in SKILL_NOT_FOUND error is unspecified UX — reasonable but untested"
+    file: "packages/cli/src/commands/proof.ts"
+    line: 1075
+    severity: observation
+    suggested_action: accept
+  - category: test
+    summary: "No test for the staged-only changes path (git diff --cached) — only unstaged changes tested via helper"
+    file: "packages/cli/tests/commands/proof.test.ts"
+    line: 2670
+    severity: debt
+    suggested_action: scope
+  - category: code
+    summary: "SEVERITY_ORDER duplication still present across proof.ts — known from proof context, not addressed by this phase"
+    file: "packages/cli/src/commands/proof.ts"
+    severity: observation
+    suggested_action: monitor
