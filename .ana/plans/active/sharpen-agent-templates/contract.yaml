@@ -1,0 +1,163 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Sharpen Agent Templates"
+
+assertions:
+  # AC1: Verify mandate uses substantive examples
+  - id: A001
+    says: "Verify's mandate now references sentinel tests as an example of what to look for"
+    block: "verify mandate includes substantive examples"
+    target: "ana-verify.md.line11"
+    matcher: "contains"
+    value: "assertions that pass on broken AND working code"
+
+  - id: A002
+    says: "Verify's mandate now references untested error paths"
+    block: "verify mandate includes substantive examples"
+    target: "ana-verify.md.line11"
+    matcher: "contains"
+    value: "untested error paths"
+
+  - id: A003
+    says: "Verify's mandate no longer suggests looking for unclear names"
+    block: "verify mandate drops style examples"
+    target: "ana-verify.md.line11"
+    matcher: "not_contains"
+    value: "unclear names"
+
+  - id: A004
+    says: "Verify's mandate no longer suggests looking for weak error messages"
+    block: "verify mandate drops style examples"
+    target: "ana-verify.md.line11"
+    matcher: "not_contains"
+    value: "weak error messages"
+
+  - id: A005
+    says: "Verify's mandate no longer suggests looking for inconsistent patterns"
+    block: "verify mandate drops style examples"
+    target: "ana-verify.md.line11"
+    matcher: "not_contains"
+    value: "inconsistent patterns"
+
+  # AC2: Conviction line and consequence test
+  - id: A006
+    says: "Verify's mandate includes the conviction that every codebase carries debt"
+    block: "verify mandate includes conviction and consequence test"
+    target: "ana-verify.md.mandate"
+    matcher: "contains"
+    value: "Every codebase carries tech debt, weak tests, and architectural shortcuts"
+
+  - id: A007
+    says: "Verify's mandate requires each finding to answer what goes wrong and for whom"
+    block: "verify mandate includes conviction and consequence test"
+    target: "ana-verify.md.mandate"
+    matcher: "contains"
+    value: "what goes wrong, and for whom?"
+
+  # AC3: "worth knowing for the next engineer"
+  - id: A008
+    says: "Findings are now framed as worth knowing for the next engineer, not just generally"
+    block: "verify mandate audience specificity"
+    target: "ana-verify.md.mandate"
+    matcher: "contains"
+    value: "worth knowing for the next engineer"
+
+  # AC4: Minimum count deleted
+  - id: A009
+    says: "The arbitrary minimum finding count has been removed"
+    block: "verify minimum count removed"
+    target: "ana-verify.md.content"
+    matcher: "not_contains"
+    value: "Minimum: one Code finding, one Test finding"
+
+  # AC5: Think proof surface reference
+  - id: A010
+    says: "Think can now check quality trajectory when scoping work"
+    block: "think has proof surface reference"
+    target: "ana.md.content"
+    matcher: "contains"
+    value: "ana proof health"
+
+  - id: A011
+    says: "Think can now review all active findings when scoping work"
+    block: "think has proof surface reference"
+    target: "ana.md.content"
+    matcher: "contains"
+    value: "ana proof audit"
+
+  - id: A012
+    says: "Think routes proof chain management to the Learn agent"
+    block: "think has proof surface reference"
+    target: "ana.md.content"
+    matcher: "contains"
+    value: "route to `claude --agent ana-learn`"
+
+  # AC6: Think step 3 quality posture check
+  - id: A013
+    says: "Think checks quality trajectory for hot modules during scoping"
+    block: "think step 3 includes health check"
+    target: "ana.md.step3"
+    matcher: "contains"
+    value: "ana proof health"
+
+  - id: A014
+    says: "A worsening quality trend influences what the scope should prioritize"
+    block: "think step 3 includes health check"
+    target: "ana.md.step3"
+    matcher: "contains"
+    value: "a worsening trend changes what the scope should prioritize"
+
+  # AC7: Dogfood sync
+  - id: A015
+    says: "The dogfood copy of the Verify template matches the shipped template exactly"
+    block: "dogfood copies match templates"
+    target: "dogfood.ana-verify.md"
+    matcher: "equals"
+    value: "template.ana-verify.md"
+
+  - id: A016
+    says: "The dogfood copy of the Think template matches the shipped template exactly"
+    block: "dogfood copies match templates"
+    target: "dogfood.ana.md"
+    matcher: "equals"
+    value: "template.ana.md"
+
+  # AC8: No other lines changed
+  - id: A017
+    says: "Only the specified lines in Verify template were changed"
+    block: "no unintended changes to verify template"
+    target: "ana-verify.md.diff"
+    matcher: "equals"
+    value: 2
+
+  - id: A018
+    says: "Only the specified lines in Think template were changed"
+    block: "no unintended changes to think template"
+    target: "ana.md.diff"
+    matcher: "equals"
+    value: 2
+
+  # AC9 + AC10: Tests and lint pass
+  - id: A019
+    says: "All existing tests continue to pass after the template changes"
+    block: "full test suite passes"
+    target: "test.result"
+    matcher: "equals"
+    value: "pass"
+
+  - id: A020
+    says: "No lint violations introduced"
+    block: "lint passes"
+    target: "lint.result"
+    matcher: "equals"
+    value: "pass"
+
+file_changes:
+  - path: "packages/cli/templates/.claude/agents/ana-verify.md"
+    action: modify
+  - path: "packages/cli/templates/.claude/agents/ana.md"
+    action: modify
+  - path: ".claude/agents/ana-verify.md"
+    action: modify
+  - path: ".claude/agents/ana.md"
+    action: modify
