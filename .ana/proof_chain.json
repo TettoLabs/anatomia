@@ -6686,7 +6686,10 @@
           "severity": "debt",
           "suggested_action": "scope",
           "id": "proof-promote-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed by fix-type-lies — options.skill type changed from string to string | undefined, aligning with Commander .option() runtime behavior.",
+          "closed_at": "2026-05-02T05:07:34.791Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
