@@ -169,7 +169,7 @@ export function classifyArchitecture(
 
   // 4. Check library (no entry point + lib/ or pkg/)
   if (entryPoints.length === 0) {
-    const hasLib = directories.some(d => {
+    const hasLib = normalized.some(d => {
       const base = basename(d);
       // Check if directory is lib/ or pkg/ or starts with them
       return base === 'lib' || base === 'pkg' || d.startsWith('lib/') || d.startsWith('pkg/');
