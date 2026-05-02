@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-38 runs · 80 active · 32 lessons · 0 promoted · 84 closed
+39 runs · 82 active · 35 lessons · 0 promoted · 84 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 80 total)
+## Active Findings (30 shown of 82 total)
 
 ### packages/cli/src/commands/proof.ts
 
@@ -29,7 +29,6 @@
 - **code:** Available skills listing in SKILL_NOT_FOUND error is unspecified UX — reasonable but untested — *Learn V3 — CLI Commands + Template Finalization*
 - **code:** SEVERITY_ORDER duplication still present across proof.ts — known from proof context, not addressed by this phase — *Learn V3 — CLI Commands + Template Finalization*
 - **code:** --min-confidence accepts invalid values silently — no validation or Commander .choices() — *Learn V3 — CLI Commands + Template Finalization*
-- **code:** SEVERITY_ORDER duplication still present — sevOrder inline array at line 1026 is correct local choice but broader duplication across audit/findings blocks remains — *Proof Command UX*
 
 ### packages/cli/src/commands/work.ts
 
@@ -47,6 +46,10 @@
 - **code:** O(n*m) traversal in computeStaleness — nested loop over entries × findings — *Learn V3 — CLI Commands + Template Finalization*
 - **code:** PreCheckData interface vestigial — retains assertions/covered/uncovered fields for reading old .saves.json but the code path that used them for assertion bootstrap is deleted — *Remove Pre-Check Tag Coverage*
 
+### packages/cli/templates/.claude/agents/ana.md
+
+- **code:** Proof surface block is informational command list without behavioral guidance — *Sharpen Agent Templates*
+
 ### packages/cli/tests/commands/proof.test.ts
 
 - **test:** A029 asserts on source code content — matches contract target but violates testing-standards skill rule — *Health Display Polish*
@@ -61,7 +64,10 @@
 ### packages/cli/tests/commands/work.test.ts
 
 - **test:** A013 conditional assertion passes vacuously when health line absent — if (output.includes('Health:')) guard means zero assertions fire when improving trend doesn't produce a health line — *Proof Command UX*
-- **test:** A003 tagged test exercises normal completion, not recovery — does not assert 'Recovering' in output — *Harden Hot Files*
+
+### packages/cli/tests/templates/agent-proof-context.test.ts
+
+- **test:** Dogfood sync test proves byte-identity but not content correctness — contract content assertions verified by source inspection only — *Sharpen Agent Templates*
 
 ### packages/cli/tests/utils/proofSummary.test.ts
 

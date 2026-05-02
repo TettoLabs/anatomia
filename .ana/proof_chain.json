@@ -8809,6 +8809,218 @@
           "suggested_action": "accept"
         }
       ]
+    },
+    {
+      "slug": "sharpen-agent-templates",
+      "feature": "Sharpen Agent Templates",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 20,
+        "satisfied": 20,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Verify's mandate now references sentinel tests as an example of what to look for",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "Verify's mandate now references untested error paths",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Verify's mandate no longer suggests looking for unclear names",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "Verify's mandate no longer suggests looking for weak error messages",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "Verify's mandate no longer suggests looking for inconsistent patterns",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "Verify's mandate includes the conviction that every codebase carries debt",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "Verify's mandate requires each finding to answer what goes wrong and for whom",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "Findings are now framed as worth knowing for the next engineer, not just generally",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "The arbitrary minimum finding count has been removed",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "Think can now check quality trajectory when scoping work",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "Think can now review all active findings when scoping work",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "Think routes proof chain management to the Learn agent",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "Think checks quality trajectory for hot modules during scoping",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "A worsening quality trend influences what the scope should prioritize",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "The dogfood copy of the Verify template matches the shipped template exactly",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "The dogfood copy of the Think template matches the shipped template exactly",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A017",
+          "says": "Only the specified lines in Verify template were changed",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A018",
+          "says": "Only the specified lines in Think template were changed",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A019",
+          "says": "All existing tests continue to pass after the template changes",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A020",
+          "says": "No lint violations introduced",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 10,
+        "met": 10
+      },
+      "timing": {
+        "total_minutes": 246,
+        "think": 7,
+        "plan": 7,
+        "build": 234,
+        "verify": 5
+      },
+      "hashes": {
+        "scope": "sha256:1f13308bf2093f0158e3ab553a5254445141da7a0f2a47a868af171a11b17ad7",
+        "contract": "sha256:5652ebf10f01c50de3c28ef469ff1cc128b4363cb69b69553d1719824c005d59",
+        "plan": "sha256:6bd06a6f425d484d7967215f8113e62e11984fb3acd0e5baa5d4a32ab123c471",
+        "spec": "sha256:0e2f8657c32973ed50cd91531cd7666dffcf34e63dede013e18750b4d850000e",
+        "build-report": "sha256:e5c580be9590e74242511c65884934b138b060fa8ce7970cab58cf7836973c7a",
+        "build-data": "sha256:a2cf7d5c1b24c246140e9fc848482eebef2a41f8372eee691ebef291fa74700d",
+        "verify-report": "sha256:22c6b35870e319541bba8693cca79b174590d81bd65fae4b67255e476842a292",
+        "verify-data": "sha256:69dfc72b0849f25360502721323635299492c30a257feaecf6c6df4a46551e75"
+      },
+      "completed_at": "2026-05-02T03:39:55.930Z",
+      "modules_touched": [
+        ".claude/agents/ana-verify.md",
+        ".claude/agents/ana.md",
+        "packages/cli/templates/.claude/agents/ana-verify.md",
+        "packages/cli/templates/.claude/agents/ana.md"
+      ],
+      "scope_summary": "Shift Verify's searchlight from style observations to substantive findings, and give Think awareness of the proof surface. Four template text changes across two agent definitions. Zero CLI code.",
+      "findings": [
+        {
+          "category": "upstream",
+          "summary": "Stale test baseline in spec — claims 1777 tests but actual baseline is 1763",
+          "file": ".ana/plans/active/sharpen-agent-templates/spec.md",
+          "anchor": null,
+          "line": 133,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "sharpen-agent-templates-C1",
+          "status": "lesson"
+        },
+        {
+          "category": "code",
+          "summary": "Proof surface block is informational command list without behavioral guidance",
+          "file": "packages/cli/templates/.claude/agents/ana.md",
+          "anchor": null,
+          "line": 295,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "sharpen-agent-templates-C2",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "Dogfood sync test proves byte-identity but not content correctness — contract content assertions verified by source inspection only",
+          "file": "packages/cli/tests/templates/agent-proof-context.test.ts",
+          "anchor": null,
+          "line": 66,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "sharpen-agent-templates-C3",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "Prior finding still active — Verify template retains 'If the command is not available' fallback inconsistent with Learn cleanup",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "sharpen-agent-templates-C4",
+          "status": "lesson"
+        },
+        {
+          "category": "upstream",
+          "summary": "Spec correctly identified and overrode scope's wrong claim about test coverage of ana.md",
+          "file": ".ana/plans/active/sharpen-agent-templates/spec.md",
+          "anchor": null,
+          "line": 15,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "sharpen-agent-templates-C5",
+          "status": "lesson"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "Spec baseline said 1777 tests but actual baseline is 1761 — likely spec was written against a different commit",
+          "file": null,
+          "severity": "observation",
+          "suggested_action": "accept"
+        }
+      ]
     }
   ],
   "schema": 1
