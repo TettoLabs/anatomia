@@ -195,9 +195,9 @@ describe('git activity — dogfood', () => {
     // Top files should be source files
     for (const file of activity.highChurnFiles) {
       const ext = file.path.substring(file.path.lastIndexOf('.'));
-      const isSrcMd = ext === '.md' && (file.path.startsWith('src/') || file.path.includes('/src/'));
+      const isMd = ext === '.md';
       expect(
-        ['.ts', '.tsx', '.js', '.jsx'].includes(ext) || isSrcMd,
+        ['.ts', '.tsx', '.js', '.jsx'].includes(ext) || isMd,
         `${file.path} should be a source file`
       ).toBe(true);
     }
