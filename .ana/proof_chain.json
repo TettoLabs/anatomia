@@ -2434,9 +2434,12 @@
           "file": "packages/cli/src/utils/proofSummary.ts",
           "anchor": "m.endsWith('/' + basename)",
           "id": "proof-context-query-C1",
-          "status": "active",
+          "status": "closed",
           "severity": "observation",
-          "suggested_action": "monitor"
+          "suggested_action": "monitor",
+          "closed_reason": "Mitigated — line 354 now checks m === basename as exact-match fallback. And the dormant condition (root-level modules) is unreachable via git diff paths.",
+          "closed_at": "2026-05-02T18:00:30.278Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
