@@ -83,8 +83,10 @@ The terminal severity counting at lines 1657-1700 IS the implementation. Hoist i
 - The counting logic handles `'—'` → `'unclassified'` mapping (line 1661) — preserve this
 
 ### Known Gotchas
+- **TWO JSON output paths.** The zero-findings early return at line 1602 produces `{ total_active: 0, by_file: [] }`. The main path at line 1636 produces the full result. BOTH need `by_severity` and `by_action`. The zero-findings path should include all-zero counts, not omit the fields.
 - The `allUnclassified` flag (line 1659) controls whether terminal severity lines are shown. The JSON should ALWAYS include the fields — don't gate on `allUnclassified`.
 - The terminal counting uses string keys ('risk', 'debt', etc.) in a `Record<string, number>`. For the JSON response, use a typed object matching the `ChainHealth` shape for consistency.
+- `severity` uses `'—'` for unclassified (line 1589: `finding.severity ?? '—'`). The JSON `by_severity` should use the key `'unclassified'`, not `'—'`.
 
 ### Things to Investigate
 - Whether the `by_severity` and `by_action` fields need their own TypeScript interface or can reuse the shape from `ChainHealth.findings`.
