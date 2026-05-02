@@ -1,0 +1,139 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Audit JSON Severity Summary"
+
+assertions:
+  # AC1: by_severity in JSON response
+  - id: A001
+    says: "Audit JSON includes a severity breakdown of active findings"
+    block: "audit JSON includes by_severity counts"
+    target: "json.results.by_severity"
+    matcher: "exists"
+
+  - id: A002
+    says: "Severity breakdown has the correct count for each level"
+    block: "audit JSON includes by_severity counts"
+    target: "json.results.by_severity.risk"
+    matcher: "equals"
+    value: 2
+
+  - id: A003
+    says: "Severity breakdown counts debt findings separately"
+    block: "audit JSON includes by_severity counts"
+    target: "json.results.by_severity.debt"
+    matcher: "equals"
+    value: 1
+
+  - id: A004
+    says: "Severity breakdown counts observation findings"
+    block: "audit JSON includes by_severity counts"
+    target: "json.results.by_severity.observation"
+    matcher: "equals"
+    value: 2
+
+  # AC2: by_action in JSON response
+  - id: A005
+    says: "Audit JSON includes an action breakdown of active findings"
+    block: "audit JSON includes by_action counts"
+    target: "json.results.by_action"
+    matcher: "exists"
+
+  - id: A006
+    says: "Action breakdown counts each suggested action correctly"
+    block: "audit JSON includes by_action counts"
+    target: "json.results.by_action.scope"
+    matcher: "equals"
+    value: 2
+
+  - id: A007
+    says: "Action breakdown counts monitor actions"
+    block: "audit JSON includes by_action counts"
+    target: "json.results.by_action.monitor"
+    matcher: "equals"
+    value: 1
+
+  # AC3: counts match terminal (active-only, not all-time)
+  - id: A008
+    says: "Severity counts come from active findings only, not the full chain"
+    block: "by_severity counts match active findings only"
+    target: "json.results.by_severity.risk"
+    matcher: "equals"
+    value: 2
+
+  # AC4: --full includes same summary fields
+  - id: A009
+    says: "Full audit JSON also includes the severity breakdown"
+    block: "audit --json --full includes summary fields"
+    target: "json.results.by_severity"
+    matcher: "exists"
+
+  - id: A010
+    says: "Full audit JSON also includes the action breakdown"
+    block: "audit --json --full includes summary fields"
+    target: "json.results.by_action"
+    matcher: "exists"
+
+  # AC5: Terminal output unchanged
+  - id: A011
+    says: "Terminal severity display still shows the same format"
+    block: "terminal output is unchanged"
+    target: "stdout"
+    matcher: "contains"
+    value: "2 risk"
+
+  - id: A012
+    says: "Terminal action display still shows the same format"
+    block: "terminal output is unchanged"
+    target: "stdout"
+    matcher: "contains"
+    value: "1 debt"
+
+  # AC6: meta block unchanged
+  - id: A013
+    says: "The meta envelope still contains all-time chain health counts"
+    block: "meta block is unchanged"
+    target: "json.meta.findings.by_severity"
+    matcher: "exists"
+
+  # Edge: zero findings
+  - id: A014
+    says: "Zero active findings still includes severity breakdown with all zeros"
+    block: "zero findings includes all-zero by_severity"
+    target: "json.results.by_severity.risk"
+    matcher: "equals"
+    value: 0
+
+  - id: A015
+    says: "Zero active findings still includes action breakdown with all zeros"
+    block: "zero findings includes all-zero by_action"
+    target: "json.results.by_action.promote"
+    matcher: "equals"
+    value: 0
+
+  - id: A016
+    says: "Zero findings response includes the severity and action fields alongside total_active"
+    block: "zero findings includes all-zero by_severity"
+    target: "json.results.total_active"
+    matcher: "equals"
+    value: 0
+
+  # Edge: all unclassified
+  - id: A017
+    says: "Findings without severity are counted as unclassified"
+    block: "all-unclassified findings counted correctly"
+    target: "json.results.by_severity.unclassified"
+    matcher: "greater"
+    value: 0
+
+  - id: A018
+    says: "Unclassified actions are counted when suggested_action is missing"
+    block: "all-unclassified findings counted correctly"
+    target: "json.results.by_action.unclassified"
+    matcher: "greater"
+    value: 0
+
+file_changes:
+  - path: "packages/cli/src/commands/proof.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/proof.test.ts"
+    action: modify
