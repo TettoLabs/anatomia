@@ -10230,6 +10230,161 @@
           "suggested_action": "monitor"
         }
       ]
+    },
+    {
+      "slug": "learn-template-session-fixes",
+      "feature": "Learn Template Session Fixes",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 13,
+        "satisfied": 13,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Accept-action intro explains that accept does not mean close",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "Accept-action intro instructs re-evaluation on own merits",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "First/routine session calibration lines are removed",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "Garden size calibrations still exist after removing first/routine",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "Observation prompt exists as a standalone instruction before the format block",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "Session approach uses priority ordering instead of a flat cap",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "The arbitrary 30-finding cap is removed",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "Session wrap-up offers a Think handoff as an explicit option",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "Session wrap-up includes promotion lifecycle guidance",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "Session wrap-up includes verification transfer note",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "Stale close reason example is in the good reasons list",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "Variadic guidance clarifies when to use individual vs batch closes",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "Dogfood copy is identical to the template",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 11,
+        "met": 11
+      },
+      "timing": {
+        "total_minutes": 181,
+        "think": 164,
+        "plan": 164,
+        "build": 7,
+        "verify": 9
+      },
+      "hashes": {
+        "scope": "sha256:b278eeee9850ba801f0e7699d2036112dcccd0d549c4e34d4be41206a84460f0",
+        "contract": "sha256:4de2217743f2d17cf3da8a253a3ff89e1287fb776ce0a5f4c896ef1a4383ea8d",
+        "plan": "sha256:3a578b3d345697b9739f3b5c9696f91a5585c429730ded42eb72a7988d365b93",
+        "spec": "sha256:d729fad1441eba2e120dd8ba5cee52d5af1781676d4cf0a194f379b44e349781",
+        "build-report": "sha256:6727013be5dd0d862f2ac036f48e6fcda9b3eca8ec5384492e6158439445eec1",
+        "build-data": "sha256:5bdcbf1cfc1198f4020aadc22a3692ea9ce2dc18ef04bebc80bd211008033b20",
+        "verify-report": "sha256:28298ba7a1b37c3ed2a225c1cc72cfc80eaaf4ba9cedbba97009ff90b5585309",
+        "verify-data": "sha256:6d672799b488dd4f4ccb5977c3d6ed59ac02c33969ac71d73006728b3e5401c4"
+      },
+      "completed_at": "2026-05-02T22:39:44.863Z",
+      "modules_touched": [
+        ".claude/agents/ana-learn.md",
+        "packages/cli/templates/.claude/agents/ana-learn.md"
+      ],
+      "scope_summary": "Seven template text fixes based on measured failures across 3 Learn sessions and 42 pipeline runs. Each change addresses a specific behavior that failed in practice — not theoretical improvements. Zero CLI code.",
+      "findings": [
+        {
+          "category": "code",
+          "summary": "Edge Cases section still says 'Cap at ~30 per session' — contradicts new 'no arbitrary cap' guidance in Session Approach",
+          "file": "packages/cli/templates/.claude/agents/ana-learn.md",
+          "anchor": null,
+          "line": 477,
+          "severity": "debt",
+          "suggested_action": "scope",
+          "related_assertions": [
+            "A007"
+          ],
+          "id": "learn-template-session-fixes-C1",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "Spec Change 4 only targeted the Session Approach paragraph but didn't address the matching ~30 reference in Edge Cases — scope gap",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "learn-template-session-fixes-C2",
+          "status": "lesson"
+        },
+        {
+          "category": "upstream",
+          "summary": "Proof context finding about SKILL.md path naming still present — not addressed by this build (expected, out of scope)",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "learn-template-session-fixes-C3",
+          "status": "lesson"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "Pre-existing lint warnings (14 no-explicit-any) in test files surfaced by pre-commit hook",
+          "file": null,
+          "severity": "observation",
+          "suggested_action": "monitor"
+        }
+      ]
     }
   ],
   "schema": 1
