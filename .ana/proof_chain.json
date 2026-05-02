@@ -3504,9 +3504,12 @@
           "file": "packages/cli/src/utils/proofSummary.ts",
           "anchor": "projectRoot",
           "id": "clear-the-deck-2-C5",
-          "status": "active",
+          "status": "closed",
           "severity": "observation",
-          "suggested_action": "monitor"
+          "suggested_action": "monitor",
+          "closed_reason": "Unreachable — projectRoot comes from findProjectRoot() which validates existence. globSync at line 362 never receives an invalid cwd.",
+          "closed_at": "2026-05-02T18:00:43.321Z",
+          "closed_by": "human"
         }
       ],
       "scope_summary": "Continuation of Clear the Deck. Phase 1 fixed 7 items identified by the proof chain — types, ESLint, dead tests, save-all parity, custom namespace. Phase 2 cleans the next layer: agent templates running at 20% context capacity, a callout file resolution gap that affects customer repos, missing test coverage for proof chain accumulation, and small corrections across the pipeline."
