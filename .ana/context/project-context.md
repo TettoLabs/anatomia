@@ -2,7 +2,7 @@
 
 ## What This Product Does
 
-**Detected:** pnpm monorepo. 120 source files, 87 test files.
+**Detected:** pnpm monorepo.
 
 Anatomia is an open-source methodology and CLI tool for verified AI development. It exports a framework — think, plan, build, verify — that turns AI coding tools from fast-but-unreliable into structured-and-proven. The CLI (`ana`) is the delivery mechanism: it scans a project, generates validated context, and runs every change through a four-agent pipeline (Think, Plan, Build, Verify) with a fifth agent (Learn) that tends the proof chain between cycles
 
@@ -16,9 +16,10 @@ The target customer is a startup at an inflection point — 2 to 5 people, techn
 
 The platform is an advocate for quality — it exists to surface tradeoffs, challenge assumptions, and ensure that what gets built is what should get built.
 
-The product has two surfaces:
+The product has three surfaces:
 1. **Scan + Init** — zero-config project analysis. Produces scan.json, CLAUDE.md, AGENTS.md, skills with rules and gotchas, and context scaffolds. Entry point for every user.
 2. **The Pipeline** — scope → spec → build → verify → proof. Managed through `ana work`, `ana artifact`, `ana verify`, `ana pr`. Where ongoing development happens with mechanical verification.
+3. **Proof Intelligence** — quality trajectory, active findings, staleness detection, finding-to-rule promotion. Managed through `ana proof` subcommands and the Learn agent. Where quality compounds across pipeline cycles.
 
 ## How the Pipeline Works
 
@@ -37,7 +38,7 @@ Verify (AnaVerify) →  verify_report.md   →  "independent proof"
 - Artifacts are saved with SHA-256 hash verification and atomic commits. The CLI validates structure before accepting each artifact.
 - On PASS, Verify creates a PR. After merge, the developer completes the work item, which archives the plan and writes a proof chain entry.
 
-**The flywheel:** Each completed pipeline run adds a proof chain entry. Future Think sessions can reference past lessons. Patterns that worked get reinforced. Patterns that failed get flagged. Quality compounds over cycles.
+**The flywheel:** Each completed pipeline run adds a proof chain entry with findings. Learn triages findings between cycles — closing resolved ones, promoting recurring patterns to skill rules. Promoted rules reach Build through Plan's Build Brief. Health tracks risks/run as the north star metric. The declining error rate proves the system works.
 
 ## Architecture
 
@@ -46,7 +47,7 @@ Verify (AnaVerify) →  verify_report.md   →  "independent proof"
 **Detected deployment:** GitHub Actions
 
 - **`packages/cli`** — the product. All development happens here. The CLI has three layers:
-  - **Commands** (`src/commands/`) — user-facing surface. init, scan, artifact, work, verify, pr, proof.
+  - **Commands** (`src/commands/`) — user-facing surface. init, scan, setup, artifact, work, verify, pr, proof, agents.
   - **Engine** (`src/engine/`) — scan intelligence. Pure functions, no CLI dependencies. Census model → detectors → analyzers → findings.
   - **Utils + Data** (`src/utils/`, `src/data/`) — shared helpers. Scaffold generators, gotcha matcher, gotcha library.
 - **`website/`** — marketing/demo site. Next.js + Tailwind. No code dependency on the CLI.
@@ -63,6 +64,9 @@ Verify (AnaVerify) →  verify_report.md   →  "independent proof"
 | Change EngineResult schema | `src/engine/types/engineResult.ts` + `createEmptyEngineResult()` + all consumers |
 | Add a finding rule | `src/engine/findings/rules/` |
 | Change agent definitions | `templates/.claude/agents/` |
+| Change proof chain commands | `src/commands/proof.ts` |
+| Change proof computation | `src/utils/proofSummary.ts` |
+| Change work complete flow | `src/commands/work.ts` |
 
 ### Templates vs. Generators
 
@@ -113,6 +117,9 @@ An LLM asked to "change the default coding-standards rules" should edit `templat
 - **Proof chain** — `proof_chain.json` + `PROOF_CHAIN.md`. One entry per completed pipeline run. Each entry contains: result (PASS/FAIL), contract assertions with status, proof findings with severity and suggested action, build concerns, modules touched, timing, SHA-256 hashes. The structured record that Learn triages and health computes on.
 - **Health** — `ana proof health`. Quality trajectory across pipeline runs. North star metric: risks/run trending down.
 - **Promote** — `ana proof promote`. A proof finding becomes a skill rule. The mechanism that turns verification intelligence into agent behavior change.
+- **Stale** — a finding whose referenced file was modified by subsequent pipeline runs. Detected by `ana proof stale` via `modules_touched` cross-reference. Confidence tiers: high (3+ subsequent entries), medium (1-2). Learn's highest-priority triage targets.
+- **Strengthen** — `ana proof strengthen`. Commit ceremony for Learn's edits to existing skill rules. Learn edits the file, strengthen stages + commits + closes findings atomically. Distinct from promote (which appends new rules).
+- **Audit** — `ana proof audit`. Active findings grouped by file with severity and action classification. `--full` removes truncation for agent consumption.
 - **Learn** — `claude --agent ana-learn`. The fifth agent. Triages findings, promotes patterns to skills, routes developer observations. Runs between pipeline cycles.
 - **Trajectory** — risks/run averaged over a window. Computed per-entry (what did this run produce?), not cumulative. Trend: improving, stable, worsening, or insufficient data.
 - **Primary root** — in monorepos, the package that defines project identity. Largest `apps/` package with framework hints, or largest package overall.
