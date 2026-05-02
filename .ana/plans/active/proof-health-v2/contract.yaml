@@ -1,0 +1,243 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Proof Health V2"
+
+assertions:
+  # Phase 1: Health Stats Polish
+  - id: A001
+    says: "Quality section replaces the old Trajectory heading"
+    block: "displays Quality section header"
+    target: "stdout"
+    matcher: "contains"
+    value: "Quality"
+
+  - id: A002
+    says: "Hot Spots section replaces the old Hot Modules heading"
+    block: "displays Hot Spots section header"
+    target: "stdout"
+    matcher: "contains"
+    value: "Hot Spots"
+
+  - id: A003
+    says: "Promote and Recurring sections are merged into Next Actions"
+    block: "displays merged Next Actions section"
+    target: "stdout"
+    matcher: "contains"
+    value: "Next Actions"
+
+  - id: A004
+    says: "Old Promote section heading no longer appears"
+    block: "does not display separate Promote section"
+    target: "stdout"
+    matcher: "not_contains"
+    value: "  Promote\n"
+
+  - id: A005
+    says: "Old Recurring section heading no longer appears"
+    block: "does not display separate Recurring section"
+    target: "stdout"
+    matcher: "not_contains"
+    value: "  Recurring\n"
+
+  - id: A006
+    says: "Verification section shows first-pass rate as a percentage"
+    block: "displays first-pass rate"
+    target: "stdout"
+    matcher: "contains"
+    value: "First-pass:"
+
+  - id: A007
+    says: "Verification section shows total issues caught before shipping"
+    block: "displays catch count"
+    target: "stdout"
+    matcher: "contains"
+    value: "issues before shipping"
+
+  - id: A008
+    says: "A project with zero rejections shows 100% first-pass rate"
+    block: "shows 100% when no rejections exist"
+    target: "stdout"
+    matcher: "contains"
+    value: "100%"
+
+  - id: A009
+    says: "Pipeline section shows median total time"
+    block: "displays median pipeline time"
+    target: "stdout"
+    matcher: "contains"
+    value: "Median:"
+
+  - id: A010
+    says: "Pipeline section shows phase breakdown with scope label"
+    block: "displays phase breakdown"
+    target: "stdout"
+    matcher: "contains"
+    value: "scope"
+
+  - id: A011
+    says: "Pipeline section is omitted when fewer than 3 entries have timing"
+    block: "omits pipeline with insufficient data"
+    target: "stdout"
+    matcher: "not_contains"
+    value: "Median:"
+
+  - id: A012
+    says: "Unclassified count parenthetical is removed from Quality section"
+    block: "does not show unclassified excluded text"
+    target: "stdout"
+    matcher: "not_contains"
+    value: "unclassified excluded"
+
+  - id: A013
+    says: "Promotions effectiveness section is hidden from terminal output"
+    block: "does not display Promotions section"
+    target: "stdout"
+    matcher: "not_contains"
+    value: "Promotions\n"
+
+  - id: A014
+    says: "Next Actions items are capped at 5"
+    block: "caps Next Actions at 5 items"
+    target: "nextActionsCount"
+    matcher: "equals"
+    value: 5
+
+  # Phase 2: Timing Fix
+  - id: A015
+    says: "Starting a work item creates the plan directory"
+    block: "creates plan directory on start"
+    target: "directoryExists"
+    matcher: "truthy"
+
+  - id: A016
+    says: "Starting a work item records the start time"
+    block: "writes work_started_at to saves.json"
+    target: "savesJson.work_started_at"
+    matcher: "exists"
+
+  - id: A017
+    says: "Invalid slug format is rejected with a clear error"
+    block: "rejects non-kebab-case slug"
+    target: "error"
+    matcher: "contains"
+    value: "Invalid slug"
+
+  - id: A018
+    says: "Uppercase characters in slug are rejected"
+    block: "rejects uppercase slug"
+    target: "exitCode"
+    matcher: "equals"
+    value: 1
+
+  - id: A019
+    says: "Duplicate slug in active plans is rejected"
+    block: "rejects slug that exists in active plans"
+    target: "error"
+    matcher: "contains"
+    value: "already exists"
+
+  - id: A020
+    says: "Duplicate slug in completed plans is rejected"
+    block: "rejects slug that exists in completed plans"
+    target: "error"
+    matcher: "contains"
+    value: "already exists"
+
+  - id: A021
+    says: "Starting on the wrong branch shows an error"
+    block: "rejects start on non-artifact branch"
+    target: "error"
+    matcher: "contains"
+    value: "main"
+
+  - id: A022
+    says: "Think time uses the work start timestamp when available"
+    block: "computes think from work_started_at"
+    target: "timing.think"
+    matcher: "not_equals"
+    value: 0
+
+  - id: A023
+    says: "Think and Plan show different values for new entries"
+    block: "think and plan differ with work_started_at"
+    target: "thinkEqualsPlan"
+    matcher: "equals"
+    value: false
+
+  - id: A024
+    says: "Old entries without start time fall back to identical think and plan"
+    block: "falls back when work_started_at missing"
+    target: "thinkEqualsPlan"
+    matcher: "equals"
+    value: true
+
+  - id: A025
+    says: "Shipped Think template tells agents to use the new start command"
+    block: "shipped template contains work start"
+    target: "templateContent"
+    matcher: "contains"
+    value: "ana work start"
+
+  - id: A026
+    says: "Dogfood Think template matches the shipped version"
+    block: "dogfood template contains work start"
+    target: "templateContent"
+    matcher: "contains"
+    value: "ana work start"
+
+  - id: A027
+    says: "Templates no longer contain the manual mkdir instruction"
+    block: "templates do not contain mkdir"
+    target: "templateContent"
+    matcher: "not_contains"
+    value: "mkdir -p .ana/plans/active"
+
+  # Phase 3: Guard Proof Chain Entry
+  - id: A028
+    says: "Completing work with a FAIL verification blocks the operation"
+    block: "blocks completion on FAIL result"
+    target: "exitCode"
+    matcher: "equals"
+    value: 1
+
+  - id: A029
+    says: "The FAIL error message tells the developer to fix and re-verify"
+    block: "FAIL error includes remediation guidance"
+    target: "error"
+    matcher: "contains"
+    value: "claude --agent ana-build"
+
+  - id: A030
+    says: "Completing work with an UNKNOWN verification still succeeds"
+    block: "allows completion on UNKNOWN result"
+    target: "completionSucceeded"
+    matcher: "truthy"
+
+  - id: A031
+    says: "Completing work with a PASS verification succeeds normally"
+    block: "allows completion on PASS result"
+    target: "completionSucceeded"
+    matcher: "truthy"
+
+file_changes:
+  # Phase 1
+  - path: "packages/cli/src/types/proof.ts"
+    action: modify
+  - path: "packages/cli/src/utils/proofSummary.ts"
+    action: modify
+  - path: "packages/cli/src/commands/proof.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/proof.test.ts"
+    action: modify
+  # Phase 2
+  - path: "packages/cli/src/commands/work.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/work.test.ts"
+    action: modify
+  - path: "packages/cli/tests/utils/proofSummary.test.ts"
+    action: modify
+  - path: "packages/cli/templates/.claude/agents/ana.md"
+    action: modify
+  - path: ".claude/agents/ana.md"
+    action: modify
+  # Phase 3 modifies work.ts and work.test.ts (already listed above)
