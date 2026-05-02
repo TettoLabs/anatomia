@@ -1,0 +1,12 @@
+schema: 1
+concerns:
+  - summary: "3 other test files still have hardcoded /tmp/ (testLocations, entryPoints-node, entryPoints-python)"
+    severity: debt
+    suggested_action: scope
+  - summary: "No dedicated backslash-input test for architecture normalization (AC8 prevents new tests)"
+    file: "packages/cli/src/engine/analyzers/structure/architecture.ts"
+    severity: observation
+    suggested_action: monitor
+  - summary: "14 pre-existing lint warnings (no-explicit-any) in unrelated test files"
+    severity: observation
+    suggested_action: accept

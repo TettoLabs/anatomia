@@ -14,5 +14,24 @@
   "spec": {
     "saved_at": "2026-05-02T22:47:27.115Z",
     "hash": "sha256:248fc37e570d43bfc2eaa09bc38eb4c3f4d01d9f9bdb69866deb24956eb31417"
-  }
+  },
+  "build-report": {
+    "saved_at": "2026-05-02T22:55:50.128Z",
+    "hash": "sha256:e28e5656bf6781f73b903e2058191a23e86b2df71c0500d2cde663afe8011e1a"
+  },
+  "build-data": {
+    "saved_at": "2026-05-02T22:55:50.129Z",
+    "hash": "sha256:6be08c3721b24f474796e8a8a8826e9be149387d2a55293bf2ba2f678bc68004"
+  },
+  "modules_touched": [
+    "packages/cli/src/engine/analyzers/structure/architecture.ts",
+    "packages/cli/src/engine/detectors/documentation.ts",
+    "packages/cli/src/engine/sampling/proportionalSampler.ts",
+    "packages/cli/tests/engine/analyzers/entryPoints-go-rust.test.ts",
+    "packages/cli/tests/engine/detectors/documentation.test.ts",
+    "packages/cli/tests/engine/detectors/git-activity.test.ts",
+    "packages/cli/tests/engine/detectors/git-detection.test.ts",
+    "packages/cli/tests/engine/integration/structure-analysis.test.ts",
+    "packages/cli/tests/engine/scanProject.test.ts"
+  ]
 }
