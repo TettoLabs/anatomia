@@ -2295,15 +2295,18 @@ describe('ana proof', () => {
       expect(promotionsHeading).toBeUndefined();
     });
 
-    // @ana A024
+    // @ana A024, A006
     it('omits promotions when empty', async () => {
       await createProofChain([
         makeHealthEntry({ slug: 'e1', risks: 1, action: 'scope' }),
       ]);
       process.chdir(tempDir);
 
-      const { stdout } = runProof(['health']);
-      expect(stdout).not.toContain('Promotions');
+      const { stdout } = runProof(['health', '--json']);
+      const json = JSON.parse(stdout);
+      // promotions key exists but array is empty when no findings are promoted
+      expect(json.results.promotions).toBeDefined();
+      expect(json.results.promotions).toHaveLength(0);
     });
 
     // @ana A025, A026
@@ -2402,15 +2405,28 @@ describe('ana proof', () => {
       expect(json.command).toBe('proof health');
     });
 
-    // @ana A029
-    it('uses MIN_ENTRIES_FOR_TREND constant', async () => {
-      // Verify source code uses the constant instead of hardcoded 10
-      const { readFileSync } = await import('node:fs');
-      const sourcePath = path.join(__dirname, '../../src/commands/proof.ts');
-      const source = readFileSync(sourcePath, 'utf-8');
-      expect(source).toContain('MIN_ENTRIES_FOR_TREND');
-      // Verify the old hardcoded pattern is not present
-      expect(source).not.toContain('need ${10}');
+    // @ana A004
+    it('shows insufficient data with 9 classified entries', async () => {
+      const entries = Array.from({ length: 9 }, (_, i) =>
+        makeHealthEntry({ slug: `slug-${i}`, risks: 1 })
+      );
+      await createProofChain(entries);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health']);
+      expect(stdout).toContain('insufficient data');
+    });
+
+    // @ana A005
+    it('shows actual trend with 10 classified entries', async () => {
+      const entries = Array.from({ length: 10 }, (_, i) =>
+        makeHealthEntry({ slug: `slug-${i}`, risks: 1 })
+      );
+      await createProofChain(entries);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health']);
+      expect(stdout).not.toContain('insufficient data');
     });
 
     // @ana A001
