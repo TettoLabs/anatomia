@@ -12,9 +12,11 @@ Three things Anatomia provides that don't exist elsewhere:
 2. **The pipeline.** Think → Plan → Build → Verify. Four agents with specific roles, typed handoffs, and independence guarantees. Verify never reads Build's report — the developer gets two independent accounts. This prevents the "grade your own homework" failure mode.
 3. **Proof chains.** Every pipeline run produces a verification record: which contract assertions passed, which failed, what the verifier found independently. The proof chain is the mechanical audit trail of every AI-assisted change.
 
-The target customer is a startup at an inflection point — 2 to 5 people, technically capable but without senior engineering depth, carrying technical debt from building fast with AI tools. They need a methodology, not just another tool. Anatomia gives them structured engineering discipline without requiring them to have learned it the hard way. The product enforces LLMs to act against their nature: think more, build less, surface tradeoffs instead of rushing to implementation.
+**Sniper customer** — a startup, 2-4 engineers, modern stack, almost always building an AI product. They built fast using AI coding tools — the app works, has users, growing revenue. But the codebase is 70-95% vibe-coded: the AI wrote most of it, nobody fully reviewed every decision, and now nobody fully understands it. They're smart, technically aware, on top of the latest tools — but they lack depth. The accumulated knowledge a senior engineer builds over six months on a codebase. Hiring takes months they don't have. Anatomia gives them that knowledge layer immediately.
 
-The platform is an advocate for quality — it exists to surface tradeoffs, challenge assumptions, and ensure that what gets built is what should get built.
+**Shotgun customer** — a more established team, 5-15 engineers, with real conventions — conventional commits, pre-commit hooks, CI pipelines, code review. The knowledge exists but it's in people's heads. When someone leaves, it leaves with them. Each engineer uses AI tools differently, no consistency. Their problem isn't lacking discipline — it's that nobody wrote it down in a format AI tools can read. Anatomia codifies tribal knowledge into institutional infrastructure.
+
+The product enforces LLMs to act against their nature: think more, build less, surface tradeoffs instead of rushing to implementation. It's an advocate for quality — it exists to surface tradeoffs, challenge assumptions, and ensure that what gets built is what should get built.
 
 The product has three surfaces:
 1. **Scan + Init** — zero-config project analysis. Produces scan.json, CLAUDE.md, AGENTS.md, skills with rules and gotchas, and context scaffolds. Entry point for every user.
