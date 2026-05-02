@@ -4,14 +4,15 @@
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { analyzeStructure } from '../../../src/engine/analyzers/structure/index.js';
-import { mkdir, writeFile, rm } from 'node:fs/promises';
+import { mkdir, writeFile, rm, mkdtemp } from 'node:fs/promises';
 import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 
 describe('analyzeStructure integration', () => {
-  const testDir = '/tmp/test-structure-integration';
+  let testDir: string;
 
   beforeEach(async () => {
-    await mkdir(testDir, { recursive: true });
+    testDir = await mkdtemp(join(tmpdir(), 'test-structure-integration-'));
   });
 
   afterEach(async () => {
@@ -79,10 +80,10 @@ describe('analyzeStructure integration', () => {
 });
 
 describe('scanProject() includes structure in output', () => {
-  const testDir = '/tmp/test-analyze-integration';
+  let testDir: string;
 
   beforeEach(async () => {
-    await mkdir(testDir, { recursive: true });
+    testDir = await mkdtemp(join(tmpdir(), 'test-analyze-integration-'));
   });
 
   afterEach(async () => {
