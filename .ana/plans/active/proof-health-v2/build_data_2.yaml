@@ -1,0 +1,10 @@
+schema: 1
+concerns:
+  - summary: "SavesData index signature treats work_started_at as SaveEntry|PreCheckData|undefined instead of string"
+    file: "packages/cli/src/utils/proofSummary.ts"
+    severity: debt
+    suggested_action: monitor
+  - summary: "startWork uses process.exit(1) for validation errors, requiring mock-heavy test setup"
+    file: "packages/cli/src/commands/work.ts"
+    severity: observation
+    suggested_action: monitor

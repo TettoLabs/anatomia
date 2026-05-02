@@ -16,18 +16,23 @@
     "hash": "sha256:673182936f46b0f888d456cca0d424f62dc23f6c64d0b2321c6954c090da1129"
   },
   "build-report": {
-    "saved_at": "2026-05-02T06:25:56.049Z",
-    "hash": "sha256:436036938c2c985751dc84b7e6c8e74cf2f4f4e6ed13c152048de79a5666cf1f"
+    "saved_at": "2026-05-02T07:01:47.346Z",
+    "hash": "sha256:bf9c083445f2856ae85d810e24ccead7a22dd82f05a11d3154f4886ec6a3bdbd"
   },
   "build-data": {
-    "saved_at": "2026-05-02T06:25:56.050Z",
-    "hash": "sha256:b88b6bfd43c35333376ea5530bc2911f3918dc7438618aa4ad905e8d05aed57a"
+    "saved_at": "2026-05-02T07:01:47.347Z",
+    "hash": "sha256:8a5393a03b445aa6cf0762037fc35906a38df53e294e5b6bf84d34fddf7a0181"
   },
   "modules_touched": [
+    ".claude/agents/ana.md",
     "packages/cli/src/commands/proof.ts",
+    "packages/cli/src/commands/work.ts",
     "packages/cli/src/types/proof.ts",
     "packages/cli/src/utils/proofSummary.ts",
-    "packages/cli/tests/commands/proof.test.ts"
+    "packages/cli/templates/.claude/agents/ana.md",
+    "packages/cli/tests/commands/proof.test.ts",
+    "packages/cli/tests/commands/work.test.ts",
+    "packages/cli/tests/utils/proofSummary.test.ts"
   ],
   "pre-check": {
     "seal": "INTACT",
