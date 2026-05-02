@@ -1,0 +1,137 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Strengthen Weak Test Assertions"
+
+assertions:
+  - id: A001
+    says: "Dry-run close does not create any git commits"
+    block: "shows what would happen without mutating"
+    target: "commitCountAfter"
+    matcher: "equals"
+    value: 1
+
+  - id: A002
+    says: "Variadic strengthen records which skill each finding was promoted to"
+    block: "strengthens multiple findings in one commit"
+    target: "f1.promoted_to"
+    matcher: "contains"
+    value: "coding-standards"
+
+  - id: A003
+    says: "Variadic strengthen records skill path for second finding too"
+    block: "strengthens multiple findings in one commit"
+    target: "f2.promoted_to"
+    matcher: "contains"
+    value: "coding-standards"
+
+  - id: A004
+    says: "Health trend requires at least 10 runs before computing direction"
+    block: "shows insufficient data with 9 classified entries"
+    target: "stdout"
+    matcher: "contains"
+    value: "insufficient data"
+
+  - id: A005
+    says: "Health trend computes direction once threshold is met"
+    block: "shows actual trend with 10 classified entries"
+    target: "stdout"
+    matcher: "not_contains"
+    value: "insufficient data"
+
+  - id: A006
+    says: "Empty promotions data is absent from JSON health output"
+    block: "omits promotions when empty"
+    target: "json.results.promotions"
+    matcher: "exists"
+
+  - id: A007
+    says: "Full-path file query returns exactly one finding per matching entry"
+    block: "returns findings for queried file (full path match)"
+    target: "results[0].findings.length"
+    matcher: "equals"
+    value: 1
+
+  - id: A008
+    says: "Basename query returns exactly one finding per matching entry"
+    block: "matches basename query to full-path finding (path suffix)"
+    target: "results[0].findings.length"
+    matcher: "equals"
+    value: 1
+
+  - id: A009
+    says: "Legacy basename finding returns exactly one match"
+    block: "matches full-path query to basename finding (legacy)"
+    target: "results[0].findings.length"
+    matcher: "equals"
+    value: 1
+
+  - id: A010
+    says: "Work start timestamp is a valid ISO date string"
+    block: "writes work_started_at to saves.json"
+    target: "saves.work_started_at"
+    matcher: "contains"
+    value: "T"
+
+  - id: A011
+    says: "Multi-phase FAIL tells the developer what went wrong and how to fix it"
+    block: "errors when multi-spec phase 1 shows FAIL"
+    target: "errorOutput"
+    matcher: "contains"
+    value: "FAIL"
+
+  - id: A012
+    says: "Multi-phase FAIL includes remediation command"
+    block: "errors when multi-spec phase 1 shows FAIL"
+    target: "errorOutput"
+    matcher: "contains"
+    value: "ana-build"
+
+  - id: A013
+    says: "Health line appears deterministically when trend changes"
+    block: "no nudge for informational triggers only"
+    target: "output"
+    matcher: "contains"
+    value: "Health:"
+
+  - id: A014
+    says: "Informational health triggers do not show a nudge arrow"
+    block: "no nudge for informational triggers only"
+    target: "output"
+    matcher: "not_contains"
+    value: "→"
+
+  - id: A015
+    says: "Dashboard shows which findings survived the cap"
+    block: "caps active findings at 30"
+    target: "md"
+    matcher: "contains"
+    value: "file-0.ts"
+
+  - id: A016
+    says: "Dashboard drops findings beyond the cap limit"
+    block: "caps active findings at 30"
+    target: "md"
+    matcher: "not_contains"
+    value: "file-30.ts"
+
+  - id: A017
+    says: "Assertions without verification get UNVERIFIED status in the proof chain"
+    block: "UNVERIFIED fallback when assertions lack verify status"
+    target: "chainAssertion.status"
+    matcher: "equals"
+    value: "UNVERIFIED"
+
+  - id: A018
+    says: "All existing tests continue to pass after strengthening"
+    block: "full test suite"
+    target: "testsPassed"
+    matcher: "greater"
+    value: 1795
+
+file_changes:
+  - path: "packages/cli/tests/commands/proof.test.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/work.test.ts"
+    action: modify
+  - path: "packages/cli/tests/utils/proofSummary.test.ts"
+    action: modify
