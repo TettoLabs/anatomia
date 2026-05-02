@@ -838,7 +838,7 @@ export function registerProofCommand(program: Command): void {
     .option('--section <section>', 'Target section: rules or gotchas (default: rules)')
     .option('--force', 'Allow promoting a closed finding')
     .option('--json', 'Output JSON format')
-    .action(async (ids: string[], options: { skill: string; text?: string; section?: string; force?: boolean; json?: boolean }) => {
+    .action(async (ids: string[], options: { skill?: string; text?: string; section?: string; force?: boolean; json?: boolean }) => {
       const proofRoot = findProjectRoot();
       const proofChainPath = path.join(proofRoot, '.ana', 'proof_chain.json');
       const parentOpts = proofCommand.opts();

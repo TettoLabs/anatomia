@@ -840,7 +840,7 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
     resolveFindingPaths(existing.build_concerns || [], existing.modules_touched || [], projectRoot, globCache);
   }
 
-  // Staleness checks — run after path resolution, reopen, and status assignment
+  // Staleness checks — run after path resolution and status assignment
   // Process all entries (existing + new)
   const allEntries = [...chain.entries, entry];
   const fileContentCache = new Map<string, string | null>();
