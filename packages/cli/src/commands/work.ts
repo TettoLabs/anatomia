@@ -772,6 +772,14 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
     }
   } catch { /* fall back to empty */ }
 
+  // FAIL result guard — block proof chain entry for failed verification
+  if (proof.result === 'FAIL') {
+    console.error(chalk.red('Error: Cannot complete work with a FAIL verification result.'));
+    console.error(chalk.gray('The verify report says FAIL. Fix the issues and re-verify before completing.'));
+    console.error(chalk.gray('Run: claude --agent ana-build to fix, then claude --agent ana-verify'));
+    process.exit(1);
+  }
+
   // UNKNOWN result warning (AC12)
   const completedPlanDir = path.join(anaDir, 'plans', 'completed', slug);
   if (proof.result === 'UNKNOWN') {
@@ -1169,8 +1177,9 @@ export async function completeWork(slug: string, options?: { json?: boolean }): 
     const result = getVerifyResult(verifyContent);
 
     if (result === 'FAIL') {
-      console.error(chalk.red(`Error: Phase ${phaseNum} verification failed (Result: FAIL).`));
-      console.error(chalk.gray('Fix issues and re-verify before completing.'));
+      console.error(chalk.red('Error: Cannot complete work with a FAIL verification result.'));
+      console.error(chalk.gray('The verify report says FAIL. Fix the issues and re-verify before completing.'));
+      console.error(chalk.gray('Run: claude --agent ana-build to fix, then claude --agent ana-verify'));
       process.exit(1);
     }
 
