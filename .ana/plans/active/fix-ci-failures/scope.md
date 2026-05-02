@@ -42,13 +42,15 @@ Six categories of failures, investigated against actual CI logs (run 25259579681
 
 **Files:** `src/engine/analyzers/structure/architecture.ts`
 
-### Category 4: Filesystem ordering assumptions — 2 tests, Windows only
+### Category 4: Windows path separators in sampler — 2 tests, Windows only
 
-**Root cause:** `proportional-sampler.test.ts` line 93 asserts `webFiles.length > uiFiles.length` — depends on glob returning files in a specific order that affects proportional allocation. Line 156 asserts `files.indexOf('index.ts') < files.indexOf('src/shallow.ts')` — depends on depth-first ordering from glob.
+**Root cause:** Same disease as Category 3 — Windows backslash paths. The sampler's `depthThenAlpha` sort function at `proportionalSampler.ts:56` splits on forward slash (`a.split('/').length`). On Windows, glob may return backslash paths, breaking the depth calculation. The test at line 89 filters with `f.startsWith('apps/web')` — backslash paths don't match. Both `webFiles` and `uiFiles` are empty, so `toBeGreaterThan` fails at line 93.
 
-**Fix:** The proportional allocation test should assert on the allocation RESULT, not assume glob order produces a specific allocation. If the sampler's sort is deterministic (depth then alpha), the test should work regardless of glob input order. Investigate whether the sampler sorts its output — if yes, the test should pass on any platform. If the sort is missing, add it to the sampler (source fix). The depth-ordering test should verify the sampler's sort function, not the glob's natural order.
+**Confirmed:** The sampler DOES sort deterministically (`depthThenAlpha` at line 136, `sorted.slice(0, limit)` at line 137). The sort and the tests are correct on Unix. The failure is path separators, not ordering.
 
-**Files:** `tests/engine/sampling/proportional-sampler.test.ts`, possibly `src/engine/sampling/proportional-sampler.ts`
+**Fix:** Normalize paths to forward slashes in the sampler output, same pattern as Category 3. Add `const normalized = nonTest.map(f => f.replace(/\\/g, '/'))` before the sort at line 136, or normalize in the glob result handler. Also normalize in `depthThenAlpha` if input paths can have mixed separators.
+
+**Files:** `src/engine/sampling/proportionalSampler.ts`
 
 ### Category 5: Dogfood tests sensitive to repo state — 3+ tests, ALL platforms
 
@@ -95,7 +97,7 @@ Six categories of failures, investigated against actual CI logs (run 25259579681
 
 ## Open Questions
 
-- Does the proportional sampler sort its output? If yes, the test should already be deterministic. If no, the sort is missing and needs to be added (source fix). Plan should investigate.
+- ~~Does the proportional sampler sort its output?~~ **RESOLVED: Yes.** `depthThenAlpha` at line 136. Sort is deterministic. The failure is path separators (same as Category 3), not ordering.
 - How many dogfood assertion changes are needed? Plan should run the tests locally and identify every assertion that references repo-specific state.
 
 ## For AnaPlan
@@ -119,5 +121,6 @@ The git config pattern in `artifact.test.ts:43-44` is the analog for Category 1.
 - Dogfood tests resolve the repo root via `path.resolve(__dirname, '..', '..', '..', '..', '..')`. This is fragile if the test file moves. Not in scope to fix but worth noting.
 
 ### Things to Investigate
-- The proportional sampler's sort behavior — does it sort output, or does it rely on glob order?
+- ~~The proportional sampler's sort behavior~~ **RESOLVED:** sorts with `depthThenAlpha` at line 136. Failure is path separators, not ordering.
 - The full list of dogfood assertion failures on Ubuntu — the log showed 5 failures but the specific assertions weren't all visible.
+- Windows has additional failures beyond the 6 categories: `artifact.test.ts` (save bypass, modules_touched), `init.test.ts` (template inventory, hooks, agent files, frontmatter) — all likely path separator issues. Plan should check whether these are covered by the normalization fixes or need separate attention.
