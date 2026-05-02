@@ -1,12 +1,12 @@
 # Proof Chain Dashboard
 
-41 runs · 82 active · 40 lessons · 0 promoted · 97 closed
+41 runs · 81 active · 40 lessons · 0 promoted · 98 closed
 
 ## Hot Modules
 
 | File | Active | Entries |
 |------|--------|--------|
-| packages/cli/src/commands/proof.ts | 16 | 9 |
+| packages/cli/src/commands/proof.ts | 15 | 9 |
 | packages/cli/tests/commands/work.test.ts | 12 | 8 |
 | packages/cli/tests/commands/proof.test.ts | 11 | 5 |
 | packages/cli/src/utils/proofSummary.ts | 8 | 7 |
@@ -16,14 +16,13 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 82 total)
+## Active Findings (30 shown of 81 total)
 
 ### packages/cli/src/commands/proof.ts
 
 - **code:** Zero-run JSON path hardcodes verification defaults inline (proof.ts:1749) rather than calling computeFirstPassRate([]) — duplicate knowledge of default shape — *Proof Health V2*
 - **code:** SEVERITY_ORDER constant at proof.ts:49 still duplicated across audit/findings blocks — pre-existing, still present — *Learn V3 — CLI Commands + Template Finalization*
 - **code:** exitError helper duplicated inline in close (~30 lines) and promote (~30 lines) action handlers — *Learn V3 — CLI Commands + Template Finalization*
-- **code:** exitError re-searches chain for finding details in ALREADY_PROMOTED and ALREADY_CLOSED single-ID paths — duplicates the earlier loop — *Learn V3 — CLI Commands + Template Finalization*
 - **code:** Available skills listing in SKILL_NOT_FOUND error is unspecified UX — reasonable but untested — *Learn V3 — CLI Commands + Template Finalization*
 - **code:** SEVERITY_ORDER duplication still present across proof.ts — known from proof context, not addressed by this phase — *Learn V3 — CLI Commands + Template Finalization*
 - **code:** --min-confidence accepts invalid values silently — no validation or Commander .choices() — *Learn V3 — CLI Commands + Template Finalization*
@@ -38,6 +37,7 @@
 
 - **code:** `as 'PASS' | 'FAIL'` cast in parseResult relies on regex constraint, not type-level proof — safe but brittle if regex changes — *Clean proofSummary.ts*
 - **code:** fileMatches `includes('/')` treats `./census.ts` as directory-qualified — theoretical false negative for dot-slash prefixed paths — *Clean proofSummary.ts*
+- **code:** O(n*m) traversal in computeStaleness — nested loop over entries × findings — *Learn V3 — CLI Commands + Template Finalization*
 
 ### packages/cli/templates/.claude/agents/ana.md
 
