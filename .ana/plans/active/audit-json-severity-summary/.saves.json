@@ -14,5 +14,17 @@
   "spec": {
     "saved_at": "2026-05-02T21:59:53.299Z",
     "hash": "sha256:5a88546474924f3fb7332762f71c0d92253fade4f34493465eef794abd2d544e"
-  }
+  },
+  "build-report": {
+    "saved_at": "2026-05-02T22:10:11.362Z",
+    "hash": "sha256:3c0311f2bf8b88ca84f84df43cc93e94137975be2b052a778ef4fbb196528333"
+  },
+  "build-data": {
+    "saved_at": "2026-05-02T22:10:11.362Z",
+    "hash": "sha256:8d99c89720f8703f04c81c22ba22467e247d98347eb65515fe55e8b4383a0918"
+  },
+  "modules_touched": [
+    "packages/cli/src/commands/proof.ts",
+    "packages/cli/tests/commands/proof.test.ts"
+  ]
 }
