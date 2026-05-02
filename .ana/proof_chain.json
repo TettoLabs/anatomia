@@ -7151,7 +7151,10 @@
           "severity": "debt",
           "suggested_action": "scope",
           "id": "delete-backward-compat-C1",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "code changed, anchor absent",
+          "closed_at": "2026-05-02T04:02:43.270Z",
+          "closed_by": "mechanical"
         },
         {
           "category": "test",
@@ -9019,6 +9022,216 @@
           "file": null,
           "severity": "observation",
           "suggested_action": "accept"
+        }
+      ]
+    },
+    {
+      "slug": "fix-type-lies",
+      "feature": "Fix Type Lies",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 17,
+        "satisfied": 14,
+        "unsatisfied": 0,
+        "deviated": 3
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Dogfood sync test checks all six agents, not a hardcoded subset",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "Dogfood sync test no longer contains a hardcoded four-agent array",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "A guard test verifies template directory contents match AGENT_FILES",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "Guard test compares sorted filesystem listing to sorted AGENT_FILES",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "Init test agent count uses AGENT_FILES.length instead of hardcoded 5",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "Init template inventory generates agent entries from AGENT_FILES",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "Init test frontmatter validation iterates AGENT_FILES",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "Verify template re-verify cleanup mentions numbered verify_data file",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "Verify template Step 6b mentions numbered verify_data file",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "Dogfood ana-verify.md matches the shipped template exactly",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "Promote command types skill as optional since it's a non-required option",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "Promote command no longer types skill as required string",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "Staleness check comment no longer references the deleted reopen loop",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "Trend improvement test asserts change.changed is true unconditionally",
+          "status": "DEVIATED",
+          "deviation": "Left `if (change.changed)` guard in place; did not add `expect(change.changed).toBe(true)`"
+        },
+        {
+          "id": "A015",
+          "says": "Trend improvement test has no conditional guard around its assertion",
+          "status": "DEVIATED",
+          "deviation": "The `if (change.changed)` guard remains in the source"
+        },
+        {
+          "id": "A016",
+          "says": "All existing tests still pass after the fixes",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A017",
+          "says": "One new test exists — the guard test — bringing total from 1777 to 1778",
+          "status": "DEVIATED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 11,
+        "met": 10
+      },
+      "timing": {
+        "total_minutes": 250,
+        "think": 9,
+        "plan": 9,
+        "build": 227,
+        "verify": 13
+      },
+      "hashes": {
+        "scope": "sha256:48aec5a52a42b4d65469623c85b02760774a37dddfc6e4e2ce351a2ecee0b5df",
+        "contract": "sha256:ce28c8bc3f83f4277d4ff8bfceb39ce8b58ded9ff8cf2582bd475a713c193f19",
+        "plan": "sha256:488024e61e7480ded72e3f1cc77bc5f8b161592bd6233f0f6b47397cbf9fc21e",
+        "spec": "sha256:e83996afca81847ed361b983170cfcf75710a6a80e08d4d63ca678d29a6dad1f",
+        "build-report": "sha256:7f23d9e4248be33b86a42458be912ecbb2532d7db16adff0e177ec6448061df8",
+        "build-data": "sha256:72e1d2450cb323312056b359d8833e367bd0f92fca4c40a239aa720acb039f87",
+        "verify-report": "sha256:8e2ebded3ff4c6cba3993762edebfdd180bf65e90c86ef56753720bc9523eda1",
+        "verify-data": "sha256:9ea64bdfc566c4d0af7a4df202ac84a69a06119cf7e4bf5a132166bf37bba782"
+      },
+      "completed_at": "2026-05-02T04:02:43.247Z",
+      "modules_touched": [
+        ".claude/agents/ana-verify.md",
+        "packages/cli/src/commands/proof.ts",
+        "packages/cli/src/commands/work.ts",
+        "packages/cli/templates/.claude/agents/ana-verify.md",
+        "packages/cli/tests/commands/init.test.ts",
+        "packages/cli/tests/templates/agent-proof-context.test.ts"
+      ],
+      "scope_summary": "The code says one thing but reality is different. Tests hardcode 4-5 agents when 6 exist — every new agent requires finding and updating 7 locations. A template gives the wrong filename for multi-phase builds, causing save failures. A type says `skill: string` but Commander makes it optional at runtime. A comment references a function that was deleted. A test asserts inside an `if` guard so it passes without checking. Six fixes. Each corrects a lie.",
+      "findings": [
+        {
+          "category": "upstream",
+          "summary": "Contract A014/A015 prescribed wrong fix — if (change.changed) guard is correct for test data that produces improving→improving (no direction change)",
+          "file": "packages/cli/tests/utils/proofSummary.test.ts",
+          "anchor": null,
+          "line": 2352,
+          "severity": "observation",
+          "suggested_action": "scope",
+          "related_assertions": [
+            "A014",
+            "A015"
+          ],
+          "id": "fix-type-lies-C1",
+          "status": "lesson"
+        },
+        {
+          "category": "test",
+          "summary": "Dogfood sync test loop short-circuits on first failure, skipping remaining files — now covers 6 files instead of 4, making masking worse",
+          "file": "packages/cli/tests/templates/agent-proof-context.test.ts",
+          "anchor": null,
+          "line": 71,
+          "severity": "debt",
+          "suggested_action": "monitor",
+          "id": "fix-type-lies-C2",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "Contract A017 baseline stale — says >1777 but real baseline is 1761, branch is 1762 (+1 guard test)",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A017"
+          ],
+          "id": "fix-type-lies-C3",
+          "status": "lesson"
+        },
+        {
+          "category": "code",
+          "summary": "Init frontmatter branch groups ana-build, ana-verify, ana-learn together — assumes identical frontmatter, masks divergence if any agent changes",
+          "file": "packages/cli/tests/commands/init.test.ts",
+          "anchor": null,
+          "line": 260,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "fix-type-lies-C4",
+          "status": "active"
+        }
+      ],
+      "rejection_cycles": 1,
+      "previous_failures": [
+        {
+          "id": "A014",
+          "summary": "Test still has `if (change.changed)` guard"
+        },
+        {
+          "id": "A015",
+          "summary": "`if (change.changed)` still present"
+        },
+        {
+          "id": "A017",
+          "summary": "Count 1762 not >1777"
+        }
+      ],
+      "build_concerns": [
+        {
+          "summary": "'detects trend improvement' test name is misleading — data produces continuation, not a direction change. Test name is itself a type lie.",
+          "file": "packages/cli/tests/utils/proofSummary.test.ts",
+          "severity": "debt",
+          "suggested_action": "scope"
         }
       ]
     }

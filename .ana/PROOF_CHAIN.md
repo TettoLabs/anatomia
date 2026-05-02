@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-39 runs · 82 active · 35 lessons · 0 promoted · 84 closed
+40 runs · 83 active · 37 lessons · 0 promoted · 85 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 82 total)
+## Active Findings (30 shown of 83 total)
 
 ### packages/cli/src/commands/proof.ts
 
@@ -50,6 +50,10 @@
 
 - **code:** Proof surface block is informational command list without behavioral guidance — *Sharpen Agent Templates*
 
+### packages/cli/tests/commands/init.test.ts
+
+- **code:** Init frontmatter branch groups ana-build, ana-verify, ana-learn together — assumes identical frontmatter, masks divergence if any agent changes — *Fix Type Lies*
+
 ### packages/cli/tests/commands/proof.test.ts
 
 - **test:** A029 asserts on source code content — matches contract target but violates testing-standards skill rule — *Health Display Polish*
@@ -59,14 +63,10 @@
 - **test:** No test for the staged-only changes path (git diff --cached) — only unstaged changes tested via helper — *Learn V3 — CLI Commands + Template Finalization*
 - **test:** Weak assertions in stale integration tests — toBeGreaterThan(0) instead of specific counts — *Learn V3 — CLI Commands + Template Finalization*
 - **test:** toBeDefined() on JSON confidence tiers — verifies existence not structure — *Learn V3 — CLI Commands + Template Finalization*
-- **test:** A002 lacks negative proof of active-only counting — fixture has only active findings, no closed finding to prove exclusion — *Proof Command UX*
-
-### packages/cli/tests/commands/work.test.ts
-
-- **test:** A013 conditional assertion passes vacuously when health line absent — if (output.includes('Health:')) guard means zero assertions fire when improving trend doesn't produce a health line — *Proof Command UX*
 
 ### packages/cli/tests/templates/agent-proof-context.test.ts
 
+- **test:** Dogfood sync test loop short-circuits on first failure, skipping remaining files — now covers 6 files instead of 4, making masking worse — *Fix Type Lies*
 - **test:** Dogfood sync test proves byte-identity but not content correctness — contract content assertions verified by source inspection only — *Sharpen Agent Templates*
 
 ### packages/cli/tests/utils/proofSummary.test.ts
