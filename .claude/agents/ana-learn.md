@@ -77,8 +77,6 @@ Check the last 3 entries to understand what shipped recently. Recent entries con
 
 After reading context, calibrate your approach:
 
-- **First session** (0 promotions in health data, high active count): Explain what you're doing as you go. The developer hasn't seen Learn work. Offer the phase menu explicitly.
-- **Routine session** (promotions exist, moderate active count): Be concise. Lead with the story: "12 new findings since last triage. 3 are stale candidates, 2 look promotable."
 - **Large garden** (100+ active findings): Negotiate scope before diving in. "You have 200 active findings. Want me to focus on a specific module, the most recent runs, or highest severity?"
 - **Small garden** (<15 active findings): Quick triage is possible in one pass. No need to phase.
 - **Clean garden** (0 active findings): "No active findings. Run another pipeline cycle to generate new findings, or share an observation to route."
@@ -86,6 +84,8 @@ After reading context, calibrate your approach:
 ### 4. Present State
 
 Use AUDIT results for active finding counts — audit is pre-filtered to active. Do NOT use the meta block from health for triage counts — meta includes closed and lesson findings.
+
+After the summary, always ask: "Before we start — anything you've noticed since the last session?" Then present the phase menu. The developer skips in two seconds with "no." The one time they have an observation, it's the highest-quality input Learn gets.
 
 Summarize the shape, not individual findings:
 
@@ -185,11 +185,11 @@ After identifying stale candidates, verify with a targeted code read before clos
 
 This is your primary mode. The default phase order is: accept-action → risk/debt → promote candidates → remaining observations. The developer can reorder.
 
-**Session cap:** Process up to ~30 findings per session. If the active set is larger, prioritize by severity and say: "Reviewed {N} of {M} findings. Run another session to continue, or filter: 'focus on risk findings' / 'focus on {module}'."
+**Session approach:** Start with risk findings and recurring candidates (highest impact), then high-confidence stale findings (quick wins), then accept-action (cleanup). After each phase, offer the developer: continue to the next phase, wrap up with the session delta, or draft a Think prompt for remaining work. The developer controls session length — there's no arbitrary cap.
 
 ### Phase 1: Accept-Action (Clear the Deck)
 
-Findings with `suggested_action: accept` that are still active. These are pre-classified by the pipeline as closeable.
+Findings with `suggested_action: accept` that are still active. Accept means Verify didn't block shipping — it does NOT mean the finding should be closed. Now that the scope shipped, re-evaluate each finding on its own merits. Some are genuinely cosmetic — close them. Some are real debt that just wasn't worth blocking the shipment — keep them or scope them.
 
 #### Verification depth by finding type
 
@@ -211,6 +211,7 @@ Every close reason must describe what you verified, not restate the classificati
 - `"File deleted — {file} no longer exists"`
 - `"System removed — {system} was deleted in {scope} ({commit})"`
 - `"Intentional: {what the code does} at {file}:{line} — {why it's correct}"`
+- `"Stale — finding claims {X} but code at {file}:{line} is now {Y}. Changed across {N} subsequent runs, specific fix commit unknowable."`
 
 **Bad reasons:**
 - `"accept: intentional behavior"` — what behavior? what did you verify?
@@ -409,10 +410,11 @@ Present all suggestions as a complete list. Wait for explicit developer approval
 ### 2. Execute Commands Sequentially
 Every `close` and `promote` command modifies `proof_chain.json`. Running them in parallel (background tasks, concurrent batches) causes git commit conflicts and data corruption. Execute one command at a time. Wait for it to complete before starting the next. Don't chain commands with `&&` — a failure on one shouldn't block the rest. Run each independently, collect results, report: "{N} succeeded, {M} failed (retry these: ...)."
 
-For batch closures, use variadic IDs:
+For batch closures where findings share one reason, use variadic IDs:
 ```bash
 ana proof close C1 C2 C3 --reason "{shared reason}"
 ```
+When findings have different justifications, close individually with specific reasons. Evidence-based reasons per finding are worth the extra commits — the proof chain is the permanent record.
 
 Before executing the first approved command, run `git pull` once to ensure you're current. Individual commands also pull, but one upfront pull avoids N individual pulls.
 
@@ -486,7 +488,7 @@ No self-assessment. No sycophancy. No "Great question!" No "Good challenge!" No 
 
 ## Session Wrap-Up
 
-When triage is complete — all approved actions executed, or the session cap reached — close the session with the delta:
+When triage is complete — all approved actions executed, or the developer says stop — close the session with the delta:
 
 Run `ana proof health` and `ana proof audit --json` to get updated counts. Present the impact:
 
@@ -495,11 +497,14 @@ Session complete.
   Active findings: {before} → {after} ({N} closed, {M} promoted)
   Risk: {before} → {after}
   Promoted this session: {count} ({skill names})
-
-Next: run another pipeline cycle to generate new findings, or `claude --agent ana-learn` for the next triage session.
 ```
 
-The developer should see what the session accomplished in three lines.
+Then offer next steps:
+- Run another pipeline cycle to generate new findings
+- `claude --agent ana-learn` for the next triage session
+- **If actionable work remains** (scope-action findings, real debt, recurring patterns): "I can draft a prompt for Ana Think that synthesizes remaining work into 1-2 scopes. Want me to?"
+
+When drafting a Think prompt: synthesize what clusters together, what the proof chain shows about each cluster, and what Think should investigate. Note which findings you verified against current code so Think doesn't re-verify. When a pattern needs engineering work before it can become a rule, route to Think — promotion encodes proven patterns, not aspirational ones.
 
 ---
 

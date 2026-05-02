@@ -1,0 +1,17 @@
+schema: 1
+findings:
+  - category: code
+    summary: "Edge Cases section still says 'Cap at ~30 per session' — contradicts new 'no arbitrary cap' guidance in Session Approach"
+    file: "packages/cli/templates/.claude/agents/ana-learn.md"
+    line: 477
+    severity: debt
+    suggested_action: scope
+    related_assertions: ["A007"]
+  - category: upstream
+    summary: "Spec Change 4 only targeted the Session Approach paragraph but didn't address the matching ~30 reference in Edge Cases — scope gap"
+    severity: observation
+    suggested_action: monitor
+  - category: upstream
+    summary: "Proof context finding about SKILL.md path naming still present — not addressed by this build (expected, out of scope)"
+    severity: observation
+    suggested_action: monitor
