@@ -8279,7 +8279,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "learn-v3-cli-commands-C8",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "SKILL_NOT_FOUND error at L929 lists available skills as contextual help. UX is reasonable and functional — untested but low-risk cosmetic output.",
+          "closed_at": "2026-05-02T23:29:20.845Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
