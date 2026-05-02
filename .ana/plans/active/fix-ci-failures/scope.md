@@ -123,4 +123,5 @@ The git config pattern in `artifact.test.ts:43-44` is the analog for Category 1.
 ### Things to Investigate
 - ~~The proportional sampler's sort behavior~~ **RESOLVED:** sorts with `depthThenAlpha` at line 136. Failure is path separators, not ordering.
 - The full list of dogfood assertion failures on Ubuntu — the log showed 5 failures but the specific assertions weren't all visible.
+- Windows has additional failures beyond the 6 categories: `artifact.test.ts` (save bypass recovery, modules_touched capture), `init.test.ts` (template inventory, hooks object, agent file creation, frontmatter validation) — likely path separator issues. Plan should check whether the Category 3/4 normalization pattern covers them or if these files need their own path fixes.
 - Windows has additional failures beyond the 6 categories: `artifact.test.ts` (save bypass, modules_touched), `init.test.ts` (template inventory, hooks, agent files, frontmatter) — all likely path separator issues. Plan should check whether these are covered by the normalization fixes or need separate attention.
