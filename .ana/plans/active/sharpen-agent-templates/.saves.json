@@ -28,5 +28,18 @@
     ".claude/agents/ana.md",
     "packages/cli/templates/.claude/agents/ana-verify.md",
     "packages/cli/templates/.claude/agents/ana.md"
-  ]
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:5652ebf10f01c50de3c28ef469ff1cc128b4363cb69b69553d1719824c005d59",
+    "run_at": "2026-05-02T03:38:59.193Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-02T03:38:59.221Z",
+    "hash": "sha256:22c6b35870e319541bba8693cca79b174590d81bd65fae4b67255e476842a292"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-02T03:38:59.221Z",
+    "hash": "sha256:69dfc72b0849f25360502721323635299492c30a257feaecf6c6df4a46551e75"
+  }
 }
