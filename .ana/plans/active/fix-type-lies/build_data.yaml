@@ -1,0 +1,6 @@
+schema: 1
+concerns:
+  - summary: "'detects trend improvement' test name is misleading — data produces continuation, not a direction change. Test name is itself a type lie."
+    file: "packages/cli/tests/utils/proofSummary.test.ts"
+    severity: debt
+    suggested_action: scope

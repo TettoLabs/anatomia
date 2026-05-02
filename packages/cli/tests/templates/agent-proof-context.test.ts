@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
+import { AGENT_FILES } from '../../src/constants.js';
 import * as path from 'node:path';
 
 const templatesDir = path.join(__dirname, '../../templates/.claude/agents');
@@ -65,12 +66,19 @@ describe('Agent Proof Context Queries', () => {
   // @ana A008
   it('dogfood agent definitions match the shipped templates exactly', () => {
     const dogfoodDir = path.join(__dirname, '../../../../.claude/agents');
-    const files = ['ana.md', 'ana-plan.md', 'ana-build.md', 'ana-verify.md'];
+    const files = [...AGENT_FILES];
 
     for (const file of files) {
       const template = readTemplate(file);
       const dogfood = readFileSync(path.join(dogfoodDir, file), 'utf-8');
       expect(dogfood, `${file} dogfood should match template`).toBe(template);
     }
+  });
+
+  // @ana A003, A004
+  it('AGENT_FILES matches template directory contents', () => {
+    const dirFiles = readdirSync(templatesDir).filter(f => f.endsWith('.md')).sort();
+    const constantFiles = [...AGENT_FILES].sort();
+    expect(dirFiles).toEqual(constantFiles);
   });
 });

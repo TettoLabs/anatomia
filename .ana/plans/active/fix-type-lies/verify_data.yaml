@@ -1,0 +1,26 @@
+schema: 1
+findings:
+  - category: upstream
+    summary: "Contract A014/A015 prescribed wrong fix — if (change.changed) guard is correct for test data that produces improving→improving (no direction change)"
+    file: "packages/cli/tests/utils/proofSummary.test.ts"
+    line: 2352
+    severity: observation
+    suggested_action: scope
+    related_assertions: ["A014", "A015"]
+  - category: test
+    summary: "Dogfood sync test loop short-circuits on first failure, skipping remaining files — now covers 6 files instead of 4, making masking worse"
+    file: "packages/cli/tests/templates/agent-proof-context.test.ts"
+    line: 71
+    severity: debt
+    suggested_action: monitor
+  - category: upstream
+    summary: "Contract A017 baseline stale — says >1777 but real baseline is 1761, branch is 1762 (+1 guard test)"
+    severity: observation
+    suggested_action: accept
+    related_assertions: ["A017"]
+  - category: code
+    summary: "Init frontmatter branch groups ana-build, ana-verify, ana-learn together — assumes identical frontmatter, masks divergence if any agent changes"
+    file: "packages/cli/tests/commands/init.test.ts"
+    line: 260
+    severity: observation
+    suggested_action: monitor
