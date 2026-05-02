@@ -1600,7 +1600,12 @@ export function registerProofCommand(program: Command): void {
       // Zero findings
       if (activeFindings.length === 0) {
         if (useJson) {
-          console.log(JSON.stringify(wrapJsonResponse('proof audit', { total_active: 0, by_file: [] }, chain), null, 2));
+          console.log(JSON.stringify(wrapJsonResponse('proof audit', {
+            total_active: 0,
+            by_severity: { risk: 0, debt: 0, observation: 0, unclassified: 0 },
+            by_action: { promote: 0, scope: 0, monitor: 0, accept: 0, unclassified: 0 },
+            by_file: [],
+          }, chain), null, 2));
         } else {
           console.log('Proof chain is clean — no active findings.');
         }
@@ -1633,6 +1638,33 @@ export function registerProofCommand(program: Command): void {
         });
       }
 
+      // Severity and action summary counts (active findings only)
+      const severityCounts: Record<string, number> = {};
+      const actionCounts: Record<string, number> = {};
+      let allUnclassified = true;
+      for (const f of activeFindings) {
+        const sev = f.severity === '—' ? 'unclassified' : f.severity;
+        severityCounts[sev] = (severityCounts[sev] || 0) + 1;
+        if (f.severity !== '—') allUnclassified = false;
+
+        const act = f.suggested_action === '—' ? 'unclassified' : f.suggested_action;
+        actionCounts[act] = (actionCounts[act] || 0) + 1;
+      }
+
+      const bySeverity = {
+        risk: severityCounts['risk'] || 0,
+        debt: severityCounts['debt'] || 0,
+        observation: severityCounts['observation'] || 0,
+        unclassified: severityCounts['unclassified'] || 0,
+      };
+      const byAction = {
+        promote: actionCounts['promote'] || 0,
+        scope: actionCounts['scope'] || 0,
+        monitor: actionCounts['monitor'] || 0,
+        accept: actionCounts['accept'] || 0,
+        unclassified: actionCounts['unclassified'] || 0,
+      };
+
       if (useJson) {
         const byFile = sortedFiles.map(([file, findings]) => ({
           file,
@@ -1644,6 +1676,8 @@ export function registerProofCommand(program: Command): void {
         const overflowFiles = useFull ? 0 : Math.max(0, totalFiles - MAX_FILES);
         const result = {
           total_active: activeFindings.length,
+          by_severity: bySeverity,
+          by_action: byAction,
           by_file: byFile,
           overflow_files: overflowFiles,
         };
@@ -1652,20 +1686,6 @@ export function registerProofCommand(program: Command): void {
         // Human-readable output
         const totalFiles = fileGroups.size;
         console.log(`\nProof Audit: ${activeFindings.length} active finding${activeFindings.length !== 1 ? 's' : ''} across ${totalFiles} file${totalFiles !== 1 ? 's' : ''}`);
-
-        // Severity and action summary lines (active findings only)
-        const severityCounts: Record<string, number> = {};
-        const actionCounts: Record<string, number> = {};
-        let allUnclassified = true;
-        for (const f of activeFindings) {
-          const sev = f.severity === '—' ? 'unclassified' : f.severity;
-          severityCounts[sev] = (severityCounts[sev] || 0) + 1;
-          if (f.severity !== '—') allUnclassified = false;
-
-          if (f.suggested_action !== '—') {
-            actionCounts[f.suggested_action] = (actionCounts[f.suggested_action] || 0) + 1;
-          }
-        }
 
         if (activeFindings.length > 0 && !allUnclassified) {
           const sevOrder = ['risk', 'debt', 'observation', 'unclassified'];
@@ -1688,9 +1708,9 @@ export function registerProofCommand(program: Command): void {
               actParts.push(label);
             }
           }
-          // Include any unknown action values not in actOrder
+          // Include any unknown action values not in actOrder (exclude 'unclassified' from display)
           for (const [key, count] of Object.entries(actionCounts)) {
-            if (!actOrder.includes(key) && count > 0) {
+            if (!actOrder.includes(key) && key !== 'unclassified' && count > 0) {
               actParts.push(`${count} ${key}`);
             }
           }

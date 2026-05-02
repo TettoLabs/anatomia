@@ -1,0 +1,35 @@
+schema: 1
+findings:
+  - category: code
+    summary: "Unknown severity/action values silently dropped from fixed-key objects — by_severity sum can be less than total_active"
+    file: "packages/cli/src/commands/proof.ts"
+    line: 1654
+    severity: observation
+    suggested_action: monitor
+    related_assertions: ["A002"]
+  - category: test
+    summary: "A008 active-only test uses fixture with only active findings — no closed finding to prove exclusion"
+    file: "packages/cli/tests/commands/proof.test.ts"
+    line: 1851
+    severity: debt
+    suggested_action: accept
+    related_assertions: ["A008"]
+    anchor: "by_severity counts match active findings only"
+  - category: test
+    summary: "A013 meta block test uses toBeDefined() — verifies existence not value preservation"
+    file: "packages/cli/tests/commands/proof.test.ts"
+    line: 1890
+    severity: observation
+    suggested_action: accept
+    related_assertions: ["A013"]
+  - category: test
+    summary: "5-finding fixture manually duplicated three times across test blocks instead of shared constant"
+    file: "packages/cli/tests/commands/proof.test.ts"
+    line: 1801
+    severity: debt
+    suggested_action: scope
+  - category: upstream
+    summary: "createAuditChain helper still never generates 'debt' severity — still present from Finding Enrichment Schema cycle"
+    severity: observation
+    suggested_action: monitor
+    anchor: "createAuditChain"

@@ -14,5 +14,30 @@
   "spec": {
     "saved_at": "2026-05-02T21:59:53.299Z",
     "hash": "sha256:5a88546474924f3fb7332762f71c0d92253fade4f34493465eef794abd2d544e"
+  },
+  "build-report": {
+    "saved_at": "2026-05-02T22:10:11.362Z",
+    "hash": "sha256:3c0311f2bf8b88ca84f84df43cc93e94137975be2b052a778ef4fbb196528333"
+  },
+  "build-data": {
+    "saved_at": "2026-05-02T22:10:11.362Z",
+    "hash": "sha256:8d99c89720f8703f04c81c22ba22467e247d98347eb65515fe55e8b4383a0918"
+  },
+  "modules_touched": [
+    "packages/cli/src/commands/proof.ts",
+    "packages/cli/tests/commands/proof.test.ts"
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:c0bca7741c9882741c06224a1fea0c954d356a63a30d40b512b0a95e5fdf265e",
+    "run_at": "2026-05-02T22:14:49.124Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-02T22:14:49.158Z",
+    "hash": "sha256:58f23b6bf83fe9a028375cba6d7631ca4f3d9eb8e62f9a7e5feb58bba66ae902"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-02T22:14:49.158Z",
+    "hash": "sha256:238737f1269456cb5f781106f5055720d61d9b3286620f8e820b27fa3a15d665"
   }
 }

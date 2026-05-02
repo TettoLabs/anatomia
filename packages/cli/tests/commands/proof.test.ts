@@ -1794,16 +1794,206 @@ describe('ana proof', () => {
     });
   });
 
-  // @ana A010
-  describe('audit JSON has no summary field', () => {
-    it('JSON output does not contain severity_summary', async () => {
+  // @ana A001, A002, A003, A004, A005, A006, A007
+  describe('audit JSON includes by_severity counts', () => {
+    it('includes by_severity and by_action with correct counts', async () => {
+      // Use the 5-finding entry from the summary line test (known distribution)
+      const findings = [
+        { id: 'F001', category: 'code', summary: 'A', file: 'src/a.ts', anchor: null, status: 'active', severity: 'risk', suggested_action: 'promote' },
+        { id: 'F002', category: 'code', summary: 'B', file: 'src/a.ts', anchor: null, status: 'active', severity: 'risk', suggested_action: 'scope' },
+        { id: 'F003', category: 'code', summary: 'C', file: 'src/b.ts', anchor: null, status: 'active', severity: 'debt', suggested_action: 'scope' },
+        { id: 'F004', category: 'code', summary: 'D', file: 'src/b.ts', anchor: null, status: 'active', severity: 'observation', suggested_action: 'monitor' },
+        { id: 'F005', category: 'code', summary: 'E', file: 'src/c.ts', anchor: null, status: 'active', severity: 'observation', suggested_action: 'accept' },
+      ];
+      const entry = {
+        slug: 'json-summary', feature: 'JSON Summary', result: 'PASS',
+        author: { name: 'Dev', email: 'dev@example.com' },
+        contract: { total: 1, covered: 1, uncovered: 0, satisfied: 1, unsatisfied: 0, deviated: 0 },
+        assertions: [{ id: 'A001', says: 'Works', status: 'SATISFIED' }],
+        acceptance_criteria: { total: 1, met: 1 },
+        timing: { total_minutes: 10 }, hashes: {},
+        completed_at: '2026-04-20T10:00:00Z', modules_touched: [],
+        findings, rejection_cycles: 0, previous_failures: [], build_concerns: [],
+      };
+
+      await createTestProject(tempDir);
+      await fs.writeFile(
+        path.join(tempDir, '.ana', 'proof_chain.json'),
+        JSON.stringify({ entries: [entry] }, null, 2),
+      );
+      process.chdir(tempDir);
+
+      const { stdout, exitCode } = runProof(['audit', '--json']);
+      expect(exitCode).toBe(0);
+
+      const json = JSON.parse(stdout);
+      // by_severity exists with correct counts
+      expect(json.results.by_severity).toBeDefined();
+      expect(json.results.by_severity.risk).toBe(2);
+      expect(json.results.by_severity.debt).toBe(1);
+      expect(json.results.by_severity.observation).toBe(2);
+      expect(json.results.by_severity.unclassified).toBe(0);
+
+      // by_action exists with correct counts
+      expect(json.results.by_action).toBeDefined();
+      expect(json.results.by_action.promote).toBe(1);
+      expect(json.results.by_action.scope).toBe(2);
+      expect(json.results.by_action.monitor).toBe(1);
+      expect(json.results.by_action.accept).toBe(1);
+      expect(json.results.by_action.unclassified).toBe(0);
+
+      // Old field names remain absent
+      expect(json.results.severity_summary).toBeUndefined();
+      expect(json.results.action_summary).toBeUndefined();
+    });
+  });
+
+  // @ana A008
+  describe('by_severity counts match active findings only', () => {
+    it('severity counts come from active findings, not full chain', async () => {
+      // createAuditChain(5,2): i%3===0 → risk (i=0,3), else observation (i=1,2,4)
       await createAuditChain(5, 2);
       process.chdir(tempDir);
 
       const { stdout } = runProof(['audit', '--json']);
       const json = JSON.parse(stdout);
-      expect(json.results.severity_summary).toBeUndefined();
-      expect(json.results.action_summary).toBeUndefined();
+      expect(json.results.by_severity.risk).toBe(2);
+      expect(json.results.by_severity.observation).toBe(3);
+      expect(json.results.by_severity.debt).toBe(0);
+      expect(json.results.by_severity.unclassified).toBe(0);
+      expect(json.results.total_active).toBe(5);
+    });
+  });
+
+  // @ana A009, A010
+  describe('audit --json --full includes summary fields', () => {
+    it('--full JSON includes by_severity and by_action', async () => {
+      await createAuditChain(5, 2);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['audit', '--json', '--full']);
+      const json = JSON.parse(stdout);
+      expect(json.results.by_severity).toBeDefined();
+      expect(json.results.by_action).toBeDefined();
+      expect(json.results.by_severity.risk).toBe(2);
+    });
+  });
+
+  // @ana A013
+  describe('meta block is unchanged', () => {
+    it('meta envelope still contains all-time chain health counts', async () => {
+      await createAuditChain(5, 2);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['audit', '--json']);
+      const json = JSON.parse(stdout);
+      expect(json.meta.findings.by_severity).toBeDefined();
+      expect(json.meta.findings.by_action).toBeDefined();
+    });
+  });
+
+  // @ana A014, A015, A016
+  describe('zero findings includes all-zero by_severity', () => {
+    it('zero active findings includes severity and action breakdowns with all zeros', async () => {
+      // Create chain with only closed findings
+      const closedFindings = [
+        { id: 'F001', category: 'code', summary: 'Closed', file: 'src/a.ts', anchor: null, status: 'closed', severity: 'risk', suggested_action: 'scope' },
+      ];
+      const entry = {
+        slug: 'zero-json', feature: 'Zero JSON', result: 'PASS',
+        author: { name: 'Dev', email: 'dev@example.com' },
+        contract: { total: 1, covered: 1, uncovered: 0, satisfied: 1, unsatisfied: 0, deviated: 0 },
+        assertions: [{ id: 'A001', says: 'Works', status: 'SATISFIED' }],
+        acceptance_criteria: { total: 1, met: 1 },
+        timing: { total_minutes: 10 }, hashes: {},
+        completed_at: '2026-04-20T10:00:00Z', modules_touched: [],
+        findings: closedFindings, rejection_cycles: 0, previous_failures: [], build_concerns: [],
+      };
+
+      await createTestProject(tempDir);
+      await fs.writeFile(
+        path.join(tempDir, '.ana', 'proof_chain.json'),
+        JSON.stringify({ entries: [entry] }, null, 2),
+      );
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['audit', '--json']);
+      const json = JSON.parse(stdout);
+      expect(json.results.total_active).toBe(0);
+      expect(json.results.by_severity).toEqual({ risk: 0, debt: 0, observation: 0, unclassified: 0 });
+      expect(json.results.by_action).toEqual({ promote: 0, scope: 0, monitor: 0, accept: 0, unclassified: 0 });
+    });
+  });
+
+  // @ana A017, A018
+  describe('all-unclassified findings counted correctly', () => {
+    it('findings without severity/action are counted as unclassified', async () => {
+      const findings = [
+        { id: 'F001', category: 'code', summary: 'A', file: 'src/a.ts', anchor: null, status: 'active', severity: '—', suggested_action: '—' },
+        { id: 'F002', category: 'code', summary: 'B', file: 'src/a.ts', anchor: null, status: 'active', severity: '—', suggested_action: '—' },
+      ];
+      const entry = {
+        slug: 'unclass-test', feature: 'Unclass Test', result: 'PASS',
+        author: { name: 'Dev', email: 'dev@example.com' },
+        contract: { total: 1, covered: 1, uncovered: 0, satisfied: 1, unsatisfied: 0, deviated: 0 },
+        assertions: [{ id: 'A001', says: 'Works', status: 'SATISFIED' }],
+        acceptance_criteria: { total: 1, met: 1 },
+        timing: { total_minutes: 10 }, hashes: {},
+        completed_at: '2026-04-20T10:00:00Z', modules_touched: [],
+        findings, rejection_cycles: 0, previous_failures: [], build_concerns: [],
+      };
+
+      await createTestProject(tempDir);
+      await fs.writeFile(
+        path.join(tempDir, '.ana', 'proof_chain.json'),
+        JSON.stringify({ entries: [entry] }, null, 2),
+      );
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['audit', '--json']);
+      const json = JSON.parse(stdout);
+      expect(json.results.by_severity.unclassified).toBe(2);
+      expect(json.results.by_severity.risk).toBe(0);
+      expect(json.results.by_action.unclassified).toBe(2);
+      expect(json.results.by_action.promote).toBe(0);
+    });
+  });
+
+  // @ana A011, A012
+  describe('terminal output is unchanged', () => {
+    it('terminal severity/action display still shows same format', async () => {
+      const findings = [
+        { id: 'F001', category: 'code', summary: 'A', file: 'src/a.ts', anchor: null, status: 'active', severity: 'risk', suggested_action: 'promote' },
+        { id: 'F002', category: 'code', summary: 'B', file: 'src/a.ts', anchor: null, status: 'active', severity: 'risk', suggested_action: 'scope' },
+        { id: 'F003', category: 'code', summary: 'C', file: 'src/b.ts', anchor: null, status: 'active', severity: 'debt', suggested_action: 'scope' },
+        { id: 'F004', category: 'code', summary: 'D', file: 'src/b.ts', anchor: null, status: 'active', severity: 'observation', suggested_action: 'monitor' },
+        { id: 'F005', category: 'code', summary: 'E', file: 'src/c.ts', anchor: null, status: 'active', severity: 'observation', suggested_action: 'accept' },
+      ];
+      const entry = {
+        slug: 'terminal-test', feature: 'Terminal Test', result: 'PASS',
+        author: { name: 'Dev', email: 'dev@example.com' },
+        contract: { total: 1, covered: 1, uncovered: 0, satisfied: 1, unsatisfied: 0, deviated: 0 },
+        assertions: [{ id: 'A001', says: 'Works', status: 'SATISFIED' }],
+        acceptance_criteria: { total: 1, met: 1 },
+        timing: { total_minutes: 10 }, hashes: {},
+        completed_at: '2026-04-20T10:00:00Z', modules_touched: [],
+        findings, rejection_cycles: 0, previous_failures: [], build_concerns: [],
+      };
+
+      await createTestProject(tempDir);
+      await fs.writeFile(
+        path.join(tempDir, '.ana', 'proof_chain.json'),
+        JSON.stringify({ entries: [entry] }, null, 2),
+      );
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['audit']);
+      expect(stdout).toContain('2 risk');
+      expect(stdout).toContain('1 debt');
+      expect(stdout).toContain('2 observation');
+      expect(stdout).toContain('1 promote');
+      expect(stdout).toContain('2 scope');
+      expect(stdout).toContain('1 monitor');
     });
   });
 

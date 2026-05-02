@@ -1,0 +1,6 @@
+schema: 1
+concerns:
+  - summary: "Terminal unknown-action loop has explicit 'unclassified' exclusion guard"
+    file: "packages/cli/src/commands/proof.ts"
+    severity: observation
+    suggested_action: monitor
