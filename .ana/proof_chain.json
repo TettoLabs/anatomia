@@ -5498,7 +5498,10 @@
             "A021"
           ],
           "id": "finding-enrichment-schema-C3",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed — A019, A020, A021 now have dedicated tagged tests at work.test.ts:2787, 2807, 2827.",
+          "closed_at": "2026-05-02T17:53:14.454Z",
+          "closed_by": "human"
         },
         {
           "category": "upstream",
