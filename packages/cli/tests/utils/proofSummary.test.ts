@@ -1223,6 +1223,70 @@ describe('getProofContext', () => {
     const results = getProofContext(['census.ts'], tempDir);
     expect(results[0]!.findings[0]!.status).toBe('active');
   });
+
+  // @ana A009
+  it('rejects same-basename different-directory paths (false positive fix)', () => {
+    const entry = {
+      ...baseEntry,
+      findings: [
+        { id: 'fp-C1', category: 'code', summary: 'Issue in package a', file: 'packages/a/census.ts', anchor: null },
+      ],
+    };
+    writeChain([entry]);
+    const results = getProofContext(['packages/b/census.ts'], tempDir);
+    expect(results[0]!.findings).toHaveLength(0);
+  });
+
+  // @ana A010
+  it('matches when one path is a suffix of the other (both have dirs)', () => {
+    const entry = {
+      ...baseEntry,
+      findings: [
+        { id: 'suffix-C1', category: 'code', summary: 'Issue in engine', file: 'engine/census.ts', anchor: null },
+      ],
+    };
+    writeChain([entry]);
+    const results = getProofContext(['packages/cli/src/engine/census.ts'], tempDir);
+    expect(results[0]!.findings.length).toBeGreaterThan(0);
+  });
+
+  // @ana A011
+  it('matches bare basename query against full stored path (backward compat)', () => {
+    const entry = {
+      ...baseEntry,
+      findings: [
+        { id: 'bare-C1', category: 'code', summary: 'Issue', file: 'packages/b/census.ts', anchor: null },
+      ],
+    };
+    writeChain([entry]);
+    const results = getProofContext(['census.ts'], tempDir);
+    expect(results[0]!.findings.length).toBeGreaterThan(0);
+  });
+
+  // @ana A012
+  it('matches full query against bare stored path (legacy data compat)', () => {
+    const entry = {
+      ...baseEntry,
+      findings: [
+        { id: 'legacy-C3', category: 'code', summary: 'Old legacy issue', file: 'census.ts', anchor: null },
+      ],
+    };
+    writeChain([entry]);
+    const results = getProofContext(['packages/cli/src/engine/census.ts'], tempDir);
+    expect(results[0]!.findings.length).toBeGreaterThan(0);
+  });
+
+  it('matches exact paths with directories (both dirs, exact)', () => {
+    const entry = {
+      ...baseEntry,
+      findings: [
+        { id: 'exact-C1', category: 'code', summary: 'Exact match', file: 'packages/cli/src/engine/census.ts', anchor: null },
+      ],
+    };
+    writeChain([entry]);
+    const results = getProofContext(['packages/cli/src/engine/census.ts'], tempDir);
+    expect(results[0]!.findings.length).toBeGreaterThan(0);
+  });
 });
 
 // @ana A022, A023

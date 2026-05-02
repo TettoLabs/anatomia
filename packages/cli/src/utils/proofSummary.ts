@@ -1646,6 +1646,11 @@ function fileMatches(stored: string, queried: string): boolean {
   // Basenames must match for any non-exact match
   if (storedBasename !== queriedBasename) return false;
 
+  // Both have directories: require one path to be a suffix of the other
+  if (stored.includes('/') && queried.includes('/')) {
+    return stored.endsWith('/' + queried) || queried.endsWith('/' + stored) || stored === queried;
+  }
+
   // Path-suffix: stored (full path) ends with '/' + queriedBasename
   if (stored.includes('/') && stored.endsWith('/' + queriedBasename)) return true;
 
