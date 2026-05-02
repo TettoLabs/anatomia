@@ -66,9 +66,11 @@ describe('scanProject()', () => {
     await createFiles({
       'package.json': JSON.stringify({ name: 'test' }),
     });
-    execSync('git init && git add -A && git commit -m "init"', {
-      cwd: tempDir, stdio: 'pipe',
-    });
+    execSync('git init', { cwd: tempDir, stdio: 'pipe' });
+    execSync('git config user.name "Test"', { cwd: tempDir, stdio: 'pipe' });
+    execSync('git config user.email "test@test.com"', { cwd: tempDir, stdio: 'pipe' });
+    execSync('git add -A', { cwd: tempDir, stdio: 'pipe' });
+    execSync('git commit -m "init"', { cwd: tempDir, stdio: 'pipe' });
 
     const result = await scanProject(tempDir, { depth: 'surface' });
 
