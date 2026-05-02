@@ -153,12 +153,35 @@ export interface PromotionEffectiveness {
  * Separate from ChainHealth (which counts what exists).
  * HealthReport analyzes what's trending, what's hot, and what's actionable.
  */
+/**
+ * Verification stats — first-pass rate and total issues caught.
+ */
+export interface VerificationStats {
+  first_pass_count: number;
+  total_runs: number;
+  first_pass_pct: number;
+  total_caught: number;
+}
+
+/**
+ * Pipeline timing stats — median total and per-phase breakdown.
+ */
+export interface PipelineStats {
+  median_total: number;
+  median_scope: number | null;
+  median_build: number | null;
+  median_verify: number | null;
+  entries_with_timing: number;
+}
+
 export interface HealthReport {
   runs: number;
   trajectory: TrajectoryData;
   hot_modules: HotModule[];
   promotion_candidates: PromotionCandidate[];
   promotions: PromotionEffectiveness[];
+  verification?: VerificationStats | undefined;
+  pipeline?: PipelineStats | undefined;
 }
 
 /**

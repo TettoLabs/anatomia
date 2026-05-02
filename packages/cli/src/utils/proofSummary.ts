@@ -604,6 +604,16 @@ const MIN_ENTRIES_FOR_EFFECTIVENESS = 5;
 export function computeHealthReport(chain: {
   entries: Array<{
     slug?: string;
+    rejection_cycles?: number;
+    previous_failures?: Array<{ id: string; summary: string }>;
+    timing?: {
+      total_minutes?: number;
+      think?: number;
+      plan?: number;
+      build?: number;
+      verify?: number;
+      scope?: number;
+    };
     findings?: Array<{
       id?: string;
       status?: string;
@@ -862,13 +872,105 @@ export function computeHealthReport(chain: {
     }
   }
 
+  // ─── Verification ─────────────────────────────────────────────────
+  const verification = computeFirstPassRate(chain.entries);
+
+  // ─── Pipeline Timing ────────────────────────────────────────────
+  const pipeline = computePipelineStats(chain.entries);
+
   return {
     runs,
     trajectory,
     hot_modules: topHotModules,
     promotion_candidates: candidates,
     promotions,
+    verification,
+    pipeline: pipeline ?? undefined,
   };
+}
+
+/**
+ * Compute first-pass rate and total issues caught from rejection data.
+ *
+ * @param entries - Proof chain entries with optional rejection_cycles and previous_failures
+ * @returns VerificationStats with first-pass count, percentage, and total caught
+ */
+export function computeFirstPassRate(entries: Array<{
+  rejection_cycles?: number;
+  previous_failures?: Array<{ id: string; summary: string }>;
+}>): import('../types/proof.js').VerificationStats {
+  let firstPassCount = 0;
+  let totalCaught = 0;
+
+  for (const entry of entries) {
+    const cycles = entry.rejection_cycles ?? 0;
+    if (cycles === 0) {
+      firstPassCount++;
+    }
+    totalCaught += (entry.previous_failures ?? []).length;
+  }
+
+  const totalRuns = entries.length;
+  const firstPassPct = totalRuns > 0 ? Math.round((firstPassCount / totalRuns) * 100) : 100;
+
+  return {
+    first_pass_count: firstPassCount,
+    total_runs: totalRuns,
+    first_pass_pct: firstPassPct,
+    total_caught: totalCaught,
+  };
+}
+
+/**
+ * Compute pipeline timing stats (medians) from entry timing data.
+ * Returns null if fewer than 3 entries have timing data with total_minutes > 0.
+ *
+ * @param entries - Proof chain entries with optional timing breakdown
+ * @returns PipelineStats or null if insufficient data
+ */
+function computePipelineStats(entries: Array<{
+  timing?: {
+    total_minutes?: number;
+    think?: number;
+    plan?: number;
+    build?: number;
+    verify?: number;
+    scope?: number;
+  };
+}>): import('../types/proof.js').PipelineStats | null {
+  const MIN_PIPELINE_ENTRIES = 3;
+
+  // Collect entries with total_minutes > 0
+  const validEntries = entries.filter(e => e.timing && (e.timing.total_minutes ?? 0) > 0);
+
+  if (validEntries.length < MIN_PIPELINE_ENTRIES) {
+    return null;
+  }
+
+  const totals = validEntries.map(e => e.timing!.total_minutes!);
+  const scopes = validEntries.map(e => e.timing!.think ?? e.timing!.scope ?? null).filter((v): v is number => v !== null);
+  const builds = validEntries.map(e => e.timing!.build ?? null).filter((v): v is number => v !== null);
+  const verifies = validEntries.map(e => e.timing!.verify ?? null).filter((v): v is number => v !== null);
+
+  return {
+    median_total: floorMedian(totals),
+    median_scope: scopes.length > 0 ? floorMedian(scopes) : null,
+    median_build: builds.length > 0 ? floorMedian(builds) : null,
+    median_verify: verifies.length > 0 ? floorMedian(verifies) : null,
+    entries_with_timing: validEntries.length,
+  };
+}
+
+/**
+ * Compute floor median — for even-count arrays, use the lower of the two middle values.
+ *
+ * @param values - Array of numbers (must be non-empty)
+ * @returns Floor median value
+ */
+function floorMedian(values: number[]): number {
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor((sorted.length - 1) / 2);
+  return sorted[mid]!;
 }
 
 /**
