@@ -33,5 +33,18 @@
     "packages/cli/tests/engine/detectors/git-detection.test.ts",
     "packages/cli/tests/engine/integration/structure-analysis.test.ts",
     "packages/cli/tests/engine/scanProject.test.ts"
-  ]
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:3c58f5bc464fecc7829f508b74bf4c61b37f43a44416ae73fd52d08542166da1",
+    "run_at": "2026-05-02T23:04:21.647Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-02T23:04:21.683Z",
+    "hash": "sha256:06a1a7b0ad81f669a847cb474d26bf736b7921e2665468c87a00b6e016dd97ee"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-02T23:04:21.683Z",
+    "hash": "sha256:e077f5613c6a3b59c091b4c93398e0779bc797a35c39ffa79772ffd0a7091e5b"
+  }
 }

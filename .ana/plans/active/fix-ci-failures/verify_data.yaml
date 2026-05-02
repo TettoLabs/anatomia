@@ -1,0 +1,43 @@
+schema: 1
+findings:
+  - category: code
+    summary: "Library detection uses unnormalized paths — d.startsWith('lib/') fails on Windows backslash input"
+    file: "packages/cli/src/engine/analyzers/structure/architecture.ts"
+    line: 172
+    severity: risk
+    suggested_action: scope
+    related_assertions: ["A007"]
+
+  - category: test
+    summary: "Three out-of-scope test files still use hardcoded /tmp/ for filesystem access — will fail on Windows CI"
+    file: "packages/cli/tests/engine/analyzers/testLocations.test.ts"
+    line: 10
+    severity: risk
+    suggested_action: scope
+    related_assertions: ["A006"]
+
+  - category: test
+    summary: "Mock data strings in test fixtures contain /tmp/ — triggers A006 grep check but no runtime impact"
+    file: "packages/cli/tests/engine/census.test.ts"
+    line: 44
+    severity: observation
+    suggested_action: accept
+    related_assertions: ["A006"]
+
+  - category: upstream
+    summary: "Contract A006 asserts codebase-wide zero /tmp/ matches but file_changes only lists 2 files for Category 2 fixes"
+    severity: debt
+    suggested_action: monitor
+
+  - category: code
+    summary: "Documentation normalization placed at output boundary in checkFile() — better than spec's per-callsite fix"
+    file: "packages/cli/src/engine/detectors/documentation.ts"
+    line: 137
+    severity: observation
+    suggested_action: accept
+
+  - category: upstream
+    summary: "Contract A004/A005 value says os.tmpdir() but implementation uses destructured tmpdir() from node:os — identical behavior"
+    severity: observation
+    suggested_action: accept
+    related_assertions: ["A004", "A005"]
