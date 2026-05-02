@@ -8758,7 +8758,10 @@
             "A009"
           ],
           "id": "clean-proofsummary-C1",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Stale — finding claims redundant stored===queried guard but code at line 1651 is now build companion file field handling (buildCompanionName derivation), not the guard described. Refactored away.",
+          "closed_at": "2026-05-02T17:47:18.986Z",
+          "closed_by": "human"
         },
         {
           "category": "code",

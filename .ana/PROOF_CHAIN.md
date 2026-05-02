@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-41 runs · 87 active · 40 lessons · 0 promoted · 92 closed
+41 runs · 86 active · 40 lessons · 0 promoted · 93 closed
 
 ## Hot Modules
 
@@ -9,14 +9,14 @@
 | packages/cli/src/commands/proof.ts | 17 | 10 |
 | packages/cli/tests/commands/work.test.ts | 12 | 8 |
 | packages/cli/tests/commands/proof.test.ts | 11 | 5 |
-| packages/cli/src/utils/proofSummary.ts | 10 | 8 |
+| packages/cli/src/utils/proofSummary.ts | 9 | 8 |
 | packages/cli/src/commands/work.ts | 7 | 5 |
 
 ## Promoted Rules
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 87 total)
+## Active Findings (30 shown of 86 total)
 
 ### packages/cli/src/commands/proof.ts
 
@@ -37,7 +37,6 @@
 ### packages/cli/src/utils/proofSummary.ts
 
 - **code:** computeFirstPassRate exported but never imported outside proofSummary.ts — only called internally by computeHealthReport — *Proof Health V2*
-- **code:** Redundant `stored === queried` in both-directories guard — exact match already caught at line 1641 — *Clean proofSummary.ts*
 - **code:** `as 'PASS' | 'FAIL'` cast in parseResult relies on regex constraint, not type-level proof — safe but brittle if regex changes — *Clean proofSummary.ts*
 - **code:** fileMatches `includes('/')` treats `./census.ts` as directory-qualified — theoretical false negative for dot-slash prefixed paths — *Clean proofSummary.ts*
 
@@ -58,6 +57,7 @@
 - **test:** Dry-run test verifies no mutation but does not verify no commit was created — *Learn V3 — CLI Commands + Template Finalization*
 - **test:** Variadic strengthen test checks status but not promoted_to on each finding — *Learn V3 — CLI Commands + Template Finalization*
 - **test:** No test for the staged-only changes path (git diff --cached) — only unstaged changes tested via helper — *Learn V3 — CLI Commands + Template Finalization*
+- **test:** Weak assertions in stale integration tests — toBeGreaterThan(0) instead of specific counts — *Learn V3 — CLI Commands + Template Finalization*
 
 ### packages/cli/tests/commands/work.test.ts
 
