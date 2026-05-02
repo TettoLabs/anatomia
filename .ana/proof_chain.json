@@ -6091,7 +6091,10 @@
           "severity": "debt",
           "suggested_action": "scope",
           "id": "work-complete-json-proof-card-C5",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed — indexOf('{') JSON parsing removed. All JSON tests now use JSON.parse(output) directly.",
+          "closed_at": "2026-05-02T17:53:26.809Z",
+          "closed_by": "human"
         }
       ],
       "rejection_cycles": 1,
