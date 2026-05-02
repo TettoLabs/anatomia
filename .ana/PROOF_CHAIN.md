@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-45 runs · 64 active · 48 lessons · 0 promoted · 127 closed
+45 runs · 63 active · 48 lessons · 0 promoted · 128 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 64 total)
+## Active Findings (30 shown of 63 total)
 
 ### packages/cli/src/commands/proof.ts
 
@@ -39,6 +39,7 @@
 
 - **code:** `as 'PASS' | 'FAIL'` cast in parseResult relies on regex constraint, not type-level proof — safe but brittle if regex changes — *Clean proofSummary.ts*
 - **code:** fileMatches `includes('/')` treats `./census.ts` as directory-qualified — theoretical false negative for dot-slash prefixed paths — *Clean proofSummary.ts*
+- **code:** O(n*m) traversal in computeStaleness — nested loop over entries × findings — *Learn V3 — CLI Commands + Template Finalization*
 
 ### packages/cli/templates/.claude/agents/ana-learn.md
 
@@ -69,10 +70,6 @@
 - **test:** UNVERIFIED test creates full project fixture manually instead of using createMergedProject helper — 60 lines vs ~5 lines — *Strengthen Weak Test Assertions*
 - **code:** Timestamp recency check (before/after window) in A010 test may flake on extremely slow CI — window depends on test execution speed — *Strengthen Weak Test Assertions*
 - **test:** A030 test named 'allows completion with UNKNOWN result' but exercises PASS path — UNKNOWN code path at L785 has no test coverage — *Proof Health V2*
-
-### packages/cli/tests/engine/types/census.test.ts
-
-- **test:** Mock data strings in test fixtures contain /tmp/ as placeholder absolutePath values — no filesystem access, no runtime impact — *Fix CI Test Failures*
 
 ### packages/cli/tests/templates/agent-proof-context.test.ts
 
