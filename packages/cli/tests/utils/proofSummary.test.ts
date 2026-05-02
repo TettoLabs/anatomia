@@ -1098,26 +1098,26 @@ describe('getProofContext', () => {
     ],
   };
 
-  // @ana A009, A010, A017
+  // @ana A009, A010, A017, A007
   it('returns findings for queried file (full path match)', () => {
     writeChain([baseEntry]);
     const results = getProofContext(['packages/cli/src/engine/census.ts'], tempDir);
     expect(results).toHaveLength(1);
-    expect(results[0]!.findings.length).toBeGreaterThan(0);
+    expect(results[0]!.findings.length).toBe(2);
     expect(results[0]!.findings[0]!.from).toBe('Fix Drizzle schema detection');
     expect(results[0]!.findings[0]!.category).toBe('code');
     expect(results[0]!.findings[0]!.summary).toContain('drizzle-dialect');
   });
 
-  // @ana A018
+  // @ana A018, A008
   it('matches basename query to full-path finding (path suffix)', () => {
     writeChain([baseEntry]);
     const results = getProofContext(['census.ts'], tempDir);
-    expect(results[0]!.findings.length).toBeGreaterThan(0);
+    expect(results[0]!.findings.length).toBe(2);
     expect(results[0]!.findings[0]!.file).toBe('packages/cli/src/engine/census.ts');
   });
 
-  // @ana A019
+  // @ana A019, A009
   it('matches full-path query to basename finding (legacy)', () => {
     const legacyEntry = {
       ...baseEntry,
@@ -1127,7 +1127,7 @@ describe('getProofContext', () => {
     };
     writeChain([legacyEntry]);
     const results = getProofContext(['packages/cli/src/engine/census.ts'], tempDir);
-    expect(results[0]!.findings.length).toBeGreaterThan(0);
+    expect(results[0]!.findings.length).toBe(1);
     expect(results[0]!.findings[0]!.file).toBe('census.ts');
   });
 
@@ -1456,6 +1456,7 @@ describe('generateDashboard', () => {
     expect(md).toContain('### src/foo.ts');
   });
 
+  // @ana A015, A016
   it('caps active findings at 30', () => {
     const findings = Array.from({ length: 35 }, (_, i) => ({
       id: `c${i}`, category: 'code', summary: `Issue ${i}`, file: `file-${i}.ts`, anchor: null, status: 'active' as const,
@@ -1465,6 +1466,10 @@ describe('generateDashboard', () => {
     expect(md).toContain('30 shown of 35 total');
     const findingLines = md.split('\n').filter(l => l.startsWith('- **'));
     expect(findingLines).toHaveLength(30);
+    // Verify first item survived the cap (insertion order preserved)
+    expect(md).toContain('file-0.ts');
+    // Verify item beyond cap was dropped
+    expect(md).not.toContain('file-30.ts');
   });
 
   it('contains promoted rules placeholder', () => {

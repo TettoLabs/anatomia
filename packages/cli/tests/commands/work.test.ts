@@ -868,10 +868,24 @@ describe('ana work status', () => {
         await expect(completeWork('test-slug')).rejects.toThrow();
       });
 
+      // @ana A011, A012
       it('errors when multi-spec phase 1 shows FAIL', async () => {
         await createMergedProject({ slug: 'test-slug', phases: 2, verifyResults: ['FAIL', 'PASS'] });
 
-        await expect(completeWork('test-slug')).rejects.toThrow();
+        const mockExit = vi.spyOn(process, 'exit').mockImplementation((() => {
+          throw new Error('process.exit');
+        }) as never);
+        const originalError = console.error;
+        const errors: string[] = [];
+        console.error = (...args: unknown[]) => { errors.push(args.join(' ')); };
+
+        await expect(completeWork('test-slug')).rejects.toThrow('process.exit');
+
+        console.error = originalError;
+        const errorOutput = errors.join('\n');
+        expect(errorOutput).toContain('FAIL');
+        expect(errorOutput).toContain('ana-build');
+        mockExit.mockRestore();
       });
 
       it('succeeds when all phases show PASS', async () => {
@@ -1118,6 +1132,76 @@ Tests: 5 passed
         expect(chain.entries[0].assertions).toHaveLength(2);
         expect(chain.entries[0].assertions[0].id).toBe('A001');
         expect(chain.entries[0].assertions[0].says).toBe('Creates item successfully');
+      });
+
+      // @ana A017
+      it('UNVERIFIED fallback when assertions lack verify status', async () => {
+        // Create a project where verify report has PASS but no compliance table
+        // → assertions get verifyStatus: null → becomes 'UNVERIFIED' in proof chain
+        execSync('git init', { cwd: tempDir, stdio: 'ignore' });
+        execSync('git config user.email "test@test.com"', { cwd: tempDir, stdio: 'ignore' });
+        execSync('git config user.name "Test"', { cwd: tempDir, stdio: 'ignore' });
+
+        const anaDir = path.join(tempDir, '.ana');
+        await fs.mkdir(anaDir, { recursive: true });
+        await fs.writeFile(path.join(anaDir, 'ana.json'), JSON.stringify({ artifactBranch: 'main' }), 'utf-8');
+        execSync('git add -A && git commit -m "init"', { cwd: tempDir, stdio: 'ignore' });
+        execSync('git branch -M main', { cwd: tempDir, stdio: 'ignore' });
+
+        const slugPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-unverified');
+        await fs.mkdir(slugPath, { recursive: true });
+        await fs.writeFile(path.join(slugPath, 'scope.md'), '# Scope', 'utf-8');
+        await fs.writeFile(path.join(slugPath, 'plan.md'), '# Plan\n## Phases\n- [ ] Phase 1\n  Spec: spec.md', 'utf-8');
+        await fs.writeFile(path.join(slugPath, 'spec.md'), '# Spec', 'utf-8');
+
+        // Contract with assertions
+        await fs.writeFile(path.join(slugPath, 'contract.yaml'), `version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Test Unverified"
+
+assertions:
+  - id: A001
+    says: "Creates item"
+    block: "creates item"
+    target: "result"
+    matcher: "equals"
+    value: true
+
+file_changes:
+  - path: "src/item.ts"
+    action: create
+`, 'utf-8');
+
+        // Verify report with PASS but NO compliance table
+        await fs.writeFile(path.join(slugPath, 'verify_report.md'), `# Verify Report
+
+**Result:** PASS
+
+## Verdict
+**Shippable:** YES
+`, 'utf-8');
+
+        await fs.writeFile(path.join(slugPath, 'build_report.md'), '# Build Report\n', 'utf-8');
+
+        await fs.writeFile(path.join(slugPath, '.saves.json'), JSON.stringify({
+          'build-report': { saved_at: new Date().toISOString(), hash: 'sha256:' + '0'.repeat(64) },
+          'verify-report': { saved_at: new Date().toISOString(), hash: 'sha256:' + '0'.repeat(64) },
+        }), 'utf-8');
+
+        execSync('git add -A && git commit -m "add planning"', { cwd: tempDir, stdio: 'ignore' });
+        execSync(`git checkout -b feature/test-unverified`, { cwd: tempDir, stdio: 'ignore' });
+        execSync('git add -A && git commit --allow-empty -m "add reports"', { cwd: tempDir, stdio: 'ignore' });
+        execSync('git checkout main', { cwd: tempDir, stdio: 'ignore' });
+        execSync('git merge --no-ff feature/test-unverified -m "merge"', { cwd: tempDir, stdio: 'ignore' });
+
+        await completeWork('test-unverified');
+
+        const chainPath = path.join(tempDir, '.ana', 'proof_chain.json');
+        const chain = JSON.parse(fsSync.readFileSync(chainPath, 'utf-8'));
+        expect(chain.entries).toHaveLength(1);
+        const chainAssertion = chain.entries[0].assertions[0];
+        expect(chainAssertion.id).toBe('A001');
+        expect(chainAssertion.status).toBe('UNVERIFIED');
       });
 
       it('appends to existing proof_chain.json', async () => {
@@ -2320,23 +2404,19 @@ Tests: 5 passed
         expect(output).toContain('ana proof audit');
       });
 
-      // @ana A013
+      // @ana A013, A014
       it('no nudge for informational triggers only', async () => {
-        // This case is already covered by existing "no health line when stable" test.
-        // Additional verification: when health line IS shown (trend_improved) but no actionable trigger.
         await createMergedProject({ slug: 'test-feature', phases: 1 });
 
-        // 10 entries with decreasing risk → improving trend. New entry (0 risk) keeps improving.
+        // 10 entries with 1 risk each → stable trend.
+        // New entry with 0 risk → tips to improving → stable→improving transition fires health line.
         const chainPath = path.join(tempDir, '.ana', 'proof_chain.json');
         const existingEntries = [];
         for (let i = 0; i < 10; i++) {
-          const riskCount = i < 5 ? 3 : 1; // first half high risk, second half low → improving
-          const findings = [];
-          for (let r = 0; r < riskCount; r++) {
-            findings.push({ id: `F${i}-${r}`, category: 'code', summary: `risk`, file: null, severity: 'risk', suggested_action: 'scope', status: 'active' });
-          }
-          // Add an observation so entries without risk still have classified data
-          findings.push({ id: `F${i}-obs`, category: 'code', summary: 'obs', file: null, severity: 'observation', suggested_action: 'monitor', status: 'active' });
+          const findings = [
+            { id: `F${i}-0`, category: 'code', summary: 'risk', file: null, severity: 'risk', suggested_action: 'scope', status: 'active' },
+            { id: `F${i}-obs`, category: 'code', summary: 'obs', file: null, severity: 'observation', suggested_action: 'monitor', status: 'active' },
+          ];
           existingEntries.push({
             slug: `entry-${i}`,
             feature: `Feature ${i}`,
@@ -2355,7 +2435,7 @@ Tests: 5 passed
         }
         fsSync.writeFileSync(chainPath, JSON.stringify({ entries: existingEntries }, null, 2));
 
-        // Add a non-risk finding so entry 11 has classified data but 0 risk
+        // New entry has 0 risk, only observation → tips from stable to improving
         const slugDir = path.join(tempDir, '.ana', 'plans', 'active', 'test-feature');
         fsSync.writeFileSync(path.join(slugDir, 'verify_data.yaml'),
           'findings:\n  - category: code\n    summary: obs\n    severity: observation\n    suggested_action: monitor\n');
@@ -2370,10 +2450,11 @@ Tests: 5 passed
 
         console.log = originalLog;
         const output = logs.join('\n');
-        // Health line may appear (trend improved) but should NOT have a nudge arrow
-        if (output.includes('Health:')) {
-          expect(output).not.toContain('→');
-        }
+        // Health line must appear (stable→improving transition is deterministic)
+        expect(output).toContain('Health:');
+        // Informational trigger (trend_improved) should NOT show a nudge suggestion
+        expect(output).not.toContain('→ claude');
+        expect(output).not.toContain('→ ana proof');
       });
 
       // @ana A014, A015
@@ -2675,18 +2756,23 @@ describe('ana work start', () => {
     expect(fsSync.existsSync(slugDir)).toBe(true);
   });
 
-  // @ana A016
+  // @ana A016, A010
   it('writes work_started_at to saves.json', async () => {
     await createStartTestProject();
 
+    const before = Date.now();
     await startWork('fix-auth-timeout');
+    const after = Date.now();
 
     const savesPath = path.join(tempDir, '.ana', 'plans', 'active', 'fix-auth-timeout', '.saves.json');
     expect(fsSync.existsSync(savesPath)).toBe(true);
     const saves = JSON.parse(fsSync.readFileSync(savesPath, 'utf-8'));
-    expect(saves.work_started_at).toBeDefined();
-    // Verify it's a valid ISO string
-    expect(new Date(saves.work_started_at).getTime()).toBeGreaterThan(0);
+    // Verify it's a valid ISO date string containing 'T' separator
+    expect(saves.work_started_at).toContain('T');
+    // Verify the timestamp is recent (within the test execution window)
+    const ts = new Date(saves.work_started_at).getTime();
+    expect(ts).toBeGreaterThanOrEqual(before);
+    expect(ts).toBeLessThanOrEqual(after);
   });
 
   it('prints confirmation message', async () => {

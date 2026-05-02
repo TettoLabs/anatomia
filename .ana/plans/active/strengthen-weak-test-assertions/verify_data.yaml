@@ -1,0 +1,46 @@
+schema: 1
+findings:
+  - category: upstream
+    summary: "Contract A007 value stale — says 1 but fixture baseEntry has 2 findings for census.ts"
+    file: "packages/cli/tests/utils/proofSummary.test.ts"
+    line: 1106
+    severity: risk
+    suggested_action: scope
+    related_assertions: ["A007"]
+  - category: upstream
+    summary: "Contract A008 value stale — says 1 but fixture baseEntry has 2 findings for census.ts"
+    file: "packages/cli/tests/utils/proofSummary.test.ts"
+    line: 1116
+    severity: risk
+    suggested_action: scope
+    related_assertions: ["A008"]
+  - category: upstream
+    summary: "Contract A014 value '→' too broad — health output uses → for trend display, not just nudges"
+    severity: observation
+    suggested_action: monitor
+    related_assertions: ["A014"]
+  - category: test
+    summary: "A014 nudge check uses specific patterns ('→ claude', '→ ana proof') — a new nudge format would slip through"
+    file: "packages/cli/tests/commands/work.test.ts"
+    line: 2456
+    severity: debt
+    suggested_action: monitor
+    related_assertions: ["A014"]
+  - category: test
+    summary: "Remaining toBeGreaterThan(0) in proofSummary.test.ts — 21 instances outside this spec's scope still use weak assertions"
+    file: "packages/cli/tests/utils/proofSummary.test.ts"
+    severity: observation
+    suggested_action: scope
+  - category: test
+    summary: "UNVERIFIED test creates full project fixture manually instead of using createMergedProject helper — 60 lines vs ~5 lines"
+    file: "packages/cli/tests/commands/work.test.ts"
+    line: 1138
+    severity: debt
+    suggested_action: accept
+  - category: code
+    summary: "Timestamp recency check (before/after window) in A010 test may flake on extremely slow CI — window depends on test execution speed"
+    file: "packages/cli/tests/commands/work.test.ts"
+    line: 2769
+    severity: observation
+    suggested_action: monitor
+    related_assertions: ["A010"]

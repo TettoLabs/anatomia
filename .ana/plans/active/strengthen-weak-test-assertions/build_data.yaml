@@ -1,0 +1,8 @@
+schema: 1
+concerns:
+  - summary: "Contract A007/A008 values (1) don't match baseEntry fixture (2 findings for census.ts)"
+    severity: observation
+    suggested_action: accept
+  - summary: "Health metric arrow (→) collides with nudge arrow character, preventing bare character assertion"
+    severity: observation
+    suggested_action: accept
