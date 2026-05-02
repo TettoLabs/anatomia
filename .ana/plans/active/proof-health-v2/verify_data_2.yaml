@@ -1,0 +1,19 @@
+schema: 1
+findings:
+  - category: test
+    summary: "A016 uses toBeDefined() for timestamp — weak assertion partially compensated by getTime() > 0 follow-up"
+    file: "packages/cli/tests/commands/work.test.ts"
+    line: 2624
+    severity: debt
+    suggested_action: accept
+    related_assertions: ["A016"]
+  - category: code
+    summary: "Untested defensive branches in startWork — 'not a git repo' and 'git pull conflict' paths have no dedicated unit tests"
+    file: "packages/cli/src/commands/work.ts"
+    line: 1340
+    severity: observation
+    suggested_action: monitor
+  - category: upstream
+    summary: "@ana tag collision — A015-A027 IDs appear in tests for other features due to per-contract numbering"
+    severity: observation
+    suggested_action: monitor

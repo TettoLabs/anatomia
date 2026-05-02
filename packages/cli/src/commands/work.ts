@@ -2,8 +2,9 @@
  * ana work - Manage pipeline work items
  *
  * Subcommands:
- *   ana work status         Show pipeline state for all active work items
- *   ana work complete {slug} Archive completed work after PR merge
+ *   ana work status          Show pipeline state for all active work items
+ *   ana work start {slug}    Start a new work item (validates, creates dir, records timestamp)
+ *   ana work complete {slug}  Archive completed work after PR merge
  *
  * Exit codes:
  *   0 - Success (always for status - it's informational)
@@ -771,6 +772,14 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
     }
   } catch { /* fall back to empty */ }
 
+  // FAIL result guard — block proof chain entry for failed verification
+  if (proof.result === 'FAIL') {
+    console.error(chalk.red('Error: Cannot complete work with a FAIL verification result.'));
+    console.error(chalk.gray('The verify report says FAIL. Fix the issues and re-verify before completing.'));
+    console.error(chalk.gray('Run: claude --agent ana-build to fix, then claude --agent ana-verify'));
+    process.exit(1);
+  }
+
   // UNKNOWN result warning (AC12)
   const completedPlanDir = path.join(anaDir, 'plans', 'completed', slug);
   if (proof.result === 'UNKNOWN') {
@@ -1168,8 +1177,9 @@ export async function completeWork(slug: string, options?: { json?: boolean }): 
     const result = getVerifyResult(verifyContent);
 
     if (result === 'FAIL') {
-      console.error(chalk.red(`Error: Phase ${phaseNum} verification failed (Result: FAIL).`));
-      console.error(chalk.gray('Fix issues and re-verify before completing.'));
+      console.error(chalk.red('Error: Cannot complete work with a FAIL verification result.'));
+      console.error(chalk.gray('The verify report says FAIL. Fix the issues and re-verify before completing.'));
+      console.error(chalk.gray('Run: claude --agent ana-build to fix, then claude --agent ana-verify'));
       process.exit(1);
     }
 
@@ -1311,7 +1321,90 @@ export async function completeWork(slug: string, options?: { json?: boolean }): 
 }
 
 /**
- * Register the `work` command (with `status` and `complete` sub-commands).
+ * Kebab-case slug validation regex.
+ * Starts with lowercase letter, segments separated by single hyphens, alphanumeric only.
+ * Allows: fix-v2, a, add-export-csv. Rejects: Fix-Auth, fix--double, -leading, trailing-.
+ */
+const SLUG_PATTERN = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
+
+/**
+ * Start a new work item: validate inputs, create directory, record start time.
+ *
+ * @param slug - Kebab-case slug for the work item
+ * @returns void — exits with code 1 on validation failures
+ */
+export async function startWork(slug: string): Promise<void> {
+  // 1. Validate slug format
+  if (!SLUG_PATTERN.test(slug)) {
+    console.error(chalk.red('Error: Invalid slug format. Use kebab-case: fix-auth-timeout, add-export-csv'));
+    process.exit(1);
+  }
+
+  // 2. Read project config
+  const projectRoot = findProjectRoot();
+  const artifactBranch = readArtifactBranch(projectRoot);
+
+  // 3. Validate branch — must be on artifact branch
+  const currentBranch = getCurrentBranch();
+  if (!currentBranch) {
+    console.error(chalk.red('Error: Not a git repository.'));
+    process.exit(1);
+  }
+  if (currentBranch !== artifactBranch) {
+    console.error(chalk.red(`Error: You're on \`${currentBranch}\`. Work items must be started on \`${artifactBranch}\`.`));
+    console.error(chalk.gray(`Run: git checkout ${artifactBranch} && git pull`));
+    process.exit(1);
+  }
+
+  // 4. Check slug uniqueness — active and completed
+  const activePath = path.join(projectRoot, '.ana', 'plans', 'active', slug);
+  const completedPath = path.join(projectRoot, '.ana', 'plans', 'completed', slug);
+  if (fs.existsSync(activePath)) {
+    console.error(chalk.red(`Error: Slug '${slug}' already exists in active plans. Choose a different name.`));
+    process.exit(1);
+  }
+  if (fs.existsSync(completedPath)) {
+    console.error(chalk.red(`Error: Slug '${slug}' already exists in completed plans. Choose a different name.`));
+    process.exit(1);
+  }
+
+  // 5. Pull latest (skip if no remotes)
+  try {
+    const remotes = execSync('git remote', { stdio: 'pipe', encoding: 'utf-8', cwd: projectRoot }).trim();
+    if (remotes) {
+      execSync('git pull --rebase', { stdio: 'pipe', encoding: 'utf-8', cwd: projectRoot });
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : '';
+    if (errorMessage.includes('conflict') || errorMessage.includes('Cannot rebase')) {
+      console.error(chalk.red('Error: Pull failed due to conflicts. Resolve conflicts and try again.'));
+      process.exit(1);
+    }
+    // Non-conflict failures: continue silently (no remote, no upstream, etc.)
+  }
+
+  // 6. Create directory
+  await fsPromises.mkdir(activePath, { recursive: true });
+
+  // 7. Write work_started_at to .saves.json
+  const savesPath = path.join(activePath, '.saves.json');
+  let saves: Record<string, unknown> = {};
+  if (fs.existsSync(savesPath)) {
+    try {
+      saves = JSON.parse(fs.readFileSync(savesPath, 'utf-8'));
+    } catch {
+      // Start fresh if corrupted
+    }
+  }
+  saves['work_started_at'] = new Date().toISOString();
+  await fsPromises.writeFile(savesPath, JSON.stringify(saves, null, 2), 'utf-8');
+
+  // 8. Confirm
+  console.log(`Started work item \`${slug}\`. Write your scope, then run \`ana artifact save scope ${slug}\`.`);
+}
+
+/**
+ * Register the `work` command (with `status`, `start`, and `complete` sub-commands).
  *
  * @param program - Commander program instance.
  */
@@ -1326,6 +1419,13 @@ export function registerWorkCommand(program: Command): void {
       getWorkStatus(options);
     });
 
+  const startCommand = new Command('start')
+    .description('Start a new work item')
+    .argument('<slug>', 'Kebab-case slug for the work item')
+    .action(async (slug: string) => {
+      await startWork(slug);
+    });
+
   const completeCommand = new Command('complete')
     .description('Archive completed work after PR merge')
     .argument('<slug>', 'Work item slug to complete')
@@ -1335,6 +1435,7 @@ export function registerWorkCommand(program: Command): void {
     });
 
   workCommand.addCommand(statusCommand);
+  workCommand.addCommand(startCommand);
   workCommand.addCommand(completeCommand);
 
   program.addCommand(workCommand);

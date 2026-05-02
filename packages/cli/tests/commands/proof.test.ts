@@ -1973,8 +1973,8 @@ describe('ana proof', () => {
       expect(stdout).toContain('(all)');
     });
 
-    // @ana A006
-    it('displays unclassified as inline parenthetical', async () => {
+    // @ana A012
+    it('does not show unclassified excluded text', async () => {
       // Create entries with unclassified findings (no severity)
       const entries = Array.from({ length: 10 }, (_, i) => {
         const entry = makeHealthEntry({ slug: `slug-${i}`, risks: 1 });
@@ -1995,7 +1995,7 @@ describe('ana proof', () => {
       process.chdir(tempDir);
 
       const { stdout } = runProof(['health']);
-      expect(stdout).toContain('unclassified excluded');
+      expect(stdout).not.toContain('unclassified excluded');
     });
 
     // @ana A007
@@ -2011,7 +2011,7 @@ describe('ana proof', () => {
     });
 
     // @ana A008
-    it('truncates hot module paths to basename', async () => {
+    it('truncates hot spot paths to basename', async () => {
       const entries = [
         makeHealthEntry({ slug: 'e1', risks: 2, file: 'src/hot.ts' }),
         makeHealthEntry({ slug: 'e2', risks: 1, file: 'src/hot.ts' }),
@@ -2020,7 +2020,7 @@ describe('ana proof', () => {
       process.chdir(tempDir);
 
       const { stdout } = runProof(['health']);
-      expect(stdout).toContain('Hot Modules');
+      expect(stdout).toContain('Hot Spots');
       expect(stdout).toContain('hot.ts');
       // Should NOT show full path when basename is unique
       expect(stdout).not.toContain('src/hot.ts');
@@ -2060,31 +2060,28 @@ describe('ana proof', () => {
     });
 
     // @ana A011
-    it('keeps full observation in promote badges', async () => {
+    it('keeps full observation in Next Actions promote badges', async () => {
       await createProofChain([
         makeHealthEntry({ slug: 'e1', observations: 1, action: 'promote' }),
       ]);
       process.chdir(tempDir);
 
       const { stdout } = runProof(['health']);
-      // Promote section uses full "observation" severity, not abbreviated "obs"
+      // Next Actions promote items use full "observation" severity
+      expect(stdout).toContain('Next Actions');
       expect(stdout).toContain('[observation');
-      // Should NOT use the abbreviated form in promote badges
-      const promoteLines = stdout.split('\n').filter(l => l.includes('promote]'));
-      expect(promoteLines.length).toBeGreaterThan(0);
-      expect(promoteLines[0]).toContain('[observation');
     });
 
-    // @ana A012
-    it('shows promote section for promote-action candidates', async () => {
+    // @ana A003
+    it('shows Next Actions for promote-action candidates', async () => {
       await createProofChain([
         makeHealthEntry({ slug: 'e1', risks: 1, action: 'promote' }),
       ]);
       process.chdir(tempDir);
 
       const { stdout } = runProof(['health']);
-      expect(stdout).toContain('Promote');
-      expect(stdout).toContain('promote]');
+      expect(stdout).toContain('Next Actions');
+      expect(stdout).toContain('Promote:');
     });
 
     // @ana A013
@@ -2109,18 +2106,19 @@ describe('ana proof', () => {
     });
 
     // @ana A014
-    it('shows severity badge on promote candidates', async () => {
+    it('shows severity badge on Next Actions promote items', async () => {
       await createProofChain([
         makeHealthEntry({ slug: 'e1', risks: 1, action: 'promote' }),
       ]);
       process.chdir(tempDir);
 
       const { stdout } = runProof(['health']);
-      expect(stdout).toContain('promote]');
+      expect(stdout).toContain('Promote:');
+      expect(stdout).toContain('[risk]');
     });
 
     // @ana A015
-    it('shows recurring section for scope-action candidates', async () => {
+    it('shows recurring candidates in Next Actions as Fix items', async () => {
       // Need same finding recurring across entries
       const entries = [
         makeHealthEntry({ slug: 'e1', debts: 1, action: 'scope' }),
@@ -2131,11 +2129,12 @@ describe('ana proof', () => {
       process.chdir(tempDir);
 
       const { stdout } = runProof(['health']);
-      expect(stdout).toContain('Recurring');
+      expect(stdout).toContain('Next Actions');
+      expect(stdout).toContain('Fix:');
     });
 
     // @ana A016
-    it('shows entry count on recurring candidates', async () => {
+    it('shows entry count on Next Actions Fix items', async () => {
       const entries = [
         makeHealthEntry({ slug: 'e1', debts: 1, action: 'scope' }),
         makeHealthEntry({ slug: 'e2', debts: 1, action: 'scope' }),
@@ -2148,8 +2147,8 @@ describe('ana proof', () => {
       expect(stdout).toContain('entries)');
     });
 
-    // @ana A017
-    it('shows severity-only badge on recurring candidates', async () => {
+    // @ana A004, A005
+    it('does not display separate Promote or Recurring sections', async () => {
       const entries = [
         makeHealthEntry({ slug: 'e1', debts: 1, action: 'scope' }),
         makeHealthEntry({ slug: 'e2', debts: 1, action: 'scope' }),
@@ -2159,7 +2158,12 @@ describe('ana proof', () => {
       process.chdir(tempDir);
 
       const { stdout } = runProof(['health']);
-      expect(stdout).toContain('[debt]');
+      // Old separate section headings should not appear
+      const lines = stdout.split('\n');
+      const promoteHeading = lines.find(l => l.trim() === 'Promote');
+      const recurringHeading = lines.find(l => l.trim() === 'Recurring');
+      expect(promoteHeading).toBeUndefined();
+      expect(recurringHeading).toBeUndefined();
     });
 
     // @ana A018
@@ -2176,15 +2180,15 @@ describe('ana proof', () => {
     });
 
     // @ana A019
-    it('omits promote section when empty', async () => {
-      // Only scope candidates, no promote action
+    it('omits Next Actions when no promote or recurring candidates', async () => {
+      // Single scope candidate (recurrence_count < 2), no promote action
       await createProofChain([
         makeHealthEntry({ slug: 'e1', risks: 1, action: 'scope' }),
       ]);
       process.chdir(tempDir);
 
       const { stdout } = runProof(['health']);
-      expect(stdout).not.toContain('Promote');
+      expect(stdout).not.toContain('Next Actions');
     });
 
     // @ana A020, A021
@@ -2259,8 +2263,8 @@ describe('ana proof', () => {
       expect(stdout).toContain('no classified data');
     });
 
-    // @ana A023
-    it('shows promotions effectiveness section', async () => {
+    // @ana A013
+    it('does not display Promotions section on terminal', async () => {
       // First entry has a promoted finding; subsequent entries have matching findings
       const entries = Array.from({ length: 6 }, (_, i) => {
         const entry = makeHealthEntry({ slug: `slug-${i}`, debts: 1 });
@@ -2277,7 +2281,10 @@ describe('ana proof', () => {
       process.chdir(tempDir);
 
       const { stdout } = runProof(['health']);
-      expect(stdout).toContain('Promotions');
+      // Promotions effectiveness hidden from terminal (still in --json)
+      const lines = stdout.split('\n');
+      const promotionsHeading = lines.find(l => l.trim() === 'Promotions');
+      expect(promotionsHeading).toBeUndefined();
     });
 
     // @ana A024
@@ -2396,6 +2403,205 @@ describe('ana proof', () => {
       expect(source).toContain('MIN_ENTRIES_FOR_TREND');
       // Verify the old hardcoded pattern is not present
       expect(source).not.toContain('need ${10}');
+    });
+
+    // @ana A001
+    it('displays Quality section header', async () => {
+      const entries = Array.from({ length: 10 }, (_, i) =>
+        makeHealthEntry({ slug: `slug-${i}`, risks: 1 })
+      );
+      await createProofChain(entries);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health']);
+      expect(stdout).toContain('Quality');
+    });
+
+    // @ana A002
+    it('displays Hot Spots section header', async () => {
+      const entries = [
+        makeHealthEntry({ slug: 'e1', risks: 2, file: 'src/hot.ts' }),
+        makeHealthEntry({ slug: 'e2', risks: 1, file: 'src/hot.ts' }),
+      ];
+      await createProofChain(entries);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health']);
+      expect(stdout).toContain('Hot Spots');
+    });
+
+    // @ana A006
+    it('displays first-pass rate', async () => {
+      const entries = Array.from({ length: 5 }, (_, i) => {
+        const entry = makeHealthEntry({ slug: `slug-${i}`, risks: 1 });
+        // Mark 2 entries as having rejection cycles
+        if (i < 2) {
+          entry['rejection_cycles'] = 1;
+          entry['previous_failures'] = [{ id: 'F1', summary: 'Failed check' }];
+        }
+        return entry;
+      });
+      await createProofChain(entries);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health']);
+      expect(stdout).toContain('First-pass:');
+      expect(stdout).toContain('60%');
+      expect(stdout).toContain('3 of 5');
+    });
+
+    // @ana A007
+    it('displays catch count', async () => {
+      const entries = Array.from({ length: 5 }, (_, i) => {
+        const entry = makeHealthEntry({ slug: `slug-${i}`, risks: 1 });
+        if (i < 2) {
+          entry['rejection_cycles'] = 1;
+          entry['previous_failures'] = [{ id: `F${i}`, summary: 'Failed check' }];
+        }
+        return entry;
+      });
+      await createProofChain(entries);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health']);
+      expect(stdout).toContain('2 issues before shipping');
+    });
+
+    // @ana A008
+    it('shows 100% when no rejections exist', async () => {
+      const entries = Array.from({ length: 5 }, (_, i) =>
+        makeHealthEntry({ slug: `slug-${i}`, risks: 1 })
+      );
+      await createProofChain(entries);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health']);
+      expect(stdout).toContain('100%');
+      expect(stdout).toContain('5 of 5');
+      expect(stdout).toContain('0 issues before shipping');
+    });
+
+    // @ana A009, A010
+    it('displays median pipeline time with phase breakdown', async () => {
+      const entries = Array.from({ length: 5 }, (_, i) => {
+        const entry = makeHealthEntry({ slug: `slug-${i}`, risks: 1 });
+        entry['timing'] = {
+          total_minutes: 50 + i * 10,
+          think: 8 + i,
+          plan: 8 + i,
+          build: 20 + i * 3,
+          verify: 10 + i * 2,
+        };
+        return entry;
+      });
+      await createProofChain(entries);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health']);
+      expect(stdout).toContain('Pipeline');
+      expect(stdout).toContain('Median:');
+      expect(stdout).toContain('scope');
+      expect(stdout).toContain('build');
+      expect(stdout).toContain('verify');
+    });
+
+    // @ana A011
+    it('omits pipeline with insufficient data', async () => {
+      // Only 2 entries with timing — below the 3-entry threshold
+      const entries = Array.from({ length: 2 }, (_, i) => {
+        const entry = makeHealthEntry({ slug: `slug-${i}`, risks: 1 });
+        entry['timing'] = { total_minutes: 50 };
+        return entry;
+      });
+      await createProofChain(entries);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health']);
+      expect(stdout).not.toContain('Median:');
+      expect(stdout).not.toContain('Pipeline');
+    });
+
+    // @ana A014
+    it('caps Next Actions at 5 items', async () => {
+      // Create 8 promote candidates (each entry gets a unique finding)
+      const entries = Array.from({ length: 8 }, (_, i) => {
+        const entry = makeHealthEntry({ slug: `e${i}`, risks: 0 });
+        entry['findings'] = [{
+          id: `F${i}`,
+          category: 'code',
+          summary: `promote finding ${i}`,
+          file: `src/file${i}.ts`,
+          anchor: null,
+          severity: 'risk',
+          suggested_action: 'promote',
+          status: 'active',
+        }];
+        return entry;
+      });
+      await createProofChain(entries);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health']);
+      expect(stdout).toContain('Next Actions');
+      // Count Promote: lines in Next Actions
+      const promoteLines = stdout.split('\n').filter(l => l.includes('Promote:'));
+      expect(promoteLines.length).toBeLessThanOrEqual(5);
+    });
+
+    it('omits pipeline when entries have total_minutes === 0', async () => {
+      const entries = Array.from({ length: 5 }, (_, i) => {
+        const entry = makeHealthEntry({ slug: `slug-${i}`, risks: 1 });
+        entry['timing'] = { total_minutes: 0 };
+        return entry;
+      });
+      await createProofChain(entries);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health']);
+      expect(stdout).not.toContain('Median:');
+      expect(stdout).not.toContain('Pipeline');
+    });
+
+    it('Next Actions empty when no promote or recurring candidates', async () => {
+      // Single entry with only monitor-action findings
+      const entry = makeHealthEntry({ slug: 'e1', risks: 0 });
+      entry['findings'] = [{
+        id: 'F1',
+        category: 'code',
+        summary: 'monitor finding',
+        file: 'src/test.ts',
+        anchor: null,
+        severity: 'debt',
+        suggested_action: 'monitor',
+        status: 'active',
+      }];
+      await createProofChain([entry]);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health']);
+      expect(stdout).not.toContain('Next Actions');
+    });
+
+    it('JSON includes verification and pipeline fields', async () => {
+      const entries = Array.from({ length: 5 }, (_, i) => {
+        const entry = makeHealthEntry({ slug: `slug-${i}`, risks: 1 });
+        entry['timing'] = { total_minutes: 50 + i * 10 };
+        if (i === 0) {
+          entry['rejection_cycles'] = 1;
+          entry['previous_failures'] = [{ id: 'F1', summary: 'Failed' }];
+        }
+        return entry;
+      });
+      await createProofChain(entries);
+      process.chdir(tempDir);
+
+      const { stdout } = runProof(['health', '--json']);
+      const json = JSON.parse(stdout);
+      expect(json.results.verification).toBeDefined();
+      expect(json.results.verification.first_pass_pct).toBe(80);
+      expect(json.results.verification.total_caught).toBe(1);
+      expect(json.results.pipeline).toBeDefined();
+      expect(json.results.pipeline.median_total).toBeGreaterThan(0);
     });
 
     it('empty chain JSON output', async () => {

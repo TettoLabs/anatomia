@@ -14,5 +14,37 @@
   "spec": {
     "saved_at": "2026-05-02T05:09:26.395Z",
     "hash": "sha256:673182936f46b0f888d456cca0d424f62dc23f6c64d0b2321c6954c090da1129"
+  },
+  "build-report": {
+    "saved_at": "2026-05-02T07:17:16.250Z",
+    "hash": "sha256:be0c129506f8061616b1343033fc52039b4851b915d9efa1a3467808facb009f"
+  },
+  "build-data": {
+    "saved_at": "2026-05-02T07:17:16.251Z",
+    "hash": "sha256:af067af74876bf4528295afa260c2ee6a95f1487255a19031c0116677e5170e6"
+  },
+  "modules_touched": [
+    ".claude/agents/ana.md",
+    "packages/cli/src/commands/proof.ts",
+    "packages/cli/src/commands/work.ts",
+    "packages/cli/src/types/proof.ts",
+    "packages/cli/src/utils/proofSummary.ts",
+    "packages/cli/templates/.claude/agents/ana.md",
+    "packages/cli/tests/commands/proof.test.ts",
+    "packages/cli/tests/commands/work.test.ts",
+    "packages/cli/tests/utils/proofSummary.test.ts"
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:793cfcd0e7a8ae5e75e9622366e70c0fef3e4587ba16af2ac3a78111a0a7775a",
+    "run_at": "2026-05-02T07:24:48.512Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-02T07:24:48.543Z",
+    "hash": "sha256:cf02492523f93c2f8e48394af2d94d65e430112322e34c9797efd3c37529aed4"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-02T07:24:48.543Z",
+    "hash": "sha256:6fbf2cf8ef4fe80e0cc8161a2e265c034537c74f012d0e986b8c8293cf09f999"
   }
 }

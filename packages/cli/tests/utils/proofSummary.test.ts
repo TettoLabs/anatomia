@@ -329,6 +329,86 @@ file_changes:
   });
 });
 
+describe('computeTiming with work_started_at', () => {
+  let tempDir: string;
+  let slugDir: string;
+
+  beforeEach(async () => {
+    tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'timing-test-'));
+    slugDir = path.join(tempDir, 'test-timing');
+    await fs.promises.mkdir(slugDir, { recursive: true });
+  });
+
+  afterEach(async () => {
+    await fs.promises.rm(tempDir, { recursive: true, force: true });
+  });
+
+  // @ana A022, A023
+  it('computes think from work_started_at and plan differs from think', async () => {
+    const saves = {
+      work_started_at: '2026-04-01T09:40:00Z',
+      scope: { saved_at: '2026-04-01T10:00:00Z' },
+      contract: { saved_at: '2026-04-01T10:30:00Z' },
+      'build-report': { saved_at: '2026-04-01T11:30:00Z' },
+      'verify-report': { saved_at: '2026-04-01T12:00:00Z' },
+    };
+    await fs.promises.writeFile(path.join(slugDir, '.saves.json'), JSON.stringify(saves));
+
+    const summary = generateProofSummary(slugDir);
+
+    // think = scopeTime - workStartedAt = 20min
+    expect(summary.timing.think).toBe(20);
+    // plan = contractTime - scopeTime = 30min
+    expect(summary.timing.plan).toBe(30);
+    // think !== plan
+    expect(summary.timing.think).not.toBe(summary.timing.plan);
+    // total includes think phase: verifyTime - workStartedAt
+    expect(summary.timing.total_minutes).toBe(140);
+    // build and verify unchanged
+    expect(summary.timing.build).toBe(60);
+    expect(summary.timing.verify).toBe(30);
+  });
+
+  // @ana A024
+  it('falls back when work_started_at missing', async () => {
+    const saves = {
+      scope: { saved_at: '2026-04-01T10:00:00Z' },
+      contract: { saved_at: '2026-04-01T10:30:00Z' },
+      'build-report': { saved_at: '2026-04-01T11:30:00Z' },
+      'verify-report': { saved_at: '2026-04-01T12:00:00Z' },
+    };
+    await fs.promises.writeFile(path.join(slugDir, '.saves.json'), JSON.stringify(saves));
+
+    const summary = generateProofSummary(slugDir);
+
+    // Fallback: think === plan (both are contractTime - scopeTime)
+    expect(summary.timing.think).toBe(30);
+    expect(summary.timing.plan).toBe(30);
+    expect(summary.timing.think).toBe(summary.timing.plan);
+    // total: verifyTime - scopeTime (no workStartedAt)
+    expect(summary.timing.total_minutes).toBe(120);
+  });
+
+  it('total_minutes includes think phase when work_started_at present', async () => {
+    const saves = {
+      work_started_at: '2026-04-01T09:00:00Z',
+      scope: { saved_at: '2026-04-01T10:00:00Z' },
+      contract: { saved_at: '2026-04-01T10:30:00Z' },
+      'build-report': { saved_at: '2026-04-01T11:30:00Z' },
+      'verify-report': { saved_at: '2026-04-01T12:00:00Z' },
+    };
+    await fs.promises.writeFile(path.join(slugDir, '.saves.json'), JSON.stringify(saves));
+
+    const summary = generateProofSummary(slugDir);
+
+    // total = verifyTime - workStartedAt = 180min (3 hours)
+    expect(summary.timing.total_minutes).toBe(180);
+    // think = 60min, plan = 30min
+    expect(summary.timing.think).toBe(60);
+    expect(summary.timing.plan).toBe(30);
+  });
+});
+
 // @ana A010, A012, A008, A009
 describe('parseFindings', () => {
   // @ana A008

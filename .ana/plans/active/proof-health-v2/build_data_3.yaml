@@ -1,0 +1,9 @@
+schema: 1
+concerns:
+  - summary: "Defense-in-depth FAIL guard in writeProofChain is unreachable via completeWork"
+    file: "packages/cli/src/commands/work.ts"
+    severity: debt
+    suggested_action: accept
+  - summary: "FAIL error message lost phase-specific numbering from old format"
+    severity: observation
+    suggested_action: monitor
