@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-45 runs · 62 active · 48 lessons · 0 promoted · 129 closed
+45 runs · 61 active · 48 lessons · 0 promoted · 130 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 62 total)
+## Active Findings (30 shown of 61 total)
 
 ### packages/cli/src/commands/proof.ts
 
@@ -60,6 +60,7 @@
 - **test:** A019 not.toContain('Promote') works by coincidence — test data has no promoted findings so 'Promotions' heading also absent; a more targeted regex or exact heading match would be more robust — *Health Display Polish*
 - **test:** No test for the staged-only changes path (git diff --cached) — only unstaged changes tested via helper — *Learn V3 — CLI Commands + Template Finalization*
 - **test:** toBeDefined() on JSON confidence tiers — verifies existence not structure — *Learn V3 — CLI Commands + Template Finalization*
+- **test:** A002 lacks negative proof of active-only counting — fixture has only active findings, no closed finding to prove exclusion — *Proof Command UX*
 
 ### packages/cli/tests/commands/work.test.ts
 
@@ -78,6 +79,5 @@
 
 ### General
 
-- **test:** No @ana A003 tag or regression test for inline coAuthor absence — verified by source inspection only — *Learn V3 — CLI Commands + Template Finalization*
 - **test:** No tagged test for template assertions A028-A033 — all verified by source inspection — *Learn V3 — CLI Commands + Template Finalization*
 

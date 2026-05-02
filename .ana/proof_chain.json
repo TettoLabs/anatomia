@@ -8195,7 +8195,10 @@
             "A003"
           ],
           "id": "learn-v3-cli-commands-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "No code reference — process observation about missing @ana A003 tag for coAuthor absence. Verified by source inspection during learn-v3 scope. Tag absence is cosmetic.",
+          "closed_at": "2026-05-02T23:28:53.194Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
