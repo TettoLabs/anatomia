@@ -1242,9 +1242,13 @@ describe('ana proof', () => {
 
   // @ana A008
   describe('close dry-run makes no changes', () => {
+    // @ana A001
     it('shows what would happen without mutating', async () => {
       await createCloseTestProject([closeEntry]);
       process.chdir(tempDir);
+
+      // Record commit count before dry-run
+      const commitCountBefore = parseInt(execSync('git log --oneline | wc -l', { cwd: tempDir, encoding: 'utf-8' }).trim());
 
       const { stdout, exitCode } = runProof(['close', 'F001', '--reason', 'test', '--dry-run']);
       expect(exitCode).toBe(0);
@@ -1256,6 +1260,10 @@ describe('ana proof', () => {
       const chain = JSON.parse(await fs.readFile(path.join(tempDir, '.ana', 'proof_chain.json'), 'utf-8'));
       const f1 = chain.entries[0].findings.find((f: { id: string }) => f.id === 'F001');
       expect(f1.status).toBe('active');
+
+      // No git commit was created during dry-run
+      const commitCountAfter = parseInt(execSync('git log --oneline | wc -l', { cwd: tempDir, encoding: 'utf-8' }).trim());
+      expect(commitCountAfter).toBe(commitCountBefore);
     });
   });
 
@@ -3338,6 +3346,7 @@ describe('ana proof', () => {
 
   // @ana A021
   describe('strengthen variadic', () => {
+    // @ana A002, A003
     it('strengthens multiple findings in one commit', async () => {
       await createStrengthenTestProject([strengthenEntry]);
       process.chdir(tempDir);
@@ -3346,12 +3355,14 @@ describe('ana proof', () => {
       expect(exitCode).toBe(0);
       expect(stdout).toContain('Strengthened 2');
 
-      // Verify both findings promoted
+      // Verify both findings promoted with skill path
       const chain = JSON.parse(await fs.readFile(path.join(tempDir, '.ana', 'proof_chain.json'), 'utf-8'));
       const f1 = chain.entries[0].findings.find((f: { id: string }) => f.id === 'F001');
       const f2 = chain.entries[0].findings.find((f: { id: string }) => f.id === 'F002');
       expect(f1.status).toBe('promoted');
+      expect(f1.promoted_to).toContain('coding-standards');
       expect(f2.status).toBe('promoted');
+      expect(f2.promoted_to).toContain('coding-standards');
 
       // One commit for the batch (init + strengthen = 2)
       const commitCount = execSync('git log --oneline | wc -l', { cwd: tempDir, encoding: 'utf-8' }).trim();
