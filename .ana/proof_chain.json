@@ -6431,7 +6431,10 @@
           "severity": "observation",
           "suggested_action": "monitor",
           "id": "proof-health-v1-C3",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed — health display now truncates promotion candidate summaries at 100 chars (proof.ts:353-355, 369-371).",
+          "closed_at": "2026-05-02T18:01:09.461Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
