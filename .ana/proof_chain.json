@@ -2485,9 +2485,12 @@
           "file": "packages/cli/src/commands/proof.ts",
           "anchor": "formatContextResult",
           "id": "proof-context-query-C6",
-          "status": "active",
+          "status": "closed",
           "severity": "debt",
-          "suggested_action": "scope"
+          "suggested_action": "scope",
+          "closed_reason": "Fixed — formatContextResult at proof.ts:1907-1911 now truncates summaries at 250 chars with word-boundary awareness.",
+          "closed_at": "2026-05-02T17:53:01.853Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
