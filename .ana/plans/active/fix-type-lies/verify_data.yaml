@@ -1,0 +1,26 @@
+schema: 1
+findings:
+  - category: test
+    summary: "Fix 6 completely skipped — conditional assertion guard not removed from trend improvement test"
+    file: "packages/cli/tests/utils/proofSummary.test.ts"
+    line: 2352
+    severity: risk
+    suggested_action: scope
+    related_assertions: ["A014", "A015"]
+  - category: test
+    summary: "Dogfood sync test loop short-circuits on first failure, skipping remaining files (pre-existing)"
+    file: "packages/cli/tests/templates/agent-proof-context.test.ts"
+    line: 71
+    severity: debt
+    suggested_action: monitor
+  - category: upstream
+    summary: "Contract A017 value stale — says >1777 but real baseline is 1761 (branch is 1762)"
+    severity: observation
+    suggested_action: accept
+    related_assertions: ["A017"]
+  - category: code
+    summary: "Frontmatter branch groups ana-build, ana-verify, ana-learn together — assumption that all three share identical frontmatter"
+    file: "packages/cli/tests/commands/init.test.ts"
+    line: 260
+    severity: observation
+    suggested_action: monitor
