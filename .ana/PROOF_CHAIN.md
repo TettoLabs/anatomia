@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-41 runs · 88 active · 40 lessons · 0 promoted · 91 closed
+41 runs · 87 active · 40 lessons · 0 promoted · 92 closed
 
 ## Hot Modules
 
@@ -8,15 +8,15 @@
 |------|--------|--------|
 | packages/cli/src/commands/proof.ts | 17 | 10 |
 | packages/cli/tests/commands/work.test.ts | 12 | 8 |
-| packages/cli/src/utils/proofSummary.ts | 11 | 8 |
 | packages/cli/tests/commands/proof.test.ts | 11 | 5 |
+| packages/cli/src/utils/proofSummary.ts | 10 | 8 |
 | packages/cli/src/commands/work.ts | 7 | 5 |
 
 ## Promoted Rules
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 88 total)
+## Active Findings (30 shown of 87 total)
 
 ### packages/cli/src/commands/proof.ts
 
@@ -26,6 +26,7 @@
 - **code:** exitError helper duplicated inline in close (~30 lines) and promote (~30 lines) action handlers — *Learn V3 — CLI Commands + Template Finalization*
 - **code:** exitError re-searches chain for finding details in ALREADY_PROMOTED and ALREADY_CLOSED single-ID paths — duplicates the earlier loop — *Learn V3 — CLI Commands + Template Finalization*
 - **code:** Available skills listing in SKILL_NOT_FOUND error is unspecified UX — reasonable but untested — *Learn V3 — CLI Commands + Template Finalization*
+- **code:** SEVERITY_ORDER duplication still present across proof.ts — known from proof context, not addressed by this phase — *Learn V3 — CLI Commands + Template Finalization*
 
 ### packages/cli/src/commands/work.ts
 
@@ -36,7 +37,6 @@
 ### packages/cli/src/utils/proofSummary.ts
 
 - **code:** computeFirstPassRate exported but never imported outside proofSummary.ts — only called internally by computeHealthReport — *Proof Health V2*
-- **code:** computePipelineStats maps timing.think to 'scope' display label (line 951: think ?? scope) — naming mismatch between data field and display is intentional per spec but may confuse future maintainers — *Proof Health V2*
 - **code:** Redundant `stored === queried` in both-directories guard — exact match already caught at line 1641 — *Clean proofSummary.ts*
 - **code:** `as 'PASS' | 'FAIL'` cast in parseResult relies on regex constraint, not type-level proof — safe but brittle if regex changes — *Clean proofSummary.ts*
 - **code:** fileMatches `includes('/')` treats `./census.ts` as directory-qualified — theoretical false negative for dot-slash prefixed paths — *Clean proofSummary.ts*
