@@ -6376,7 +6376,10 @@
           "severity": "debt",
           "suggested_action": "scope",
           "id": "proof-health-v1-C1",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed in health-display-polish — line 276 now uses MIN_ENTRIES_FOR_TREND constant instead of hardcoded 10.",
+          "closed_at": "2026-05-02T17:52:48.822Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
