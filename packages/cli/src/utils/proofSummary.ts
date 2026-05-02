@@ -382,111 +382,6 @@ interface FindingWithFeature {
   feature: string;
 }
 
-/**
- * Proof chain entry structure (minimal for generateActiveIssuesMarkdown)
- */
-interface ProofChainEntryForIndex {
-  feature: string;
-  completed_at: string;
-  findings?: Array<{ id: string; category: string; summary: string; file: string | null; anchor: string | null; status?: string }>;
-}
-
-/**
- * Generate Active Issues markdown section from proof chain entries.
- *
- * Groups findings by file reference, caps at 30 total findings (FIFO — oldest dropped),
- * and returns markdown with file headings. Findings without file refs go under "General".
- *
- * @param entries - Proof chain entries (oldest first, as stored in JSON)
- * @returns Markdown string starting with "# Active Issues"
- */
-export function generateActiveIssuesMarkdown(entries: ProofChainEntryForIndex[]): string {
-  // Collect all findings with feature context, newest entries first
-  const allFindings: Array<FindingWithFeature & { entryDate: string }> = [];
-
-  // Reverse to get newest first
-  const reversedEntries = [...entries].reverse();
-
-  for (const entry of reversedEntries) {
-    const findings = entry.findings || [];
-    for (const finding of findings) {
-      if (finding.status !== 'active') continue;
-      allFindings.push({
-        category: finding.category,
-        summary: finding.summary,
-        file: finding.file,
-        feature: entry.feature,
-        entryDate: entry.completed_at,
-      });
-    }
-  }
-
-  // Cap at MAX_ACTIVE_ISSUES (take from start = most recent)
-  const MAX_ACTIVE_ISSUES = 30;
-  const totalCount = allFindings.length;
-  const cappedFindings = allFindings.slice(0, MAX_ACTIVE_ISSUES);
-
-  // Heading with count
-  let heading: string;
-  if (totalCount === 0) {
-    heading = '# Active Issues';
-  } else if (totalCount <= MAX_ACTIVE_ISSUES) {
-    heading = `# Active Issues (${totalCount})`;
-  } else {
-    heading = `# Active Issues (${MAX_ACTIVE_ISSUES} shown of ${totalCount} total)`;
-  }
-
-  // Empty state
-  if (cappedFindings.length === 0) {
-    return `${heading}
-
-*No active issues.*
-
----
-`;
-  }
-
-  // Group by file reference
-  const fileGroups = new Map<string, FindingWithFeature[]>();
-
-  for (const finding of cappedFindings) {
-    const key = finding.file ?? 'General';
-    const existing = fileGroups.get(key) || [];
-    existing.push(finding);
-    fileGroups.set(key, existing);
-  }
-
-  // Build markdown
-  let md = heading + '\n\n';
-
-  // Sort file headings: named files first (alphabetically), then General
-  const fileNames = Array.from(fileGroups.keys()).sort((a, b) => {
-    if (a === 'General') return 1;
-    if (b === 'General') return -1;
-    return a.localeCompare(b);
-  });
-
-  for (const fileName of fileNames) {
-    const findings = fileGroups.get(fileName) || [];
-    md += `## ${fileName}\n\n`;
-
-    for (const finding of findings) {
-      // Truncate summary for index display (JSON keeps full text up to 1000 chars)
-      let truncatedSummary = finding.summary;
-      if (truncatedSummary.length > 250) {
-        const lastSpace = truncatedSummary.lastIndexOf(' ', 250);
-        const cutPoint = lastSpace > 0 ? lastSpace : 250;
-        truncatedSummary = truncatedSummary.substring(0, cutPoint) + '...';
-      }
-      md += `- **${finding.category}:** ${truncatedSummary} — *${finding.feature}*\n`;
-    }
-    md += '\n';
-  }
-
-  md += '---\n';
-
-  return md;
-}
 
 /**
  * Extract the first paragraph of the ## Intent section from a scope.md file.
@@ -524,7 +419,7 @@ interface DashboardEntry {
  * Generate a quality dashboard from proof chain entries.
  *
  * Contains: summary line, Hot Modules section, Promoted Rules placeholder,
- * and Active Findings section (via generateActiveIssuesMarkdown logic, grouped by file).
+ * and Active Findings section (grouped by file).
  *
  * @param entries - Proof chain entries (oldest first)
  * @param stats - Chain health stats
@@ -575,7 +470,7 @@ export function generateDashboard(entries: DashboardEntry[], stats: { runs: numb
 
   md += '\n## Promoted Rules\n\n*No promoted rules yet.*\n\n';
 
-  // Active Findings section (reuse generateActiveIssuesMarkdown logic)
+  // Active Findings section (grouped by file)
   // Collect active findings
   const allActive: Array<FindingWithFeature & { entryDate: string }> = [];
   const reversedEntries = [...entries].reverse();
