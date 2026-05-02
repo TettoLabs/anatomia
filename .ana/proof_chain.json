@@ -8358,7 +8358,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "learn-v3-cli-commands-C14",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "No code reference — template assertions A028-A033 are verified by source inspection at build time. No tagged test needed for template content assertions.",
+          "closed_at": "2026-05-02T23:29:06.747Z",
+          "closed_by": "human"
         },
         {
           "category": "code",

@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-45 runs · 61 active · 48 lessons · 0 promoted · 130 closed
+45 runs · 60 active · 48 lessons · 0 promoted · 131 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 61 total)
+## Active Findings (30 shown of 60 total)
 
 ### packages/cli/src/commands/proof.ts
 
@@ -68,6 +68,7 @@
 - **test:** UNVERIFIED test creates full project fixture manually instead of using createMergedProject helper — 60 lines vs ~5 lines — *Strengthen Weak Test Assertions*
 - **code:** Timestamp recency check (before/after window) in A010 test may flake on extremely slow CI — window depends on test execution speed — *Strengthen Weak Test Assertions*
 - **test:** A030 test named 'allows completion with UNKNOWN result' but exercises PASS path — UNKNOWN code path at L785 has no test coverage — *Proof Health V2*
+- **test:** A003 tagged test exercises normal completion, not recovery — does not assert 'Recovering' in output — *Harden Hot Files*
 
 ### packages/cli/tests/templates/agent-proof-context.test.ts
 
@@ -76,8 +77,4 @@
 ### packages/cli/tests/utils/proofSummary.test.ts
 
 - **test:** Remaining toBeGreaterThan(0) in proofSummary.test.ts — 21 instances outside this spec's scope still use weak assertions — *Strengthen Weak Test Assertions*
-
-### General
-
-- **test:** No tagged test for template assertions A028-A033 — all verified by source inspection — *Learn V3 — CLI Commands + Template Finalization*
 
