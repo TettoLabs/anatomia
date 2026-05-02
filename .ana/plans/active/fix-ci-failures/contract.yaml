@@ -1,0 +1,128 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Fix CI Test Failures"
+
+assertions:
+  - id: A001
+    says: "Git detection tests pass without global git config"
+    block: "detects default branch via common names when no remote"
+    target: "test.status"
+    matcher: "equals"
+    value: "pass"
+
+  - id: A002
+    says: "Git branch detection works in fresh repos without global config"
+    block: "returns branch list for local repo with commits"
+    target: "test.status"
+    matcher: "equals"
+    value: "pass"
+
+  - id: A003
+    says: "Scan project detects git info without relying on global config"
+    block: "detects git info when repo exists"
+    target: "test.status"
+    matcher: "equals"
+    value: "pass"
+
+  - id: A004
+    says: "Go and Rust entry point tests use platform-safe temp directories"
+    block: "detects cmd/*/main.go pattern (standard Go layout)"
+    target: "testDir.source"
+    matcher: "contains"
+    value: "os.tmpdir()"
+
+  - id: A005
+    says: "Structure analysis integration test uses platform-safe temp directory"
+    block: "structure field populated for projects with directories"
+    target: "testDir.source"
+    matcher: "contains"
+    value: "os.tmpdir()"
+
+  - id: A006
+    says: "No test file contains hardcoded /tmp/ paths"
+    block: "codebase search for hardcoded /tmp/"
+    target: "grep.count"
+    matcher: "equals"
+    value: 0
+
+  - id: A007
+    says: "Architecture detection normalizes paths before matching patterns"
+    block: "classifyArchitecture applies forward-slash normalization"
+    target: "source.architecture.normalization"
+    matcher: "exists"
+
+  - id: A008
+    says: "Architecture correctly detects microservices with backslash input"
+    block: "classifyArchitecture handles Windows-style paths"
+    target: "result.architecture"
+    matcher: "equals"
+    value: "microservices"
+
+  - id: A009
+    says: "Proportional sampler returns forward-slash paths on all platforms"
+    block: "allocates proportionally across source roots"
+    target: "files.every"
+    matcher: "not_contains"
+    value: "\\"
+
+  - id: A010
+    says: "Sampler path filtering works regardless of platform separators"
+    block: "allocates proportionally across source roots"
+    target: "webFiles.length"
+    matcher: "greater"
+    value: 0
+
+  - id: A011
+    says: "Documentation detector returns forward-slash paths for monorepo packages"
+    block: "detects README.md in package subdirectories"
+    target: "result.files[0].path"
+    matcher: "not_contains"
+    value: "\\"
+
+  - id: A012
+    says: "Documentation dogfood test does not depend on file modification recency"
+    block: "produces expected output for Anatomia repo"
+    target: "websiteReadme.lastModifiedDays"
+    matcher: "greater"
+    value: -1
+
+  - id: A013
+    says: "Git activity dogfood test accepts markdown files anywhere in the repo"
+    block: "produces expected output for Anatomia repo"
+    target: "highChurnFiles.extensionCheck"
+    matcher: "not_contains"
+    value: "startsWith('src/')"
+
+  - id: A014
+    says: "All existing tests continue to pass after fixes"
+    block: "full test suite regression check"
+    target: "testSuite.passCount"
+    matcher: "greater"
+    value: 1800
+
+  - id: A015
+    says: "No new test files were created"
+    block: "file count check"
+    target: "testFiles.count"
+    matcher: "equals"
+    value: 93
+
+file_changes:
+  - path: "packages/cli/tests/engine/detectors/git-detection.test.ts"
+    action: modify
+  - path: "packages/cli/tests/engine/scanProject.test.ts"
+    action: modify
+  - path: "packages/cli/tests/engine/analyzers/entryPoints-go-rust.test.ts"
+    action: modify
+  - path: "packages/cli/tests/engine/integration/structure-analysis.test.ts"
+    action: modify
+  - path: "packages/cli/src/engine/analyzers/structure/architecture.ts"
+    action: modify
+  - path: "packages/cli/src/engine/sampling/proportionalSampler.ts"
+    action: modify
+  - path: "packages/cli/src/engine/detectors/documentation.ts"
+    action: modify
+  - path: "packages/cli/tests/engine/detectors/documentation.test.ts"
+    action: modify
+  - path: "packages/cli/tests/engine/detectors/git-activity.test.ts"
+    action: modify
