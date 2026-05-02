@@ -1,0 +1,10 @@
+schema: 1
+concerns:
+  - summary: "parseResult uses `as 'PASS' | 'FAIL'` cast due to toUpperCase() widening — safe but technically a cast"
+    file: "packages/cli/src/utils/proofSummary.ts"
+    severity: observation
+    suggested_action: accept
+  - summary: "fileMatches both-directories guard includes redundant exact-match check"
+    file: "packages/cli/src/utils/proofSummary.ts"
+    severity: observation
+    suggested_action: accept
