@@ -1,12 +1,12 @@
 # Proof Chain Dashboard
 
-41 runs · 83 active · 40 lessons · 0 promoted · 96 closed
+41 runs · 82 active · 40 lessons · 0 promoted · 97 closed
 
 ## Hot Modules
 
 | File | Active | Entries |
 |------|--------|--------|
-| packages/cli/src/commands/proof.ts | 17 | 10 |
+| packages/cli/src/commands/proof.ts | 16 | 9 |
 | packages/cli/tests/commands/work.test.ts | 12 | 8 |
 | packages/cli/tests/commands/proof.test.ts | 11 | 5 |
 | packages/cli/src/utils/proofSummary.ts | 8 | 7 |
@@ -16,12 +16,11 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 83 total)
+## Active Findings (30 shown of 82 total)
 
 ### packages/cli/src/commands/proof.ts
 
 - **code:** Zero-run JSON path hardcodes verification defaults inline (proof.ts:1749) rather than calling computeFirstPassRate([]) — duplicate knowledge of default shape — *Proof Health V2*
-- **code:** MAX_SUMMARY constant (100) defined twice in adjacent loops — could be extracted to function-level const — *Health Display Polish*
 - **code:** SEVERITY_ORDER constant at proof.ts:49 still duplicated across audit/findings blocks — pre-existing, still present — *Learn V3 — CLI Commands + Template Finalization*
 - **code:** exitError helper duplicated inline in close (~30 lines) and promote (~30 lines) action handlers — *Learn V3 — CLI Commands + Template Finalization*
 - **code:** exitError re-searches chain for finding details in ALREADY_PROMOTED and ALREADY_CLOSED single-ID paths — duplicates the earlier loop — *Learn V3 — CLI Commands + Template Finalization*
@@ -77,4 +76,5 @@
 ### General
 
 - **test:** No @ana A003 tag or regression test for inline coAuthor absence — verified by source inspection only — *Learn V3 — CLI Commands + Template Finalization*
+- **test:** No tagged test for template assertions A028-A033 — all verified by source inspection — *Learn V3 — CLI Commands + Template Finalization*
 

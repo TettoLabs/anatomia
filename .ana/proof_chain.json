@@ -8589,7 +8589,10 @@
           "suggested_action": "accept",
           "related_assertions": [],
           "id": "health-display-polish-C4",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Two-line duplication (MAX_SUMMARY=100) in adjacent loops at proof.ts:353,369 within the same function. Cosmetic — extracting to function-level const is trivial if the function is ever touched.",
+          "closed_at": "2026-05-02T17:48:13.625Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
