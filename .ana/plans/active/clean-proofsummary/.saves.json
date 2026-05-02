@@ -27,5 +27,18 @@
     "packages/cli/src/commands/work.ts",
     "packages/cli/src/utils/proofSummary.ts",
     "packages/cli/tests/utils/proofSummary.test.ts"
-  ]
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:4d40ab536982cd7da239aae222a2099436a7407396d1fb0f1802d2396d4b3562",
+    "run_at": "2026-05-02T03:23:47.819Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-02T03:23:47.849Z",
+    "hash": "sha256:bac2fcd4dc31c132afbaec6da9c70e072bb41bbd0650299a7bb46e1296558b29"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-02T03:23:47.849Z",
+    "hash": "sha256:83e16e629825e7e3711af5e8b335cd82e5a3dfc1e5b9fb422ded773c21452a1c"
+  }
 }

@@ -1,0 +1,33 @@
+schema: 1
+findings:
+  - category: code
+    summary: "Redundant `stored === queried` in both-directories guard — exact match already caught at line 1641"
+    file: "packages/cli/src/utils/proofSummary.ts"
+    line: 1651
+    severity: debt
+    suggested_action: accept
+    related_assertions: ["A009"]
+  - category: code
+    summary: "`as 'PASS' | 'FAIL'` cast in parseResult relies on regex constraint, not type-level proof — safe but brittle if regex changes"
+    file: "packages/cli/src/utils/proofSummary.ts"
+    line: 190
+    severity: observation
+    suggested_action: monitor
+    related_assertions: ["A007"]
+  - category: test
+    summary: "A010-A012 use toBeGreaterThan(0) instead of toBe(1) — each test creates exactly one finding, so the specific count is known"
+    file: "packages/cli/tests/utils/proofSummary.test.ts"
+    severity: debt
+    suggested_action: accept
+    related_assertions: ["A010", "A011", "A012"]
+  - category: code
+    summary: "fileMatches `includes('/')` treats `./census.ts` as directory-qualified — theoretical false negative for dot-slash prefixed paths"
+    file: "packages/cli/src/utils/proofSummary.ts"
+    line: 1650
+    severity: observation
+    suggested_action: monitor
+    related_assertions: ["A009"]
+  - category: upstream
+    summary: "Stale finding 'fileMatches overmatch on same-basename different-directory paths' likely resolved by this build"
+    severity: observation
+    suggested_action: monitor
