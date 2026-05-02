@@ -1,0 +1,33 @@
+schema: 1
+findings:
+  - category: code
+    summary: "Dual FAIL guard creates maintenance surface — two independent checks for same condition at L776 and L1179"
+    file: "packages/cli/src/commands/work.ts"
+    line: 776
+    severity: debt
+    suggested_action: scope
+    related_assertions: ["A028"]
+  - category: code
+    summary: "Multi-phase error lost phase number — generic message no longer identifies which phase failed"
+    file: "packages/cli/src/commands/work.ts"
+    line: 1180
+    severity: observation
+    suggested_action: scope
+  - category: test
+    summary: "A030 test named 'allows completion with UNKNOWN result' but exercises PASS path — UNKNOWN code path at L785 has no test coverage"
+    file: "packages/cli/tests/commands/work.test.ts"
+    line: 822
+    severity: debt
+    suggested_action: monitor
+    related_assertions: ["A030"]
+  - category: test
+    summary: "Multi-phase FAIL test asserts rejects.toThrow() without checking exit code or message content"
+    file: "packages/cli/tests/commands/work.test.ts"
+    line: 871
+    severity: observation
+    suggested_action: accept
+  - category: upstream
+    summary: "Contract A030 describes writeProofChain UNKNOWN behavior but completeWork step 8 blocks unknown before writeProofChain runs — assertion targets unreachable-through-completeWork path"
+    severity: observation
+    suggested_action: monitor
+    related_assertions: ["A030"]

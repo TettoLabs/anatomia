@@ -9,6 +9,6 @@
 - [x] Timing Fix — add `ana work start`, fix `computeTiming`, update Think templates
   - Spec: spec-2.md
   - Depends on: Phase 1
-- [ ] Guard Proof Chain Entry — block `ana work complete` when verify result is FAIL
+- [x] Guard Proof Chain Entry — block `ana work complete` when verify result is FAIL
   - Spec: spec-3.md
   - Depends on: Phase 2
