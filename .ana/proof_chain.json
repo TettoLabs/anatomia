@@ -8171,7 +8171,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "learn-v3-cli-commands-C5",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Per-spec behavior — variadic close exits 0 on partial success, reports mixed results. Intentional design, not debt.",
+          "closed_at": "2026-05-02T17:46:50.654Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
