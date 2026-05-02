@@ -1643,9 +1643,12 @@
           "summary": "A009 backfill verification is indirect: `proofSummary.test.ts:748-763` — The `@ana A009` tag is on the \"respects 20-callout cap\" test, which exercises `file` fields in the cap logic. It doesn't directly verify that proof_chain.json was backfilled. The backfill was verified manually by reading the diff. A direct test (e.g., reading proof_chain.json and asserting every callout has `file`) would be more robust, but the migration is a one-time operation and the backfill is already committed.",
           "file": "packages/cli/tests/utils/proofSummary.test.ts",
           "anchor": "@ana A009",
-          "status": "active",
+          "status": "closed",
           "severity": "observation",
-          "suggested_action": "monitor"
+          "suggested_action": "monitor",
+          "closed_reason": "Duplicate of proof-chain-active-issues-C4 (kept) — same A009 cap test concern. Tracked by the existing finding.",
+          "closed_at": "2026-05-02T18:01:22.131Z",
+          "closed_by": "human"
         },
         {
           "id": "add-callout-file-field-C4",
