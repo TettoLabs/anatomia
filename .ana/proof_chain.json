@@ -10021,6 +10021,215 @@
           "suggested_action": "accept"
         }
       ]
+    },
+    {
+      "slug": "audit-json-severity-summary",
+      "feature": "Audit JSON Severity Summary",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 18,
+        "satisfied": 18,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Audit JSON includes a severity breakdown of active findings",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "Severity breakdown has the correct count for each level",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Severity breakdown counts debt findings separately",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "Severity breakdown counts observation findings",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "Audit JSON includes an action breakdown of active findings",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "Action breakdown counts each suggested action correctly",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "Action breakdown counts monitor actions",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "Severity counts come from active findings only, not the full chain",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "Full audit JSON also includes the severity breakdown",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "Full audit JSON also includes the action breakdown",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "Terminal severity display still shows the same format",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "Terminal action display still shows the same format",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "The meta envelope still contains all-time chain health counts",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "Zero active findings still includes severity breakdown with all zeros",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "Zero active findings still includes action breakdown with all zeros",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "Zero findings response includes the severity and action fields alongside total_active",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A017",
+          "says": "Findings without severity are counted as unclassified",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A018",
+          "says": "Unclassified actions are counted when suggested_action is missing",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 9,
+        "met": 9
+      },
+      "timing": {
+        "total_minutes": 187,
+        "think": 172,
+        "plan": 172,
+        "build": 10,
+        "verify": 5
+      },
+      "hashes": {
+        "scope": "sha256:06b74a7f05119666050b1868f72250c9b6565b1e50519b5bac8c0b766a2ad9cb",
+        "contract": "sha256:c0bca7741c9882741c06224a1fea0c954d356a63a30d40b512b0a95e5fdf265e",
+        "plan": "sha256:946904806311e310e14c5341da64d2d36b016e9e817797c9e72de5bf58c9a534",
+        "spec": "sha256:5a88546474924f3fb7332762f71c0d92253fade4f34493465eef794abd2d544e",
+        "build-report": "sha256:3c0311f2bf8b88ca84f84df43cc93e94137975be2b052a778ef4fbb196528333",
+        "build-data": "sha256:8d99c89720f8703f04c81c22ba22467e247d98347eb65515fe55e8b4383a0918",
+        "verify-report": "sha256:58f23b6bf83fe9a028375cba6d7631ca4f3d9eb8e62f9a7e5feb58bba66ae902",
+        "verify-data": "sha256:238737f1269456cb5f781106f5055720d61d9b3286620f8e820b27fa3a15d665"
+      },
+      "completed_at": "2026-05-02T22:16:48.831Z",
+      "modules_touched": [
+        "packages/cli/src/commands/proof.ts",
+        "packages/cli/tests/commands/proof.test.ts"
+      ],
+      "scope_summary": "`ana proof audit --json` returns active findings grouped by file but no severity or action summary. The terminal output shows `1 risk · 22 debt · 43 observation` — the JSON response doesn't. Learn keeps pulling severity counts from health's meta block (which includes closed/lesson findings) because audit JSON doesn't provide them. This produces wrong numbers in Learn's state summary. Same bug in 3 consecutive Learn sessions despite the template explicitly saying \"use audit, not meta.\"",
+      "findings": [
+        {
+          "category": "code",
+          "summary": "Unknown severity/action values silently dropped from fixed-key objects — by_severity sum can be less than total_active",
+          "file": "packages/cli/src/commands/proof.ts",
+          "anchor": null,
+          "line": 1654,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "related_assertions": [
+            "A002"
+          ],
+          "id": "audit-json-severity-summary-C1",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "A008 active-only test uses fixture with only active findings — no closed finding to prove exclusion",
+          "file": "packages/cli/tests/commands/proof.test.ts",
+          "anchor": "by_severity counts match active findings only",
+          "line": 1851,
+          "severity": "debt",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A008"
+          ],
+          "id": "audit-json-severity-summary-C2",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "A013 meta block test uses toBeDefined() — verifies existence not value preservation",
+          "file": "packages/cli/tests/commands/proof.test.ts",
+          "anchor": null,
+          "line": 1890,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A013"
+          ],
+          "id": "audit-json-severity-summary-C3",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "5-finding fixture manually duplicated three times across test blocks instead of shared constant",
+          "file": "packages/cli/tests/commands/proof.test.ts",
+          "anchor": null,
+          "line": 1801,
+          "severity": "debt",
+          "suggested_action": "scope",
+          "id": "audit-json-severity-summary-C4",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "createAuditChain helper still never generates 'debt' severity — still present from Finding Enrichment Schema cycle",
+          "file": null,
+          "anchor": "createAuditChain",
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "audit-json-severity-summary-C5",
+          "status": "lesson"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "Terminal unknown-action loop has explicit 'unclassified' exclusion guard",
+          "file": "packages/cli/src/commands/proof.ts",
+          "severity": "observation",
+          "suggested_action": "monitor"
+        }
+      ]
     }
   ],
   "schema": 1
