@@ -5492,7 +5492,10 @@
             "A020"
           ],
           "id": "finding-enrichment-schema-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "One-time migration concern — all data migrated across 10+ subsequent runs. Unknown severity values are speculative; the code never produces them.",
+          "closed_at": "2026-05-02T18:00:56.519Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
