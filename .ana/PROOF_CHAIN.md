@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-45 runs · 65 active · 48 lessons · 0 promoted · 126 closed
+45 runs · 64 active · 48 lessons · 0 promoted · 127 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 65 total)
+## Active Findings (30 shown of 64 total)
 
 ### packages/cli/src/commands/proof.ts
 
@@ -30,10 +30,6 @@
 - **code:** Untested defensive branches in startWork — 'not a git repo' and 'git pull conflict' paths have no dedicated unit tests — *Proof Health V2*
 - **code:** Dual FAIL guard creates maintenance surface — two independent checks for same condition at L776 and L1179 — *Proof Health V2*
 - **code:** Multi-phase error lost phase number — generic message no longer identifies which phase failed — *Proof Health V2*
-
-### packages/cli/src/engine/analyzers/structure/architecture.ts
-
-- **code:** Library detection uses unnormalized paths — d.startsWith('lib/') fails on Windows backslash input — *Fix CI Test Failures*
 
 ### packages/cli/src/engine/detectors/documentation.ts
 
@@ -89,4 +85,5 @@
 ### General
 
 - **test:** No @ana A003 tag or regression test for inline coAuthor absence — verified by source inspection only — *Learn V3 — CLI Commands + Template Finalization*
+- **test:** No tagged test for template assertions A028-A033 — all verified by source inspection — *Learn V3 — CLI Commands + Template Finalization*
 

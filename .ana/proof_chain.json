@@ -10524,7 +10524,10 @@
           "severity": "risk",
           "suggested_action": "scope",
           "id": "fix-ci-failures-C1",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Claim false — line 138 normalizes backslashes to forward slashes (d.replace(/\\\\/g, '/')) before the startsWith check at line 172. Windows paths are handled.",
+          "closed_at": "2026-05-02T23:22:21.224Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
