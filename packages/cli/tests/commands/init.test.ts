@@ -4,6 +4,7 @@ import * as path from 'node:path';
 import * as os from 'node:os';
 import { createEmptyEngineResult } from '../../src/engine/types/engineResult.js';
 import { fileExists } from '../../src/commands/init/preflight.js';
+import { AGENT_FILES } from '../../src/constants.js';
 
 async function dirExists(dirPath: string): Promise<boolean> {
   try {
@@ -57,12 +58,8 @@ describe('ana init', () => {
       const expectedFiles = [
         // 1 settings template
         '.claude/settings.json',
-        // 5 agent files
-        '.claude/agents/ana.md',
-        '.claude/agents/ana-plan.md',
-        '.claude/agents/ana-setup.md',
-        '.claude/agents/ana-build.md',
-        '.claude/agents/ana-verify.md',
+        // Agent files (from AGENT_FILES constant)
+        ...AGENT_FILES.map(f => '.claude/agents/' + f),
         // 5 core skill files (S15: troubleshooting added via computeSkillManifest)
         '.claude/skills/testing-standards/SKILL.md',
         '.claude/skills/coding-standards/SKILL.md',
@@ -73,7 +70,7 @@ describe('ana init', () => {
         'CLAUDE.md',
       ];
 
-      expect(expectedFiles).toHaveLength(12);
+      expect(expectedFiles).toHaveLength(7 + AGENT_FILES.length);
 
       for (const file of expectedFiles) {
         const filePath = path.join(templatesDir, file);
@@ -195,7 +192,7 @@ describe('ana init', () => {
       expect(settings.hooks).toEqual({});
     });
 
-    it('creates .claude/agents/ directory with 8 agent files', async () => {
+    it(`creates .claude/agents/ directory with ${AGENT_FILES.length} agent files`, async () => {
       const claudePath = path.join(tmpDir, '.claude');
       const agentsPath = path.join(claudePath, 'agents');
 
@@ -208,15 +205,7 @@ describe('ana init', () => {
       const templatesDir = path.join(__dirname, '..', '..', 'templates');
 
       // Copy agent files
-      const agentFiles = [
-        'ana.md',
-        'ana-plan.md',
-        'ana-setup.md',
-        'ana-build.md',
-        'ana-verify.md',
-      ];
-
-      for (const agentFile of agentFiles) {
+      for (const agentFile of AGENT_FILES) {
         const sourcePath = path.join(templatesDir, '.claude/agents', agentFile);
         const destPath = path.join(agentsPath, agentFile);
         await fs.copyFile(sourcePath, destPath);
@@ -225,14 +214,12 @@ describe('ana init', () => {
       const exists = await dirExists(agentsPath);
       expect(exists).toBe(true);
 
-      // Should have 5 agent files
+      // Should have all agent files
       const files = await fs.readdir(agentsPath);
-      expect(files).toHaveLength(5);
-      expect(files).toContain('ana.md');
-      expect(files).toContain('ana-plan.md');
-      expect(files).toContain('ana-setup.md');
-      expect(files).toContain('ana-build.md');
-      expect(files).toContain('ana-verify.md');
+      expect(files).toHaveLength(AGENT_FILES.length);
+      for (const agentFile of AGENT_FILES) {
+        expect(files).toContain(agentFile);
+      }
     });
 
     it('agent files have valid frontmatter with required fields', async () => {
@@ -240,15 +227,7 @@ describe('ana init', () => {
       const __dirname = path.dirname(__filename);
       const templatesDir = path.join(__dirname, '..', '..', 'templates');
 
-      const agentFiles = [
-        'ana.md',
-        'ana-plan.md',
-        'ana-setup.md',
-        'ana-build.md',
-        'ana-verify.md',
-      ];
-
-      for (const agentFile of agentFiles) {
+      for (const agentFile of AGENT_FILES) {
         const filePath = path.join(templatesDir, '.claude/agents', agentFile);
         const content = await fs.readFile(filePath, 'utf-8');
 
@@ -278,7 +257,7 @@ describe('ana init', () => {
           expect(frontmatter).toContain('model: opus');
           expect(frontmatter).not.toContain('tools:');  // no tools field = inherit all tools including Agent
           expect(frontmatter).not.toContain('memory:');
-        } else if (agentFile === 'ana-build.md' || agentFile === 'ana-verify.md') {
+        } else if (agentFile === 'ana-build.md' || agentFile === 'ana-verify.md' || agentFile === 'ana-learn.md') {
           expect(frontmatter).toContain('model: opus');
           expect(frontmatter).not.toContain('tools:');
           expect(frontmatter).not.toContain('memory:');
@@ -299,31 +278,23 @@ describe('ana init', () => {
       const templatesDir = path.join(__dirname, '..', '..', 'templates');
 
       // Copy agent files (first init)
-      const agentFiles = [
-        'ana.md',
-        'ana-plan.md',
-        'ana-setup.md',
-        'ana-build.md',
-        'ana-verify.md',
-      ];
-
-      for (const agentFile of agentFiles) {
+      for (const agentFile of AGENT_FILES) {
         const sourcePath = path.join(templatesDir, '.claude/agents', agentFile);
         const destPath = path.join(agentsPath, agentFile);
         await fs.copyFile(sourcePath, destPath);
       }
 
       // Simulate re-init: check if file exists before copying
-      for (const agentFile of agentFiles) {
+      for (const agentFile of AGENT_FILES) {
         const destPath = path.join(agentsPath, agentFile);
         const exists = await fileExists(destPath);
         // Should skip copy if exists
         expect(exists).toBe(true);
       }
 
-      // Should still have exactly 5 files, not 10
+      // Should still have exactly AGENT_FILES.length files, not double
       const files = await fs.readdir(agentsPath);
-      expect(files).toHaveLength(5);
+      expect(files).toHaveLength(AGENT_FILES.length);
     });
 
     it('merges into existing .claude/settings.json without duplicates', async () => {
