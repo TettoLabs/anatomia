@@ -1,0 +1,36 @@
+schema: 1
+findings:
+  - category: test
+    summary: "A014 cap test uses toBeLessThanOrEqual(5) instead of toBe(5) — passes even if cap logic is broken and returns 0 items"
+    file: "packages/cli/tests/commands/proof.test.ts"
+    line: 2548
+    severity: debt
+    suggested_action: monitor
+    related_assertions: ["A014"]
+  - category: code
+    summary: "computeFirstPassRate exported but never imported outside proofSummary.ts — only called internally by computeHealthReport"
+    file: "packages/cli/src/utils/proofSummary.ts"
+    line: 898
+    severity: debt
+    suggested_action: accept
+  - category: test
+    summary: "No direct unit tests for computeFirstPassRate or computePipelineStats — only covered through integration tests via runProof(['health'])"
+    file: "packages/cli/tests/commands/proof.test.ts"
+    severity: observation
+    suggested_action: monitor
+  - category: code
+    summary: "computePipelineStats maps timing.think to 'scope' display label (line 951: think ?? scope) — naming mismatch between data field and display is intentional per spec but may confuse future maintainers"
+    file: "packages/cli/src/utils/proofSummary.ts"
+    line: 951
+    severity: observation
+    suggested_action: accept
+  - category: upstream
+    summary: "Spec predicted ~18 new tests but only ~11 were added (1773 vs 1762 baseline) — edge case tests for zero-entry verification, empty timing fields, and mixed promote+recurring sorting exist but inline, reducing count"
+    severity: observation
+    suggested_action: accept
+  - category: code
+    summary: "Zero-run JSON path hardcodes verification defaults inline (proof.ts:1749) rather than calling computeFirstPassRate([]) — duplicate knowledge of default shape"
+    file: "packages/cli/src/commands/proof.ts"
+    line: 1749
+    severity: debt
+    suggested_action: scope
