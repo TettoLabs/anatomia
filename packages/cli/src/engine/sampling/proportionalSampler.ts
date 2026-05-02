@@ -138,7 +138,7 @@ async function globFromDir(
 
     // Convert to rootPath-relative paths
     const relDir = path.relative(rootPath, dir);
-    return sampled.map(f => relDir ? path.join(relDir, f) : f);
+    return sampled.map(f => (relDir ? path.join(relDir, f) : f).replace(/\\/g, '/'));
   } catch {
     return [];
   }

@@ -9,14 +9,15 @@
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { findEntryPoints } from '../../../src/engine/analyzers/structure/index.js';
-import { mkdir, writeFile, rm } from 'node:fs/promises';
+import { mkdir, writeFile, rm, mkdtemp } from 'node:fs/promises';
 import { join } from 'node:path';
-
-const testDir = '/tmp/test-entry-points-python';
+import { tmpdir } from 'node:os';
 
 describe('Python entry point detection', () => {
+  let testDir: string;
+
   beforeEach(async () => {
-    await mkdir(testDir, { recursive: true });
+    testDir = await mkdtemp(join(tmpdir(), 'test-entry-points-python-'));
   });
 
   afterEach(async () => {

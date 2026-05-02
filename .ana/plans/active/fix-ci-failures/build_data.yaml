@@ -1,0 +1,16 @@
+schema: 1
+concerns:
+  - summary: "Mock data strings in census/applicationShape tests still contain /tmp/ — grep count won't reach 0"
+    severity: observation
+    suggested_action: accept
+  - summary: "No dedicated backslash-input test for architecture normalization (AC8 prevents new tests)"
+    file: "packages/cli/src/engine/analyzers/structure/architecture.ts"
+    severity: observation
+    suggested_action: monitor
+  - summary: "14 pre-existing lint warnings (no-explicit-any) in unrelated test files"
+    severity: observation
+    suggested_action: accept
+  - summary: "Library detection branch in architecture.ts uses unnormalized directories"
+    file: "packages/cli/src/engine/analyzers/structure/architecture.ts"
+    severity: debt
+    suggested_action: scope

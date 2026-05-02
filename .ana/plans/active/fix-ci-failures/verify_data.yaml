@@ -1,0 +1,33 @@
+schema: 1
+findings:
+  - category: code
+    summary: "Library detection uses unnormalized paths — d.startsWith('lib/') fails on Windows backslash input"
+    file: "packages/cli/src/engine/analyzers/structure/architecture.ts"
+    line: 172
+    severity: risk
+    suggested_action: scope
+
+  - category: test
+    summary: "Mock data strings in test fixtures contain /tmp/ as placeholder absolutePath values — no filesystem access, no runtime impact"
+    file: "packages/cli/tests/engine/types/census.test.ts"
+    line: 8
+    severity: observation
+    suggested_action: accept
+
+  - category: upstream
+    summary: "Contract A006 grep.count matcher counts mock data strings — overly broad for detecting actual filesystem /tmp/ usage"
+    severity: observation
+    suggested_action: monitor
+
+  - category: upstream
+    summary: "Contract A004/A005 value specifies os.tmpdir() but implementation uses destructured tmpdir() — semantically identical"
+    severity: observation
+    suggested_action: accept
+    related_assertions: ["A004", "A005"]
+
+  - category: code
+    summary: "Documentation normalization in checkFile() covers all callers at output boundary — better than per-callsite fix"
+    file: "packages/cli/src/engine/detectors/documentation.ts"
+    line: 137
+    severity: observation
+    suggested_action: accept

@@ -32,6 +32,8 @@ describe('git detection', () => {
       const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'git-test-noremote-'));
       try {
         execSync('git init -b main', { cwd: tmpDir, stdio: 'pipe' });
+        execSync('git config user.email "test@test.com"', { cwd: tmpDir, stdio: 'pipe' });
+        execSync('git config user.name "Test"', { cwd: tmpDir, stdio: 'pipe' });
         // Create initial commit so rev-parse works
         fs.writeFileSync(path.join(tmpDir, 'file.txt'), 'hello');
         execSync('git add . && git commit -m "init"', { cwd: tmpDir, stdio: 'pipe' });
@@ -81,6 +83,8 @@ describe('git detection', () => {
       const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'git-test-branches-'));
       try {
         execSync('git init -b main', { cwd: tmpDir, stdio: 'pipe' });
+        execSync('git config user.email "test@test.com"', { cwd: tmpDir, stdio: 'pipe' });
+        execSync('git config user.name "Test"', { cwd: tmpDir, stdio: 'pipe' });
         fs.writeFileSync(path.join(tmpDir, 'file.txt'), 'hello');
         execSync('git add . && git commit -m "init"', { cwd: tmpDir, stdio: 'pipe' });
         execSync('git checkout -b feature', { cwd: tmpDir, stdio: 'pipe' });

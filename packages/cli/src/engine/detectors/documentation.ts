@@ -134,7 +134,7 @@ function checkFile(
   // For directories (like .github/ISSUE_TEMPLATE), report existence
   const stat = statSync(fullPath);
   return {
-    path: relativePath,
+    path: relativePath.replace(/\\/g, '/'),
     category,
     sizeBytes: stat.isDirectory() ? 0 : stat.size,
     lastModifiedDays: getLastModifiedDays(fullPath, rootPath),
