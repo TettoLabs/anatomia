@@ -9485,7 +9485,10 @@
           "severity": "debt",
           "suggested_action": "accept",
           "id": "proof-health-v2-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Intentional — computeFirstPassRate exported for testability. Standard pattern: export pure functions even when only one internal caller exists.",
+          "closed_at": "2026-05-02T17:47:32.454Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
