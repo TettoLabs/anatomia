@@ -1,0 +1,101 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Learn Template Session Fixes"
+
+assertions:
+  - id: A001
+    says: "Accept-action intro explains that accept does not mean close"
+    block: "Change 1 — accept ≠ close"
+    target: "template.phase1_intro"
+    matcher: "contains"
+    value: "does NOT mean the finding should be closed"
+
+  - id: A002
+    says: "Accept-action intro instructs re-evaluation on own merits"
+    block: "Change 1 — accept ≠ close"
+    target: "template.phase1_intro"
+    matcher: "contains"
+    value: "re-evaluate each finding on its own merits"
+
+  - id: A003
+    says: "First/routine session calibration lines are removed"
+    block: "Change 2 — remove first/routine"
+    target: "template.calibration_section"
+    matcher: "not_contains"
+    value: "First session"
+
+  - id: A004
+    says: "Garden size calibrations still exist after removing first/routine"
+    block: "Change 2 — remove first/routine"
+    target: "template.calibration_section"
+    matcher: "contains"
+    value: "Large garden"
+
+  - id: A005
+    says: "Observation prompt exists as a standalone instruction before the format block"
+    block: "Change 3 — observation prompt"
+    target: "template.present_state_section"
+    matcher: "contains"
+    value: "After the summary, always ask"
+
+  - id: A006
+    says: "Session approach uses priority ordering instead of a flat cap"
+    block: "Change 4 — priority ordering"
+    target: "template.session_approach"
+    matcher: "contains"
+    value: "Start with risk findings and recurring candidates"
+
+  - id: A007
+    says: "The arbitrary 30-finding cap is removed"
+    block: "Change 4 — priority ordering"
+    target: "template.session_approach"
+    matcher: "not_contains"
+    value: "~30"
+
+  - id: A008
+    says: "Session wrap-up offers a Think handoff as an explicit option"
+    block: "Change 5 — Think handoff"
+    target: "template.wrap_up_section"
+    matcher: "contains"
+    value: "draft a prompt for Ana Think"
+
+  - id: A009
+    says: "Session wrap-up includes promotion lifecycle guidance"
+    block: "Change 5 — Think handoff"
+    target: "template.wrap_up_section"
+    matcher: "contains"
+    value: "promotion encodes proven patterns, not aspirational ones"
+
+  - id: A010
+    says: "Session wrap-up includes verification transfer note"
+    block: "Change 5 — Think handoff"
+    target: "template.wrap_up_section"
+    matcher: "contains"
+    value: "which findings you verified against current code"
+
+  - id: A011
+    says: "Stale close reason example is in the good reasons list"
+    block: "Change 6 — stale close reason"
+    target: "template.close_reasons"
+    matcher: "contains"
+    value: "Stale — finding claims"
+
+  - id: A012
+    says: "Variadic guidance clarifies when to use individual vs batch closes"
+    block: "Change 7 — variadic guidance"
+    target: "template.guardrail2"
+    matcher: "contains"
+    value: "When findings have different justifications, close individually"
+
+  - id: A013
+    says: "Dogfood copy is identical to the template"
+    block: "dogfood sync"
+    target: "diff.template_vs_dogfood"
+    matcher: "equals"
+    value: ""
+
+file_changes:
+  - path: "packages/cli/templates/.claude/agents/ana-learn.md"
+    action: modify
+  - path: ".claude/agents/ana-learn.md"
+    action: modify
