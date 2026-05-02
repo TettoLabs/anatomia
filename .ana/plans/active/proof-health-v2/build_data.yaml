@@ -1,0 +1,14 @@
+schema: 1
+concerns:
+  - summary: "computePipelineStats and floorMedian are private — may need export for Phase 2/3"
+    file: "packages/cli/src/utils/proofSummary.ts"
+    severity: observation
+    suggested_action: monitor
+  - summary: "Pre-existing @ana tags (A001-A029) in proof.test.ts are from a different contract scope"
+    file: "packages/cli/tests/commands/proof.test.ts"
+    severity: observation
+    suggested_action: accept
+  - summary: "Pipeline 'scope' label uses think field which includes plan time — semantic mismatch"
+    file: "packages/cli/src/utils/proofSummary.ts"
+    severity: debt
+    suggested_action: monitor
