@@ -7898,7 +7898,10 @@
             "A018"
           ],
           "id": "remove-tag-coverage-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed by strengthen-weak-test-assertions — UNVERIFIED fallback test added as A017 at work.test.ts:1137, exercises null-compliance-table path through full fixture (a51f0b6)",
+          "closed_at": "2026-05-02T19:00:29.296Z",
+          "closed_by": "human"
         },
         {
           "category": "code",

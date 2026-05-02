@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-42 runs · 58 active · 43 lessons · 0 promoted · 125 closed
+42 runs · 57 active · 43 lessons · 0 promoted · 126 closed
 
 ## Hot Modules
 
@@ -9,27 +9,27 @@
 | packages/cli/tests/commands/work.test.ts | 9 | 5 |
 | packages/cli/tests/commands/proof.test.ts | 7 | 5 |
 | packages/cli/src/utils/proofSummary.ts | 6 | 5 |
-| packages/cli/src/commands/work.ts | 6 | 4 |
 | packages/cli/src/commands/proof.ts | 5 | 4 |
+| packages/cli/src/commands/work.ts | 5 | 3 |
 
 ## Promoted Rules
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 58 total)
+## Active Findings (30 shown of 57 total)
 
 ### packages/cli/src/commands/proof.ts
 
 - **code:** Zero-run JSON path hardcodes verification defaults inline (proof.ts:1749) rather than calling computeFirstPassRate([]) — duplicate knowledge of default shape — *Proof Health V2*
 - **code:** exitError helper duplicated inline in close (~30 lines) and promote (~30 lines) action handlers — *Learn V3 — CLI Commands + Template Finalization*
 - **code:** Available skills listing in SKILL_NOT_FOUND error is unspecified UX — reasonable but untested — *Learn V3 — CLI Commands + Template Finalization*
+- **code:** No summary truncation for promoted finding display — long summaries break terminal formatting — *Proof Promote*
 
 ### packages/cli/src/commands/work.ts
 
 - **code:** Untested defensive branches in startWork — 'not a git repo' and 'git pull conflict' paths have no dedicated unit tests — *Proof Health V2*
 - **code:** Dual FAIL guard creates maintenance surface — two independent checks for same condition at L776 and L1179 — *Proof Health V2*
 - **code:** Multi-phase error lost phase number — generic message no longer identifies which phase failed — *Proof Health V2*
-- **test:** No tests for UNVERIFIED fallback — A014-A018 verified by source inspection only; work.ts, pr.ts, proof.ts UNVERIFIED paths have zero test coverage — *Remove Pre-Check Tag Coverage*
 
 ### packages/cli/src/utils/proofSummary.ts
 
