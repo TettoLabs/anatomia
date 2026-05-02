@@ -4199,9 +4199,12 @@
           "file": "packages/cli/tests/commands/work.test.ts",
           "anchor": "closed_reason",
           "id": "fix-proof-chain-mechanical-accuracy-C5",
-          "status": "active",
+          "status": "closed",
           "severity": "observation",
-          "suggested_action": "monitor"
+          "suggested_action": "monitor",
+          "closed_reason": "Fixed — work.test.ts:1444-1445 now asserts both not.toBe('closed') AND toBe('active'). Exactly what the finding requested.",
+          "closed_at": "2026-05-02T18:01:47.589Z",
+          "closed_by": "human"
         },
         {
           "category": "upstream",
