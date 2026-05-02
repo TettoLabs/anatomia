@@ -263,9 +263,9 @@ function formatHealthDisplay(reportOrZero: import('../types/proof.js').HealthRep
 
   const report = reportOrZero;
 
-  // Trajectory section
+  // Quality section (renamed from Trajectory)
   lines.push('');
-  lines.push(chalk.bold('  Trajectory'));
+  lines.push(chalk.bold('  Quality'));
   lines.push(chalk.gray('  ' + BOX.horizontal.repeat(10)));
 
   if (report.trajectory.trend === 'no_classified_data') {
@@ -284,14 +284,35 @@ function formatHealthDisplay(reportOrZero: import('../types/proof.js').HealthRep
       ? String(report.trajectory.risks_per_run_all)
       : 'no data';
 
-    let risksLine = `  Risks/run:  ${last5} (last 5) \u00b7 ${all} (all)`;
-    if (report.trajectory.unclassified_count > 0) {
-      risksLine += `  (${report.trajectory.unclassified_count} unclassified excluded)`;
-    }
+    const risksLine = `  Risks/run:  ${last5} (last 5) \u00b7 ${all} (all)`;
     lines.push(risksLine);
   }
 
-  // Hot Modules section — omit when empty
+  // Verification section — always shown when runs > 0
+  if (report.verification) {
+    lines.push('');
+    lines.push(chalk.bold('  Verification'));
+    lines.push(chalk.gray('  ' + BOX.horizontal.repeat(10)));
+
+    lines.push(`  First-pass:  ${report.verification.first_pass_pct}% (${report.verification.first_pass_count} of ${report.verification.total_runs})`);
+    lines.push(`  Caught:      ${report.verification.total_caught} issues before shipping`);
+  }
+
+  // Pipeline section — omitted when fewer than 3 entries have timing
+  if (report.pipeline) {
+    lines.push('');
+    lines.push(chalk.bold('  Pipeline'));
+    lines.push(chalk.gray('  ' + BOX.horizontal.repeat(10)));
+
+    const parts: string[] = [];
+    if (report.pipeline.median_scope !== null) parts.push(`scope ${report.pipeline.median_scope}m`);
+    if (report.pipeline.median_build !== null) parts.push(`build ${report.pipeline.median_build}m`);
+    if (report.pipeline.median_verify !== null) parts.push(`verify ${report.pipeline.median_verify}m`);
+    const breakdown = parts.length > 0 ? ` (${parts.join(' \u00b7 ')})` : '';
+    lines.push(`  Median:  ${report.pipeline.median_total}m${breakdown}`);
+  }
+
+  // Hot Spots section (renamed from Hot Modules) — omit when empty
   if (report.hot_modules.length > 0) {
     // Build basename map for disambiguation
     const basenameCounts = new Map<string, number>();
@@ -301,8 +322,8 @@ function formatHealthDisplay(reportOrZero: import('../types/proof.js').HealthRep
     }
 
     lines.push('');
-    lines.push(chalk.bold('  Hot Modules'));
-    lines.push(chalk.gray('  ' + BOX.horizontal.repeat(11)));
+    lines.push(chalk.bold('  Hot Spots'));
+    lines.push(chalk.gray('  ' + BOX.horizontal.repeat(10)));
 
     for (const mod of report.hot_modules) {
       const base = path.basename(mod.file);
@@ -322,55 +343,51 @@ function formatHealthDisplay(reportOrZero: import('../types/proof.js').HealthRep
     }
   }
 
-  // Promote section — only promote-action candidates
-  const promoteCandidates = report.promotion_candidates.filter(c => c.suggested_action === 'promote');
-  if (promoteCandidates.length > 0) {
-    lines.push('');
-    lines.push(chalk.bold('  Promote'));
-    lines.push(chalk.gray('  ' + BOX.horizontal.repeat(7)));
+  // Next Actions section — merged Promote + Recurring, capped at 5
+  const MAX_NEXT_ACTIONS = 5;
+  const nextActions: Array<{ label: string; sortKey: number }> = [];
 
-    for (const c of promoteCandidates) {
-      const MAX_SUMMARY = 100;
-      const summary = c.summary.length > MAX_SUMMARY
-        ? c.summary.slice(0, MAX_SUMMARY) + '...'
-        : c.summary;
-      const fileSuffix = c.file ? ` \u2014 ${path.basename(c.file)}` : '';
-      lines.push(`  [${c.severity} \u00b7 promote] ${summary}${fileSuffix}`);
-    }
+  // Promote candidates → "Promote:" with severity badge
+  const promoteCandidates = report.promotion_candidates.filter(c => c.suggested_action === 'promote');
+  for (const c of promoteCandidates) {
+    const MAX_SUMMARY = 100;
+    const summary = c.summary.length > MAX_SUMMARY
+      ? c.summary.slice(0, MAX_SUMMARY) + '...'
+      : c.summary;
+    const fileSuffix = c.file ? ` \u2014 ${path.basename(c.file)}` : '';
+    nextActions.push({
+      label: `  Promote: [${c.severity}] ${summary}${fileSuffix}`,
+      sortKey: c.recurrence_count ?? 1,
+    });
   }
 
-  // Recurring section — scope-action candidates with recurrence_count >= 2
+  // Recurring scope candidates → "Fix:" with entry count
   const recurringCandidates = report.promotion_candidates.filter(
     c => c.suggested_action === 'scope' && (c.recurrence_count ?? 0) >= 2
   );
-  if (recurringCandidates.length > 0) {
-    lines.push('');
-    lines.push(chalk.bold('  Recurring'));
-    lines.push(chalk.gray('  ' + BOX.horizontal.repeat(9)));
-
-    for (const c of recurringCandidates) {
-      const MAX_SUMMARY = 100;
-      const summary = c.summary.length > MAX_SUMMARY
-        ? c.summary.slice(0, MAX_SUMMARY) + '...'
-        : c.summary;
-      const fileSuffix = c.file ? ` \u2014 ${path.basename(c.file)}` : '';
-      lines.push(`  [${c.severity}] ${summary}${fileSuffix} (${c.recurrence_count} entries)`);
-    }
+  for (const c of recurringCandidates) {
+    const MAX_SUMMARY = 100;
+    const summary = c.summary.length > MAX_SUMMARY
+      ? c.summary.slice(0, MAX_SUMMARY) + '...'
+      : c.summary;
+    const fileSuffix = c.file ? ` \u2014 ${path.basename(c.file)}` : '';
+    nextActions.push({
+      label: `  Fix: ${summary}${fileSuffix} (${c.recurrence_count} entries)`,
+      sortKey: c.recurrence_count ?? 1,
+    });
   }
 
-  // Promotions effectiveness section — only when promoted findings exist
-  if (report.promotions.length > 0) {
-    lines.push('');
-    lines.push(chalk.bold('  Promotions'));
-    lines.push(chalk.gray('  ' + BOX.horizontal.repeat(10)));
+  // Sort by recurrence count descending, cap at 5
+  nextActions.sort((a, b) => b.sortKey - a.sortKey);
+  const cappedActions = nextActions.slice(0, MAX_NEXT_ACTIONS);
 
-    for (const p of report.promotions) {
-      if (p.status === 'tracking') {
-        lines.push(`  [${p.severity}] ${p.summary}  tracking... (${p.subsequent_entries} entries, need 5)`);
-      } else {
-        const pct = p.reduction_pct !== null ? `${p.reduction_pct}%` : '\u2014';
-        lines.push(`  [${p.severity}] ${p.summary}  ${p.status} (${pct} reduction)`);
-      }
+  if (cappedActions.length > 0) {
+    lines.push('');
+    lines.push(chalk.bold('  Next Actions'));
+    lines.push(chalk.gray('  ' + BOX.horizontal.repeat(12)));
+
+    for (const action of cappedActions) {
+      lines.push(action.label);
     }
   }
 
@@ -1729,6 +1746,7 @@ export function registerProofCommand(program: Command): void {
             hot_modules: [],
             promotion_candidates: [],
             promotions: [],
+            verification: { first_pass_count: 0, total_runs: 0, first_pass_pct: 100, total_caught: 0 },
           }, { entries: [] }), null, 2));
         } else {
           console.log(formatHealthDisplay(0));
