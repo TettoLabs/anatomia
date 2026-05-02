@@ -8291,7 +8291,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "learn-v3-cli-commands-C15",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Intentional — StaleFinding/StalenessResult consumed via inline import() in proofSummary.ts to avoid circular dependency between utils and types. Named imports would create a direct dependency cycle.",
+          "closed_at": "2026-05-02T17:47:45.902Z",
+          "closed_by": "human"
         },
         {
           "category": "upstream",
