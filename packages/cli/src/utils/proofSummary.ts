@@ -37,7 +37,7 @@ export interface ProofDeviation {
  */
 export interface ProofSummary {
   feature: string;
-  result: string;
+  result: 'PASS' | 'FAIL' | 'UNKNOWN';
   author: {
     name: string;
     email: string;
@@ -185,9 +185,9 @@ function parseComplianceTable(content: string): Array<{
  * @param content - Verify report content
  * @returns PASS, FAIL, or UNKNOWN
  */
-function parseResult(content: string): string {
+function parseResult(content: string): 'PASS' | 'FAIL' | 'UNKNOWN' {
   const match = content.match(/\*\*Result:\*\*\s*(PASS|FAIL)/i);
-  return match && match[1] ? match[1].toUpperCase() : 'UNKNOWN';
+  return match && match[1] ? match[1].toUpperCase() as 'PASS' | 'FAIL' : 'UNKNOWN';
 }
 
 /**
@@ -1437,7 +1437,7 @@ export function generateProofSummary(slugDir: string): ProofSummary {
     .filter(f => f.match(/^verify_report(_\d+)?\.md$/))
     .sort();
 
-  let lastResult: string | null = null;
+  let lastResult: 'PASS' | 'FAIL' | 'UNKNOWN' | null = null;
   const allFindings: ProofSummary['findings'] = [];
 
   for (const verifyFile of verifyFiles) {

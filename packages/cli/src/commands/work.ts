@@ -783,7 +783,7 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
   const entry: ProofChainEntry = {
     slug,
     feature: proof.feature,
-    result: proof.result as ProofChainEntry['result'],
+    result: proof.result,
     author: proof.author,
     contract: proof.contract,
     assertions: proof.assertions.map(a => {
