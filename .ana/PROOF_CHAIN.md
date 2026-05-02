@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-41 runs · 84 active · 40 lessons · 0 promoted · 95 closed
+41 runs · 83 active · 40 lessons · 0 promoted · 96 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 84 total)
+## Active Findings (30 shown of 83 total)
 
 ### packages/cli/src/commands/proof.ts
 
@@ -27,6 +27,7 @@
 - **code:** exitError re-searches chain for finding details in ALREADY_PROMOTED and ALREADY_CLOSED single-ID paths — duplicates the earlier loop — *Learn V3 — CLI Commands + Template Finalization*
 - **code:** Available skills listing in SKILL_NOT_FOUND error is unspecified UX — reasonable but untested — *Learn V3 — CLI Commands + Template Finalization*
 - **code:** SEVERITY_ORDER duplication still present across proof.ts — known from proof context, not addressed by this phase — *Learn V3 — CLI Commands + Template Finalization*
+- **code:** --min-confidence accepts invalid values silently — no validation or Commander .choices() — *Learn V3 — CLI Commands + Template Finalization*
 
 ### packages/cli/src/commands/work.ts
 
@@ -68,7 +69,6 @@
 ### packages/cli/tests/templates/agent-proof-context.test.ts
 
 - **test:** Dogfood sync test loop short-circuits on first failure, skipping remaining files — now covers 6 files instead of 4, making masking worse — *Fix Type Lies*
-- **test:** Dogfood sync test proves byte-identity but not content correctness — contract content assertions verified by source inspection only — *Sharpen Agent Templates*
 
 ### packages/cli/tests/utils/proofSummary.test.ts
 

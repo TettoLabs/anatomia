@@ -9014,7 +9014,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "sharpen-agent-templates-C3",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Byte-identity IS content correctness for template sync — if the dogfood file matches the template byte-for-byte, the content is correct by definition. No separate content assertion needed.",
+          "closed_at": "2026-05-02T17:47:59.401Z",
+          "closed_by": "human"
         },
         {
           "category": "upstream",
