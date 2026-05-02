@@ -2782,3 +2782,32 @@ describe('ana work start', () => {
     mockExit.mockRestore();
   });
 });
+
+/**
+ * Tests for Think template content
+ */
+describe('Think template content', () => {
+  // @ana A025
+  it('shipped template contains ana work start', () => {
+    const templatePath = path.join(__dirname, '..', '..', 'templates', '.claude', 'agents', 'ana.md');
+    const content = fsSync.readFileSync(templatePath, 'utf-8');
+    expect(content).toContain('ana work start');
+  });
+
+  // @ana A026
+  it('dogfood template contains ana work start', () => {
+    const dogfoodPath = path.join(__dirname, '..', '..', '..', '..', '.claude', 'agents', 'ana.md');
+    const content = fsSync.readFileSync(dogfoodPath, 'utf-8');
+    expect(content).toContain('ana work start');
+  });
+
+  // @ana A027
+  it('templates do not contain mkdir instruction', () => {
+    const shippedPath = path.join(__dirname, '..', '..', 'templates', '.claude', 'agents', 'ana.md');
+    const dogfoodPath = path.join(__dirname, '..', '..', '..', '..', '.claude', 'agents', 'ana.md');
+    const shipped = fsSync.readFileSync(shippedPath, 'utf-8');
+    const dogfood = fsSync.readFileSync(dogfoodPath, 'utf-8');
+    expect(shipped).not.toContain('mkdir -p .ana/plans/active');
+    expect(dogfood).not.toContain('mkdir -p .ana/plans/active');
+  });
+});

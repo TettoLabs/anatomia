@@ -165,12 +165,12 @@ Not everything is a task. Sometimes the user wants to understand, discuss, explo
 
 When the user confirms your scope preview and you're ready to route to the pipeline:
 
-### Step 1: Verify branch and create the directory
-Verify you're on the artifact branch before creating scope artifacts. If not: `git checkout {artifactBranch} && git pull`. Then:
+### Step 1: Start the work item
+Run:
 ```bash
-mkdir -p .ana/plans/active/{slug}
+ana work start {slug}
 ```
-Slug is kebab-case: `fix-auth-timeout`, `add-export-csv`, `refactor-user-service`.
+This validates your branch (must be on the artifact branch), validates slug format (kebab-case), checks uniqueness, pulls latest, creates the directory, and records the start time. Slug examples: `fix-auth-timeout`, `add-export-csv`, `refactor-user-service`.
 
 ### Step 2: Write scope.md
 
