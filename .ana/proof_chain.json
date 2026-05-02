@@ -5541,7 +5541,10 @@
             "A031"
           ],
           "id": "finding-enrichment-schema-C6",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed in harden-hot-files (59e49d5) — duplicate from: line deleted. Current audit display at proof.ts:1711 has one from: line.",
+          "closed_at": "2026-05-02T17:52:35.438Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
