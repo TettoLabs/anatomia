@@ -26,5 +26,18 @@
   "modules_touched": [
     ".claude/agents/ana-learn.md",
     "packages/cli/templates/.claude/agents/ana-learn.md"
-  ]
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:4de2217743f2d17cf3da8a253a3ff89e1287fb776ce0a5f4c896ef1a4383ea8d",
+    "run_at": "2026-05-02T22:38:27.646Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-02T22:38:27.684Z",
+    "hash": "sha256:28298ba7a1b37c3ed2a225c1cc72cfc80eaaf4ba9cedbba97009ff90b5585309"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-02T22:38:27.684Z",
+    "hash": "sha256:6d672799b488dd4f4ccb5977c3d6ed59ac02c33969ac71d73006728b3e5401c4"
+  }
 }
