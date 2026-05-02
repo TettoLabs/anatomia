@@ -9749,6 +9749,251 @@
           "suggested_action": "monitor"
         }
       ]
+    },
+    {
+      "slug": "strengthen-weak-test-assertions",
+      "feature": "Strengthen Weak Test Assertions",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 18,
+        "satisfied": 16,
+        "unsatisfied": 0,
+        "deviated": 2
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Dry-run close does not create any git commits",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "Variadic strengthen records which skill each finding was promoted to",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Variadic strengthen records skill path for second finding too",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "Health trend requires at least 10 runs before computing direction",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "Health trend computes direction once threshold is met",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "Empty promotions data is absent from JSON health output",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "Full-path file query returns exactly one finding per matching entry",
+          "status": "DEVIATED",
+          "deviation": "Asserted `toBe(2)` — baseEntry fixture has 2 findings for census.ts"
+        },
+        {
+          "id": "A008",
+          "says": "Basename query returns exactly one finding per matching entry",
+          "status": "DEVIATED",
+          "deviation": "Asserted `toBe(2)` — same baseEntry fixture with 2 findings"
+        },
+        {
+          "id": "A009",
+          "says": "Legacy basename finding returns exactly one match",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "Work start timestamp is a valid ISO date string",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "Multi-phase FAIL tells the developer what went wrong and how to fix it",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "Multi-phase FAIL includes remediation command",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "Health line appears deterministically when trend changes",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "Informational health triggers do not show a nudge arrow",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "Dashboard shows which findings survived the cap",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "Dashboard drops findings beyond the cap limit",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A017",
+          "says": "Assertions without verification get UNVERIFIED status in the proof chain",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A018",
+          "says": "All existing tests continue to pass after strengthening",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 11,
+        "met": 11
+      },
+      "timing": {
+        "total_minutes": 36,
+        "think": 1,
+        "plan": 12,
+        "build": 12,
+        "verify": 11
+      },
+      "hashes": {
+        "scope": "sha256:46fab84be5cad5b3dd354d512ef9ed015a813289c3d14baff03e6a853aa67efb",
+        "contract": "sha256:4888a834eb914feffc492c0de3d0f49c8120c32bf91f85544d21e7ea0b09180d",
+        "plan": "sha256:b2e736183f18c36ab37c38eabcf33967fbb2a6790eec69f786a9c016b979defe",
+        "spec": "sha256:607dd81935bc6b889ec4c6f31eab8a45b44a29518081130a624680d5ecf683c3",
+        "build-report": "sha256:d48e0b8b0b535ca9c14ccdbc276a8103849f486afe9b47eca0ad1df1d604fed9",
+        "build-data": "sha256:abdea342e80718359020ad3ca5872952219185696059bfc1eecf222e7988191a",
+        "verify-report": "sha256:399dec4b29fee497532a205e2f9a3d7739793369ab9e9e55a95742e14613b8f3",
+        "verify-data": "sha256:22ca17c0e6ac3a9e48a2f14ac140b77df0ddcfa323d38da762d0d83872ecdcd3"
+      },
+      "completed_at": "2026-05-02T18:53:57.101Z",
+      "modules_touched": [
+        "packages/cli/tests/commands/proof.test.ts",
+        "packages/cli/tests/commands/work.test.ts",
+        "packages/cli/tests/utils/proofSummary.test.ts"
+      ],
+      "scope_summary": "Learn triage (2026-05-02) reviewed 62 active findings across 41 pipeline runs and identified 10 that share one disease: tests that pass without proving anything. Weak matchers (`toBeDefined()`, `toBeGreaterThan(0)`), conditional guards that make assertions vacuous, and `not.toContain()` that passes by coincidence of fixture data. An 11th finding (risk severity) surfaces zero coverage for the UNVERIFIED fallback path — a safety-critical code path where silent failure corrupts the proof chain.",
+      "findings": [
+        {
+          "category": "upstream",
+          "summary": "Contract A007 value stale — says 1 but fixture baseEntry has 2 findings for census.ts",
+          "file": "packages/cli/tests/utils/proofSummary.test.ts",
+          "anchor": null,
+          "line": 1106,
+          "severity": "risk",
+          "suggested_action": "scope",
+          "related_assertions": [
+            "A007"
+          ],
+          "id": "strengthen-weak-test-assertions-C1",
+          "status": "lesson"
+        },
+        {
+          "category": "upstream",
+          "summary": "Contract A008 value stale — says 1 but fixture baseEntry has 2 findings for census.ts",
+          "file": "packages/cli/tests/utils/proofSummary.test.ts",
+          "anchor": null,
+          "line": 1116,
+          "severity": "risk",
+          "suggested_action": "scope",
+          "related_assertions": [
+            "A008"
+          ],
+          "id": "strengthen-weak-test-assertions-C2",
+          "status": "lesson"
+        },
+        {
+          "category": "upstream",
+          "summary": "Contract A014 value '→' too broad — health output uses → for trend display, not just nudges",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "related_assertions": [
+            "A014"
+          ],
+          "id": "strengthen-weak-test-assertions-C3",
+          "status": "lesson"
+        },
+        {
+          "category": "test",
+          "summary": "A014 nudge check uses specific patterns ('→ claude', '→ ana proof') — a new nudge format would slip through",
+          "file": "packages/cli/tests/commands/work.test.ts",
+          "anchor": null,
+          "line": 2456,
+          "severity": "debt",
+          "suggested_action": "monitor",
+          "related_assertions": [
+            "A014"
+          ],
+          "id": "strengthen-weak-test-assertions-C4",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "Remaining toBeGreaterThan(0) in proofSummary.test.ts — 21 instances outside this spec's scope still use weak assertions",
+          "file": "packages/cli/tests/utils/proofSummary.test.ts",
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "scope",
+          "id": "strengthen-weak-test-assertions-C5",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "UNVERIFIED test creates full project fixture manually instead of using createMergedProject helper — 60 lines vs ~5 lines",
+          "file": "packages/cli/tests/commands/work.test.ts",
+          "anchor": null,
+          "line": 1138,
+          "severity": "debt",
+          "suggested_action": "accept",
+          "id": "strengthen-weak-test-assertions-C6",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Timestamp recency check (before/after window) in A010 test may flake on extremely slow CI — window depends on test execution speed",
+          "file": "packages/cli/tests/commands/work.test.ts",
+          "anchor": null,
+          "line": 2769,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "related_assertions": [
+            "A010"
+          ],
+          "id": "strengthen-weak-test-assertions-C7",
+          "status": "active"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "Contract A007/A008 values (1) don't match baseEntry fixture (2 findings for census.ts)",
+          "file": null,
+          "severity": "observation",
+          "suggested_action": "accept"
+        },
+        {
+          "summary": "Health metric arrow (→) collides with nudge arrow character, preventing bare character assertion",
+          "file": null,
+          "severity": "observation",
+          "suggested_action": "accept"
+        }
+      ]
     }
   ],
   "schema": 1

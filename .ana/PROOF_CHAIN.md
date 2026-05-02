@@ -1,13 +1,13 @@
 # Proof Chain Dashboard
 
-41 runs · 62 active · 40 lessons · 0 promoted · 117 closed
+42 runs · 66 active · 43 lessons · 0 promoted · 117 closed
 
 ## Hot Modules
 
 | File | Active | Entries |
 |------|--------|--------|
+| packages/cli/tests/commands/work.test.ts | 12 | 6 |
 | packages/cli/tests/commands/proof.test.ts | 11 | 5 |
-| packages/cli/tests/commands/work.test.ts | 9 | 5 |
 | packages/cli/src/utils/proofSummary.ts | 6 | 5 |
 | packages/cli/src/commands/work.ts | 6 | 4 |
 | packages/cli/src/commands/proof.ts | 5 | 4 |
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 62 total)
+## Active Findings (30 shown of 66 total)
 
 ### packages/cli/src/commands/proof.ts
 
@@ -29,14 +29,11 @@
 - **code:** Untested defensive branches in startWork — 'not a git repo' and 'git pull conflict' paths have no dedicated unit tests — *Proof Health V2*
 - **code:** Dual FAIL guard creates maintenance surface — two independent checks for same condition at L776 and L1179 — *Proof Health V2*
 - **code:** Multi-phase error lost phase number — generic message no longer identifies which phase failed — *Proof Health V2*
-- **test:** No tests for UNVERIFIED fallback — A014-A018 verified by source inspection only; work.ts, pr.ts, proof.ts UNVERIFIED paths have zero test coverage — *Remove Pre-Check Tag Coverage*
 
 ### packages/cli/src/utils/proofSummary.ts
 
 - **code:** `as 'PASS' | 'FAIL'` cast in parseResult relies on regex constraint, not type-level proof — safe but brittle if regex changes — *Clean proofSummary.ts*
 - **code:** fileMatches `includes('/')` treats `./census.ts` as directory-qualified — theoretical false negative for dot-slash prefixed paths — *Clean proofSummary.ts*
-- **code:** O(n*m) traversal in computeStaleness — nested loop over entries × findings — *Learn V3 — CLI Commands + Template Finalization*
-- **code:** PreCheckData interface vestigial — retains assertions/covered/uncovered fields for reading old .saves.json but the code path that used them for assertion bootstrap is deleted — *Remove Pre-Check Tag Coverage*
 
 ### packages/cli/templates/.claude/agents/ana.md
 
@@ -60,10 +57,12 @@
 
 ### packages/cli/tests/commands/work.test.ts
 
+- **test:** A014 nudge check uses specific patterns ('→ claude', '→ ana proof') — a new nudge format would slip through — *Strengthen Weak Test Assertions*
+- **test:** UNVERIFIED test creates full project fixture manually instead of using createMergedProject helper — 60 lines vs ~5 lines — *Strengthen Weak Test Assertions*
+- **code:** Timestamp recency check (before/after window) in A010 test may flake on extremely slow CI — window depends on test execution speed — *Strengthen Weak Test Assertions*
 - **test:** A016 uses toBeDefined() for timestamp — weak assertion partially compensated by getTime() > 0 follow-up — *Proof Health V2*
 - **test:** A030 test named 'allows completion with UNKNOWN result' but exercises PASS path — UNKNOWN code path at L785 has no test coverage — *Proof Health V2*
 - **test:** Multi-phase FAIL test asserts rejects.toThrow() without checking exit code or message content — *Proof Health V2*
-- **test:** A013 conditional assertion passes vacuously when health line absent — if (output.includes('Health:')) guard means zero assertions fire when improving trend doesn't produce a health line — *Proof Command UX*
 
 ### packages/cli/tests/templates/agent-proof-context.test.ts
 
@@ -71,6 +70,7 @@
 
 ### packages/cli/tests/utils/proofSummary.test.ts
 
+- **test:** Remaining toBeGreaterThan(0) in proofSummary.test.ts — 21 instances outside this spec's scope still use weak assertions — *Strengthen Weak Test Assertions*
 - **test:** A010-A012 use toBeGreaterThan(0) instead of toBe(1) — each test creates exactly one finding, so the specific count is known — *Clean proofSummary.ts*
 
 ### General
