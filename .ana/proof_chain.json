@@ -1630,9 +1630,12 @@
           "summary": "`@ana A012` tag misplaced: `proofSummary.test.ts:324` — Tag `@ana A012` (\"extractFileRefs tests unchanged\") is on the `parseCallouts` describe block, not the `extractFileRefs` describe block at line 602. Pre-check counts it as COVERED since the tag exists in the file. Verified independently via diff, but the tag's semantic placement is wrong. A future tag-only search would find A012 covering parseCallouts, not extractFileRefs.",
           "file": "packages/cli/tests/utils/proofSummary.test.ts",
           "anchor": "@ana A012",
-          "status": "active",
+          "status": "closed",
           "severity": "debt",
-          "suggested_action": "scope"
+          "suggested_action": "scope",
+          "closed_reason": "Stale — @ana A012 is no longer on the parseCallouts describe block. Current placements (proofSummary.test.ts:230, 1346) are on appropriate test blocks. Reorganized across 13 subsequent runs.",
+          "closed_at": "2026-05-02T17:53:39.592Z",
+          "closed_by": "human"
         },
         {
           "id": "add-callout-file-field-C3",
