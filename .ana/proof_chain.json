@@ -8273,7 +8273,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "learn-v3-cli-commands-C13",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Low-risk — --min-confidence is only consumed by the Learn agent, not end users. Invalid values produce empty results (safe failure). Not worth validation overhead.",
+          "closed_at": "2026-05-02T17:48:41.996Z",
+          "closed_by": "human"
         },
         {
           "category": "test",

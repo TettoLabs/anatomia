@@ -1,12 +1,12 @@
 # Proof Chain Dashboard
 
-41 runs · 81 active · 40 lessons · 0 promoted · 98 closed
+41 runs · 80 active · 40 lessons · 0 promoted · 99 closed
 
 ## Hot Modules
 
 | File | Active | Entries |
 |------|--------|--------|
-| packages/cli/src/commands/proof.ts | 15 | 9 |
+| packages/cli/src/commands/proof.ts | 14 | 9 |
 | packages/cli/tests/commands/work.test.ts | 12 | 8 |
 | packages/cli/tests/commands/proof.test.ts | 11 | 5 |
 | packages/cli/src/utils/proofSummary.ts | 8 | 7 |
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 81 total)
+## Active Findings (30 shown of 80 total)
 
 ### packages/cli/src/commands/proof.ts
 
@@ -25,13 +25,13 @@
 - **code:** exitError helper duplicated inline in close (~30 lines) and promote (~30 lines) action handlers — *Learn V3 — CLI Commands + Template Finalization*
 - **code:** Available skills listing in SKILL_NOT_FOUND error is unspecified UX — reasonable but untested — *Learn V3 — CLI Commands + Template Finalization*
 - **code:** SEVERITY_ORDER duplication still present across proof.ts — known from proof context, not addressed by this phase — *Learn V3 — CLI Commands + Template Finalization*
-- **code:** --min-confidence accepts invalid values silently — no validation or Commander .choices() — *Learn V3 — CLI Commands + Template Finalization*
 
 ### packages/cli/src/commands/work.ts
 
 - **code:** Untested defensive branches in startWork — 'not a git repo' and 'git pull conflict' paths have no dedicated unit tests — *Proof Health V2*
 - **code:** Dual FAIL guard creates maintenance surface — two independent checks for same condition at L776 and L1179 — *Proof Health V2*
 - **code:** Multi-phase error lost phase number — generic message no longer identifies which phase failed — *Proof Health V2*
+- **test:** No tests for UNVERIFIED fallback — A014-A018 verified by source inspection only; work.ts, pr.ts, proof.ts UNVERIFIED paths have zero test coverage — *Remove Pre-Check Tag Coverage*
 
 ### packages/cli/src/utils/proofSummary.ts
 
