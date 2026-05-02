@@ -134,8 +134,11 @@ export function classifyArchitecture(
   framework: string | null,
   projectType: string = 'unknown'
 ): ArchitectureResult {
+  // Normalize to forward slashes so regex patterns match on all platforms
+  const normalized = directories.map(d => d.replace(/\\/g, '/'));
+
   // 1. Check microservices (highest specificity)
-  const microservices = isMicroservices(directories, projectType);
+  const microservices = isMicroservices(normalized, projectType);
   if (microservices.match) {
     return {
       architecture: 'microservices',
@@ -145,7 +148,7 @@ export function classifyArchitecture(
   }
 
   // 2. Check domain-driven (features/*, modules/*)
-  const ddd = isDomainDriven(directories, framework);
+  const ddd = isDomainDriven(normalized, framework);
   if (ddd.match) {
     return {
       architecture: 'domain-driven',
@@ -155,7 +158,7 @@ export function classifyArchitecture(
   }
 
   // 3. Check layered (models + services + api)
-  const layered = isLayeredArchitecture(directories);
+  const layered = isLayeredArchitecture(normalized);
   if (layered.match) {
     return {
       architecture: 'layered',
