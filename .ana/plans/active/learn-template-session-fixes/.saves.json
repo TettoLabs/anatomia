@@ -14,5 +14,17 @@
   "spec": {
     "saved_at": "2026-05-02T22:22:09.413Z",
     "hash": "sha256:d729fad1441eba2e120dd8ba5cee52d5af1781676d4cf0a194f379b44e349781"
-  }
+  },
+  "build-report": {
+    "saved_at": "2026-05-02T22:29:02.170Z",
+    "hash": "sha256:6727013be5dd0d862f2ac036f48e6fcda9b3eca8ec5384492e6158439445eec1"
+  },
+  "build-data": {
+    "saved_at": "2026-05-02T22:29:02.170Z",
+    "hash": "sha256:5bdcbf1cfc1198f4020aadc22a3692ea9ce2dc18ef04bebc80bd211008033b20"
+  },
+  "modules_touched": [
+    ".claude/agents/ana-learn.md",
+    "packages/cli/templates/.claude/agents/ana-learn.md"
+  ]
 }
