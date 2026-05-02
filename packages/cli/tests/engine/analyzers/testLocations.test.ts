@@ -4,14 +4,15 @@
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { findTestLocations } from '../../../src/engine/analyzers/structure/index.js';
-import { mkdir, writeFile, rm } from 'node:fs/promises';
+import { mkdir, writeFile, rm, mkdtemp } from 'node:fs/promises';
 import { join } from 'node:path';
-
-const testDir = '/tmp/test-locations';
+import { tmpdir } from 'node:os';
 
 describe('Test location detection', () => {
+  let testDir: string;
+
   beforeEach(async () => {
-    await mkdir(testDir, { recursive: true });
+    testDir = await mkdtemp(join(tmpdir(), 'test-locations-'));
   });
 
   afterEach(async () => {
