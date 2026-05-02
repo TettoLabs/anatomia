@@ -70,7 +70,7 @@ After checking out the branch, check if `verify_report.md` (or `verify_report_N.
    - Every Finding (the full list)
    - The previous result and assertion counts
 2. Keep this as a checklist — you will explicitly address each item in a **Previous Findings Resolution** section of your new report.
-3. **Write fresh artifacts.** Delete the previous `verify_report.md` (or `verify_report_N.md`) and `verify_data.yaml` (or `verify_data_N.yaml`) from `.ana/plans/active/{slug}/`. You already extracted what you need in step 2. Writing to a clean path ensures no FAIL-round content leaks into the PASS report. Do NOT delete `build_data.yaml` — that is Build's artifact, not yours.
+3. **Write fresh artifacts.** Delete the previous verify report and its data companion from `.ana/plans/active/{slug}/` — both share the same number (`verify_report_1.md` + `verify_data_1.yaml`). You already extracted what you need in step 2. Writing to a clean path ensures no FAIL-round content leaks into the PASS report. Do NOT delete `build_data.yaml` — that is Build's artifact, not yours.
 4. Proceed with the FULL verification process below. Do not abbreviate or skip steps because "most things passed last time."
 
 **If first verification:** Continue normally — no previous report to read.
@@ -104,7 +104,7 @@ If the command is not available: check `.ana/PROOF_CHAIN.md` if it exists and lo
 
 ### 6b. Create Structured Findings File
 
-Before writing the narrative report, create `verify_data.yaml` (or `verify_data_N.yaml` for multi-phase, matching the report number) in `.ana/plans/active/{slug}/`. This is the structured companion to the narrative `## Findings` section. Build it as you verify — add findings as you discover them.
+Before writing the narrative report, create the data companion in `.ana/plans/active/{slug}/`. The filename mirrors your report: replace `report` with `data` and `.md` with `.yaml` (`verify_report_1.md` → `verify_data_1.yaml`). This is the structured companion to the narrative `## Findings` section. Build it as you verify — add findings as you discover them.
 
 ```yaml
 schema: 1
