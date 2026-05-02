@@ -1408,17 +1408,30 @@ function computeTiming(saves: SavesData): ProofSummary['timing'] {
     return entry?.saved_at ? new Date(entry.saved_at).getTime() : null;
   };
 
+  // work_started_at is a top-level ISO string, not a { saved_at, hash } object
+  const workStartedAtRaw = saves['work_started_at'];
+  const workStartedAt = typeof workStartedAtRaw === 'string'
+    ? new Date(workStartedAtRaw).getTime()
+    : null;
+
   const scopeTime = getTime('scope');
   const contractTime = getTime('contract');
   const buildTime = getTime('build-report');
   const verifyTime = getTime('verify-report');
 
-  const totalMs = (verifyTime && scopeTime) ? verifyTime - scopeTime : 0;
+  // Total includes think phase when work_started_at is available
+  const startTime = workStartedAt ?? scopeTime;
+  const totalMs = (verifyTime && startTime) ? verifyTime - startTime : 0;
 
   const timing: ProofSummary['timing'] = {
     total_minutes: Math.round(totalMs / 60000),
   };
-  if (contractTime && scopeTime) {
+  if (workStartedAt && scopeTime && contractTime) {
+    // New behavior: separate think and plan using work_started_at
+    timing.think = Math.round((scopeTime - workStartedAt) / 60000);
+    timing.plan = Math.round((contractTime - scopeTime) / 60000);
+  } else if (contractTime && scopeTime) {
+    // Fallback: identical think and plan (backward compat for old entries)
     timing.think = Math.round((contractTime - scopeTime) / 60000);
     timing.plan = Math.round((contractTime - scopeTime) / 60000);
   }
