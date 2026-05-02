@@ -1,0 +1,144 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Fix Type Lies"
+
+assertions:
+  # Fix 1: AGENT_FILES in dogfood sync test
+  - id: A001
+    says: "Dogfood sync test checks all six agents, not a hardcoded subset"
+    block: "dogfood agent definitions match the shipped templates exactly"
+    target: "test.iterates_over"
+    matcher: "equals"
+    value: "AGENT_FILES"
+
+  - id: A002
+    says: "Dogfood sync test no longer contains a hardcoded four-agent array"
+    block: "dogfood agent definitions match the shipped templates exactly"
+    target: "source.hardcoded_agent_array"
+    matcher: "not_contains"
+    value: "['ana.md', 'ana-plan.md', 'ana-build.md', 'ana-verify.md']"
+
+  # Fix 2: Guard test
+  - id: A003
+    says: "A guard test verifies template directory contents match AGENT_FILES"
+    block: "AGENT_FILES matches template directory contents"
+    target: "test.exists"
+    matcher: "truthy"
+
+  - id: A004
+    says: "Guard test compares sorted filesystem listing to sorted AGENT_FILES"
+    block: "AGENT_FILES matches template directory contents"
+    target: "test.uses_sort_comparison"
+    matcher: "truthy"
+
+  # Fix 1 continued: AGENT_FILES in init.test.ts
+  - id: A005
+    says: "Init test agent count uses AGENT_FILES.length instead of hardcoded 5"
+    block: "creates .claude/agents/ directory with agent files"
+    target: "source.count_assertion"
+    matcher: "contains"
+    value: "AGENT_FILES.length"
+
+  - id: A006
+    says: "Init template inventory generates agent entries from AGENT_FILES"
+    block: "all template files exist in CLI package"
+    target: "source.agent_entries"
+    matcher: "contains"
+    value: "AGENT_FILES"
+
+  - id: A007
+    says: "Init test frontmatter validation iterates AGENT_FILES"
+    block: "agent files have valid frontmatter with required fields"
+    target: "source.iteration_source"
+    matcher: "contains"
+    value: "AGENT_FILES"
+
+  # Fix 3: Verify template multi-phase data naming
+  - id: A008
+    says: "Verify template re-verify cleanup mentions numbered verify_data file"
+    block: "verify template re-verify cleanup"
+    target: "template.line73"
+    matcher: "contains"
+    value: "verify_data_N.yaml"
+
+  - id: A009
+    says: "Verify template Step 6b mentions numbered verify_data file"
+    block: "verify template step 6b"
+    target: "template.line107"
+    matcher: "contains"
+    value: "verify_data_N.yaml"
+
+  - id: A010
+    says: "Dogfood ana-verify.md matches the shipped template exactly"
+    block: "dogfood ana-verify sync"
+    target: "dogfood.matches_template"
+    matcher: "truthy"
+
+  # Fix 4: proof.ts skill type
+  - id: A011
+    says: "Promote command types skill as optional since it's a non-required option"
+    block: "promote skill type"
+    target: "source.skill_type"
+    matcher: "contains"
+    value: "skill?: string"
+
+  - id: A012
+    says: "Promote command no longer types skill as required string"
+    block: "promote skill type"
+    target: "source.skill_type"
+    matcher: "not_contains"
+    value: "skill: string;"
+
+  # Fix 5: work.ts stale comment
+  - id: A013
+    says: "Staleness check comment no longer references the deleted reopen loop"
+    block: "work.ts stale comment"
+    target: "source.comment"
+    matcher: "not_contains"
+    value: "reopen"
+
+  # Fix 6: conditional assertion guard
+  - id: A014
+    says: "Trend improvement test asserts change.changed is true unconditionally"
+    block: "detects trend improvement"
+    target: "test.assertion"
+    matcher: "contains"
+    value: "expect(change.changed).toBe(true)"
+
+  - id: A015
+    says: "Trend improvement test has no conditional guard around its assertion"
+    block: "detects trend improvement"
+    target: "test.source"
+    matcher: "not_contains"
+    value: "if (change.changed)"
+
+  # Cross-cutting
+  - id: A016
+    says: "All existing tests still pass after the fixes"
+    block: "full test suite"
+    target: "test.result"
+    matcher: "equals"
+    value: "pass"
+
+  - id: A017
+    says: "One new test exists — the guard test — bringing total from 1777 to 1778"
+    block: "full test suite"
+    target: "test.passed_count"
+    matcher: "greater"
+    value: 1777
+
+file_changes:
+  - path: "packages/cli/tests/templates/agent-proof-context.test.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/init.test.ts"
+    action: modify
+  - path: "packages/cli/templates/.claude/agents/ana-verify.md"
+    action: modify
+  - path: ".claude/agents/ana-verify.md"
+    action: modify
+  - path: "packages/cli/src/commands/proof.ts"
+    action: modify
+  - path: "packages/cli/src/commands/work.ts"
+    action: modify
+  - path: "packages/cli/tests/utils/proofSummary.test.ts"
+    action: modify
