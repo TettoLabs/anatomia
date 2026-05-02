@@ -9246,6 +9246,425 @@
           "suggested_action": "scope"
         }
       ]
+    },
+    {
+      "slug": "proof-health-v2",
+      "feature": "Proof Health V2",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 31,
+        "satisfied": 31,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Quality section replaces the old Trajectory heading",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "Hot Spots section replaces the old Hot Modules heading",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Promote and Recurring sections are merged into Next Actions",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "Old Promote section heading no longer appears",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "Old Recurring section heading no longer appears",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "Verification section shows first-pass rate as a percentage",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "Verification section shows total issues caught before shipping",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "A project with zero rejections shows 100% first-pass rate",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "Pipeline section shows median total time",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "Pipeline section shows phase breakdown with scope label",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "Pipeline section is omitted when fewer than 3 entries have timing",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "Unclassified count parenthetical is removed from Quality section",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "Promotions effectiveness section is hidden from terminal output",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "Next Actions items are capped at 5",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "Starting a work item creates the plan directory",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "Starting a work item records the start time",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A017",
+          "says": "Invalid slug format is rejected with a clear error",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A018",
+          "says": "Uppercase characters in slug are rejected",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A019",
+          "says": "Duplicate slug in active plans is rejected",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A020",
+          "says": "Duplicate slug in completed plans is rejected",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A021",
+          "says": "Starting on the wrong branch shows an error",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A022",
+          "says": "Think time uses the work start timestamp when available",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A023",
+          "says": "Think and Plan show different values for new entries",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A024",
+          "says": "Old entries without start time fall back to identical think and plan",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A025",
+          "says": "Shipped Think template tells agents to use the new start command",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A026",
+          "says": "Dogfood Think template matches the shipped version",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A027",
+          "says": "Templates no longer contain the manual mkdir instruction",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A028",
+          "says": "Completing work with a FAIL verification blocks the operation",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A029",
+          "says": "The FAIL error message tells the developer to fix and re-verify",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A030",
+          "says": "Completing work with an UNKNOWN verification still succeeds",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A031",
+          "says": "Completing work with a PASS verification succeeds normally",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 0,
+        "met": 0
+      },
+      "timing": {
+        "total_minutes": 163,
+        "think": 28,
+        "plan": 28,
+        "build": 128,
+        "verify": 8
+      },
+      "hashes": {
+        "scope": "sha256:d2fe97db3061e2a02878ae5e58b419a14965220de592e1438c4d27bb1109fbf3",
+        "contract": "sha256:793cfcd0e7a8ae5e75e9622366e70c0fef3e4587ba16af2ac3a78111a0a7775a",
+        "plan": "sha256:2c2b593cab11b5b02c32e84960a908ce60a95ed502d6219ad5849f143cf18593",
+        "spec": "sha256:673182936f46b0f888d456cca0d424f62dc23f6c64d0b2321c6954c090da1129",
+        "build-report": "sha256:be0c129506f8061616b1343033fc52039b4851b915d9efa1a3467808facb009f",
+        "build-data": "sha256:af067af74876bf4528295afa260c2ee6a95f1487255a19031c0116677e5170e6",
+        "verify-report": "sha256:cf02492523f93c2f8e48394af2d94d65e430112322e34c9797efd3c37529aed4",
+        "verify-data": "sha256:6fbf2cf8ef4fe80e0cc8161a2e265c034537c74f012d0e986b8c8293cf09f999"
+      },
+      "completed_at": "2026-05-02T07:26:53.029Z",
+      "modules_touched": [
+        ".claude/agents/ana.md",
+        "packages/cli/src/commands/proof.ts",
+        "packages/cli/src/commands/work.ts",
+        "packages/cli/src/types/proof.ts",
+        "packages/cli/src/utils/proofSummary.ts",
+        "packages/cli/templates/.claude/agents/ana.md",
+        "packages/cli/tests/commands/proof.test.ts",
+        "packages/cli/tests/commands/work.test.ts",
+        "packages/cli/tests/utils/proofSummary.test.ts"
+      ],
+      "scope_summary": "The health dashboard is the proof system's face. It's what a founder screenshots for their co-founder, what a developer checks before scoping work, what Learn reads at startup. Three gaps: the stats don't tell the full story (no verification effectiveness, no pipeline velocity), the timing data lies (think and plan show identical values), and nothing stops failed work from entering the proof chain. Three phases, one goal: the dashboard tells the truth and the proof chain guards its own integrity.",
+      "findings": [
+        {
+          "category": "test",
+          "summary": "A014 cap test uses toBeLessThanOrEqual(5) instead of toBe(5) — passes even if cap logic is broken and returns 0 items",
+          "file": "packages/cli/tests/commands/proof.test.ts",
+          "anchor": null,
+          "line": 2548,
+          "severity": "debt",
+          "suggested_action": "monitor",
+          "related_assertions": [
+            "A014"
+          ],
+          "id": "proof-health-v2-C1",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "computeFirstPassRate exported but never imported outside proofSummary.ts — only called internally by computeHealthReport",
+          "file": "packages/cli/src/utils/proofSummary.ts",
+          "anchor": null,
+          "line": 898,
+          "severity": "debt",
+          "suggested_action": "accept",
+          "id": "proof-health-v2-C2",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "No direct unit tests for computeFirstPassRate or computePipelineStats — only covered through integration tests via runProof(['health'])",
+          "file": "packages/cli/tests/commands/proof.test.ts",
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "proof-health-v2-C3",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "computePipelineStats maps timing.think to 'scope' display label (line 951: think ?? scope) — naming mismatch between data field and display is intentional per spec but may confuse future maintainers",
+          "file": "packages/cli/src/utils/proofSummary.ts",
+          "anchor": null,
+          "line": 951,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "proof-health-v2-C4",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "Spec predicted ~18 new tests but only ~11 were added (1773 vs 1762 baseline) — edge case tests for zero-entry verification, empty timing fields, and mixed promote+recurring sorting exist but inline, reducing count",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "proof-health-v2-C5",
+          "status": "lesson"
+        },
+        {
+          "category": "code",
+          "summary": "Zero-run JSON path hardcodes verification defaults inline (proof.ts:1749) rather than calling computeFirstPassRate([]) — duplicate knowledge of default shape",
+          "file": "packages/cli/src/commands/proof.ts",
+          "anchor": null,
+          "line": 1749,
+          "severity": "debt",
+          "suggested_action": "scope",
+          "id": "proof-health-v2-C6",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "A016 uses toBeDefined() for timestamp — weak assertion partially compensated by getTime() > 0 follow-up",
+          "file": "packages/cli/tests/commands/work.test.ts",
+          "anchor": null,
+          "line": 2624,
+          "severity": "debt",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A016"
+          ],
+          "id": "proof-health-v2-C7",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Untested defensive branches in startWork — 'not a git repo' and 'git pull conflict' paths have no dedicated unit tests",
+          "file": "packages/cli/src/commands/work.ts",
+          "anchor": null,
+          "line": 1340,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "proof-health-v2-C8",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "@ana tag collision — A015-A027 IDs appear in tests for other features due to per-contract numbering",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "proof-health-v2-C9",
+          "status": "lesson"
+        },
+        {
+          "category": "code",
+          "summary": "Dual FAIL guard creates maintenance surface — two independent checks for same condition at L776 and L1179",
+          "file": "packages/cli/src/commands/work.ts",
+          "anchor": null,
+          "line": 776,
+          "severity": "debt",
+          "suggested_action": "scope",
+          "related_assertions": [
+            "A028"
+          ],
+          "id": "proof-health-v2-C10",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Multi-phase error lost phase number — generic message no longer identifies which phase failed",
+          "file": "packages/cli/src/commands/work.ts",
+          "anchor": null,
+          "line": 1180,
+          "severity": "observation",
+          "suggested_action": "scope",
+          "id": "proof-health-v2-C11",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "A030 test named 'allows completion with UNKNOWN result' but exercises PASS path — UNKNOWN code path at L785 has no test coverage",
+          "file": "packages/cli/tests/commands/work.test.ts",
+          "anchor": null,
+          "line": 822,
+          "severity": "debt",
+          "suggested_action": "monitor",
+          "related_assertions": [
+            "A030"
+          ],
+          "id": "proof-health-v2-C12",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "Multi-phase FAIL test asserts rejects.toThrow() without checking exit code or message content",
+          "file": "packages/cli/tests/commands/work.test.ts",
+          "anchor": null,
+          "line": 871,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "proof-health-v2-C13",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "Contract A030 describes writeProofChain UNKNOWN behavior but completeWork step 8 blocks unknown before writeProofChain runs — assertion targets unreachable-through-completeWork path",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "related_assertions": [
+            "A030"
+          ],
+          "id": "proof-health-v2-C14",
+          "status": "lesson"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "computePipelineStats and floorMedian are private — may need export for Phase 2/3",
+          "file": "packages/cli/src/utils/proofSummary.ts",
+          "severity": "observation",
+          "suggested_action": "monitor"
+        },
+        {
+          "summary": "Pre-existing @ana tags (A001-A029) in proof.test.ts are from a different contract scope",
+          "file": "packages/cli/tests/commands/proof.test.ts",
+          "severity": "observation",
+          "suggested_action": "accept"
+        },
+        {
+          "summary": "Pipeline 'scope' label uses think field which includes plan time — semantic mismatch",
+          "file": "packages/cli/src/utils/proofSummary.ts",
+          "severity": "debt",
+          "suggested_action": "monitor"
+        },
+        {
+          "summary": "SavesData index signature treats work_started_at as SaveEntry|PreCheckData|undefined instead of string",
+          "file": "packages/cli/src/utils/proofSummary.ts",
+          "severity": "debt",
+          "suggested_action": "monitor"
+        },
+        {
+          "summary": "startWork uses process.exit(1) for validation errors, requiring mock-heavy test setup",
+          "file": "packages/cli/src/commands/work.ts",
+          "severity": "observation",
+          "suggested_action": "monitor"
+        },
+        {
+          "summary": "Defense-in-depth FAIL guard in writeProofChain is unreachable via completeWork",
+          "file": "packages/cli/src/commands/work.ts",
+          "severity": "debt",
+          "suggested_action": "accept"
+        },
+        {
+          "summary": "FAIL error message lost phase-specific numbering from old format",
+          "file": null,
+          "severity": "observation",
+          "suggested_action": "monitor"
+        }
+      ]
     }
   ],
   "schema": 1
