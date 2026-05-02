@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-41 runs · 70 active · 40 lessons · 0 promoted · 109 closed
+41 runs · 69 active · 40 lessons · 0 promoted · 110 closed
 
 ## Hot Modules
 
@@ -9,21 +9,20 @@
 | packages/cli/tests/commands/proof.test.ts | 11 | 5 |
 | packages/cli/tests/commands/work.test.ts | 10 | 6 |
 | packages/cli/src/utils/proofSummary.ts | 8 | 7 |
-| packages/cli/src/commands/proof.ts | 7 | 5 |
 | packages/cli/src/commands/work.ts | 7 | 5 |
+| packages/cli/src/commands/proof.ts | 6 | 5 |
 
 ## Promoted Rules
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 70 total)
+## Active Findings (30 shown of 69 total)
 
 ### packages/cli/src/commands/proof.ts
 
 - **code:** Zero-run JSON path hardcodes verification defaults inline (proof.ts:1749) rather than calling computeFirstPassRate([]) — duplicate knowledge of default shape — *Proof Health V2*
 - **code:** exitError helper duplicated inline in close (~30 lines) and promote (~30 lines) action handlers — *Learn V3 — CLI Commands + Template Finalization*
 - **code:** Available skills listing in SKILL_NOT_FOUND error is unspecified UX — reasonable but untested — *Learn V3 — CLI Commands + Template Finalization*
-- **code:** SEVERITY_ORDER duplication still present across proof.ts — known from proof context, not addressed by this phase — *Learn V3 — CLI Commands + Template Finalization*
 
 ### packages/cli/src/commands/work.ts
 
@@ -64,6 +63,7 @@
 - **test:** A016 uses toBeDefined() for timestamp — weak assertion partially compensated by getTime() > 0 follow-up — *Proof Health V2*
 - **test:** A030 test named 'allows completion with UNKNOWN result' but exercises PASS path — UNKNOWN code path at L785 has no test coverage — *Proof Health V2*
 - **test:** Multi-phase FAIL test asserts rejects.toThrow() without checking exit code or message content — *Proof Health V2*
+- **test:** A013 conditional assertion passes vacuously when health line absent — if (output.includes('Health:')) guard means zero assertions fire when improving trend doesn't produce a health line — *Proof Command UX*
 
 ### packages/cli/tests/templates/agent-proof-context.test.ts
 
