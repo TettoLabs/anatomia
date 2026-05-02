@@ -10576,7 +10576,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "fix-ci-failures-C5",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "checkFile() normalizes backslashes to forward slashes at L137 (.replace(/\\\\/g, '/')) — output-boundary normalization is the correct pattern. Intentional design.",
+          "closed_at": "2026-05-02T23:28:38.706Z",
+          "closed_by": "human"
         }
       ],
       "rejection_cycles": 1,

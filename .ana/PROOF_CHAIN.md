@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-45 runs · 63 active · 48 lessons · 0 promoted · 128 closed
+45 runs · 62 active · 48 lessons · 0 promoted · 129 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 63 total)
+## Active Findings (30 shown of 62 total)
 
 ### packages/cli/src/commands/proof.ts
 
@@ -31,15 +31,12 @@
 - **code:** Dual FAIL guard creates maintenance surface — two independent checks for same condition at L776 and L1179 — *Proof Health V2*
 - **code:** Multi-phase error lost phase number — generic message no longer identifies which phase failed — *Proof Health V2*
 
-### packages/cli/src/engine/detectors/documentation.ts
-
-- **code:** Documentation normalization in checkFile() covers all callers at output boundary — better than per-callsite fix — *Fix CI Test Failures*
-
 ### packages/cli/src/utils/proofSummary.ts
 
 - **code:** `as 'PASS' | 'FAIL'` cast in parseResult relies on regex constraint, not type-level proof — safe but brittle if regex changes — *Clean proofSummary.ts*
 - **code:** fileMatches `includes('/')` treats `./census.ts` as directory-qualified — theoretical false negative for dot-slash prefixed paths — *Clean proofSummary.ts*
 - **code:** O(n*m) traversal in computeStaleness — nested loop over entries × findings — *Learn V3 — CLI Commands + Template Finalization*
+- **code:** PreCheckData interface vestigial — retains assertions/covered/uncovered fields for reading old .saves.json but the code path that used them for assertion bootstrap is deleted — *Remove Pre-Check Tag Coverage*
 
 ### packages/cli/templates/.claude/agents/ana-learn.md
 
