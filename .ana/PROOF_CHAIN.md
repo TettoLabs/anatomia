@@ -1,22 +1,22 @@
 # Proof Chain Dashboard
 
-37 runs · 77 active · 31 lessons · 0 promoted · 83 closed
+38 runs · 80 active · 32 lessons · 0 promoted · 84 closed
 
 ## Hot Modules
 
 | File | Active | Entries |
 |------|--------|--------|
 | packages/cli/src/commands/proof.ts | 19 | 9 |
-| packages/cli/src/utils/proofSummary.ts | 9 | 8 |
+| packages/cli/src/utils/proofSummary.ts | 11 | 8 |
 | packages/cli/tests/commands/work.test.ts | 9 | 7 |
 | packages/cli/tests/commands/proof.test.ts | 9 | 4 |
-| packages/cli/tests/utils/proofSummary.test.ts | 6 | 4 |
+| packages/cli/tests/utils/proofSummary.test.ts | 7 | 5 |
 
 ## Promoted Rules
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 77 total)
+## Active Findings (30 shown of 80 total)
 
 ### packages/cli/src/commands/proof.ts
 
@@ -30,12 +30,10 @@
 - **code:** SEVERITY_ORDER duplication still present across proof.ts — known from proof context, not addressed by this phase — *Learn V3 — CLI Commands + Template Finalization*
 - **code:** --min-confidence accepts invalid values silently — no validation or Commander .choices() — *Learn V3 — CLI Commands + Template Finalization*
 - **code:** SEVERITY_ORDER duplication still present — sevOrder inline array at line 1026 is correct local choice but broader duplication across audit/findings blocks remains — *Proof Command UX*
-- **code:** options.skill typed as non-optional string but can be undefined after requiredOption→option change — *Proof Promote*
 
 ### packages/cli/src/commands/work.ts
 
 - **test:** No tests for UNVERIFIED fallback — A014-A018 verified by source inspection only; work.ts, pr.ts, proof.ts UNVERIFIED paths have zero test coverage — *Remove Pre-Check Tag Coverage*
-- **code:** Stale comment references deleted reopen loop — *Delete backward-compatibility code*
 
 ### packages/cli/src/types/proof.ts
 
@@ -43,12 +41,11 @@
 
 ### packages/cli/src/utils/proofSummary.ts
 
+- **code:** Redundant `stored === queried` in both-directories guard — exact match already caught at line 1641 — *Clean proofSummary.ts*
+- **code:** `as 'PASS' | 'FAIL'` cast in parseResult relies on regex constraint, not type-level proof — safe but brittle if regex changes — *Clean proofSummary.ts*
+- **code:** fileMatches `includes('/')` treats `./census.ts` as directory-qualified — theoretical false negative for dot-slash prefixed paths — *Clean proofSummary.ts*
 - **code:** O(n*m) traversal in computeStaleness — nested loop over entries × findings — *Learn V3 — CLI Commands + Template Finalization*
 - **code:** PreCheckData interface vestigial — retains assertions/covered/uncovered fields for reading old .saves.json but the code path that used them for assertion bootstrap is deleted — *Remove Pre-Check Tag Coverage*
-
-### packages/cli/templates/.claude/agents/ana-learn.md
-
-- **code:** Template instructs Learn to read .claude/skills/{name}/SKILL.md but actual skill files use different naming (e.g., coding-standards.md not SKILL.md) — agent will adapt at runtime but the path hint is misleading — *Ana Learn V1*
 
 ### packages/cli/tests/commands/proof.test.ts
 
@@ -65,7 +62,10 @@
 
 - **test:** A013 conditional assertion passes vacuously when health line absent — if (output.includes('Health:')) guard means zero assertions fire when improving trend doesn't produce a health line — *Proof Command UX*
 - **test:** A003 tagged test exercises normal completion, not recovery — does not assert 'Recovering' in output — *Harden Hot Files*
-- **test:** Pre-check COVERED status for A004-A010 comes from other features' tag collisions, not from harden-hot-files-specific tests — *Harden Hot Files*
+
+### packages/cli/tests/utils/proofSummary.test.ts
+
+- **test:** A010-A012 use toBeGreaterThan(0) instead of toBe(1) — each test creates exactly one finding, so the specific count is known — *Clean proofSummary.ts*
 
 ### General
 
