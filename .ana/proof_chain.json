@@ -7624,7 +7624,10 @@
             "A013"
           ],
           "id": "proof-command-ux-C1",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed by strengthen-weak-test-assertions — weak assertions replaced with specific behavioral checks (58bac65)",
+          "closed_at": "2026-05-02T19:00:15.950Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
@@ -8173,7 +8176,10 @@
             "A008"
           ],
           "id": "learn-v3-cli-commands-C1",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed by strengthen-weak-test-assertions — weak assertions replaced with specific behavioral checks (58bac65)",
+          "closed_at": "2026-05-02T19:00:15.950Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
@@ -8239,7 +8245,10 @@
             "A021"
           ],
           "id": "learn-v3-cli-commands-C6",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed by strengthen-weak-test-assertions — weak assertions replaced with specific behavioral checks (58bac65)",
+          "closed_at": "2026-05-02T19:00:15.950Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
@@ -8302,7 +8311,10 @@
             "A022"
           ],
           "id": "learn-v3-cli-commands-C11",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed by strengthen-weak-test-assertions — weak assertions replaced with specific behavioral checks (58bac65)",
+          "closed_at": "2026-05-02T19:00:15.950Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
@@ -8624,7 +8636,10 @@
             "A029"
           ],
           "id": "health-display-polish-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed by strengthen-weak-test-assertions — weak assertions replaced with specific behavioral checks (58bac65)",
+          "closed_at": "2026-05-02T19:00:15.950Z",
+          "closed_by": "human"
         },
         {
           "category": "upstream",
@@ -8856,7 +8871,10 @@
             "A012"
           ],
           "id": "clean-proofsummary-C3",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed by strengthen-weak-test-assertions — weak assertions replaced with specific behavioral checks (58bac65)",
+          "closed_at": "2026-05-02T19:00:15.950Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
@@ -9616,7 +9634,10 @@
             "A016"
           ],
           "id": "proof-health-v2-C7",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed by strengthen-weak-test-assertions — weak assertions replaced with specific behavioral checks (58bac65)",
+          "closed_at": "2026-05-02T19:00:15.949Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
@@ -9687,7 +9708,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "proof-health-v2-C13",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed by strengthen-weak-test-assertions — weak assertions replaced with specific behavioral checks (58bac65)",
+          "closed_at": "2026-05-02T19:00:15.950Z",
+          "closed_by": "human"
         },
         {
           "category": "upstream",
