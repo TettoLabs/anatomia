@@ -5459,7 +5459,10 @@
             "A004"
           ],
           "id": "finding-enrichment-schema-C1",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed by clean-proofsummary — ProofSummary.result tightened from string to 'PASS' | 'FAIL' | 'UNKNOWN'. Cast at work.ts:786 removed.",
+          "closed_at": "2026-05-02T05:07:03.174Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
