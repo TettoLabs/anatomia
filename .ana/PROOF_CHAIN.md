@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-44 runs · 62 active · 46 lessons · 0 promoted · 126 closed
+45 runs · 65 active · 48 lessons · 0 promoted · 126 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 62 total)
+## Active Findings (30 shown of 65 total)
 
 ### packages/cli/src/commands/proof.ts
 
@@ -31,12 +31,18 @@
 - **code:** Dual FAIL guard creates maintenance surface — two independent checks for same condition at L776 and L1179 — *Proof Health V2*
 - **code:** Multi-phase error lost phase number — generic message no longer identifies which phase failed — *Proof Health V2*
 
+### packages/cli/src/engine/analyzers/structure/architecture.ts
+
+- **code:** Library detection uses unnormalized paths — d.startsWith('lib/') fails on Windows backslash input — *Fix CI Test Failures*
+
+### packages/cli/src/engine/detectors/documentation.ts
+
+- **code:** Documentation normalization in checkFile() covers all callers at output boundary — better than per-callsite fix — *Fix CI Test Failures*
+
 ### packages/cli/src/utils/proofSummary.ts
 
 - **code:** `as 'PASS' | 'FAIL'` cast in parseResult relies on regex constraint, not type-level proof — safe but brittle if regex changes — *Clean proofSummary.ts*
 - **code:** fileMatches `includes('/')` treats `./census.ts` as directory-qualified — theoretical false negative for dot-slash prefixed paths — *Clean proofSummary.ts*
-- **code:** O(n*m) traversal in computeStaleness — nested loop over entries × findings — *Learn V3 — CLI Commands + Template Finalization*
-- **code:** PreCheckData interface vestigial — retains assertions/covered/uncovered fields for reading old .saves.json but the code path that used them for assertion bootstrap is deleted — *Remove Pre-Check Tag Coverage*
 
 ### packages/cli/templates/.claude/agents/ana-learn.md
 
@@ -68,6 +74,10 @@
 - **code:** Timestamp recency check (before/after window) in A010 test may flake on extremely slow CI — window depends on test execution speed — *Strengthen Weak Test Assertions*
 - **test:** A030 test named 'allows completion with UNKNOWN result' but exercises PASS path — UNKNOWN code path at L785 has no test coverage — *Proof Health V2*
 
+### packages/cli/tests/engine/types/census.test.ts
+
+- **test:** Mock data strings in test fixtures contain /tmp/ as placeholder absolutePath values — no filesystem access, no runtime impact — *Fix CI Test Failures*
+
 ### packages/cli/tests/templates/agent-proof-context.test.ts
 
 - **test:** Dogfood sync test loop short-circuits on first failure, skipping remaining files — now covers 6 files instead of 4, making masking worse — *Fix Type Lies*
@@ -79,5 +89,4 @@
 ### General
 
 - **test:** No @ana A003 tag or regression test for inline coAuthor absence — verified by source inspection only — *Learn V3 — CLI Commands + Template Finalization*
-- **test:** No tagged test for template assertions A028-A033 — all verified by source inspection — *Learn V3 — CLI Commands + Template Finalization*
 

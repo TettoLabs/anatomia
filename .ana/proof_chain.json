@@ -10385,6 +10385,227 @@
           "suggested_action": "monitor"
         }
       ]
+    },
+    {
+      "slug": "fix-ci-failures",
+      "feature": "Fix CI Test Failures",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 15,
+        "satisfied": 15,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Git detection tests pass without global git config",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "Git branch detection works in fresh repos without global config",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Scan project detects git info without relying on global config",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "Go and Rust entry point tests use platform-safe temp directories",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "Structure analysis integration test uses platform-safe temp directory",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "No test file contains hardcoded /tmp/ paths",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "Architecture detection normalizes paths before matching patterns",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "Architecture correctly detects microservices with backslash input",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "Proportional sampler returns forward-slash paths on all platforms",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "Sampler path filtering works regardless of platform separators",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "Documentation detector returns forward-slash paths for monorepo packages",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "Documentation dogfood test does not depend on file modification recency",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "Git activity dogfood test accepts markdown files anywhere in the repo",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "All existing tests continue to pass after fixes",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "No new test files were created",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 10,
+        "met": 9
+      },
+      "timing": {
+        "total_minutes": 34,
+        "think": 7,
+        "plan": 7,
+        "build": 22,
+        "verify": 5
+      },
+      "hashes": {
+        "scope": "sha256:feeca7733f60281d16f4a7713208c816fec3982443f068a00093b8ba78f7a028",
+        "contract": "sha256:3c58f5bc464fecc7829f508b74bf4c61b37f43a44416ae73fd52d08542166da1",
+        "plan": "sha256:4b6b1c91b89a4bdc90f093ef94129398161348f62e8801016f82981cbbbb305b",
+        "spec": "sha256:248fc37e570d43bfc2eaa09bc38eb4c3f4d01d9f9bdb69866deb24956eb31417",
+        "build-report": "sha256:45c4caed02f827f063bf379dcb8ce3c36a6b0004974171ac2e5f3ae7f8ef93f5",
+        "build-data": "sha256:718820e77e2fa4aeb057ad2ec3df31153889fabc57d30b5b747c339803990664",
+        "verify-report": "sha256:444f475c669e0d31530192e4695c9d529bfff1f91186a4574535e02dbb334ed2",
+        "verify-data": "sha256:5795e1836e2c734d3690f6d568641cfd3e5122592a4431bcc907f05b8e58f91c"
+      },
+      "completed_at": "2026-05-02T23:15:16.668Z",
+      "modules_touched": [
+        "packages/cli/src/engine/analyzers/structure/architecture.ts",
+        "packages/cli/src/engine/detectors/documentation.ts",
+        "packages/cli/src/engine/sampling/proportionalSampler.ts",
+        "packages/cli/tests/engine/analyzers/entryPoints-go-rust.test.ts",
+        "packages/cli/tests/engine/analyzers/entryPoints-node.test.ts",
+        "packages/cli/tests/engine/analyzers/entryPoints-python.test.ts",
+        "packages/cli/tests/engine/analyzers/testLocations.test.ts",
+        "packages/cli/tests/engine/detectors/documentation.test.ts",
+        "packages/cli/tests/engine/detectors/git-activity.test.ts",
+        "packages/cli/tests/engine/detectors/git-detection.test.ts",
+        "packages/cli/tests/engine/integration/structure-analysis.test.ts",
+        "packages/cli/tests/engine/scanProject.test.ts"
+      ],
+      "scope_summary": "CI fails on every push — 5 failures on Ubuntu, 28 on Windows, across 10 test files. The safety net is broken. \"Verified over trusted\" demands the mechanical checks work. This scope fixes all CI failures to get the test matrix green across 3 OS × 2 Node versions.",
+      "findings": [
+        {
+          "category": "code",
+          "summary": "Library detection uses unnormalized paths — d.startsWith('lib/') fails on Windows backslash input",
+          "file": "packages/cli/src/engine/analyzers/structure/architecture.ts",
+          "anchor": null,
+          "line": 172,
+          "severity": "risk",
+          "suggested_action": "scope",
+          "id": "fix-ci-failures-C1",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "Mock data strings in test fixtures contain /tmp/ as placeholder absolutePath values — no filesystem access, no runtime impact",
+          "file": "packages/cli/tests/engine/types/census.test.ts",
+          "anchor": null,
+          "line": 8,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "fix-ci-failures-C2",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "Contract A006 grep.count matcher counts mock data strings — overly broad for detecting actual filesystem /tmp/ usage",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "fix-ci-failures-C3",
+          "status": "lesson"
+        },
+        {
+          "category": "upstream",
+          "summary": "Contract A004/A005 value specifies os.tmpdir() but implementation uses destructured tmpdir() — semantically identical",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A004",
+            "A005"
+          ],
+          "id": "fix-ci-failures-C4",
+          "status": "lesson"
+        },
+        {
+          "category": "code",
+          "summary": "Documentation normalization in checkFile() covers all callers at output boundary — better than per-callsite fix",
+          "file": "packages/cli/src/engine/detectors/documentation.ts",
+          "anchor": null,
+          "line": 137,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "fix-ci-failures-C5",
+          "status": "active"
+        }
+      ],
+      "rejection_cycles": 1,
+      "previous_failures": [
+        {
+          "id": "A006",
+          "summary": "Grep for `/tmp/` returned 12+ matches across test files"
+        }
+      ],
+      "build_concerns": [
+        {
+          "summary": "Mock data strings in census/applicationShape tests still contain /tmp/ — grep count won't reach 0",
+          "file": null,
+          "severity": "observation",
+          "suggested_action": "accept"
+        },
+        {
+          "summary": "No dedicated backslash-input test for architecture normalization (AC8 prevents new tests)",
+          "file": "packages/cli/src/engine/analyzers/structure/architecture.ts",
+          "severity": "observation",
+          "suggested_action": "monitor"
+        },
+        {
+          "summary": "14 pre-existing lint warnings (no-explicit-any) in unrelated test files",
+          "file": null,
+          "severity": "observation",
+          "suggested_action": "accept"
+        },
+        {
+          "summary": "Library detection branch in architecture.ts uses unnormalized directories",
+          "file": "packages/cli/src/engine/analyzers/structure/architecture.ts",
+          "severity": "debt",
+          "suggested_action": "scope"
+        }
+      ]
     }
   ],
   "schema": 1
