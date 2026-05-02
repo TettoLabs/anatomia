@@ -14,5 +14,21 @@
   "spec": {
     "saved_at": "2026-05-02T00:01:18.856Z",
     "hash": "sha256:e83996afca81847ed361b983170cfcf75710a6a80e08d4d63ca678d29a6dad1f"
-  }
+  },
+  "build-report": {
+    "saved_at": "2026-05-02T03:48:28.915Z",
+    "hash": "sha256:7f23d9e4248be33b86a42458be912ecbb2532d7db16adff0e177ec6448061df8"
+  },
+  "build-data": {
+    "saved_at": "2026-05-02T03:48:28.915Z",
+    "hash": "sha256:72e1d2450cb323312056b359d8833e367bd0f92fca4c40a239aa720acb039f87"
+  },
+  "modules_touched": [
+    ".claude/agents/ana-verify.md",
+    "packages/cli/src/commands/proof.ts",
+    "packages/cli/src/commands/work.ts",
+    "packages/cli/templates/.claude/agents/ana-verify.md",
+    "packages/cli/tests/commands/init.test.ts",
+    "packages/cli/tests/templates/agent-proof-context.test.ts"
+  ]
 }
