@@ -44,5 +44,18 @@
     "packages/cli/tests/engine/integration/parsed-integration.test.ts",
     "packages/cli/tests/engine/types.test.ts",
     "packages/cli/tests/helpers/test-project.ts"
-  ]
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:74b1e3043bda384dc8caad2f8d2f4eb375bd5dae6431b69924d4298457e0d5ed",
+    "run_at": "2026-05-03T21:52:54.924Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-03T21:52:54.964Z",
+    "hash": "sha256:4bba45ccd875904f5e1b0fd6fb6dd11536912e7dce4da3f8a9af605d41a3218e"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-03T21:52:54.964Z",
+    "hash": "sha256:9b797df5c41ecc8c1097cb846d5c961f96c424d4c95f92e15c5e6e0103abefff"
+  }
 }
