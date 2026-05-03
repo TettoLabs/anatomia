@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-45 runs · 59 active · 48 lessons · 0 promoted · 132 closed
+46 runs · 61 active · 50 lessons · 0 promoted · 132 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 59 total)
+## Active Findings (30 shown of 61 total)
 
 ### packages/cli/src/commands/proof.ts
 
@@ -39,6 +39,8 @@
 
 ### packages/cli/templates/.claude/agents/ana-learn.md
 
+- **code:** Residual 'accept-action findings' in audit usage guidance reinforces batch framing — *Learn Severity-Based Triage*
+- **code:** 'Accept-action findings are pre-classified for closure' in Field Semantics section perpetuates batch framing language — *Learn Severity-Based Triage*
 - **code:** Edge Cases section still says 'Cap at ~30 per session' — contradicts new 'no arbitrary cap' guidance in Session Approach — *Learn Template Session Fixes*
 
 ### packages/cli/templates/.claude/agents/ana.md
@@ -67,8 +69,6 @@
 - **test:** UNVERIFIED test creates full project fixture manually instead of using createMergedProject helper — 60 lines vs ~5 lines — *Strengthen Weak Test Assertions*
 - **code:** Timestamp recency check (before/after window) in A010 test may flake on extremely slow CI — window depends on test execution speed — *Strengthen Weak Test Assertions*
 - **test:** A030 test named 'allows completion with UNKNOWN result' but exercises PASS path — UNKNOWN code path at L785 has no test coverage — *Proof Health V2*
-- **test:** A003 tagged test exercises normal completion, not recovery — does not assert 'Recovering' in output — *Harden Hot Files*
-- **test:** Pre-check COVERED status for A004-A010 comes from other features' tag collisions, not from harden-hot-files-specific tests — *Harden Hot Files*
 
 ### packages/cli/tests/templates/agent-proof-context.test.ts
 

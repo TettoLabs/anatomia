@@ -10624,6 +10624,224 @@
           "suggested_action": "scope"
         }
       ]
+    },
+    {
+      "slug": "learn-severity-triage",
+      "feature": "Learn Severity-Based Triage",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 23,
+        "satisfied": 23,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "The accept-action triage phase no longer exists in the Learn template",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "Clear the Deck heading is gone from the Learn template",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Risk and debt findings are triaged first as Phase 1",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "Promote candidates come after risk and debt as Phase 2",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "Observations are triaged last as Phase 3",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "Session approach paragraph describes severity-based ordering",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "Session approach paragraph does not mention accept-action",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "Phase 1 uses the claim-extraction workflow for all risk and debt findings",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "Phase 1 includes staleness prediction step",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "No phase heading references accept as a triage category",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "Close reason standards survive as a shared section",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "Good and bad close reason examples are preserved",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "Null-file finding guidance survives the restructure",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "The arbitrary 30-finding cap is removed",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "Large active set guidance now focuses on severity or module",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "Verify template line 73 uses the mechanical naming formula",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A017",
+          "says": "Verify template no longer uses 'both share the same number' phrasing",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A018",
+          "says": "Dogfood learn template is identical to the source template",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A019",
+          "says": "Dogfood verify template is identical to the source template",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A020",
+          "says": "Present State menu no longer offers Clear the Deck as an option",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A021",
+          "says": "Present State menu offers risk findings as an option",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A022",
+          "says": "Default ordering parenthetical reflects severity-based sequence",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A023",
+          "says": "Promote phase correctly references Phase 1 for recurring patterns",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 11,
+        "met": 11
+      },
+      "timing": {
+        "total_minutes": 38,
+        "think": 1,
+        "plan": 8,
+        "build": 19,
+        "verify": 10
+      },
+      "hashes": {
+        "scope": "sha256:23bcedf98a32ff97a08e77e49ecc3469a995aef6e52010a3973537650152bf59",
+        "contract": "sha256:a9b410de0cef18539acf03216a46d8c26e0d8745eca24519bfd050024388ea4c",
+        "plan": "sha256:7e42ffe43c43122357c4932cc5eeddb55b902b0f5cd55b7ac40694b53d5c8c4a",
+        "spec": "sha256:5f908547c0660f1c7191b10e77b72d895008e0c22b1c8b83c375f618edd7c323",
+        "build-report": "sha256:1f70f8a0e34bfbe3fd8e9d0e9bc10321c2747812956e47c3d147a27db01f15c2",
+        "build-data": "sha256:4bc898d8c8f97244f1de8cbf036be46b991c39a1beeb8fb2b602bbfe77b71315",
+        "verify-report": "sha256:1a29b940fc2e8a1eaaa175b1b341bb92f328a46ae48bbd9aa4755b05ab9bac19",
+        "verify-data": "sha256:690dd9f25aae05f9d4390f8e4426be8a367f55ccb258fc74050daedc65876781"
+      },
+      "completed_at": "2026-05-03T01:16:09.678Z",
+      "modules_touched": [
+        ".claude/agents/ana-learn.md",
+        ".claude/agents/ana-verify.md",
+        "packages/cli/templates/.claude/agents/ana-learn.md",
+        "packages/cli/templates/.claude/agents/ana-verify.md"
+      ],
+      "scope_summary": "Restructure Learn's triage workflow to eliminate the batch-closing failure mode caused by Phase 1 \"Accept-Action (Clear the Deck).\" Three consecutive sessions proved that grouping findings by `suggested_action: accept` creates batch thinking — Learn recommends closing the entire group without individual evaluation, regardless of template instructions. The fix removes the action-based grouping and triages by severity instead, extending the rigorous Phase 2 workflow to ALL findings.",
+      "findings": [
+        {
+          "category": "code",
+          "summary": "Residual 'accept-action findings' in audit usage guidance reinforces batch framing",
+          "file": "packages/cli/templates/.claude/agents/ana-learn.md",
+          "anchor": null,
+          "line": 68,
+          "severity": "debt",
+          "suggested_action": "scope",
+          "related_assertions": [
+            "A007"
+          ],
+          "id": "learn-severity-triage-C1",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "'Accept-action findings are pre-classified for closure' in Field Semantics section perpetuates batch framing language",
+          "file": "packages/cli/templates/.claude/agents/ana-learn.md",
+          "anchor": null,
+          "line": 159,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "learn-severity-triage-C2",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "Proof chain finding 'Cap at ~30 per session' likely resolved by this build (AC7)",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "learn-severity-triage-C3",
+          "status": "lesson"
+        },
+        {
+          "category": "upstream",
+          "summary": "Proof chain finding about skill file path naming (SKILL.md vs actual names) still present — out of scope for this build",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "learn-severity-triage-C4",
+          "status": "lesson"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "Two accept-action references remain in non-phase sections (audit command usage at line 68, Proof Chain Field Semantics at line 159) — per spec constraint these are correct but could confuse future readers",
+          "file": "packages/cli/templates/.claude/agents/ana-learn.md",
+          "severity": "observation",
+          "suggested_action": "monitor"
+        }
+      ]
     }
   ],
   "schema": 1
