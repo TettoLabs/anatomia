@@ -1,0 +1,39 @@
+schema: 1
+findings:
+  - category: test
+    summary: "Dogfood test expects deleted packages/cli/README.md — regression"
+    file: "packages/cli/tests/engine/detectors/documentation.test.ts"
+    line: 277
+    severity: risk
+    suggested_action: scope
+    related_assertions: []
+
+  - category: upstream
+    summary: "Contract A002 says 9 second-level sections but spec mockup shows 7 — planner miscount"
+    severity: observation
+    suggested_action: accept
+    related_assertions: ["A002"]
+
+  - category: code
+    summary: "prepublishOnly cp uses relative ../../ path — fragile if monorepo restructures"
+    file: "packages/cli/package.json"
+    severity: debt
+    suggested_action: monitor
+
+  - category: code
+    summary: "npm pack --dry-run shows no README/CHANGELOG because files only exist after prepublishOnly runs — not testable in isolation"
+    file: "packages/cli/package.json"
+    severity: observation
+    suggested_action: accept
+
+  - category: code
+    summary: "CONTRIBUTING.md Development links use absolute GitHub URLs instead of relative cross-references"
+    file: "README.md"
+    line: 146
+    severity: debt
+    suggested_action: scope
+
+  - category: upstream
+    summary: "A033 emoji check scope includes CHANGELOG-internal.md but contract says 'all docs' — archive has sprint content by design, not emoji concern but scope ambiguity"
+    severity: observation
+    suggested_action: accept

@@ -34,5 +34,18 @@
     "packages/cli/CONTRIBUTING.md",
     "packages/cli/README.md",
     "packages/cli/package.json"
-  ]
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:e57d692795a037f2f6f406d8e142f70a698a0cd4d079786786834bb79c242e1b",
+    "run_at": "2026-05-03T19:42:05.709Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-03T19:42:05.748Z",
+    "hash": "sha256:e55b0e04f25c5b418c8649ba68d1f1dae2b40aaaf6c57180753fbd11b864cd2e"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-03T19:42:05.748Z",
+    "hash": "sha256:1cb1fd08f9bd4af6ed36655f44280bb26f17a4886310d6f1f4f40b72f98112d7"
+  }
 }
