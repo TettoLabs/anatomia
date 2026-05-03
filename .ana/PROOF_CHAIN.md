@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-47 runs · 66 active · 53 lessons · 0 promoted · 132 closed
+48 runs · 70 active · 53 lessons · 0 promoted · 132 closed
 
 ## Hot Modules
 
@@ -8,7 +8,7 @@
 |------|--------|--------|
 | packages/cli/tests/commands/proof.test.ts | 10 | 6 |
 | packages/cli/tests/commands/work.test.ts | 9 | 5 |
-| packages/cli/src/utils/proofSummary.ts | 6 | 5 |
+| packages/cli/src/utils/proofSummary.ts | 8 | 6 |
 | packages/cli/src/commands/proof.ts | 5 | 5 |
 | packages/cli/src/commands/work.ts | 5 | 3 |
 
@@ -16,7 +16,11 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 66 total)
+## Active Findings (30 shown of 70 total)
+
+### .husky/pre-commit
+
+- **code:** Pre-commit comment claims ~9s / 10s threshold — will drift as test count grows (1807 now) — *V1 Code Changes*
 
 ### packages/cli/package.json
 
@@ -27,7 +31,6 @@
 
 - **code:** Unknown severity/action values silently dropped from fixed-key objects — by_severity sum can be less than total_active — *Audit JSON Severity Summary*
 - **code:** Zero-run JSON path hardcodes verification defaults inline (proof.ts:1749) rather than calling computeFirstPassRate([]) — duplicate knowledge of default shape — *Proof Health V2*
-- **code:** exitError helper duplicated inline in close (~30 lines) and promote (~30 lines) action handlers — *Learn V3 — CLI Commands + Template Finalization*
 
 ### packages/cli/src/commands/work.ts
 
@@ -37,8 +40,8 @@
 
 ### packages/cli/src/utils/proofSummary.ts
 
-- **code:** `as 'PASS' | 'FAIL'` cast in parseResult relies on regex constraint, not type-level proof — safe but brittle if regex changes — *Clean proofSummary.ts*
-- **code:** fileMatches `includes('/')` treats `./census.ts` as directory-qualified — theoretical false negative for dot-slash prefixed paths — *Clean proofSummary.ts*
+- **code:** Theoretical false-match in parseACResults regex — bullet lines outside AC section containing PASS/FAIL could inflate counts — *V1 Code Changes*
+- **code:** proofSummary.ts ~1550 lines — past comfort threshold, known from prior cycles — *V1 Code Changes*
 
 ### packages/cli/templates/.claude/agents/ana-learn.md
 
@@ -61,7 +64,6 @@
 - **test:** 5-finding fixture manually duplicated three times across test blocks instead of shared constant — *Audit JSON Severity Summary*
 - **test:** A014 cap test uses toBeLessThanOrEqual(5) instead of toBe(5) — passes even if cap logic is broken and returns 0 items — *Proof Health V2*
 - **test:** No direct unit tests for computeFirstPassRate or computePipelineStats — only covered through integration tests via runProof(['health']) — *Proof Health V2*
-- **test:** A019 not.toContain('Promote') works by coincidence — test data has no promoted findings so 'Promotions' heading also absent; a more targeted regex or exact heading match would be more robust — *Health Display Polish*
 
 ### packages/cli/tests/commands/work.test.ts
 
@@ -80,6 +82,7 @@
 
 ### packages/cli/tests/utils/proofSummary.test.ts
 
+- **test:** No false-match edge case test for non-AC bullet lines containing status words — *V1 Code Changes*
 - **test:** Remaining toBeGreaterThan(0) in proofSummary.test.ts — 21 instances outside this spec's scope still use weak assertions — *Strengthen Weak Test Assertions*
 
 ### README.md
