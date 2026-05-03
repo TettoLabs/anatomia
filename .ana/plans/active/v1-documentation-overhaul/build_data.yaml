@@ -1,0 +1,14 @@
+schema: 1
+concerns:
+  - summary: "README line count is exactly 150 — at the lower bound of the 150-200 target"
+    file: "README.md"
+    severity: observation
+    suggested_action: accept
+  - summary: "Contract A002 expects 9 second-level sections but spec mockup shows 7 ## headings (title+description are conceptual sections, not headings)"
+    file: "README.md"
+    severity: observation
+    suggested_action: accept
+  - summary: "Pre-existing test failure in documentation.test.ts (docsDirectory assertion) — not introduced by this build"
+    file: "packages/cli/tests/engine/detectors/documentation.test.ts"
+    severity: debt
+    suggested_action: scope

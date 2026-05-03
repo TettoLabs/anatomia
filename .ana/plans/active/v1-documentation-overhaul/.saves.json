@@ -15,5 +15,24 @@
   "spec": {
     "saved_at": "2026-05-03T19:04:43.048Z",
     "hash": "sha256:ce0d03d8989dd93450adc969c6254fd277e290ae32266282634a95beecabe085"
-  }
+  },
+  "build-report": {
+    "saved_at": "2026-05-03T19:25:31.998Z",
+    "hash": "sha256:4ae1208e35800a8507856d8c751ff429945231390c58c4160d0197f0f6dca28b"
+  },
+  "build-data": {
+    "saved_at": "2026-05-03T19:25:31.999Z",
+    "hash": "sha256:2453a533377904faa8365b68e1dbf0a6b8076abfbcf4574066ca114627f56875"
+  },
+  "modules_touched": [
+    "CHANGELOG-internal.md",
+    "CHANGELOG.md",
+    "README.md",
+    "packages/cli/.gitignore",
+    "packages/cli/ARCHITECTURE.md",
+    "packages/cli/CHANGELOG.md",
+    "packages/cli/CONTRIBUTING.md",
+    "packages/cli/README.md",
+    "packages/cli/package.json"
+  ]
 }
