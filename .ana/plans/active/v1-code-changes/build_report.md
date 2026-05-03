@@ -12,7 +12,7 @@
 - `packages/cli/templates/.claude/agents/ana-verify.md` (modified): Replaced 3 occurrences of `🔍 UNVERIFIABLE` with `-- UNVERIFIABLE`.
 - `.claude/agents/ana-verify.md` (modified): Same `🔍` → `--` replacement in dogfood copy (3 occurrences).
 - `packages/cli/src/commands/scan.ts` (modified): Removed `verbose` from `ScanOptions` interface, removed `--verbose` option registration, removed verbose from spinner condition, deleted the verbose block. Rewrote `--quick` description to plain language.
-- `packages/cli/docs/TROUBLESHOOTING.md` (modified): Replaced all 9 `--verbose` references — removed verbose-specific diagnostic steps, updated commands to plain `ana scan`.
+- `packages/cli/docs/TROUBLESHOOTING.md` (modified): Replaced all 9 `--verbose` references — removed verbose-specific diagnostic steps, updated commands to plain `ana scan`. Fixed remaining Section 4 Option 3 reference missed in first build round.
 - `packages/cli/src/commands/init/index.ts` (modified): Replaced `❌ Init failed:` with `Error: Init failed:`.
 - `packages/cli/src/commands/setup.ts` (modified): Removed `🔍` from validating setup message. Rewrote description from `'Setup-related commands'` to `'Configure project context (check, complete)'`.
 - `packages/cli/src/index.ts` (modified): Changed version output from bare `pkg.version` to `anatomia-cli/${pkg.version}`.
@@ -35,7 +35,7 @@
 
 ## Acceptance Criteria Coverage
 
-- AC1 "--verbose flag removed" → scan.ts: option registration, ScanOptions, spinner condition, verbose block all deleted. TROUBLESHOOTING.md: all 9 references updated. ✅ Verified (grep confirms 0 `--verbose` in both files)
+- AC1 "--verbose flag removed" → scan.ts: option registration, ScanOptions, spinner condition, verbose block all deleted. TROUBLESHOOTING.md: all 9 references updated including Section 4 Option 3. ✅ Verified (grep confirms 0 `--verbose` in both files)
 - AC2 "Zero decorative emoji" → init/index.ts: `❌` → `Error:`, setup.ts: `🔍` removed. ✅ Verified (grep `❌|🔍` in src/commands/ returns only pr.ts verify protocol display, which is excluded)
 - AC3 "parseACResults matches words not emoji" → proofSummary.ts: regex replaced with `^\s*-\s+.*\bSTATUS\b/gm`. ✅ Verified (3 test cases prove all formats work)
 - AC4 "All existing proofSummary tests pass" → proofSummary.test.ts: 172 tests passed (169 existing + 3 new). ✅ Verified
@@ -60,9 +60,14 @@
 
 None — contract followed exactly.
 
+## Fix History
+
+### Round 1 (verify failure)
+- **A009 UNSATISFIED:** TROUBLESHOOTING.md Section 4 "Low Confidence Detection", Option 3 at lines 249-256 still contained `ana scan --verbose`. Rewrote Option 3 to remove the verbose reference. Commit: `d1d0903`.
+
 ## Test Results
 
-### Baseline (before changes)
+### Baseline (before original changes)
 ```
 cd packages/cli && pnpm vitest run --run
 Test Files  93 passed (93)
@@ -75,7 +80,7 @@ Test Files  93 passed (93)
 cd packages/cli && pnpm vitest run --run
 Test Files  93 passed (93)
       Tests  1807 passed | 2 skipped (1809)
-   Duration  30.86s
+   Duration  31.00s
 ```
 
 ### Comparison
@@ -88,13 +93,16 @@ Test Files  93 passed (93)
 
 ## Verification Commands
 ```bash
-cd packages/cli && pnpm run build
+pnpm run build
 cd packages/cli && pnpm vitest run --run
 pnpm run lint
 ```
 
 ## Git History
 ```
+d1d0903 [v1-code-changes] Fix: remove last --verbose reference in TROUBLESHOOTING.md Section 4
+5c37618 [v1-code-changes] Verify report
+adbea52 [v1-code-changes] Build report
 e1f0dfc [v1-code-changes] Clean up CLI output: emoji, descriptions, chalk.dim, tsup, husky
 5c3a344 [v1-code-changes] Remove --verbose flag from scan, update troubleshooting docs
 6f64379 [v1-code-changes] Replace 🔍 UNVERIFIABLE with -- UNVERIFIABLE in verify templates
@@ -105,5 +113,6 @@ e1f0dfc [v1-code-changes] Clean up CLI output: emoji, descriptions, chalk.dim, t
 
 - The `npm pack --dry-run` still includes `ARCHITECTURE.md` and `CONTRIBUTING.md` in the tarball because the `files` field in `package.json` currently doesn't restrict to `["dist"]` — that's scoped for v1-release-prep, not this spec.
 - Pre-existing lint warnings (14 `@typescript-eslint/no-explicit-any`) in test files — not introduced by this build.
+- The `parseACResults` regex `^\s*-\s+.*\bPASS\b` would theoretically match any bullet line containing the word PASS outside the AC section (e.g., a finding line mentioning PASS). Low practical risk — real reports don't contain such lines in AC walkthrough sections — but the regex is less precise than the emoji version. No test covers this false-match edge case.
 
 Verified complete by second pass.

@@ -1,8 +1,13 @@
 schema: 1
 concerns:
-  - summary: "npm pack includes ARCHITECTURE.md and CONTRIBUTING.md — files field not yet restricted"
+  - summary: "npm pack includes ARCHITECTURE.md and CONTRIBUTING.md — files field not restricted to dist"
+    file: "packages/cli/package.json"
+    severity: debt
+    suggested_action: scope
+  - summary: "14 pre-existing @typescript-eslint/no-explicit-any warnings in test files"
     severity: observation
     suggested_action: monitor
-  - summary: "14 pre-existing @typescript-eslint/no-explicit-any warnings in test files"
-    severity: debt
-    suggested_action: accept
+  - summary: "parseACResults regex could theoretically false-match non-AC bullet lines containing PASS"
+    file: "packages/cli/src/utils/proofSummary.ts"
+    severity: observation
+    suggested_action: monitor
