@@ -1,39 +1,47 @@
 schema: 1
 findings:
-  - category: test
-    summary: "Dogfood test expects deleted packages/cli/README.md — regression"
-    file: "packages/cli/tests/engine/detectors/documentation.test.ts"
-    line: 277
-    severity: risk
-    suggested_action: scope
-    related_assertions: []
-
   - category: upstream
-    summary: "Contract A002 says 9 second-level sections but spec mockup shows 7 — planner miscount"
+    summary: "Contract A002 value stale — says 9 sections but spec mockup and implementation both show 7"
     severity: observation
     suggested_action: accept
     related_assertions: ["A002"]
-
-  - category: code
-    summary: "prepublishOnly cp uses relative ../../ path — fragile if monorepo restructures"
-    file: "packages/cli/package.json"
-    severity: debt
-    suggested_action: monitor
-
-  - category: code
-    summary: "npm pack --dry-run shows no README/CHANGELOG because files only exist after prepublishOnly runs — not testable in isolation"
-    file: "packages/cli/package.json"
-    severity: observation
-    suggested_action: accept
-
-  - category: code
-    summary: "CONTRIBUTING.md Development links use absolute GitHub URLs instead of relative cross-references"
-    file: "README.md"
-    line: 146
+  - category: upstream
+    summary: "ARCHITECTURE.md claims 5 python detector files but filesystem has 4 — inherited from spec verified counts"
+    file: "packages/cli/ARCHITECTURE.md"
+    line: 61
     severity: debt
     suggested_action: scope
-
+  - category: code
+    summary: "prepublishOnly relies on relative ../../ path — breaks if package depth changes"
+    file: "packages/cli/package.json"
+    line: 50
+    severity: observation
+    suggested_action: monitor
+  - category: code
+    summary: "README.md and CHANGELOG.md cannot be verified with npm pack --dry-run — only exist after prepublishOnly"
+    file: "packages/cli/package.json"
+    line: 34
+    severity: observation
+    suggested_action: accept
+  - category: test
+    summary: "documentation.test.ts assertion removed for packages/cli/README.md — justified but reduces dogfood coverage"
+    file: "packages/cli/tests/engine/detectors/documentation.test.ts"
+    line: 276
+    severity: observation
+    suggested_action: accept
   - category: upstream
-    summary: "A033 emoji check scope includes CHANGELOG-internal.md but contract says 'all docs' — archive has sprint content by design, not emoji concern but scope ambiguity"
+    summary: "Spec 'Zero test changes' constraint was incompatible with deleting packages/cli/README.md — forced builder deviation"
+    severity: observation
+    suggested_action: accept
+  - category: code
+    summary: "README Development section uses absolute GitHub URLs for CONTRIBUTING/ARCHITECTURE — correct since README is at root"
+    file: "README.md"
+    line: 152
+    severity: observation
+    suggested_action: accept
+  - category: code
+    summary: "Scan output block in README is representative example, not live output — cannot be mechanically validated"
+    file: "README.md"
+    line: 35
     severity: observation
     suggested_action: accept
