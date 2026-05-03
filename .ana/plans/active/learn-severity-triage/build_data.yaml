@@ -1,0 +1,6 @@
+schema: 1
+concerns:
+  - summary: "Two accept-action references remain in non-phase sections (audit command usage at line 68, Proof Chain Field Semantics at line 159) — per spec constraint these are correct but could confuse future readers"
+    file: "packages/cli/templates/.claude/agents/ana-learn.md"
+    severity: observation
+    suggested_action: monitor
