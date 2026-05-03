@@ -1,0 +1,268 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "V1 Documentation Overhaul"
+
+assertions:
+  # AC1: README structure and content
+  - id: A001
+    says: "The root README exists and is between 150 and 200 lines"
+    block: "README has correct length"
+    target: "readme.lineCount"
+    matcher: "greater"
+    value: 149
+
+  - id: A002
+    says: "The README contains exactly 9 second-level sections"
+    block: "README has correct section count"
+    target: "readme.sectionCount"
+    matcher: "equals"
+    value: 9
+
+  - id: A003
+    says: "The README has CI, npm, and license badges"
+    block: "README has three badges"
+    target: "readme.badgeCount"
+    matcher: "equals"
+    value: 3
+
+  - id: A004
+    says: "The README has an install section with npm install command"
+    block: "README has install section"
+    target: "readme.content"
+    matcher: "contains"
+    value: "npm install -g anatomia-cli"
+
+  - id: A005
+    says: "The README states the Claude Code boundary clearly"
+    block: "README states Claude Code boundary"
+    target: "readme.content"
+    matcher: "contains"
+    value: "Claude Code"
+
+  - id: A006
+    says: "The README contains no hedge words"
+    block: "README has no hedge words"
+    target: "readme.hedgeWordCount"
+    matcher: "equals"
+    value: 0
+
+  - id: A007
+    says: "All proof subcommands are visible in the README"
+    block: "README shows proof subcommands"
+    target: "readme.content"
+    matcher: "contains"
+    value: "ana proof health"
+
+  - id: A008
+    says: "The README contains a scan output example block"
+    block: "README has scan ASCII block"
+    target: "readme.content"
+    matcher: "contains"
+    value: "ana scan"
+
+  # AC2: CHANGELOG structure and content
+  - id: A009
+    says: "The changelog opens the 1.0.0 entry with First stable release"
+    block: "CHANGELOG has correct opening"
+    target: "changelog.content"
+    matcher: "contains"
+    value: "First stable release."
+
+  - id: A010
+    says: "The changelog follows Keep a Changelog format with version header"
+    block: "CHANGELOG has version header"
+    target: "changelog.content"
+    matcher: "contains"
+    value: "[1.0.0]"
+
+  - id: A011
+    says: "The changelog has an Unreleased section for future changes"
+    block: "CHANGELOG has Unreleased section"
+    target: "changelog.content"
+    matcher: "contains"
+    value: "[Unreleased]"
+
+  - id: A012
+    says: "The changelog has GitHub compare links in the footer"
+    block: "CHANGELOG has compare links"
+    target: "changelog.content"
+    matcher: "contains"
+    value: "https://github.com/TettoLabs/anatomia/compare/"
+
+  - id: A013
+    says: "The changelog does not reference any deleted features"
+    block: "CHANGELOG has no deleted feature references"
+    target: "changelog.deletedFeatureCount"
+    matcher: "equals"
+    value: 0
+
+  - id: A014
+    says: "The changelog groups features by product surface"
+    block: "CHANGELOG groups by product surface"
+    target: "changelog.content"
+    matcher: "contains"
+    value: "#### Scan engine"
+
+  # AC3: Archive
+  - id: A015
+    says: "The old changelog is preserved as an internal archive"
+    block: "CHANGELOG-internal.md exists"
+    target: "archive.exists"
+    matcher: "truthy"
+
+  - id: A016
+    says: "The archive has a header explaining it is internal history"
+    block: "CHANGELOG-internal.md has internal header"
+    target: "archive.content"
+    matcher: "contains"
+    value: "Internal Development History"
+
+  # AC4: CONTRIBUTING.md
+  - id: A017
+    says: "The contributor guide has no stale line number references"
+    block: "CONTRIBUTING has no line numbers"
+    target: "contributing.lineNumberCount"
+    matcher: "equals"
+    value: 0
+
+  - id: A018
+    says: "The contributor guide has no sprint jargon"
+    block: "CONTRIBUTING has no sprint references"
+    target: "contributing.sprintRefCount"
+    matcher: "equals"
+    value: 0
+
+  - id: A019
+    says: "All test commands in CONTRIBUTING use vitest run"
+    block: "CONTRIBUTING uses correct test commands"
+    target: "contributing.content"
+    matcher: "not_contains"
+    value: "pnpm test\n"
+
+  - id: A020
+    says: "CONTRIBUTING opens with a cross-reference to ARCHITECTURE"
+    block: "CONTRIBUTING cross-references ARCHITECTURE"
+    target: "contributing.content"
+    matcher: "contains"
+    value: "ARCHITECTURE.md"
+
+  - id: A021
+    says: "The contributor guide includes detectRemix in the framework example"
+    block: "CONTRIBUTING includes detectRemix"
+    target: "contributing.content"
+    matcher: "contains"
+    value: "detectRemix"
+
+  # AC5: ARCHITECTURE.md
+  - id: A022
+    says: "The architecture doc describes the census-based scan pipeline"
+    block: "ARCHITECTURE describes census pipeline"
+    target: "architecture.content"
+    matcher: "contains"
+    value: "buildCensus"
+
+  - id: A023
+    says: "The architecture doc does not mention the deleted analyze function"
+    block: "ARCHITECTURE has no analyze() reference"
+    target: "architecture.content"
+    matcher: "not_contains"
+    value: "analyze()"
+
+  - id: A024
+    says: "The architecture doc does not mention the deleted monorepo detector"
+    block: "ARCHITECTURE has no monorepo.ts reference"
+    target: "architecture.content"
+    matcher: "not_contains"
+    value: "detectors/monorepo.ts"
+
+  - id: A025
+    says: "The architecture doc has no sprint jargon"
+    block: "ARCHITECTURE has no sprint references"
+    target: "architecture.sprintRefCount"
+    matcher: "equals"
+    value: 0
+
+  - id: A026
+    says: "ARCHITECTURE opens with a cross-reference to CONTRIBUTING"
+    block: "ARCHITECTURE cross-references CONTRIBUTING"
+    target: "architecture.content"
+    matcher: "contains"
+    value: "CONTRIBUTING.md"
+
+  - id: A027
+    says: "The architecture doc lists the sampling module"
+    block: "ARCHITECTURE lists sampling"
+    target: "architecture.content"
+    matcher: "contains"
+    value: "sampling"
+
+  # AC6: prepublishOnly
+  - id: A028
+    says: "The build step copies the README from root before building"
+    block: "prepublishOnly copies README"
+    target: "packageJson.scripts.prepublishOnly"
+    matcher: "contains"
+    value: "cp ../../README.md ./README.md"
+
+  - id: A029
+    says: "The build step copies the CHANGELOG from root before building"
+    block: "prepublishOnly copies CHANGELOG"
+    target: "packageJson.scripts.prepublishOnly"
+    matcher: "contains"
+    value: "cp ../../CHANGELOG.md ./CHANGELOG.md"
+
+  # AC7: gitignore and git removal
+  - id: A030
+    says: "A gitignore exists in the CLI package to exclude build artifacts"
+    block: "packages/cli/.gitignore exists"
+    target: "gitignore.exists"
+    matcher: "truthy"
+
+  - id: A031
+    says: "The gitignore excludes the README copy"
+    block: "gitignore contains README.md"
+    target: "gitignore.content"
+    matcher: "contains"
+    value: "README.md"
+
+  - id: A032
+    says: "The gitignore excludes the CHANGELOG copy"
+    block: "gitignore contains CHANGELOG.md"
+    target: "gitignore.content"
+    matcher: "contains"
+    value: "CHANGELOG.md"
+
+  # AC8-9: Cross-cutting cleanliness
+  - id: A033
+    says: "No document contains emoji characters"
+    block: "all docs are emoji-free"
+    target: "allDocs.emojiCount"
+    matcher: "equals"
+    value: 0
+
+  - id: A034
+    says: "No document contains sprint reference jargon"
+    block: "all docs are sprint-jargon-free"
+    target: "allDocs.sprintRefCount"
+    matcher: "equals"
+    value: 0
+
+file_changes:
+  - path: "README.md"
+    action: modify
+  - path: "CHANGELOG.md"
+    action: modify
+  - path: "CHANGELOG-internal.md"
+    action: create
+  - path: "packages/cli/CONTRIBUTING.md"
+    action: modify
+  - path: "packages/cli/ARCHITECTURE.md"
+    action: modify
+  - path: "packages/cli/package.json"
+    action: modify
+  - path: "packages/cli/.gitignore"
+    action: create
+  - path: "packages/cli/README.md"
+    action: delete
+  - path: "packages/cli/CHANGELOG.md"
+    action: delete
