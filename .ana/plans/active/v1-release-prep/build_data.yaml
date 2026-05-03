@@ -1,0 +1,8 @@
+schema: 1
+concerns:
+  - summary: "npm pack --dry-run without prepublishOnly does not show README.md/CHANGELOG.md — they appear only after prepublishOnly copies them from root"
+    severity: observation
+    suggested_action: accept
+  - summary: "CODE_OF_CONDUCT.md created via curl workaround due to Claude Code content filter false-positive (known bug #4379)"
+    severity: observation
+    suggested_action: monitor
