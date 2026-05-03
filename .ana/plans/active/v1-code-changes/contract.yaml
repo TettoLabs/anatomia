@@ -1,0 +1,180 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "V1 Code Changes"
+
+assertions:
+  - id: A001
+    says: "The parser matches AC results by status word, not by emoji symbol"
+    block: "parseACResults matches word-based status on bullet lines"
+    target: "regex.match"
+    matcher: "not_contains"
+    value: "✅"
+
+  - id: A002
+    says: "Existing verify reports with emoji format still parse correctly"
+    block: "parseACResults handles Format A (emoji prefix)"
+    target: "acResults.total"
+    matcher: "greater"
+    value: 0
+
+  - id: A003
+    says: "Bold-label format from real verify runs parses correctly"
+    block: "parseACResults handles Format B (bold AC label before status)"
+    target: "acResults.met"
+    matcher: "greater"
+    value: 0
+
+  - id: A004
+    says: "Arrow-suffix format from real verify runs parses correctly"
+    block: "parseACResults handles Format C (status at end after arrow)"
+    target: "acResults.met"
+    matcher: "greater"
+    value: 0
+
+  - id: A005
+    says: "The overall Result line is not counted as an individual AC pass"
+    block: "parseACResults does not false-match on Result line"
+    target: "acResults.total"
+    matcher: "equals"
+    value: 2
+
+  - id: A006
+    says: "All existing proof summary tests pass without fixture changes"
+    block: "existing proofSummary tests unchanged"
+    target: "testResult"
+    matcher: "equals"
+    value: "pass"
+
+  - id: A007
+    says: "All existing work pipeline tests pass unchanged"
+    block: "existing work tests unchanged"
+    target: "testResult"
+    matcher: "equals"
+    value: "pass"
+
+  - id: A008
+    says: "The verbose flag no longer exists on the scan command"
+    block: "scan --verbose removed"
+    target: "scanOptions.verbose"
+    matcher: "not_equals"
+    value: true
+
+  - id: A009
+    says: "Troubleshooting docs no longer reference the removed verbose flag"
+    block: "TROUBLESHOOTING.md updated"
+    target: "file.content"
+    matcher: "not_contains"
+    value: "--verbose"
+
+  - id: A010
+    says: "No decorative emoji remains in CLI error or status messages"
+    block: "decorative emoji removed from commands"
+    target: "grep.matches"
+    matcher: "equals"
+    value: 0
+
+  - id: A011
+    says: "The version output identifies the tool by name"
+    block: "version output includes tool name"
+    target: "versionOutput"
+    matcher: "contains"
+    value: "anatomia-cli/"
+
+  - id: A012
+    says: "Command descriptions are jargon-free and start with a capital letter"
+    block: "help descriptions rewritten"
+    target: "descriptions"
+    matcher: "not_contains"
+    value: "Setup-related commands"
+
+  - id: A013
+    says: "Error hints use consistent gray styling"
+    block: "chalk.dim replaced with chalk.gray in hints"
+    target: "agents.hint.style"
+    matcher: "contains"
+    value: "chalk.gray"
+
+  - id: A014
+    says: "The DEVIATED status icon in proof display is preserved"
+    block: "proof.ts DEVIATED icon unchanged"
+    target: "proofOutput"
+    matcher: "contains"
+    value: "⚠"
+
+  - id: A015
+    says: "Build config has no dead dependency reference"
+    block: "tsup.config.ts cleaned"
+    target: "tsupConfig"
+    matcher: "not_contains"
+    value: "anatomia-analyzer"
+
+  - id: A016
+    says: "Build config does not generate type declarations for a CLI binary"
+    block: "tsup.config.ts dts removed"
+    target: "tsupConfig"
+    matcher: "not_contains"
+    value: "dts"
+
+  - id: A017
+    says: "Pre-commit hook has no sprint jargon"
+    block: "husky comment cleaned"
+    target: "preCommit.content"
+    matcher: "not_contains"
+    value: "Item 20"
+
+  - id: A018
+    says: "Verify template uses a neutral marker instead of magnifying glass emoji"
+    block: "template UNVERIFIABLE marker changed"
+    target: "template.content"
+    matcher: "not_contains"
+    value: "🔍"
+
+  - id: A019
+    says: "The project builds successfully after all changes"
+    block: "build succeeds"
+    target: "buildResult"
+    matcher: "equals"
+    value: "success"
+
+  - id: A020
+    says: "The full test suite passes with no regressions"
+    block: "full test suite passes"
+    target: "testsPassed"
+    matcher: "greater"
+    value: 1803
+
+file_changes:
+  - path: "packages/cli/src/utils/proofSummary.ts"
+    action: modify
+  - path: "packages/cli/tests/utils/proofSummary.test.ts"
+    action: modify
+  - path: "packages/cli/src/commands/scan.ts"
+    action: modify
+  - path: "packages/cli/docs/TROUBLESHOOTING.md"
+    action: modify
+  - path: "packages/cli/src/commands/init/index.ts"
+    action: modify
+  - path: "packages/cli/src/commands/setup.ts"
+    action: modify
+  - path: "packages/cli/src/index.ts"
+    action: modify
+  - path: "packages/cli/src/commands/verify.ts"
+    action: modify
+  - path: "packages/cli/src/commands/artifact.ts"
+    action: modify
+  - path: "packages/cli/src/commands/work.ts"
+    action: modify
+  - path: "packages/cli/src/commands/proof.ts"
+    action: modify
+  - path: "packages/cli/src/commands/agents.ts"
+    action: modify
+  - path: "packages/cli/src/commands/pr.ts"
+    action: modify
+  - path: "packages/cli/tsup.config.ts"
+    action: modify
+  - path: ".husky/pre-commit"
+    action: modify
+  - path: "packages/cli/templates/.claude/agents/ana-verify.md"
+    action: modify
+  - path: ".claude/agents/ana-verify.md"
+    action: modify

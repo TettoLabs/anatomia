@@ -1,0 +1,280 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "V1 Release Prep"
+
+assertions:
+  # AC1-6: Package metadata
+  - id: A001
+    says: "Package version is set to 1.0.0 for the first public release"
+    block: "package.json version is 1.0.0"
+    target: "packageJson.version"
+    matcher: "equals"
+    value: "1.0.0"
+
+  - id: A002
+    says: "Package description tells strangers what the tool does"
+    block: "package.json description is functional sentence"
+    target: "packageJson.description"
+    matcher: "equals"
+    value: "Verified AI development. Scan your project, generate context, verify every change through a four-agent pipeline."
+
+  - id: A003
+    says: "Keywords include terms that differentiate Anatomia in npm search"
+    block: "package.json keywords include new terms"
+    target: "packageJson.keywords"
+    matcher: "contains"
+    value: "context-engineering"
+
+  - id: A004
+    says: "Keywords include proof-chain as a unique Anatomia term"
+    block: "package.json keywords include proof-chain"
+    target: "packageJson.keywords"
+    matcher: "contains"
+    value: "proof-chain"
+
+  - id: A005
+    says: "The generic ai-assistant keyword is removed"
+    block: "package.json keywords exclude ai-assistant"
+    target: "packageJson.keywords"
+    matcher: "not_contains"
+    value: "ai-assistant"
+
+  - id: A006
+    says: "Package homepage points to the product website"
+    block: "package.json homepage is anatomia.dev"
+    target: "packageJson.homepage"
+    matcher: "equals"
+    value: "https://anatomia.dev"
+
+  - id: A007
+    says: "Author includes the company URL for npm display"
+    block: "package.json author has url"
+    target: "packageJson.author.url"
+    matcher: "equals"
+    value: "https://anatomia.dev"
+
+  - id: A008
+    says: "Only compiled code ships to npm users"
+    block: "package.json files is dist only"
+    target: "packageJson.files"
+    matcher: "equals"
+    value: ["dist"]
+
+  # AC7-8: Version fallbacks
+  - id: A009
+    says: "Version fallback uses a generic sentinel that never goes stale"
+    block: "getCliVersion fallback is 0.0.0"
+    target: "state.ts getCliVersion or-fallback"
+    matcher: "equals"
+    value: "0.0.0"
+
+  - id: A010
+    says: "Version fallback in catch block uses the same sentinel"
+    block: "getCliVersion catch fallback is 0.0.0"
+    target: "state.ts getCliVersion catch-fallback"
+    matcher: "equals"
+    value: "0.0.0"
+
+  - id: A011
+    says: "Empty analysis results use the unknown version sentinel"
+    block: "createEmptyAnalysisResult version is 0.0.0"
+    target: "types/index.ts createEmptyAnalysisResult version"
+    matcher: "equals"
+    value: "0.0.0"
+
+  # AC9: Test fixtures
+  - id: A012
+    says: "No test files reference the old 0.2.0 version"
+    block: "zero 0.2.0 occurrences in test files"
+    target: "grep 0.2.0 in tests/"
+    matcher: "equals"
+    value: 0
+
+  - id: A013
+    says: "No source files reference the old 0.2.0 version"
+    block: "zero 0.2.0 occurrences in source files"
+    target: "grep 0.2.0 in src/"
+    matcher: "equals"
+    value: 0
+
+  - id: A014
+    says: "Schema round-trip preserves the current version in fixtures"
+    block: "anaJsonSchema test asserts 1.0.0"
+    target: "anaJsonSchema.test.ts toBe assertion"
+    matcher: "equals"
+    value: "1.0.0"
+
+  - id: A015
+    says: "Empty analysis result test matches the sentinel version"
+    block: "types.test.ts asserts 0.0.0 for createEmptyAnalysisResult"
+    target: "types.test.ts version toBe assertion"
+    matcher: "equals"
+    value: "0.0.0"
+
+  # AC10-11: Release infrastructure
+  - id: A016
+    says: "A release workflow exists that triggers on version tags"
+    block: "release.yml exists with v* trigger"
+    target: "release.yml on.push.tags"
+    matcher: "contains"
+    value: "v*"
+
+  - id: A017
+    says: "Published packages include cryptographic provenance"
+    block: "release.yml uses --provenance flag"
+    target: "release.yml publish command"
+    matcher: "contains"
+    value: "--provenance"
+
+  - id: A018
+    says: "The workflow can generate provenance tokens"
+    block: "release.yml has id-token write permission"
+    target: "release.yml permissions.id-token"
+    matcher: "equals"
+    value: "write"
+
+  - id: A019
+    says: "Future version bumps are a one-liner from the repo root"
+    block: "root package.json has release script"
+    target: "rootPackageJson.scripts.release"
+    matcher: "equals"
+    value: "cd packages/cli && npm version"
+
+  # AC12-17: Community files
+  - id: A020
+    says: "Security vulnerabilities can be reported privately"
+    block: "SECURITY.md exists"
+    target: "SECURITY.md"
+    matcher: "exists"
+
+  - id: A021
+    says: "The project has a code of conduct for contributors"
+    block: "CODE_OF_CONDUCT.md exists"
+    target: "CODE_OF_CONDUCT.md"
+    matcher: "exists"
+
+  - id: A022
+    says: "Code of conduct uses the industry standard text"
+    block: "CODE_OF_CONDUCT.md is Contributor Covenant"
+    target: "CODE_OF_CONDUCT.md content"
+    matcher: "contains"
+    value: "Contributor Covenant"
+
+  - id: A023
+    says: "Bug reporters fill out a structured form instead of freeform text"
+    block: "bug_report.yml exists"
+    target: ".github/ISSUE_TEMPLATE/bug_report.yml"
+    matcher: "exists"
+
+  - id: A024
+    says: "Feature requests follow a consistent structure"
+    block: "feature_request.yml exists"
+    target: ".github/ISSUE_TEMPLATE/feature_request.yml"
+    matcher: "exists"
+
+  - id: A025
+    says: "Pull requests start with a consistent template"
+    block: "PULL_REQUEST_TEMPLATE.md exists"
+    target: ".github/PULL_REQUEST_TEMPLATE.md"
+    matcher: "exists"
+
+  - id: A026
+    says: "Dependencies are automatically kept up to date"
+    block: "dependabot.yml exists with npm and github-actions"
+    target: ".github/dependabot.yml"
+    matcher: "exists"
+
+  # AC18-20: Repo cleanup
+  - id: A027
+    says: "Website context files won't accidentally be committed"
+    block: "gitignore includes website/.ana/"
+    target: ".gitignore content"
+    matcher: "contains"
+    value: "website/.ana/"
+
+  - id: A028
+    says: "Stale investigation artifact is removed from the repo"
+    block: "proof-chain-agent-integration.md is deleted"
+    target: "proof-chain-agent-integration.md"
+    matcher: "not_equals"
+    value: "exists"
+
+  - id: A029
+    says: "Stale generated AGENTS.md copy is removed"
+    block: "packages/cli/AGENTS.md is deleted"
+    target: "packages/cli/AGENTS.md"
+    matcher: "not_equals"
+    value: "exists"
+
+  # AC21-23: Build verification
+  - id: A030
+    says: "Internal docs don't ship to npm users"
+    block: "npm pack excludes docs directory"
+    target: "npm pack --dry-run output"
+    matcher: "not_contains"
+    value: "ARCHITECTURE.md"
+
+  - id: A031
+    says: "The npm tarball includes compiled code"
+    block: "npm pack includes dist"
+    target: "npm pack --dry-run output"
+    matcher: "contains"
+    value: "dist/"
+
+  - id: A032
+    says: "All existing tests still pass after the changes"
+    block: "full test suite passes"
+    target: "vitest run exit code"
+    matcher: "equals"
+    value: 0
+
+  - id: A033
+    says: "The project builds successfully"
+    block: "pnpm build succeeds"
+    target: "pnpm build exit code"
+    matcher: "equals"
+    value: 0
+
+file_changes:
+  - path: "packages/cli/package.json"
+    action: modify
+  - path: "packages/cli/src/commands/init/state.ts"
+    action: modify
+  - path: "packages/cli/src/engine/types/index.ts"
+    action: modify
+  - path: "packages/cli/tests/helpers/test-project.ts"
+    action: modify
+  - path: "packages/cli/tests/engine/types.test.ts"
+    action: modify
+  - path: "packages/cli/tests/engine/integration/parsed-integration.test.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/init.test.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/init/anaJsonSchema.test.ts"
+    action: modify
+  - path: "packages/cli/tests/engine/analyzers/patterns/performance.test.ts"
+    action: modify
+  - path: "packages/cli/tests/engine/analyzers/patterns/confirmation.test.ts"
+    action: modify
+  - path: "package.json"
+    action: modify
+  - path: ".github/workflows/release.yml"
+    action: create
+  - path: "SECURITY.md"
+    action: create
+  - path: "CODE_OF_CONDUCT.md"
+    action: create
+  - path: ".github/ISSUE_TEMPLATE/bug_report.yml"
+    action: create
+  - path: ".github/ISSUE_TEMPLATE/feature_request.yml"
+    action: create
+  - path: ".github/PULL_REQUEST_TEMPLATE.md"
+    action: create
+  - path: ".github/dependabot.yml"
+    action: create
+  - path: ".gitignore"
+    action: modify
+  - path: "proof-chain-agent-integration.md"
+    action: delete
+  - path: "packages/cli/AGENTS.md"
+    action: delete
