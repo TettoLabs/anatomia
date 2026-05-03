@@ -27,16 +27,17 @@ Four documents rewritten to a consistent standard. The standard: Ruff's structur
 
 ## Acceptance Criteria
 
-- AC1: Root README.md exists, 150-200 lines, 9 sections in specified order, 3 badges (CI, npm, license), install section present, commands grouped by product surface with all proof subcommands visible
-- AC2: Root CHANGELOG.md exists with 1.0.0 entry following Keep a Changelog 1.1.0 format, grouped by product surface (Scan, Context, Pipeline, Proof, Learn, Setup, Infrastructure), `[Unreleased]` section above, footer compare links
+- AC1: Root README.md exists, 150-200 lines, 9 sections in specified order, 3 badges (CI, npm, license), install section present, commands grouped by product surface with all proof subcommands visible, scan ASCII block updated to match current `formatHumanReadable()` output, Claude Code boundary stated ("scan and init work standalone, pipeline requires Claude Code")
+- AC2: Root CHANGELOG.md exists with 1.0.0 entry following Keep a Changelog 1.1.0 format, opens with "First stable release.", grouped by product surface (Scan, Context, Pipeline, Proof, Learn, Setup, Infrastructure), `[Unreleased]` section above, footer compare links, zero references to deleted features (modes, analysis.md, handlebars, anatomia-analyzer, ENTRY.md, .meta.json, snapshot.json)
 - AC3: Old changelogs archived — root renamed to CHANGELOG-internal.md, packages/cli/CHANGELOG.md deleted from git
-- AC4: CONTRIBUTING.md has zero line-number citations, zero sprint references, zero broken file paths, all test commands use `pnpm vitest run`, project structure tree matches actual filesystem, `detectRemix` in the framework detector example
-- AC5: ARCHITECTURE.md data flow section describes the current census-based `scanProject()` pipeline — `analyze()` not mentioned, `detectors/monorepo.ts` not mentioned, file/module counts match reality, known debt section contains only currently-valid items
+- AC4: CONTRIBUTING.md has zero line-number citations, zero sprint references, zero broken file paths, all test commands use `pnpm vitest run`, project structure tree matches actual filesystem including ENRICHMENT.md files in skill directories, `detectRemix` in the framework detector example
+- AC5: ARCHITECTURE.md data flow section describes the current census-based `scanProject()` pipeline — `analyze()` not mentioned, `detectors/monorepo.ts` not mentioned, file/module counts match reality (init/: 7, conventions/: 5, node/: 6+1), missing modules added (applicationShape.ts, documentation.ts, readme.ts, sampling/), extension guides deduplicated (brief Extension Points list with cross-ref to CONTRIBUTING, not duplicated step-by-step), opens with cross-reference to CONTRIBUTING.md, known debt section contains only currently-valid items
 - AC6: `prepublishOnly` in packages/cli/package.json copies both README.md and CHANGELOG.md from root before build
 - AC7: packages/cli/README.md and packages/cli/CHANGELOG.md are in packages/cli/.gitignore and deleted from git tracking
 - AC8: Zero emoji in any of the four documents
 - AC9: Zero sprint references across all four documents (grep for `S1[0-9]`, `S2[0-9]`, `Item [0-9]`)
 - AC10: Zero hedge words in README (grep for "simply," "just," "easily," "helps you," "allows you to," "enables," "powerful," "robust," "comprehensive")
+- AC11: CONTRIBUTING.md opens with cross-reference to ARCHITECTURE.md, and vice versa
 
 ## Edge Cases & Risks
 
