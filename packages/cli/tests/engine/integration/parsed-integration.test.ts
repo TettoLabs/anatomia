@@ -23,7 +23,7 @@ describe('AnalysisResult schema validation', () => {
       confidence: { projectType: 0.9, framework: 0.85 },
       indicators: { projectType: ['package.json found'], framework: ['next in dependencies'] },
       detectedAt: '2026-01-01T00:00:00.000Z',
-      version: '0.2.0',
+      version: '1.0.0',
     };
 
     const result = AnalysisResultSchema.safeParse(minimal);

@@ -12,7 +12,7 @@ describe('Pattern Confirmation Performance', () => {
       confidence: { projectType: 0.95, framework: 0.90 },
       indicators: { projectType: [], framework: [] },
       detectedAt: new Date().toISOString(),
-      version: '0.2.0',
+      version: '1.0.0',
       parsed: {
         files: [
           // 20 files (typical sample size)
@@ -61,7 +61,7 @@ describe('Pattern Confirmation Performance', () => {
       confidence: { projectType: 0.95, framework: 0.90 },
       indicators: { projectType: [], framework: [] },
       detectedAt: new Date().toISOString(),
-      version: '0.2.0',
+      version: '1.0.0',
       parsed: {
         files: [{
           file: 'src/index.ts',

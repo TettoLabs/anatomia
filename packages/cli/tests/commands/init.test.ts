@@ -85,7 +85,7 @@ describe('ana init', () => {
       const engineResult = createEmptyEngineResult();
       // Simulate what createAnaJson does from an EngineResult
       const meta = {
-        anaVersion: '0.2.0',
+        anaVersion: '1.0.0',
         name: engineResult.overview.project,
         language: engineResult.stack.language || null,
         framework: engineResult.stack.framework || null,
@@ -116,7 +116,7 @@ describe('ana init', () => {
 
     it('has all required fields for D1 schema', () => {
       const meta = {
-        anaVersion: '0.2.0',
+        anaVersion: '1.0.0',
         name: 'my-project',
         language: 'Python',
         framework: 'FastAPI',
