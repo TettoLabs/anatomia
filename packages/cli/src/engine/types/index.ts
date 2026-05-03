@@ -112,7 +112,7 @@ export function createEmptyAnalysisResult(): AnalysisResult {
       framework: [],
     },
     detectedAt: new Date().toISOString(),
-    version: '0.2.0',
+    version: '0.0.0',
   };
 }
 

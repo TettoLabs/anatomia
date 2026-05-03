@@ -149,9 +149,9 @@ export async function getCliVersion(): Promise<string> {
 
     const content = await fs.readFile(pkgPath, 'utf-8');
     const pkg = JSON.parse(content);
-    return pkg.version || '0.2.0';
+    return pkg.version || '0.0.0';
   } catch {
-    return '0.2.0';
+    return '0.0.0';
   }
 }
 
