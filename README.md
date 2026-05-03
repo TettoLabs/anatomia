@@ -4,32 +4,15 @@
 [![npm](https://img.shields.io/npm/v/anatomia-cli)](https://www.npmjs.com/package/anatomia-cli)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-Anatomia scans your project — framework, database, auth, testing, conventions — and generates context files AI coding tools consume. Run changes through a four-agent pipeline where verification is independent: Verify never reads Build's report. Every pipeline run produces a proof chain entry.
+Anatomia is the engineering judgment your AI doesn't have. Four agents scope, plan, build, and verify every change. Contracts are sealed before code is written — typed assertions the verifier checks against the code, not Build's account of what it did. Every run produces a proof chain entry — what was asserted, what was found, what shipped. A fifth agent learns from that record and promotes what it finds to rules that shape future builds. Not opinion. Mechanical proof.
 
-## Install
-
-```bash
-npm install -g anatomia-cli
-```
-
-Requires Node.js 20+. Or run without installing: `npx anatomia-cli scan .`
-
-## Quick start
+## Scan any project in 10 seconds
 
 ```bash
-ana scan .                    # detect your stack
-ana init                      # generate context + agents
-claude --agent ana            # start working
+npx anatomia-cli scan .
 ```
 
-`scan` and `init` work standalone — no Claude Code required.
-The pipeline requires [Claude Code](https://claude.com/code).
-
-## What it does
-
-### Scan + init
-
-`ana scan` reads your project and detects framework, database, auth, testing, services, conventions, and patterns. 40+ detectors across two tiers: surface (dependency-based, fast) and deep (tree-sitter AST).
+No install. One command. Here's what you'll see:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -59,6 +42,33 @@ The pipeline requires [Claude Code](https://claude.com/code).
   Run `ana init` to scaffold 8 skills (5 core + api-patterns, data-access, ai-patterns)
 ```
 
+## Install
+
+```bash
+npm install -g anatomia-cli
+```
+
+Requires Node.js 20+.
+
+## Quick start
+
+```bash
+ana init                      # generate context + agents
+claude --agent ana            # start working
+claude --agent ana-setup      # enrich with your team's knowledge (optional, recommended, ~10 min)
+```
+
+`init` runs scan automatically and works standalone — no Claude Code required.
+The pipeline and setup require [Claude Code](https://claude.com/code).
+
+Tell Ana what you want to build. It'll investigate the codebase, surface tradeoffs, and push back if the approach has problems. When the scope is right, it hands off to Plan, Build, and Verify.
+
+## What it does
+
+### Scan + init
+
+`ana scan` reads your project and detects framework, database, auth, testing, services, conventions, and patterns. Re-running `ana init` refreshes scan data without overwriting your edits.
+
 `ana init` writes that intelligence to files agents read:
 
 - `scan.json` — full structured scan data for agent consumption
@@ -66,31 +76,50 @@ The pipeline requires [Claude Code](https://claude.com/code).
 - 5 core + 3 conditional skill templates with scan-driven Detected sections
 - 16 stack-specific gotchas with compound triggers
 
-Works with Claude Code, Cursor, Copilot, or any tool that reads markdown.
+Setup (`claude --agent ana-setup`) bridges the gap between what scan detects and what your team knows. A ~10 minute session that investigates your codebase, asks 2-3 questions, and writes enriched context. After setup, agents understand your product and decisions — not just your stack.
 
 ### The pipeline
 
-| Stage | Agent | Produces |
-|-------|-------|----------|
-| Think | Ana | Scope — what and why |
-| Plan | AnaPlan | Spec + sealed contract with test assertions |
-| Build | AnaBuild | Code + tests tagged to contract assertions |
-| Verify | AnaVerify | Independent verification report |
-
-Verify never reads Build's report. The developer gets two independent accounts and decides based on the difference.
-
-Plan writes assertions. Build tags tests to assertions. Verify checks each independently.
-
-Contracts use typed matchers: `equals`, `contains`, `exists`, `greater`, `truthy`, `not_equals`, `not_contains`.
+| Agent | Role | Produces |
+|-------|------|----------|
+| Ana | Thinking partner — scope, investigate, advise | `scope.md` |
+| AnaPlan | Architect — design + sealed contract | `spec.md` + `contract.yaml` + `plan.md` |
+| AnaBuild | Builder — implement spec, prove it works | Code + tests + `build_report.md` |
+| AnaVerify | Fault-finder — reads spec and code, skips Build's report | `verify_report.md` |
+| AnaLearn | Quality gardener — runs between cycles | Findings promoted to rules |
 
 ### Proof intelligence
 
-Every pipeline run writes a proof chain entry. The chain accumulates across features — each entry records assertions, findings, timing, and hashes.
+Every pipeline run writes a proof chain entry. The chain accumulates across features — each entry records assertions, findings, timing, and hashes. `ana proof health` shows the trajectory:
 
-- `ana proof health` — quality trajectory with risks per run as the north star metric
-- `ana proof audit` — active findings grouped by file for triage
-- `ana proof promote` — findings become skill rules that change agent behavior on future runs
-- `ana proof stale` — surface findings with staleness signals
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│  ana proof health                                                   │
+│  172 runs                                               2026-08-14 │
+└─────────────────────────────────────────────────────────────────────┘
+
+  Quality
+  ──────────
+  Trend:      improving
+  Risks/run:  0.1 (last 5) · 0.4 (all)
+
+  Verification
+  ──────────
+  First-pass:  84% (144 of 172)
+  Caught:      47 issues before shipping
+
+  Pipeline
+  ──────────
+  Median:  46m (scope 4m · plan 13m · build 18m · verify 11m)
+
+  Hot Spots
+  ──────────
+  api/webhooks.ts         12 findings (3 risk, 4 debt, 5 obs)       18 runs
+  lib/auth.ts             8 findings (1 risk, 3 debt, 4 obs)        14 runs
+  db/migrations.ts        6 findings (2 debt, 4 obs)                 9 runs
+```
+
+`proof audit` groups active findings by file for triage. `proof promote` turns findings into skill rules that change agent behavior on future runs. `proof stale` surfaces findings whose files changed since discovery.
 
 The system learns.
 
@@ -110,8 +139,9 @@ The system learns.
 | `ana work start <slug>` | Start a work item, record timestamp |
 | `ana work status` | Show pipeline state for active work |
 | `ana work complete <slug>` | Archive plan, write proof chain entry |
-| `ana artifact save <type>` | Save pipeline artifact with hash verification |
-| `ana verify pre-check <slug>` | Run contract assertion coverage check |
+| `ana artifact save <type> <slug>` | Save pipeline artifact with hash verification |
+| `ana artifact save-all <slug>` | Save all artifacts in a plan directory atomically |
+| `ana verify pre-check <slug>` | Run contract seal verification |
 | `ana pr create <slug>` | Create PR from verified build |
 
 ### Proof intelligence
@@ -133,13 +163,14 @@ The system learns.
 |---------|-------------|
 | `ana setup` | Enrich context with team knowledge (Claude Code agent) |
 | `ana setup check` | Validate context file quality |
+| `ana setup complete` | Validate context and finalize setup |
 | `ana agents` | List deployed agent definitions |
 
 ## Works with
 
-Built for [Claude Code](https://claude.com/code). Pipeline agents are Claude Code agent definitions. Skills follow Claude Code's skill format.
+Built for [Claude Code](https://claude.com/code). The pipeline, agents, and skills are Claude Code native.
 
-Scan, init, and context files work with any AI tool that reads markdown — Cursor, Copilot, Windsurf, Codex. `AGENTS.md` and `CLAUDE.md` are standard formats.
+Scan output (`AGENTS.md`, `CLAUDE.md`) works with any AI tool that reads markdown.
 
 ## Development
 
