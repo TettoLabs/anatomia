@@ -42,5 +42,18 @@
     "packages/cli/templates/.claude/agents/ana-verify.md",
     "packages/cli/tests/utils/proofSummary.test.ts",
     "packages/cli/tsup.config.ts"
-  ]
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:9fa69ffdc2079acb0f368413ae6c40f9ba7e25ee8dbff72fcc69f0daee8ac6ab",
+    "run_at": "2026-05-03T20:58:58.524Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-03T20:58:58.574Z",
+    "hash": "sha256:c67638f7c0ed8e64af86a0b267568d30b95f16a2cf15d1bd614b5c14c5ebdba2"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-03T20:58:58.574Z",
+    "hash": "sha256:e826347398a8a2c59123bc09a6f5693557e791418e50a2fab1185819fe86275a"
+  }
 }
