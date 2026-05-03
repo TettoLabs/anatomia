@@ -12,7 +12,7 @@
  *   ana scan           Scan current directory (deep by default)
  *   ana scan <path>    Scan specified path
  *   ana scan --json    Output JSON format
- *   ana scan --quick   Surface-tier only (skip tree-sitter)
+ *   ana scan --quick   Fast scan — skip deep code analysis
  *   ana scan --quiet   Suppress informational stdout
  */
 
@@ -338,7 +338,6 @@ function formatHumanReadable(
 
 interface ScanOptions {
   json?: boolean;
-  verbose?: boolean;
   save?: boolean;
   quiet?: boolean;
   quick?: boolean;
@@ -354,10 +353,9 @@ export function registerScanCommand(program: Command): void {
     .description('Scan project and display tech stack, file counts, and structure')
     .argument('[path]', 'Directory to scan (default: current directory)', '.')
     .option('--json', 'Output JSON format for programmatic consumption')
-    .option('--verbose', 'Show detailed analyzer output')
     .option('--save', 'Save scan results to .ana/scan.json')
     .option('-q, --quiet', 'Suppress informational stdout')
-    .option('--quick', 'Force surface-tier analysis (skip tree-sitter)')
+    .option('--quick', 'Fast scan — skip deep code analysis')
     .action(async (targetPath: string, options: ScanOptions) => {
     const rootPath = path.resolve(targetPath);
 
@@ -387,7 +385,7 @@ export function registerScanCommand(program: Command): void {
       }
     }
 
-    const spinner = options.json || options.verbose || options.quiet ? null : ora('Scanning project...').start();
+    const spinner = options.json || options.quiet ? null : ora('Scanning project...').start();
 
     try {
       // Dynamic import to avoid WASM crash at module level
@@ -397,18 +395,6 @@ export function registerScanCommand(program: Command): void {
       const result = await scanProject(rootPath, { depth });
 
       if (spinner) spinner.stop();
-
-      // S19/NEW-006 Part B: the previous --verbose output printed a
-      // 4-line summary of Stack/Commands/Git/service count/blind-spot
-      // count — every field already visible in the default human-readable
-      // output. Decorative duplication, not diagnostic signal. Deleted.
-      // Flag stays wired on Commander (see registerScanCommand below) so
-      // users don't see "unknown option" errors; a real --verbose
-      // implementation (per-phase timing, WASM status, detection-
-      // collector contents) is tracked for a future sprint.
-      if (options.verbose) {
-        console.error(chalk.gray('  (--verbose: detailed output not yet implemented)'));
-      }
 
       // Output (stdout — suppressed by --quiet unless --json)
       if (options.json) {
