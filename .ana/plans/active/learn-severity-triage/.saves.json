@@ -15,5 +15,32 @@
   "spec": {
     "saved_at": "2026-05-03T00:45:31.816Z",
     "hash": "sha256:5f908547c0660f1c7191b10e77b72d895008e0c22b1c8b83c375f618edd7c323"
+  },
+  "build-report": {
+    "saved_at": "2026-05-03T01:04:08.091Z",
+    "hash": "sha256:1f70f8a0e34bfbe3fd8e9d0e9bc10321c2747812956e47c3d147a27db01f15c2"
+  },
+  "build-data": {
+    "saved_at": "2026-05-03T01:04:08.092Z",
+    "hash": "sha256:4bc898d8c8f97244f1de8cbf036be46b991c39a1beeb8fb2b602bbfe77b71315"
+  },
+  "modules_touched": [
+    ".claude/agents/ana-learn.md",
+    ".claude/agents/ana-verify.md",
+    "packages/cli/templates/.claude/agents/ana-learn.md",
+    "packages/cli/templates/.claude/agents/ana-verify.md"
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:a9b410de0cef18539acf03216a46d8c26e0d8745eca24519bfd050024388ea4c",
+    "run_at": "2026-05-03T01:14:25.301Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-03T01:14:25.333Z",
+    "hash": "sha256:1a29b940fc2e8a1eaaa175b1b341bb92f328a46ae48bbd9aa4755b05ab9bac19"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-03T01:14:25.333Z",
+    "hash": "sha256:690dd9f25aae05f9d4390f8e4426be8a367f55ccb258fc74050daedc65876781"
   }
 }
