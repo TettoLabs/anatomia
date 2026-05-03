@@ -1,0 +1,8 @@
+schema: 1
+concerns:
+  - summary: "npm pack includes ARCHITECTURE.md and CONTRIBUTING.md — files field not yet restricted"
+    severity: observation
+    suggested_action: monitor
+  - summary: "14 pre-existing @typescript-eslint/no-explicit-any warnings in test files"
+    severity: debt
+    suggested_action: accept
