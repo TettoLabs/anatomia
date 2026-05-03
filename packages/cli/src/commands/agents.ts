@@ -62,7 +62,7 @@ export function listAgents(): void {
   // Check if directory exists
   if (!fs.existsSync(agentsDir)) {
     console.error(chalk.red('No agents directory found.'));
-    console.error(chalk.dim('Run `ana init` first.'));
+    console.error(chalk.gray('Run `ana init` first.'));
     process.exit(1);
   }
 

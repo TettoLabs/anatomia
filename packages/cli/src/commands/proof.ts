@@ -447,7 +447,7 @@ function formatListTable(entries: ProofChainEntry[]): string {
  */
 export function registerProofCommand(program: Command): void {
   const proofCommand = new Command('proof')
-    .description('Display proof chain entry for a completed work item')
+    .description('View proof chain entries, health, and findings')
     .argument('[slug]', 'Work item slug to display proof for')
     .option('--json', 'Output JSON format for programmatic consumption')
     .action(async (slug: string | undefined, options: { json?: boolean }) => {

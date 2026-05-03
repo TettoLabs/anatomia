@@ -6,6 +6,4 @@ export default defineConfig({
   target: 'node20',
   shims: true,
   clean: true,
-  dts: true,
-  external: ['anatomia-analyzer'], // Don't bundle dependency
 });

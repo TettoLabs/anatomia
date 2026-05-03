@@ -1410,7 +1410,7 @@ export async function startWork(slug: string): Promise<void> {
  */
 export function registerWorkCommand(program: Command): void {
   const workCommand = new Command('work')
-    .description('Manage pipeline work items');
+    .description('Track work items and complete pipelines');
 
   const statusCommand = new Command('status')
     .description('Show pipeline state for all active work items')

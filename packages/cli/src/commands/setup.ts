@@ -25,7 +25,7 @@ interface SetupCompleteOptions {
  */
 export function registerSetupCommand(program: Command): void {
   const setupCommand = new Command('setup').description(
-    'Setup-related commands'
+    'Configure project context (check, complete)'
   );
 
   setupCommand.addCommand(createCheckCommand());
@@ -71,7 +71,7 @@ export function registerSetupCommand(program: Command): void {
       process.exit(1);
     }
 
-    console.log(chalk.blue('\n🔍 Validating setup...\n'));
+    console.log(chalk.blue('\nValidating setup...\n'));
 
     // Run D12.3 validation
     const result = await validateSetupCompletion(cwd);

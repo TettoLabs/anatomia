@@ -30,7 +30,7 @@ const program = new Command();
 program
   .name('ana')
   .description('Verified AI development. Ship with proof.')
-  .version(pkg.version, '-v, --version', 'Display version number');
+  .version(`anatomia-cli/${pkg.version}`, '-v, --version', 'Display version number');
 
 // Register commands (Item 22: every command uses the register* pattern).
 registerInitCommand(program);

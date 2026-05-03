@@ -159,7 +159,7 @@ export function registerInitCommand(program: Command): void {
       }
 
       if (error instanceof Error) {
-        console.error(chalk.red(`\n❌ Init failed: ${error.message}`));
+        console.error(chalk.red(`\nError: Init failed: ${error.message}`));
         console.error(chalk.gray('No changes made to your project.'));
       }
       process.exit(1);
