@@ -1,33 +1,26 @@
 schema: 1
 findings:
   - category: code
-    summary: "TROUBLESHOOTING.md Section 4 still references --verbose at line 249-256"
-    file: "packages/cli/docs/TROUBLESHOOTING.md"
-    line: 251
-    severity: risk
-    suggested_action: scope
-    related_assertions: ["A009"]
-  - category: code
-    summary: "parseACResults bullet-anchored regex could false-match non-AC bullet lines containing status words (e.g., '- Note: tests PASS consistently')"
+    summary: "Theoretical false-match in parseACResults regex — bullet lines outside AC section containing PASS/FAIL could inflate counts"
     file: "packages/cli/src/utils/proofSummary.ts"
     line: 203
-    severity: observation
+    severity: risk
     suggested_action: monitor
     related_assertions: ["A001"]
   - category: test
-    summary: "No test exercises false-match scenario where a non-AC bullet line contains status words"
+    summary: "No false-match edge case test for non-AC bullet lines containing status words"
     file: "packages/cli/tests/utils/proofSummary.test.ts"
     severity: debt
     suggested_action: scope
-    related_assertions: ["A001"]
-  - category: upstream
-    summary: "proofSummary.ts approaching ~1550 lines — growing past comfort threshold (still present, known from Proof Health V1)"
+    related_assertions: ["A001", "A005"]
+  - category: code
+    summary: "proofSummary.ts ~1550 lines — past comfort threshold, known from prior cycles"
     file: "packages/cli/src/utils/proofSummary.ts"
     severity: observation
     suggested_action: monitor
   - category: code
-    summary: "Pre-commit hook comment says '~9s locally' but may drift as test suite grows (1807 tests now)"
+    summary: "Pre-commit comment claims ~9s / 10s threshold — will drift as test count grows (1807 now)"
     file: ".husky/pre-commit"
-    line: 4
+    line: 3
     severity: observation
     suggested_action: accept
