@@ -80,13 +80,13 @@ Setup (`claude --agent ana-setup`) bridges the gap between what scan detects and
 
 ### The pipeline
 
-| Agent | Role | Produces |
-|-------|------|----------|
-| Ana | Thinking partner — scope, investigate, advise | `scope.md` |
-| AnaPlan | Architect — design + sealed contract | `spec.md` + `contract.yaml` + `plan.md` |
-| AnaBuild | Builder — implement spec, prove it works | Code + tests + `build_report.md` |
-| AnaVerify | Fault-finder — reads spec and code, skips Build's report | `verify_report.md` |
-| AnaLearn | Quality gardener — runs between cycles | Findings promoted to rules |
+| Stage | Agent | Role | Produces |
+|-------|-------|------|----------|
+| 1. Think | Ana | Thinking partner — scope, investigate, advise | `scope.md` |
+| 2. Plan | AnaPlan | Architect — design + sealed contract | `spec.md` + `contract.yaml` + `plan.md` |
+| 3. Build | AnaBuild | Builder — implement spec, prove it works | Code + tests + `build_report.md` |
+| 4. Verify | AnaVerify | Fault-finder — reads spec and code, skips Build's report | `verify_report.md` |
+| Learn | AnaLearn | Quality gardener — runs between cycles | Findings promoted to rules |
 
 ### Proof intelligence
 
