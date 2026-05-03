@@ -1,0 +1,23 @@
+schema: 1
+findings:
+  - category: code
+    summary: "Residual 'accept-action findings' in audit usage guidance reinforces batch framing"
+    file: "packages/cli/templates/.claude/agents/ana-learn.md"
+    line: 68
+    severity: debt
+    suggested_action: scope
+    related_assertions: ["A007"]
+  - category: code
+    summary: "'Accept-action findings are pre-classified for closure' in Field Semantics section perpetuates batch framing language"
+    file: "packages/cli/templates/.claude/agents/ana-learn.md"
+    line: 159
+    severity: observation
+    suggested_action: monitor
+  - category: upstream
+    summary: "Proof chain finding 'Cap at ~30 per session' likely resolved by this build (AC7)"
+    severity: observation
+    suggested_action: accept
+  - category: upstream
+    summary: "Proof chain finding about skill file path naming (SKILL.md vs actual names) still present — out of scope for this build"
+    severity: observation
+    suggested_action: monitor
