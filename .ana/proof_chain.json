@@ -11419,6 +11419,296 @@
           "suggested_action": "monitor"
         }
       ]
+    },
+    {
+      "slug": "v1-release-prep",
+      "feature": "V1 Release Prep",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 33,
+        "satisfied": 33,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Package version is set to 1.0.0 for the first public release",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "Package description tells strangers what the tool does",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Keywords include terms that differentiate Anatomia in npm search",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "Keywords include proof-chain as a unique Anatomia term",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "The generic ai-assistant keyword is removed",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "Package homepage points to the product website",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "Author includes the company URL for npm display",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "Only compiled code ships to npm users",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "Version fallback uses a generic sentinel that never goes stale",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "Version fallback in catch block uses the same sentinel",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "Empty analysis results use the unknown version sentinel",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "No test files reference the old 0.2.0 version",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "No source files reference the old 0.2.0 version",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "Schema round-trip preserves the current version in fixtures",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "Empty analysis result test matches the sentinel version",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "A release workflow exists that triggers on version tags",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A017",
+          "says": "Published packages include cryptographic provenance",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A018",
+          "says": "The workflow can generate provenance tokens",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A019",
+          "says": "Future version bumps are a one-liner from the repo root",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A020",
+          "says": "Security vulnerabilities can be reported privately",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A021",
+          "says": "The project has a code of conduct for contributors",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A022",
+          "says": "Code of conduct uses the industry standard text",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A023",
+          "says": "Bug reporters fill out a structured form instead of freeform text",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A024",
+          "says": "Feature requests follow a consistent structure",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A025",
+          "says": "Pull requests start with a consistent template",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A026",
+          "says": "Dependencies are automatically kept up to date",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A027",
+          "says": "Website context files won't accidentally be committed",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A028",
+          "says": "Stale investigation artifact is removed from the repo",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A029",
+          "says": "Stale generated AGENTS.md copy is removed",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A030",
+          "says": "Internal docs don't ship to npm users",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A031",
+          "says": "The npm tarball includes compiled code",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A032",
+          "says": "All existing tests still pass after the changes",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A033",
+          "says": "The project builds successfully",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 0,
+        "met": 0
+      },
+      "timing": {
+        "total_minutes": 96,
+        "think": 1,
+        "plan": 7,
+        "build": 81,
+        "verify": 7
+      },
+      "hashes": {
+        "scope": "sha256:dbb4d22085db76ab0d797b5b5c12021ab7b0a65dffc1ee2473d695a254201910",
+        "contract": "sha256:74b1e3043bda384dc8caad2f8d2f4eb375bd5dae6431b69924d4298457e0d5ed",
+        "plan": "sha256:4f57f958e93b985120d71576c808004eae8b8f325d269ac68b28459123f9cac6",
+        "spec": "sha256:109df2916a743ab855f712b62c5ab8ff2c91f7496e6e0c933013e30f985b7ccc",
+        "build-report": "sha256:7c3af181dd461c3403e5a33cd44dcd79709ddadc6b7038cdb6cc17423752223f",
+        "build-data": "sha256:6e009836742f4668d8d44e08763de2ddee7770d7cf1d5048f65a78f18891e01e",
+        "verify-report": "sha256:4bba45ccd875904f5e1b0fd6fb6dd11536912e7dce4da3f8a9af605d41a3218e",
+        "verify-data": "sha256:9b797df5c41ecc8c1097cb846d5c961f96c424d4c95f92e15c5e6e0103abefff"
+      },
+      "completed_at": "2026-05-03T21:53:35.583Z",
+      "modules_touched": [
+        ".github/ISSUE_TEMPLATE/bug_report.yml",
+        ".github/ISSUE_TEMPLATE/feature_request.yml",
+        ".github/PULL_REQUEST_TEMPLATE.md",
+        ".github/dependabot.yml",
+        ".github/workflows/release.yml",
+        ".gitignore",
+        "CODE_OF_CONDUCT.md",
+        "SECURITY.md",
+        "package.json",
+        "packages/cli/package.json",
+        "packages/cli/src/commands/init/state.ts",
+        "packages/cli/src/engine/types/index.ts",
+        "packages/cli/tests/commands/init.test.ts",
+        "packages/cli/tests/commands/init/anaJsonSchema.test.ts",
+        "packages/cli/tests/engine/analyzers/patterns/confirmation.test.ts",
+        "packages/cli/tests/engine/analyzers/patterns/performance.test.ts",
+        "packages/cli/tests/engine/integration/parsed-integration.test.ts",
+        "packages/cli/tests/engine/types.test.ts",
+        "packages/cli/tests/helpers/test-project.ts"
+      ],
+      "scope_summary": "Final preparation for publishing `anatomia-cli@1.0.0` to npm. Package metadata, release workflow, community files, repo cleanup, version bump. This is the third of three V1 scopes — docs and code changes must be merged first. After this scope ships and merges, the publish ceremony is: tag, push, verify.",
+      "findings": [
+        {
+          "category": "code",
+          "summary": "npm pack dry-run doesn't include README.md or CHANGELOG.md — prepublishOnly required first",
+          "file": "packages/cli/package.json",
+          "anchor": null,
+          "line": 50,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "related_assertions": [
+            "A031"
+          ],
+          "id": "v1-release-prep-C1",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Release script 'cd packages/cli && npm version' requires a semver argument — no guard or help text",
+          "file": "package.json",
+          "anchor": null,
+          "line": 12,
+          "severity": "debt",
+          "suggested_action": "accept",
+          "id": "v1-release-prep-C2",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "release.yml copies README/CHANGELOG separately from prepublishOnly — two sources of truth for doc copying",
+          "file": ".github/workflows/release.yml",
+          "anchor": null,
+          "line": 30,
+          "severity": "debt",
+          "suggested_action": "monitor",
+          "id": "v1-release-prep-C3",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "No dedicated tests for v1-release-prep contract — assertions verified by source inspection only",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "v1-release-prep-C4",
+          "status": "active"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "npm pack --dry-run without prepublishOnly does not show README.md/CHANGELOG.md — they appear only after prepublishOnly copies them from root",
+          "file": null,
+          "severity": "observation",
+          "suggested_action": "accept"
+        },
+        {
+          "summary": "CODE_OF_CONDUCT.md created via curl workaround due to Claude Code content filter false-positive (known bug #4379)",
+          "file": null,
+          "severity": "observation",
+          "suggested_action": "monitor"
+        }
+      ]
     }
   ],
   "schema": 1

@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-48 runs · 70 active · 53 lessons · 0 promoted · 132 closed
+49 runs · 74 active · 53 lessons · 0 promoted · 132 closed
 
 ## Hot Modules
 
@@ -16,14 +16,23 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 70 total)
+## Active Findings (30 shown of 74 total)
+
+### .github/workflows/release.yml
+
+- **code:** release.yml copies README/CHANGELOG separately from prepublishOnly — two sources of truth for doc copying — *V1 Release Prep*
 
 ### .husky/pre-commit
 
 - **code:** Pre-commit comment claims ~9s / 10s threshold — will drift as test count grows (1807 now) — *V1 Code Changes*
 
+### package.json
+
+- **code:** Release script 'cd packages/cli && npm version' requires a semver argument — no guard or help text — *V1 Release Prep*
+
 ### packages/cli/package.json
 
+- **code:** npm pack dry-run doesn't include README.md or CHANGELOG.md — prepublishOnly required first — *V1 Release Prep*
 - **code:** prepublishOnly relies on relative ../../ path — breaks if package depth changes — *V1 Documentation Overhaul*
 - **code:** README.md and CHANGELOG.md cannot be verified with npm pack --dry-run — only exist after prepublishOnly — *V1 Documentation Overhaul*
 
@@ -49,14 +58,6 @@
 - **code:** 'Accept-action findings are pre-classified for closure' in Field Semantics section perpetuates batch framing language — *Learn Severity-Based Triage*
 - **code:** Edge Cases section still says 'Cap at ~30 per session' — contradicts new 'no arbitrary cap' guidance in Session Approach — *Learn Template Session Fixes*
 
-### packages/cli/templates/.claude/agents/ana.md
-
-- **code:** Proof surface block is informational command list without behavioral guidance — *Sharpen Agent Templates*
-
-### packages/cli/tests/commands/init.test.ts
-
-- **code:** Init frontmatter branch groups ana-build, ana-verify, ana-learn together — assumes identical frontmatter, masks divergence if any agent changes — *Fix Type Lies*
-
 ### packages/cli/tests/commands/proof.test.ts
 
 - **test:** A008 active-only test uses fixture with only active findings — no closed finding to prove exclusion — *Audit JSON Severity Summary*
@@ -70,15 +71,10 @@
 - **test:** A014 nudge check uses specific patterns ('→ claude', '→ ana proof') — a new nudge format would slip through — *Strengthen Weak Test Assertions*
 - **test:** UNVERIFIED test creates full project fixture manually instead of using createMergedProject helper — 60 lines vs ~5 lines — *Strengthen Weak Test Assertions*
 - **code:** Timestamp recency check (before/after window) in A010 test may flake on extremely slow CI — window depends on test execution speed — *Strengthen Weak Test Assertions*
-- **test:** A030 test named 'allows completion with UNKNOWN result' but exercises PASS path — UNKNOWN code path at L785 has no test coverage — *Proof Health V2*
 
 ### packages/cli/tests/engine/detectors/documentation.test.ts
 
 - **test:** documentation.test.ts assertion removed for packages/cli/README.md — justified but reduces dogfood coverage — *V1 Documentation Overhaul*
-
-### packages/cli/tests/templates/agent-proof-context.test.ts
-
-- **test:** Dogfood sync test loop short-circuits on first failure, skipping remaining files — now covers 6 files instead of 4, making masking worse — *Fix Type Lies*
 
 ### packages/cli/tests/utils/proofSummary.test.ts
 
@@ -89,4 +85,8 @@
 
 - **code:** README Development section uses absolute GitHub URLs for CONTRIBUTING/ARCHITECTURE — correct since README is at root — *V1 Documentation Overhaul*
 - **code:** Scan output block in README is representative example, not live output — cannot be mechanically validated — *V1 Documentation Overhaul*
+
+### General
+
+- **test:** No dedicated tests for v1-release-prep contract — assertions verified by source inspection only — *V1 Release Prep*
 
