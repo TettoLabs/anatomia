@@ -92,7 +92,7 @@ Summarize the shape, not individual findings:
 ```
 Proof chain: {N} runs, {M} active findings
   {X} risk · {Y} debt · {Z} observation
-  {A} closeable (accept-action) · {B} promotable · {C} need review
+  {B} promotable · {C} need review
 
 Last 3 runs: {slug1} ({days} ago), {slug2} ({days} ago), {slug3} ({days} ago)
 Skills: {list installed}
@@ -105,12 +105,12 @@ Do NOT call out individual findings in the summary. Save that for the triage pha
 Do NOT report unclassified counts as triage work. Unclassified findings in meta are predominantly historical closed/lesson entries from before the enrichment schema. If you need to surface them: "Note: {N} historical findings lack classification — these are closed/lesson entries, not active work."
 
 After the summary, present options:
-- Clear the deck ({A} accept-action findings)
 - Review risks ({X} risk findings)
+- Review debt ({Y} debt findings)
 - Promote patterns ({B} promotion candidates)
 - Focus on {module} ({N} findings in hot module)
 
-The developer picks the order. These are a menu, not a mandatory sequence. If they say "focus on risks" — go to risks. If they say "promote patterns" — go to promotions. The default ordering (accept → risk/debt → promote → observations) is the recommendation, not the rule.
+The developer picks the order. These are a menu, not a mandatory sequence. If they say "focus on risks" — go to risks. If they say "promote patterns" — go to promotions. The default ordering (risk → debt → promote → observations) is the recommendation, not the rule.
 
 ---
 
@@ -183,26 +183,11 @@ After identifying stale candidates, verify with a targeted code read before clos
 
 ## Structured Triage
 
-This is your primary mode. The default phase order is: accept-action → risk/debt → promote candidates → remaining observations. The developer can reorder.
+This is your primary mode. The default phase order is: risk/debt → promote candidates → remaining observations. The developer can reorder.
 
-**Session approach:** Start with risk findings and recurring candidates (highest impact), then high-confidence stale findings (quick wins), then accept-action (cleanup). After each phase, offer the developer: continue to the next phase, wrap up with the session delta, or draft a Think prompt for remaining work. The developer controls session length — there's no arbitrary cap.
+**Session approach:** Start with risk findings (highest impact), then debt findings (claim extraction + git history), then promote candidates, then remaining observations. Within risk and debt, surface high-confidence stale findings first (quick wins from `ana proof stale`). After each phase, offer the developer: continue to the next phase, wrap up with the session delta, or draft a Think prompt for remaining work. The developer controls session length — there's no arbitrary cap.
 
-### Phase 1: Accept-Action (Clear the Deck)
-
-Findings with `suggested_action: accept` that are still active. Accept means Verify didn't block shipping — it does NOT mean the finding should be closed. Now that the scope shipped, re-evaluate each finding on its own merits. Some are genuinely cosmetic — close them. Some are real debt that just wasn't worth blocking the shipment — keep them or scope them.
-
-#### Verification depth by finding type
-
-**Accept-action observations** (severity: observation, action: accept):
-Confirm file exists and anchor is present. For observations, anchor existence is sufficient — the classification says "closeable" and you're confirming the finding still applies. This is the bulk of clear-the-deck work.
-
-**Accept-action debt/risk** (severity: debt or risk, action: accept):
-Read the code around the anchor. The accept classification on a higher-severity finding means someone judged it not worth fixing — verify that judgment is still sound.
-
-**Null-file findings** (file: null, anchor: null):
-These are about process, upstream, or documentation — not code. Close based on the classification, the entry context, and whether the system the finding describes still exists. Note in the reason: "no code reference — closed based on {what you assessed}."
-
-#### Close reason standard
+### Close Reason Standards
 
 Every close reason must describe what you verified, not restate the classification. A future reader should understand what was checked without re-reading the finding.
 
@@ -220,25 +205,11 @@ Every close reason must describe what you verified, not restate the classificati
 
 The reason should contain enough information that a developer reading the proof chain 6 months from now understands what was checked.
 
-#### Presentation
+### Null-File Findings
 
-Present all Phase 1 suggestions as a grouped list before executing any. Group by theme — not by finding ID:
+Findings with `file: null` and `anchor: null` are about process, upstream, or documentation — not code. Close based on the classification, the entry context, and whether the system the finding describes still exists. Note in the reason: "no code reference — closed based on {what you assessed}."
 
-```
-Closing {N} accepted findings. I verified each one:
-  - {X} about {system} that was removed (system doesn't exist)
-  - {Y} about intentional design choices (code verified)
-  - {Z} about test behavior working as designed
-  - {W} about cosmetic/historical observations
-
-[full list with commands below]
-
-Approve all, approve by group, or reject individually?
-```
-
-The developer sees the shape first. Details support it.
-
-### Phase 2: Risk and Debt Findings (Deep Review)
+### Phase 1: Risk and Debt Findings (Deep Review)
 
 Findings with `severity: risk` or `severity: debt`, ordered by severity (risk first). This is the deep work — every finding gets code-verified.
 
@@ -303,9 +274,9 @@ THEORETICAL — recommend close:
 Commands: [list]
 ```
 
-### Phase 3: Promote Candidates
+### Phase 2: Promote Candidates
 
-Findings with `suggested_action: promote` or recurring patterns you identified in Phase 2.
+Findings with `suggested_action: promote` or recurring patterns you identified in Phase 1.
 
 Before drafting any rules, look across all active findings for the same SHAPE — different files, same anti-pattern. Group findings that share a root cause. "Three findings about weak test matchers in three different test files" is one pattern, not three promotions. One promotion covering the disease beats three promotions covering instances.
 
@@ -313,9 +284,9 @@ For each pattern identified, follow the Promotion Workflow below.
 
 If no patterns are worth promoting, say what you checked: "Reviewed {N} active findings for recurring patterns. Checked {skill-1} and {skill-2} for coverage gaps. No patterns recur across 2+ entries — nothing to promote this session."
 
-### Phase 4: Remaining Observations
+### Phase 3: Remaining Observations
 
-Observations that weren't covered by Phases 1-3. Most observations are correctly parked — they were classified as `monitor` because they're real but not actionable yet.
+Observations that weren't covered by Phases 1-2. Most observations are correctly parked — they were classified as `monitor` because they're real but not actionable yet.
 
 Don't read code for every observation. Batch-assess:
 1. Run `ana proof stale` to identify observations with staleness signals.
@@ -419,11 +390,9 @@ When findings have different justifications, close individually with specific re
 Before executing the first approved command, run `git pull` once to ensure you're current. Individual commands also pull, but one upfront pull avoids N individual pulls.
 
 ### 3. Never Close Without Verification
-For code-referenced findings: verify the finding's specific claim against the current code. "File exists and anchor is present" is necessary but not sufficient for risk/debt findings — read the code around the anchor.
+For code-referenced findings: verify the finding's specific claim against the current code. "File exists and anchor is present" is necessary but not sufficient for risk/debt findings — read the code around the anchor. For observations, anchor existence is sufficient — confirm the finding still applies.
 
 For null-file findings (process, upstream, documentation): close based on classification and context. Note "no code reference — closed based on {what you assessed}" in the reason.
-
-For accept-action observations: file existence + anchor presence is sufficient verification.
 
 ### 4. Never Promote a Redundant Rule
 Before drafting a new rule, read the target skill file. If an existing rule covers the same principle, strengthen it — don't duplicate it. Redundant rules dilute signal.
@@ -474,7 +443,7 @@ No self-assessment. No sycophancy. No "Great question!" No "Good challenge!" No 
 
 - **Promote fails on specific finding:** Check the error. `ALREADY_PROMOTED` means someone else promoted it — verify the rule exists. `ALREADY_CLOSED` means the finding was closed — use `--force` if the promotion is still needed.
 
-- **Very large active set (200+ findings):** Cap at ~30 per session. Negotiate scope: "You have {N} active findings. Want me to focus on a specific module, the oldest, or the highest-severity?" Prioritize risk severity, then debt, then observations.
+- **Very large active set (200+ findings):** Negotiate focus by severity or module: "You have {N} active findings. Want me to focus on risks, a specific module, or the oldest?" The developer controls session length — no arbitrary cap.
 
 - **Developer rejects 5+ suggestions:** Stop. Recalibrate (Guardrail 6).
 
