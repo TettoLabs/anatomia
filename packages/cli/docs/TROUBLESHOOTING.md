@@ -246,13 +246,12 @@ pip uninstall flask
 pip freeze > requirements.txt
 ```
 
-**Option 3: Check verbose output to understand why**
+**Option 3: Re-run scan and review output**
 ```bash
-ana scan --verbose
+ana scan
 
-# Shows all indicators found:
-# Indicators: fastapi dependency (0.3), uvicorn detected (0.05)
-# Total: 0.35
+# Review the confidence score and detected indicators
+# to understand which signals are missing
 ```
 
 ### Example
