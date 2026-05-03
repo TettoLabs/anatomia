@@ -1,93 +1,68 @@
 # Changelog
 
-## [Unreleased] — S11: The Context Sprint
+All notable changes to [anatomia-cli](https://www.npmjs.com/package/anatomia-cli) are documented in this file.
 
-### Init Enrichment
-- scan.json saved during init — full 19-key EngineResult, agents read on cold start
-- ana.json populated with detected commands, framework, language, package manager (not hardcoded defaults)
-- Context files enriched with `**Detected:**` / `**Unexamined:**` tags, 0.7 confidence threshold, `## Open Questions` structure
-- Skills seeded: coding-standards (conventions), testing-standards (framework + real commands), git-workflow (branch info), deployment (platform), logging-standards (monitoring services)
-- Init completion message shows developer's detected stack, services, and deployment
+Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
+Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
-### Renames
-- `.meta.json` → `ana.json` (file, functions, variables, tests, templates)
-- `.state/` → `state/` (directory, hooks, tests, .gitignore)
-- `analysis.md` deleted (scan.json + context files replace it)
-- `setupStatus` → `setupMode` (`not_started` → `complete` lifecycle)
+## [Unreleased]
 
-### Scan Polish
-- TypeScript projects show "TypeScript" not "Node.js" (when tsconfig.json or typescript dep present)
-- Database arrow notation: "Prisma → PostgreSQL (3 models)" when ORM and engine both detectable
-- Package manager inheritance: sub-packages inherit root's lockfile (capped at 5 levels)
-- `ana init /path` now rejects with clear error (operates on cwd only)
+## [1.0.0] - 2026-05-XX
 
-### Quality
-- Scaffold generators rewritten for EngineResult (deleted lossy adapter)
-- Reinit guard prevents duplicate `## Detected` in skills on `--force`
-- displaySuccessMessage only claims files exist when they were actually created
-- setupMode state machine fixed (init always writes `not_started`, setup sets the mode)
-- Unit tests for TypeScript detection, arrow notation, PM inheritance, skill seeding
-- npm publish ready (prepublishOnly, description, keywords)
+First stable release.
 
-## S10 — The Engine Sprint
+### Added
 
-- **One package:** Absorbed analyzer into CLI. Deleted generator package.
-- **EngineResult:** 19-key unified interface from `analyzeProject()`
-- **Five-category detection:** Language, Framework, Database, Auth, Testing all populate
-- **2026 stack coverage:** Clerk, Neon, Convex, Resend, PostHog, Anthropic SDK, Vercel AI SDK, Inngest, Playwright, 30+ more
-- **External services:** Grouped by category (AI, payments, email, monitoring)
-- **Deployment detection:** Vercel, Netlify, Fly.io, Railway, Docker
-- **Redesigned terminal output:** Box-drawing scan display with all 19 keys
-- 937 tests, 0 failures
+#### Scan engine
+- 40+ framework, database, auth, testing, and service detectors
+- Convention analysis: naming, imports, indentation across 5 categories
+- Pattern inference: error handling, validation, database, auth, testing
+- Application shape classification (cli, web-app, api-server, library, and 5 more)
+- Two-tier scanning: surface (dependency-based) and deep (tree-sitter AST)
+- Git intelligence: activity, churn, hooks, commit format, contributors
 
-## S9 — The Fix Sprint
+#### Context generation
+- `CLAUDE.md` and `AGENTS.md` for cross-tool AI consumption
+- 5 core + 3 conditional skill templates with scan-driven Detected sections
+- Project-context and design-principles scaffolds
+- 16 stack-specific gotchas with compound triggers
+- Idempotent init: re-run refreshes scan data, preserves user content
 
-- Resolved all 12 enhancements from S8 dogfood
-- Contract system stabilized
-- Pipeline flow hardened
+#### Pipeline
+- Four-agent pipeline: Think, Plan, Build, Verify
+- Sealed contracts with typed assertions (equals, contains, exists, greater, truthy, not_equals, not_contains)
+- Hash-verified artifact saves with atomic commits
+- Branch-aware pipeline state tracking
+- PR creation from verified builds
 
-## S8 — The Verification Sprint
+#### Proof chain
+- One entry per pipeline run: assertions, findings, timing, hashes
+- Quality trajectory via `ana proof health`
+- Finding lifecycle: active, closed, promoted, lesson
+- Finding-to-rule promotion via `ana proof promote`
+- Staleness detection via `ana proof stale`
+- Severity classification: risk, debt, observation
+- Active findings audit via `ana proof audit`
+- File-scoped context queries via `ana proof context`
 
-- Mechanical verification via contract system
-- Four-agent pipeline: Think → Plan → Build → Verify
-- Proof chain tracking
-- First dogfood: 24/24 assertions satisfied
+#### Learn agent
+- Severity-based triage between pipeline cycles
+- Pattern promotion to skill rules
+- Think handoff for scope-worthy findings
 
-## [Unreleased] — S7
-- Detection overhaul: 6 stack categories (Language, Framework, Database, Auth, Testing, Payments)
-- Dependency-file fallback for package.json-based detection
-- Structure map: 35+ recognized directories
-- Monorepo awareness (pnpm, lerna, nx, npm/yarn workspaces)
-- Pre-check matching accuracy improvement (66% → <5% false positive rate)
-- --verbose flag for scan debugging
-- 5 prompt calibrations from dogfood evidence
-- Dead code cleanup in fileCounts.ts
-- Analyzer error boundary architecture verified
-- WASM/npx investigation and recommendation
+#### Setup
+- Guess-and-confirm enrichment via Claude Code agent
+- Phase-tracked state with resume support
+- Context file validation via `ana setup check`
 
-## [0.2.0] — 2026-03-31
-- `ana scan` command with --json flag
-- Graceful degradation in analyzer
-- File counting utility
-- save-all push fix
-- Zero-install project scanner
+#### Infrastructure
+- CI: 3 OS (Ubuntu, macOS, Windows) x 2 Node versions (20, 22)
+- Pre-commit hooks: typecheck + lint
+- Atomic init with crash-safe rollback
 
-## [0.1.1] — 2026-03-30
-- S6: Verification architecture (build report independence)
-- Pre-check bugfixes (skeleton regex, YAML parser)
-- 8 prompt calibrations
-- 4 artifact save validations
-- Block-based assertion matching
+---
 
-## [0.1.0] — 2026-03-29
-- S5: Mechanical verification (`ana verify pre-check`)
-- `ana artifact save-all` command
-- Config in ana.json
-- AnaVerify rewrite
-- Test skeleton support
+Previous development history is preserved in git log.
 
-## [0.0.x] — 2026-03-27
-- S2-S4: Pipeline foundation
-- Toolbelt commands (work, artifact, pr)
-- Ana/AnaPlan/AnaBuild/AnaVerify agents
-- Testing infrastructure
+[Unreleased]: https://github.com/TettoLabs/anatomia/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/TettoLabs/anatomia/releases/tag/v1.0.0

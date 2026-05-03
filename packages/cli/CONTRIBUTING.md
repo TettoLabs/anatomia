@@ -1,6 +1,8 @@
 # Contributing to Anatomia
 
-Thank you for your interest in contributing to Anatomia!
+Read [ARCHITECTURE.md](ARCHITECTURE.md) first for the module map. Then come back here for setup and extension guides.
+
+Every file path and code identifier below is verified against the current codebase. If you follow these guides and something does not match, the code is right — file an issue.
 
 ---
 
@@ -29,20 +31,20 @@ ana --version
 
 ## Project Structure
 
-For a detailed module map, data flow, and extension points, see [ARCHITECTURE.md](./ARCHITECTURE.md). Quick summary:
-
 ```
 packages/cli/
-├── ARCHITECTURE.md        # ← Read this before adding modules or extending the engine
+├── ARCHITECTURE.md        # Module map, data flow, extension points
+├── CONTRIBUTING.md         # Setup, testing, step-by-step extension guides
 ├── src/
 │   ├── index.ts           # CLI entry point — registers all 9 commands
 │   ├── commands/          # 9 user-visible commands (init/, scan, setup, artifact, work, proof, pr, agents, verify)
-│   │   └── init/          # 6-file split: index, types, preflight, skills, assets, state
+│   │   └── init/          # 7-file split: index, types, preflight, skills, assets, state, anaJsonSchema
 │   ├── engine/            # Scan engine
 │   │   ├── scan-engine.ts #   scanProject() — public entry point
 │   │   ├── index.ts       #   Re-exports: EngineResult, scanProject, ASTCache, ParserManager
-│   │   ├── detectors/     #   framework/service/git/deployment/monorepo + node/ + python/
-│   │   ├── analyzers/     #   patterns/, structure/, conventions/ (each a 4–6 file folder)
+│   │   ├── detectors/     #   12 top-level .ts files + node/ (6 + registry) + python/ (5 + registry)
+│   │   ├── analyzers/     #   patterns/, structure/, conventions/ (5 files)
+│   │   ├── sampling/      #   proportionalSampler.ts
 │   │   ├── types/         #   EngineResult + pattern/convention/parsed Zod schemas
 │   │   ├── parsers/       #   tree-sitter + per-language dependency parsers
 │   │   ├── utils/         #   routeHandlers, serviceAnnotation, confidence, file
@@ -54,11 +56,10 @@ packages/cli/
 │   └── constants.ts       # CORE_SKILLS, CONDITIONAL_SKILL_TRIGGERS, AGENT_FILES, getStackSummary
 ├── templates/
 │   ├── CLAUDE.md          # Project entry point template
-│   ├── context/           # Context scaffolds
-│   ├── .ana/              # Hook scripts + static docs
 │   └── .claude/
-│       ├── agents/        # Agent definitions — see AGENT_FILES in src/constants.ts for the current list
+│       ├── agents/        # Agent definitions — see AGENT_FILES in src/constants.ts
 │       └── skills/        # 8 skill templates (5 core + 3 conditional)
+│           └── <name>/    # Each contains SKILL.md + ENRICHMENT.md
 ├── tests/                 # Vitest suite — run `(cd packages/cli && pnpm vitest run)` for current counts
 │   ├── commands/          # Command tests
 │   ├── engine/            # Engine tests (analyzers, detectors, parsers, conventions, patterns, utils, types)
@@ -77,14 +78,14 @@ packages/cli/
 
 **Run tests:**
 ```bash
-pnpm test                # All tests
-pnpm test tests/templates/  # Template tests only
+cd packages/cli && pnpm vitest run           # All tests
+cd packages/cli && pnpm vitest run tests/templates/  # Template tests only
 ```
 
 **Test requirements:**
 - All tests must pass before PR
 - Add tests for new features
-- Maintain ≥80% coverage
+- Maintain coverage
 
 **Test structure:**
 - Use vitest
@@ -97,20 +98,16 @@ pnpm test tests/templates/  # Template tests only
 ## Modifying Templates
 
 **Template locations:**
-- `Agent templates:` templates/.claude/agents/
-- `Skill templates:` templates/.claude/skills/
+- Agent templates: `templates/.claude/agents/`
+- Skill templates: `templates/.claude/skills/`
+- Each skill directory contains `SKILL.md` (the template) and `ENRICHMENT.md` (setup enrichment guidance)
 
 **Development workflow:**
 
 1. **Edit template file** in `templates/`
-2. **Run tests:** `pnpm test`
+2. **Run tests:** `cd packages/cli && pnpm vitest run`
 3. **Test locally:** `pnpm build && cd /tmp && mkdir test && cd test && git init && npm init -y && ana init`
 4. **Submit PR** with test results and rationale
-
-**Testing requirements:**
-- All automated tests pass (`pnpm test`)
-- Coverage remains ≥80%
-- Quality rubric maintained (if changed templates)
 
 ---
 
@@ -121,13 +118,11 @@ pnpm test tests/templates/  # Template tests only
 - **Professional tone:** Imperative, clear, no jargon without explanation
 - **Section structure for skills:** `## Detected`, `## Rules`, `## Gotchas`, `## Examples` — the Detected section is machine-owned (auto-refreshed by `scaffoldAndSeedSkills`); the other three are human-owned and preserved on re-init.
 
-See the "Templates are behavioral contracts" note in [ARCHITECTURE.md](./ARCHITECTURE.md) for the framing.
+See the "Templates are behavioral contracts" note in [ARCHITECTURE.md](ARCHITECTURE.md) for the framing.
 
 ---
 
 ## Common Contributions — Step-by-Step Guides
-
-Every path, file, and line number below is verified against the current codebase. If you follow these guides and something doesn't match, the code is right — file an issue.
 
 ### 1. Adding a Framework Detector
 
@@ -147,21 +142,22 @@ Example throughout: adding **Hono** (a lightweight Node.js web framework).
      return { framework: null, confidence: 0.0, indicators: [] };
    }
    ```
-2. **Register it** in `packages/cli/src/engine/detectors/node/framework-registry.ts`:
+2. **Register it** in `src/engine/detectors/node/framework-registry.ts`:
    ```typescript
    import { detectHono } from './hono.js';
 
    export const NODE_FRAMEWORK_DETECTORS: NodeFrameworkDetector[] = [
      detectNextjs,
+     detectRemix,
      detectNestjs,
      detectExpress,
-     detectHono,        // ← add at correct priority
+     detectHono,        // add at correct priority
      detectReact,
      detectOtherNodeFrameworks,
    ];
    ```
    **Priority matters.** First match wins. Put disambiguating frameworks before their parents (Next.js before React, Nest before Express).
-3. **Add a display name** at `packages/cli/src/utils/displayNames.ts` in `FRAMEWORK_DISPLAY_NAMES`:
+3. **Add a display name** in `src/utils/displayNames.ts` in `FRAMEWORK_DISPLAY_NAMES`:
    ```typescript
    hono: 'Hono',
    ```
@@ -176,9 +172,9 @@ Python, Go, and Rust follow the same pattern. Python uses `detectors/python/fram
 
 ### 2. Adding a Gotcha
 
-Gotchas are short, high-value warnings injected into `## Gotchas` sections of skill files on **fresh init only**. The gotcha system fired 80+ times across 22 test projects in S18 with zero false positives — precise triggers are the whole point.
+Gotchas are short, high-value warnings injected into `## Gotchas` sections of skill files on **fresh init only**. The gotcha system fired 80+ times across 22 test projects with zero false positives — precise triggers are the whole point.
 
-1. **Edit** `packages/cli/src/data/gotchas.ts` and add an entry to `GOTCHAS`:
+1. **Edit** `src/data/gotchas.ts` and add an entry to `GOTCHAS`:
    ```typescript
    {
      id: 'tanstack-query-staletime',
@@ -187,7 +183,7 @@ Gotchas are short, high-value warnings injected into `## Gotchas` sections of sk
      text: 'TanStack Query defaults to staleTime: 0. Set a sensible default or every mount refetches.',
    },
    ```
-2. **Triggers are compound.** `triggers` is `Record<string, string>` — every key/value pair must match the corresponding `stack.*` field. Compound triggers (`framework + database`) are how gotchas stay precise. See `matchGotchas()` at `src/utils/gotchas.ts:16`.
+2. **Triggers are compound.** `triggers` is `Record<string, string>` — every key/value pair must match the corresponding `stack.*` field. Compound triggers (`framework + database`) are how gotchas stay precise. See `matchGotchas()` in `src/utils/gotchas.ts`.
 3. **Valid skill targets:** any of `CORE_SKILLS` + `CONDITIONAL_SKILL_TRIGGERS` names in `src/constants.ts` (`coding-standards`, `testing-standards`, `git-workflow`, `deployment`, `troubleshooting`, `ai-patterns`, `api-patterns`, `data-access`).
 4. **Test it:**
    ```bash
@@ -199,13 +195,13 @@ Gotchas are short, high-value warnings injected into `## Gotchas` sections of sk
    ana init --yes
    grep "staleTime" .claude/skills/data-access/SKILL.md  # should find your gotcha
    ```
-5. **Re-init is the negative test.** Delete `.ana/`, edit the gotcha out of the skill file, run `ana init --yes` again — your edit should survive. `scaffoldAndSeedSkills` sets `allowGotchaInjection = false` when a skill file already exists (Item 12 Path B).
+5. **Re-init is the negative test.** Delete `.ana/`, edit the gotcha out of the skill file, run `ana init --yes` again — your edit should survive. `scaffoldAndSeedSkills` sets `allowGotchaInjection = false` when a skill file already exists.
 
 ### 3. Adding a Service
 
 Services show up in scan output and AGENTS.md's Services list. Two registration sites:
 
-1. **Primary registration** at `packages/cli/src/engine/scan-engine.ts:107` → `EXTERNAL_SERVICE_PACKAGES`:
+1. **Primary registration** in `src/engine/scan-engine.ts` at `EXTERNAL_SERVICE_PACKAGES`:
    ```typescript
    const EXTERNAL_SERVICE_PACKAGES: Record<string, { name: string; category: string }> = {
      // ...
@@ -213,8 +209,8 @@ Services show up in scan output and AGENTS.md's Services list. Two registration 
    };
    ```
 2. **Category** should be one of: `ai`, `analytics`, `auth`, `backend`, `database`, `deployment`, `email`, `hosting`, `jobs`, `monitoring`, `payments`, `storage`, `other`.
-3. **Naming convention for multi-provider SDKs** (Item 18): use the branded name in stack (`'Vercel AI'`) and parenthesized variants in services (`'Vercel AI (Anthropic)'`, `'Vercel AI (OpenAI)'`). The exact-match filter in `injectAiPatterns` relies on this split.
-4. **AI services have a second registration** in `AI_PACKAGES` at `src/engine/detectors/dependencies.ts:72` (used for stack-level SDK detection). Keep them aligned: if you add a package to one map, consider whether it belongs in both.
+3. **Naming convention for multi-provider SDKs:** use the branded name in stack (`'Vercel AI'`) and parenthesized variants in services (`'Vercel AI (Anthropic)'`, `'Vercel AI (OpenAI)'`). The exact-match filter in `injectAiPatterns` relies on this split.
+4. **AI services have a second registration** in `AI_PACKAGES` in `src/engine/detectors/dependencies.ts` (used for stack-level SDK detection). Keep them aligned: if you add a package to one map, consider whether it belongs in both.
 5. **Test:**
    ```bash
    ana scan /path/to/project-using-your-service
@@ -248,12 +244,12 @@ Example throughout: adding a `code-review` skill for projects with CI configured
    *Not yet captured.*
    ```
 2. **Register it.** Two options:
-   - **Core skill** (always scaffolded): add to `CORE_SKILLS` at `src/constants.ts:49`.
-   - **Conditional skill** (scaffolded only when a trigger matches): add a predicate to `CONDITIONAL_SKILL_TRIGGERS` at `src/constants.ts:60`:
+   - **Core skill** (always scaffolded): add to `CORE_SKILLS` in `src/constants.ts`.
+   - **Conditional skill** (scaffolded only when a trigger matches): add a predicate to `CONDITIONAL_SKILL_TRIGGERS` in `src/constants.ts`:
      ```typescript
      'code-review': (r) => r?.deployment?.ci !== null,
      ```
-3. **Add a Detected section injector** (optional — only if the skill's Detected section should show project-specific data) at `src/commands/init/skills.ts:152` in `SKILL_INJECTORS`:
+3. **Add a Detected section injector** (optional — only if the skill's Detected section should show project-specific data) in `src/commands/init/skills.ts` at `SKILL_INJECTORS`:
    ```typescript
    const SKILL_INJECTORS: Record<string, DetectedInjector> = {
      // ...
@@ -276,55 +272,55 @@ Example throughout: adding a `code-review` skill for projects with CI configured
 
 ## Code Patterns to Avoid
 
-These are real anti-patterns found and removed during S18. Don't reintroduce them.
+These are real anti-patterns found and removed during codebase cleanup. Do not reintroduce them.
 
 ### Type washing
 
-**Don't** manually retype parameters or return values with looser types. The compiler can't catch drift between the loose shape and the real shape.
+**Do not** manually retype parameters or return values with looser types. The compiler cannot catch drift between the loose shape and the real shape.
 
 ```typescript
-// ❌ BAD — the parameter shape is silently narrower than the real type
+// BAD — the parameter shape is silently narrower than the real type
 function mapConventions(raw: { naming: { files: { majority: string } } }): ConventionsOutput {
   return { naming: { files: { majority: raw.naming.files.majority } } };
 }
 ```
 
 ```typescript
-// ✅ GOOD — import the real type, let tsc enforce completeness
+// GOOD — import the real type, let tsc enforce completeness
 import type { ConventionAnalysis } from '../types/conventions.js';
 function formatConventions(input: ConventionAnalysis): string { ... }
 ```
 
-S18 deleted `mapConventions` and `mapToPatternDetail` (Phase 1, Items 3 and 6) because they were the bridge between parallel type definitions that drifted silently on every schema change. Five type pairs are now unified via direct composition in `EngineResult`. If you find yourself writing a function that takes one type and returns a lightly-relabeled version of the same data, **stop** — unify the types instead.
+The architecture cleanup deleted `mapConventions` and `mapToPatternDetail` because they were the bridge between parallel type definitions that drifted silently on every schema change. Five type pairs are now unified via direct composition in `EngineResult`. If you find yourself writing a function that takes one type and returns a lightly-relabeled version of the same data, **stop** — unify the types instead.
 
 ### Phantom analyzers
 
-**Don't** write analyzers that cast to nonexistent fields via `as unknown as`. The cast lies to the compiler; the code reads zeros; the tests assert on the zeros; nothing ever catches it.
+**Do not** write analyzers that cast to nonexistent fields via `as unknown as`. The cast lies to the compiler; the code reads zeros; the tests assert on the zeros; nothing ever catches it.
 
 ```typescript
-// ❌ BAD — this is what the deleted typeHints.ts / docstrings.ts did
+// BAD — this is what the deleted typeHints.ts / docstrings.ts did
 const fn = parsedFunction as unknown as { returnType?: string; parameters?: { type: string }[] };
 const annotated = fn.parameters?.filter(p => p.type).length ?? 0;
 // fn.parameters is ALWAYS undefined because ParsedFile never populates it.
 // The function always returns 0. The test asserts 0. It passes forever.
 ```
 
-Items 4 and 16 of Phase 1 + Phase 2 killed these patterns. If you catch yourself writing `as unknown as <bigger type>`, stop and either extract the missing data for real (tree-sitter query work) or delete the analyzer.
+If you catch yourself writing `as unknown as <bigger type>`, stop and either extract the missing data for real (tree-sitter query work) or delete the analyzer.
 
 Phantom tests are the corollary: `expect(result).toBe(0)` on a function that always returns 0 provides zero signal. Every new test must use input that *should* produce a non-default output. See `tests/engine/utils/service-annotation.test.ts` for the "stack field coverage" pattern that flags regressions rather than asserting on sentinels.
 
 ### Duplicate type definitions
 
-**Don't** define the same concept twice — once on the detector side, once inline in `EngineResult`. S18 unified 5 such pairs (conventions, patterns, commands, git, deployment). The compile-time assertions in `tests/engine/types.test.ts` will fail if you regress any of them. If you need a new detector that feeds `EngineResult`, import the detector's type directly into the field declaration.
+**Do not** define the same concept twice — once on the detector side, once inline in `EngineResult`. The cleanup unified 5 such pairs (conventions, patterns, commands, git, deployment). The compile-time assertions in `tests/engine/types.test.ts` will fail if you regress any of them. If you need a new detector that feeds `EngineResult`, import the detector's type directly into the field declaration.
 
 ```typescript
-// ❌ BAD
+// BAD
 // engine/detectors/foo.ts:
 export interface FooInfo { a: string; b: number; }
 // engine/types/engineResult.ts:
 foo: { a: string; b: number };  // duplicate — will drift
 
-// ✅ GOOD
+// GOOD
 // engine/detectors/foo.ts:
 export interface FooInfo { a: string; b: number; }
 // engine/types/engineResult.ts:
@@ -340,7 +336,7 @@ Three patterns. Pick based on the caller's needs, not on reflex.
 
 ### 1. Silent catch for optional files
 
-When a file is optional and its absence is not an error — use a narrow try/catch that swallows the error and returns an empty/default value. Example: `src/engine/utils/file.ts` `readFile()`:
+When a file is optional and its absence is not an error — use a narrow try/catch that swallows the error and returns an empty/default value. Example: `readFile()` in `src/engine/utils/file.ts`:
 
 ```typescript
 export async function readFile(filePath: string): Promise<string> {
@@ -356,7 +352,7 @@ Use this for: missing lockfiles, missing config files, missing dependency manife
 
 ### 2. Return null for fallible lookups
 
-When a function looks up something that may or may not exist — return `null` or `undefined` instead of throwing. Example: `src/engine/detectors/dependencies.ts:152` `detectAiSdk()`:
+When a function looks up something that may or may not exist — return `null` or `undefined` instead of throwing. Example: `detectAiSdk()` in `src/engine/detectors/dependencies.ts`:
 
 ```typescript
 export function detectAiSdk(allDeps: Record<string, string>): string | null {
@@ -371,12 +367,12 @@ Use this for: detectors, helpers that answer a yes/no question, parsers that may
 
 ### 3. Throw for real errors
 
-When the operation MUST succeed and failure means the tool can't continue — throw. Example: `src/commands/init/state.ts` uses `catch (error)` to wrap the failure and `process.exit(1)`:
+When the operation MUST succeed and failure means the tool cannot continue — throw. Example: `state.ts` in `src/commands/init/` uses `catch (error)` to wrap the failure and `process.exit(1)`:
 
 ```typescript
 } catch (error) {
   if (error instanceof Error) {
-    console.error(chalk.red(`\n❌ Init failed: ${error.message}`));
+    console.error(chalk.red(`\n Init failed: ${error.message}`));
     console.error(chalk.gray('No changes made to your project.'));
   }
   process.exit(1);
@@ -385,11 +381,11 @@ When the operation MUST succeed and failure means the tool can't continue — th
 
 Use this for: init pipeline phases, anything downstream of the atomic rename, any user-facing operation where silent failure would corrupt state.
 
-### Don't introduce `Result<T, E>` types
+### Do not introduce `Result<T, E>` types
 
 TypeScript already has `T | null` and `T | undefined`. Those express "might fail" at the type level with zero runtime overhead. A `Result<T, E>` wrapper type adds an allocation per call, forces every caller to unwrap, and duplicates the work the type system already does.
 
-The 118 catch blocks in `src/` audited during S18 were all legitimately one of the three patterns above. None needed a Result wrapper. Document your error handling with a one-line comment at the catch site if it's not obvious which pattern applies.
+The 118 catch blocks in `src/` are all legitimately one of the three patterns above. None needed a Result wrapper. Document your error handling with a one-line comment at the catch site if it is not obvious which pattern applies.
 
 ---
 
@@ -397,16 +393,14 @@ The 118 catch blocks in `src/` audited during S18 were all legitimately one of t
 
 **Branching policy: feature branches + PR review.**
 
-1. Create a branch: `feature/s19-<name>` or `fix/<short-description>`
+1. Create a branch: `feature/<slug>` or `fix/<short-description>`
 2. Open a PR to `main`
-3. **CI must pass** — the workflow runs typecheck + typecheck:tests + lint + test + build on Ubuntu/macOS/Windows × Node 20/22
+3. **CI must pass** — the workflow runs typecheck + typecheck:tests + lint + test + build on Ubuntu/macOS/Windows x Node 20/22
 4. **Pre-commit hook** runs typecheck + typecheck:tests + lint locally on every commit (installed by husky; `pnpm install` sets it up)
 5. **Human review required** before merge
 6. **Squash-merge preferred** for clean history
 
-**Context:** S18 cleanup (Items 0-28) was committed directly to `main` under real-time review between the maintainers. That worked for a solo cleanup sprint because the review was synchronous and the commits were small. S19+ moves to the branch+PR workflow because the work becomes collaborative and asynchronous, and PR review + CI are the only two enforcement mechanisms that scale.
-
-**Don't `--no-verify`.** The pre-commit hook is there to catch the exact class of bugs that let S18 ship with 140 silent type errors before the Phase 1 cleanup. If the hook fires, fix the issue — don't bypass it.
+Do not `--no-verify`. The pre-commit hook catches the exact class of bugs that let 140 silent type errors accumulate before they were cleaned up. If the hook fires, fix the issue — do not bypass it.
 
 ---
 
@@ -415,9 +409,9 @@ The 118 catch blocks in `src/` audited during S18 were all legitimately one of t
 1. Fork the repository (or create a branch if you have push access)
 2. Create a feature branch: `git checkout -b feature/<name>`
 3. Make your changes — the husky pre-commit hook will run checks on every commit
-4. Run the full suite locally: `pnpm test -- --run && pnpm lint && pnpm typecheck && pnpm typecheck:tests`
+4. Run the full suite locally: `cd packages/cli && pnpm vitest run && pnpm lint && pnpm typecheck && pnpm typecheck:tests`
 5. Push and open a Pull Request
-6. Wait for CI — the same four checks run on Ubuntu/macOS/Windows × Node 20/22
+6. Wait for CI — the same four checks run on Ubuntu/macOS/Windows x Node 20/22
 7. Address review feedback
 
 **PR requirements:**
@@ -439,10 +433,4 @@ The 118 catch blocks in `src/` audited during S18 were all legitimately one of t
 
 ---
 
-## Questions?
-
-- Open an issue: https://github.com/TettoLabs/anatomia/issues
-
----
-
-Thank you for contributing!
+Questions? Open an issue: https://github.com/TettoLabs/anatomia/issues

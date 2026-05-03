@@ -15,5 +15,38 @@
   "spec": {
     "saved_at": "2026-05-03T19:04:43.048Z",
     "hash": "sha256:ce0d03d8989dd93450adc969c6254fd277e290ae32266282634a95beecabe085"
+  },
+  "build-report": {
+    "saved_at": "2026-05-03T19:51:26.553Z",
+    "hash": "sha256:fb1055ef66d5510dd846ae1d8082c085ae06cbafa71124ecdc2a8b65cbaf2267"
+  },
+  "build-data": {
+    "saved_at": "2026-05-03T19:51:26.554Z",
+    "hash": "sha256:b41aa8ca7317d9137ec13bc089537fca721c5ba098b5f0851d5dd27e29040dc1"
+  },
+  "modules_touched": [
+    "CHANGELOG-internal.md",
+    "CHANGELOG.md",
+    "README.md",
+    "packages/cli/.gitignore",
+    "packages/cli/ARCHITECTURE.md",
+    "packages/cli/CHANGELOG.md",
+    "packages/cli/CONTRIBUTING.md",
+    "packages/cli/README.md",
+    "packages/cli/package.json",
+    "packages/cli/tests/engine/detectors/documentation.test.ts"
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:e57d692795a037f2f6f406d8e142f70a698a0cd4d079786786834bb79c242e1b",
+    "run_at": "2026-05-03T20:02:22.556Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-03T20:02:22.595Z",
+    "hash": "sha256:f3530cce20517670b55e5f5e5a814032580ba482250cd931814b5b04b81f4b9d"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-03T20:02:22.595Z",
+    "hash": "sha256:528538da9d401b052a80b6c4b6ca38d5d34ae862476e5f9a0eef95ad27cbf61a"
   }
 }

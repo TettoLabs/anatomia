@@ -1,0 +1,14 @@
+schema: 1
+concerns:
+  - summary: "Contract A002 asserts 9 sections but spec mockup shows 7 — planner miscount"
+    file: "README.md"
+    severity: observation
+    suggested_action: accept
+  - summary: "Removed packages/cli/README.md assertion from dogfood test — file is now a build artifact"
+    file: "packages/cli/tests/engine/detectors/documentation.test.ts"
+    severity: observation
+    suggested_action: accept
+  - summary: "prepublishOnly relies on relative ../../ path for copy — breaks if package depth changes"
+    file: "packages/cli/package.json"
+    severity: debt
+    suggested_action: monitor
