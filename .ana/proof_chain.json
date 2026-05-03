@@ -10842,6 +10842,346 @@
           "suggested_action": "monitor"
         }
       ]
+    },
+    {
+      "slug": "v1-documentation-overhaul",
+      "feature": "V1 Documentation Overhaul",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 34,
+        "satisfied": 33,
+        "unsatisfied": 1,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "The root README exists and is between 150 and 200 lines",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "The README contains exactly 9 second-level sections",
+          "status": "UNSATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "The README has CI, npm, and license badges",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "The README has an install section with npm install command",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "The README states the Claude Code boundary clearly",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "The README contains no hedge words",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "All proof subcommands are visible in the README",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "The README contains a scan output example block",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "The changelog opens the 1.0.0 entry with First stable release",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "The changelog follows Keep a Changelog format with version header",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "The changelog has an Unreleased section for future changes",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "The changelog has GitHub compare links in the footer",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "The changelog does not reference any deleted features",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "The changelog groups features by product surface",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "The old changelog is preserved as an internal archive",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "The archive has a header explaining it is internal history",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A017",
+          "says": "The contributor guide has no stale line number references",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A018",
+          "says": "The contributor guide has no sprint jargon",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A019",
+          "says": "All test commands in CONTRIBUTING use vitest run",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A020",
+          "says": "CONTRIBUTING opens with a cross-reference to ARCHITECTURE",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A021",
+          "says": "The contributor guide includes detectRemix in the framework example",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A022",
+          "says": "The architecture doc describes the census-based scan pipeline",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A023",
+          "says": "The architecture doc does not mention the deleted analyze function",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A024",
+          "says": "The architecture doc does not mention the deleted monorepo detector",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A025",
+          "says": "The architecture doc has no sprint jargon",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A026",
+          "says": "ARCHITECTURE opens with a cross-reference to CONTRIBUTING",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A027",
+          "says": "The architecture doc lists the sampling module",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A028",
+          "says": "The build step copies the README from root before building",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A029",
+          "says": "The build step copies the CHANGELOG from root before building",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A030",
+          "says": "A gitignore exists in the CLI package to exclude build artifacts",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A031",
+          "says": "The gitignore excludes the README copy",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A032",
+          "says": "The gitignore excludes the CHANGELOG copy",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A033",
+          "says": "No document contains emoji characters",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A034",
+          "says": "No document contains sprint reference jargon",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 13,
+        "met": 12
+      },
+      "timing": {
+        "total_minutes": 91,
+        "think": 25,
+        "plan": 9,
+        "build": 47,
+        "verify": 11
+      },
+      "hashes": {
+        "scope": "sha256:09aeb90da1cdcbcdd991973fa2e367d99205317f746c496fc953cba99213caa9",
+        "contract": "sha256:e57d692795a037f2f6f406d8e142f70a698a0cd4d079786786834bb79c242e1b",
+        "plan": "sha256:e82583b2ca85fe4a658a8db467139629786b195c133238b7d32ecfb437f6dc11",
+        "spec": "sha256:ce0d03d8989dd93450adc969c6254fd277e290ae32266282634a95beecabe085",
+        "build-report": "sha256:fb1055ef66d5510dd846ae1d8082c085ae06cbafa71124ecdc2a8b65cbaf2267",
+        "build-data": "sha256:b41aa8ca7317d9137ec13bc089537fca721c5ba098b5f0851d5dd27e29040dc1",
+        "verify-report": "sha256:f3530cce20517670b55e5f5e5a814032580ba482250cd931814b5b04b81f4b9d",
+        "verify-data": "sha256:528538da9d401b052a80b6c4b6ca38d5d34ae862476e5f9a0eef95ad27cbf61a"
+      },
+      "completed_at": "2026-05-03T20:05:56.130Z",
+      "modules_touched": [
+        "CHANGELOG-internal.md",
+        "CHANGELOG.md",
+        "README.md",
+        "packages/cli/.gitignore",
+        "packages/cli/ARCHITECTURE.md",
+        "packages/cli/CHANGELOG.md",
+        "packages/cli/CONTRIBUTING.md",
+        "packages/cli/README.md",
+        "packages/cli/package.json",
+        "packages/cli/tests/engine/detectors/documentation.test.ts"
+      ],
+      "scope_summary": "Rewrite every document a stranger reads so the project presents as a publication-grade product, not an internal R&D project. README, CHANGELOG, CONTRIBUTING, ARCHITECTURE — all four are stale, sprint-numbered, or undersized. This is the first of two scopes preparing for the 1.0.0 npm publish. This scope is docs only — no production code changes, no test changes. The second scope (v1-code-changes) handles CLI output polish, parser fixes, and build config.",
+      "findings": [
+        {
+          "category": "upstream",
+          "summary": "Contract A002 value stale — says 9 sections but spec mockup and implementation both show 7",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A002"
+          ],
+          "id": "v1-documentation-overhaul-C1",
+          "status": "lesson"
+        },
+        {
+          "category": "upstream",
+          "summary": "ARCHITECTURE.md claims 5 python detector files but filesystem has 4 — inherited from spec verified counts",
+          "file": "packages/cli/ARCHITECTURE.md",
+          "anchor": null,
+          "line": 61,
+          "severity": "debt",
+          "suggested_action": "scope",
+          "id": "v1-documentation-overhaul-C2",
+          "status": "lesson"
+        },
+        {
+          "category": "code",
+          "summary": "prepublishOnly relies on relative ../../ path — breaks if package depth changes",
+          "file": "packages/cli/package.json",
+          "anchor": null,
+          "line": 50,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "v1-documentation-overhaul-C3",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "README.md and CHANGELOG.md cannot be verified with npm pack --dry-run — only exist after prepublishOnly",
+          "file": "packages/cli/package.json",
+          "anchor": null,
+          "line": 34,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "v1-documentation-overhaul-C4",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "documentation.test.ts assertion removed for packages/cli/README.md — justified but reduces dogfood coverage",
+          "file": "packages/cli/tests/engine/detectors/documentation.test.ts",
+          "anchor": null,
+          "line": 276,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "v1-documentation-overhaul-C5",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "Spec 'Zero test changes' constraint was incompatible with deleting packages/cli/README.md — forced builder deviation",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "v1-documentation-overhaul-C6",
+          "status": "lesson"
+        },
+        {
+          "category": "code",
+          "summary": "README Development section uses absolute GitHub URLs for CONTRIBUTING/ARCHITECTURE — correct since README is at root",
+          "file": "README.md",
+          "anchor": null,
+          "line": 152,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "v1-documentation-overhaul-C7",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Scan output block in README is representative example, not live output — cannot be mechanically validated",
+          "file": "README.md",
+          "anchor": null,
+          "line": 35,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "v1-documentation-overhaul-C8",
+          "status": "active"
+        }
+      ],
+      "rejection_cycles": 1,
+      "previous_failures": [
+        {
+          "id": "A002",
+          "summary": "7 sections instead of 9"
+        }
+      ],
+      "build_concerns": [
+        {
+          "summary": "Contract A002 asserts 9 sections but spec mockup shows 7 — planner miscount",
+          "file": "README.md",
+          "severity": "observation",
+          "suggested_action": "accept"
+        },
+        {
+          "summary": "Removed packages/cli/README.md assertion from dogfood test — file is now a build artifact",
+          "file": "packages/cli/tests/engine/detectors/documentation.test.ts",
+          "severity": "observation",
+          "suggested_action": "accept"
+        },
+        {
+          "summary": "prepublishOnly relies on relative ../../ path for copy — breaks if package depth changes",
+          "file": "packages/cli/package.json",
+          "severity": "debt",
+          "suggested_action": "monitor"
+        }
+      ]
     }
   ],
   "schema": 1
