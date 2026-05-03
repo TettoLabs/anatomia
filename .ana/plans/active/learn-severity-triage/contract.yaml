@@ -1,0 +1,186 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Learn Severity-Based Triage"
+
+assertions:
+  # AC1: Phase 1 Accept-Action removed
+  - id: A001
+    says: "The accept-action triage phase no longer exists in the Learn template"
+    block: "phase 1 accept-action removed"
+    target: "template.learn.structured_triage"
+    matcher: "not_contains"
+    value: "### Phase 1: Accept-Action"
+
+  - id: A002
+    says: "Clear the Deck heading is gone from the Learn template"
+    block: "phase 1 accept-action removed"
+    target: "template.learn.structured_triage"
+    matcher: "not_contains"
+    value: "Clear the Deck"
+
+  # AC2: Severity-based phase ordering
+  - id: A003
+    says: "Risk and debt findings are triaged first as Phase 1"
+    block: "severity-based phase ordering"
+    target: "template.learn.phase1_heading"
+    matcher: "contains"
+    value: "Risk and Debt"
+
+  - id: A004
+    says: "Promote candidates come after risk and debt as Phase 2"
+    block: "severity-based phase ordering"
+    target: "template.learn.phase2_heading"
+    matcher: "contains"
+    value: "Promote"
+
+  - id: A005
+    says: "Observations are triaged last as Phase 3"
+    block: "severity-based phase ordering"
+    target: "template.learn.phase3_heading"
+    matcher: "contains"
+    value: "Observations"
+
+  # AC3: Session approach updated
+  - id: A006
+    says: "Session approach paragraph describes severity-based ordering"
+    block: "session approach reflects severity ordering"
+    target: "template.learn.session_approach"
+    matcher: "contains"
+    value: "risk"
+
+  - id: A007
+    says: "Session approach paragraph does not mention accept-action"
+    block: "session approach reflects severity ordering"
+    target: "template.learn.session_approach"
+    matcher: "not_contains"
+    value: "accept-action"
+
+  # AC4: Full claim-extraction for all severity-bearing findings
+  - id: A008
+    says: "Phase 1 uses the claim-extraction workflow for all risk and debt findings"
+    block: "claim-extraction workflow applies to all"
+    target: "template.learn.phase1_content"
+    matcher: "contains"
+    value: "Extract the claim"
+
+  - id: A009
+    says: "Phase 1 includes staleness prediction step"
+    block: "claim-extraction workflow applies to all"
+    target: "template.learn.phase1_content"
+    matcher: "contains"
+    value: "Predict before reading"
+
+  # AC5: Accept not a triage category
+  - id: A010
+    says: "No phase heading references accept as a triage category"
+    block: "accept not a triage category"
+    target: "template.learn.phase_headings"
+    matcher: "not_contains"
+    value: "Accept"
+
+  # AC6: Close reason standards preserved
+  - id: A011
+    says: "Close reason standards survive as a shared section"
+    block: "close reason standards relocated"
+    target: "template.learn.shared_sections"
+    matcher: "contains"
+    value: "Close Reason Standard"
+
+  - id: A012
+    says: "Good and bad close reason examples are preserved"
+    block: "close reason standards relocated"
+    target: "template.learn.close_reasons"
+    matcher: "contains"
+    value: "6 months from now"
+
+  - id: A013
+    says: "Null-file finding guidance survives the restructure"
+    block: "null-file handling relocated"
+    target: "template.learn.shared_sections"
+    matcher: "contains"
+    value: "Null-file"
+
+  # AC7: Edge case cap rewritten
+  - id: A014
+    says: "The arbitrary 30-finding cap is removed"
+    block: "edge case cap rewritten"
+    target: "template.learn.edge_cases"
+    matcher: "not_contains"
+    value: "Cap at ~30"
+
+  - id: A015
+    says: "Large active set guidance now focuses on severity or module"
+    block: "edge case cap rewritten"
+    target: "template.learn.edge_cases"
+    matcher: "contains"
+    value: "severity"
+
+  # AC8: Verify naming fix
+  - id: A016
+    says: "Verify template line 73 uses the mechanical naming formula"
+    block: "verify mechanical naming rule"
+    target: "template.verify.re_verification_step3"
+    matcher: "contains"
+    value: "replace `report` with `data`"
+
+  - id: A017
+    says: "Verify template no longer uses 'both share the same number' phrasing"
+    block: "verify mechanical naming rule"
+    target: "template.verify.re_verification_step3"
+    matcher: "not_contains"
+    value: "both share the same number"
+
+  # AC9: Dogfood copies match
+  - id: A018
+    says: "Dogfood learn template is identical to the source template"
+    block: "dogfood copies match templates"
+    target: "diff.learn_template_vs_dogfood"
+    matcher: "equals"
+    value: ""
+
+  - id: A019
+    says: "Dogfood verify template is identical to the source template"
+    block: "dogfood copies match templates"
+    target: "diff.verify_template_vs_dogfood"
+    matcher: "equals"
+    value: ""
+
+  # Menu and summary updates
+  - id: A020
+    says: "Present State menu no longer offers Clear the Deck as an option"
+    block: "menu updated for severity ordering"
+    target: "template.learn.present_state_menu"
+    matcher: "not_contains"
+    value: "Clear the deck"
+
+  - id: A021
+    says: "Present State menu offers risk findings as an option"
+    block: "menu updated for severity ordering"
+    target: "template.learn.present_state_menu"
+    matcher: "contains"
+    value: "risk"
+
+  - id: A022
+    says: "Default ordering parenthetical reflects severity-based sequence"
+    block: "menu updated for severity ordering"
+    target: "template.learn.default_ordering"
+    matcher: "not_contains"
+    value: "accept"
+
+  # Cross-reference correctness
+  - id: A023
+    says: "Promote phase correctly references Phase 1 for recurring patterns"
+    block: "phase cross-references updated"
+    target: "template.learn.phase2_content"
+    matcher: "contains"
+    value: "Phase 1"
+
+file_changes:
+  - path: "packages/cli/templates/.claude/agents/ana-learn.md"
+    action: modify
+  - path: "packages/cli/templates/.claude/agents/ana-verify.md"
+    action: modify
+  - path: ".claude/agents/ana-learn.md"
+    action: modify
+  - path: ".claude/agents/ana-verify.md"
+    action: modify
