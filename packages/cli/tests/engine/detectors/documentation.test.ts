@@ -273,8 +273,7 @@ describe('documentation inventory — dogfood', () => {
     expect(result.files.some(f => f.path === 'CONTRIBUTING.md')).toBe(true);
     expect(result.files.some(f => f.path === 'CHANGELOG.md')).toBe(true);
 
-    // Package docs
-    expect(result.files.some(f => f.path === 'packages/cli/README.md')).toBe(true);
+    // Package docs (README.md is a prepublishOnly artifact, not tracked in git)
     expect(result.files.some(f => f.path === 'packages/cli/ARCHITECTURE.md')).toBe(true);
     expect(result.files.some(f => f.path === 'packages/cli/CONTRIBUTING.md')).toBe(true);
 

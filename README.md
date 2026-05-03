@@ -32,25 +32,31 @@ The pipeline requires [Claude Code](https://claude.com/code).
 `ana scan` reads your project and detects framework, database, auth, testing, services, conventions, and patterns. 40+ detectors across two tiers: surface (dependency-based, fast) and deep (tree-sitter AST).
 
 ```
-Anatomia v0.2.0
+┌─────────────────────────────────────────────────────────────────────┐
+│  my-saas-app                                              web-app   │
+│  TypeScript · Next.js · Prisma → PostgreSQL · Clerk                 │
+└─────────────────────────────────────────────────────────────────────┘
 
-  Project    my-saas-app
-  Shape      web-app
+  Stack
+  ─────
+  Language     TypeScript
+  Framework    Next.js
+  Database     Prisma → PostgreSQL (14 models)
+  Auth         Clerk
+  Payments     Stripe
+  Testing      Vitest
+  Services     Resend · Sentry · PostHog
+  Deploy       Vercel · GitHub Actions
 
-  Stack      TypeScript  ·  Next.js  ·  Prisma -> PostgreSQL  ·  Clerk  ·  Vitest
-  Services   Stripe, Resend, Sentry, PostHog
-  Deploy     Vercel  ·  GitHub Actions
-  Files      148 source  ·  94 test  ·  12 config
+  Intelligence
+  ────────────
+  Activity     3 contributors · 12→8→15→9 weekly
+  Hot files    schema.prisma (23), api/webhooks.ts (18)
+  Docs         README.md · CONTRIBUTING.md · ARCHITECTURE.md + 2 more
+  Pre-commit   typecheck + lint
 
-  Patterns
-    Error handling    try/catch with typed catches (87% of handlers)
-    Validation        zod schemas at API boundaries
-    Auth              middleware pattern (3 files)
-
-  Conventions
-    Files             camelCase (92%)
-    Exports           named exports preferred
-    Indentation       2 spaces
+  Full data: .ana/scan.json
+  Run `ana init` to scaffold 8 skills (5 core + api-patterns, data-access, ai-patterns)
 ```
 
 `ana init` writes that intelligence to files agents read:
