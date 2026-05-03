@@ -131,7 +131,7 @@ export function runPreCheck(slug: string): void {
  */
 export function registerVerifyCommand(program: Command): void {
   const verifyCommand = new Command('verify')
-    .description('Verification tools');
+    .description('Check contract seal integrity');
 
   verifyCommand
     .command('pre-check')

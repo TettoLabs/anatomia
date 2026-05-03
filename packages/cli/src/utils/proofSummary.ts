@@ -197,11 +197,13 @@ function parseResult(content: string): 'PASS' | 'FAIL' | 'UNKNOWN' {
  * @returns Object with total and met AC counts
  */
 function parseACResults(content: string): { total: number; met: number } {
-  // Count all AC markers
-  const passCount = (content.match(/✅\s*PASS/g) || []).length;
-  const failCount = (content.match(/❌\s*FAIL/g) || []).length;
-  const partialCount = (content.match(/⚠️?\s*PARTIAL/g) || []).length;
-  const unverifiableCount = (content.match(/🔍\s*UNVERIFIABLE/g) || []).length;
+  // Match status words on bullet-list lines (anchored to `- ` prefix).
+  // Mirrors parseAssertionResults: match the word, ignore prefix symbols.
+  // Excludes `**Result:** PASS` (no bullet prefix) to avoid false matches.
+  const passCount = (content.match(/^\s*-\s+.*\bPASS\b/gm) || []).length;
+  const failCount = (content.match(/^\s*-\s+.*\bFAIL\b/gm) || []).length;
+  const partialCount = (content.match(/^\s*-\s+.*\bPARTIAL\b/gm) || []).length;
+  const unverifiableCount = (content.match(/^\s*-\s+.*\bUNVERIFIABLE\b/gm) || []).length;
 
   const total = passCount + failCount + partialCount + unverifiableCount;
   const met = passCount;

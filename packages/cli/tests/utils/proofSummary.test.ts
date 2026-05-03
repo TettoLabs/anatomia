@@ -139,6 +139,81 @@ file_changes:
     expect(summary.acceptance_criteria.met).toBe(2);
   });
 
+  // @ana A003
+  it('parseACResults handles Format B (bold AC label before status)', async () => {
+    // Format B: - **AC1:** ✅ PASS — description
+    const verifyReport = `# Verify Report
+
+**Result:** PASS
+
+## Contract Compliance
+| ID | Says | Status | Evidence |
+|----|------|--------|----------|
+| A001 | Feature works | ✅ SATISFIED | test line 10 |
+
+## AC Walkthrough
+- **AC1:** ✅ PASS — Test at proofSummary.ts:397
+- **AC2:** ❌ FAIL — Missing validation
+- **AC3:** ✅ PASS — Handles edge case
+`;
+    await fs.promises.writeFile(path.join(slugDir, 'verify_report.md'), verifyReport);
+
+    const summary = generateProofSummary(slugDir);
+
+    expect(summary.acceptance_criteria.total).toBe(3);
+    expect(summary.acceptance_criteria.met).toBe(2);
+  });
+
+  // @ana A004
+  it('parseACResults handles Format C (status at end after arrow)', async () => {
+    // Format C: - **AC1:** description ... → ✅ PASS
+    const verifyReport = `# Verify Report
+
+**Result:** PASS
+
+## Contract Compliance
+| ID | Says | Status | Evidence |
+|----|------|--------|----------|
+| A001 | Feature works | ✅ SATISFIED | test line 10 |
+
+## AC Walkthrough
+- **AC1:** Template has frontmatter with correct fields → ✅ PASS
+- **AC2:** Output matches expected format → ✅ PASS
+- **AC3:** Error handling covers edge cases → ⚠️ PARTIAL
+`;
+    await fs.promises.writeFile(path.join(slugDir, 'verify_report.md'), verifyReport);
+
+    const summary = generateProofSummary(slugDir);
+
+    expect(summary.acceptance_criteria.total).toBe(3);
+    expect(summary.acceptance_criteria.met).toBe(2);
+  });
+
+  // @ana A005
+  it('parseACResults does not false-match on Result line', async () => {
+    // The **Result:** PASS line should NOT be counted as an AC pass
+    const verifyReport = `# Verify Report
+
+**Result:** PASS
+
+## Contract Compliance
+| ID | Says | Status | Evidence |
+|----|------|--------|----------|
+| A001 | Feature works | ✅ SATISFIED | test line 10 |
+
+## AC Walkthrough
+- ✅ PASS: AC1 Feature works
+- ❌ FAIL: AC2 Edge case broken
+`;
+    await fs.promises.writeFile(path.join(slugDir, 'verify_report.md'), verifyReport);
+
+    const summary = generateProofSummary(slugDir);
+
+    // Total should be 2 (one PASS + one FAIL), NOT 3 (which would mean **Result:** PASS was counted)
+    expect(summary.acceptance_criteria.total).toBe(2);
+    expect(summary.acceptance_criteria.met).toBe(1);
+  });
+
   // @ana A010, A011
   it('handles missing verify report — bootstraps from contract.yaml', async () => {
     const contract = `

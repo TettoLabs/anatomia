@@ -1,0 +1,26 @@
+schema: 1
+findings:
+  - category: code
+    summary: "Theoretical false-match in parseACResults regex — bullet lines outside AC section containing PASS/FAIL could inflate counts"
+    file: "packages/cli/src/utils/proofSummary.ts"
+    line: 203
+    severity: risk
+    suggested_action: monitor
+    related_assertions: ["A001"]
+  - category: test
+    summary: "No false-match edge case test for non-AC bullet lines containing status words"
+    file: "packages/cli/tests/utils/proofSummary.test.ts"
+    severity: debt
+    suggested_action: scope
+    related_assertions: ["A001", "A005"]
+  - category: code
+    summary: "proofSummary.ts ~1550 lines — past comfort threshold, known from prior cycles"
+    file: "packages/cli/src/utils/proofSummary.ts"
+    severity: observation
+    suggested_action: monitor
+  - category: code
+    summary: "Pre-commit comment claims ~9s / 10s threshold — will drift as test count grows (1807 now)"
+    file: ".husky/pre-commit"
+    line: 3
+    severity: observation
+    suggested_action: accept

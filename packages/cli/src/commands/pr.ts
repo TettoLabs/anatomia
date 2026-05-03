@@ -171,7 +171,7 @@ export function createPr(slug: string): void {
   const ghCheck = spawnSync('gh', ['--version'], { stdio: 'pipe' });
   if (ghCheck.status !== 0) {
     console.error(chalk.red('Error: GitHub CLI (gh) not found.'));
-    console.error(chalk.dim('Install from https://cli.github.com/'));
+    console.error(chalk.gray('Install from https://cli.github.com/'));
     process.exit(1);
   }
 
@@ -188,7 +188,7 @@ export function createPr(slug: string): void {
       verifyReportPath = path.join(planDir, verifyReports[verifyReports.length - 1]!);
     } else {
       console.error(chalk.red('No verify report found.'));
-      console.error(chalk.dim('Run `claude --agent ana-verify` first.'));
+      console.error(chalk.gray('Run `claude --agent ana-verify` first.'));
       process.exit(1);
     }
   }
@@ -203,7 +203,7 @@ export function createPr(slug: string): void {
 
   if (result !== 'PASS') {
     console.error(chalk.red(`Cannot create PR — verification result is ${result}.`));
-    console.error(chalk.dim('Fix issues and re-verify before creating PR.'));
+    console.error(chalk.gray('Fix issues and re-verify before creating PR.'));
     process.exit(1);
   }
 
@@ -220,7 +220,7 @@ export function createPr(slug: string): void {
       buildReportPath = path.join(planDir, buildReports[buildReports.length - 1]!);
     } else {
       console.error(chalk.red('No build report found.'));
-      console.error(chalk.dim('Run `claude --agent ana-build` first.'));
+      console.error(chalk.gray('Run `claude --agent ana-build` first.'));
       process.exit(1);
     }
   }

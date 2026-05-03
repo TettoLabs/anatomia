@@ -849,7 +849,7 @@ export function saveArtifact(type: string, slug: string): void {
     const error = validatePlanFormat(filePath);
     if (error) {
       console.error(chalk.red(`Error: plan.md format invalid.\n${error}`));
-      console.error(chalk.dim("Run 'ana work status' to see the expected format."));
+      console.error(chalk.gray("Run 'ana work status' to see the expected format."));
       process.exit(1);
     }
   }
@@ -1403,7 +1403,7 @@ export function saveAllArtifacts(slug: string): void {
  */
 export function registerArtifactCommand(program: Command): void {
   const artifactCommand = new Command('artifact')
-    .description('Manage pipeline artifacts');
+    .description('Save and validate plan artifacts');
 
   const saveCommand = new Command('save')
     .description('Commit a pipeline artifact to the correct branch')

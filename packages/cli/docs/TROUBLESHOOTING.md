@@ -7,13 +7,13 @@
 
 ## Quick Diagnostic
 
-If detection is failing, run with verbose mode first:
+If detection is failing, run `ana scan` and review the output:
 
 ```bash
-ana scan --verbose
+ana scan
 ```
 
-This shows detailed indicators and helps identify which step is failing.
+This shows detected stack, file counts, and structure — review for missing or incorrect entries.
 
 ---
 
@@ -175,11 +175,11 @@ pip freeze > requirements.txt
 npm install express
 ```
 
-**Option 3: Check verbose output for hints**
+**Option 3: Check scan output for hints**
 ```bash
-ana scan --verbose
+ana scan
 
-# Look for indicators that were found but didn't meet threshold
+# Review the stack detection section for indicators that were found
 ```
 
 ### Example
@@ -246,13 +246,12 @@ pip uninstall flask
 pip freeze > requirements.txt
 ```
 
-**Option 3: Check verbose output to understand why**
+**Option 3: Re-run scan and review output**
 ```bash
-ana scan --verbose
+ana scan
 
-# Shows all indicators found:
-# Indicators: fastapi dependency (0.3), uvicorn detected (0.05)
-# Total: 0.35
+# Review the confidence score and detected indicators
+# to understand which signals are missing
 ```
 
 ### Example
@@ -309,7 +308,7 @@ pip freeze > requirements.txt
 # 3. Flask
 # If both exist, FastAPI wins
 
-ana scan --verbose
+ana scan
 # Check which framework has more indicators
 ```
 
@@ -471,13 +470,11 @@ module.exports = nextConfig
 EOF
 ```
 
-**Option 3: Check verbose output**
+**Option 3: Check scan output**
 ```bash
-ana scan --verbose
+ana scan
 
-# Shows detection order:
-# 1. Checking Next.js... not found
-# 2. Checking React... found (react dependency)
+# Review the detected framework in the output
 ```
 
 ### Example
@@ -833,13 +830,9 @@ packages/
 
 ## Still Having Issues?
 
-### Enable Debug Mode
+### Review Scan Output
 ```bash
-# Maximum verbosity
-ana scan --verbose
-
-# Check specific phase
-ana scan --verbose 2>&1 | grep "phase:"
+ana scan
 ```
 
 ### Check System Requirements
@@ -856,7 +849,7 @@ df -h .
 
 ### Report Issues
 If none of these solutions work, file an issue with:
-1. Output of `ana scan --verbose`
+1. Output of `ana scan`
 2. Contents of dependency files (package.json, requirements.txt)
 3. Operating system and Node.js version
 4. Project structure (`tree -L 2 -I node_modules`)
