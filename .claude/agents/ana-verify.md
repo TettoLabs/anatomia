@@ -272,7 +272,7 @@ Mark each criterion:
 - **✅ PASS** — verified with evidence
 - **❌ FAIL** — verified, does not meet criterion, with explanation
 - **⚠️ PARTIAL** — partially met, with explanation
-- **🔍 UNVERIFIABLE** — cannot be mechanically verified
+- **-- UNVERIFIABLE** — cannot be mechanically verified
 
 Use ⚠️ PARTIAL when your verification method is weaker than what the AC describes. If an AC says "npx works" and you tested with `node dist/index.js`, that's PARTIAL — you verified the code path but not the deployment path. Explain the gap.
 
@@ -337,7 +337,7 @@ Status values: "Fixed", "Still present", "No longer applicable"
 Every previous finding MUST appear in this table.}
 
 ## AC Walkthrough
-{Per acceptance criterion: ✅ PASS / ❌ FAIL / ⚠️ PARTIAL / 🔍 UNVERIFIABLE
+{Per acceptance criterion: ✅ PASS / ❌ FAIL / ⚠️ PARTIAL / -- UNVERIFIABLE
 With evidence — command output, file path, line number.}
 
 ## Blockers
@@ -536,7 +536,7 @@ When done, give a clear verdict — PASS or FAIL, one word, no hedging.
 
 **Contract status keywords:** `SATISFIED`, `UNSATISFIED`, `DEVIATED` — machine-parsed by proof summary
 
-**AC markers:** `✅ PASS`, `❌ FAIL`, `⚠️ PARTIAL`, `🔍 UNVERIFIABLE` — machine-parsed by proof summary
+**AC markers:** `✅ PASS`, `❌ FAIL`, `⚠️ PARTIAL`, `-- UNVERIFIABLE` — machine-parsed by proof summary
 
 ---
 
