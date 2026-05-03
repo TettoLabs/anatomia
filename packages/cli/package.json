@@ -1,7 +1,7 @@
 {
   "name": "anatomia-cli",
-  "version": "0.2.0",
-  "description": "Verified AI development. Ship with proof.",
+  "version": "1.0.0",
+  "description": "Verified AI development. Scan your project, generate context, verify every change through a four-agent pipeline.",
   "bin": {
     "ana": "./dist/index.js"
   },
@@ -12,32 +12,32 @@
     "ai",
     "cli",
     "developer-tools",
-    "typescript",
-    "verification",
+    "context-engineering",
+    "code-verification",
+    "proof-chain",
+    "pipeline",
     "claude-code",
     "code-analysis",
-    "ai-assistant"
+    "typescript"
   ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/TettoLabs/anatomia.git",
     "directory": "packages/cli"
   },
-  "homepage": "https://github.com/TettoLabs/anatomia",
+  "homepage": "https://anatomia.dev",
   "bugs": {
     "url": "https://github.com/TettoLabs/anatomia/issues"
   },
-  "author": "TettoLabs",
+  "author": {
+    "name": "TettoLabs",
+    "url": "https://anatomia.dev"
+  },
   "engines": {
     "node": ">=20.0.0"
   },
   "files": [
-    "dist",
-    "docs",
-    "ARCHITECTURE.md",
-    "CONTRIBUTING.md",
-    "CHANGELOG.md",
-    "README.md"
+    "dist"
   ],
   "scripts": {
     "build": "pnpm typecheck && rm -rf dist && tsup && cp -r templates dist/",
