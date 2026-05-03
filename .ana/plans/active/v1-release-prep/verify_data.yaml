@@ -1,0 +1,25 @@
+schema: 1
+findings:
+  - category: code
+    summary: "npm pack dry-run doesn't include README.md or CHANGELOG.md — prepublishOnly required first"
+    file: "packages/cli/package.json"
+    line: 50
+    severity: observation
+    suggested_action: monitor
+    related_assertions: ["A031"]
+  - category: code
+    summary: "Release script 'cd packages/cli && npm version' requires a semver argument — no guard or help text"
+    file: "package.json"
+    line: 12
+    severity: debt
+    suggested_action: accept
+  - category: code
+    summary: "release.yml copies README/CHANGELOG separately from prepublishOnly — two sources of truth for doc copying"
+    file: ".github/workflows/release.yml"
+    line: 30
+    severity: debt
+    suggested_action: monitor
+  - category: test
+    summary: "No dedicated tests for v1-release-prep contract — assertions verified by source inspection only"
+    severity: observation
+    suggested_action: accept

@@ -9,6 +9,7 @@
     "test": "turbo run test",
     "lint": "turbo run lint",
     "clean": "turbo run clean && rm -rf node_modules .turbo",
+    "release": "cd packages/cli && npm version",
     "prepare": "husky"
   },
   "devDependencies": {

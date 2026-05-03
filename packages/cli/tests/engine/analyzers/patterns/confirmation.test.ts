@@ -43,7 +43,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.90 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         parsed: {
           files: [
             createMockParsedFile(
@@ -83,7 +83,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.90 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         parsed: {
           files: [
             createMockParsedFile(
@@ -120,7 +120,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.0 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         parsed: {
           files: [
             createMockParsedFile('app/main.py', 'python', [], [], []),
@@ -154,7 +154,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.90 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         parsed: {
           files: [
             createMockParsedFile(
@@ -191,7 +191,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.95 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         parsed: {
           files: [
             createMockParsedFile(
@@ -234,7 +234,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.90 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         parsed: {
           files: [
             createMockParsedFile(
@@ -277,7 +277,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.90 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         parsed: {
           files: [
             createMockParsedFile(
@@ -326,7 +326,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.85 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         parsed: {
           files: [
             createMockParsedFile(
@@ -364,7 +364,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.95 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         parsed: {
           files: [
             createMockParsedFile(
@@ -401,7 +401,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.95 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         parsed: {
           files: [
             createMockParsedFile(
@@ -438,7 +438,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.90 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         parsed: {
           files: [
             createMockParsedFile(
@@ -475,7 +475,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.90 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         parsed: {
           files: [
             createMockParsedFile(
@@ -514,7 +514,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.90 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         parsed: {
           files: [
             createMockParsedFile(
@@ -554,7 +554,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.95 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         parsed: {
           files: [
             createMockParsedFile(
@@ -591,7 +591,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.90 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         parsed: {
           files: [
             createMockParsedFile(
@@ -630,7 +630,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.90 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         structure: {
           directories: {},
           entryPoints: ['app/main.py'],
@@ -675,7 +675,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.90 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         structure: {
           directories: {},
           entryPoints: ['src/index.ts'],
@@ -727,7 +727,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.90 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         structure: {
           directories: {},
           entryPoints: ['main.go'],
@@ -774,7 +774,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.90 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         parsed: {
           files: Array.from({ length: 12 }, (_, i) =>
             createMockParsedFile(
@@ -814,7 +814,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.90 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         parsed: {
           files: [
             createMockParsedFile(
@@ -852,7 +852,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.90 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         parsed: {
           files: [],
           totalParsed: 0,
@@ -885,7 +885,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.0 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         // No parsed field (skipParsing:true scenario)
       };
 
@@ -912,7 +912,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.0 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         parsed: {
           files: [],  // Empty array
           totalParsed: 0,
@@ -943,7 +943,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.90 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         parsed: {
           files: [],
           totalParsed: 0,
@@ -968,7 +968,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.90 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         parsed: {
           files: [
             createMockParsedFile(
@@ -1009,7 +1009,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.90 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         parsed: {
           files: [
             createMockParsedFile(
@@ -1058,7 +1058,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.95 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         parsed: {
           files: [
             // 10 component files total, 4 with useQuery → dominant (40%)
@@ -1106,7 +1106,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.0 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         parsed: {
           files: [
             createMockParsedFile('src/app.tsx', 'typescript', []),
@@ -1138,7 +1138,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.0 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         parsed: {
           files: [
             createMockParsedFile(
@@ -1179,7 +1179,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.0 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         parsed: {
           files: [
             // 4/10 = 40% → dominant
@@ -1227,7 +1227,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.0 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         parsed: {
           files: [
             // 2/10 = 20% → present
@@ -1274,7 +1274,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.0 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         parsed: {
           files: [
             // 1/20 = 5% → incidental
@@ -1321,7 +1321,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.0 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         parsed: {
           files: [
             // 4 react-query files (40%)
@@ -1383,7 +1383,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.0 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         parsed: {
           files: [
             // 3 react-query files (30%)
@@ -1434,7 +1434,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.0 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         parsed: {
           files: [
             createMockParsedFile(
@@ -1477,7 +1477,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.0 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         parsed: {
           files: [
             createMockParsedFile(
@@ -1516,7 +1516,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.90 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         parsed: {
           files: [
             createMockParsedFile(
@@ -1558,7 +1558,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.0 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         parsed: {
           files: [
             createMockParsedFile(
@@ -1602,7 +1602,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.0 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         parsed: {
           files: [
             createMockParsedFile(
@@ -1644,7 +1644,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.90 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         parsed: {
           files: [
             // Nuxt may still have explicit imports for some composables
@@ -1691,7 +1691,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.95 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         parsed: {
           files: [
             // A file that happens to import something called useFetch
@@ -1733,7 +1733,7 @@ describe.skipIf(!wasmAvailable)('Tree-sitter Pattern Confirmation', () => {
         confidence: { projectType: 0.95, framework: 0.0 },
         indicators: { projectType: [], framework: [] },
         detectedAt: new Date().toISOString(),
-        version: '0.2.0',
+        version: '1.0.0',
         parsed: {
           files: [
             createMockParsedFile(

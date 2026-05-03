@@ -24,7 +24,7 @@ export async function createTestProject(tempDir: string): Promise<void> {
   await fs.writeFile(
     path.join(anaDir, 'ana.json'),
     JSON.stringify({
-      anaVersion: '0.2.0',
+      anaVersion: '1.0.0',
       name: 'test-project',
       language: 'TypeScript',
       artifactBranch: 'main',

@@ -19,7 +19,7 @@ describe('AnaJsonSchema', () => {
   describe('happy path', () => {
     it('parses a fully-valid ana.json unchanged', () => {
       const input = {
-        anaVersion: '0.2.0',
+        anaVersion: '1.0.0',
         name: 'my-project',
         language: 'TypeScript',
         framework: 'Next.js',
@@ -31,7 +31,7 @@ describe('AnaJsonSchema', () => {
         lastScanAt: '2026-04-07T17:58:30.491Z',
       };
       const parsed = AnaJsonSchema.parse(input);
-      expect(parsed.anaVersion).toBe('0.2.0');
+      expect(parsed.anaVersion).toBe('1.0.0');
       expect(parsed.name).toBe('my-project');
       expect(parsed.setupPhase).toBe('complete');
       expect(parsed.lastScanAt).toBe('2026-04-07T17:58:30.491Z');
@@ -39,7 +39,7 @@ describe('AnaJsonSchema', () => {
 
     it('accepts nullable fields as null', () => {
       const parsed = AnaJsonSchema.parse({
-        anaVersion: '0.2.0',
+        anaVersion: '1.0.0',
         name: 'x',
         language: null,
         framework: null,
@@ -151,7 +151,7 @@ describe('AnaJsonSchema', () => {
   describe('per-field .catch() isolation', () => {
     it('resets only the broken field when multiple fields have valid values', () => {
       const parsed = AnaJsonSchema.parse({
-        anaVersion: '0.2.0',
+        anaVersion: '1.0.0',
         name: 'my-project',
         language: 42, // wrong type, catches to null
         framework: 'Next.js',
@@ -159,7 +159,7 @@ describe('AnaJsonSchema', () => {
       });
       expect(parsed.language).toBeNull();
       expect(parsed.framework).toBe('Next.js');
-      expect(parsed.anaVersion).toBe('0.2.0');
+      expect(parsed.anaVersion).toBe('1.0.0');
       expect(parsed.setupPhase).toBe('complete');
     });
   });

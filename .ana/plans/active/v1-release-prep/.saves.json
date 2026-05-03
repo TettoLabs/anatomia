@@ -15,5 +15,47 @@
   "spec": {
     "saved_at": "2026-05-03T20:24:59.473Z",
     "hash": "sha256:109df2916a743ab855f712b62c5ab8ff2c91f7496e6e0c933013e30f985b7ccc"
+  },
+  "build-report": {
+    "saved_at": "2026-05-03T21:46:19.690Z",
+    "hash": "sha256:7c3af181dd461c3403e5a33cd44dcd79709ddadc6b7038cdb6cc17423752223f"
+  },
+  "build-data": {
+    "saved_at": "2026-05-03T21:46:19.690Z",
+    "hash": "sha256:6e009836742f4668d8d44e08763de2ddee7770d7cf1d5048f65a78f18891e01e"
+  },
+  "modules_touched": [
+    ".github/ISSUE_TEMPLATE/bug_report.yml",
+    ".github/ISSUE_TEMPLATE/feature_request.yml",
+    ".github/PULL_REQUEST_TEMPLATE.md",
+    ".github/dependabot.yml",
+    ".github/workflows/release.yml",
+    ".gitignore",
+    "CODE_OF_CONDUCT.md",
+    "SECURITY.md",
+    "package.json",
+    "packages/cli/package.json",
+    "packages/cli/src/commands/init/state.ts",
+    "packages/cli/src/engine/types/index.ts",
+    "packages/cli/tests/commands/init.test.ts",
+    "packages/cli/tests/commands/init/anaJsonSchema.test.ts",
+    "packages/cli/tests/engine/analyzers/patterns/confirmation.test.ts",
+    "packages/cli/tests/engine/analyzers/patterns/performance.test.ts",
+    "packages/cli/tests/engine/integration/parsed-integration.test.ts",
+    "packages/cli/tests/engine/types.test.ts",
+    "packages/cli/tests/helpers/test-project.ts"
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:74b1e3043bda384dc8caad2f8d2f4eb375bd5dae6431b69924d4298457e0d5ed",
+    "run_at": "2026-05-03T21:52:54.924Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-03T21:52:54.964Z",
+    "hash": "sha256:4bba45ccd875904f5e1b0fd6fb6dd11536912e7dce4da3f8a9af605d41a3218e"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-03T21:52:54.964Z",
+    "hash": "sha256:9b797df5c41ecc8c1097cb846d5c961f96c424d4c95f92e15c5e6e0103abefff"
   }
 }
