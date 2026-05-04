@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import * as os from 'node:os';
-import { readBranchPrefix, readCoAuthor } from '../../src/utils/git-operations.js';
+import { readArtifactBranch, readBranchPrefix, readCoAuthor } from '../../src/utils/git-operations.js';
 import { AnaJsonSchema } from '../../src/commands/init/anaJsonSchema.js';
 
 /**
@@ -127,6 +127,128 @@ describe('readCoAuthor', () => {
     await fs.mkdir(anaDir, { recursive: true });
     await fs.writeFile(path.join(anaDir, 'ana.json'), '{invalid json', 'utf-8');
     const result = readCoAuthor(tempDir);
+    expect(result).toBe('Ana <build@anatomia.dev>');
+  });
+});
+
+describe('readArtifactBranch security hardening', () => {
+  let tempDir: string;
+
+  beforeEach(async () => {
+    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'git-ops-artifact-'));
+  });
+
+  afterEach(async () => {
+    await fs.rm(tempDir, { recursive: true, force: true });
+  });
+
+  async function writeAnaJson(config: Record<string, unknown>): Promise<void> {
+    const anaDir = path.join(tempDir, '.ana');
+    await fs.mkdir(anaDir, { recursive: true });
+    await fs.writeFile(
+      path.join(anaDir, 'ana.json'),
+      JSON.stringify(config, null, 2),
+      'utf-8'
+    );
+  }
+
+  // @ana A010
+  it('exits with code 1 when artifactBranch contains injection payload', async () => {
+    await writeAnaJson({ artifactBranch: 'main; echo pwned' });
+    const originalExit = process.exit;
+    const originalError = console.error;
+    let exitCode: number | undefined;
+    let errorMessage = '';
+    process.exit = ((code: number) => { exitCode = code; }) as never;
+    console.error = (msg: string) => { errorMessage += msg; };
+    try {
+      readArtifactBranch(tempDir);
+    } finally {
+      process.exit = originalExit;
+      console.error = originalError;
+    }
+    expect(exitCode).toBe(1);
+    expect(errorMessage).toContain('Invalid artifactBranch');
+  });
+
+  it('passes through valid artifact branch values', async () => {
+    await writeAnaJson({ artifactBranch: 'main' });
+    expect(readArtifactBranch(tempDir)).toBe('main');
+  });
+});
+
+describe('readBranchPrefix security hardening', () => {
+  let tempDir: string;
+
+  beforeEach(async () => {
+    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'git-ops-prefix-sec-'));
+  });
+
+  afterEach(async () => {
+    await fs.rm(tempDir, { recursive: true, force: true });
+  });
+
+  async function writeAnaJson(config: Record<string, unknown>): Promise<void> {
+    const anaDir = path.join(tempDir, '.ana');
+    await fs.mkdir(anaDir, { recursive: true });
+    await fs.writeFile(
+      path.join(anaDir, 'ana.json'),
+      JSON.stringify(config, null, 2),
+      'utf-8'
+    );
+  }
+
+  // @ana A011
+  it('returns fallback for injection payload in branchPrefix', async () => {
+    await writeAnaJson({ artifactBranch: 'main', branchPrefix: 'x; echo pwned/' });
+    const result = readBranchPrefix(tempDir);
+    expect(result).toBe('feature/');
+  });
+
+  // @ana A027
+  it('accepts empty string after hardening', async () => {
+    await writeAnaJson({ artifactBranch: 'main', branchPrefix: '' });
+    const result = readBranchPrefix(tempDir);
+    expect(result).toBe('');
+  });
+});
+
+describe('readCoAuthor security hardening', () => {
+  let tempDir: string;
+
+  beforeEach(async () => {
+    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'git-ops-coauthor-sec-'));
+  });
+
+  afterEach(async () => {
+    await fs.rm(tempDir, { recursive: true, force: true });
+  });
+
+  async function writeAnaJson(config: Record<string, unknown>): Promise<void> {
+    const anaDir = path.join(tempDir, '.ana');
+    await fs.mkdir(anaDir, { recursive: true });
+    await fs.writeFile(
+      path.join(anaDir, 'ana.json'),
+      JSON.stringify(config, null, 2),
+      'utf-8'
+    );
+  }
+
+  // @ana A012
+  it('strips control characters from co-author value', async () => {
+    await writeAnaJson({ coAuthor: 'Ana\n<build@anatomia.dev>\r\x00' });
+    const result = readCoAuthor(tempDir);
+    expect(result).not.toContain('\n');
+    expect(result).not.toContain('\r');
+    expect(result).not.toContain('\x00');
+    expect(result).toBe('Ana<build@anatomia.dev>');
+  });
+
+  // @ana A013
+  it('preserves normal co-author values with angle brackets', async () => {
+    await writeAnaJson({ coAuthor: 'Ana <build@anatomia.dev>' });
+    const result = readCoAuthor(tempDir);
+    expect(result).toContain('<');
     expect(result).toBe('Ana <build@anatomia.dev>');
   });
 });

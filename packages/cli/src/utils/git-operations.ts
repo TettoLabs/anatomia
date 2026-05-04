@@ -11,6 +11,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { execSync } from 'node:child_process';
 import chalk from 'chalk';
+import { validateBranchName } from './validators.js';
 
 /**
  * Read the artifact branch name from .ana/ana.json. Exits the process with
@@ -45,7 +46,16 @@ export function readArtifactBranch(projectRoot?: string): string {
     process.exit(1);
   }
 
-  return config['artifactBranch'] as string;
+  const branch = config['artifactBranch'] as string;
+
+  try {
+    validateBranchName(branch);
+  } catch {
+    console.error(chalk.red('Error: Invalid artifactBranch in ana.json: contains invalid characters.'));
+    process.exit(1);
+  }
+
+  return branch;
 }
 
 /**
@@ -76,6 +86,12 @@ export function readBranchPrefix(projectRoot?: string): string {
 
   const prefix = config['branchPrefix'];
   if (typeof prefix !== 'string') {
+    return 'feature/';
+  }
+
+  try {
+    validateBranchName(prefix);
+  } catch {
     return 'feature/';
   }
 
@@ -113,7 +129,10 @@ export function readCoAuthor(projectRoot?: string): string {
     return 'Ana <build@anatomia.dev>';
   }
 
-  return coAuthor;
+  // Strip newlines and control characters — co-author comes from user config,
+  // not an attack vector, so strip silently rather than reject.
+  // eslint-disable-next-line no-control-regex
+  return coAuthor.replace(/[\x00-\x1f\x7f]/g, '');
 }
 
 /**
