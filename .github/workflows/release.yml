@@ -43,8 +43,6 @@ jobs:
           fi
 
       - run: cd packages/cli && npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - run: gh release create ${{ github.ref_name }} --generate-notes
         env:
