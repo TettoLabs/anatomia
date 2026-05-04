@@ -4,8 +4,8 @@
 
 ## Phases
 
-- [ ] Validators and config reader hardening
+- [x] Validators and config reader hardening
   - Spec: spec-1.md
-- [ ] runGit utility and full execSync elimination
+- [x] runGit utility and full execSync elimination
   - Spec: spec-2.md
   - Depends on: Phase 1

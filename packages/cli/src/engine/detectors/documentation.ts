@@ -7,7 +7,7 @@
  */
 
 import { existsSync, statSync } from 'node:fs';
-import { execSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { join, relative, extname } from 'node:path';
 import { glob } from 'glob';
 import type { SourceRoot } from '../types/census.js';
@@ -100,12 +100,13 @@ const DOCS_INDEX_FILES = ['index.mdx', 'index.md', 'README.md'];
 function getLastModifiedDays(filePath: string, rootPath: string): number {
   const relativePath = relative(rootPath, filePath);
   try {
-    const output = execSync(`git log --format="%ct" -1 -- "${relativePath}"`, {
+    const result = spawnSync('git', ['log', '--format=%ct', '-1', '--', relativePath], {
       cwd: rootPath,
       encoding: 'utf-8',
       stdio: ['pipe', 'pipe', 'pipe'],
-    }).trim();
-    if (output) {
+    });
+    const output = (result.stdout ?? '').trim();
+    if (output && result.status === 0) {
       const timestamp = parseInt(output, 10);
       return Math.floor((Date.now() / 1000 - timestamp) / 86400);
     }

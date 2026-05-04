@@ -4,11 +4,79 @@
  * Provides helper functions for:
  * - Getting project name from config files
  * - File existence checks
+ * - Input validation (slugs, branch names, skill names)
  */
 
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
 import * as fsSync from 'node:fs';
+
+/**
+ * Kebab-case slug validation regex.
+ * Starts with lowercase letter, segments separated by single hyphens, alphanumeric only.
+ * Allows: fix-v2, a, add-export-csv. Rejects: Fix-Auth, fix--double, -leading, trailing-.
+ */
+export const SLUG_PATTERN = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
+
+/**
+ * Branch name validation regex.
+ * Allows alphanumeric, hyphens, underscores, slashes, and dots.
+ * Rejects semicolons, spaces, backticks, pipes, $, parentheses, newlines.
+ */
+const BRANCH_NAME_PATTERN = /^[a-zA-Z0-9._/\-]+$/;
+
+/**
+ * Skill name validation regex.
+ * Allows lowercase alphanumeric and hyphens (kebab-case).
+ * Rejects shell metacharacters, slashes, spaces, etc.
+ */
+const SKILL_NAME_PATTERN = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
+
+/**
+ * Validate a slug string. Throws if invalid.
+ *
+ * @param slug - The slug to validate
+ * @returns The validated slug (pass-through)
+ * @throws Error if the slug contains invalid characters
+ */
+export function validateSlug(slug: string): string {
+  if (!SLUG_PATTERN.test(slug)) {
+    throw new Error('Invalid slug format. Use kebab-case: fix-auth-timeout, add-export-csv');
+  }
+  return slug;
+}
+
+/**
+ * Validate a branch name string. Throws if invalid.
+ * Accepts empty string as valid (for branchPrefix use case).
+ *
+ * @param name - The branch name to validate
+ * @returns The validated branch name (pass-through)
+ * @throws Error if the branch name contains invalid characters
+ */
+export function validateBranchName(name: string): string {
+  if (name === '') {
+    return name;
+  }
+  if (!BRANCH_NAME_PATTERN.test(name)) {
+    throw new Error('Invalid branch name: contains invalid characters.');
+  }
+  return name;
+}
+
+/**
+ * Validate a skill name string. Throws if invalid.
+ *
+ * @param name - The skill name to validate
+ * @returns The validated skill name (pass-through)
+ * @throws Error if the skill name contains invalid characters
+ */
+export function validateSkillName(name: string): string {
+  if (!SKILL_NAME_PATTERN.test(name)) {
+    throw new Error('Invalid skill name: contains invalid characters. Use kebab-case: coding-standards, api-patterns');
+  }
+  return name;
+}
 
 /**
  * Get project name from package.json, pyproject.toml, go.mod, or directory name
@@ -103,6 +171,18 @@ export function findProjectRoot(startDir: string = process.cwd()): string {
 
   while (true) {
     if (fsSync.existsSync(path.join(current, '.ana', 'ana.json'))) {
+      // Containment check: a project root must also have a .git directory (or file, for worktrees)
+      if (!fsSync.existsSync(path.join(current, '.git'))) {
+        // Skip this directory — .ana/ exists but no git repo
+        const parent = path.dirname(current);
+        if (parent === current) {
+          throw new Error(
+            `No .ana/ found in ${startDir} or any parent directory. Run ana init from your project root.`
+          );
+        }
+        current = parent;
+        continue;
+      }
       return current;
     }
 

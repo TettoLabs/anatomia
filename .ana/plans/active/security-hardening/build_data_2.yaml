@@ -1,0 +1,10 @@
+schema: 1
+concerns:
+  - summary: "Grep enforcement test uses spawnSync('grep', ...) — platform-dependent (macOS/Linux only)"
+    file: "packages/cli/tests/utils/git-operations.test.ts"
+    severity: observation
+    suggested_action: monitor
+  - summary: "Pre-existing unused eslint-disable directive at git-operations.ts:169 from Phase 1"
+    file: "packages/cli/src/utils/git-operations.ts"
+    severity: observation
+    suggested_action: accept

@@ -13,14 +13,14 @@
 
 import { Command } from 'commander';
 import chalk from 'chalk';
-import { execSync, spawnSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as fsPromises from 'node:fs/promises';
 import * as path from 'node:path';
 import { globSync } from 'glob';
-import { readArtifactBranch, readBranchPrefix, getCurrentBranch, readCoAuthor } from '../utils/git-operations.js';
+import { readArtifactBranch, readBranchPrefix, getCurrentBranch, readCoAuthor, runGit } from '../utils/git-operations.js';
 import { generateProofSummary, resolveFindingPaths, generateDashboard, computeChainHealth, wrapJsonResponse, detectHealthChange, type ProofSummary } from '../utils/proofSummary.js';
-import { findProjectRoot } from '../utils/validators.js';
+import { findProjectRoot, validateSlug } from '../utils/validators.js';
 import type { ProofChainEntry, ProofChain, ProofChainStats } from '../types/proof.js';
 
 /**
@@ -97,12 +97,8 @@ interface StatusOutput {
  * @returns True if file exists on branch
  */
 function fileExistsOnBranch(branch: string, filePath: string): boolean {
-  try {
-    execSync(`git show ${branch}:${filePath}`, { stdio: 'pipe', encoding: 'utf-8' });
-    return true;
-  } catch {
-    return false;
-  }
+  const result = runGit(['show', `${branch}:${filePath}`]);
+  return result.exitCode === 0;
 }
 
 /**
@@ -113,11 +109,8 @@ function fileExistsOnBranch(branch: string, filePath: string): boolean {
  * @returns File content or null if doesn't exist
  */
 function readFileOnBranch(branch: string, filePath: string): string | null {
-  try {
-    return execSync(`git show ${branch}:${filePath}`, { stdio: 'pipe', encoding: 'utf-8' });
-  } catch {
-    return null;
-  }
+  const result = runGit(['show', `${branch}:${filePath}`]);
+  return result.exitCode === 0 ? result.stdout : null;
 }
 
 /**
@@ -128,19 +121,15 @@ function readFileOnBranch(branch: string, filePath: string): string | null {
  * @returns Branch name or null if doesn't exist
  */
 function getWorkBranch(slug: string, branchPrefix: string): string | null {
-  try {
-    const output = execSync(`git branch -a --list "*${slug}*"`, { encoding: 'utf-8', stdio: 'pipe' }).trim();
-    if (!output) return null;
+  const result = runGit(['branch', '-a', '--list', `*${slug}*`]);
+  if (result.exitCode !== 0 || !result.stdout) return null;
 
-    // Parse branches — prefer local over remote
-    const branches = output.split('\n').map(b => b.trim().replace(/^\* /, '').replace(/^remotes\//, ''));
-    const local = branches.find(b => b === `${branchPrefix}${slug}`);
-    const remote = branches.find(b => b === `origin/${branchPrefix}${slug}`);
+  // Parse branches — prefer local over remote
+  const branches = result.stdout.split('\n').map(b => b.trim().replace(/^\* /, '').replace(/^remotes\//, ''));
+  const local = branches.find(b => b === `${branchPrefix}${slug}`);
+  const remote = branches.find(b => b === `origin/${branchPrefix}${slug}`);
 
-    return local || remote || null;
-  } catch {
-    return null;
-  }
+  return local || remote || null;
 }
 
 /**
@@ -209,21 +198,14 @@ function discoverSlugs(artifactBranch: string, onArtifactBranch: boolean, projec
       .map(entry => entry.name);
   } else {
     // Use git ls-tree with trailing slash to get directory contents
-    try {
-      const output = execSync(`git ls-tree --name-only origin/${artifactBranch} ${plansPath}/`, {
-        encoding: 'utf-8',
-        stdio: 'pipe',
-      }).trim();
-      if (!output) return [];
-      // Output will be like ".ana/plans/active/slug-name", extract just the slug
-      return output
-        .split('\n')
-        .filter(Boolean)
-        .map(line => path.basename(line))
-        .filter(name => name !== '.DS_Store' && name !== '.gitkeep');
-    } catch {
-      return [];
-    }
+    const lsResult = runGit(['ls-tree', '--name-only', `origin/${artifactBranch}`, `${plansPath}/`]);
+    if (lsResult.exitCode !== 0 || !lsResult.stdout) return [];
+    // Output will be like ".ana/plans/active/slug-name", extract just the slug
+    return lsResult.stdout
+      .split('\n')
+      .filter(Boolean)
+      .map(line => path.basename(line))
+      .filter(name => name !== '.DS_Store' && name !== '.gitkeep');
   }
 }
 
@@ -256,10 +238,10 @@ function gatherArtifactState(
       const info: ArtifactInfo = { exists };
       if (exists) {
         // Check if file is actually committed, not just on disk
-        try {
-          execSync(`git ls-files --error-unmatch ${filePath}`, { stdio: 'pipe', cwd: projectRoot });
+        const lsResult = runGit(['ls-files', '--error-unmatch', filePath], { cwd: projectRoot });
+        if (lsResult.exitCode === 0) {
           info.location = artifactBranch;
-        } catch {
+        } else {
           info.location = 'untracked';
         }
       }
@@ -405,14 +387,12 @@ function determineStage(slug: string, artifacts: ArtifactState, workBranch: stri
         // Check if build report was updated AFTER verify report (fixes applied)
         try {
           const basePath = `.ana/plans/active/${slug}`;
-          const buildTime = execSync(
-            `git log --format='%ct' -1 ${workBranch} -- ${basePath}/build_report.md`,
-            { encoding: 'utf-8', stdio: 'pipe' }
-          ).trim();
-          const verifyTime = execSync(
-            `git log --format='%ct' -1 ${workBranch} -- ${basePath}/verify_report.md`,
-            { encoding: 'utf-8', stdio: 'pipe' }
-          ).trim();
+          const buildTime = runGit(
+            ['log', '--format=%ct', '-1', workBranch, '--', `${basePath}/build_report.md`]
+          ).stdout;
+          const verifyTime = runGit(
+            ['log', '--format=%ct', '-1', workBranch, '--', `${basePath}/verify_report.md`]
+          ).stdout;
           if (buildTime && verifyTime && parseInt(buildTime) > parseInt(verifyTime)) {
             return 'ready-for-re-verify';
           }
@@ -463,14 +443,12 @@ function determineStage(slug: string, artifacts: ArtifactState, workBranch: stri
             const basePath = `.ana/plans/active/${slug}`;
             const expectedBuild = phaseBuildReport.file;
             const expectedVerify = phaseVerifyReport.file;
-            const bTime = execSync(
-              `git log --format='%ct' -1 ${workBranch} -- ${basePath}/${expectedBuild}`,
-              { encoding: 'utf-8', stdio: 'pipe' }
-            ).trim();
-            const vTime = execSync(
-              `git log --format='%ct' -1 ${workBranch} -- ${basePath}/${expectedVerify}`,
-              { encoding: 'utf-8', stdio: 'pipe' }
-            ).trim();
+            const bTime = runGit(
+              ['log', '--format=%ct', '-1', workBranch, '--', `${basePath}/${expectedBuild}`]
+            ).stdout;
+            const vTime = runGit(
+              ['log', '--format=%ct', '-1', workBranch, '--', `${basePath}/${expectedVerify}`]
+            ).stdout;
             if (bTime && vTime && parseInt(bTime) > parseInt(vTime)) {
               return `phase-${phaseNum}-ready-for-re-verify`;
             }
@@ -652,22 +630,18 @@ export function getWorkStatus(options: { json?: boolean }): void {
 
   // Best-effort fetch (don't fail if offline)
   if (currentBranch) {
-    try {
-      execSync(`git fetch origin ${artifactBranch} --quiet`, { stdio: 'pipe' });
-
+    const fetchResult = runGit(['fetch', 'origin', artifactBranch, '--quiet']);
+    if (fetchResult.exitCode === 0) {
       // Warn if local artifact branch is behind remote
-      const behind = execSync(
-        `git rev-list ${artifactBranch}..origin/${artifactBranch} --count`,
-        { encoding: 'utf-8', stdio: 'pipe' }
-      ).trim();
+      const behindResult = runGit(['rev-list', `${artifactBranch}..origin/${artifactBranch}`, '--count']);
+      const behind = behindResult.stdout;
       if (parseInt(behind) > 0) {
         console.log(chalk.yellow(
           `ℹ ${artifactBranch} is ${behind} commit${behind === '1' ? '' : 's'} behind remote.`
         ));
       }
-    } catch {
-      // Silently continue with local state
     }
+    // Silently continue with local state on fetch failure
   }
 
   // Discover slugs
@@ -959,6 +933,14 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
  * @param options.json - When true, output structured JSON envelope instead of console output
  */
 export async function completeWork(slug: string, options?: { json?: boolean }): Promise<void> {
+  // 0. Validate slug format
+  try {
+    validateSlug(slug);
+  } catch {
+    console.error(chalk.red('Error: Invalid slug format. Use kebab-case: fix-auth-timeout, add-export-csv'));
+    process.exit(1);
+  }
+
   // 1. Read artifactBranch, branchPrefix, and coAuthor from ana.json
   const projectRoot = findProjectRoot();
   const artifactBranch = readArtifactBranch(projectRoot);
@@ -983,22 +965,21 @@ export async function completeWork(slug: string, options?: { json?: boolean }): 
   }
 
   // 4. Pull latest to get merged content
-  try {
-    // Check if remote exists first
-    const remotes = execSync('git remote', { stdio: 'pipe', encoding: 'utf-8', cwd: projectRoot }).trim();
+  {
+    const remotes = runGit(['remote'], { cwd: projectRoot }).stdout;
     if (remotes) {
-      execSync('git pull --rebase', { stdio: 'pipe', encoding: 'utf-8', cwd: projectRoot });
-    }
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : '';
-    if (errorMessage.includes('conflict') || errorMessage.includes('Cannot rebase')) {
-      console.error(chalk.red('Error: Pull failed due to conflicts. Resolve conflicts and try again.'));
-      process.exit(1);
-    }
-    // Non-conflict failures: warn and continue (matching saveArtifact's pattern)
-    if (errorMessage) {
-      console.error(chalk.yellow('⚠ Warning: Pull failed (network error). Continuing with local data.'));
-      console.error(chalk.yellow('  Run `git pull` manually to sync before completing.'));
+      const pullResult = runGit(['pull', '--rebase'], { cwd: projectRoot });
+      if (pullResult.exitCode !== 0) {
+        const errorMessage = pullResult.stderr;
+        if (errorMessage.includes('conflict') || errorMessage.includes('Cannot rebase')) {
+          console.error(chalk.red('Error: Pull failed due to conflicts. Resolve conflicts and try again.'));
+          process.exit(1);
+        }
+        if (errorMessage) {
+          console.error(chalk.yellow('⚠ Warning: Pull failed (network error). Continuing with local data.'));
+          console.error(chalk.yellow('  Run `git pull` manually to sync before completing.'));
+        }
+      }
     }
   }
 
@@ -1010,23 +991,19 @@ export async function completeWork(slug: string, options?: { json?: boolean }): 
     if (fs.existsSync(completedPath)) {
       // Check for uncommitted changes — indicates a failed prior run
       try {
-        const porcelain = execSync('git status --porcelain .ana/', {
-          encoding: 'utf-8', stdio: 'pipe', cwd: projectRoot,
-        }).trim();
+        const porcelainResult = runGit(['status', '--porcelain', '.ana/'], { cwd: projectRoot });
+        const porcelain = porcelainResult.stdout;
         if (porcelain) {
           // Recovery: retry the commit
           if (!options?.json) {
             console.log(chalk.yellow('Recovering incomplete completion — retrying commit...'));
           }
-          execSync('git add .ana/plans/ .ana/proof_chain.json .ana/PROOF_CHAIN.md', {
-            stdio: 'pipe', cwd: projectRoot,
-          });
+          runGit(['add', '.ana/plans/', '.ana/proof_chain.json', '.ana/PROOF_CHAIN.md'], { cwd: projectRoot });
           const commitMessage = `[${slug}] Complete — archived to plans/completed\n\nCo-authored-by: ${coAuthor}`;
           const commitResult = spawnSync('git', ['commit', '-m', commitMessage], { stdio: 'pipe', cwd: projectRoot });
           if (commitResult.status !== 0) throw new Error(commitResult.stderr?.toString() || 'Commit failed');
-          try {
-            execSync('git push', { stdio: 'pipe', cwd: projectRoot });
-          } catch {
+          const pushResult = runGit(['push'], { cwd: projectRoot });
+          if (pushResult.exitCode !== 0) {
             console.error(chalk.yellow('Warning: Push failed. Changes committed locally. Run `git push` manually.'));
           }
 
@@ -1088,36 +1065,30 @@ export async function completeWork(slug: string, options?: { json?: boolean }): 
   // 6. Verify work branch was merged (optional - branch might be deleted)
   //    Prune stale remote refs — squash merge + --delete-branch removes
   //    the remote branch on GitHub but local refs persist until pruned.
-  try {
-    execSync('git fetch --prune origin', { stdio: 'pipe', cwd: projectRoot });
-  } catch { /* offline — continue with local state */ }
+  runGit(['fetch', '--prune', 'origin'], { cwd: projectRoot });
+  // Silently continue with local state on failure
 
   const workBranchName = `${branchPrefix}${slug}`;
   const workBranchExists = getWorkBranch(slug, branchPrefix);
   if (workBranchExists) {
     // Check if remote branch still exists after prune
-    const hasRemote = (() => {
-      try {
-        const output = execSync(`git branch -r --list "origin/${workBranchName}"`, { encoding: 'utf-8', stdio: 'pipe', cwd: projectRoot }).trim();
-        return output.length > 0;
-      } catch { return false; }
-    })();
+    const remoteBranchResult = runGit(['branch', '-r', '--list', `origin/${workBranchName}`], { cwd: projectRoot });
+    const hasRemote = remoteBranchResult.exitCode === 0 && remoteBranchResult.stdout.length > 0;
 
     if (hasRemote) {
       // Remote still exists — verify with is-ancestor (regular merge)
       let merged = false;
-      try {
-        execSync(`git merge-base --is-ancestor ${workBranchName} HEAD`, { stdio: 'pipe', cwd: projectRoot });
+      const ancestorResult = runGit(['merge-base', '--is-ancestor', workBranchName, 'HEAD'], { cwd: projectRoot });
+      if (ancestorResult.exitCode === 0) {
         merged = true;
-      } catch {
+      } else {
         // is-ancestor failed — might be squash merge. Check via gh CLI.
-        try {
-          const prState = execSync(
-            `gh pr view ${workBranchName} --json state -q .state`,
-            { encoding: 'utf-8', stdio: 'pipe' }
-          ).trim();
-          merged = prState === 'MERGED';
-        } catch { /* gh not available or no PR — fall through to error */ }
+        const ghResult = spawnSync('gh', ['pr', 'view', workBranchName, '--json', 'state', '-q', '.state'], {
+          encoding: 'utf-8', stdio: 'pipe',
+        });
+        if (ghResult.status === 0 && ghResult.stdout) {
+          merged = ghResult.stdout.trim() === 'MERGED';
+        }
       }
       if (!merged) {
         console.error(chalk.red(`Error: \`${workBranchName}\` has not been merged into \`${artifactBranch}\`.`));
@@ -1231,7 +1202,7 @@ export async function completeWork(slug: string, options?: { json?: boolean }): 
 
   // 10. Stage and commit
   try {
-    execSync('git add .ana/plans/ .ana/proof_chain.json .ana/PROOF_CHAIN.md', { stdio: 'pipe', cwd: projectRoot });
+    runGit(['add', '.ana/plans/', '.ana/proof_chain.json', '.ana/PROOF_CHAIN.md'], { cwd: projectRoot });
     const commitMessage = `[${slug}] Complete — archived to plans/completed\n\nCo-authored-by: ${coAuthor}`;
     const commitResult = spawnSync('git', ['commit', '-m', commitMessage], { stdio: 'pipe', cwd: projectRoot });
     if (commitResult.status !== 0) throw new Error(commitResult.stderr?.toString() || 'Commit failed');
@@ -1241,25 +1212,18 @@ export async function completeWork(slug: string, options?: { json?: boolean }): 
   }
 
   // 11. Push
-  try {
-    execSync('git push', { stdio: 'pipe', cwd: projectRoot });
-  } catch {
+  const pushResult = runGit(['push'], { cwd: projectRoot });
+  if (pushResult.exitCode !== 0) {
     console.error(chalk.yellow('Warning: Push failed. Changes committed locally. Run `git push` manually.'));
     // Don't exit - commit succeeded
   }
 
   // 12. Delete work branch (cleanup)
-  try {
-    execSync(`git branch -d ${workBranchName}`, { stdio: 'pipe', cwd: projectRoot });
-  } catch {
-    // Silently continue if branch doesn't exist or was already deleted
-  }
+  runGit(['branch', '-d', workBranchName], { cwd: projectRoot });
+  // Silently continue if branch doesn't exist or was already deleted
 
-  try {
-    execSync(`git push origin --delete ${workBranchName}`, { stdio: 'pipe', cwd: projectRoot });
-  } catch {
-    // Silently continue if remote branch doesn't exist or was already deleted
-  }
+  runGit(['push', 'origin', '--delete', workBranchName], { cwd: projectRoot });
+  // Silently continue if remote branch doesn't exist or was already deleted
 
   // 13. Read chain once for both meta and health change detection
   const chainPath = path.join(projectRoot, '.ana', 'proof_chain.json');
@@ -1321,13 +1285,6 @@ export async function completeWork(slug: string, options?: { json?: boolean }): 
 }
 
 /**
- * Kebab-case slug validation regex.
- * Starts with lowercase letter, segments separated by single hyphens, alphanumeric only.
- * Allows: fix-v2, a, add-export-csv. Rejects: Fix-Auth, fix--double, -leading, trailing-.
- */
-const SLUG_PATTERN = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
-
-/**
  * Start a new work item: validate inputs, create directory, record start time.
  *
  * @param slug - Kebab-case slug for the work item
@@ -1335,7 +1292,9 @@ const SLUG_PATTERN = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
  */
 export async function startWork(slug: string): Promise<void> {
   // 1. Validate slug format
-  if (!SLUG_PATTERN.test(slug)) {
+  try {
+    validateSlug(slug);
+  } catch {
     console.error(chalk.red('Error: Invalid slug format. Use kebab-case: fix-auth-timeout, add-export-csv'));
     process.exit(1);
   }
@@ -1369,18 +1328,19 @@ export async function startWork(slug: string): Promise<void> {
   }
 
   // 5. Pull latest (skip if no remotes)
-  try {
-    const remotes = execSync('git remote', { stdio: 'pipe', encoding: 'utf-8', cwd: projectRoot }).trim();
+  {
+    const remotes = runGit(['remote'], { cwd: projectRoot }).stdout;
     if (remotes) {
-      execSync('git pull --rebase', { stdio: 'pipe', encoding: 'utf-8', cwd: projectRoot });
+      const pullResult = runGit(['pull', '--rebase'], { cwd: projectRoot });
+      if (pullResult.exitCode !== 0) {
+        const errorMessage = pullResult.stderr;
+        if (errorMessage.includes('conflict') || errorMessage.includes('Cannot rebase')) {
+          console.error(chalk.red('Error: Pull failed due to conflicts. Resolve conflicts and try again.'));
+          process.exit(1);
+        }
+        // Non-conflict failures: continue silently (no remote, no upstream, etc.)
+      }
     }
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : '';
-    if (errorMessage.includes('conflict') || errorMessage.includes('Cannot rebase')) {
-      console.error(chalk.red('Error: Pull failed due to conflicts. Resolve conflicts and try again.'));
-      process.exit(1);
-    }
-    // Non-conflict failures: continue silently (no remote, no upstream, etc.)
   }
 
   // 6. Create directory

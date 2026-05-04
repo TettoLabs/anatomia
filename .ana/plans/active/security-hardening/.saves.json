@@ -15,5 +15,44 @@
   "spec": {
     "saved_at": "2026-05-04T21:03:39.615Z",
     "hash": "sha256:0fe120b5859afefaf9d52989ef776d8b933762a2689883dbb1204cc0907e286b"
+  },
+  "build-report": {
+    "saved_at": "2026-05-04T21:56:22.444Z",
+    "hash": "sha256:67bc172dade85baa831e7c1a1866b56022cae9a66756b6552c2c50b0f9ec56e5"
+  },
+  "build-data": {
+    "saved_at": "2026-05-04T21:56:22.445Z",
+    "hash": "sha256:0888fb3e8495eea6a68e1a948fa8ca7804df62c7f168e3ae0d2f3184c13bd8a0"
+  },
+  "modules_touched": [
+    "packages/cli/src/commands/artifact.ts",
+    "packages/cli/src/commands/init/preflight.ts",
+    "packages/cli/src/commands/pr.ts",
+    "packages/cli/src/commands/proof.ts",
+    "packages/cli/src/commands/work.ts",
+    "packages/cli/src/engine/detectors/documentation.ts",
+    "packages/cli/src/utils/git-operations.ts",
+    "packages/cli/src/utils/proofSummary.ts",
+    "packages/cli/src/utils/validators.ts",
+    "packages/cli/tests/commands/check.test.ts",
+    "packages/cli/tests/commands/symbol-index.test.ts",
+    "packages/cli/tests/commands/verify.test.ts",
+    "packages/cli/tests/helpers/test-project.ts",
+    "packages/cli/tests/utils/findProjectRoot.test.ts",
+    "packages/cli/tests/utils/git-operations.test.ts",
+    "packages/cli/tests/utils/validators.test.ts"
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:b9e52761c704d63c7b994a80f9d8f93ea891f6d1ed3b47d0eeda621586017969",
+    "run_at": "2026-05-04T22:01:41.354Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-04T22:01:41.766Z",
+    "hash": "sha256:9f0dd78e9f3ac0a1b8e6fc24ce96458a7a5cbbf840629ad5e6a17c305832bdf4"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-04T22:01:41.766Z",
+    "hash": "sha256:63108d6bb4fdf88159431602cb2ce538a0fb37573f3f4411f5e42fc8cb0ccfe1"
   }
 }

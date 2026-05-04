@@ -98,7 +98,7 @@ describe('ana verify pre-check', () => {
     });
 
     it('errors when slug does not exist', async () => {
-      // Create minimal project with ana.json
+      // Create minimal project with ana.json and .git/
       const anaDir = path.join(tempDir, '.ana');
       await fs.mkdir(anaDir, { recursive: true });
       await fs.writeFile(
@@ -106,6 +106,7 @@ describe('ana verify pre-check', () => {
         JSON.stringify({ artifactBranch: 'main' }),
         'utf-8'
       );
+      await fs.mkdir(path.join(tempDir, '.git'), { recursive: true });
 
       const output = captureOutput(() => runPreCheck('nonexistent'));
 

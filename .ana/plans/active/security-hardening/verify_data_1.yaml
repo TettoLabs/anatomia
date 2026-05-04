@@ -1,0 +1,37 @@
+schema: 1
+findings:
+  - category: test
+    summary: "A016-A019 @ana tags point to pre-existing branchPrefix template tests, not command entry point validation"
+    file: "packages/cli/tests/commands/work.test.ts"
+    line: 495
+    severity: debt
+    suggested_action: scope
+    related_assertions: ["A016", "A017", "A018", "A019"]
+  - category: test
+    summary: "No dedicated integration tests for command entry point injection rejection — saveArtifact, completeWork, createPr, strengthen"
+    severity: debt
+    suggested_action: scope
+    related_assertions: ["A016", "A017", "A018", "A019"]
+  - category: upstream
+    summary: "@ana tag IDs collide across build cycles — A001-A008 tags from prior contracts still present in git-operations.test.ts and findProjectRoot.test.ts"
+    file: "packages/cli/tests/utils/git-operations.test.ts"
+    severity: observation
+    suggested_action: monitor
+  - category: code
+    summary: "getCurrentBranch still uses execSync — not hardened by this phase"
+    file: "packages/cli/src/utils/git-operations.ts"
+    line: 144
+    severity: observation
+    suggested_action: monitor
+  - category: code
+    summary: "SLUG_PATTERN exported but only consumed by test file — no source imports the raw regex"
+    file: "packages/cli/src/utils/validators.ts"
+    line: 19
+    severity: observation
+    suggested_action: accept
+  - category: test
+    summary: "A010 test mocks process.exit — after mock, readArtifactBranch continues and returns invalid branch to caller. Correct in production but test pattern allows post-exit execution."
+    file: "packages/cli/tests/utils/git-operations.test.ts"
+    line: 156
+    severity: observation
+    suggested_action: accept

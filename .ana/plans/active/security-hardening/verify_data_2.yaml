@@ -1,0 +1,27 @@
+schema: 1
+findings:
+  - category: test
+    summary: "Enforcement test (A023) asserts on source code content via grep — violates testing-standards skill rule 'never assert on source code content' but is the only practical way to enforce convention. Spec explicitly requested this pattern."
+    file: "packages/cli/tests/utils/git-operations.test.ts"
+    line: 358
+    severity: observation
+    suggested_action: accept
+    related_assertions: ["A023"]
+  - category: code
+    summary: "git.ts in src/engine/detectors/ retains execSync — architecturally correct (engine boundary, not commands/utils) but is the last remaining execSync in the codebase outside tests. Future hardening could migrate this to spawnSync for consistency."
+    file: "packages/cli/src/engine/detectors/git.ts"
+    line: 56
+    severity: debt
+    suggested_action: scope
+  - category: test
+    summary: "Enforcement test comment-filter heuristic checks line prefix only (starts with //, *, /*). An execSync buried mid-line after non-comment code wouldn't be caught if the line also starts with a comment-like pattern. Low probability given codebase conventions."
+    file: "packages/cli/tests/utils/git-operations.test.ts"
+    line: 371
+    severity: observation
+    suggested_action: accept
+  - category: code
+    summary: "runGit defaults exitCode to 1 when spawnSync returns null status (signal kill). This is reasonable but means SIGKILL'd git processes appear as generic failures — no way to distinguish 'command failed' from 'process was killed'. Acceptable for CLI use."
+    file: "packages/cli/src/utils/git-operations.ts"
+    line: 47
+    severity: observation
+    suggested_action: monitor

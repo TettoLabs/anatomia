@@ -5,7 +5,7 @@
  * a structured summary for proof chain and PR generation.
  */
 
-import { execSync } from 'node:child_process';
+import { runGit } from './git-operations.js';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { globSync } from 'glob';
@@ -1452,13 +1452,12 @@ function computeTiming(saves: SavesData): ProofSummary['timing'] {
  * @returns Object with name and email from git config
  */
 function getAuthor(): { name: string; email: string } {
-  try {
-    const name = execSync('git config user.name', { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }).trim();
-    const email = execSync('git config user.email', { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }).trim();
-    return { name: name || 'Unknown', email: email || 'unknown@example.com' };
-  } catch {
-    return { name: 'Unknown', email: 'unknown@example.com' };
-  }
+  const nameResult = runGit(['config', 'user.name']);
+  const emailResult = runGit(['config', 'user.email']);
+  return {
+    name: nameResult.exitCode === 0 && nameResult.stdout ? nameResult.stdout : 'Unknown',
+    email: emailResult.exitCode === 0 && emailResult.stdout ? emailResult.stdout : 'unknown@example.com',
+  };
 }
 
 /**

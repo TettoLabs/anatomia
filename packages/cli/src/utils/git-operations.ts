@@ -9,8 +9,44 @@
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { execSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import chalk from 'chalk';
+import { validateBranchName } from './validators.js';
+
+/**
+ * Result from running a git command via spawnSync.
+ */
+export interface RunGitResult {
+  stdout: string;
+  stderr: string;
+  exitCode: number;
+}
+
+/**
+ * Execute a git command using spawnSync with array arguments.
+ *
+ * This eliminates shell interpolation by passing arguments as an array
+ * directly to the git process. All git operations in commands/ and utils/
+ * should use this instead of execSync.
+ *
+ * @param args - Array of arguments to pass to git (e.g., ['status', '--porcelain'])
+ * @param options - Optional cwd override
+ * @param options.cwd - Working directory for the git command
+ * @returns Object with stdout, stderr, and exitCode
+ */
+export function runGit(args: string[], options?: { cwd?: string }): RunGitResult {
+  const result = spawnSync('git', args, {
+    cwd: options?.cwd,
+    stdio: 'pipe',
+    encoding: 'utf-8',
+  });
+
+  return {
+    stdout: (result.stdout ?? '').trim(),
+    stderr: (result.stderr ?? '').trim(),
+    exitCode: result.status ?? 1,
+  };
+}
 
 /**
  * Read the artifact branch name from .ana/ana.json. Exits the process with
@@ -45,7 +81,16 @@ export function readArtifactBranch(projectRoot?: string): string {
     process.exit(1);
   }
 
-  return config['artifactBranch'] as string;
+  const branch = config['artifactBranch'] as string;
+
+  try {
+    validateBranchName(branch);
+  } catch {
+    console.error(chalk.red('Error: Invalid artifactBranch in ana.json: contains invalid characters.'));
+    process.exit(1);
+  }
+
+  return branch;
 }
 
 /**
@@ -76,6 +121,12 @@ export function readBranchPrefix(projectRoot?: string): string {
 
   const prefix = config['branchPrefix'];
   if (typeof prefix !== 'string') {
+    return 'feature/';
+  }
+
+  try {
+    validateBranchName(prefix);
+  } catch {
     return 'feature/';
   }
 
@@ -113,7 +164,10 @@ export function readCoAuthor(projectRoot?: string): string {
     return 'Ana <build@anatomia.dev>';
   }
 
-  return coAuthor;
+  // Strip newlines and control characters — co-author comes from user config,
+  // not an attack vector, so strip silently rather than reject.
+  // eslint-disable-next-line no-control-regex
+  return coAuthor.replace(/[\x00-\x1f\x7f]/g, '');
 }
 
 /**
@@ -122,9 +176,6 @@ export function readCoAuthor(projectRoot?: string): string {
  * @returns Current branch name, or null on failure
  */
 export function getCurrentBranch(): string | null {
-  try {
-    return execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf-8', stdio: 'pipe' }).trim();
-  } catch {
-    return null;
-  }
+  const result = runGit(['rev-parse', '--abbrev-ref', 'HEAD']);
+  return result.exitCode === 0 ? result.stdout : null;
 }
