@@ -72,8 +72,8 @@
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@typescript-eslint/eslint-plugin": "^8.57.1",
-    "@typescript-eslint/parser": "^8.57.1",
-    "eslint": "^10.1.0",
+    "@typescript-eslint/parser": "^8.59.1",
+    "eslint": "^10.3.0",
     "eslint-plugin-jsdoc": "^62.8.0",
     "tsup": "^8.0.0",
     "tsx": "^4.21.0",
