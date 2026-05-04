@@ -1,8 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fs from 'node:fs/promises';
+import * as fsSync from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
-import { readArtifactBranch, readBranchPrefix, readCoAuthor } from '../../src/utils/git-operations.js';
+import { readArtifactBranch, readBranchPrefix, readCoAuthor, runGit } from '../../src/utils/git-operations.js';
+import { spawnSync } from 'node:child_process';
 import { AnaJsonSchema } from '../../src/commands/init/anaJsonSchema.js';
 
 /**
@@ -296,5 +298,82 @@ describe('AnaJsonSchema branchPrefix', () => {
     const parsed = AnaJsonSchema.parse(input);
     expect(parsed.branchPrefix).toBe('release/');
     expect((parsed as Record<string, unknown>)['unknownField']).toBeUndefined();
+  });
+});
+
+describe('runGit', () => {
+  let tempDir: string;
+
+  beforeEach(async () => {
+    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'rungit-test-'));
+    // Initialize a git repo
+    spawnSync('git', ['init'], { cwd: tempDir, stdio: 'pipe' });
+    spawnSync('git', ['config', 'user.email', 'test@test.com'], { cwd: tempDir, stdio: 'pipe' });
+    spawnSync('git', ['config', 'user.name', 'Test'], { cwd: tempDir, stdio: 'pipe' });
+  });
+
+  afterEach(async () => {
+    await fs.rm(tempDir, { recursive: true, force: true });
+  });
+
+  // @ana A020
+  it('captures stdout from successful command', () => {
+    const result = runGit(['rev-parse', '--is-inside-work-tree'], { cwd: tempDir });
+    expect(result.stdout).toContain('true');
+    expect(result.exitCode).toBe(0);
+  });
+
+  // @ana A021
+  it('returns non-zero exitCode on failure', () => {
+    const result = runGit(['log', '--oneline', '-1'], { cwd: tempDir });
+    // Empty repo has no commits — git log fails
+    expect(result.exitCode).not.toBe(0);
+  });
+
+  // @ana A022
+  it('works with cwd option', async () => {
+    // Create a subdirectory that is NOT a git repo
+    const subDir = path.join(tempDir, 'sub');
+    await fs.mkdir(subDir);
+    // Running in the git repo's root should succeed
+    const result = runGit(['status', '--porcelain'], { cwd: tempDir });
+    expect(result.exitCode).toBe(0);
+  });
+
+  it('returns empty stdout for commands with no output', () => {
+    const result = runGit(['branch', '--list', 'nonexistent-branch-xyz'], { cwd: tempDir });
+    expect(result.stdout).toBe('');
+    expect(result.exitCode).toBe(0);
+  });
+
+  it('captures stderr on error', () => {
+    const result = runGit(['checkout', 'nonexistent-branch-xyz'], { cwd: tempDir });
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr.length).toBeGreaterThan(0);
+  });
+});
+
+// @ana A023
+describe('execSync enforcement', () => {
+  it('zero execSync in commands and utils', () => {
+    const thisDir = path.dirname(new URL(import.meta.url).pathname);
+    const cliSrc = path.resolve(thisDir, '../../src');
+    // Grep for execSync usage (imports or calls)
+    const result = spawnSync('grep', ['-r', '--include=*.ts', '-l', 'execSync', `${cliSrc}/commands/`, `${cliSrc}/utils/`], {
+      encoding: 'utf-8',
+      stdio: 'pipe',
+    });
+    const files = (result.stdout ?? '').trim().split('\n').filter(Boolean);
+    // Filter out files that only mention execSync in comments/JSDoc
+    const actualUsage = files.filter(file => {
+      const content = fsSync.readFileSync(file, 'utf-8');
+      const lines = content.split('\n');
+      return lines.some((line: string) => {
+        const trimmed = line.trim();
+        if (trimmed.startsWith('//') || trimmed.startsWith('*') || trimmed.startsWith('/*')) return false;
+        return trimmed.includes('execSync');
+      });
+    });
+    expect(actualUsage).toEqual([]);
   });
 });
