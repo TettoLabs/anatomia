@@ -38,5 +38,18 @@
     "packages/cli/tests/utils/findProjectRoot.test.ts",
     "packages/cli/tests/utils/git-operations.test.ts",
     "packages/cli/tests/utils/validators.test.ts"
-  ]
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:b9e52761c704d63c7b994a80f9d8f93ea891f6d1ed3b47d0eeda621586017969",
+    "run_at": "2026-05-04T21:37:41.429Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-04T21:37:41.479Z",
+    "hash": "sha256:dfd3782e6a65f4a9a61d5a1f6895464175b59b69622df5711709c1429cad25a1"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-04T21:37:41.479Z",
+    "hash": "sha256:777bf44592e5c231004bd806f9a58b0fbc5d286680cf21d38ac3f7f762e5f82e"
+  }
 }
