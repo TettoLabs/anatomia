@@ -3,7 +3,7 @@
   "applicationShape": "cli",
   "overview": {
     "project": "anatomia-workspace",
-    "scannedAt": "2026-04-19T22:24:28.005Z",
+    "scannedAt": "2026-05-04T22:12:48.293Z",
     "depth": "deep"
   },
   "stack": {
@@ -40,10 +40,10 @@
     "vitest": "^2.0.0"
   },
   "files": {
-    "source": 125,
-    "test": 94,
-    "config": 17,
-    "total": 236
+    "source": 127,
+    "test": 97,
+    "config": 18,
+    "total": 242
   },
   "structure": [
     {
@@ -70,21 +70,31 @@
       "test": "turbo run test",
       "lint": "turbo run lint",
       "clean": "turbo run clean && rm -rf node_modules .turbo",
+      "release": "cd packages/cli && npm version",
       "prepare": "husky"
     },
     "packageManager": "pnpm"
   },
   "git": {
-    "head": "fe315f0",
-    "branch": "s24-p1-foundation",
-    "commitCount": 693,
-    "lastCommitAt": "2026-04-19T15:23:30-07:00",
-    "uncommittedChanges": true,
-    "contributorCount": 2,
+    "head": "7ff2987",
+    "branch": "main",
+    "commitCount": 1259,
+    "lastCommitAt": "2026-05-04T16:12:26-06:00",
+    "uncommittedChanges": false,
+    "contributorCount": 3,
     "defaultBranch": "main",
     "branches": [
       "SideSprint/setup-redesign",
       "archive/test-ana-feature-work",
+      "dependabot/github_actions/actions/checkout-6",
+      "dependabot/github_actions/actions/setup-node-6",
+      "dependabot/github_actions/codecov/codecov-action-6",
+      "dependabot/github_actions/pnpm/action-setup-6",
+      "dependabot/npm_and_yarn/packages/cli/commander-14.0.3",
+      "dependabot/npm_and_yarn/packages/cli/eslint-10.3.0",
+      "dependabot/npm_and_yarn/packages/cli/types/node-25.6.0",
+      "dependabot/npm_and_yarn/packages/cli/typescript-eslint/parser-8.59.1",
+      "dependabot/npm_and_yarn/packages/cli/vitest-4.1.5",
       "effort/STEP_0_1_FOUNDATION",
       "effort/STEP_0_2_TEMPLATES",
       "effort/STEP_0_3_CONTENT",
@@ -99,6 +109,8 @@
       "effort/STEP_2_5_CLI_CODE",
       "feature/fix-skill-template-gaps",
       "feature/monorepo-primary-agents-md",
+      "feature/proof-chain-health-signal",
+      "feature/proof-context-query",
       "feature/s10-engine",
       "feature/s11-init-reset",
       "feature/s12-prove-it",
@@ -142,6 +154,25 @@
       "s23-proof-quality",
       "s23/mona-lisa",
       "s24-p1-foundation",
+      "s24-p2-design-principles",
+      "s24-p2-enhanced-review",
+      "s24-p2-gap-fills",
+      "s24-p2-persistent-fixes",
+      "s24-p2-preprod-detection",
+      "s24-p2-run2-fixes",
+      "s24-p2-scan-improvements",
+      "s24-p2-setup-agent",
+      "s24-p2-skill-enrichment",
+      "s24-p2-skill-gate",
+      "s24-p2-template-protections",
+      "s24-p2-template-revision",
+      "s24-p2-testing-fixes",
+      "s24-p2-wave2",
+      "s24-p2-wave3",
+      "s25-m1-dogfood-fixes",
+      "s25-multi-spec-fixes",
+      "s25-prework",
+      "s25-proof-prework",
       "ux/copy-update",
       "ux/fix-copy"
     ],
@@ -154,8 +185,9 @@
       "prefixes": {
         "SideSprint/": 1,
         "archive/": 1,
+        "dependabot/": 9,
         "effort/": 12,
-        "feature/": 8,
+        "feature/": 9,
         "s13/": 1,
         "s14/": 1,
         "s15/": 1,
@@ -180,6 +212,58 @@
     "coAuthor": {
       "detected": true,
       "pattern": "Ana <build@anatomia.dev>"
+    },
+    "recentActivity": {
+      "windowDays": 14,
+      "highChurnFiles": [
+        {
+          "path": "packages/cli/src/commands/work.ts",
+          "commits": 34
+        },
+        {
+          "path": "packages/cli/src/utils/proofSummary.ts",
+          "commits": 30
+        },
+        {
+          "path": "packages/cli/tests/utils/proofSummary.test.ts",
+          "commits": 25
+        },
+        {
+          "path": "packages/cli/tests/commands/work.test.ts",
+          "commits": 24
+        },
+        {
+          "path": "packages/cli/src/commands/proof.ts",
+          "commits": 21
+        },
+        {
+          "path": "packages/cli/src/commands/artifact.ts",
+          "commits": 18
+        },
+        {
+          "path": "packages/cli/tests/commands/proof.test.ts",
+          "commits": 17
+        },
+        {
+          "path": "packages/cli/src/types/proof.ts",
+          "commits": 13
+        },
+        {
+          "path": "packages/cli/tests/commands/artifact.test.ts",
+          "commits": 11
+        },
+        {
+          "path": "packages/cli/src/commands/pr.ts",
+          "commits": 7
+        }
+      ],
+      "activeContributors": 2,
+      "weeklyCommits": [
+        386,
+        173,
+        120,
+        207
+      ]
     }
   },
   "monorepo": {
@@ -236,7 +320,11 @@
   "deployment": {
     "platform": null,
     "configFile": null,
-    "ci": "GitHub Actions"
+    "ci": "GitHub Actions",
+    "ciWorkflowFiles": [
+      "release.yml",
+      "test.yml"
+    ]
   },
   "patterns": {
     "errorHandling": {
@@ -266,7 +354,7 @@
         "vitest imports found"
       ]
     },
-    "sampledFiles": 127,
+    "sampledFiles": 129,
     "detectionTime": 1,
     "threshold": 0.7
   },
@@ -281,17 +369,17 @@
           "PascalCase": 0.26666666666666666,
           "kebab-case": 0.3333333333333333
         },
-        "sampleSize": 127
+        "sampleSize": 129
       },
       "functions": {
         "majority": "camelCase",
-        "confidence": 0.9528795811518325,
+        "confidence": 0.9569377990430622,
         "mixed": false,
         "distribution": {
-          "camelCase": 0.9655172413793104,
-          "PascalCase": 0.034482758620689655
+          "camelCase": 0.9685230024213075,
+          "PascalCase": 0.031476997578692496
         },
-        "sampleSize": 393
+        "sampleSize": 429
       },
       "classes": {
         "majority": "PascalCase",
@@ -304,31 +392,31 @@
       },
       "variables": {
         "majority": "camelCase",
-        "confidence": 0.9010736196319018,
+        "confidence": 0.906508875739645,
         "mixed": false,
         "distribution": {
-          "camelCase": 0.9045419553502695,
-          "PascalCase": 0.023094688221709007,
-          "SCREAMING_SNAKE_CASE": 0.07236335642802155
+          "camelCase": 0.9091988130563798,
+          "PascalCase": 0.017804154302670624,
+          "SCREAMING_SNAKE_CASE": 0.07299703264094956
         },
-        "sampleSize": 2215
+        "sampleSize": 2804
       },
       "constants": {
         "majority": "SCREAMING_SNAKE_CASE",
-        "confidence": 0.9494949494949495,
+        "confidence": 0.9609375,
         "mixed": false,
         "distribution": {
           "SCREAMING_SNAKE_CASE": 1
         },
-        "sampleSize": 94
+        "sampleSize": 123
       }
     },
     "imports": {
       "style": "relative",
-      "confidence": 0.9721115537848606,
+      "confidence": 0.9730769230769231,
       "distribution": {
-        "absolute": 0.027888446215139442,
-        "relative": 0.9721115537848606
+        "absolute": 0.026923076923076925,
+        "relative": 0.9730769230769231
       },
       "aliasPattern": "@/"
     },
@@ -339,9 +427,9 @@
     },
     "codePatterns": {
       "jsExtensionImports": {
-        "count": 74,
-        "total": 76,
-        "ratio": 0.9736842105263158
+        "count": 77,
+        "total": 79,
+        "ratio": 0.9746835443037974
       },
       "nodePrefix": {
         "count": 41,
@@ -350,27 +438,93 @@
       },
       "emptyCatches": {
         "empty": 0,
-        "commented": 49,
-        "total": 111
+        "commented": 52,
+        "total": 128
       },
       "defaultExports": {
         "count": 3,
         "totalFiles": 30
       },
       "nullStyle": {
-        "nullCount": 53,
-        "optionalCount": 77,
+        "nullCount": 131,
+        "optionalCount": 217,
         "preference": "mixed"
       }
     },
-    "sampledFiles": 127,
-    "detectionTime": 168
+    "sampledFiles": 129,
+    "detectionTime": 705
   },
   "readme": {
-    "description": "Verified AI development. Ship with proof.",
+    "description": "Anatomia is the engineering judgment your AI doesn't have. Four agents scope, plan, build, and verify every change. Contracts are sealed before code is written — typed assertions the verifier checks against the code, not Build's account of what it did. Every run produces a proof chain entry — what was asserted, what was found, what shipped. A fifth agent learns from that record and promotes what it finds to rules that shape future builds. Not opinion. Mechanical proof.",
     "architecture": null,
-    "setup": null,
-    "source": "fallback"
+    "setup": "```bash\nnpm install -g anatomia-cli\n```\n\nRequires Node.js 20+.",
+    "source": "pre-section"
+  },
+  "documentation": {
+    "files": [
+      {
+        "path": "README.md",
+        "category": "project-docs",
+        "sizeBytes": 9003,
+        "lastModifiedDays": 0
+      },
+      {
+        "path": "CONTRIBUTING.md",
+        "category": "guides",
+        "sizeBytes": 418,
+        "lastModifiedDays": 23
+      },
+      {
+        "path": "SECURITY.md",
+        "category": "guides",
+        "sizeBytes": 1016,
+        "lastModifiedDays": 1
+      },
+      {
+        "path": "CODE_OF_CONDUCT.md",
+        "category": "guides",
+        "sizeBytes": 5477,
+        "lastModifiedDays": 1
+      },
+      {
+        "path": "CHANGELOG.md",
+        "category": "changelog",
+        "sizeBytes": 2517,
+        "lastModifiedDays": 1
+      },
+      {
+        "path": ".github/PULL_REQUEST_TEMPLATE.md",
+        "category": "templates",
+        "sizeBytes": 244,
+        "lastModifiedDays": 1
+      },
+      {
+        "path": ".github/ISSUE_TEMPLATE",
+        "category": "templates",
+        "sizeBytes": 0,
+        "lastModifiedDays": 1
+      },
+      {
+        "path": "packages/cli/ARCHITECTURE.md",
+        "category": "guides",
+        "sizeBytes": 15031,
+        "lastModifiedDays": 1
+      },
+      {
+        "path": "packages/cli/CONTRIBUTING.md",
+        "category": "guides",
+        "sizeBytes": 19242,
+        "lastModifiedDays": 1
+      },
+      {
+        "path": "website/README.md",
+        "category": "project-docs",
+        "sizeBytes": 1450,
+        "lastModifiedDays": 104
+      }
+    ],
+    "docsDirectory": null,
+    "landingPage": null
   },
   "secretFindings": null,
   "envVarMap": null,
