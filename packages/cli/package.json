@@ -47,7 +47,7 @@
     "typecheck:tests": "tsc --noEmit -p tsconfig.test.json",
     "lint": "eslint src/ tests/",
     "lint:fix": "eslint src/ tests/ --fix",
-    "prepublishOnly": "cp ../../README.md ./README.md && cp ../../CHANGELOG.md ./CHANGELOG.md && pnpm build && pnpm test"
+    "prepublishOnly": "cp ../../README.md ./README.md && cp ../../CHANGELOG.md ./CHANGELOG.md && pnpm build && pnpm vitest run"
   },
   "dependencies": {
     "@manypkg/get-packages": "^3.1.0",
