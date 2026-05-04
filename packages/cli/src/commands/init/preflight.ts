@@ -23,7 +23,7 @@
 import chalk from 'chalk';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import { execSync } from 'node:child_process';
+import { runGit } from '../../utils/git-operations.js';
 import type { InitCommandOptions, InitState, PreflightResult } from './types.js';
 import { confirm, getCliVersion } from './state.js';
 
@@ -223,12 +223,8 @@ export async function validateInitPreconditions(
  * @returns true if HEAD exists (has commits)
  */
 function gitHasCommits(cwd: string): boolean {
-  try {
-    execSync('git rev-parse --verify HEAD', { cwd, stdio: 'pipe' });
-    return true;
-  } catch {
-    return false;
-  }
+  const result = runGit(['rev-parse', '--verify', 'HEAD'], { cwd });
+  return result.exitCode === 0;
 }
 
 /**
@@ -237,12 +233,8 @@ function gitHasCommits(cwd: string): boolean {
  * @returns true if at least one remote exists
  */
 function gitHasRemote(cwd: string): boolean {
-  try {
-    const output = execSync('git remote', { cwd, stdio: 'pipe', encoding: 'utf-8' });
-    return output.trim().length > 0;
-  } catch {
-    return false;
-  }
+  const result = runGit(['remote'], { cwd });
+  return result.exitCode === 0 && result.stdout.length > 0;
 }
 
 /**
