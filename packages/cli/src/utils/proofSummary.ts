@@ -364,7 +364,7 @@ export function resolveFindingPaths(
         globMatches = globSync('**/' + basename, {
           cwd: projectRoot,
           ignore: ['**/node_modules/**', '**/.ana/**'],
-        });
+        }).map(p => p.replace(/\\/g, '/'));
         globCache.set(basename, globMatches);
       }
       if (globMatches.length === 1) {

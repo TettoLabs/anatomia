@@ -282,11 +282,12 @@ export async function findEntryPoints(
     if (pattern.includes('*')) {
       // Use glob for patterns like 'cmd/*/main.go'
       try {
-        const matches = await glob(pattern, {
+        const rawMatches = await glob(pattern, {
           cwd: rootPath,
           absolute: false,
           nodir: true,
         });
+        const matches = rawMatches.map(p => p.replace(/\\/g, '/'));
 
         if (matches.length > 0) {
           // Found one or more matches

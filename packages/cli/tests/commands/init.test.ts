@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import * as os from 'node:os';
+import { fileURLToPath } from 'node:url';
 import { createEmptyEngineResult } from '../../src/engine/types/engineResult.js';
 import { fileExists } from '../../src/commands/init/preflight.js';
 import { AGENT_FILES } from '../../src/constants.js';
@@ -442,6 +443,5 @@ describe('ana init', () => {
   });
 });
 
-function fileURLToPath(url: string): string {
-  return new URL(url).pathname;
-}
+// Uses Node.js built-in fileURLToPath from 'node:url' (imported at top)
+// to correctly handle Windows drive letter paths.

@@ -153,7 +153,7 @@ function captureModulesTouched(projectRoot: string, slugDir: string): void {
     }
 
     const diffOutput = execSync(
-      `git diff ${mergeBase} --name-only -- . ':!.ana'`,
+      `git diff ${mergeBase} --name-only -- . ":(exclude).ana"`,
       { encoding: 'utf-8', cwd: projectRoot, stdio: ['pipe', 'pipe', 'pipe'] }
     ).trim();
     const modulesList = diffOutput ? diffOutput.split('\n').filter(Boolean) : [];

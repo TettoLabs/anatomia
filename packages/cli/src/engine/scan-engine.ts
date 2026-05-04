@@ -17,6 +17,9 @@ import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { glob } from 'glob';
+
+/** Normalize a path to forward slashes for cross-platform consistency. */
+const toPosix = (p: string): string => p.replace(/\\/g, '/');
 import type { EngineResult } from './types/engineResult.js';
 import { getPatternLibrary } from './types/patterns.js';
 import { detectFromDeps, detectServiceDeps, detectAiSdk, TESTING_PACKAGES } from './detectors/dependencies.js';
@@ -282,13 +285,13 @@ async function detectSchemas(
       const censusPrisma = censusSchemas.filter(s => s.orm === 'prisma').map(s => s.path);
       let matches = censusPrisma.length > 0
         ? censusPrisma
-        : await glob('**/schema.prisma', SCHEMA_GLOB_OPTS);
+        : (await glob('**/schema.prisma', SCHEMA_GLOB_OPTS)).map(toPosix);
       // Second fallback: if no schema.prisma found anywhere, try multi-file
       // layouts where .prisma files live in prisma/ directories without an anchor.
       if (matches.length === 0) {
-        const prismaGlob = await glob('**/prisma/*.prisma', SCHEMA_GLOB_OPTS);
+        const prismaGlob = (await glob('**/prisma/*.prisma', SCHEMA_GLOB_OPTS)).map(toPosix);
         // Deduplicate by directory — one entry per unique prisma/ directory
-        const dirs = new Set(prismaGlob.map(f => path.dirname(f as string) + '/'));
+        const dirs = new Set(prismaGlob.map(f => toPosix(path.dirname(f as string)) + '/'));
         matches = [...dirs];
       }
       if (matches.length > 0) {
@@ -385,7 +388,7 @@ async function detectSchemas(
               const stat = await fs.stat(absPath);
               if (stat.isDirectory()) {
                 // Directory: find all .ts files inside
-                const dirFiles = await glob(`${p}/**/*.ts`, SCHEMA_GLOB_OPTS);
+                const dirFiles = (await glob(`${p}/**/*.ts`, SCHEMA_GLOB_OPTS)).map(toPosix);
                 matches.push(...dirFiles);
               } else {
                 matches.push(p);
@@ -395,7 +398,7 @@ async function detectSchemas(
             }
           } else {
             // Path doesn't exist as-is — try as glob pattern
-            const globbed = await glob(`${p}*.ts`, SCHEMA_GLOB_OPTS);
+            const globbed = (await glob(`${p}*.ts`, SCHEMA_GLOB_OPTS)).map(toPosix);
             matches.push(...globbed);
           }
         }
@@ -406,7 +409,7 @@ async function detectSchemas(
         const globPatterns = ['**/schema.ts', '**/schema/*.ts', '**/db/schema*.ts'];
         const rawMatches: string[] = [];
         for (const pattern of globPatterns) {
-          const found = await glob(pattern, SCHEMA_GLOB_OPTS);
+          const found = (await glob(pattern, SCHEMA_GLOB_OPTS)).map(toPosix);
           rawMatches.push(...found);
         }
         // Deduplicate
@@ -489,7 +492,7 @@ async function detectSchemas(
         // this surfaces as e.g. `apps/api/supabase/migrations/` instead of the
         // legacy hard-coded `supabase/migrations/` root.
         const firstPath = migrationFiles[0] ?? schemaFiles[0] ?? null;
-        const schemaDir = firstPath ? `${path.dirname(firstPath)}/` : null;
+        const schemaDir = firstPath ? `${toPosix(path.dirname(firstPath))}/` : null;
         schemas['supabase'] = { found: true, path: schemaDir, modelCount };
       } else {
         schemas['supabase'] = { found: false, path: null, modelCount: null };

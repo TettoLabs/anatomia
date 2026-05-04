@@ -10,6 +10,9 @@
 import * as path from 'node:path';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { getPackages } from '@manypkg/get-packages';
+
+/** Normalize a relative path to forward slashes (posix style) for cross-platform consistency. */
+const toPosix = (p: string): string => p.replace(/\\/g, '/');
 import { getTsconfig } from 'get-tsconfig';
 import type {
   ProjectCensus,
@@ -142,7 +145,7 @@ function discoverFrameworkHints(
           hints.push({
             framework,
             sourceRootPath: root.relativePath,
-            path: path.relative(rootPath, full),
+            path: toPosix(path.relative(rootPath, full)),
           });
         } catch {
           // Skip inaccessible entries
@@ -178,7 +181,7 @@ function discoverTsconfigs(
       }
       entries.push({
         sourceRootPath: root.relativePath,
-        path: path.relative(rootPath, tsconfigPath),
+        path: toPosix(path.relative(rootPath, tsconfigPath)),
         paths,
         baseUrl,
       });
@@ -204,7 +207,7 @@ function discoverSchemas(
         entries.push({
           orm: 'prisma',
           sourceRootPath: root.relativePath,
-          path: path.relative(rootPath, prismaPath),
+          path: toPosix(path.relative(rootPath, prismaPath)),
         });
         foundPrismaFile = true;
       }
@@ -222,7 +225,7 @@ function discoverSchemas(
             entries.push({
               orm: 'prisma',
               sourceRootPath: root.relativePath,
-              path: path.relative(rootPath, prismaDir) + '/',
+              path: toPosix(path.relative(rootPath, prismaDir)) + '/',
             });
           }
         } catch {
@@ -258,7 +261,7 @@ function discoverSchemas(
             entries.push({
               orm: 'drizzle',
               sourceRootPath: root.relativePath,
-              path: path.relative(rootPath, absoluteSchemaPath),
+              path: toPosix(path.relative(rootPath, absoluteSchemaPath)),
             });
           }
           // Dialect extraction moved to scan-engine — it reads the config
@@ -286,7 +289,7 @@ function discoverDeployments(
         entries.push({
           platform,
           sourceRootPath: root.relativePath,
-          path: path.relative(rootPath, full),
+          path: toPosix(path.relative(rootPath, full)),
         });
       }
     }
@@ -373,7 +376,7 @@ export async function buildCensus(rootPath: string): Promise<ProjectCensus> {
   } else {
     sourceRoots = result.packages.map(pkg => {
       const abs = pkg.dir;
-      const rel = path.relative(normalizedRoot, abs);
+      const rel = toPosix(path.relative(normalizedRoot, abs));
       return {
         absolutePath: abs,
         relativePath: rel,
