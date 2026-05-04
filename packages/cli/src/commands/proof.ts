@@ -21,13 +21,13 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import * as path from 'node:path';
 import * as fs from 'node:fs';
-import { execSync, spawnSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { globSync } from 'glob';
 import type { ProofChainEntry, ProofChain } from '../types/proof.js';
 import { findProjectRoot, validateSkillName } from '../utils/validators.js';
 import { getProofContext, wrapJsonResponse, wrapJsonError, generateDashboard, computeChainHealth, computeHealthReport, computeStaleness, MIN_ENTRIES_FOR_TREND } from '../utils/proofSummary.js';
 import type { ProofContextResult } from '../utils/proofSummary.js';
-import { readArtifactBranch, getCurrentBranch, readCoAuthor } from '../utils/git-operations.js';
+import { readArtifactBranch, getCurrentBranch, readCoAuthor, runGit } from '../utils/git-operations.js';
 
 /**
  * Box-drawing characters for terminal output
@@ -621,18 +621,19 @@ export function registerProofCommand(program: Command): void {
         }
 
         // Pull before reading chain
-        try {
-          const remotes = execSync('git remote', { stdio: 'pipe', encoding: 'utf-8', cwd: proofRoot }).trim();
+        {
+          const remotes = runGit(['remote'], { cwd: proofRoot }).stdout;
           if (remotes) {
-            execSync('git pull --rebase', { stdio: 'pipe', encoding: 'utf-8', cwd: proofRoot });
+            const pullResult = runGit(['pull', '--rebase'], { cwd: proofRoot });
+            if (pullResult.exitCode !== 0) {
+              const errorMessage = pullResult.stderr;
+              if (errorMessage.includes('conflict') || errorMessage.includes('Cannot rebase')) {
+                console.error(chalk.red('Error: Pull failed due to conflicts. Resolve conflicts and try again.'));
+                process.exit(1);
+              }
+              console.error(chalk.yellow('⚠ Warning: Pull failed (network error). Continuing with local data.'));
+            }
           }
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : '';
-          if (errorMessage.includes('conflict') || errorMessage.includes('Cannot rebase')) {
-            console.error(chalk.red('Error: Pull failed due to conflicts. Resolve conflicts and try again.'));
-            process.exit(1);
-          }
-          console.error(chalk.yellow('⚠ Warning: Pull failed (network error). Continuing with local data.'));
         }
       }
 
@@ -775,7 +776,7 @@ export function registerProofCommand(program: Command): void {
       // Git: stage, commit, push — one commit for the batch
       const coAuthor = readCoAuthor(proofRoot);
       try {
-        execSync('git add .ana/proof_chain.json .ana/PROOF_CHAIN.md', { stdio: 'pipe', cwd: proofRoot });
+        runGit(['add', '.ana/proof_chain.json', '.ana/PROOF_CHAIN.md'], { cwd: proofRoot });
         const idList = closed.length <= 3
           ? closed.map(c => c.id).join(', ')
           : `${closed.slice(0, 2).map(c => c.id).join(', ')}, ... (${closed.length} total)`;
@@ -787,9 +788,8 @@ export function registerProofCommand(program: Command): void {
         process.exit(1);
       }
 
-      try {
-        execSync('git push', { stdio: 'pipe', cwd: proofRoot });
-      } catch {
+      const closePushResult = runGit(['push'], { cwd: proofRoot });
+      if (closePushResult.exitCode !== 0) {
         console.error(chalk.yellow('Warning: Push failed. Changes committed locally. Run `git push` manually.'));
       }
 
@@ -939,18 +939,19 @@ export function registerProofCommand(program: Command): void {
       }
 
       // Pull before reading chain
-      try {
-        const remotes = execSync('git remote', { stdio: 'pipe', encoding: 'utf-8', cwd: proofRoot }).trim();
+      {
+        const remotes = runGit(['remote'], { cwd: proofRoot }).stdout;
         if (remotes) {
-          execSync('git pull --rebase', { stdio: 'pipe', encoding: 'utf-8', cwd: proofRoot });
+          const pullResult = runGit(['pull', '--rebase'], { cwd: proofRoot });
+          if (pullResult.exitCode !== 0) {
+            const errorMessage = pullResult.stderr;
+            if (errorMessage.includes('conflict') || errorMessage.includes('Cannot rebase')) {
+              console.error(chalk.red('Error: Pull failed due to conflicts. Resolve conflicts and try again.'));
+              process.exit(1);
+            }
+            console.error(chalk.yellow('⚠ Warning: Pull failed (network error). Continuing with local data.'));
+          }
         }
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : '';
-        if (errorMessage.includes('conflict') || errorMessage.includes('Cannot rebase')) {
-          console.error(chalk.red('Error: Pull failed due to conflicts. Resolve conflicts and try again.'));
-          process.exit(1);
-        }
-        console.error(chalk.yellow('⚠ Warning: Pull failed (network error). Continuing with local data.'));
       }
 
       // Read chain
@@ -1130,7 +1131,7 @@ export function registerProofCommand(program: Command): void {
       // Git: stage, commit, push — one commit for the batch
       const coAuthor = readCoAuthor(proofRoot);
       try {
-        execSync(`git add .ana/proof_chain.json .ana/PROOF_CHAIN.md ${skillRelPath}`, { stdio: 'pipe', cwd: proofRoot });
+        runGit(['add', '.ana/proof_chain.json', '.ana/PROOF_CHAIN.md', skillRelPath], { cwd: proofRoot });
         const idList = promoted.length <= 3
           ? promoted.map(p => p.id).join(', ')
           : `${promoted.slice(0, 2).map(p => p.id).join(', ')}, ... (${promoted.length} total)`;
@@ -1142,9 +1143,8 @@ export function registerProofCommand(program: Command): void {
         process.exit(1);
       }
 
-      try {
-        execSync('git push', { stdio: 'pipe', cwd: proofRoot });
-      } catch {
+      const promotePushResult = runGit(['push'], { cwd: proofRoot });
+      if (promotePushResult.exitCode !== 0) {
         console.error(chalk.yellow('Warning: Push failed. Changes committed locally. Run `git push` manually.'));
       }
 
@@ -1317,8 +1317,8 @@ export function registerProofCommand(program: Command): void {
       // Check both unstaged and staged changes
       let hasUncommittedChanges = false;
       try {
-        const unstaged = execSync(`git diff --name-only -- ${skillRelPath}`, { stdio: 'pipe', encoding: 'utf-8', cwd: proofRoot }).trim();
-        const staged = execSync(`git diff --name-only --cached -- ${skillRelPath}`, { stdio: 'pipe', encoding: 'utf-8', cwd: proofRoot }).trim();
+        const unstaged = runGit(['diff', '--name-only', '--', skillRelPath], { cwd: proofRoot }).stdout;
+        const staged = runGit(['diff', '--name-only', '--cached', '--', skillRelPath], { cwd: proofRoot }).stdout;
         hasUncommittedChanges = unstaged.length > 0 || staged.length > 0;
       } catch {
         // git diff failed — treat as no changes
@@ -1330,18 +1330,19 @@ export function registerProofCommand(program: Command): void {
       }
 
       // Pull before reading chain
-      try {
-        const remotes = execSync('git remote', { stdio: 'pipe', encoding: 'utf-8', cwd: proofRoot }).trim();
+      {
+        const remotes = runGit(['remote'], { cwd: proofRoot }).stdout;
         if (remotes) {
-          execSync('git pull --rebase', { stdio: 'pipe', encoding: 'utf-8', cwd: proofRoot });
+          const pullResult = runGit(['pull', '--rebase'], { cwd: proofRoot });
+          if (pullResult.exitCode !== 0) {
+            const errorMessage = pullResult.stderr;
+            if (errorMessage.includes('conflict') || errorMessage.includes('Cannot rebase')) {
+              console.error(chalk.red('Error: Pull failed due to conflicts. Resolve conflicts and try again.'));
+              process.exit(1);
+            }
+            console.error(chalk.yellow('⚠ Warning: Pull failed (network error). Continuing with local data.'));
+          }
         }
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : '';
-        if (errorMessage.includes('conflict') || errorMessage.includes('Cannot rebase')) {
-          console.error(chalk.red('Error: Pull failed due to conflicts. Resolve conflicts and try again.'));
-          process.exit(1);
-        }
-        console.error(chalk.yellow('⚠ Warning: Pull failed (network error). Continuing with local data.'));
       }
 
       // Read chain
@@ -1461,7 +1462,7 @@ export function registerProofCommand(program: Command): void {
       // Git: stage skill file + proof chain files, commit, push — one commit for the batch
       const coAuthor = readCoAuthor(proofRoot);
       try {
-        execSync(`git add ${skillRelPath} .ana/proof_chain.json .ana/PROOF_CHAIN.md`, { stdio: 'pipe', cwd: proofRoot });
+        runGit(['add', skillRelPath, '.ana/proof_chain.json', '.ana/PROOF_CHAIN.md'], { cwd: proofRoot });
         const commitMessage = `[learn] Strengthen ${skillName}: ${options.reason}\n\nCo-authored-by: ${coAuthor}`;
         const commitResult = spawnSync('git', ['commit', '-m', commitMessage], { stdio: 'pipe', cwd: proofRoot });
         if (commitResult.status !== 0) throw new Error(commitResult.stderr?.toString() || 'Commit failed');
@@ -1470,9 +1471,8 @@ export function registerProofCommand(program: Command): void {
         process.exit(1);
       }
 
-      try {
-        execSync('git push', { stdio: 'pipe', cwd: proofRoot });
-      } catch {
+      const strengthenPushResult = runGit(['push'], { cwd: proofRoot });
+      if (strengthenPushResult.exitCode !== 0) {
         console.error(chalk.yellow('Warning: Push failed. Changes committed locally. Run `git push` manually.'));
       }
 

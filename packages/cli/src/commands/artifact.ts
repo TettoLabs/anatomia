@@ -14,7 +14,7 @@
 
 import { Command } from 'commander';
 import chalk from 'chalk';
-import { execSync, spawnSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { createHash } from 'node:crypto';
@@ -24,7 +24,7 @@ import { findProjectRoot, validateSlug } from '../utils/validators.js';
 // readArtifactBranch + getCurrentBranch moved to utils/git-operations.ts (Item 13).
 // artifact.ts still uses them internally; pr.ts and work.ts now import directly
 // from utils/ instead of cross-command-importing from here.
-import { readArtifactBranch, readBranchPrefix, getCurrentBranch, readCoAuthor } from '../utils/git-operations.js';
+import { readArtifactBranch, readBranchPrefix, getCurrentBranch, readCoAuthor, runGit } from '../utils/git-operations.js';
 import type { ContractSchema } from '../types/contract.js';
 
 /**
@@ -144,18 +144,15 @@ function captureModulesTouched(projectRoot: string, slugDir: string): void {
     // Inner try: merge-base failure is expected on first commit or no remote
     let mergeBase: string;
     try {
-      mergeBase = execSync(
-        `git merge-base ${artBranch} HEAD`,
-        { encoding: 'utf-8', cwd: projectRoot, stdio: ['pipe', 'pipe', 'pipe'] }
-      ).trim();
+      const mbResult = runGit(['merge-base', artBranch, 'HEAD'], { cwd: projectRoot });
+      if (mbResult.exitCode !== 0) return; // Expected on new repos — silently skip
+      mergeBase = mbResult.stdout;
     } catch {
       return; // Expected on new repos — silently skip
     }
 
-    const diffOutput = execSync(
-      `git diff ${mergeBase} --name-only -- . ":(exclude).ana"`,
-      { encoding: 'utf-8', cwd: projectRoot, stdio: ['pipe', 'pipe', 'pipe'] }
-    ).trim();
+    const diffResult = runGit(['diff', mergeBase, '--name-only', '--', '.', ':(exclude).ana'], { cwd: projectRoot });
+    const diffOutput = diffResult.stdout;
     const modulesList = diffOutput ? diffOutput.split('\n').filter(Boolean) : [];
 
     const savesPath = path.join(slugDir, '.saves.json');
@@ -979,9 +976,9 @@ export function saveArtifact(type: string, slug: string): void {
   if (typeInfo.category === 'planning') {
     try {
       // Check if remote exists first
-      const remotes = execSync('git remote', { stdio: 'pipe', encoding: 'utf-8', cwd: projectRoot }).trim();
+      const remotes = runGit(['remote'], { cwd: projectRoot }).stdout;
       if (remotes) {
-        execSync('git pull --rebase', { stdio: 'pipe', encoding: 'utf-8', cwd: projectRoot });
+        runGit(['pull', '--rebase'], { cwd: projectRoot });
       }
       // If no remotes, skip pull (e.g., in tests or new repos)
     } catch (error) {
@@ -997,18 +994,18 @@ export function saveArtifact(type: string, slug: string): void {
 
   // 8. Stage the artifact file(s)
   try {
-    execSync(`git add ${relFilePath}`, { stdio: 'pipe', cwd: projectRoot });
+    runGit(['add', relFilePath], { cwd: projectRoot });
 
     // Stage companion YAML alongside report
     if (relCompanionPath && companionPath && fs.existsSync(companionPath)) {
-      execSync(`git add ${relCompanionPath}`, { stdio: 'pipe', cwd: projectRoot });
+      runGit(['add', relCompanionPath], { cwd: projectRoot });
     }
 
     // Special case: verify-report also stages plan.md if it exists
     if (type.startsWith('verify-report')) {
       const relPlanPath = path.join('.ana', 'plans', 'active', slug, 'plan.md');
       if (fs.existsSync(path.join(projectRoot, relPlanPath))) {
-        execSync(`git add ${relPlanPath}`, { stdio: 'pipe', cwd: projectRoot });
+        runGit(['add', relPlanPath], { cwd: projectRoot });
       }
     }
   } catch (error) {
@@ -1038,7 +1035,7 @@ export function saveArtifact(type: string, slug: string): void {
   const savesPath = path.join(slugDir, '.saves.json');
   if (fs.existsSync(savesPath)) {
     try {
-      execSync(`git add ${path.relative(projectRoot, savesPath)}`, { stdio: 'pipe', cwd: projectRoot });
+      runGit(['add', path.relative(projectRoot, savesPath)], { cwd: projectRoot });
     } catch { /* */ }
   }
 
@@ -1065,9 +1062,8 @@ export function saveArtifact(type: string, slug: string): void {
 
   // 10. Push (artifact branch only)
   if (typeInfo.category === 'planning') {
-    try {
-      execSync('git push', { stdio: 'pipe', cwd: projectRoot });
-    } catch (_error) {
+    const pushResult = runGit(['push'], { cwd: projectRoot });
+    if (pushResult.exitCode !== 0) {
       console.error(chalk.yellow('Warning: Push failed. Artifact committed locally. Run `git push` manually.'));
       // Don't exit - commit succeeded
     }
@@ -1075,9 +1071,8 @@ export function saveArtifact(type: string, slug: string): void {
 
   // Push build-verify artifacts to feature branch
   if (typeInfo.category === 'build-verify') {
-    try {
-      execSync('git push', { stdio: 'pipe', cwd: projectRoot });
-    } catch (_error) {
+    const pushResult = runGit(['push'], { cwd: projectRoot });
+    if (pushResult.exitCode !== 0) {
       console.error(chalk.yellow(
         'Warning: Push failed. Artifact committed locally. Run `git push` manually.'
       ));
@@ -1096,9 +1091,8 @@ export function saveArtifact(type: string, slug: string): void {
       for (const name of PLANNING_ARTIFACTS) {
         const filePath = path.join(planDir, name);
         if (fs.existsSync(filePath) && name !== path.basename(typeInfo.fileName)) {
-          try {
-            execSync(`git ls-files --error-unmatch ${path.relative(projectRoot, filePath)}`, { stdio: 'pipe', cwd: projectRoot });
-          } catch {
+          const lsResult = runGit(['ls-files', '--error-unmatch', path.relative(projectRoot, filePath)], { cwd: projectRoot });
+          if (lsResult.exitCode !== 0) {
             unsaved.push(name);
           }
         }
@@ -1109,9 +1103,8 @@ export function saveArtifact(type: string, slug: string): void {
         for (const entry of entries) {
           if (entry.match(/^spec-\d+\.md$/) && entry !== path.basename(typeInfo.fileName)) {
             const filePath = path.join(planDir, entry);
-            try {
-              execSync(`git ls-files --error-unmatch ${path.relative(projectRoot, filePath)}`, { stdio: 'pipe', cwd: projectRoot });
-            } catch {
+            const lsResult = runGit(['ls-files', '--error-unmatch', path.relative(projectRoot, filePath)], { cwd: projectRoot });
+            if (lsResult.exitCode !== 0) {
               unsaved.push(entry);
             }
           }
@@ -1327,19 +1320,19 @@ export function saveAllArtifacts(slug: string): void {
   // 6. Stage all artifacts
   try {
     for (const artifactPath of artifactPaths) {
-      execSync(`git add ${artifactPath}`, { stdio: 'pipe', cwd: projectRoot });
+      runGit(['add', artifactPath], { cwd: projectRoot });
     }
 
     // Stage companion YAMLs alongside their reports
     for (const companion of companions) {
-      execSync(`git add ${companion.relPath}`, { stdio: 'pipe', cwd: projectRoot });
+      runGit(['add', companion.relPath], { cwd: projectRoot });
     }
 
     // Special case: if verify-report exists, also stage plan.md
     if (artifacts.some(a => a.typeInfo.baseType === 'verify-report')) {
       const planPath = path.join(planDir, 'plan.md');
       if (fs.existsSync(planPath) && !artifactPaths.includes(path.relative(projectRoot, planPath))) {
-        execSync(`git add ${planPath}`, { stdio: 'pipe', cwd: projectRoot });
+        runGit(['add', planPath], { cwd: projectRoot });
       }
     }
   } catch (error) {
@@ -1362,7 +1355,7 @@ export function saveAllArtifacts(slug: string): void {
   const savesPathAll = path.join(planDir, '.saves.json');
   if (fs.existsSync(savesPathAll)) {
     try {
-      execSync(`git add ${path.relative(projectRoot, savesPathAll)}`, { stdio: 'pipe', cwd: projectRoot });
+      runGit(['add', path.relative(projectRoot, savesPathAll)], { cwd: projectRoot });
     } catch { /* */ }
   }
 
@@ -1388,9 +1381,8 @@ export function saveAllArtifacts(slug: string): void {
 
   // 9. Push (planning artifacts only)
   if (currentBranch === artifactBranch) {
-    try {
-      execSync('git push', { stdio: 'pipe', cwd: projectRoot });
-    } catch (_error) {
+    const pushResult = runGit(['push'], { cwd: projectRoot });
+    if (pushResult.exitCode !== 0) {
       console.error(chalk.yellow('Warning: Push failed. Artifacts committed locally. Run `git push` manually.'));
       // Don't exit - commit succeeded
     }
@@ -1398,9 +1390,8 @@ export function saveAllArtifacts(slug: string): void {
 
   // Also push if we saved build-verify artifacts on a feature branch
   if (currentBranch !== artifactBranch && artifacts.some(a => a.typeInfo.category === 'build-verify')) {
-    try {
-      execSync('git push', { stdio: 'pipe', cwd: projectRoot });
-    } catch (_error) {
+    const pushResult = runGit(['push'], { cwd: projectRoot });
+    if (pushResult.exitCode !== 0) {
       console.error(chalk.yellow(
         'Warning: Push failed. Artifacts committed locally. Run `git push` manually.'
       ));
