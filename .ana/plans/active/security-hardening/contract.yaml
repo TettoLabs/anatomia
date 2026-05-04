@@ -1,0 +1,228 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Security Hardening — Command Injection Elimination"
+
+assertions:
+  # --- Phase 1: Validators ---
+
+  - id: A001
+    says: "Slugs with shell injection characters are rejected before any operation"
+    block: "rejects slug with shell metacharacters"
+    target: "error.message"
+    matcher: "contains"
+    value: "Invalid slug"
+
+  - id: A002
+    says: "Slugs attempting path traversal are rejected"
+    block: "rejects slug with path traversal"
+    target: "error.message"
+    matcher: "contains"
+    value: "Invalid slug"
+
+  - id: A003
+    says: "Valid kebab-case slugs pass validation"
+    block: "accepts valid kebab-case slugs"
+    target: "result"
+    matcher: "truthy"
+
+  - id: A004
+    says: "Slugs with numbers like fix-v2 pass validation"
+    block: "accepts slugs with numbers"
+    target: "result"
+    matcher: "truthy"
+
+  - id: A005
+    says: "Branch names with shell injection characters are rejected"
+    block: "rejects branch name with shell metacharacters"
+    target: "error.message"
+    matcher: "contains"
+    value: "invalid"
+
+  - id: A006
+    says: "Valid branch names with slashes pass validation"
+    block: "accepts valid branch names with slashes"
+    target: "result"
+    matcher: "truthy"
+
+  - id: A007
+    says: "Empty string is accepted as a valid branch prefix"
+    block: "accepts empty string as branch prefix"
+    target: "result"
+    matcher: "truthy"
+
+  - id: A008
+    says: "Skill names with shell injection characters are rejected"
+    block: "rejects skill name with shell metacharacters"
+    target: "error.message"
+    matcher: "contains"
+    value: "invalid"
+
+  - id: A009
+    says: "Valid skill names with hyphens pass validation"
+    block: "accepts valid skill names"
+    target: "result"
+    matcher: "truthy"
+
+  # --- Phase 1: Config reader hardening ---
+
+  - id: A010
+    says: "Malicious artifact branch values in config cause an error exit"
+    block: "readArtifactBranch rejects injection payload"
+    target: "process.exitCode"
+    matcher: "equals"
+    value: 1
+
+  - id: A011
+    says: "Malicious branch prefix values in config fall back to the safe default"
+    block: "readBranchPrefix returns fallback for injection payload"
+    target: "result"
+    matcher: "equals"
+    value: "feature/"
+
+  - id: A012
+    says: "Control characters in co-author values are stripped before use"
+    block: "readCoAuthor strips control characters"
+    target: "result"
+    matcher: "not_contains"
+    value: "\n"
+
+  - id: A013
+    says: "Normal co-author values with angle brackets pass through unchanged"
+    block: "readCoAuthor preserves normal values"
+    target: "result"
+    matcher: "contains"
+    value: "<"
+
+  # --- Phase 1: findProjectRoot containment ---
+
+  - id: A014
+    says: "Directories with config files but no git repository are not treated as project roots"
+    block: "findProjectRoot rejects directory without .git"
+    target: "error.message"
+    matcher: "contains"
+    value: "No .ana/ found"
+
+  - id: A015
+    says: "Directories with both config and git repository are accepted as project roots"
+    block: "findProjectRoot accepts directory with .git"
+    target: "result"
+    matcher: "exists"
+
+  # --- Phase 1: Command entry point validation ---
+
+  - id: A016
+    says: "Saving an artifact with an injection slug is rejected immediately"
+    block: "saveArtifact rejects injection slug"
+    target: "process.exitCode"
+    matcher: "equals"
+    value: 1
+
+  - id: A017
+    says: "Completing work with an injection slug is rejected immediately"
+    block: "completeWork rejects injection slug"
+    target: "error.message"
+    matcher: "contains"
+    value: "Invalid slug"
+
+  - id: A018
+    says: "Creating a PR with an injection slug is rejected immediately"
+    block: "createPr rejects injection slug"
+    target: "process.exitCode"
+    matcher: "equals"
+    value: 1
+
+  - id: A019
+    says: "Strengthening a finding with an injection skill name is rejected"
+    block: "strengthen rejects injection skill name"
+    target: "error"
+    matcher: "exists"
+
+  # --- Phase 2: runGit utility ---
+
+  - id: A020
+    says: "The git wrapper utility successfully executes git commands and captures output"
+    block: "runGit captures stdout from successful command"
+    target: "result.stdout"
+    matcher: "contains"
+    value: "true"
+
+  - id: A021
+    says: "The git wrapper utility reports failure exit codes"
+    block: "runGit returns non-zero exitCode on failure"
+    target: "result.exitCode"
+    matcher: "not_equals"
+    value: 0
+
+  - id: A022
+    says: "The git wrapper utility respects the working directory option"
+    block: "runGit works with cwd option"
+    target: "result.exitCode"
+    matcher: "equals"
+    value: 0
+
+  # --- Phase 2: execSync elimination ---
+
+  - id: A023
+    says: "No direct shell execution calls remain in command or utility files"
+    block: "zero execSync in commands and utils"
+    target: "grepMatchCount"
+    matcher: "equals"
+    value: 0
+
+  - id: A024
+    says: "The engine documentation detector uses safe array-based process spawning"
+    block: "documentation.ts uses spawnSync not execSync"
+    target: "fileContent"
+    matcher: "contains"
+    value: "spawnSync"
+
+  - id: A025
+    says: "The engine documentation detector does not import CLI utilities"
+    block: "documentation.ts has no runGit import"
+    target: "fileContent"
+    matcher: "not_contains"
+    value: "runGit"
+
+  # --- Cross-cutting: backward compatibility ---
+
+  - id: A026
+    says: "All existing tests continue to pass after security hardening"
+    block: "full test suite passes"
+    target: "testResult"
+    matcher: "equals"
+    value: "pass"
+
+  - id: A027
+    says: "Empty branch prefix remains a valid configuration"
+    block: "readBranchPrefix accepts empty string after hardening"
+    target: "result"
+    matcher: "equals"
+    value: ""
+
+file_changes:
+  # Phase 1
+  - path: "packages/cli/src/utils/validators.ts"
+    action: modify
+  - path: "packages/cli/src/utils/git-operations.ts"
+    action: modify
+  - path: "packages/cli/src/commands/work.ts"
+    action: modify
+  - path: "packages/cli/src/commands/artifact.ts"
+    action: modify
+  - path: "packages/cli/src/commands/pr.ts"
+    action: modify
+  - path: "packages/cli/src/commands/proof.ts"
+    action: modify
+  - path: "packages/cli/tests/utils/validators.test.ts"
+    action: create
+  - path: "packages/cli/tests/utils/git-operations.test.ts"
+    action: modify
+  - path: "packages/cli/tests/utils/findProjectRoot.test.ts"
+    action: modify
+  # Phase 2
+  - path: "packages/cli/src/commands/init/preflight.ts"
+    action: modify
+  - path: "packages/cli/src/utils/proofSummary.ts"
+    action: modify
+  - path: "packages/cli/src/engine/detectors/documentation.ts"
+    action: modify
