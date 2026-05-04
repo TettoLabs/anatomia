@@ -1,5 +1,5 @@
 {
-  "anaVersion": "0.2.0",
+  "anaVersion": "1.0.0",
   "name": "anatomia-workspace",
   "language": "TypeScript",
   "framework": null,

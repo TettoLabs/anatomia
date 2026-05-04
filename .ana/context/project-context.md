@@ -103,7 +103,7 @@ An LLM asked to "change the default coding-standards rules" should edit `templat
 
 - **CLI is the primary development focus.** The website is secondary — marketing only, no code dependency on the CLI.
 - **The scan produces one result per repo, not per package.** Per-package scanning for multi-product monorepos is a known limitation. The `primaryDeps` field on census is the foundation for future per-package support.
-- **The CLI is not yet published to npm.** Installation is from source.
+- **The CLI is published on npm as `anatomia-cli`.** Install with `npm install -g anatomia-cli`.
 - **Test count must not decrease.** CI runs across 3 OS × 2 Node versions. Coverage thresholds enforced in vitest.config.ts.
 
 ## Domain Vocabulary

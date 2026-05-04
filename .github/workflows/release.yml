@@ -42,6 +42,18 @@ jobs:
             exit 1
           fi
 
+      - name: Verify CHANGELOG has entry for this version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          if ! grep -q "\[${VERSION}\]" CHANGELOG.md; then
+            echo "ERROR: CHANGELOG.md has no entry for version ${VERSION}"
+            exit 1
+          fi
+          if grep -q "\[${VERSION}\].*XX" CHANGELOG.md; then
+            echo "ERROR: CHANGELOG.md has placeholder date for version ${VERSION}"
+            exit 1
+          fi
+
       - run: cd packages/cli && npm publish --provenance --access public
 
       - run: gh release create ${{ github.ref_name }} --generate-notes
