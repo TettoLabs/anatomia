@@ -17,28 +17,31 @@ No install. One command. Here's what you'll see:
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │  my-saas-app                                              web-app   │
-│  TypeScript · Next.js · Prisma → PostgreSQL · Clerk                 │
+│  TypeScript · Next.js · Prisma → PostgreSQL (37 models) · Clerk     │
 └─────────────────────────────────────────────────────────────────────┘
 
   Stack
   ─────
   Language     TypeScript
   Framework    Next.js
-  Database     Prisma → PostgreSQL (14 models)
+  Database     Prisma → PostgreSQL (37 models)
   Auth         Clerk
+  AI           Anthropic
   Payments     Stripe
-  Testing      Vitest
-  Services     Resend · Sentry · PostHog
+  Testing      Vitest, Playwright
+  UI           Tailwind CSS
+  Services     Resend · Sentry · PostHog · Inngest (+2 more)
   Deploy       Vercel · GitHub Actions
 
   Intelligence
   ────────────
-  Activity     3 contributors · 12→8→15→9 weekly
-  Hot files    schema.prisma (23), api/webhooks.ts (18)
-  Docs         README.md · CONTRIBUTING.md · ARCHITECTURE.md + 2 more
+  Activity     4 contributors · 18→12→22→15 weekly
+  Hot files    webhooks.ts (31), chat.ts (24), schema.prisma (19)
+  Docs         README.md · CONTRIBUTING.md · .env.example + 3 more
   Pre-commit   typecheck + lint
 
-  Full data: .ana/scan.json
+  ⚠ Hardcoded PostHog project key in lib/analytics.ts
+  ⚠ 2/3 sampled API routes have no input validation
   Run `ana init` to scaffold 8 skills (5 core + api-patterns, data-access, ai-patterns)
 ```
 
@@ -86,40 +89,52 @@ Setup (`claude --agent ana-setup`) bridges the gap between what scan detects and
 | Plan | AnaPlan | Architect — design + sealed contract | `spec.md` + `contract.yaml` + `plan.md` |
 | Build | AnaBuild | Builder — implement spec, prove it works | Code + tests + `build_report.md` |
 | Verify | AnaVerify | Fault-finder — reads spec and code, skips Build's report | `verify_report.md` |
-| Learn | AnaLearn | Quality gardener — runs between cycles | Findings promoted to rules |
+| Learn | AnaLearn | Proof analyst — runs between cycles | Stronger skills and system improvements |
 
 ### Proof intelligence
 
-Every pipeline run writes a proof chain entry. The chain accumulates across features — each entry records assertions, findings, timing, and hashes. `ana proof health` shows the trajectory:
+Every pipeline run writes a proof chain entry — here's one:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│  ana proof health                                                   │
-│  172 runs                                               2026-08-14 │
+│  ana proof                                                          │
+│  Add Stripe Webhooks                                2026-04-29 11:07│
 └─────────────────────────────────────────────────────────────────────┘
 
-  Quality
-  ──────────
-  Trend:      improving
-  Risks/run:  0.1 (last 5) · 0.4 (all)
+  Result: PASS
 
-  Verification
-  ──────────
-  First-pass:  84% (144 of 172)
-  Caught:      47 issues before shipping
+  Contract
+  ────────
+  14/14 satisfied · 0 unsatisfied · 0 deviated
 
-  Pipeline
+  Assertions (6 of 14)
   ──────────
-  Median:  46m (scope 4m · plan 13m · build 18m · verify 11m)
+  ✓ Webhook endpoint verifies Stripe signature before processing
+  ✓ Events are processed idempotently using the Stripe event ID
+  ✓ Failed signature check returns 400, not 500
+  ✓ Unrecognized event types return 200 without processing
+  ✓ Migration adds idempotency_key column with unique constraint
+  ✓ Existing checkout and billing portal flows pass without modification
 
-  Hot Spots
-  ──────────
-  api/webhooks.ts         12 findings (3 risk, 4 debt, 5 obs)       18 runs
-  lib/auth.ts             8 findings (1 risk, 3 debt, 4 obs)        14 runs
-  db/migrations.ts        6 findings (2 debt, 4 obs)                 9 runs
+  Findings
+  ────────
+  [risk · scope] Signature verification uses direct string comparison —
+                 timing-safe equality not enforced
+  [debt · scope] No retry mechanism for failed event processing —
+                 transient DB errors will drop events silently
+  [observation · monitor] Webhook handler is 340 lines with a switch
+                          that will grow with every new event type
+
+  Timing
+  ──────
+  Total        52 min
+  Think        4 min
+  Plan         15 min
+  Build        22 min
+  Verify       11 min
 ```
 
-`proof audit` groups active findings by file for triage. `proof promote` turns findings into skill rules that change agent behavior on future runs. `proof stale` surfaces findings whose files changed since discovery.
+Each entry adds to a proof chain. `ana proof health` tracks the trajectory across runs — first-pass verification rate, risks per run, hot spots where findings cluster, and what to fix next. When patterns recur, `proof promote` turns them into skill rules that reach the next build. `proof audit` groups active findings by file. `proof stale` flags findings whose files changed since discovery.
 
 ## Commands
 
