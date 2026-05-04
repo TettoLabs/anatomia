@@ -16,7 +16,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { readArtifactBranch, readBranchPrefix, getCurrentBranch, readCoAuthor } from '../utils/git-operations.js';
 import { generateProofSummary, type ProofSummary } from '../utils/proofSummary.js';
-import { findProjectRoot } from '../utils/validators.js';
+import { findProjectRoot, validateSlug } from '../utils/validators.js';
 
 /**
  * Extract PR Summary section from build report
@@ -149,6 +149,14 @@ function renderProofMarkdown(proof: ProofSummary): string {
  * @param slug - Work item slug
  */
 export function createPr(slug: string): void {
+  // 0. Validate slug format
+  try {
+    validateSlug(slug);
+  } catch {
+    console.error(chalk.red('Error: Invalid slug format. Use kebab-case: fix-auth-timeout, add-export-csv'));
+    process.exit(1);
+  }
+
   const projectRoot = findProjectRoot();
 
   // 1. Read artifactBranch and branchPrefix from ana.json

@@ -20,7 +20,7 @@ import * as path from 'node:path';
 import { globSync } from 'glob';
 import { readArtifactBranch, readBranchPrefix, getCurrentBranch, readCoAuthor } from '../utils/git-operations.js';
 import { generateProofSummary, resolveFindingPaths, generateDashboard, computeChainHealth, wrapJsonResponse, detectHealthChange, type ProofSummary } from '../utils/proofSummary.js';
-import { findProjectRoot } from '../utils/validators.js';
+import { findProjectRoot, validateSlug } from '../utils/validators.js';
 import type { ProofChainEntry, ProofChain, ProofChainStats } from '../types/proof.js';
 
 /**
@@ -959,6 +959,14 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
  * @param options.json - When true, output structured JSON envelope instead of console output
  */
 export async function completeWork(slug: string, options?: { json?: boolean }): Promise<void> {
+  // 0. Validate slug format
+  try {
+    validateSlug(slug);
+  } catch {
+    console.error(chalk.red('Error: Invalid slug format. Use kebab-case: fix-auth-timeout, add-export-csv'));
+    process.exit(1);
+  }
+
   // 1. Read artifactBranch, branchPrefix, and coAuthor from ana.json
   const projectRoot = findProjectRoot();
   const artifactBranch = readArtifactBranch(projectRoot);
@@ -1321,13 +1329,6 @@ export async function completeWork(slug: string, options?: { json?: boolean }): 
 }
 
 /**
- * Kebab-case slug validation regex.
- * Starts with lowercase letter, segments separated by single hyphens, alphanumeric only.
- * Allows: fix-v2, a, add-export-csv. Rejects: Fix-Auth, fix--double, -leading, trailing-.
- */
-const SLUG_PATTERN = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
-
-/**
  * Start a new work item: validate inputs, create directory, record start time.
  *
  * @param slug - Kebab-case slug for the work item
@@ -1335,7 +1336,9 @@ const SLUG_PATTERN = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
  */
 export async function startWork(slug: string): Promise<void> {
   // 1. Validate slug format
-  if (!SLUG_PATTERN.test(slug)) {
+  try {
+    validateSlug(slug);
+  } catch {
     console.error(chalk.red('Error: Invalid slug format. Use kebab-case: fix-auth-timeout, add-export-csv'));
     process.exit(1);
   }

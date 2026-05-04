@@ -20,7 +20,7 @@ import * as path from 'node:path';
 import { createHash } from 'node:crypto';
 import * as yaml from 'yaml';
 import { runContractPreCheck } from './verify.js';
-import { findProjectRoot } from '../utils/validators.js';
+import { findProjectRoot, validateSlug } from '../utils/validators.js';
 // readArtifactBranch + getCurrentBranch moved to utils/git-operations.ts (Item 13).
 // artifact.ts still uses them internally; pr.ts and work.ts now import directly
 // from utils/ instead of cross-command-importing from here.
@@ -792,6 +792,14 @@ function validateBranch(
  * @param slug - Work item slug (e.g., "add-status-command")
  */
 export function saveArtifact(type: string, slug: string): void {
+  // 0. Validate slug format
+  try {
+    validateSlug(slug);
+  } catch {
+    console.error(chalk.red('Error: Invalid slug format. Use kebab-case: fix-auth-timeout, add-export-csv'));
+    process.exit(1);
+  }
+
   // 1. Parse type
   const typeInfo = parseArtifactType(type);
   if (!typeInfo) {
@@ -1126,6 +1134,14 @@ export function saveArtifact(type: string, slug: string): void {
  * @param slug - Work item slug
  */
 export function saveAllArtifacts(slug: string): void {
+  // 0. Validate slug format
+  try {
+    validateSlug(slug);
+  } catch {
+    console.error(chalk.red('Error: Invalid slug format. Use kebab-case: fix-auth-timeout, add-export-csv'));
+    process.exit(1);
+  }
+
   const projectRoot = findProjectRoot();
   const planDir = path.join(projectRoot, '.ana/plans/active', slug);
 

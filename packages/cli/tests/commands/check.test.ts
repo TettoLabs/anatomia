@@ -19,8 +19,9 @@ describe('ana setup check', () => {
     tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'check-test-'));
     contextPath = path.join(tempDir, '.ana', 'context');
     await fs.mkdir(contextPath, { recursive: true });
-    // findProjectRoot requires ana.json to identify this as a valid project root
+    // findProjectRoot requires ana.json + .git/ to identify this as a valid project root
     await fs.writeFile(path.join(tempDir, '.ana', 'ana.json'), '{}');
+    await fs.mkdir(path.join(tempDir, '.git'), { recursive: true });
     originalCwd = process.cwd();
     process.chdir(tempDir);
   });

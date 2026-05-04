@@ -24,7 +24,7 @@ import * as fs from 'node:fs';
 import { execSync, spawnSync } from 'node:child_process';
 import { globSync } from 'glob';
 import type { ProofChainEntry, ProofChain } from '../types/proof.js';
-import { findProjectRoot } from '../utils/validators.js';
+import { findProjectRoot, validateSkillName } from '../utils/validators.js';
 import { getProofContext, wrapJsonResponse, wrapJsonError, generateDashboard, computeChainHealth, computeHealthReport, computeStaleness, MIN_ENTRIES_FOR_TREND } from '../utils/proofSummary.js';
 import type { ProofContextResult } from '../utils/proofSummary.js';
 import { readArtifactBranch, getCurrentBranch, readCoAuthor } from '../utils/git-operations.js';
@@ -1285,6 +1285,14 @@ export function registerProofCommand(program: Command): void {
       // Validate --reason is provided
       if (!options.reason) {
         exitError('REASON_REQUIRED', '--reason is required.');
+        return;
+      }
+
+      // Validate skill name format
+      try {
+        validateSkillName(options.skill);
+      } catch {
+        exitError('INVALID_SKILL', 'Invalid skill name: contains invalid characters. Use kebab-case: coding-standards, api-patterns');
         return;
       }
 

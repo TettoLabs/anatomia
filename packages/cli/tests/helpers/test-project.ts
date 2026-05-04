@@ -14,7 +14,10 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 
 /**
- * Create a minimal .ana/ directory with ana.json in a temp dir.
+ * Create a minimal .ana/ directory with ana.json and .git/ in a temp dir.
+ *
+ * Includes .git/ because findProjectRoot() requires it for containment
+ * (a directory with .ana/ but no .git/ is not treated as a project root).
  *
  * @param tempDir - Root of the test project (usually from fs.mkdtemp)
  */
@@ -30,4 +33,6 @@ export async function createTestProject(tempDir: string): Promise<void> {
       artifactBranch: 'main',
     }, null, 2)
   );
+  // Create .git/ for findProjectRoot() containment check
+  await fs.mkdir(path.join(tempDir, '.git'), { recursive: true });
 }
