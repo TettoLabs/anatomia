@@ -171,6 +171,18 @@ export function findProjectRoot(startDir: string = process.cwd()): string {
 
   while (true) {
     if (fsSync.existsSync(path.join(current, '.ana', 'ana.json'))) {
+      // Containment check: a project root must also have a .git directory (or file, for worktrees)
+      if (!fsSync.existsSync(path.join(current, '.git'))) {
+        // Skip this directory — .ana/ exists but no git repo
+        const parent = path.dirname(current);
+        if (parent === current) {
+          throw new Error(
+            `No .ana/ found in ${startDir} or any parent directory. Run ana init from your project root.`
+          );
+        }
+        current = parent;
+        continue;
+      }
       return current;
     }
 
