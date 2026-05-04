@@ -1,0 +1,12 @@
+schema: 1
+concerns:
+  - summary: "AC10 containment check required updating 6 test fixtures (contradicts AC11 literal wording)"
+    severity: observation
+    suggested_action: accept
+  - summary: "A016/A017/A018/A019 tested indirectly via validator unit tests, not direct integration tests"
+    severity: observation
+    suggested_action: accept
+  - summary: "eslint-disable no-control-regex in readCoAuthor for intentional control char matching"
+    file: "packages/cli/src/utils/git-operations.ts"
+    severity: observation
+    suggested_action: accept

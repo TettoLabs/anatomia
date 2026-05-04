@@ -15,5 +15,28 @@
   "spec": {
     "saved_at": "2026-05-04T21:03:39.615Z",
     "hash": "sha256:0fe120b5859afefaf9d52989ef776d8b933762a2689883dbb1204cc0907e286b"
-  }
+  },
+  "build-report": {
+    "saved_at": "2026-05-04T21:28:39.739Z",
+    "hash": "sha256:a45fcccae6278daa2dec7b46cc106ab2c2c96444221426f8aef6f9b17ab6336e"
+  },
+  "build-data": {
+    "saved_at": "2026-05-04T21:28:39.739Z",
+    "hash": "sha256:173672f5e06ef8ed1b4540098fb51ece9456c2fa69673ee4f87d6b3fd82a8e52"
+  },
+  "modules_touched": [
+    "packages/cli/src/commands/artifact.ts",
+    "packages/cli/src/commands/pr.ts",
+    "packages/cli/src/commands/proof.ts",
+    "packages/cli/src/commands/work.ts",
+    "packages/cli/src/utils/git-operations.ts",
+    "packages/cli/src/utils/validators.ts",
+    "packages/cli/tests/commands/check.test.ts",
+    "packages/cli/tests/commands/symbol-index.test.ts",
+    "packages/cli/tests/commands/verify.test.ts",
+    "packages/cli/tests/helpers/test-project.ts",
+    "packages/cli/tests/utils/findProjectRoot.test.ts",
+    "packages/cli/tests/utils/git-operations.test.ts",
+    "packages/cli/tests/utils/validators.test.ts"
+  ]
 }
