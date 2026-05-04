@@ -15,10 +15,13 @@
     "context-engineering",
     "code-verification",
     "proof-chain",
-    "pipeline",
     "claude-code",
     "code-analysis",
-    "typescript"
+    "code-review",
+    "code-quality",
+    "ai-agent",
+    "static-analysis",
+    "project-scanner"
   ],
   "repository": {
     "type": "git",
