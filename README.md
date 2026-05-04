@@ -82,7 +82,7 @@ Setup (`claude --agent ana-setup`) bridges the gap between what scan detects and
 
 | Stage | Agent | Role | Produces |
 |-------|-------|------|----------|
-| Think | Ana | Thinking partner — scope, investigate, advise | `scope.md` |
+| Think | Ana | Thinking partner — scope, investigate, advise, push back | `scope.md` |
 | Plan | AnaPlan | Architect — design + sealed contract | `spec.md` + `contract.yaml` + `plan.md` |
 | Build | AnaBuild | Builder — implement spec, prove it works | Code + tests + `build_report.md` |
 | Verify | AnaVerify | Fault-finder — reads spec and code, skips Build's report | `verify_report.md` |
@@ -120,8 +120,6 @@ Every pipeline run writes a proof chain entry. The chain accumulates across feat
 ```
 
 `proof audit` groups active findings by file for triage. `proof promote` turns findings into skill rules that change agent behavior on future runs. `proof stale` surfaces findings whose files changed since discovery.
-
-The system learns.
 
 ## Commands
 
