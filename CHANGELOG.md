@@ -7,7 +7,21 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
-## [1.0.0] - 2026-05-XX
+## [1.0.1] - 2026-05-04
+
+### Fixed
+- Eliminate command injection via unvalidated slugs in artifact, pr, proof, and work complete commands
+- Validate artifactBranch and branchPrefix from ana.json against shell metacharacters
+- Migrate all git command execution from execSync to spawnSync array arguments
+- Add findProjectRoot containment check — require .git alongside .ana/ana.json
+- Strip control characters from coAuthor config values
+- Add version/tag and CHANGELOG verification gates to release workflow
+- Fix CHANGELOG 1.0.0 release date
+- Update project metadata to reflect npm publication
+- Refresh dogfood scan from clean main branch
+- Remove internal development history from public repository
+
+## [1.0.0] - 2026-05-04
 
 First stable release.
 
@@ -64,5 +78,6 @@ First stable release.
 
 Previous development history is preserved in git log.
 
-[Unreleased]: https://github.com/TettoLabs/anatomia/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/TettoLabs/anatomia/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/TettoLabs/anatomia/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/TettoLabs/anatomia/releases/tag/v1.0.0
