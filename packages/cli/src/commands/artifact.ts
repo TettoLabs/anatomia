@@ -1410,7 +1410,7 @@ export function saveAllArtifacts(slug: string): void {
  */
 export function registerArtifactCommand(program: Command): void {
   const artifactCommand = new Command('artifact')
-    .description('Save and validate plan artifacts');
+    .description('Save pipeline outputs with hash verification');
 
   const saveCommand = new Command('save')
     .description('Commit a pipeline artifact to the correct branch')

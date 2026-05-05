@@ -350,7 +350,7 @@ interface ScanOptions {
  */
 export function registerScanCommand(program: Command): void {
   const scanCommand = new Command('scan')
-    .description('Scan project and display tech stack, file counts, and structure')
+    .description('Detect stack, conventions, and patterns')
     .argument('[path]', 'Directory to scan (default: current directory)', '.')
     .option('--json', 'Output JSON format for programmatic consumption')
     .option('--save', 'Save scan results to .ana/scan.json')

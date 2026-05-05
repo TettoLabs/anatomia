@@ -109,7 +109,7 @@ export function listAgents(): void {
 export function registerAgentsCommand(program: Command): void {
   program
     .command('agents')
-    .description('List deployed agents')
+    .description('List installed agent definitions')
     .action(() => {
       listAgents();
     });

@@ -328,7 +328,7 @@ Co-authored-by: ${coAuthor}`;
  */
 export function registerPrCommand(program: Command): void {
   const prCommand = new Command('pr')
-    .description('Manage pull requests');
+    .description('Create pull request from verified build');
 
   prCommand
     .command('create')

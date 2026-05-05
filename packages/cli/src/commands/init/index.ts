@@ -54,7 +54,7 @@ import {
  */
 export function registerInitCommand(program: Command): void {
   const initCommand = new Command('init')
-    .description('Initialize .ana/ context framework')
+    .description('Scan project and generate agent context')
     .option('-f, --force', 'Skip confirmation prompts for existing installations')
     .option('-y, --yes', 'Skip confirmation prompts (non-interactive mode)')
     .action(async (options: InitCommandOptions, command: Command) => {

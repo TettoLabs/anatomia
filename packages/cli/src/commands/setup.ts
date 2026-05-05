@@ -25,11 +25,11 @@ interface SetupCompleteOptions {
  */
 export function registerSetupCommand(program: Command): void {
   const setupCommand = new Command('setup').description(
-    'Configure project context (check, complete)'
+    'Enrich context with team knowledge'
   );
 
   setupCommand.addCommand(createCheckCommand());
-  setupCommand.addCommand(createIndexCommand());
+  setupCommand.addCommand(createIndexCommand(), { hidden: true });
 
   // S19/SETUP-002: bare `ana setup` should tell the user that setup is an
   // agent flow, not a CLI action. `ana init` and `ana scan` have root
