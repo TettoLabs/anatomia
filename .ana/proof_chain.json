@@ -3757,9 +3757,12 @@
           "file": "packages/cli/tests/commands/work.test.ts",
           "anchor": null,
           "id": "findings-lifecycle-foundation-C4",
-          "status": "active",
+          "status": "closed",
           "severity": "observation",
-          "suggested_action": "monitor"
+          "suggested_action": "monitor",
+          "closed_reason": "Stale — A015/A016 coverage gap filled by dedicated test at work.test.ts:1385 ('closes findings for deleted files'). Original supersession test at ~1278 still lacks these edges, but the guards are now exercised by the newer test.",
+          "closed_at": "2026-05-05T01:21:50.615Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
