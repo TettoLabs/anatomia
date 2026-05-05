@@ -1,0 +1,214 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Proof System Near-Term — Learn Infrastructure Foundation"
+
+assertions:
+  # Push retry (AC1, AC2)
+  - id: A001
+    says: "Push failure triggers a pull-then-retry before giving up"
+    block: "close retries push after pull on failure"
+    target: "stdout"
+    matcher: "contains"
+    value: "Push failed after retry"
+
+  - id: A002
+    says: "Commit failure clearly tells the user changes were not saved"
+    block: "close commit failure shows NOT saved message"
+    target: "stderr"
+    matcher: "contains"
+    value: "NOT saved"
+
+  - id: A003
+    says: "Lesson command retries push the same way close does"
+    block: "lesson retries push after pull on failure"
+    target: "stdout"
+    matcher: "contains"
+    value: "Push failed after retry"
+
+  - id: A004
+    says: "Promote command retries push the same way close does"
+    block: "promote retries push after pull on failure"
+    target: "stdout"
+    matcher: "contains"
+    value: "Push failed after retry"
+
+  - id: A005
+    says: "Strengthen command retries push the same way close does"
+    block: "strengthen retries push after pull on failure"
+    target: "stdout"
+    matcher: "contains"
+    value: "Push failed after retry"
+
+  # Pre-commit filter (AC3, AC4)
+  - id: A006
+    says: "Commits touching only proof chain files skip the full build check"
+    block: "pre-commit skips checks for .ana/-only commits"
+    target: "hook.ran_checks"
+    matcher: "equals"
+    value: false
+
+  - id: A007
+    says: "Commits touching source code still run the full build check"
+    block: "pre-commit runs checks for mixed .ana/ and source commits"
+    target: "hook.ran_checks"
+    matcher: "equals"
+    value: true
+
+  # Severity counts active-only (AC5, AC6)
+  - id: A008
+    says: "Health severity counts exclude closed and promoted findings"
+    block: "computeChainHealth counts only active findings in by_severity"
+    target: "health.findings.by_severity.debt"
+    matcher: "equals"
+    value: 0
+
+  - id: A009
+    says: "Health action counts exclude closed and promoted findings"
+    block: "computeChainHealth counts only active findings in by_action"
+    target: "health.findings.by_action.accept"
+    matcher: "equals"
+    value: 0
+
+  - id: A010
+    says: "Health and audit now agree on severity counts"
+    block: "health by_severity matches audit by_severity for same chain"
+    target: "counts_match"
+    matcher: "equals"
+    value: true
+
+  # findFindingById (AC7, AC8)
+  - id: A011
+    says: "Finding lookup returns both the finding and its parent entry"
+    block: "findFindingById returns finding and entry"
+    target: "result.entry.slug"
+    matcher: "exists"
+
+  - id: A012
+    says: "Finding lookup returns null when the ID does not exist"
+    block: "findFindingById returns null for missing id"
+    target: "result"
+    matcher: "equals"
+    value: null
+
+  - id: A013
+    says: "No inline finding-search loops remain in the proof commands"
+    block: "proof.ts has zero inline finding-search loops"
+    target: "inlineLoopCount"
+    matcher: "equals"
+    value: 0
+
+  # Audit filters (AC9, AC10, AC11)
+  - id: A014
+    says: "Audit severity filter returns only findings matching requested severities"
+    block: "audit --severity risk,debt returns only risk and debt findings"
+    target: "results.by_severity.observation"
+    matcher: "equals"
+    value: 0
+
+  - id: A015
+    says: "Audit entry filter returns only findings from the requested pipeline run"
+    block: "audit --entry returns only findings from that entry"
+    target: "results.by_file"
+    matcher: "not_contains"
+    value: "other-entry"
+
+  - id: A016
+    says: "Audit filters work with JSON output"
+    block: "audit --severity with --json returns valid filtered JSON"
+    target: "json.command"
+    matcher: "equals"
+    value: "proof audit"
+
+  - id: A017
+    says: "Audit filters work with full output"
+    block: "audit --severity with --json --full returns untruncated filtered results"
+    target: "json.results.overflow_files"
+    matcher: "equals"
+    value: 0
+
+  - id: A018
+    says: "Audit severity filter handles unclassified findings"
+    block: "audit --severity unclassified returns findings without severity"
+    target: "results.total_active"
+    matcher: "greater"
+    value: 0
+
+  - id: A019
+    says: "Audit with nonexistent entry returns zero findings"
+    block: "audit --entry nonexistent returns empty results"
+    target: "results.total_active"
+    matcher: "equals"
+    value: 0
+
+  - id: A020
+    says: "Both audit filters can be combined for intersection"
+    block: "audit --severity risk --entry slug returns intersection"
+    target: "results.total_active"
+    matcher: "exists"
+
+  # Template (AC12-AC16)
+  - id: A021
+    says: "Learn template documents the lesson command"
+    block: "template Reference includes lesson command"
+    target: "content"
+    matcher: "contains"
+    value: "ana proof lesson"
+
+  - id: A022
+    says: "Learn template documents the context command"
+    block: "template Reference includes context command"
+    target: "content"
+    matcher: "contains"
+    value: "ana proof context"
+
+  - id: A023
+    says: "Learn template documents audit severity and entry filters"
+    block: "template Reference includes audit filter options"
+    target: "content"
+    matcher: "contains"
+    value: "--severity risk,debt"
+
+  - id: A024
+    says: "Learn template includes a guide on when to use each command"
+    block: "template Reference includes when-to-use guide"
+    target: "content"
+    matcher: "contains"
+    value: "When to use which"
+
+  - id: A025
+    says: "Learn template positions stale findings as candidates, not conclusions"
+    block: "template stale description says could be resolved"
+    target: "content"
+    matcher: "not_contains"
+    value: "findings with staleness signals from subsequent pipeline runs"
+
+  - id: A026
+    says: "Dogfood copy matches the template's Reference section"
+    block: "dogfood copy Reference matches template Reference"
+    target: "sections_match"
+    matcher: "equals"
+    value: true
+
+  # Regression (AC17)
+  - id: A027
+    says: "All existing tests continue to pass"
+    block: "full test suite passes"
+    target: "test.passed"
+    matcher: "greater"
+    value: 1865
+
+file_changes:
+  - path: "packages/cli/src/utils/proofSummary.ts"
+    action: modify
+  - path: "packages/cli/src/commands/proof.ts"
+    action: modify
+  - path: ".husky/pre-commit"
+    action: modify
+  - path: "packages/cli/tests/utils/proofSummary.test.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/proof.test.ts"
+    action: modify
+  - path: "packages/cli/templates/.claude/agents/ana-learn.md"
+    action: modify
+  - path: ".claude/agents/ana-learn.md"
+    action: modify
