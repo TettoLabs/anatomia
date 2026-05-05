@@ -28,7 +28,7 @@ Two layers: fix the tools (code changes), then fix the instructions (template ch
 
 **Layer 1 — Code:** Fix push error recovery (retry after pull instead of misleading error). Skip pre-commit for non-source commits. Make severity counts active-only. Extract the duplicated finding-search loop. Add severity and entry filters to audit.
 
-**Layer 2 — Template:** Add lesson and context commands to reference. Add post-scope findings guidance. Abbreviate verification cycle. Move meta warning to guardrail. Set default phase order. Add session contract.
+**Layer 2 — Template:** Update the Reference/Commands section with new tools (lesson, context, audit filters) and prescriptive usage guidance on when to use each. Position stale findings as "could be stale" candidates, not conclusions.
 
 ## Acceptance Criteria
 
@@ -43,14 +43,12 @@ Two layers: fix the tools (code changes), then fix the instructions (template ch
 - AC9: `ana proof audit --severity risk,debt` returns only findings with those severities
 - AC10: `ana proof audit --entry proof-intelligence-hardening` returns only findings from that entry
 - AC11: Both filters work with `--json` and `--full`
-- AC12: Learn template Reference section includes `ana proof lesson` with when-to-use
-- AC13: Learn template Reference section includes `ana proof context` with when-to-use
-- AC14: Learn template has a "Post-Scope Findings" section for lighter triage of findings from a just-completed scope
-- AC15: Learn template verification cycle abbreviates after calibration (full 5-step for first 5, then read→decide)
-- AC16: Learn template has meta warning as a numbered guardrail
-- AC17: Learn template has an explicit default phase order
-- AC18: Learn template startup includes a session contract declaration
-- AC19: All existing tests pass
+- AC12: Learn template Reference section includes `ana proof lesson` with description: record as institutional lesson — verified, real, but not actionable
+- AC13: Learn template Reference section includes `ana proof context {files...}` with description: findings and build concerns for specific files, active only by default
+- AC14: Learn template Reference section includes audit filter usage: `--severity risk,debt` to filter by severity, `--entry {slug}` to filter by pipeline run
+- AC15: Learn template Reference section includes a "when to use which" guide that prescribes: `--severity risk,debt` at session start for deep review targets, `--severity observation` for lesson candidates, `--entry {slug}` after a scope ships to see its findings, `--full` when truncated top 3 isn't enough, `context {files}` for file-focused triage, `stale` for candidates that COULD be resolved (not conclusions — always verify before closing)
+- AC16: Learn template positions stale findings as "could be stale" — candidates for investigation, not conclusions. A stale signal means the file was touched, NOT that the finding is resolved
+- AC17: All existing tests pass
 
 ## Edge Cases & Risks
 
