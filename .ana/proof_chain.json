@@ -11390,7 +11390,10 @@
             "A001"
           ],
           "id": "v1-code-changes-C1",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed by proof-intelligence-hardening Phase 1 — parseACResults now scopes regex to ## AC Walkthrough section via indexOf/substring at proofSummary.ts:199-220. Bullet lines in Findings section no longer inflate counts. Verified: 3/44 false matches eliminated.",
+          "closed_at": "2026-05-05T06:39:58.958Z",
+          "closed_by": "human"
         },
         {
           "category": "test",

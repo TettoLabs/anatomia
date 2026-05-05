@@ -1,12 +1,12 @@
 # Proof Chain Dashboard
 
-51 runs · 85 active · 57 lessons · 0 promoted · 144 closed
+51 runs · 84 active · 57 lessons · 0 promoted · 145 closed
 
 ## Hot Modules
 
 | File | Active | Entries |
 |------|--------|--------|
-| packages/cli/src/utils/proofSummary.ts | 12 | 7 |
+| packages/cli/src/utils/proofSummary.ts | 11 | 7 |
 | packages/cli/tests/commands/work.test.ts | 9 | 7 |
 | packages/cli/src/commands/proof.ts | 9 | 6 |
 | packages/cli/tests/commands/proof.test.ts | 7 | 3 |
@@ -16,11 +16,15 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 85 total)
+## Active Findings (30 shown of 84 total)
 
 ### .github/workflows/release.yml
 
 - **code:** release.yml copies README/CHANGELOG separately from prepublishOnly — two sources of truth for doc copying — *V1 Release Prep*
+
+### .husky/pre-commit
+
+- **code:** Pre-commit comment claims ~9s / 10s threshold — will drift as test count grows (1807 now) — *V1 Code Changes*
 
 ### package.json
 
@@ -57,7 +61,6 @@
 - **code:** proofSummary.ts now ~1913 lines — past comfort threshold, known from prior cycles — *Proof Intelligence Hardening*
 - **code:** Staleness touchRate uses full-chain baseline rate instead of post-finding rate as specified — *Proof Intelligence Hardening*
 - **code:** proofSummary.ts ~1560+ lines — past comfort threshold, growing each phase — *Proof Intelligence Hardening*
-- **code:** Theoretical false-match in parseACResults regex — bullet lines outside AC section containing PASS/FAIL could inflate counts — *V1 Code Changes*
 - **code:** proofSummary.ts ~1550 lines — past comfort threshold, known from prior cycles — *V1 Code Changes*
 
 ### packages/cli/src/utils/validators.ts
