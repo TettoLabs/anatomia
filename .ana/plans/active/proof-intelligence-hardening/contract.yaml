@@ -1,0 +1,225 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Proof Intelligence Hardening"
+
+assertions:
+  # AC1: parseACResults section scoping
+  - id: A001
+    says: "AC status counts come only from the AC Walkthrough section, not the entire report"
+    block: "parseACResults scopes to AC Walkthrough section"
+    target: "result.total"
+    matcher: "equals"
+    value: 3
+
+  - id: A002
+    says: "A PASS mention in the Findings section does not inflate the assertion count"
+    block: "parseACResults ignores PASS in non-walkthrough sections"
+    target: "result.met"
+    matcher: "equals"
+    value: 2
+
+  - id: A003
+    says: "Reports missing the AC Walkthrough heading still produce counts using full content"
+    block: "parseACResults falls back to full content when heading missing"
+    target: "result.total"
+    matcher: "greater"
+    value: 0
+
+  # AC4: FAIL guard dedup
+  - id: A004
+    says: "The FAIL rejection logic exists in exactly one helper function"
+    block: "FAIL guard is deduplicated into shared helper"
+    target: "guardDefinitionCount"
+    matcher: "equals"
+    value: 1
+
+  - id: A005
+    says: "A FAIL result in single-phase flow still blocks completion"
+    block: "single-phase FAIL rejection uses shared guard"
+    target: "exitCode"
+    matcher: "equals"
+    value: 1
+
+  - id: A006
+    says: "A FAIL result in multi-phase flow still blocks completion"
+    block: "multi-phase FAIL rejection uses shared guard"
+    target: "exitCode"
+    matcher: "equals"
+    value: 1
+
+  # AC5: Recovery-path counting
+  - id: A007
+    says: "The recovery path uses the same counting function as the main completion path"
+    block: "recovery path uses computeChainHealth"
+    target: "usesComputeChainHealth"
+    matcher: "truthy"
+
+  # AC6: Zero-run defaults
+  - id: A008
+    says: "Zero-run health output uses the shared computation function instead of hardcoded values"
+    block: "zero-run calls computeFirstPassRate"
+    target: "usesComputeFirstPassRate"
+    matcher: "truthy"
+
+  # AC3: exitError factory
+  - id: A009
+    says: "Error handling for proof close uses a shared factory instead of inline definition"
+    block: "close uses exitError factory"
+    target: "factoryCallExists"
+    matcher: "truthy"
+
+  - id: A010
+    says: "Error handling for proof promote uses a shared factory instead of inline definition"
+    block: "promote uses exitError factory"
+    target: "factoryCallExists"
+    matcher: "truthy"
+
+  - id: A011
+    says: "Error handling for proof strengthen uses a shared factory instead of inline definition"
+    block: "strengthen uses exitError factory"
+    target: "factoryCallExists"
+    matcher: "truthy"
+
+  - id: A012
+    says: "The promote error handler still shows available skills when skill is required"
+    block: "promote exitError preserves skill hints"
+    target: "output"
+    matcher: "contains"
+    value: "Available skills"
+
+  # AC7: Truncation consistency
+  - id: A013
+    says: "Long summaries are truncated at word boundaries with ellipsis"
+    block: "truncateSummary truncates at word boundary"
+    target: "result"
+    matcher: "contains"
+    value: "..."
+
+  - id: A014
+    says: "Short summaries pass through unchanged"
+    block: "truncateSummary preserves short text"
+    target: "result.length"
+    matcher: "equals"
+    value: 10
+
+  - id: A015
+    says: "Custom max length parameter controls truncation point"
+    block: "truncateSummary respects custom maxLength"
+    target: "result.length"
+    matcher: "greater"
+    value: 0
+
+  # AC2: Staleness normalization
+  - id: A016
+    says: "A high-frequency file needs more touches to reach high confidence than the raw threshold"
+    block: "staleness normalization increases threshold for hot files"
+    target: "confidence"
+    matcher: "not_equals"
+    value: "high"
+
+  - id: A017
+    says: "A low-frequency file keeps the default minimum threshold of 3 touches"
+    block: "staleness normalization preserves floor for cold files"
+    target: "confidence"
+    matcher: "equals"
+    value: "high"
+
+  - id: A018
+    says: "Normalization only activates when enough entries exist after the finding"
+    block: "staleness uses raw thresholds below minimum entries"
+    target: "confidence"
+    matcher: "equals"
+    value: "high"
+
+  # AC8: Audit headline split
+  - id: A019
+    says: "The audit headline shows how many findings need action versus how many are just monitoring"
+    block: "audit headline shows actionable and monitoring counts"
+    target: "output"
+    matcher: "contains"
+    value: "actionable"
+
+  - id: A020
+    says: "The audit JSON includes separate counts for actionable and monitoring findings"
+    block: "audit JSON includes actionable_count"
+    target: "response.data.actionable_count"
+    matcher: "exists"
+
+  - id: A021
+    says: "A risk-severity finding counts as actionable regardless of its suggested action"
+    block: "risk severity is always actionable"
+    target: "actionableCount"
+    matcher: "greater"
+    value: 0
+
+  # AC9: Lesson command
+  - id: A022
+    says: "Running lesson with valid IDs and reason sets findings to lesson status"
+    block: "lesson command sets status to lesson"
+    target: "finding.status"
+    matcher: "equals"
+    value: "lesson"
+
+  - id: A023
+    says: "Running lesson without a reason shows an error"
+    block: "lesson requires --reason"
+    target: "exitCode"
+    matcher: "equals"
+    value: 1
+
+  - id: A024
+    says: "Running lesson on an already-closed finding is rejected"
+    block: "lesson rejects closed findings"
+    target: "exitCode"
+    matcher: "equals"
+    value: 1
+
+  - id: A025
+    says: "Running lesson on an already-promoted finding is rejected"
+    block: "lesson rejects promoted findings"
+    target: "exitCode"
+    matcher: "equals"
+    value: 1
+
+  - id: A026
+    says: "Lesson command creates a git commit with the proof prefix"
+    block: "lesson commits with proof prefix"
+    target: "commitMessage"
+    matcher: "contains"
+    value: "[proof] Lesson:"
+
+  - id: A027
+    says: "Lesson dry-run shows what would happen without changing anything"
+    block: "lesson --dry-run does not mutate"
+    target: "finding.status"
+    matcher: "equals"
+    value: "active"
+
+  # AC10: Learn template language
+  - id: A028
+    says: "The Learn template no longer uses 'all accept-action findings' phrasing"
+    block: "learn template line 68 updated"
+    target: "templateContent"
+    matcher: "not_contains"
+    value: "all accept-action findings"
+
+  - id: A029
+    says: "The Learn template no longer says findings are pre-classified for closure"
+    block: "learn template line 159 updated"
+    target: "templateContent"
+    matcher: "not_contains"
+    value: "pre-classified for closure"
+
+file_changes:
+  - path: "packages/cli/src/utils/proofSummary.ts"
+    action: modify
+  - path: "packages/cli/src/commands/proof.ts"
+    action: modify
+  - path: "packages/cli/src/commands/work.ts"
+    action: modify
+  - path: "packages/cli/templates/.claude/agents/ana-learn.md"
+    action: modify
+  - path: "packages/cli/tests/utils/proofSummary.test.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/proof.test.ts"
+    action: modify
