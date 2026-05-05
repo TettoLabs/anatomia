@@ -12429,7 +12429,10 @@
           "severity": "debt",
           "suggested_action": "scope",
           "id": "proof-intelligence-hardening-C8",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Duplicate — proofSummary.ts file size already tracked by v1-code-changes-C3 ('proofSummary.ts ~1550 lines — past comfort threshold, known from prior cycles'). Same complaint, third and fourth time raised.",
+          "closed_at": "2026-05-05T06:54:26.441Z",
+          "closed_by": "human"
         },
         {
           "category": "upstream",
@@ -12507,7 +12510,10 @@
           "suggested_action": "monitor",
           "related_assertions": [],
           "id": "proof-intelligence-hardening-C14",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Duplicate — proofSummary.ts file size already tracked by v1-code-changes-C3 ('proofSummary.ts ~1550 lines — past comfort threshold, known from prior cycles'). Same complaint, third and fourth time raised.",
+          "closed_at": "2026-05-05T06:54:26.442Z",
+          "closed_by": "human"
         },
         {
           "category": "upstream",

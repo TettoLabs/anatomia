@@ -1,13 +1,13 @@
 # Proof Chain Dashboard
 
-51 runs · 72 active · 57 lessons · 0 promoted · 157 closed
+51 runs · 70 active · 57 lessons · 0 promoted · 159 closed
 
 ## Hot Modules
 
 | File | Active | Entries |
 |------|--------|--------|
 | packages/cli/tests/commands/work.test.ts | 9 | 7 |
-| packages/cli/src/utils/proofSummary.ts | 9 | 6 |
+| packages/cli/src/utils/proofSummary.ts | 7 | 6 |
 | packages/cli/tests/commands/proof.test.ts | 7 | 3 |
 | packages/cli/src/commands/proof.ts | 5 | 3 |
 | packages/cli/tests/templates/agent-proof-context.test.ts | 3 | 2 |
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 72 total)
+## Active Findings (30 shown of 70 total)
 
 ### .github/workflows/release.yml
 
@@ -41,6 +41,7 @@
 - **code:** createExitError formatHint empty-array return is truthy — prevents fallback to static hints even when callback returns no lines — *Proof Intelligence Hardening*
 - **code:** Lesson command catch block at proof.ts:1141 loses error detail — swallows commit failure cause — *Proof Intelligence Hardening*
 - **code:** Lesson command duplicates close's finding-search loop pattern — 4 identical loops across lesson, close, promote, strengthen — *Proof Intelligence Hardening*
+- **code:** Unknown severity/action values silently dropped from fixed-key objects — by_severity sum can be less than total_active — *Audit JSON Severity Summary*
 
 ### packages/cli/src/commands/work.ts
 
@@ -58,8 +59,6 @@
 ### packages/cli/src/utils/proofSummary.ts
 
 - **code:** parseACResults heading match is case-sensitive and exact — '## AC walkthrough' or '##  AC Walkthrough' (extra space) would miss — *Proof Intelligence Hardening*
-- **code:** proofSummary.ts now ~1913 lines — past comfort threshold, known from prior cycles — *Proof Intelligence Hardening*
-- **code:** proofSummary.ts ~1560+ lines — past comfort threshold, growing each phase — *Proof Intelligence Hardening*
 - **code:** proofSummary.ts ~1550 lines — past comfort threshold, known from prior cycles — *V1 Code Changes*
 
 ### packages/cli/src/utils/validators.ts
@@ -96,6 +95,7 @@
 ### README.md
 
 - **code:** README Development section uses absolute GitHub URLs for CONTRIBUTING/ARCHITECTURE — correct since README is at root — *V1 Documentation Overhaul*
+- **code:** Scan output block in README is representative example, not live output — cannot be mechanically validated — *V1 Documentation Overhaul*
 
 ### General
 
