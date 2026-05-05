@@ -8708,7 +8708,10 @@
             "A019"
           ],
           "id": "health-display-polish-C5",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Stale — coincidental not.toContain('Promote') superseded by dedicated tests at proof.test.ts:2349 (checks heading-level 'Promote' and 'Recurring' separately) and :2484 (checks 'Promotions' heading explicitly). The coverage gap is filled by stronger, targeted assertions.",
+          "closed_at": "2026-05-05T01:27:09.739Z",
+          "closed_by": "human"
         }
       ],
       "rejection_cycles": 0,
