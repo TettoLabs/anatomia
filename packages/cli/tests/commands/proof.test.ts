@@ -4212,7 +4212,9 @@ describe('ana proof', () => {
       };
 
       await fs.writeFile(path.join(anaDir, 'proof_chain.json'), JSON.stringify({ entries: [entry] }, null, 2));
-      execSync('git add -A && git commit -m "init" && git push -u origin main', { cwd: workDir, stdio: 'ignore' });
+      execSync('git add -A && git commit -m "init"', { cwd: workDir, stdio: 'ignore' });
+      execSync('git branch -M main', { cwd: workDir, stdio: 'ignore' });
+      execSync('git push -u origin main', { cwd: workDir, stdio: 'ignore' });
 
       // Create a conflicting commit on the remote (via a second clone)
       const conflictDir = path.join(tempDir, 'conflict');
