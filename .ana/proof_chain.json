@@ -1200,9 +1200,12 @@
           "summary": "A009 cap test doesn't verify WHICH callouts were dropped — proofSummary.test.ts:550-564 creates 25 identical-structure callouts and asserts count is 20, but doesn't verify the 5 dropped are the oldest. The separate \"takes most recent callouts when capping at 20\" test (line 691) does verify this. Together they provide full coverage, but A009 alone would pass even if the implementation kept the oldest instead of the newest.",
           "file": "packages/cli/tests/utils/proofSummary.test.ts",
           "anchor": null,
-          "status": "active",
+          "status": "closed",
           "severity": "debt",
-          "suggested_action": "monitor"
+          "suggested_action": "monitor",
+          "closed_reason": "Stale — code at proofSummary.test.ts:550-564 completely rewritten. Original callout cap test no longer exists — replaced by finding parsing tests across 16 subsequent runs.",
+          "closed_at": "2026-05-05T01:21:29.772Z",
+          "closed_by": "human"
         },
         {
           "id": "proof-chain-active-issues-C5",
