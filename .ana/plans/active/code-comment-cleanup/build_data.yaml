@@ -1,0 +1,9 @@
+schema: 1
+concerns:
+  - summary: "Pre-existing lint warning in git-operations.ts:169 (unused eslint-disable)"
+    file: "packages/cli/src/utils/git-operations.ts"
+    severity: debt
+    suggested_action: accept
+  - summary: "~10 test description strings still contain sprint/ticket identifiers"
+    severity: observation
+    suggested_action: monitor
