@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-50 runs · 72 active · 54 lessons · 0 promoted · 143 closed
+50 runs · 71 active · 54 lessons · 0 promoted · 144 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 72 total)
+## Active Findings (30 shown of 71 total)
 
 ### .github/workflows/release.yml
 
