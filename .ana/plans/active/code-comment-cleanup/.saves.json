@@ -128,5 +128,18 @@
     "packages/cli/tests/engine/utils/service-annotation.test.ts",
     "packages/cli/tests/engine/version-detection.test.ts",
     "packages/cli/tests/templates/cross-platform.test.ts"
-  ]
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:a8e4e5e6175355e926367af535dee8e79a1efe2f807b3e31639888d9d748bb2b",
+    "run_at": "2026-05-05T23:50:54.108Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-05T23:50:54.143Z",
+    "hash": "sha256:0e0a13a1ba62cbb56ded07df4e45c5eca5960f20c8e73472c77afb3ccc8c4857"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-05T23:50:54.143Z",
+    "hash": "sha256:9b3e674578083f4588d53f3200806f662be3a72dad30dc6b3a43eed51bb0c2f3"
+  }
 }
