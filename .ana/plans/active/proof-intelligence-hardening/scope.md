@@ -10,7 +10,7 @@ Consolidation pass on the proof intelligence surface. Two confirmed bugs corrupt
 ## Complexity Assessment
 - **Size:** large
 - **Files affected:** `proofSummary.ts`, `proof.ts`, `work.ts`, `templates/.claude/agents/ana-learn.md`, plus test files for each
-- **Blast radius:** All proof subcommands consume proofSummary functions. The exitError extraction touches close/promote/strengthen. The staleness normalization changes what Learn sees. The lesson command adds a new subcommand.
+- **Blast radius:** All proof subcommands consume proofSummary functions. The exitError extraction touches close/promote/strengthen. The staleness normalization changes what Learn sees. The lesson command adds a new subcommand. The parseACResults fix affects the proof chain write path — work.ts completeWork calls it via generateProofSummary, so this is a data-path fix, not just display.
 - **Estimated effort:** 2-3 pipeline phases
 - **Multi-phase:** yes
 
@@ -31,7 +31,6 @@ The design principle is removal: three exitError copies become one factory, hard
 - AC8: Audit headline distinguishes actionable findings (risk/debt severity OR scope/promote action) from monitoring findings
 - AC9: `ana proof lesson <ids...> --reason "..."` sets findings to status 'lesson' with git commit — same UX pattern as close
 - AC10: Learn template lines 68 and 159 no longer contain language that encourages batch closure of accept-action findings
-- AC11: Finding `ana-learn-v1-C3` closed as invalid (SKILL.md paths are correct)
 
 ## Edge Cases & Risks
 - **parseACResults section extraction:** Verify reports might lack the `## AC Walkthrough` heading (malformed reports from early pipeline runs). The fix must handle missing section gracefully — fall back to current behavior (full content) rather than returning 0.
@@ -68,8 +67,8 @@ The design principle is removal: three exitError copies become one factory, hard
 - [OBSERVED] 3/44 verify reports have parseACResults false matches (verified against completed plans)
 
 ### Test Infrastructure
-- `packages/cli/tests/proof.test.ts`: Large test file covering proof subcommands (close, promote, strengthen, health, audit, stale). Test fixtures include proof_chain.json with known entries.
-- `packages/cli/tests/proofSummary.test.ts`: Unit tests for computation functions including computeStaleness, parseACResults
+- `packages/cli/tests/commands/proof.test.ts`: Large test file covering proof subcommands (close, promote, strengthen, health, audit, stale). Test fixtures include proof_chain.json with known entries.
+- `packages/cli/tests/utils/proofSummary.test.ts`: Unit tests for computation functions including computeStaleness, parseACResults
 
 ## For AnaPlan
 
@@ -89,7 +88,7 @@ The design principle is removal: three exitError copies become one factory, hard
 - `templates/.claude/agents/ana-learn.md:68, 159` — accept-action language
 
 ### Patterns to Follow
-- `proofSummary.ts:214-240` (parseDeviations) — already scopes to section via indexOf/slice pattern. parseACResults should follow the same approach.
+- parseACResults fix approach: Extract the section between `## AC Walkthrough` and the next `## ` heading via indexOf/slice, then run the existing regex on that substring. Fall back to full content if heading not found.
 - `proof.ts:565-800` (close) — the lesson command clones this exactly with one status value changed.
 
 ### Known Gotchas
