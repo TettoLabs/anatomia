@@ -7,6 +7,22 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-05-05
+
+### Fixed
+- Fix parseACResults regex — scope to AC Walkthrough section only, preventing false PASS/FAIL matches from Findings bullets (3/44 proof chain entries had inflated counts)
+- Normalize staleness detector confidence by file touch frequency — reduces false positives from 78% to ~40% on hot files
+- Collapse dual FAIL guard in work.ts to single shared helper
+- Unify recovery-path finding count with computeChainHealth
+- Delete hardcoded zero-run defaults in favor of calling computeFirstPassRate
+- Extract shared exitError factory across close/promote/strengthen subcommands
+- Extract and apply summary truncation helper consistently
+- Fix Learn template — remove "pre-classified for closure" language that caused batch-closing
+
+### Added
+- `ana proof lesson` command — record findings as institutional lessons (verified but not actionable)
+- Audit headline now shows actionable vs monitoring split (e.g., "24 actionable, 48 monitoring")
+
 ## [1.0.1] - 2026-05-04
 
 ### Fixed
@@ -78,6 +94,7 @@ First stable release.
 
 Previous development history is preserved in git log.
 
-[Unreleased]: https://github.com/TettoLabs/anatomia/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/TettoLabs/anatomia/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/TettoLabs/anatomia/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/TettoLabs/anatomia/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/TettoLabs/anatomia/releases/tag/v1.0.0
