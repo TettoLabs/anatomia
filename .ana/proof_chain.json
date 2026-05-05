@@ -9665,7 +9665,10 @@
           "severity": "debt",
           "suggested_action": "scope",
           "id": "proof-health-v2-C6",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed by proof-intelligence-hardening Phase 1 — zero-run path at proof.ts:2142 now calls computeFirstPassRate([]) instead of hardcoding defaults.",
+          "closed_at": "2026-05-05T06:43:04.040Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
