@@ -54,7 +54,7 @@ jobs:
             exit 1
           fi
 
-      - run: npm install -g npm@latest
+      - run: sudo npm install -g npm@latest
 
       - run: cd packages/cli && npm publish --provenance --access public
 
