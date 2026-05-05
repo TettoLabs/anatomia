@@ -58,7 +58,7 @@ packages/cli/src/
       rust.ts                       — detectRustFramework (single-function)
       node/                         — 6 detector files + framework-registry.ts
         express.ts, nestjs.ts, nextjs.ts, other.ts, react.ts, remix.ts
-      python/                       — 5 detector files + framework-registry.ts
+      python/                       — 4 detector files + framework-registry.ts
         cli.ts, django.ts, fastapi.ts, flask.ts
 
     sampling/

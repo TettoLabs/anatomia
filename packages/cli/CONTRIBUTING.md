@@ -42,7 +42,7 @@ packages/cli/
 │   ├── engine/            # Scan engine
 │   │   ├── scan-engine.ts #   scanProject() — public entry point
 │   │   ├── index.ts       #   Re-exports: EngineResult, scanProject, ASTCache, ParserManager
-│   │   ├── detectors/     #   12 top-level .ts files + node/ (6 + registry) + python/ (5 + registry)
+│   │   ├── detectors/     #   12 top-level .ts files + node/ (6 + registry) + python/ (4 + registry)
 │   │   ├── analyzers/     #   patterns/, structure/, conventions/ (5 files)
 │   │   ├── sampling/      #   proportionalSampler.ts
 │   │   ├── types/         #   EngineResult + pattern/convention/parsed Zod schemas
