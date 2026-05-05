@@ -1133,6 +1133,33 @@ export function computeStaleness(
 
       if (subsequentSlugs.length === 0) continue;
 
+      // Frequency-normalized confidence thresholds
+      // entries_since = total entries after this finding's entry
+      const entriesSince = chain.entries.length - (i + 1);
+      let confidence: 'high' | 'medium';
+
+      if (entriesSince < 5) {
+        // Below minimum entries: use raw thresholds
+        confidence = subsequentSlugs.length >= 3 ? 'high' : 'medium';
+      } else {
+        // Compute file touch rate across the entire chain (baseline frequency)
+        let totalTouches = 0;
+        for (const e of chain.entries) {
+          if ((e.modules_touched || []).includes(f.file)) {
+            totalTouches++;
+          }
+        }
+        const touchRate = totalTouches / chain.entries.length;
+        const expected = Math.max(3, Math.ceil(entriesSince * touchRate));
+        if (subsequentSlugs.length >= expected) {
+          confidence = 'high';
+        } else if (subsequentSlugs.length >= Math.ceil(expected * 0.5)) {
+          confidence = 'medium';
+        } else {
+          continue; // Not stale enough — skip
+        }
+      }
+
       const staleFinding: import('../types/proof.js').StaleFinding = {
         id: f.id || 'unknown',
         category: f.category || 'code',
@@ -1143,7 +1170,7 @@ export function computeStaleness(
         completed_at: entry.completed_at || '',
         subsequent_slugs: subsequentSlugs,
         subsequent_count: subsequentSlugs.length,
-        confidence: subsequentSlugs.length >= 3 ? 'high' : 'medium',
+        confidence,
       };
 
       if (staleFinding.confidence === 'high') {

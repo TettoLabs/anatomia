@@ -2963,6 +2963,133 @@ describe('computeStaleness', () => {
     const result = computeStaleness(chain);
     expect(result.total_stale).toBe(0);
   });
+
+  // @ana A016
+  it('high-frequency file needs more touches for high confidence', () => {
+    // 11 entries total. File src/hot.ts touched in 6 of 11 entries (55% baseline rate).
+    // entriesSince = 10, touchRate = 6/11 ≈ 0.545
+    // expected = max(3, ceil(10 * 0.545)) = max(3, 6) = 6
+    // Only 3 post-finding touches < 6 → NOT high
+    // 3 >= ceil(6*0.5)=3 → medium
+    const chain = {
+      entries: [
+        {
+          slug: 'entry-0',
+          completed_at: '2026-04-19T10:00:00Z',
+          modules_touched: ['src/hot.ts'],
+          findings: [
+            { id: 'F001', status: 'active', severity: 'risk', category: 'code', summary: 'Hot file finding', file: 'src/hot.ts' },
+          ],
+        },
+        { slug: 'e1', completed_at: '2026-04-20T10:00:00Z', modules_touched: ['src/hot.ts'], findings: [] },
+        { slug: 'e2', completed_at: '2026-04-20T11:00:00Z', modules_touched: ['src/hot.ts'], findings: [] },
+        { slug: 'e3', completed_at: '2026-04-20T12:00:00Z', modules_touched: ['src/hot.ts'], findings: [] },
+        { slug: 'e4', completed_at: '2026-04-20T13:00:00Z', modules_touched: ['src/other.ts'], findings: [] },
+        { slug: 'e5', completed_at: '2026-04-20T14:00:00Z', modules_touched: ['src/hot.ts'], findings: [] },
+        { slug: 'e6', completed_at: '2026-04-20T15:00:00Z', modules_touched: ['src/other.ts'], findings: [] },
+        { slug: 'e7', completed_at: '2026-04-20T16:00:00Z', modules_touched: ['src/hot.ts'], findings: [] },
+        { slug: 'e8', completed_at: '2026-04-20T17:00:00Z', modules_touched: ['src/other.ts'], findings: [] },
+        { slug: 'e9', completed_at: '2026-04-20T18:00:00Z', modules_touched: ['src/other.ts'], findings: [] },
+        { slug: 'e10', completed_at: '2026-04-20T19:00:00Z', modules_touched: ['src/other.ts'], findings: [] },
+      ],
+    };
+    const result = computeStaleness(chain);
+    // Post-finding touches: e1, e2, e3 = 3. Expected = 6. 3 < 6 → NOT high
+    expect(result.high_confidence.length).toBe(0);
+    expect(result.medium_confidence.length).toBe(1);
+    expect(result.medium_confidence[0]!.confidence).toBe('medium');
+  });
+
+  // @ana A017
+  it('low-frequency file keeps floor threshold of 3', () => {
+    // 11 entries total. File src/cold.ts touched in 3 of 11 entries (27% rate).
+    // entriesSince = 10, touchRate = 3/11 ≈ 0.273
+    // expected = max(3, ceil(10 * 0.273)) = max(3, 3) = 3
+    // 3 post-finding touches >= 3 → high
+    const chain = {
+      entries: [
+        {
+          slug: 'entry-0',
+          completed_at: '2026-04-19T10:00:00Z',
+          modules_touched: [],
+          findings: [
+            { id: 'F001', status: 'active', severity: 'risk', category: 'code', summary: 'Cold file finding', file: 'src/cold.ts' },
+          ],
+        },
+        { slug: 'e1', completed_at: '2026-04-20T10:00:00Z', modules_touched: ['src/cold.ts'], findings: [] },
+        { slug: 'e2', completed_at: '2026-04-20T11:00:00Z', modules_touched: ['src/other.ts'], findings: [] },
+        { slug: 'e3', completed_at: '2026-04-20T12:00:00Z', modules_touched: ['src/other.ts'], findings: [] },
+        { slug: 'e4', completed_at: '2026-04-20T13:00:00Z', modules_touched: ['src/cold.ts'], findings: [] },
+        { slug: 'e5', completed_at: '2026-04-20T14:00:00Z', modules_touched: ['src/other.ts'], findings: [] },
+        { slug: 'e6', completed_at: '2026-04-20T15:00:00Z', modules_touched: ['src/other.ts'], findings: [] },
+        { slug: 'e7', completed_at: '2026-04-20T16:00:00Z', modules_touched: ['src/other.ts'], findings: [] },
+        { slug: 'e8', completed_at: '2026-04-20T17:00:00Z', modules_touched: ['src/other.ts'], findings: [] },
+        { slug: 'e9', completed_at: '2026-04-20T18:00:00Z', modules_touched: ['src/cold.ts'], findings: [] },
+        { slug: 'e10', completed_at: '2026-04-20T19:00:00Z', modules_touched: ['src/other.ts'], findings: [] },
+      ],
+    };
+    const result = computeStaleness(chain);
+    // 3 post-finding touches, expected=3 → 3>=3 → high
+    expect(result.high_confidence.length).toBe(1);
+    expect(result.high_confidence[0]!.confidence).toBe('high');
+  });
+
+  // @ana A018
+  it('uses raw thresholds below minimum entries', () => {
+    // Only 4 entries after finding (< 5 minimum), file touched 3 times → raw: high
+    const chain = {
+      entries: [
+        {
+          slug: 'entry-0',
+          completed_at: '2026-04-19T10:00:00Z',
+          modules_touched: [],
+          findings: [
+            { id: 'F001', status: 'active', severity: 'risk', category: 'code', summary: 'Young finding', file: 'src/young.ts' },
+          ],
+        },
+        { slug: 'e1', completed_at: '2026-04-20T10:00:00Z', modules_touched: ['src/young.ts'], findings: [] },
+        { slug: 'e2', completed_at: '2026-04-20T11:00:00Z', modules_touched: ['src/young.ts'], findings: [] },
+        { slug: 'e3', completed_at: '2026-04-20T12:00:00Z', modules_touched: ['src/young.ts'], findings: [] },
+        { slug: 'e4', completed_at: '2026-04-20T13:00:00Z', modules_touched: ['src/young.ts'], findings: [] },
+      ],
+    };
+    const result = computeStaleness(chain);
+    // entriesSince=4, < 5 → raw thresholds. 4 touches >= 3 → high
+    expect(result.high_confidence.length).toBe(1);
+    expect(result.high_confidence[0]!.confidence).toBe('high');
+  });
+
+  it('high-frequency file reaches high when touches meet expected threshold', () => {
+    // 11 entries total. File src/hot.ts touched in 6 of 11 (55% rate).
+    // entriesSince = 10, expected = max(3, ceil(10 * 6/11)) = max(3, 6) = 6
+    // 6 post-finding touches >= 6 → high
+    const chain = {
+      entries: [
+        {
+          slug: 'entry-0',
+          completed_at: '2026-04-19T10:00:00Z',
+          modules_touched: [],
+          findings: [
+            { id: 'F001', status: 'active', severity: 'risk', category: 'code', summary: 'Hot file many touches', file: 'src/hot.ts' },
+          ],
+        },
+        { slug: 'e1', completed_at: '2026-04-20T10:00:00Z', modules_touched: ['src/hot.ts'], findings: [] },
+        { slug: 'e2', completed_at: '2026-04-20T11:00:00Z', modules_touched: ['src/hot.ts'], findings: [] },
+        { slug: 'e3', completed_at: '2026-04-20T12:00:00Z', modules_touched: ['src/hot.ts'], findings: [] },
+        { slug: 'e4', completed_at: '2026-04-20T13:00:00Z', modules_touched: ['src/other.ts'], findings: [] },
+        { slug: 'e5', completed_at: '2026-04-20T14:00:00Z', modules_touched: ['src/hot.ts'], findings: [] },
+        { slug: 'e6', completed_at: '2026-04-20T15:00:00Z', modules_touched: ['src/other.ts'], findings: [] },
+        { slug: 'e7', completed_at: '2026-04-20T16:00:00Z', modules_touched: ['src/other.ts'], findings: [] },
+        { slug: 'e8', completed_at: '2026-04-20T17:00:00Z', modules_touched: ['src/other.ts'], findings: [] },
+        { slug: 'e9', completed_at: '2026-04-20T18:00:00Z', modules_touched: ['src/hot.ts'], findings: [] },
+        { slug: 'e10', completed_at: '2026-04-20T19:00:00Z', modules_touched: ['src/hot.ts'], findings: [] },
+      ],
+    };
+    const result = computeStaleness(chain);
+    // 6 touches across 11 entries → rate=6/11≈0.545, expected=ceil(10*0.545)=6, 6>=6 → high
+    expect(result.high_confidence.length).toBe(1);
+    expect(result.high_confidence[0]!.confidence).toBe('high');
+  });
 });
 
 // @ana A013, A014, A015
