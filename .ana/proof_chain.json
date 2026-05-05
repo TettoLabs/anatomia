@@ -5591,7 +5591,10 @@
             "A031"
           ],
           "id": "finding-enrichment-schema-C7",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Stale — createAuditChain still doesn't generate debt, but debt badge display is now tested at proof.test.ts:326 and :420 via manually constructed fixtures with severity: 'debt'. Coverage gap filled.",
+          "closed_at": "2026-05-05T01:22:10.736Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
