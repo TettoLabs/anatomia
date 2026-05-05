@@ -707,6 +707,25 @@ export function getWorkStatus(options: { json?: boolean }): void {
 /**
  * Write proof chain files (JSON and markdown)
  *
+ * Guard against completing work with a FAIL verification result.
+ * Prints error messages and exits the process if result is FAIL.
+ *
+ * @param result - Verification result string
+ * @param context - Optional context (e.g., "Phase 2") for the error message
+ */
+function guardFailResult(result: string, context?: string): void {
+  if (result === 'FAIL') {
+    const prefix = context ? `${context}: ` : '';
+    console.error(chalk.red(`Error: ${prefix}Cannot complete work with a FAIL verification result.`));
+    console.error(chalk.gray('The verify report says FAIL. Fix the issues and re-verify before completing.'));
+    console.error(chalk.gray('Run: claude --agent ana-build to fix, then claude --agent ana-verify'));
+    process.exit(1);
+  }
+}
+
+/**
+ * Write a proof chain entry for a completed work item and regenerate the dashboard.
+ *
  * @param slug - Work item slug
  * @param proof - Proof summary data
  * @param projectRoot - Project root directory
@@ -747,12 +766,7 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
   } catch { /* fall back to empty */ }
 
   // FAIL result guard — block proof chain entry for failed verification
-  if (proof.result === 'FAIL') {
-    console.error(chalk.red('Error: Cannot complete work with a FAIL verification result.'));
-    console.error(chalk.gray('The verify report says FAIL. Fix the issues and re-verify before completing.'));
-    console.error(chalk.gray('Run: claude --agent ana-build to fix, then claude --agent ana-verify'));
-    process.exit(1);
-  }
+  guardFailResult(proof.result);
 
   // UNKNOWN result warning (AC12)
   const completedPlanDir = path.join(anaDir, 'plans', 'completed', slug);
@@ -1010,19 +1024,15 @@ export async function completeWork(slug: string, options?: { json?: boolean }): 
           // Print summary from completed path
           const proof = generateProofSummary(completedPath);
           const chainPath = path.join(projectRoot, '.ana', 'proof_chain.json');
-          let runs = 0;
-          let findingsCount = 0;
           let recoveryChain: { entries: Array<{ findings?: Array<{ status?: string; severity?: string; suggested_action?: string }> }> } = { entries: [] };
           if (fs.existsSync(chainPath)) {
             try {
-              const parsed = JSON.parse(fs.readFileSync(chainPath, 'utf-8'));
-              recoveryChain = parsed;
-              runs = Array.isArray(parsed.entries) ? parsed.entries.length : 0;
-              for (const e of parsed.entries || []) {
-                findingsCount += (e.findings || []).length;
-              }
+              recoveryChain = JSON.parse(fs.readFileSync(chainPath, 'utf-8'));
             } catch { /* */ }
           }
+          const recoveryHealth = computeChainHealth(recoveryChain);
+          const runs = recoveryHealth.chain_runs;
+          const findingsCount = recoveryHealth.findings.total;
 
           if (options?.json) {
             const jsonResults = {
@@ -1147,12 +1157,7 @@ export async function completeWork(slug: string, options?: { json?: boolean }): 
     const verifyContent = fs.readFileSync(verifyReportPath, 'utf-8');
     const result = getVerifyResult(verifyContent);
 
-    if (result === 'FAIL') {
-      console.error(chalk.red('Error: Cannot complete work with a FAIL verification result.'));
-      console.error(chalk.gray('The verify report says FAIL. Fix the issues and re-verify before completing.'));
-      console.error(chalk.gray('Run: claude --agent ana-build to fix, then claude --agent ana-verify'));
-      process.exit(1);
-    }
+    guardFailResult(result, `Phase ${phaseNum}`);
 
     if (result === 'unknown') {
       console.error(chalk.red(`Error: Phase ${phaseNum} verify report has no Result line.`));
