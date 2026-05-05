@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-51 runs · 75 active · 57 lessons · 0 promoted · 154 closed
+51 runs · 74 active · 57 lessons · 0 promoted · 155 closed
 
 ## Hot Modules
 
@@ -10,13 +10,13 @@
 | packages/cli/tests/commands/work.test.ts | 9 | 7 |
 | packages/cli/tests/commands/proof.test.ts | 7 | 3 |
 | packages/cli/src/commands/proof.ts | 6 | 3 |
-| packages/cli/src/commands/work.ts | 4 | 3 |
+| packages/cli/tests/templates/agent-proof-context.test.ts | 3 | 2 |
 
 ## Promoted Rules
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 75 total)
+## Active Findings (30 shown of 74 total)
 
 ### .github/workflows/release.yml
 
@@ -34,6 +34,7 @@
 
 - **code:** npm pack dry-run doesn't include README.md or CHANGELOG.md — prepublishOnly required first — *V1 Release Prep*
 - **code:** prepublishOnly relies on relative ../../ path — breaks if package depth changes — *V1 Documentation Overhaul*
+- **code:** README.md and CHANGELOG.md cannot be verified with npm pack --dry-run — only exist after prepublishOnly — *V1 Documentation Overhaul*
 
 ### packages/cli/src/commands/proof.ts
 
@@ -45,7 +46,6 @@
 ### packages/cli/src/commands/work.ts
 
 - **code:** guardFailResult JSDoc first line says 'Write proof chain files' — copy-paste from writeProofChain description — *Proof Intelligence Hardening*
-- **code:** guardFailResult changes multi-phase FAIL message format from original — adds 'Phase N: ' prefix not present before — *Proof Intelligence Hardening*
 
 ### packages/cli/src/engine/detectors/git.ts
 

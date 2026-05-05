@@ -12349,7 +12349,10 @@
             "A006"
           ],
           "id": "proof-intelligence-hardening-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Intentional design — spec explicitly defined guardFailResult(result, context?) to accept phase context. The 'Phase N:' prefix is the designed behavior for multi-phase error messages.",
+          "closed_at": "2026-05-05T06:53:21.496Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
