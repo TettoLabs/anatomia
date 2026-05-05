@@ -119,7 +119,7 @@ Proof Audit: 6 active findings (4 actionable, 2 monitoring) across 3 files
 **Why:** Push retry and audit filters are new behavior that needs coverage.
 
 ### `packages/cli/templates/.claude/agents/ana-learn.md` (modify)
-**What changes:** Replace the Reference/Commands section (lines 489–498) with the expanded version from the Output Mockups below. Adds lesson, context, audit filters, a "when to use which" guide, and repositions the stale description as "could be resolved" rather than a conclusion.
+**What changes:** Replace the Reference/Commands section (lines 489–498) with the expanded version from the Output Mockups section above. Adds lesson, context, audit filters, a "when to use which" guide, and repositions the stale description as "could be resolved" rather than a conclusion.
 **Pattern to follow:** Existing command list format in the same section.
 **Why:** Learn doesn't know about `lesson`, `context`, or audit filters. Without the when-to-use guide, Learn guesses which filter to apply.
 
