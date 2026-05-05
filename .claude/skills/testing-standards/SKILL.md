@@ -27,7 +27,7 @@ description: "Invoke when writing tests, reviewing test quality, or setting up t
 - Scan integration tests run against the compiled `dist/index.js`, not source. The pre-commit hook runs `pnpm run build` to keep the artifact fresh. If running tests manually outside the hook, run `pnpm run build` first — stale dist will give false passes on terminal output tests.
 
 ## Gotchas
-*Not yet captured. Add as you discover them during development.*
+- Git: always use `git init --initial-branch=main` or `git branch -M main` after first commit. CI runners may have different `init.defaultBranch` settings — never assume the default.
 
 ## Examples
 *Not yet captured. Add short snippets showing the RIGHT way.*

@@ -8,4 +8,5 @@
 
 - [ ] Tests pass: `cd packages/cli && pnpm vitest run`
 - [ ] Build succeeds: `pnpm build`
+- [ ] Typecheck tests: `cd packages/cli && pnpm typecheck:tests`
 - [ ] Lint passes: `cd packages/cli && pnpm lint`
