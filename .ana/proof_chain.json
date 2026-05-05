@@ -10391,7 +10391,10 @@
             "A007"
           ],
           "id": "learn-template-session-fixes-C1",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Stale — ana-learn.md no longer contains 'cap at ~30 per session'. Lines 188 and 446 now say 'no arbitrary cap' and 'developer controls session length'. The contradiction this finding identified is resolved.",
+          "closed_at": "2026-05-05T01:30:08.396Z",
+          "closed_by": "human"
         },
         {
           "category": "upstream",

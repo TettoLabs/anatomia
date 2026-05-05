@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-50 runs · 73 active · 54 lessons · 0 promoted · 142 closed
+50 runs · 72 active · 54 lessons · 0 promoted · 143 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 73 total)
+## Active Findings (30 shown of 72 total)
 
 ### .github/workflows/release.yml
 
@@ -62,7 +62,6 @@
 
 - **code:** Residual 'accept-action findings' in audit usage guidance reinforces batch framing — *Learn Severity-Based Triage*
 - **code:** 'Accept-action findings are pre-classified for closure' in Field Semantics section perpetuates batch framing language — *Learn Severity-Based Triage*
-- **code:** Edge Cases section still says 'Cap at ~30 per session' — contradicts new 'no arbitrary cap' guidance in Session Approach — *Learn Template Session Fixes*
 
 ### packages/cli/tests/commands/proof.test.ts
 
@@ -88,6 +87,7 @@
 ### packages/cli/tests/utils/proofSummary.test.ts
 
 - **test:** No false-match edge case test for non-AC bullet lines containing status words — *V1 Code Changes*
+- **test:** Remaining toBeGreaterThan(0) in proofSummary.test.ts — 21 instances outside this spec's scope still use weak assertions — *Strengthen Weak Test Assertions*
 
 ### README.md
 
