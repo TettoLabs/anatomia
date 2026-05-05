@@ -5229,8 +5229,11 @@
           "line": 1085,
           "severity": "observation",
           "id": "harden-git-commit-calls-C3",
-          "status": "active",
-          "suggested_action": "scope"
+          "status": "closed",
+          "suggested_action": "scope",
+          "closed_reason": "Fixed by proof-intelligence-hardening Phase 1 — recovery path now calls computeChainHealth(recoveryChain) at work.ts:1033 instead of manual loop. Same computation as main path.",
+          "closed_at": "2026-05-05T06:42:38.747Z",
+          "closed_by": "human"
         },
         {
           "category": "upstream",
