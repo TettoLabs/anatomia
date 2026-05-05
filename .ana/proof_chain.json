@@ -7653,7 +7653,10 @@
             "A002"
           ],
           "id": "proof-command-ux-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Stale — audit test fixtures now include closed findings (proof.test.ts:975, :1771, :1898). Negative proof of active-only counting exists. The coverage gap this finding identified is filled.",
+          "closed_at": "2026-05-05T01:25:21.001Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
