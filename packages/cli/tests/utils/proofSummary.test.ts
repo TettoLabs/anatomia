@@ -23,6 +23,7 @@ import {
   computeHealthReport,
   detectHealthChange,
   computeStaleness,
+  truncateSummary,
   MIN_FINDINGS_HOT,
   MIN_ENTRIES_HOT,
   TRAJECTORY_WINDOW,
@@ -2961,5 +2962,52 @@ describe('computeStaleness', () => {
     };
     const result = computeStaleness(chain);
     expect(result.total_stale).toBe(0);
+  });
+});
+
+// @ana A013, A014, A015
+describe('truncateSummary', () => {
+  // @ana A014
+  it('returns short text unchanged', () => {
+    const text = 'short text';
+    const result = truncateSummary(text, 100);
+    expect(result).toBe(text);
+    expect(result.length).toBe(10);
+  });
+
+  it('returns text exactly at maxLength unchanged', () => {
+    const text = 'a'.repeat(50);
+    const result = truncateSummary(text, 50);
+    expect(result).toBe(text);
+  });
+
+  // @ana A013
+  it('truncates at last word boundary and appends ellipsis', () => {
+    const text = 'The quick brown fox jumps over the lazy dog and keeps running far away';
+    const result = truncateSummary(text, 50);
+    expect(result).toContain('...');
+    expect(result.length).toBeLessThanOrEqual(53); // 50 + '...'
+    // Should cut at a space boundary
+    const withoutEllipsis = result.slice(0, -3);
+    expect(text.startsWith(withoutEllipsis)).toBe(true);
+    expect(withoutEllipsis.endsWith(' ')).toBe(false);
+  });
+
+  it('hard-cuts when no space found before maxLength', () => {
+    const text = 'abcdefghijklmnopqrstuvwxyz';
+    const result = truncateSummary(text, 10);
+    expect(result).toBe('abcdefghij...');
+  });
+
+  // @ana A015
+  it('respects custom maxLength parameter', () => {
+    // 50 chars then a space — lastIndexOf(' ', 50) returns 50, substring(0, 50) + '...' = 53
+    const text = '12345678901234567890123456789012345678901234567890 more text after space';
+    const result = truncateSummary(text, 50);
+    expect(result.length).toBe(53);
+  });
+
+  it('handles empty string', () => {
+    expect(truncateSummary('', 100)).toBe('');
   });
 });

@@ -25,7 +25,7 @@ import { spawnSync } from 'node:child_process';
 import { globSync } from 'glob';
 import type { ProofChainEntry, ProofChain } from '../types/proof.js';
 import { findProjectRoot, validateSkillName } from '../utils/validators.js';
-import { getProofContext, wrapJsonResponse, wrapJsonError, generateDashboard, computeChainHealth, computeHealthReport, computeFirstPassRate, computeStaleness, MIN_ENTRIES_FOR_TREND } from '../utils/proofSummary.js';
+import { getProofContext, wrapJsonResponse, wrapJsonError, generateDashboard, computeChainHealth, computeHealthReport, computeFirstPassRate, computeStaleness, truncateSummary, MIN_ENTRIES_FOR_TREND } from '../utils/proofSummary.js';
 import type { ProofContextResult } from '../utils/proofSummary.js';
 import { readArtifactBranch, getCurrentBranch, readCoAuthor, runGit } from '../utils/git-operations.js';
 
@@ -350,10 +350,7 @@ function formatHealthDisplay(reportOrZero: import('../types/proof.js').HealthRep
   // Promote candidates → "Promote:" with severity badge
   const promoteCandidates = report.promotion_candidates.filter(c => c.suggested_action === 'promote');
   for (const c of promoteCandidates) {
-    const MAX_SUMMARY = 100;
-    const summary = c.summary.length > MAX_SUMMARY
-      ? c.summary.slice(0, MAX_SUMMARY) + '...'
-      : c.summary;
+    const summary = truncateSummary(c.summary, 100);
     const fileSuffix = c.file ? ` \u2014 ${path.basename(c.file)}` : '';
     nextActions.push({
       label: `  Promote: [${c.severity}] ${summary}${fileSuffix}`,
@@ -366,10 +363,7 @@ function formatHealthDisplay(reportOrZero: import('../types/proof.js').HealthRep
     c => c.suggested_action === 'scope' && (c.recurrence_count ?? 0) >= 2
   );
   for (const c of recurringCandidates) {
-    const MAX_SUMMARY = 100;
-    const summary = c.summary.length > MAX_SUMMARY
-      ? c.summary.slice(0, MAX_SUMMARY) + '...'
-      : c.summary;
+    const summary = truncateSummary(c.summary, 100);
     const fileSuffix = c.file ? ` \u2014 ${path.basename(c.file)}` : '';
     nextActions.push({
       label: `  Fix: ${summary}${fileSuffix} (${c.recurrence_count} entries)`,
@@ -1187,7 +1181,7 @@ export function registerProofCommand(program: Command): void {
           console.log(chalk.yellow(`⚠ ${duplicateWarning}`));
         }
         console.log(`✓ Promoted ${p.id} to ${skillName}`);
-        console.log(`  ${chalk.dim(`[${p.category}]`)} ${p.summary} — ${p.file ?? 'no file'}`);
+        console.log(`  ${chalk.dim(`[${p.category}]`)} ${truncateSummary(p.summary, 100)} — ${p.file ?? 'no file'}`);
         console.log(`  ${p.previous_status} → promoted`);
         console.log(`  Rule: ${ruleLine}`);
         console.log(`  Section: ${sectionHeading}`);
@@ -1201,7 +1195,7 @@ export function registerProofCommand(program: Command): void {
         }
         console.log(`✓ Promoted ${promoted.length} findings to ${skillName}`);
         for (const p of promoted) {
-          console.log(`  ${p.id} ${chalk.dim(`[${p.category}]`)} ${p.summary} — ${p.file ?? 'no file'} (${p.previous_status} → promoted)`);
+          console.log(`  ${p.id} ${chalk.dim(`[${p.category}]`)} ${truncateSummary(p.summary, 100)} — ${p.file ?? 'no file'} (${p.previous_status} → promoted)`);
         }
         for (const s of skipped) {
           console.log(`  ✗ ${s.id} — ${s.reason} (skipped)`);
@@ -1488,7 +1482,7 @@ export function registerProofCommand(program: Command): void {
       } else if (strengthened.length === 1 && skipped.length === 0) {
         const s = strengthened[0]!;
         console.log(`✓ Strengthened 1 finding → ${skillName}`);
-        console.log(`  ${s.id} ${chalk.dim(`[${s.category}]`)} ${s.summary} — ${s.file ?? 'no file'} (${s.previous_status} → promoted)`);
+        console.log(`  ${s.id} ${chalk.dim(`[${s.category}]`)} ${truncateSummary(s.summary, 100)} — ${s.file ?? 'no file'} (${s.previous_status} → promoted)`);
         console.log(`  Skill: ${skillRelPath}`);
         console.log(`  Reason: ${options.reason}`);
         console.log('');
@@ -1496,7 +1490,7 @@ export function registerProofCommand(program: Command): void {
       } else {
         console.log(`✓ Strengthened ${strengthened.length} findings → ${skillName}`);
         for (const s of strengthened) {
-          console.log(`  ${s.id} ${chalk.dim(`[${s.category}]`)} ${s.summary} — ${s.file ?? 'no file'} (${s.previous_status} → promoted)`);
+          console.log(`  ${s.id} ${chalk.dim(`[${s.category}]`)} ${truncateSummary(s.summary, 100)} — ${s.file ?? 'no file'} (${s.previous_status} → promoted)`);
         }
         for (const sk of skipped) {
           console.log(`  ✗ ${sk.id} — ${sk.reason} (skipped)`);
@@ -1932,12 +1926,7 @@ function formatContextResult(result: ProofContextResult): string {
     lines.push('Findings:');
     for (const finding of result.findings) {
       const anchor = finding.anchor ? ` ${finding.anchor} —` : '';
-      let truncatedSummary = finding.summary;
-      if (truncatedSummary.length > 250) {
-        const lastSpace = truncatedSummary.lastIndexOf(' ', 250);
-        const cutPoint = lastSpace > 0 ? lastSpace : 250;
-        truncatedSummary = truncatedSummary.substring(0, cutPoint) + '...';
-      }
+      const truncatedSummary = truncateSummary(finding.summary, 250);
       lines.push(`  ${chalk.dim(`[${finding.category}]`)}${anchor} ${truncatedSummary}`);
       lines.push(`         ${chalk.gray(`From: ${finding.from}`)}`);
       lines.push('');

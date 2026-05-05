@@ -1892,3 +1892,21 @@ export function getProofContext(queries: string[], projectRoot: string, options?
     };
   });
 }
+
+/**
+ * Truncate text at a word boundary, appending '...' if truncated.
+ *
+ * If text fits within maxLength, returns it unchanged. Otherwise finds
+ * the last space before the limit and truncates there. If no space is
+ * found, hard-cuts at maxLength.
+ *
+ * @param text - The text to truncate
+ * @param maxLength - Maximum length before truncation
+ * @returns Original text or truncated text with '...' appended
+ */
+export function truncateSummary(text: string, maxLength: number): string {
+  if (text.length <= maxLength) return text;
+  const lastSpace = text.lastIndexOf(' ', maxLength);
+  const cutPoint = lastSpace > 0 ? lastSpace : maxLength;
+  return text.substring(0, cutPoint) + '...';
+}
