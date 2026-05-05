@@ -23,6 +23,7 @@ import {
   computeHealthReport,
   detectHealthChange,
   computeStaleness,
+  truncateSummary,
   MIN_FINDINGS_HOT,
   MIN_ENTRIES_HOT,
   TRAJECTORY_WINDOW,
@@ -212,6 +213,98 @@ file_changes:
     // Total should be 2 (one PASS + one FAIL), NOT 3 (which would mean **Result:** PASS was counted)
     expect(summary.acceptance_criteria.total).toBe(2);
     expect(summary.acceptance_criteria.met).toBe(1);
+  });
+
+  // @ana A001
+  it('parseACResults scopes to AC Walkthrough section — ignores PASS in other sections', async () => {
+    const verifyReport = `# Verify Report
+
+**Result:** PASS
+
+## AC Walkthrough
+- ✅ PASS: AC1 Feature works
+- ❌ FAIL: AC2 Missing edge case
+- ✅ PASS: AC3 Handles errors
+
+## Findings
+- Finding about PASS rate improvements in the codebase
+- Another finding mentioning PASS in prose
+`;
+    await fs.promises.writeFile(path.join(slugDir, 'verify_report.md'), verifyReport);
+
+    const summary = generateProofSummary(slugDir);
+
+    // Only 3 ACs in the walkthrough, not 5 (would be 5 if Findings PASS lines counted)
+    expect(summary.acceptance_criteria.total).toBe(3);
+    expect(summary.acceptance_criteria.met).toBe(2);
+  });
+
+  // @ana A002
+  it('parseACResults met count excludes PASS mentions outside AC Walkthrough', async () => {
+    const verifyReport = `# Verify Report
+
+**Result:** PASS
+
+## AC Walkthrough
+- ✅ PASS: AC1 Works correctly
+- ❌ FAIL: AC2 Needs fix
+- ⚠️ PARTIAL: AC3 Partially done
+
+## Findings
+- PASS: This line should not inflate the met count
+`;
+    await fs.promises.writeFile(path.join(slugDir, 'verify_report.md'), verifyReport);
+
+    const summary = generateProofSummary(slugDir);
+
+    expect(summary.acceptance_criteria.total).toBe(3);
+    expect(summary.acceptance_criteria.met).toBe(1);
+  });
+
+  // @ana A003
+  it('parseACResults falls back to full content when AC Walkthrough heading missing', async () => {
+    const verifyReport = `# Verify Report
+
+**Result:** PASS
+
+## Some Other Section
+- ✅ PASS: AC1 Works
+- ❌ FAIL: AC2 Broken
+`;
+    await fs.promises.writeFile(path.join(slugDir, 'verify_report.md'), verifyReport);
+
+    const summary = generateProofSummary(slugDir);
+
+    // No ## AC Walkthrough heading, so falls back to full content
+    expect(summary.acceptance_criteria.total).toBe(2);
+    expect(summary.acceptance_criteria.met).toBe(1);
+  });
+
+  it('parseACResults handles AC Walkthrough as last section (no subsequent heading)', async () => {
+    const verifyReport = `# Verify Report
+
+**Result:** PASS
+
+## AC Walkthrough
+- ✅ PASS: AC1 Feature works
+- ✅ PASS: AC2 Edge case handled
+- ❌ FAIL: AC3 Needs work`;
+    await fs.promises.writeFile(path.join(slugDir, 'verify_report.md'), verifyReport);
+
+    const summary = generateProofSummary(slugDir);
+
+    expect(summary.acceptance_criteria.total).toBe(3);
+    expect(summary.acceptance_criteria.met).toBe(2);
+  });
+
+  it('parseACResults returns zero counts for empty report', async () => {
+    const verifyReport = '';
+    await fs.promises.writeFile(path.join(slugDir, 'verify_report.md'), verifyReport);
+
+    const summary = generateProofSummary(slugDir);
+
+    expect(summary.acceptance_criteria.total).toBe(0);
+    expect(summary.acceptance_criteria.met).toBe(0);
   });
 
   // @ana A010, A011
@@ -2869,5 +2962,179 @@ describe('computeStaleness', () => {
     };
     const result = computeStaleness(chain);
     expect(result.total_stale).toBe(0);
+  });
+
+  // @ana A016
+  it('high-frequency file needs more touches for high confidence', () => {
+    // 11 entries total. File src/hot.ts touched in 6 of 11 entries (55% baseline rate).
+    // entriesSince = 10, touchRate = 6/11 ≈ 0.545
+    // expected = max(3, ceil(10 * 0.545)) = max(3, 6) = 6
+    // Only 3 post-finding touches < 6 → NOT high
+    // 3 >= ceil(6*0.5)=3 → medium
+    const chain = {
+      entries: [
+        {
+          slug: 'entry-0',
+          completed_at: '2026-04-19T10:00:00Z',
+          modules_touched: ['src/hot.ts'],
+          findings: [
+            { id: 'F001', status: 'active', severity: 'risk', category: 'code', summary: 'Hot file finding', file: 'src/hot.ts' },
+          ],
+        },
+        { slug: 'e1', completed_at: '2026-04-20T10:00:00Z', modules_touched: ['src/hot.ts'], findings: [] },
+        { slug: 'e2', completed_at: '2026-04-20T11:00:00Z', modules_touched: ['src/hot.ts'], findings: [] },
+        { slug: 'e3', completed_at: '2026-04-20T12:00:00Z', modules_touched: ['src/hot.ts'], findings: [] },
+        { slug: 'e4', completed_at: '2026-04-20T13:00:00Z', modules_touched: ['src/other.ts'], findings: [] },
+        { slug: 'e5', completed_at: '2026-04-20T14:00:00Z', modules_touched: ['src/hot.ts'], findings: [] },
+        { slug: 'e6', completed_at: '2026-04-20T15:00:00Z', modules_touched: ['src/other.ts'], findings: [] },
+        { slug: 'e7', completed_at: '2026-04-20T16:00:00Z', modules_touched: ['src/hot.ts'], findings: [] },
+        { slug: 'e8', completed_at: '2026-04-20T17:00:00Z', modules_touched: ['src/other.ts'], findings: [] },
+        { slug: 'e9', completed_at: '2026-04-20T18:00:00Z', modules_touched: ['src/other.ts'], findings: [] },
+        { slug: 'e10', completed_at: '2026-04-20T19:00:00Z', modules_touched: ['src/other.ts'], findings: [] },
+      ],
+    };
+    const result = computeStaleness(chain);
+    // Post-finding touches: e1, e2, e3 = 3. Expected = 6. 3 < 6 → NOT high
+    expect(result.high_confidence.length).toBe(0);
+    expect(result.medium_confidence.length).toBe(1);
+    expect(result.medium_confidence[0]!.confidence).toBe('medium');
+  });
+
+  // @ana A017
+  it('low-frequency file keeps floor threshold of 3', () => {
+    // 11 entries total. File src/cold.ts touched in 3 of 11 entries (27% rate).
+    // entriesSince = 10, touchRate = 3/11 ≈ 0.273
+    // expected = max(3, ceil(10 * 0.273)) = max(3, 3) = 3
+    // 3 post-finding touches >= 3 → high
+    const chain = {
+      entries: [
+        {
+          slug: 'entry-0',
+          completed_at: '2026-04-19T10:00:00Z',
+          modules_touched: [],
+          findings: [
+            { id: 'F001', status: 'active', severity: 'risk', category: 'code', summary: 'Cold file finding', file: 'src/cold.ts' },
+          ],
+        },
+        { slug: 'e1', completed_at: '2026-04-20T10:00:00Z', modules_touched: ['src/cold.ts'], findings: [] },
+        { slug: 'e2', completed_at: '2026-04-20T11:00:00Z', modules_touched: ['src/other.ts'], findings: [] },
+        { slug: 'e3', completed_at: '2026-04-20T12:00:00Z', modules_touched: ['src/other.ts'], findings: [] },
+        { slug: 'e4', completed_at: '2026-04-20T13:00:00Z', modules_touched: ['src/cold.ts'], findings: [] },
+        { slug: 'e5', completed_at: '2026-04-20T14:00:00Z', modules_touched: ['src/other.ts'], findings: [] },
+        { slug: 'e6', completed_at: '2026-04-20T15:00:00Z', modules_touched: ['src/other.ts'], findings: [] },
+        { slug: 'e7', completed_at: '2026-04-20T16:00:00Z', modules_touched: ['src/other.ts'], findings: [] },
+        { slug: 'e8', completed_at: '2026-04-20T17:00:00Z', modules_touched: ['src/other.ts'], findings: [] },
+        { slug: 'e9', completed_at: '2026-04-20T18:00:00Z', modules_touched: ['src/cold.ts'], findings: [] },
+        { slug: 'e10', completed_at: '2026-04-20T19:00:00Z', modules_touched: ['src/other.ts'], findings: [] },
+      ],
+    };
+    const result = computeStaleness(chain);
+    // 3 post-finding touches, expected=3 → 3>=3 → high
+    expect(result.high_confidence.length).toBe(1);
+    expect(result.high_confidence[0]!.confidence).toBe('high');
+  });
+
+  // @ana A018
+  it('uses raw thresholds below minimum entries', () => {
+    // Only 4 entries after finding (< 5 minimum), file touched 3 times → raw: high
+    const chain = {
+      entries: [
+        {
+          slug: 'entry-0',
+          completed_at: '2026-04-19T10:00:00Z',
+          modules_touched: [],
+          findings: [
+            { id: 'F001', status: 'active', severity: 'risk', category: 'code', summary: 'Young finding', file: 'src/young.ts' },
+          ],
+        },
+        { slug: 'e1', completed_at: '2026-04-20T10:00:00Z', modules_touched: ['src/young.ts'], findings: [] },
+        { slug: 'e2', completed_at: '2026-04-20T11:00:00Z', modules_touched: ['src/young.ts'], findings: [] },
+        { slug: 'e3', completed_at: '2026-04-20T12:00:00Z', modules_touched: ['src/young.ts'], findings: [] },
+        { slug: 'e4', completed_at: '2026-04-20T13:00:00Z', modules_touched: ['src/young.ts'], findings: [] },
+      ],
+    };
+    const result = computeStaleness(chain);
+    // entriesSince=4, < 5 → raw thresholds. 4 touches >= 3 → high
+    expect(result.high_confidence.length).toBe(1);
+    expect(result.high_confidence[0]!.confidence).toBe('high');
+  });
+
+  it('high-frequency file reaches high when touches meet expected threshold', () => {
+    // 11 entries total. File src/hot.ts touched in 6 of 11 (55% rate).
+    // entriesSince = 10, expected = max(3, ceil(10 * 6/11)) = max(3, 6) = 6
+    // 6 post-finding touches >= 6 → high
+    const chain = {
+      entries: [
+        {
+          slug: 'entry-0',
+          completed_at: '2026-04-19T10:00:00Z',
+          modules_touched: [],
+          findings: [
+            { id: 'F001', status: 'active', severity: 'risk', category: 'code', summary: 'Hot file many touches', file: 'src/hot.ts' },
+          ],
+        },
+        { slug: 'e1', completed_at: '2026-04-20T10:00:00Z', modules_touched: ['src/hot.ts'], findings: [] },
+        { slug: 'e2', completed_at: '2026-04-20T11:00:00Z', modules_touched: ['src/hot.ts'], findings: [] },
+        { slug: 'e3', completed_at: '2026-04-20T12:00:00Z', modules_touched: ['src/hot.ts'], findings: [] },
+        { slug: 'e4', completed_at: '2026-04-20T13:00:00Z', modules_touched: ['src/other.ts'], findings: [] },
+        { slug: 'e5', completed_at: '2026-04-20T14:00:00Z', modules_touched: ['src/hot.ts'], findings: [] },
+        { slug: 'e6', completed_at: '2026-04-20T15:00:00Z', modules_touched: ['src/other.ts'], findings: [] },
+        { slug: 'e7', completed_at: '2026-04-20T16:00:00Z', modules_touched: ['src/other.ts'], findings: [] },
+        { slug: 'e8', completed_at: '2026-04-20T17:00:00Z', modules_touched: ['src/other.ts'], findings: [] },
+        { slug: 'e9', completed_at: '2026-04-20T18:00:00Z', modules_touched: ['src/hot.ts'], findings: [] },
+        { slug: 'e10', completed_at: '2026-04-20T19:00:00Z', modules_touched: ['src/hot.ts'], findings: [] },
+      ],
+    };
+    const result = computeStaleness(chain);
+    // 6 touches across 11 entries → rate=6/11≈0.545, expected=ceil(10*0.545)=6, 6>=6 → high
+    expect(result.high_confidence.length).toBe(1);
+    expect(result.high_confidence[0]!.confidence).toBe('high');
+  });
+});
+
+// @ana A013, A014, A015
+describe('truncateSummary', () => {
+  // @ana A014
+  it('returns short text unchanged', () => {
+    const text = 'short text';
+    const result = truncateSummary(text, 100);
+    expect(result).toBe(text);
+    expect(result.length).toBe(10);
+  });
+
+  it('returns text exactly at maxLength unchanged', () => {
+    const text = 'a'.repeat(50);
+    const result = truncateSummary(text, 50);
+    expect(result).toBe(text);
+  });
+
+  // @ana A013
+  it('truncates at last word boundary and appends ellipsis', () => {
+    const text = 'The quick brown fox jumps over the lazy dog and keeps running far away';
+    const result = truncateSummary(text, 50);
+    expect(result).toContain('...');
+    expect(result.length).toBeLessThanOrEqual(53); // 50 + '...'
+    // Should cut at a space boundary
+    const withoutEllipsis = result.slice(0, -3);
+    expect(text.startsWith(withoutEllipsis)).toBe(true);
+    expect(withoutEllipsis.endsWith(' ')).toBe(false);
+  });
+
+  it('hard-cuts when no space found before maxLength', () => {
+    const text = 'abcdefghijklmnopqrstuvwxyz';
+    const result = truncateSummary(text, 10);
+    expect(result).toBe('abcdefghij...');
+  });
+
+  // @ana A015
+  it('respects custom maxLength parameter', () => {
+    // 50 chars then a space — lastIndexOf(' ', 50) returns 50, substring(0, 50) + '...' = 53
+    const text = '12345678901234567890123456789012345678901234567890 more text after space';
+    const result = truncateSummary(text, 50);
+    expect(result.length).toBe(53);
+  });
+
+  it('handles empty string', () => {
+    expect(truncateSummary('', 100)).toBe('');
   });
 });

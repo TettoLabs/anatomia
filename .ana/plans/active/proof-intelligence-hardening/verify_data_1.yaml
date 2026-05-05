@@ -1,0 +1,33 @@
+schema: 1
+findings:
+  - category: code
+    summary: "guardFailResult JSDoc first line says 'Write proof chain files' — copy-paste from writeProofChain description"
+    file: "packages/cli/src/commands/work.ts"
+    line: 708
+    severity: debt
+    suggested_action: accept
+    related_assertions: ["A004"]
+  - category: code
+    summary: "guardFailResult changes multi-phase FAIL message format from original — adds 'Phase N: ' prefix not present before"
+    file: "packages/cli/src/commands/work.ts"
+    line: 719
+    severity: observation
+    suggested_action: monitor
+    related_assertions: ["A006"]
+  - category: code
+    summary: "parseACResults heading match is case-sensitive and exact — '## AC walkthrough' or '##  AC Walkthrough' (extra space) would miss"
+    file: "packages/cli/src/utils/proofSummary.ts"
+    line: 204
+    severity: observation
+    suggested_action: accept
+    anchor: "parseACResults"
+  - category: test
+    summary: "No tagged tests for A004-A008 — structural/behavioral assertions verified by source inspection only, not by @ana-tagged test cases"
+    file: "packages/cli/tests/commands/work.test.ts"
+    severity: observation
+    suggested_action: accept
+    related_assertions: ["A004", "A005", "A006", "A007", "A008"]
+  - category: upstream
+    summary: "Proof context finding 'Theoretical false-match in parseACResults regex' from V1 Code Changes is now resolved by this build's section scoping"
+    severity: observation
+    suggested_action: accept

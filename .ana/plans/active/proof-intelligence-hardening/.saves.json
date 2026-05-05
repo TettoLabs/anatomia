@@ -15,5 +15,36 @@
   "spec": {
     "saved_at": "2026-05-05T03:47:47.325Z",
     "hash": "sha256:9ec351ab5c14e8fa83bf133653d92a2bed4fc3ebcc349abf2aca7336721202bb"
+  },
+  "build-report": {
+    "saved_at": "2026-05-05T04:51:08.278Z",
+    "hash": "sha256:a3e4207f259db73b8cf526f30e711807e6b493b1832e3a904bb49d11ee5c66aa"
+  },
+  "build-data": {
+    "saved_at": "2026-05-05T04:51:08.279Z",
+    "hash": "sha256:d5768448f812ff11f6949b355e89d17fa8da4b2c2212b40d3cdb66d3051d6640"
+  },
+  "modules_touched": [
+    ".claude/agents/ana-learn.md",
+    "packages/cli/src/commands/proof.ts",
+    "packages/cli/src/commands/work.ts",
+    "packages/cli/src/utils/proofSummary.ts",
+    "packages/cli/templates/.claude/agents/ana-learn.md",
+    "packages/cli/tests/commands/proof.test.ts",
+    "packages/cli/tests/utils/proofSummary.test.ts",
+    "packages/cli/vitest.config.ts"
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:eddfe6b4c1b77aea14eb2346623195d15365dfc9804ad7f466fde9118af5e9d4",
+    "run_at": "2026-05-05T05:02:00.062Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-05T05:02:00.103Z",
+    "hash": "sha256:060ba9016f8cb8f4051f73f7254e5122ef8418e7326d4f7eca2602d26eaf9d3f"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-05T05:02:00.103Z",
+    "hash": "sha256:c6a16b5928edb3b041e9af2cedbb76aad421bb647f70724ee65173404c03f23b"
   }
 }

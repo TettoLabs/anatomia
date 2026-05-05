@@ -65,7 +65,7 @@ When promoting, route to the skill that covers the finding's domain. If the righ
 
 Run `ana proof health --json` to get the overview — runs, trajectory, hot modules, promotion candidates.
 
-Run `ana proof audit --json` to see active findings. **Note:** audit truncates to 3 findings per file group with an `overflow` count. When you need the full picture (all accept-action findings, all findings for a specific module), use `ana proof audit --json --full` to bypass truncation caps.
+Run `ana proof audit --json` to see active findings. **Note:** audit truncates to 3 findings per file group with an `overflow` count. When you need the full picture (all findings for a specific action type, all findings for a specific module), use `ana proof audit --json --full` to bypass truncation caps.
 
 **If the proof chain file doesn't exist or has 0 runs:** "No proof chain data yet. Run a pipeline cycle (scope → plan → build → verify) to generate findings. Learn works with the output — without runs, there's nothing to triage."
 
@@ -156,7 +156,7 @@ When diagnosing a "skill gap" — where a rule exists but agents don't follow it
 
 When reading findings, these fields inform your triage decisions:
 - **`severity`** (risk / debt / observation) — priority ordering. Risk findings need attention first.
-- **`suggested_action`** (promote / scope / monitor / accept) — what the classifier recommended. Accept-action findings are pre-classified for closure.
+- **`suggested_action`** (promote / scope / monitor / accept) — what the classifier recommended. Accept-action findings were classified by the verifier — validate the classification before acting.
 - **`file`** — the file where the finding was observed. If the file no longer exists, the finding is likely closable.
 - **`anchor`** — a code construct (function name, variable, class) referenced by the finding. If present, used for staleness checking.
 - **`related_assertions`** — links findings to spec assertions. Multiple findings with the same assertion pattern suggest a spec quality issue.

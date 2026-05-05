@@ -1,0 +1,42 @@
+schema: 1
+findings:
+  - category: code
+    summary: "Staleness touchRate uses full-chain baseline rate instead of post-finding rate as specified"
+    file: "packages/cli/src/utils/proofSummary.ts"
+    line: 1152
+    severity: observation
+    suggested_action: monitor
+    related_assertions: ["A016", "A017"]
+  - category: code
+    summary: "vitest.config.ts timeout changes not in spec — CI-specific testTimeout and hookTimeout added"
+    file: "packages/cli/vitest.config.ts"
+    line: 8
+    severity: observation
+    suggested_action: accept
+  - category: code
+    summary: "Lesson command catch block at proof.ts:1141 loses error detail — swallows commit failure cause"
+    file: "packages/cli/src/commands/proof.ts"
+    line: 1141
+    severity: debt
+    suggested_action: scope
+  - category: code
+    summary: "proofSummary.ts ~1560+ lines — past comfort threshold, growing each phase"
+    file: "packages/cli/src/utils/proofSummary.ts"
+    severity: debt
+    suggested_action: monitor
+    related_assertions: []
+  - category: upstream
+    summary: "Stale finding — parseACResults regex theoretical false-match (V1 Code Changes) resolved by AC Walkthrough section scoping"
+    severity: observation
+    suggested_action: accept
+  - category: test
+    summary: "A028/A029 learn template assertions verified by source inspection only — no test file exercises these"
+    file: "packages/cli/templates/.claude/agents/ana-learn.md"
+    severity: observation
+    suggested_action: accept
+  - category: code
+    summary: "Lesson command duplicates close's finding-search loop pattern — 4 identical loops across lesson, close, promote, strengthen"
+    file: "packages/cli/src/commands/proof.ts"
+    line: 996
+    severity: debt
+    suggested_action: scope

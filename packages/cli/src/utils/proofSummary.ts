@@ -197,13 +197,26 @@ function parseResult(content: string): 'PASS' | 'FAIL' | 'UNKNOWN' {
  * @returns Object with total and met AC counts
  */
 function parseACResults(content: string): { total: number; met: number } {
+  // Scope to the AC Walkthrough section to avoid false matches from other sections
+  // (e.g., a Findings bullet containing "PASS" in prose).
+  // Fall back to full content if heading is missing (old reports).
+  let section = content;
+  const walkthroughStart = content.indexOf('## AC Walkthrough');
+  if (walkthroughStart !== -1) {
+    const afterHeading = walkthroughStart + '## AC Walkthrough'.length;
+    const nextHeading = content.indexOf('\n## ', afterHeading);
+    section = nextHeading !== -1
+      ? content.substring(walkthroughStart, nextHeading)
+      : content.substring(walkthroughStart);
+  }
+
   // Match status words on bullet-list lines (anchored to `- ` prefix).
   // Mirrors parseAssertionResults: match the word, ignore prefix symbols.
   // Excludes `**Result:** PASS` (no bullet prefix) to avoid false matches.
-  const passCount = (content.match(/^\s*-\s+.*\bPASS\b/gm) || []).length;
-  const failCount = (content.match(/^\s*-\s+.*\bFAIL\b/gm) || []).length;
-  const partialCount = (content.match(/^\s*-\s+.*\bPARTIAL\b/gm) || []).length;
-  const unverifiableCount = (content.match(/^\s*-\s+.*\bUNVERIFIABLE\b/gm) || []).length;
+  const passCount = (section.match(/^\s*-\s+.*\bPASS\b/gm) || []).length;
+  const failCount = (section.match(/^\s*-\s+.*\bFAIL\b/gm) || []).length;
+  const partialCount = (section.match(/^\s*-\s+.*\bPARTIAL\b/gm) || []).length;
+  const unverifiableCount = (section.match(/^\s*-\s+.*\bUNVERIFIABLE\b/gm) || []).length;
 
   const total = passCount + failCount + partialCount + unverifiableCount;
   const met = passCount;
@@ -1120,6 +1133,33 @@ export function computeStaleness(
 
       if (subsequentSlugs.length === 0) continue;
 
+      // Frequency-normalized confidence thresholds
+      // entries_since = total entries after this finding's entry
+      const entriesSince = chain.entries.length - (i + 1);
+      let confidence: 'high' | 'medium';
+
+      if (entriesSince < 5) {
+        // Below minimum entries: use raw thresholds
+        confidence = subsequentSlugs.length >= 3 ? 'high' : 'medium';
+      } else {
+        // Compute file touch rate across the entire chain (baseline frequency)
+        let totalTouches = 0;
+        for (const e of chain.entries) {
+          if ((e.modules_touched || []).includes(f.file)) {
+            totalTouches++;
+          }
+        }
+        const touchRate = totalTouches / chain.entries.length;
+        const expected = Math.max(3, Math.ceil(entriesSince * touchRate));
+        if (subsequentSlugs.length >= expected) {
+          confidence = 'high';
+        } else if (subsequentSlugs.length >= Math.ceil(expected * 0.5)) {
+          confidence = 'medium';
+        } else {
+          continue; // Not stale enough — skip
+        }
+      }
+
       const staleFinding: import('../types/proof.js').StaleFinding = {
         id: f.id || 'unknown',
         category: f.category || 'code',
@@ -1130,7 +1170,7 @@ export function computeStaleness(
         completed_at: entry.completed_at || '',
         subsequent_slugs: subsequentSlugs,
         subsequent_count: subsequentSlugs.length,
-        confidence: subsequentSlugs.length >= 3 ? 'high' : 'medium',
+        confidence,
       };
 
       if (staleFinding.confidence === 'high') {
@@ -1878,4 +1918,22 @@ export function getProofContext(queries: string[], projectRoot: string, options?
       last_touched: touchDates[0] ?? null,
     };
   });
+}
+
+/**
+ * Truncate text at a word boundary, appending '...' if truncated.
+ *
+ * If text fits within maxLength, returns it unchanged. Otherwise finds
+ * the last space before the limit and truncates there. If no space is
+ * found, hard-cuts at maxLength.
+ *
+ * @param text - The text to truncate
+ * @param maxLength - Maximum length before truncation
+ * @returns Original text or truncated text with '...' appended
+ */
+export function truncateSummary(text: string, maxLength: number): string {
+  if (text.length <= maxLength) return text;
+  const lastSpace = text.lastIndexOf(' ', maxLength);
+  const cutPoint = lastSpace > 0 ? lastSpace : maxLength;
+  return text.substring(0, cutPoint) + '...';
 }

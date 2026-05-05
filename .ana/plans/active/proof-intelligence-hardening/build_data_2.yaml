@@ -1,0 +1,6 @@
+schema: 1
+concerns:
+  - summary: "Health display truncation changed from hard-cut to word-boundary — minor output difference authorized by spec"
+    file: "packages/cli/src/commands/proof.ts"
+    severity: observation
+    suggested_action: accept
