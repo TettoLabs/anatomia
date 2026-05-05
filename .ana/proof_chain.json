@@ -12453,7 +12453,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "proof-intelligence-hardening-C10",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Intentional design — spec-2 explicitly chose word-boundary truncation over hard-cut: 'Unify on word-boundary (the cleaner behavior)'. Minor behavior change is the intended improvement.",
+          "closed_at": "2026-05-05T06:53:43.611Z",
+          "closed_by": "human"
         },
         {
           "category": "code",

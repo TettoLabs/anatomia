@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-51 runs · 74 active · 57 lessons · 0 promoted · 155 closed
+51 runs · 73 active · 57 lessons · 0 promoted · 156 closed
 
 ## Hot Modules
 
@@ -9,14 +9,14 @@
 | packages/cli/src/utils/proofSummary.ts | 10 | 6 |
 | packages/cli/tests/commands/work.test.ts | 9 | 7 |
 | packages/cli/tests/commands/proof.test.ts | 7 | 3 |
-| packages/cli/src/commands/proof.ts | 6 | 3 |
+| packages/cli/src/commands/proof.ts | 5 | 3 |
 | packages/cli/tests/templates/agent-proof-context.test.ts | 3 | 2 |
 
 ## Promoted Rules
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 74 total)
+## Active Findings (30 shown of 73 total)
 
 ### .github/workflows/release.yml
 
@@ -39,7 +39,6 @@
 ### packages/cli/src/commands/proof.ts
 
 - **code:** createExitError formatHint empty-array return is truthy — prevents fallback to static hints even when callback returns no lines — *Proof Intelligence Hardening*
-- **code:** Health display truncation now uses word-boundary instead of hard-cut — minor behavior change from .slice(0, 100) to truncateSummary(_, 100) — *Proof Intelligence Hardening*
 - **code:** Lesson command catch block at proof.ts:1141 loses error detail — swallows commit failure cause — *Proof Intelligence Hardening*
 - **code:** Lesson command duplicates close's finding-search loop pattern — 4 identical loops across lesson, close, promote, strengthen — *Proof Intelligence Hardening*
 
@@ -76,6 +75,10 @@
 
 - **test:** No tagged tests for A004-A008 — structural/behavioral assertions verified by source inspection only, not by @ana-tagged test cases — *Proof Intelligence Hardening*
 - **test:** A016-A019 @ana tags point to pre-existing branchPrefix template tests, not command entry point validation — *Security Hardening — Command Injection Elimination*
+
+### packages/cli/tests/engine/detectors/documentation.test.ts
+
+- **test:** documentation.test.ts assertion removed for packages/cli/README.md — justified but reduces dogfood coverage — *V1 Documentation Overhaul*
 
 ### packages/cli/tests/utils/git-operations.test.ts
 
