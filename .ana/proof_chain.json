@@ -12097,6 +12097,445 @@
           "suggested_action": "accept"
         }
       ]
+    },
+    {
+      "slug": "proof-intelligence-hardening",
+      "feature": "Proof Intelligence Hardening",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 29,
+        "satisfied": 29,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "AC status counts come only from the AC Walkthrough section, not the entire report",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "A PASS mention in the Findings section does not inflate the assertion count",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Reports missing the AC Walkthrough heading still produce counts using full content",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "The FAIL rejection logic exists in exactly one helper function",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "A FAIL result in single-phase flow still blocks completion",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "A FAIL result in multi-phase flow still blocks completion",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "The recovery path uses the same counting function as the main completion path",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "Zero-run health output uses the shared computation function instead of hardcoded values",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "Error handling for proof close uses a shared factory instead of inline definition",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "Error handling for proof promote uses a shared factory instead of inline definition",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "Error handling for proof strengthen uses a shared factory instead of inline definition",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "The promote error handler still shows available skills when skill is required",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "Long summaries are truncated at word boundaries with ellipsis",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "Short summaries pass through unchanged",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "Custom max length parameter controls truncation point",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "A high-frequency file needs more touches to reach high confidence than the raw threshold",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A017",
+          "says": "A low-frequency file keeps the default minimum threshold of 3 touches",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A018",
+          "says": "Normalization only activates when enough entries exist after the finding",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A019",
+          "says": "The audit headline shows how many findings need action versus how many are just monitoring",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A020",
+          "says": "The audit JSON includes separate counts for actionable and monitoring findings",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A021",
+          "says": "A risk-severity finding counts as actionable regardless of its suggested action",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A022",
+          "says": "Running lesson with valid IDs and reason sets findings to lesson status",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A023",
+          "says": "Running lesson without a reason shows an error",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A024",
+          "says": "Running lesson on an already-closed finding is rejected",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A025",
+          "says": "Running lesson on an already-promoted finding is rejected",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A026",
+          "says": "Lesson command creates a git commit with the proof prefix",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A027",
+          "says": "Lesson dry-run shows what would happen without changing anything",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A028",
+          "says": "The Learn template no longer uses 'all accept-action findings' phrasing",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A029",
+          "says": "The Learn template no longer says findings are pre-classified for closure",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 6,
+        "met": 6
+      },
+      "timing": {
+        "total_minutes": 102,
+        "think": 10,
+        "plan": 18,
+        "build": 63,
+        "verify": 11
+      },
+      "hashes": {
+        "scope": "sha256:057fbf44a671dfd81751a47d0513d267172b3a67f9a55fbd5d9cfd6edac1ccc7",
+        "contract": "sha256:eddfe6b4c1b77aea14eb2346623195d15365dfc9804ad7f466fde9118af5e9d4",
+        "plan": "sha256:c9b2fb9aa040b0d59409af81aee9212859a4d9e3ee503422e0b61db63673952c",
+        "spec": "sha256:9ec351ab5c14e8fa83bf133653d92a2bed4fc3ebcc349abf2aca7336721202bb",
+        "build-report": "sha256:a3e4207f259db73b8cf526f30e711807e6b493b1832e3a904bb49d11ee5c66aa",
+        "build-data": "sha256:d5768448f812ff11f6949b355e89d17fa8da4b2c2212b40d3cdb66d3051d6640",
+        "verify-report": "sha256:060ba9016f8cb8f4051f73f7254e5122ef8418e7326d4f7eca2602d26eaf9d3f",
+        "verify-data": "sha256:c6a16b5928edb3b041e9af2cedbb76aad421bb647f70724ee65173404c03f23b"
+      },
+      "completed_at": "2026-05-05T05:13:14.890Z",
+      "modules_touched": [
+        ".claude/agents/ana-learn.md",
+        "packages/cli/src/commands/proof.ts",
+        "packages/cli/src/commands/work.ts",
+        "packages/cli/src/utils/proofSummary.ts",
+        "packages/cli/templates/.claude/agents/ana-learn.md",
+        "packages/cli/tests/commands/proof.test.ts",
+        "packages/cli/tests/utils/proofSummary.test.ts",
+        "packages/cli/vitest.config.ts"
+      ],
+      "scope_summary": "Consolidation pass on the proof intelligence surface. Two confirmed bugs corrupt data, the staleness detector produces 78% false positives, shared logic is copy-pasted three times, and the audit display conflates actionable findings with monitoring noise. These aren't independent problems — they grew feature-by-feature without a consolidation pass. The proof surface now undermines its own credibility: the tool that verifies AI work can't get its own verification data right.",
+      "findings": [
+        {
+          "category": "code",
+          "summary": "guardFailResult JSDoc first line says 'Write proof chain files' — copy-paste from writeProofChain description",
+          "file": "packages/cli/src/commands/work.ts",
+          "anchor": null,
+          "line": 708,
+          "severity": "debt",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A004"
+          ],
+          "id": "proof-intelligence-hardening-C1",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "guardFailResult changes multi-phase FAIL message format from original — adds 'Phase N: ' prefix not present before",
+          "file": "packages/cli/src/commands/work.ts",
+          "anchor": null,
+          "line": 719,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "related_assertions": [
+            "A006"
+          ],
+          "id": "proof-intelligence-hardening-C2",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "parseACResults heading match is case-sensitive and exact — '## AC walkthrough' or '##  AC Walkthrough' (extra space) would miss",
+          "file": "packages/cli/src/utils/proofSummary.ts",
+          "anchor": "parseACResults",
+          "line": 204,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "proof-intelligence-hardening-C3",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "No tagged tests for A004-A008 — structural/behavioral assertions verified by source inspection only, not by @ana-tagged test cases",
+          "file": "packages/cli/tests/commands/work.test.ts",
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A004",
+            "A005",
+            "A006",
+            "A007",
+            "A008"
+          ],
+          "id": "proof-intelligence-hardening-C4",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "Proof context finding 'Theoretical false-match in parseACResults regex' from V1 Code Changes is now resolved by this build's section scoping",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "proof-intelligence-hardening-C5",
+          "status": "lesson"
+        },
+        {
+          "category": "test",
+          "summary": "truncateSummary word-boundary test uses toBeLessThanOrEqual instead of exact value assertion",
+          "file": "packages/cli/tests/utils/proofSummary.test.ts",
+          "anchor": null,
+          "line": 2989,
+          "severity": "debt",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A013"
+          ],
+          "id": "proof-intelligence-hardening-C6",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "createExitError formatHint empty-array return is truthy — prevents fallback to static hints even when callback returns no lines",
+          "file": "packages/cli/src/commands/proof.ts",
+          "anchor": null,
+          "line": 87,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "related_assertions": [
+            "A011"
+          ],
+          "id": "proof-intelligence-hardening-C7",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "proofSummary.ts now ~1913 lines — past comfort threshold, known from prior cycles",
+          "file": "packages/cli/src/utils/proofSummary.ts",
+          "anchor": null,
+          "line": 1912,
+          "severity": "debt",
+          "suggested_action": "scope",
+          "id": "proof-intelligence-hardening-C8",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "A012 has no @ana tag in tests — verified by source inspection only, not by tagged test",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A012"
+          ],
+          "id": "proof-intelligence-hardening-C9",
+          "status": "lesson"
+        },
+        {
+          "category": "code",
+          "summary": "Health display truncation now uses word-boundary instead of hard-cut — minor behavior change from .slice(0, 100) to truncateSummary(_, 100)",
+          "file": "packages/cli/src/commands/proof.ts",
+          "anchor": null,
+          "line": 409,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "proof-intelligence-hardening-C10",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Staleness touchRate uses full-chain baseline rate instead of post-finding rate as specified",
+          "file": "packages/cli/src/utils/proofSummary.ts",
+          "anchor": null,
+          "line": 1152,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "related_assertions": [
+            "A016",
+            "A017"
+          ],
+          "id": "proof-intelligence-hardening-C11",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "vitest.config.ts timeout changes not in spec — CI-specific testTimeout and hookTimeout added",
+          "file": "packages/cli/vitest.config.ts",
+          "anchor": null,
+          "line": 8,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "proof-intelligence-hardening-C12",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Lesson command catch block at proof.ts:1141 loses error detail — swallows commit failure cause",
+          "file": "packages/cli/src/commands/proof.ts",
+          "anchor": null,
+          "line": 1141,
+          "severity": "debt",
+          "suggested_action": "scope",
+          "id": "proof-intelligence-hardening-C13",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "proofSummary.ts ~1560+ lines — past comfort threshold, growing each phase",
+          "file": "packages/cli/src/utils/proofSummary.ts",
+          "anchor": null,
+          "severity": "debt",
+          "suggested_action": "monitor",
+          "related_assertions": [],
+          "id": "proof-intelligence-hardening-C14",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "Stale finding — parseACResults regex theoretical false-match (V1 Code Changes) resolved by AC Walkthrough section scoping",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "proof-intelligence-hardening-C15",
+          "status": "lesson"
+        },
+        {
+          "category": "test",
+          "summary": "A028/A029 learn template assertions verified by source inspection only — no test file exercises these",
+          "file": "packages/cli/templates/.claude/agents/ana-learn.md",
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "proof-intelligence-hardening-C16",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Lesson command duplicates close's finding-search loop pattern — 4 identical loops across lesson, close, promote, strengthen",
+          "file": "packages/cli/src/commands/proof.ts",
+          "anchor": null,
+          "line": 996,
+          "severity": "debt",
+          "suggested_action": "scope",
+          "id": "proof-intelligence-hardening-C17",
+          "status": "active"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "guardFailResult changes multi-phase error message format by prepending 'Phase N: ' prefix",
+          "file": "packages/cli/src/commands/work.ts",
+          "severity": "observation",
+          "suggested_action": "monitor"
+        },
+        {
+          "summary": "Contract assertions A004-A008 are structural (code shape) not behavioral — verified by inspection, not unit tests",
+          "file": null,
+          "severity": "observation",
+          "suggested_action": "accept"
+        },
+        {
+          "summary": "Health display truncation changed from hard-cut to word-boundary — minor output difference authorized by spec",
+          "file": "packages/cli/src/commands/proof.ts",
+          "severity": "observation",
+          "suggested_action": "accept"
+        },
+        {
+          "summary": "Staleness touch rate formula deviates from spec — uses whole-chain rate instead of post-finding window to avoid circular computation",
+          "file": "packages/cli/src/utils/proofSummary.ts",
+          "severity": "observation",
+          "suggested_action": "accept"
+        },
+        {
+          "summary": "runProof test helper splits multi-word --reason values — tests use hyphenated reasons as workaround",
+          "file": null,
+          "severity": "debt",
+          "suggested_action": "monitor"
+        }
+      ]
     }
   ],
   "schema": 1

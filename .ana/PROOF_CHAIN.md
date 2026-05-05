@@ -1,30 +1,26 @@
 # Proof Chain Dashboard
 
-50 runs · 71 active · 54 lessons · 0 promoted · 144 closed
+51 runs · 85 active · 57 lessons · 0 promoted · 144 closed
 
 ## Hot Modules
 
 | File | Active | Entries |
 |------|--------|--------|
-| packages/cli/tests/commands/work.test.ts | 8 | 6 |
-| packages/cli/src/utils/proofSummary.ts | 8 | 6 |
+| packages/cli/src/utils/proofSummary.ts | 12 | 7 |
+| packages/cli/tests/commands/work.test.ts | 9 | 7 |
+| packages/cli/src/commands/proof.ts | 9 | 6 |
 | packages/cli/tests/commands/proof.test.ts | 7 | 3 |
-| packages/cli/src/commands/proof.ts | 5 | 5 |
-| packages/cli/src/commands/work.ts | 4 | 3 |
+| packages/cli/src/commands/work.ts | 6 | 4 |
 
 ## Promoted Rules
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 71 total)
+## Active Findings (30 shown of 85 total)
 
 ### .github/workflows/release.yml
 
 - **code:** release.yml copies README/CHANGELOG separately from prepublishOnly — two sources of truth for doc copying — *V1 Release Prep*
-
-### .husky/pre-commit
-
-- **code:** Pre-commit comment claims ~9s / 10s threshold — will drift as test count grows (1807 now) — *V1 Code Changes*
 
 ### package.json
 
@@ -33,12 +29,18 @@
 ### packages/cli/package.json
 
 - **code:** npm pack dry-run doesn't include README.md or CHANGELOG.md — prepublishOnly required first — *V1 Release Prep*
-- **code:** prepublishOnly relies on relative ../../ path — breaks if package depth changes — *V1 Documentation Overhaul*
-- **code:** README.md and CHANGELOG.md cannot be verified with npm pack --dry-run — only exist after prepublishOnly — *V1 Documentation Overhaul*
 
 ### packages/cli/src/commands/proof.ts
 
-- **code:** Unknown severity/action values silently dropped from fixed-key objects — by_severity sum can be less than total_active — *Audit JSON Severity Summary*
+- **code:** createExitError formatHint empty-array return is truthy — prevents fallback to static hints even when callback returns no lines — *Proof Intelligence Hardening*
+- **code:** Health display truncation now uses word-boundary instead of hard-cut — minor behavior change from .slice(0, 100) to truncateSummary(_, 100) — *Proof Intelligence Hardening*
+- **code:** Lesson command catch block at proof.ts:1141 loses error detail — swallows commit failure cause — *Proof Intelligence Hardening*
+- **code:** Lesson command duplicates close's finding-search loop pattern — 4 identical loops across lesson, close, promote, strengthen — *Proof Intelligence Hardening*
+
+### packages/cli/src/commands/work.ts
+
+- **code:** guardFailResult JSDoc first line says 'Write proof chain files' — copy-paste from writeProofChain description — *Proof Intelligence Hardening*
+- **code:** guardFailResult changes multi-phase FAIL message format from original — adds 'Phase N: ' prefix not present before — *Proof Intelligence Hardening*
 
 ### packages/cli/src/engine/detectors/git.ts
 
@@ -51,6 +53,10 @@
 
 ### packages/cli/src/utils/proofSummary.ts
 
+- **code:** parseACResults heading match is case-sensitive and exact — '## AC walkthrough' or '##  AC Walkthrough' (extra space) would miss — *Proof Intelligence Hardening*
+- **code:** proofSummary.ts now ~1913 lines — past comfort threshold, known from prior cycles — *Proof Intelligence Hardening*
+- **code:** Staleness touchRate uses full-chain baseline rate instead of post-finding rate as specified — *Proof Intelligence Hardening*
+- **code:** proofSummary.ts ~1560+ lines — past comfort threshold, growing each phase — *Proof Intelligence Hardening*
 - **code:** Theoretical false-match in parseACResults regex — bullet lines outside AC section containing PASS/FAIL could inflate counts — *V1 Code Changes*
 - **code:** proofSummary.ts ~1550 lines — past comfort threshold, known from prior cycles — *V1 Code Changes*
 
@@ -60,23 +66,12 @@
 
 ### packages/cli/templates/.claude/agents/ana-learn.md
 
-- **code:** Residual 'accept-action findings' in audit usage guidance reinforces batch framing — *Learn Severity-Based Triage*
-- **code:** 'Accept-action findings are pre-classified for closure' in Field Semantics section perpetuates batch framing language — *Learn Severity-Based Triage*
-
-### packages/cli/tests/commands/proof.test.ts
-
-- **test:** A008 active-only test uses fixture with only active findings — no closed finding to prove exclusion — *Audit JSON Severity Summary*
-- **test:** A013 meta block test uses toBeDefined() — verifies existence not value preservation — *Audit JSON Severity Summary*
-- **test:** 5-finding fixture manually duplicated three times across test blocks instead of shared constant — *Audit JSON Severity Summary*
+- **test:** A028/A029 learn template assertions verified by source inspection only — no test file exercises these — *Proof Intelligence Hardening*
 
 ### packages/cli/tests/commands/work.test.ts
 
+- **test:** No tagged tests for A004-A008 — structural/behavioral assertions verified by source inspection only, not by @ana-tagged test cases — *Proof Intelligence Hardening*
 - **test:** A016-A019 @ana tags point to pre-existing branchPrefix template tests, not command entry point validation — *Security Hardening — Command Injection Elimination*
-- **test:** A014 nudge check uses specific patterns ('→ claude', '→ ana proof') — a new nudge format would slip through — *Strengthen Weak Test Assertions*
-
-### packages/cli/tests/engine/detectors/documentation.test.ts
-
-- **test:** documentation.test.ts assertion removed for packages/cli/README.md — justified but reduces dogfood coverage — *V1 Documentation Overhaul*
 
 ### packages/cli/tests/utils/git-operations.test.ts
 
@@ -86,13 +81,12 @@
 
 ### packages/cli/tests/utils/proofSummary.test.ts
 
+- **test:** truncateSummary word-boundary test uses toBeLessThanOrEqual instead of exact value assertion — *Proof Intelligence Hardening*
 - **test:** No false-match edge case test for non-AC bullet lines containing status words — *V1 Code Changes*
-- **test:** Remaining toBeGreaterThan(0) in proofSummary.test.ts — 21 instances outside this spec's scope still use weak assertions — *Strengthen Weak Test Assertions*
 
-### README.md
+### packages/cli/vitest.config.ts
 
-- **code:** README Development section uses absolute GitHub URLs for CONTRIBUTING/ARCHITECTURE — correct since README is at root — *V1 Documentation Overhaul*
-- **code:** Scan output block in README is representative example, not live output — cannot be mechanically validated — *V1 Documentation Overhaul*
+- **code:** vitest.config.ts timeout changes not in spec — CI-specific testTimeout and hookTimeout added — *Proof Intelligence Hardening*
 
 ### General
 
