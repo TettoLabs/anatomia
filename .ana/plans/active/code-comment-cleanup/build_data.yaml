@@ -3,7 +3,8 @@ concerns:
   - summary: "Pre-existing lint warning in git-operations.ts:169 (unused eslint-disable)"
     file: "packages/cli/src/utils/git-operations.ts"
     severity: debt
-    suggested_action: accept
-  - summary: "~10 test description strings still contain sprint/ticket identifiers"
+    suggested_action: scope
+  - summary: "readme.test.ts 'Item 1/2/3' natural language matches grep pattern for design doc refs"
+    file: "packages/cli/tests/engine/detectors/readme.test.ts"
     severity: observation
-    suggested_action: monitor
+    suggested_action: accept

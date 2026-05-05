@@ -17,12 +17,12 @@
     "hash": "sha256:75f53c7ba9cde8c3c4bdc008321e9c851d005a4373defe8fd9102afc99855f9f"
   },
   "build-report": {
-    "saved_at": "2026-05-05T23:40:08.181Z",
-    "hash": "sha256:aeaf300a96d2e816ebdd11cc96dbcc512e3572f8567e44dd0f8e572709a330e3"
+    "saved_at": "2026-05-05T23:56:58.219Z",
+    "hash": "sha256:1d69315a0d6845e8a86017916b5f3cbcdae3b849d24caa50faaad8e7dadcf5eb"
   },
   "build-data": {
-    "saved_at": "2026-05-05T23:40:08.182Z",
-    "hash": "sha256:111b983f022c5a93ab41e5c12c2ed942cdf81097e661d2ec18c17722d51b341b"
+    "saved_at": "2026-05-05T23:56:58.220Z",
+    "hash": "sha256:9160b905a4a5a370bc7f9825dcb3689d3cc52247ba34ab2733cd12d81225c474"
   },
   "modules_touched": [
     "packages/cli/src/commands/artifact.ts",
@@ -127,6 +127,7 @@
     "packages/cli/tests/engine/utils/route-handlers.test.ts",
     "packages/cli/tests/engine/utils/service-annotation.test.ts",
     "packages/cli/tests/engine/version-detection.test.ts",
+    "packages/cli/tests/scaffolds/all-scaffolds.test.ts",
     "packages/cli/tests/templates/cross-platform.test.ts"
   ],
   "pre-check": {
