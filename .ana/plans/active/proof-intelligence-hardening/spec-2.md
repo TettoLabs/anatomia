@@ -14,7 +14,7 @@ The key insight: the three copies share identical structure (read chain, format 
 
 The promote variant needs `availableSkills` — it passes `{ SKILL_REQUIRED: availableSkills, SKILL_NOT_FOUND: availableSkills }` in hints. The factory's console branch checks if `hints[code]` exists and formats accordingly.
 
-**Truncation helper:** `truncateSummary(text: string, maxLength?: number): string`. Default max 100. Finds the last space before the limit, truncates there, appends `...`. Extracted to proofSummary.ts (it's a display utility used by proof commands via proofSummary already). Replaces the inline `MAX_SUMMARY` patterns in health display and the 250-char pattern in audit.
+**Truncation helper:** `truncateSummary(text: string, maxLength: number): string`. No default — every caller declares its intent explicitly. Finds the last space before the limit, truncates there, appends `...`. Extracted to proofSummary.ts (it's a display utility used by proof commands via proofSummary already). Replaces the 2 inline `MAX_SUMMARY` patterns in health display (:353, :369) and the 250-char pattern in audit (:1935). Additionally, promote (:1190) and strengthen (:1204) output currently has NO truncation on finding summaries — the helper gets added there too (with 100-char limit matching health display).
 
 ## Output Mockups
 
@@ -26,16 +26,17 @@ No user-visible output changes. The refactoring preserves exact output for all e
 **What changes:**
 1. Define `createExitError` as a module-level function (not exported — it's internal to this file). Signature: `createExitError(opts: { commandName: string; proofChainPath: string; useJson: boolean; hints?: Record<string, string[]> })`. Returns `(code: string, message: string, context?: Record<string, unknown>) => never`.
 2. Replace the three inline exitError definitions (close :578, promote :869, strengthen :1234) with calls to the factory.
-3. Replace the two inline `MAX_SUMMARY` / truncation patterns (health display :353-355, :369-371) with `truncateSummary()` calls.
+3. Replace the two inline `MAX_SUMMARY` / truncation patterns (health display :353-355, :369-371) with `truncateSummary(summary, 100)` calls.
 4. Replace the 250-char truncation in audit display (:1935-1939) with `truncateSummary(summary, 250)`.
+5. Add `truncateSummary(summary, 100)` to promote output (:1190) and strengthen output (:1204) which currently display untruncated summaries.
 
 **Pattern to follow:** The existing `wrapJsonError` and `wrapJsonResponse` utility functions — same style of internal helper that multiple subcommands consume.
 **Why:** Three drifting copies of the same error infrastructure guarantees inconsistency. One already lacks a hint that the others have. Factory prevents future drift.
 
 ### packages/cli/src/utils/proofSummary.ts (modify)
-**What changes:** Add exported `truncateSummary` function. Logic: if text.length <= maxLength, return text. Otherwise find lastIndexOf(' ', maxLength), slice there, append '...'. If no space found, hard-cut at maxLength.
+**What changes:** Add exported `truncateSummary` function. Signature: `truncateSummary(text: string, maxLength: number): string`. Logic: if text.length <= maxLength, return text. Otherwise find lastIndexOf(' ', maxLength), slice there, append '...'. If no space found, hard-cut at maxLength.
 **Pattern to follow:** Other exported utility functions in this file (computeFirstPassRate, computeChainHealth) — same JSDoc style, same export pattern.
-**Why:** Truncation logic appears 3 times with minor variations (100 vs 250, some use lastIndexOf space, some don't). One function, parameterized.
+**Why:** Truncation logic appears in 2 places inline (health :353/:369 at 100 chars, audit :1935 at 250 chars with word boundary), and is missing entirely from promote/strengthen output (:1190/:1204). One function with explicit length parameter unifies existing and fills the gap.
 
 ## Acceptance Criteria
 
@@ -72,6 +73,7 @@ Phase 1 must be complete (FAIL guard is extracted, proof.ts is updated with comp
 - The promote exitError has a conditional that checks `context['promoted_to']` and `context['closed_by']` — these context-dependent branches must be preserved in the factory. The factory should keep the generic context-key-based hints (for `SKILL_REQUIRED`, `SKILL_NOT_FOUND`, `WRONG_BRANCH`) and also support a `formatHint` callback for complex cases (like checking context keys). Alternatively, keep a small set of well-known context-based patterns in the factory itself since all three commands share FINDING_NOT_FOUND, ALREADY_CLOSED, and WRONG_BRANCH handling.
 - The strengthen variant discovers available skills differently (reads directory directly at :1251-1257) vs promote (uses globSync at :865-866). The factory doesn't need to unify skill discovery — each command still discovers skills its own way and passes the list via hints.
 - `truncateSummary` in the audit display currently uses `lastIndexOf(' ', 250)` — preserve this word-boundary behavior. The health display uses simple `.slice(0, 100) + '...'` without word boundary. Unify on word-boundary (the cleaner behavior) — this may change a few truncation points by a character or two, which is acceptable.
+- Promote output at :1190 prints `p.summary` and strengthen at :1204 prints `p.summary` — both untruncated. Long summaries break terminal layout. Add truncation here as part of AC7.
 
 ## Build Brief
 

@@ -10,7 +10,7 @@ Four changes that improve signal quality for users and agents consuming proof in
 
 **Audit headline split** — The current headline `"Proof Audit: 12 active findings across 8 files"` treats all findings equally. An operator needs to know: how many require action vs. how many are monitoring noise? Split into actionable (severity risk/debt OR action scope/promote) and monitoring (everything else). This gives Learn and operators a quick read on actual work remaining.
 
-**Lesson command** — Clone the close subcommand. `ana proof lesson <ids...> --reason "..."` sets findings to `status: 'lesson'` with a git commit. Same guards: can't lesson a promoted or already-closed finding. Same `--dry-run` and `--json` support. Uses the exitError factory from Phase 2. Registered in the proof command group after close.
+**Lesson command** — Clone the close subcommand. `ana proof lesson <ids...> --reason "..."` sets findings to `status: 'lesson'` with a git commit. Reuses the existing `closed_reason`, `closed_at`, `closed_by` fields — the `status: 'lesson'` discriminator is sufficient, adding parallel `lesson_*` fields would be type bloat for zero information gain. Same guards: can't lesson a promoted or already-closed finding. Same `--dry-run` and `--json` support. Uses the exitError factory from Phase 2. Registered in the proof command group after close.
 
 **Staleness normalization** — The current `subsequent_count >= 3 → high` threshold ignores file frequency. A file touched in every other pipeline run (48% frequency) will hit 3 touches quickly regardless of whether the finding is actually stale. Normalize confidence using `entries_since_finding * file_touch_rate_since_finding` as the expected touches denominator.
 
@@ -62,7 +62,7 @@ Same output format. Fewer false positives — high-frequency files require propo
 ### packages/cli/src/commands/proof.ts (modify)
 **What changes:**
 1. Audit display: compute `actionableCount` and `monitoringCount` from the existing `severityCounts` and `actionCounts`. A finding is actionable if its severity is 'risk' or 'debt' OR its action is 'promote' or 'scope'. Update the headline string and add the two new fields to the JSON output object.
-2. Lesson command: new subcommand registered after close. Clones close's structure — variadic IDs, `--reason` required, `--dry-run`, `--json`. Uses `createExitError` factory. Sets `status: 'lesson'`, adds `lesson_reason` and `lesson_at` fields to the finding. Git commit with `[proof] Lesson: {ids}` message.
+2. Lesson command: new subcommand registered after close. Clones close's structure — variadic IDs, `--reason` required, `--dry-run`, `--json`. Uses `createExitError` factory. Sets `status: 'lesson'`, populates `closed_reason` (the lesson reason), `closed_at`, and `closed_by: 'human'` — same fields as close, differentiated by status value. Git commit with `[proof] Lesson: {ids}` message.
 
 **Pattern to follow:** Close subcommand (proof.ts:565-800) is the structural analog for lesson. The audit headline code is at :1696.
 **Why:** Audit headline gives operators instant triage signal. Lesson command gives Learn a way to record institutional decisions without closing findings.
@@ -124,7 +124,7 @@ Phase 2 must be complete (exitError factory available for lesson command, trunca
 
 ## Gotchas
 
-- The lesson command needs the `ProofChainEntry` type's findings to accept `status: 'lesson'`. Verify this is already in the type definition (it is — proofSummary.ts and proof types already reference 'lesson' status).
+- The lesson command needs the `ProofChainEntry` type's findings to accept `status: 'lesson'`. Already in the type definition (proof.ts:76 has `'active' | 'lesson' | 'promoted' | 'closed'`). No type change needed.
 - Staleness test fixtures will break — existing tests assert specific findings as high/medium confidence with the old `>= 3` threshold. Update fixtures to match the new normalized thresholds.
 - The audit "actionable" classification uses OR logic (severity risk/debt OR action scope/promote). A finding that is `observation` severity but `promote` action IS actionable. A finding that is `risk` severity but `accept` action IS actionable. This prevents severity and action from fighting — either signal is enough.
 - **Out of scope (noted per scope open questions):** proof-health-v1-C5 "worsening label misleading" — the half-split trend comparison at proofSummary.ts:690-699 reports worsening for near-zero rates. Future work. audit-json-severity-summary-C1 "unknown severity silently dropped" — findings with novel severity values not in the bySeverity keys get excluded from that object. Low-priority.
@@ -152,14 +152,14 @@ const closeCommand = new Command('close')
   .action(async (ids: string[], options: { reason?: string; dryRun?: boolean; json?: boolean }) => {
 ```
 
-Close's finding mutation (proof.ts:680-691):
+Close's finding mutation (proof.ts:684-691) — dry-run skips mutation entirely:
 ```typescript
-      foundFinding.status = 'closed';
-      foundFinding.closed_at = new Date().toISOString();
-      foundFinding.closed_reason = options.reason;
-      if (dryRun) {
-        foundFinding.closed_by = 'human (dry-run)';
-      } else {
+      const previousStatus = foundFinding.status ?? 'active';
+
+      if (!options.dryRun) {
+        foundFinding.status = 'closed';
+        foundFinding.closed_reason = options.reason;
+        foundFinding.closed_at = new Date().toISOString();
         foundFinding.closed_by = 'human';
       }
 ```

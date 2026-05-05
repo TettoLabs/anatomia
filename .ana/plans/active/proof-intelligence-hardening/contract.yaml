@@ -29,7 +29,7 @@ assertions:
   - id: A004
     says: "The FAIL rejection logic exists in exactly one helper function"
     block: "FAIL guard is deduplicated into shared helper"
-    target: "guardDefinitionCount"
+    target: "sourceGrepCount"
     matcher: "equals"
     value: 1
 
@@ -104,10 +104,10 @@ assertions:
 
   - id: A015
     says: "Custom max length parameter controls truncation point"
-    block: "truncateSummary respects custom maxLength"
+    block: "truncateSummary respects custom maxLength of 50"
     target: "result.length"
-    matcher: "greater"
-    value: 0
+    matcher: "equals"
+    value: 53
 
   # AC2: Staleness normalization
   - id: A016
