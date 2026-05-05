@@ -54,9 +54,11 @@ jobs:
             exit 1
           fi
 
-      - run: sudo npm install -g npm@latest
-
+      # TODO: Migrate to trusted publishing (OIDC) — see ANA-INFRA-086
+      # Currently using NPM_TOKEN because OIDC returns E404 (root cause under investigation)
       - run: cd packages/cli && npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - run: gh release create ${{ github.ref_name }} --generate-notes
         env:
