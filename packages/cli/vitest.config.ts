@@ -5,6 +5,8 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['tests/**/*.test.ts'],
+    testTimeout: process.env['CI'] ? 15000 : 5000,
+    hookTimeout: process.env['CI'] ? 15000 : 10000,
     // Item 19: type tests (`.test-d.ts` / `assertType()` calls) are opt-in.
     // For ambient type checking of all test files, the authoritative path is
     // `pnpm typecheck:tests` (runs tsc against tsconfig.test.json). Vitest's
