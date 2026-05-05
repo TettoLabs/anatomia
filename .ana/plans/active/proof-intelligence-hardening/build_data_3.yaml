@@ -1,0 +1,9 @@
+schema: 1
+concerns:
+  - summary: "Staleness touch rate formula deviates from spec — uses whole-chain rate instead of post-finding window to avoid circular computation"
+    file: "packages/cli/src/utils/proofSummary.ts"
+    severity: observation
+    suggested_action: accept
+  - summary: "runProof test helper splits multi-word --reason values — tests use hyphenated reasons as workaround"
+    severity: debt
+    suggested_action: monitor
