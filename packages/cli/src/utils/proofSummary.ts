@@ -197,13 +197,26 @@ function parseResult(content: string): 'PASS' | 'FAIL' | 'UNKNOWN' {
  * @returns Object with total and met AC counts
  */
 function parseACResults(content: string): { total: number; met: number } {
+  // Scope to the AC Walkthrough section to avoid false matches from other sections
+  // (e.g., a Findings bullet containing "PASS" in prose).
+  // Fall back to full content if heading is missing (old reports).
+  let section = content;
+  const walkthroughStart = content.indexOf('## AC Walkthrough');
+  if (walkthroughStart !== -1) {
+    const afterHeading = walkthroughStart + '## AC Walkthrough'.length;
+    const nextHeading = content.indexOf('\n## ', afterHeading);
+    section = nextHeading !== -1
+      ? content.substring(walkthroughStart, nextHeading)
+      : content.substring(walkthroughStart);
+  }
+
   // Match status words on bullet-list lines (anchored to `- ` prefix).
   // Mirrors parseAssertionResults: match the word, ignore prefix symbols.
   // Excludes `**Result:** PASS` (no bullet prefix) to avoid false matches.
-  const passCount = (content.match(/^\s*-\s+.*\bPASS\b/gm) || []).length;
-  const failCount = (content.match(/^\s*-\s+.*\bFAIL\b/gm) || []).length;
-  const partialCount = (content.match(/^\s*-\s+.*\bPARTIAL\b/gm) || []).length;
-  const unverifiableCount = (content.match(/^\s*-\s+.*\bUNVERIFIABLE\b/gm) || []).length;
+  const passCount = (section.match(/^\s*-\s+.*\bPASS\b/gm) || []).length;
+  const failCount = (section.match(/^\s*-\s+.*\bFAIL\b/gm) || []).length;
+  const partialCount = (section.match(/^\s*-\s+.*\bPARTIAL\b/gm) || []).length;
+  const unverifiableCount = (section.match(/^\s*-\s+.*\bUNVERIFIABLE\b/gm) || []).length;
 
   const total = passCount + failCount + partialCount + unverifiableCount;
   const met = passCount;

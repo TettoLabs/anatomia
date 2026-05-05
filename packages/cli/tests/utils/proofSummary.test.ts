@@ -214,6 +214,98 @@ file_changes:
     expect(summary.acceptance_criteria.met).toBe(1);
   });
 
+  // @ana A001
+  it('parseACResults scopes to AC Walkthrough section — ignores PASS in other sections', async () => {
+    const verifyReport = `# Verify Report
+
+**Result:** PASS
+
+## AC Walkthrough
+- ✅ PASS: AC1 Feature works
+- ❌ FAIL: AC2 Missing edge case
+- ✅ PASS: AC3 Handles errors
+
+## Findings
+- Finding about PASS rate improvements in the codebase
+- Another finding mentioning PASS in prose
+`;
+    await fs.promises.writeFile(path.join(slugDir, 'verify_report.md'), verifyReport);
+
+    const summary = generateProofSummary(slugDir);
+
+    // Only 3 ACs in the walkthrough, not 5 (would be 5 if Findings PASS lines counted)
+    expect(summary.acceptance_criteria.total).toBe(3);
+    expect(summary.acceptance_criteria.met).toBe(2);
+  });
+
+  // @ana A002
+  it('parseACResults met count excludes PASS mentions outside AC Walkthrough', async () => {
+    const verifyReport = `# Verify Report
+
+**Result:** PASS
+
+## AC Walkthrough
+- ✅ PASS: AC1 Works correctly
+- ❌ FAIL: AC2 Needs fix
+- ⚠️ PARTIAL: AC3 Partially done
+
+## Findings
+- PASS: This line should not inflate the met count
+`;
+    await fs.promises.writeFile(path.join(slugDir, 'verify_report.md'), verifyReport);
+
+    const summary = generateProofSummary(slugDir);
+
+    expect(summary.acceptance_criteria.total).toBe(3);
+    expect(summary.acceptance_criteria.met).toBe(1);
+  });
+
+  // @ana A003
+  it('parseACResults falls back to full content when AC Walkthrough heading missing', async () => {
+    const verifyReport = `# Verify Report
+
+**Result:** PASS
+
+## Some Other Section
+- ✅ PASS: AC1 Works
+- ❌ FAIL: AC2 Broken
+`;
+    await fs.promises.writeFile(path.join(slugDir, 'verify_report.md'), verifyReport);
+
+    const summary = generateProofSummary(slugDir);
+
+    // No ## AC Walkthrough heading, so falls back to full content
+    expect(summary.acceptance_criteria.total).toBe(2);
+    expect(summary.acceptance_criteria.met).toBe(1);
+  });
+
+  it('parseACResults handles AC Walkthrough as last section (no subsequent heading)', async () => {
+    const verifyReport = `# Verify Report
+
+**Result:** PASS
+
+## AC Walkthrough
+- ✅ PASS: AC1 Feature works
+- ✅ PASS: AC2 Edge case handled
+- ❌ FAIL: AC3 Needs work`;
+    await fs.promises.writeFile(path.join(slugDir, 'verify_report.md'), verifyReport);
+
+    const summary = generateProofSummary(slugDir);
+
+    expect(summary.acceptance_criteria.total).toBe(3);
+    expect(summary.acceptance_criteria.met).toBe(2);
+  });
+
+  it('parseACResults returns zero counts for empty report', async () => {
+    const verifyReport = '';
+    await fs.promises.writeFile(path.join(slugDir, 'verify_report.md'), verifyReport);
+
+    const summary = generateProofSummary(slugDir);
+
+    expect(summary.acceptance_criteria.total).toBe(0);
+    expect(summary.acceptance_criteria.met).toBe(0);
+  });
+
   // @ana A010, A011
   it('handles missing verify report — bootstraps from contract.yaml', async () => {
     const contract = `
