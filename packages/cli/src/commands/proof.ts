@@ -25,7 +25,7 @@ import { spawnSync } from 'node:child_process';
 import { globSync } from 'glob';
 import type { ProofChainEntry, ProofChain } from '../types/proof.js';
 import { findProjectRoot, validateSkillName } from '../utils/validators.js';
-import { getProofContext, wrapJsonResponse, wrapJsonError, generateDashboard, computeChainHealth, computeHealthReport, computeStaleness, MIN_ENTRIES_FOR_TREND } from '../utils/proofSummary.js';
+import { getProofContext, wrapJsonResponse, wrapJsonError, generateDashboard, computeChainHealth, computeHealthReport, computeFirstPassRate, computeStaleness, MIN_ENTRIES_FOR_TREND } from '../utils/proofSummary.js';
 import type { ProofContextResult } from '../utils/proofSummary.js';
 import { readArtifactBranch, getCurrentBranch, readCoAuthor, runGit } from '../utils/git-operations.js';
 
@@ -1774,7 +1774,7 @@ export function registerProofCommand(program: Command): void {
             hot_modules: [],
             promotion_candidates: [],
             promotions: [],
-            verification: { first_pass_count: 0, total_runs: 0, first_pass_pct: 100, total_caught: 0 },
+            verification: computeFirstPassRate([]),
           }, { entries: [] }), null, 2));
         } else {
           console.log(formatHealthDisplay(0));
