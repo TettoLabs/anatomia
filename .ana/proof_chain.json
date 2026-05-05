@@ -9722,7 +9722,10 @@
           "severity": "observation",
           "suggested_action": "scope",
           "id": "proof-health-v2-C11",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Stale — work.ts:1158 now includes phase number in the error message: 'Phase ${phaseNum} verify report has no Result line'. The specific gap this finding identified (generic message without phase identification) is fixed.",
+          "closed_at": "2026-05-05T01:29:13.024Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
