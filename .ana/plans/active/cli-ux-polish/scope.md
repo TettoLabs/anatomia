@@ -76,7 +76,7 @@ Intelligence
 
 Entry-point commands first (scan before init — zero-install audition). Pipeline commands second. Intelligence commands last.
 
-Implementation: Commander doesn't support command groups natively. Use `.addHelpText('beforeAll', ...)` to override the default command list display, or use Commander's `.configureHelp()` to customize the format.
+Implementation: Commander v14 has native `.commandsGroup()` support. Call `program.commandsGroup('GETTING STARTED')` before registering scan/init/setup, then `program.commandsGroup('PIPELINE')` before work/artifact/verify/pr, then `program.commandsGroup('INTELLIGENCE')` before proof/agents. No custom help rendering needed.
 
 ### 5. Add internal marker to ENRICHMENT.md files
 First line of each ENRICHMENT.md: `<!-- Internal: read by ana-setup only. Not for manual editing. -->`
@@ -103,26 +103,26 @@ First line of each ENRICHMENT.md: `<!-- Internal: read by ana-setup only. Not fo
 - AC11: All existing tests pass
 
 ## Edge Cases & Risks
-- **Commander grouping:** Commander doesn't natively support command groups. The implementation must either use `.configureHelp()` to customize the formatter, or use `.addHelpText()` to prepend/replace the command listing. Plan should investigate which approach is cleaner and more maintainable.
+- **Commander grouping:** Commander v14 has native `.commandsGroup()` — verified locally. No custom help rendering needed.
 - **Test impact:** Tests that assert on `--help` output or version string format will need updating.
 - **`setup index` visibility:** `.hideHelp()` hides from `--help` but the command still works if called directly. This is correct — agents call it programmatically.
 - **Subcommand examples format:** The `EXAMPLES` section via `.addHelpText('after', ...)` appears after Commander's default help. Verify the visual layout doesn't look broken.
 
 ## Rejected Approaches
-- **Custom help renderer.** A full custom help system would give complete control but is overengineering for 9 commands. `.addHelpText()` and `.configureHelp()` are sufficient.
+- **Custom help renderer.** Commander v14 has native `.commandsGroup()`. No custom renderer needed.
 - **Examples in top-level help.** `gh` puts examples only in subcommand help, not the top-level `--help`. Follow the same pattern — keep top-level clean.
 
 ## Open Questions
-- Commander `.configureHelp()` vs `.addHelpText()` for command grouping — Plan should investigate which produces cleaner output and is more maintainable. `.configureHelp()` overrides the formatter (full control, more code). `.addHelpText()` prepends/appends (simpler, might conflict with default output).
+- The `EXAMPLES` section in top-level help — use `.addHelpText('after', ...)` to append examples after the grouped commands. Plan should verify the visual layout is clean with Commander v14's grouped output.
 
 ## Exploration Findings
 
 ### Patterns Discovered
 - `gh` groups commands into CORE COMMANDS, GITHUB ACTIONS COMMANDS, ADDITIONAL COMMANDS with section headers
 - `gh` uses `Run 'gh <command> <subcommand> --help' for more information` as footer
-- `gh` examples use `$ ` prefix format
+- `gh` examples use `$ ` prefix format with right-aligned descriptions
 - `docker` groups into Management Commands and Commands
-- Commander.js `.configureHelp()` allows custom `formatHelp()` override
+- Commander v14 has native `.commandsGroup(heading)` — verified locally: `typeof program.commandsGroup === 'function'`. Also has `.helpGroup(heading)` per-command. No custom help rendering needed.
 
 ### Constraints Discovered
 - [OBSERVED] Commander registers commands in insertion order — reordering in `index.ts` changes `--help` order
