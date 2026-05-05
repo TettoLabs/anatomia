@@ -11407,7 +11407,10 @@
             "A005"
           ],
           "id": "v1-code-changes-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed by proof-intelligence-hardening Phase 1 — false-match edge case tests added in proofSummary.test.ts. Tests verify PASS in Findings section doesn't inflate AC count.",
+          "closed_at": "2026-05-05T06:40:18.553Z",
+          "closed_by": "human"
         },
         {
           "category": "code",

@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-51 runs · 84 active · 57 lessons · 0 promoted · 145 closed
+51 runs · 83 active · 57 lessons · 0 promoted · 146 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 84 total)
+## Active Findings (30 shown of 83 total)
 
 ### .github/workflows/release.yml
 
@@ -33,6 +33,7 @@
 ### packages/cli/package.json
 
 - **code:** npm pack dry-run doesn't include README.md or CHANGELOG.md — prepublishOnly required first — *V1 Release Prep*
+- **code:** prepublishOnly relies on relative ../../ path — breaks if package depth changes — *V1 Documentation Overhaul*
 
 ### packages/cli/src/commands/proof.ts
 
@@ -85,7 +86,6 @@
 ### packages/cli/tests/utils/proofSummary.test.ts
 
 - **test:** truncateSummary word-boundary test uses toBeLessThanOrEqual instead of exact value assertion — *Proof Intelligence Hardening*
-- **test:** No false-match edge case test for non-AC bullet lines containing status words — *V1 Code Changes*
 
 ### packages/cli/vitest.config.ts
 
