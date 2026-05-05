@@ -73,7 +73,7 @@ We chose TypeScript for type safety.
 - src/engine/analyze.ts — project scanner
 
 ## Active Constraints
-Do not modify engine types during S15.
+Do not modify engine types during active sprints.
 
 ## Domain Vocabulary
 - Scaffold: auto-generated context file
@@ -130,7 +130,7 @@ ${extra}`;
     });
   });
 
-  describe('structural validation (D12.3 — no line counts)', () => {
+  describe('structural validation (no line counts)', () => {
     it('line count always passes regardless of file size', async () => {
       // Even very short files pass line count
       await createContextFile('project-context.md', generateProjectContext());

@@ -138,7 +138,7 @@ describe('Package manager inheritance', () => {
     expect(pm).toBe('pnpm');
   });
 
-  it('returns null when no lockfile found (S19/SCAN-032)', async () => {
+  it('returns null when no lockfile found', async () => {
     // No lockfile anywhere in temp dir. Previously this fell back to 'npm',
     // which was a semantic lie for non-Node projects (Python/Go/Rust).
     // Now null — downstream display code already guards with truthy check.

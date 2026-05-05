@@ -24,7 +24,7 @@ describe('Cross-Platform Path Handling', () => {
     expect(assetsContent).toContain("path.join(tmpAnaPath, 'context'");
   });
 
-  it('FileWriter utility uses path.join (from STEP_0.1)', async () => {
+  it('FileWriter utility uses path.join for cross-platform paths', async () => {
     const fs = await import('node:fs/promises');
     const fileWriter = await fs.readFile('src/utils/file-writer.ts', 'utf-8');
 

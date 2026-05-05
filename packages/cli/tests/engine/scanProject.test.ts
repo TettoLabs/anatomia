@@ -120,7 +120,7 @@ describe('scanProject()', () => {
   // Monorepo sub-package ORM schema detection. 5 of 22 target-customer
   // projects had Prisma inside a packages/<pkg>/ sub-directory; the old
   // root-only glob missed them and fired a misleading blind spot.
-  it('detects Prisma schema in a monorepo sub-package (SCAN-042)', async () => {
+  it('detects Prisma schema in a monorepo sub-package', async () => {
     await createFiles({
       'package.json': JSON.stringify({
         name: 'monorepo-root',
@@ -219,7 +219,7 @@ describe('scanProject()', () => {
   });
 
   // @ana A018, A019, A020
-  it('detects Drizzle schema in a monorepo sub-package (SCAN-042)', async () => {
+  it('detects Drizzle schema in a monorepo sub-package', async () => {
     await createFiles({
       'package.json': JSON.stringify({
         name: 'monorepo-root',

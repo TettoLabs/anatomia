@@ -97,7 +97,7 @@ function resolveWasmPath(packageName: string, wasmFileName: string): string {
  *
  * Performance: Saves 100-200ms over 20 files (5-10ms × 20 files avoided)
  *
- * WASM Migration (SS-10):
+ * WASM Migration:
  * - Must call initialize() once before any parsing
  * - Grammars are pre-loaded during initialization
  * - getParser() is sync after initialization

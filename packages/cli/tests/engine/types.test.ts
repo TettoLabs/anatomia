@@ -124,7 +124,7 @@ describe('AnalysisResult types', () => {
  * guard against gross regressions only (missing fields, renamed types).
  */
 describe('type-unification compile-time assertions', () => {
-  it('EngineResult.conventions is the analyzer ConventionAnalysis type (Item 3)', () => {
+  it('EngineResult.conventions is the analyzer ConventionAnalysis type', () => {
     // If these lines compile, the unification is intact.
     type ConventionsField = NonNullable<EngineResult['conventions']>;
     const _same1: ConventionsField = {} as ConventionAnalysis;
@@ -140,7 +140,7 @@ describe('type-unification compile-time assertions', () => {
     expect(true).toBe(true);
   });
 
-  it('EngineResult.patterns is the analyzer PatternAnalysis type (Item 6)', () => {
+  it('EngineResult.patterns is the analyzer PatternAnalysis type', () => {
     type PatternsField = NonNullable<EngineResult['patterns']>;
     const _same1: PatternsField = {} as PatternAnalysis;
     const _same2: PatternAnalysis = {} as PatternsField;
@@ -158,7 +158,7 @@ describe('type-unification compile-time assertions', () => {
     expect(true).toBe(true);
   });
 
-  it('EngineResult.commands composes DetectedCommands & { packageManager } (Item 7a)', () => {
+  it('EngineResult.commands composes DetectedCommands & { packageManager }', () => {
     // scan-engine composes detectCommands() output with packageManager.
     // If EngineResult['commands'] regresses to an inline type that omits any
     // DetectedCommands field, this block fails to compile.
@@ -177,7 +177,7 @@ describe('type-unification compile-time assertions', () => {
     expect(true).toBe(true);
   });
 
-  it('EngineResult.git is GitInfo directly (Item 7b)', () => {
+  it('EngineResult.git is GitInfo directly', () => {
     // Inline git shape was byte-identical to GitInfo, so the field
     // imports the detector type directly. Any inline divergence fails here.
     const _a: GitInfo = {} as EngineResult['git'];
@@ -188,7 +188,7 @@ describe('type-unification compile-time assertions', () => {
     expect(true).toBe(true);
   });
 
-  it('EngineResult.deployment composes DetectedDeployment & DetectedCI (Item 7d)', () => {
+  it('EngineResult.deployment composes DetectedDeployment & DetectedCI', () => {
     // scan-engine merges detectDeployment() + detectCI() via spread.
     // The field type matches that runtime shape exactly — both halves must
     // be assignable from EngineResult['deployment'] and vice versa.

@@ -107,7 +107,7 @@ describe('EngineResultPartialSchema', () => {
     }
   });
 
-  it('rejects missing stack field (e.g. aiSdk added in Item 2.1)', () => {
+  it('rejects missing stack field (e.g. aiSdk)', () => {
     const data = validShape() as Partial<ReturnType<typeof validShape>>;
     // aiSdk is required; an old scan.json missing it should fail
     delete (data.stack as Partial<NonNullable<typeof data.stack>>).aiSdk;

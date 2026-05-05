@@ -25,7 +25,7 @@ function makeService(name: string, category: string): ExternalService {
   return { name, category, source: 'dep', configFound: false, stackRoles: [] };
 }
 
-describe('injectAiPatterns (B1 filter — simplified to exact match in Item 18)', () => {
+describe('injectAiPatterns (simplified to exact match filter)', () => {
   it('shows both SDK and a distinct provider variant', () => {
     const result = createEmptyEngineResult();
     result.stack.aiSdk = 'OpenAI';
@@ -202,7 +202,7 @@ describe('matchGotchas', () => {
   // `['Vitest'] === 'Vitest'` and the existing Vitest gotcha silently stops
   // firing on every Vitest project. This test exercises the multi-framework
   // path specifically: Jest + Vitest together.
-  it('matches array-valued stack.testing on multi-framework projects (SCAN-050)', () => {
+  it('matches array-valued stack.testing on multi-framework projects', () => {
     const result = createEmptyEngineResult();
     result.stack.testing = ['Jest', 'Vitest'];
     const matches = matchGotchas(result);

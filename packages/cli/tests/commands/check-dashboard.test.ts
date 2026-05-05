@@ -336,7 +336,7 @@ describe('skill check', () => {
 // ── Consistency Checks ──
 
 describe('consistency checks', () => {
-  it('reports "awaiting setup enrichment" when Detected is empty (S19/SETUP-025)', async () => {
+  it('reports "awaiting setup enrichment" when Detected is empty', async () => {
     // Create skill files with empty Detected (template state). The previous
     // behavior silently reported "aligned" here, which was phantom
     // verification: the check was skipped because there was nothing to
@@ -728,7 +728,7 @@ Widget, Gadget, Thingamajig.
     expect(result.symbol).toContain('○');
   });
 
-  it('project-context with multiline comment in critical section reports empty (SETUP-027)', async () => {
+  it('project-context with multiline comment in critical section reports empty', async () => {
     // The old dashboard used hasNonTemplateContent which didn't track
     // multiline HTML comment state, so a multiline comment was treated as
     // real content. The completion validator used hasRealContent which

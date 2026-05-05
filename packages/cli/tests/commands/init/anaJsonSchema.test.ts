@@ -52,7 +52,7 @@ describe('AnaJsonSchema', () => {
     });
   });
 
-  describe('drift from pre-S18 installs', () => {
+  describe('drift from legacy installs', () => {
     it('strips scanStaleDays fossil without touching other fields', () => {
       const input = {
         anaVersion: '0.1.0',

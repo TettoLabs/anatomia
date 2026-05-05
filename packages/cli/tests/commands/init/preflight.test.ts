@@ -27,7 +27,7 @@ import * as path from 'node:path';
 import * as os from 'node:os';
 import { validateInitPreconditions } from '../../../src/commands/init/preflight.js';
 
-describe('validateInitPreconditions — SIGKILL recovery detection (S19/NEW-001)', () => {
+describe('validateInitPreconditions — SIGKILL recovery detection', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
