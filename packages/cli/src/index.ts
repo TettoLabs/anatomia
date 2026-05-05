@@ -30,18 +30,27 @@ const program = new Command();
 program
   .name('ana')
   .description('Verified AI development. Ship with proof.')
-  .version(`anatomia-cli/${pkg.version}`, '-v, --version', 'Display version number');
+  .version(`ana/${pkg.version}`, '-v, --version', 'Display version number');
 
-// Register commands (Item 22: every command uses the register* pattern).
-registerInitCommand(program);
+program.addHelpCommand(false);
+
+// Register commands grouped for --help display.
+// Commander renders groups in registration order — commandsGroup() sets
+// the heading for all commands registered after it until the next call.
+program.commandsGroup('GETTING STARTED');
 registerScanCommand(program);
+registerInitCommand(program);
 registerSetupCommand(program);
-registerArtifactCommand(program);
+
+program.commandsGroup('PIPELINE');
 registerWorkCommand(program);
-registerProofCommand(program);
-registerPrCommand(program);
-registerAgentsCommand(program);
+registerArtifactCommand(program);
 registerVerifyCommand(program);
+registerPrCommand(program);
+
+program.commandsGroup('INTELLIGENCE');
+registerProofCommand(program);
+registerAgentsCommand(program);
 
 // Parse arguments with async support
 // CRITICAL: Use parseAsync() not parse() for async action handlers

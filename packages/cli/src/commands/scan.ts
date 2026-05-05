@@ -319,7 +319,7 @@ function formatHumanReadable(
     if (findings === 0) {
       lines.push(chalk.gray('  Run `ana init` to get started.'));
     } else {
-      lines.push(chalk.gray(`  Found ${findings} issues. Run \`ana init\` to fix them.`));
+      lines.push(chalk.gray(`  Found ${findings} issues. Run \`ana init\` to scaffold context and agents for your project.`));
     }
   } else {
     const skills = computeSkillManifest(result);
@@ -350,12 +350,13 @@ interface ScanOptions {
  */
 export function registerScanCommand(program: Command): void {
   const scanCommand = new Command('scan')
-    .description('Scan project and display tech stack, file counts, and structure')
+    .description('Detect stack, conventions, and patterns')
     .argument('[path]', 'Directory to scan (default: current directory)', '.')
     .option('--json', 'Output JSON format for programmatic consumption')
     .option('--save', 'Save scan results to .ana/scan.json')
     .option('-q, --quiet', 'Suppress informational stdout')
     .option('--quick', 'Fast scan — skip deep code analysis')
+    .addHelpText('after', '\nEXAMPLES\n  $ ana scan .\n  $ ana scan /path/to/project --json')
     .action(async (targetPath: string, options: ScanOptions) => {
     const rootPath = path.resolve(targetPath);
 

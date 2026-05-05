@@ -1410,12 +1410,13 @@ export function saveAllArtifacts(slug: string): void {
  */
 export function registerArtifactCommand(program: Command): void {
   const artifactCommand = new Command('artifact')
-    .description('Save and validate plan artifacts');
+    .description('Save pipeline outputs with hash verification');
 
   const saveCommand = new Command('save')
     .description('Commit a pipeline artifact to the correct branch')
     .argument('<type>', 'Artifact type: scope, plan, spec, spec-N, contract, build-report, build-report-N, verify-report, verify-report-N')
     .argument('<slug>', 'Work item slug (e.g., add-status-command)')
+    .addHelpText('after', '\nEXAMPLES\n  $ ana artifact save scope my-feature\n  $ ana artifact save-all my-feature')
     .action((type: string, slug: string) => {
       saveArtifact(type, slug);
     });

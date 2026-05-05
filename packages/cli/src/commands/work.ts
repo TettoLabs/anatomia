@@ -1375,7 +1375,7 @@ export async function startWork(slug: string): Promise<void> {
  */
 export function registerWorkCommand(program: Command): void {
   const workCommand = new Command('work')
-    .description('Track work items and complete pipelines');
+    .description('Start, track, and complete development tasks');
 
   const statusCommand = new Command('status')
     .description('Show pipeline state for all active work items')
@@ -1387,6 +1387,7 @@ export function registerWorkCommand(program: Command): void {
   const startCommand = new Command('start')
     .description('Start a new work item')
     .argument('<slug>', 'Kebab-case slug for the work item')
+    .addHelpText('after', '\nEXAMPLES\n  $ ana work start fix-auth-timeout')
     .action(async (slug: string) => {
       await startWork(slug);
     });
