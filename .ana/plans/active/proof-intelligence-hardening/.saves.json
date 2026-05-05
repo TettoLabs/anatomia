@@ -17,18 +17,19 @@
     "hash": "sha256:9ec351ab5c14e8fa83bf133653d92a2bed4fc3ebcc349abf2aca7336721202bb"
   },
   "build-report": {
-    "saved_at": "2026-05-05T03:58:34.488Z",
-    "hash": "sha256:a73ec61499de9263e87b1e62a1bab95272ce4b5dd0fbfd57abb12fd1c2152a89"
+    "saved_at": "2026-05-05T04:18:28.408Z",
+    "hash": "sha256:20136c9c91bb92cef6c6d64793cc4dcca1505bf6ded459768d4c17498f1c0d69"
   },
   "build-data": {
-    "saved_at": "2026-05-05T03:58:34.489Z",
-    "hash": "sha256:bd95e5092e8570ee1c12d0f3cec1e9746501595760dba5f33351696bfca50704"
+    "saved_at": "2026-05-05T04:18:28.409Z",
+    "hash": "sha256:1007bafecf670bd289b28394ec83342a818d063d56021842de7057f4c8de0c61"
   },
   "modules_touched": [
     "packages/cli/src/commands/proof.ts",
     "packages/cli/src/commands/work.ts",
     "packages/cli/src/utils/proofSummary.ts",
-    "packages/cli/tests/utils/proofSummary.test.ts"
+    "packages/cli/tests/utils/proofSummary.test.ts",
+    "packages/cli/vitest.config.ts"
   ],
   "pre-check": {
     "seal": "INTACT",
