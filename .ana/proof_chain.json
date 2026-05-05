@@ -12363,7 +12363,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "proof-intelligence-hardening-C3",
-          "status": "active"
+          "status": "lesson",
+          "closed_reason": "Verified observations — theoretical edge cases and minor test quality notes that nobody will scope. C3: case-sensitive heading match is fine (all reports use exact heading). C4/C6: structural assertions and weak test matchers in non-critical paths.",
+          "closed_at": "2026-05-05T06:54:47.973Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
@@ -12380,7 +12383,10 @@
             "A008"
           ],
           "id": "proof-intelligence-hardening-C4",
-          "status": "active"
+          "status": "lesson",
+          "closed_reason": "Verified observations — theoretical edge cases and minor test quality notes that nobody will scope. C3: case-sensitive heading match is fine (all reports use exact heading). C4/C6: structural assertions and weak test matchers in non-critical paths.",
+          "closed_at": "2026-05-05T06:54:47.974Z",
+          "closed_by": "human"
         },
         {
           "category": "upstream",
@@ -12404,7 +12410,10 @@
             "A013"
           ],
           "id": "proof-intelligence-hardening-C6",
-          "status": "active"
+          "status": "lesson",
+          "closed_reason": "Verified observations — theoretical edge cases and minor test quality notes that nobody will scope. C3: case-sensitive heading match is fine (all reports use exact heading). C4/C6: structural assertions and weak test matchers in non-critical paths.",
+          "closed_at": "2026-05-05T06:54:47.974Z",
+          "closed_by": "human"
         },
         {
           "category": "code",

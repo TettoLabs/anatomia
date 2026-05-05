@@ -1,14 +1,14 @@
 # Proof Chain Dashboard
 
-51 runs · 70 active · 57 lessons · 0 promoted · 159 closed
+51 runs · 67 active · 60 lessons · 0 promoted · 159 closed
 
 ## Hot Modules
 
 | File | Active | Entries |
 |------|--------|--------|
-| packages/cli/tests/commands/work.test.ts | 9 | 7 |
-| packages/cli/src/utils/proofSummary.ts | 7 | 6 |
+| packages/cli/tests/commands/work.test.ts | 8 | 6 |
 | packages/cli/tests/commands/proof.test.ts | 7 | 3 |
+| packages/cli/src/utils/proofSummary.ts | 6 | 5 |
 | packages/cli/src/commands/proof.ts | 5 | 3 |
 | packages/cli/tests/templates/agent-proof-context.test.ts | 3 | 2 |
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 70 total)
+## Active Findings (30 shown of 67 total)
 
 ### .github/workflows/release.yml
 
@@ -58,7 +58,6 @@
 
 ### packages/cli/src/utils/proofSummary.ts
 
-- **code:** parseACResults heading match is case-sensitive and exact — '## AC walkthrough' or '##  AC Walkthrough' (extra space) would miss — *Proof Intelligence Hardening*
 - **code:** proofSummary.ts ~1550 lines — past comfort threshold, known from prior cycles — *V1 Code Changes*
 
 ### packages/cli/src/utils/validators.ts
@@ -69,9 +68,14 @@
 
 - **test:** A028/A029 learn template assertions verified by source inspection only — no test file exercises these — *Proof Intelligence Hardening*
 
+### packages/cli/tests/commands/proof.test.ts
+
+- **test:** A008 active-only test uses fixture with only active findings — no closed finding to prove exclusion — *Audit JSON Severity Summary*
+- **test:** A013 meta block test uses toBeDefined() — verifies existence not value preservation — *Audit JSON Severity Summary*
+- **test:** 5-finding fixture manually duplicated three times across test blocks instead of shared constant — *Audit JSON Severity Summary*
+
 ### packages/cli/tests/commands/work.test.ts
 
-- **test:** No tagged tests for A004-A008 — structural/behavioral assertions verified by source inspection only, not by @ana-tagged test cases — *Proof Intelligence Hardening*
 - **test:** A016-A019 @ana tags point to pre-existing branchPrefix template tests, not command entry point validation — *Security Hardening — Command Injection Elimination*
 
 ### packages/cli/tests/engine/detectors/documentation.test.ts
@@ -83,10 +87,6 @@
 - **test:** A010 test mocks process.exit — after mock, readArtifactBranch continues and returns invalid branch to caller. Correct in production but test pattern allows post-exit execution. — *Security Hardening — Command Injection Elimination*
 - **test:** Enforcement test (A023) asserts on source code content via grep — violates testing-standards skill rule 'never assert on source code content' but is the only practical way to enforce convention. Spec explicitly requested this pattern. — *Security Hardening — Command Injection Elimination*
 - **test:** Enforcement test comment-filter heuristic checks line prefix only (starts with //, *, /*). An execSync buried mid-line after non-comment code wouldn't be caught if the line also starts with a comment-like pattern. Low probability given codebase conventions. — *Security Hardening — Command Injection Elimination*
-
-### packages/cli/tests/utils/proofSummary.test.ts
-
-- **test:** truncateSummary word-boundary test uses toBeLessThanOrEqual instead of exact value assertion — *Proof Intelligence Hardening*
 
 ### packages/cli/vitest.config.ts
 
