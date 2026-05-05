@@ -4,8 +4,5 @@
 
 ## Phases
 
-- [ ] Code fixes — push retry, pre-commit filter, severity counts, findFindingById extraction, audit filters
-  - Spec: spec-1.md
-- [ ] Template update — Learn Reference/Commands section with new tools and usage guidance
-  - Spec: spec-2.md
-  - Depends on: Phase 1
+- [ ] Code fixes + template update — push retry, pre-commit filter, severity counts, findFindingById extraction, audit filters, Learn Reference section
+  - Spec: spec.md
