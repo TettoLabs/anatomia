@@ -894,6 +894,306 @@ export function registerProofCommand(program: Command): void {
 
   proofCommand.addCommand(closeCommand);
 
+  // Register lesson subcommand
+  const lessonCommand = new Command('lesson')
+    .description('Record findings as institutional lessons')
+    .argument('<ids...>', 'Finding IDs to record as lessons (e.g., F003 or F001 F002)')
+    .option('--reason <reason>', 'Why this is being recorded as a lesson')
+    .option('--dry-run', 'Show what would happen without making changes')
+    .option('--json', 'Output JSON format')
+    .action(async (ids: string[], options: { reason?: string; dryRun?: boolean; json?: boolean }) => {
+      const proofRoot = findProjectRoot();
+      const proofChainPath = path.join(proofRoot, '.ana', 'proof_chain.json');
+      const parentOpts = proofCommand.opts();
+      const useJson = options.json || parentOpts['json'];
+
+      const exitError = createExitError({
+        commandName: 'proof lesson',
+        proofChainPath,
+        proofRoot,
+        useJson,
+        hints: {
+          REASON_REQUIRED: [
+            '  Lessons must explain the institutional decision.',
+            '  Usage: ana proof lesson {id} --reason "explanation"',
+          ],
+          FINDING_NOT_FOUND: ['  Run `ana proof audit` to see active findings.'],
+        },
+        formatHint: (code, context) => {
+          if (code === 'ALREADY_CLOSED' && context['closed_by']) {
+            const lines = [`  Closed by: ${context['closed_by']} on ${context['closed_at'] ?? 'unknown'}`];
+            if (context['closed_reason']) {
+              lines.push(`  Reason: ${context['closed_reason']}`);
+            }
+            return lines;
+          }
+          if (code === 'ALREADY_PROMOTED' && context['promoted_to']) {
+            return [`  Promoted to: ${context['promoted_to']}`];
+          }
+          if (code === 'WRONG_BRANCH') {
+            const artifactBranch = readArtifactBranch(proofRoot);
+            return [`  Run: git checkout ${artifactBranch}`];
+          }
+          return null;
+        },
+      });
+
+      // Validate --reason is provided
+      if (!options.reason) {
+        exitError('REASON_REQUIRED', '--reason is required.');
+        return;
+      }
+
+      // Branch check: must be on artifact branch (skip for dry-run — it's read-only)
+      if (!options.dryRun) {
+        const artifactBranch = readArtifactBranch(proofRoot);
+        const currentBranch = getCurrentBranch();
+        if (currentBranch !== artifactBranch) {
+          exitError('WRONG_BRANCH', `Wrong branch. Switch to \`${artifactBranch}\` to record lessons.`);
+          return;
+        }
+
+        // Pull before reading chain
+        {
+          const remotes = runGit(['remote'], { cwd: proofRoot }).stdout;
+          if (remotes) {
+            const pullResult = runGit(['pull', '--rebase'], { cwd: proofRoot });
+            if (pullResult.exitCode !== 0) {
+              const errorMessage = pullResult.stderr;
+              if (errorMessage.includes('conflict') || errorMessage.includes('Cannot rebase')) {
+                console.error(chalk.red('Error: Pull failed due to conflicts. Resolve conflicts and try again.'));
+                process.exit(1);
+              }
+              console.error(chalk.yellow('⚠ Warning: Pull failed (network error). Continuing with local data.'));
+            }
+          }
+        }
+      }
+
+      // Read chain
+      if (!fs.existsSync(proofChainPath)) {
+        exitError('NO_PROOF_CHAIN', 'No proof chain found.');
+        return;
+      }
+
+      let chain: ProofChain;
+      try {
+        chain = JSON.parse(fs.readFileSync(proofChainPath, 'utf-8'));
+      } catch {
+        exitError('PARSE_ERROR', 'Failed to parse proof_chain.json.');
+        return;
+      }
+
+      // Process each ID — collect results
+      const lessoned: Array<{ id: string; category: string; summary: string; file: string | null; severity: string | null; previous_status: string; entry_slug: string; entry_feature: string }> = [];
+      const skipped: Array<{ id: string; reason: string }> = [];
+
+      for (const id of ids) {
+        // Find the finding across all entries
+        let foundFinding: ProofChainEntry['findings'][0] | null = null;
+        let foundEntry: ProofChainEntry | null = null;
+
+        for (const entry of chain.entries) {
+          for (const finding of entry.findings || []) {
+            if (finding.id === id) {
+              foundFinding = finding;
+              foundEntry = entry;
+              break;
+            }
+          }
+          if (foundFinding) break;
+        }
+
+        if (!foundFinding || !foundEntry) {
+          skipped.push({ id, reason: 'not found' });
+          continue;
+        }
+
+        if (foundFinding.status === 'closed') {
+          skipped.push({ id, reason: 'already closed' });
+          continue;
+        }
+
+        if (foundFinding.status === 'promoted') {
+          skipped.push({ id, reason: 'already promoted' });
+          continue;
+        }
+
+        if (foundFinding.status === 'lesson') {
+          skipped.push({ id, reason: 'already a lesson' });
+          continue;
+        }
+
+        const previousStatus = foundFinding.status ?? 'active';
+
+        if (!options.dryRun) {
+          foundFinding.status = 'lesson';
+          foundFinding.closed_reason = options.reason;
+          foundFinding.closed_at = new Date().toISOString();
+          foundFinding.closed_by = 'human';
+        }
+
+        lessoned.push({
+          id: foundFinding.id,
+          category: foundFinding.category,
+          summary: foundFinding.summary,
+          file: foundFinding.file,
+          severity: foundFinding.severity ?? null,
+          previous_status: previousStatus,
+          entry_slug: foundEntry.slug,
+          entry_feature: foundEntry.feature,
+        });
+      }
+
+      // All IDs failed — exit with error
+      if (lessoned.length === 0) {
+        if (ids.length === 1 && skipped.length === 1) {
+          const skip = skipped[0]!;
+          if (skip.reason === 'not found') {
+            exitError('FINDING_NOT_FOUND', `Finding "${skip.id}" not found.`);
+          } else if (skip.reason === 'already closed') {
+            let originalFinding: ProofChainEntry['findings'][0] | null = null;
+            for (const entry of chain.entries) {
+              for (const finding of entry.findings || []) {
+                if (finding.id === skip.id) { originalFinding = finding; break; }
+              }
+              if (originalFinding) break;
+            }
+            exitError('ALREADY_CLOSED', `Finding "${skip.id}" is already closed.`, {
+              closed_by: originalFinding?.closed_by ?? 'unknown',
+              closed_at: originalFinding?.closed_at ?? 'unknown',
+              closed_reason: originalFinding?.closed_reason ?? '',
+            });
+          } else if (skip.reason === 'already promoted') {
+            let originalFinding: ProofChainEntry['findings'][0] | null = null;
+            for (const entry of chain.entries) {
+              for (const finding of entry.findings || []) {
+                if (finding.id === skip.id) { originalFinding = finding; break; }
+              }
+              if (originalFinding) break;
+            }
+            exitError('ALREADY_PROMOTED', `Finding "${skip.id}" is already promoted.`, {
+              promoted_to: originalFinding?.promoted_to ?? 'unknown',
+            });
+          } else {
+            exitError('ALREADY_LESSON', `Finding "${skip.id}" is already a lesson.`);
+          }
+        } else {
+          exitError('ALL_FAILED', `All ${ids.length} finding IDs failed to record as lessons.`);
+        }
+        return;
+      }
+
+      // Dry run — report without mutating
+      if (options.dryRun) {
+        if (useJson) {
+          console.log(JSON.stringify(wrapJsonResponse('proof lesson', {
+            reason: options.reason,
+            lessoned: lessoned.map(l => ({ id: l.id, category: l.category, summary: l.summary, file: l.file, previous_status: l.previous_status })),
+            skipped,
+            dry_run: true,
+          }, chain), null, 2));
+        } else {
+          console.log('Dry run — no changes will be made.');
+          console.log('');
+          if (lessoned.length > 0) {
+            console.log(`Would record ${lessoned.length} lesson${lessoned.length !== 1 ? 's' : ''}:`);
+            for (const l of lessoned) {
+              console.log(`  ${l.id} ${chalk.dim(`[${l.severity ?? 'unclassified'} · ${l.category}]`)} ${l.summary} — ${l.file ?? 'no file'}`);
+            }
+          }
+          if (skipped.length > 0) {
+            console.log('');
+            console.log(`Would skip ${skipped.length}:`);
+            for (const s of skipped) {
+              console.log(`  ${s.id} — ${s.reason}`);
+            }
+          }
+        }
+        return;
+      }
+
+      // Write updated chain
+      fs.writeFileSync(proofChainPath, JSON.stringify(chain, null, 2));
+
+      // Regenerate PROOF_CHAIN.md
+      const health = computeChainHealth(chain);
+      const dashboardMd = generateDashboard(chain.entries, {
+        runs: health.chain_runs,
+        active: health.findings.active,
+        lessons: health.findings.lesson,
+        promoted: health.findings.promoted,
+        closed: health.findings.closed,
+      });
+      const chainMdPath = path.join(proofRoot, '.ana', 'PROOF_CHAIN.md');
+      fs.writeFileSync(chainMdPath, dashboardMd);
+
+      // Git: stage, commit, push
+      const coAuthor = readCoAuthor(proofRoot);
+      try {
+        runGit(['add', '.ana/proof_chain.json', '.ana/PROOF_CHAIN.md'], { cwd: proofRoot });
+        const idList = lessoned.length <= 3
+          ? lessoned.map(l => l.id).join(', ')
+          : `${lessoned.slice(0, 2).map(l => l.id).join(', ')}, ... (${lessoned.length} total)`;
+        const commitMessage = `[proof] Lesson: ${idList}\n\nCo-authored-by: ${coAuthor}`;
+        const commitResult = spawnSync('git', ['commit', '-m', commitMessage], { stdio: 'pipe', cwd: proofRoot });
+        if (commitResult.status !== 0) throw new Error(commitResult.stderr?.toString() || 'Commit failed');
+      } catch {
+        console.error(chalk.red('Error: Failed to commit. Changes saved to proof_chain.json but not committed.'));
+        process.exit(1);
+      }
+
+      const lessonPushResult = runGit(['push'], { cwd: proofRoot });
+      if (lessonPushResult.exitCode !== 0) {
+        console.error(chalk.yellow('Warning: Push failed. Changes committed locally. Run `git push` manually.'));
+      }
+
+      // Output
+      if (useJson) {
+        if (ids.length === 1 && lessoned.length === 1 && skipped.length === 0) {
+          const l = lessoned[0]!;
+          console.log(JSON.stringify(wrapJsonResponse('proof lesson', {
+            finding: {
+              id: l.id,
+              category: l.category,
+              summary: l.summary,
+              file: l.file,
+              severity: l.severity,
+              entry_slug: l.entry_slug,
+              entry_feature: l.entry_feature,
+            },
+            previous_status: l.previous_status,
+            new_status: 'lesson',
+            reason: options.reason,
+            closed_by: 'human',
+          }, chain), null, 2));
+        } else {
+          console.log(JSON.stringify(wrapJsonResponse('proof lesson', {
+            reason: options.reason,
+            lessoned: lessoned.map(l => ({ id: l.id, category: l.category, summary: l.summary, file: l.file, previous_status: l.previous_status })),
+            skipped,
+            dry_run: false,
+          }, chain), null, 2));
+        }
+      } else {
+        console.log('');
+        console.log('Lessons recorded:');
+        for (const l of lessoned) {
+          console.log(`  ${l.id} ${chalk.dim(`[${l.severity ?? 'unclassified'} · ${l.category}]`)} ${l.summary} — ${l.file ?? 'no file'}`);
+        }
+        if (skipped.length > 0) {
+          console.log('');
+          for (const s of skipped) {
+            console.log(`  ✗ ${s.id} — ${s.reason} (skipped)`);
+          }
+        }
+        console.log('');
+        console.log(chalk.gray(`Committed: [proof] Lesson: ${lessoned.map(l => l.id).join(', ')}`));
+      }
+    });
+
+  proofCommand.addCommand(lessonCommand);
+
   // Register promote subcommand
   const promoteCommand = new Command('promote')
     .description('Promote findings to a skill rule')
@@ -1720,6 +2020,21 @@ export function registerProofCommand(program: Command): void {
         unclassified: actionCounts['unclassified'] || 0,
       };
 
+      // Compute actionable vs monitoring counts
+      // Actionable: severity is risk/debt OR action is promote/scope
+      // Monitoring: everything else
+      let actionableCount = 0;
+      let monitoringCount = 0;
+      for (const f of activeFindings) {
+        const sev = f.severity === '—' ? 'unclassified' : f.severity;
+        const act = f.suggested_action === '—' ? 'unclassified' : f.suggested_action;
+        if (sev === 'risk' || sev === 'debt' || act === 'promote' || act === 'scope') {
+          actionableCount++;
+        } else {
+          monitoringCount++;
+        }
+      }
+
       if (useJson) {
         const byFile = sortedFiles.map(([file, findings]) => ({
           file,
@@ -1731,6 +2046,8 @@ export function registerProofCommand(program: Command): void {
         const overflowFiles = useFull ? 0 : Math.max(0, totalFiles - MAX_FILES);
         const result = {
           total_active: activeFindings.length,
+          actionable_count: actionableCount,
+          monitoring_count: monitoringCount,
           by_severity: bySeverity,
           by_action: byAction,
           by_file: byFile,
@@ -1740,7 +2057,8 @@ export function registerProofCommand(program: Command): void {
       } else {
         // Human-readable output
         const totalFiles = fileGroups.size;
-        console.log(`\nProof Audit: ${activeFindings.length} active finding${activeFindings.length !== 1 ? 's' : ''} across ${totalFiles} file${totalFiles !== 1 ? 's' : ''}`);
+        const actionablePart = activeFindings.length > 0 ? ` (${actionableCount} actionable, ${monitoringCount} monitoring)` : '';
+        console.log(`\nProof Audit: ${activeFindings.length} active finding${activeFindings.length !== 1 ? 's' : ''}${actionablePart} across ${totalFiles} file${totalFiles !== 1 ? 's' : ''}`);
 
         if (activeFindings.length > 0 && !allUnclassified) {
           const sevOrder = ['risk', 'debt', 'observation', 'unclassified'];
