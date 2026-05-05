@@ -55,7 +55,7 @@ describe('Proportional sampler', () => {
       expect(files.length).toBe(10);
       expect(files.every(f => f.endsWith('.ts'))).toBe(true);
     } finally {
-      fs.rmSync(tmpDir, { recursive: true });
+      fs.rmSync(tmpDir, { recursive: true, maxRetries: 3, retryDelay: 200 });
     }
   });
 
@@ -94,7 +94,7 @@ describe('Proportional sampler', () => {
       // Floor of 1: ui should have at least 1
       expect(uiFiles.length).toBeGreaterThanOrEqual(1);
     } finally {
-      fs.rmSync(tmpDir, { recursive: true });
+      fs.rmSync(tmpDir, { recursive: true, maxRetries: 3, retryDelay: 200 });
     }
   });
 
@@ -116,7 +116,7 @@ describe('Proportional sampler', () => {
       expect(files.some(f => f.includes('.test.'))).toBe(false);
       expect(files.some(f => f.includes('.spec.'))).toBe(false);
     } finally {
-      fs.rmSync(tmpDir, { recursive: true });
+      fs.rmSync(tmpDir, { recursive: true, maxRetries: 3, retryDelay: 200 });
     }
   });
 
@@ -135,7 +135,7 @@ describe('Proportional sampler', () => {
       const files = await sampleFilesProportional(census, 10);
       expect(files.length).toBe(10);
     } finally {
-      fs.rmSync(tmpDir, { recursive: true });
+      fs.rmSync(tmpDir, { recursive: true, maxRetries: 3, retryDelay: 200 });
     }
   });
 
@@ -155,7 +155,7 @@ describe('Proportional sampler', () => {
       // Root-level files should come first, then src/, then deep
       expect(files.indexOf('index.ts')).toBeLessThan(files.indexOf('src/shallow.ts'));
     } finally {
-      fs.rmSync(tmpDir, { recursive: true });
+      fs.rmSync(tmpDir, { recursive: true, maxRetries: 3, retryDelay: 200 });
     }
   });
 });

@@ -14,7 +14,7 @@ describe('scanProject()', () => {
   });
 
   afterEach(async () => {
-    await rm(tempDir, { recursive: true, force: true });
+    await rm(tempDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   async function createFiles(files: Record<string, string>): Promise<void> {

@@ -19,7 +19,7 @@ describe('ana setup index', () => {
 
   afterEach(async () => {
     process.chdir(originalCwd);
-    await fs.rm(tempDir, { recursive: true, force: true });
+    await fs.rm(tempDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   /**
@@ -265,7 +265,7 @@ describe('ana setup check with symbol index', () => {
 
   afterEach(async () => {
     process.chdir(originalCwd);
-    await fs.rm(tempDir, { recursive: true, force: true });
+    await fs.rm(tempDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   function runCheck(args: string = ''): { stdout: string; exitCode: number } {

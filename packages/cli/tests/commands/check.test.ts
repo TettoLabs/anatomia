@@ -28,7 +28,7 @@ describe('ana setup check', () => {
 
   afterEach(async () => {
     process.chdir(originalCwd);
-    await fs.rm(tempDir, { recursive: true, force: true });
+    await fs.rm(tempDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   function runCheck(args: string = ''): { stdout: string; exitCode: number } {
@@ -288,7 +288,7 @@ ${extra}`;
 
   describe('error handling', () => {
     it('gives helpful error when .ana/context/ does not exist', async () => {
-      await fs.rm(contextPath, { recursive: true, force: true });
+      await fs.rm(contextPath, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
 
       const { stdout, exitCode } = runCheck('--json');
       const result = JSON.parse(stdout);

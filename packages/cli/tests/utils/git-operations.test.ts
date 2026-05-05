@@ -21,7 +21,7 @@ describe('readBranchPrefix', () => {
   });
 
   afterEach(async () => {
-    await fs.rm(tempDir, { recursive: true, force: true });
+    await fs.rm(tempDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   /** Helper to write an ana.json fixture */
@@ -91,7 +91,7 @@ describe('readCoAuthor', () => {
   });
 
   afterEach(async () => {
-    await fs.rm(tempDir, { recursive: true, force: true });
+    await fs.rm(tempDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   /** Helper to write an ana.json fixture */
@@ -141,7 +141,7 @@ describe('readArtifactBranch security hardening', () => {
   });
 
   afterEach(async () => {
-    await fs.rm(tempDir, { recursive: true, force: true });
+    await fs.rm(tempDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   async function writeAnaJson(config: Record<string, unknown>): Promise<void> {
@@ -187,7 +187,7 @@ describe('readBranchPrefix security hardening', () => {
   });
 
   afterEach(async () => {
-    await fs.rm(tempDir, { recursive: true, force: true });
+    await fs.rm(tempDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   async function writeAnaJson(config: Record<string, unknown>): Promise<void> {
@@ -223,7 +223,7 @@ describe('readCoAuthor security hardening', () => {
   });
 
   afterEach(async () => {
-    await fs.rm(tempDir, { recursive: true, force: true });
+    await fs.rm(tempDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   async function writeAnaJson(config: Record<string, unknown>): Promise<void> {
@@ -313,7 +313,7 @@ describe('runGit', () => {
   });
 
   afterEach(async () => {
-    await fs.rm(tempDir, { recursive: true, force: true });
+    await fs.rm(tempDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   // @ana A020

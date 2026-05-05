@@ -40,7 +40,7 @@ describe('ana init E2E', () => {
   });
 
   afterEach(async () => {
-    await fs.rm(tmpProject, { recursive: true, force: true });
+    await fs.rm(tmpProject, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   it('creates all expected files in .ana/ (context, docs, plans, hooks, state)', async () => {
@@ -245,7 +245,7 @@ describe('regression tests', () => {
   });
 
   afterEach(async () => {
-    await fs.rm(tmpProject, { recursive: true, force: true });
+    await fs.rm(tmpProject, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   it('creates scan.json with full engine result when analysis runs', async () => {

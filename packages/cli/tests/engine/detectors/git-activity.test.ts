@@ -35,7 +35,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  fs.rmSync(tmpDir, { recursive: true });
+  fs.rmSync(tmpDir, { recursive: true, maxRetries: 3, retryDelay: 200 });
 });
 
 describe('git activity signals', () => {
@@ -140,7 +140,7 @@ describe('git activity signals', () => {
         const result = await detectGitInfo(nonGit);
         expect(result.recentActivity).toBeNull();
       } finally {
-        fs.rmSync(nonGit, { recursive: true });
+        fs.rmSync(nonGit, { recursive: true, maxRetries: 3, retryDelay: 200 });
       }
     });
 
@@ -151,7 +151,7 @@ describe('git activity signals', () => {
         const result = await detectGitInfo(emptyRepo);
         expect(result.recentActivity).toBeNull();
       } finally {
-        fs.rmSync(emptyRepo, { recursive: true });
+        fs.rmSync(emptyRepo, { recursive: true, maxRetries: 3, retryDelay: 200 });
       }
     });
 
@@ -166,14 +166,14 @@ describe('git activity signals', () => {
         fs.writeFileSync(path.join(origin, 'f.txt'), 'x');
         execSync('git add . && git commit -m "init"', { cwd: origin, stdio: 'pipe' });
 
-        fs.rmSync(shallow, { recursive: true });
+        fs.rmSync(shallow, { recursive: true, maxRetries: 3, retryDelay: 200 });
         execSync(`git clone --depth=1 "file://${origin}" "${shallow}"`, { stdio: 'pipe' });
 
         const result = await detectGitInfo(shallow);
         expect(result.recentActivity).toBeNull();
       } finally {
-        fs.rmSync(origin, { recursive: true });
-        fs.rmSync(shallow, { recursive: true, force: true });
+        fs.rmSync(origin, { recursive: true, maxRetries: 3, retryDelay: 200 });
+        fs.rmSync(shallow, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
       }
     });
   });

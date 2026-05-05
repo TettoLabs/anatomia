@@ -14,7 +14,7 @@ describe('readNodeDependencies', () => {
 
   afterAll(async () => {
     // Clean up temporary directory
-    await fs.rm(tempDir, { recursive: true, force: true });
+    await fs.rm(tempDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   it('reads dependencies from package.json', async () => {

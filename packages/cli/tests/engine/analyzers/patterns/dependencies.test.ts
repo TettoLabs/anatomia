@@ -12,7 +12,7 @@ describe('Dependency-based pattern detection', () => {
   });
 
   afterEach(async () => {
-    await rm(testDir, { recursive: true, force: true });
+    await rm(testDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   describe('FastAPI project patterns', () => {

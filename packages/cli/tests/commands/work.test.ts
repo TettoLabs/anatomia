@@ -24,7 +24,7 @@ describe('ana work status', () => {
 
   afterEach(async () => {
     process.chdir(originalCwd);
-    await fs.rm(tempDir, { recursive: true, force: true });
+    await fs.rm(tempDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   /**
@@ -2688,7 +2688,7 @@ describe('ana work start', () => {
 
   afterEach(async () => {
     process.chdir(originalCwd);
-    await fs.rm(tempDir, { recursive: true, force: true });
+    await fs.rm(tempDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   /**

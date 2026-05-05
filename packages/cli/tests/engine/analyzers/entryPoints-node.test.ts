@@ -21,7 +21,7 @@ describe('Node.js entry point detection', () => {
   });
 
   afterEach(async () => {
-    await rm(testDir, { recursive: true, force: true });
+    await rm(testDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   it('reads package.json "main" field (framework=null)', async () => {

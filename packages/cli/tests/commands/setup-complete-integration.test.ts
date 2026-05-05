@@ -83,7 +83,7 @@ describe('ana setup complete integration', () => {
   });
 
   afterEach(async () => {
-    await fs.rm(tmpDir, { recursive: true, force: true });
+    await fs.rm(tmpDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   it('returns complete with fully populated project', async () => {

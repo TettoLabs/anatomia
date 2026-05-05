@@ -45,7 +45,7 @@ describe('skill seeding', () => {
   });
 
   afterEach(async () => {
-    await fs.rm(tempDir, { recursive: true, force: true });
+    await fs.rm(tempDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   it('injects ## Detected section into coding-standards', async () => {
@@ -127,7 +127,7 @@ describe('skill seeding', () => {
     const afterGotchas = nextSectionAfterGotchas === -1 ? '' : afterFirstInit.slice(nextSectionAfterGotchas);
     const customContent = beforeGotchas + '## Gotchas\n' + customGotchas + '\n' + afterGotchas;
     await fs.writeFile(skillPath, customContent, 'utf-8');
-    await fs.rm(path.join(tempDir, '.ana'), { recursive: true, force: true });
+    await fs.rm(path.join(tempDir, '.ana'), { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
 
     // Re-init: Path B (skill file exists, .ana/ missing). Should preserve
     // custom gotchas and refresh Detected, but NOT re-inject vitest-watch-mode.

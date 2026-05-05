@@ -198,7 +198,7 @@ describe.skipIf(!wasmAvailable)('variable extraction reads files from disk', () 
   });
 
   afterAll(async () => {
-    await rm(tempDir, { recursive: true, force: true });
+    await rm(tempDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   it('extracts variables from .tsx files (Commit 1 regression)', async () => {

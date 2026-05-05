@@ -33,7 +33,7 @@ describe.skipIf(!wasmAvailable)('ASTCache', () => {
 
   afterEach(async () => {
     // Clean up temp directory
-    await rm(tempDir, { recursive: true, force: true });
+    await rm(tempDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   describe('Cache miss behavior', () => {
@@ -329,7 +329,7 @@ describe.skipIf(!wasmAvailable)('ASTCache - invalidation scenarios', () => {
 
   afterEach(async () => {
     // Clean up temp directory
-    await rm(tempDir, { recursive: true, force: true });
+    await rm(tempDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   describe('File modification scenarios', () => {

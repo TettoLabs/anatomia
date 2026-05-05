@@ -20,7 +20,7 @@ describe.skipIf(!wasmAvailable)('Error handling', () => {
   });
 
   afterEach(async () => {
-    await rm(testDir, { recursive: true, force: true });
+    await rm(testDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   it('handles Python syntax error gracefully', async () => {

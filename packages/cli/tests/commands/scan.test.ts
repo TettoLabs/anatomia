@@ -29,7 +29,7 @@ describe('ana scan', () => {
 
   afterEach(async () => {
     process.chdir(originalCwd);
-    await fs.rm(tempDir, { recursive: true, force: true });
+    await fs.rm(tempDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   /**
@@ -472,7 +472,7 @@ describe('countFiles utility', () => {
   });
 
   afterEach(async () => {
-    await fs.rm(tempDir, { recursive: true, force: true });
+    await fs.rm(tempDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   /**
@@ -668,7 +668,7 @@ describe('scanProject graceful degradation', () => {
   });
 
   afterEach(async () => {
-    await fs.rm(tempDir, { recursive: true, force: true });
+    await fs.rm(tempDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   async function createTestFiles(files: Record<string, string>): Promise<void> {
@@ -737,7 +737,7 @@ describe('ana scan', () => {
 
   afterEach(async () => {
     process.chdir(originalCwd);
-    await fs.rm(tempDir, { recursive: true, force: true });
+    await fs.rm(tempDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   function runScan(args: string[] = []): { stdout: string; stderr: string; exitCode: number } {

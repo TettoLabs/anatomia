@@ -13,7 +13,7 @@ describe('findProjectRoot', () => {
   });
 
   afterEach(async () => {
-    await fs.promises.rm(tempDir, { recursive: true, force: true });
+    await fs.promises.rm(tempDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   // Helper: create a valid .ana/ with ana.json

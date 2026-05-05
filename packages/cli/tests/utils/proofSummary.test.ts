@@ -40,7 +40,7 @@ describe('generateProofSummary', () => {
   });
 
   afterEach(async () => {
-    await fs.promises.rm(tempDir, { recursive: true, force: true });
+    await fs.promises.rm(tempDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   it('reads all four sources and returns complete summary', async () => {
@@ -415,7 +415,7 @@ describe('computeTiming with work_started_at', () => {
   });
 
   afterEach(async () => {
-    await fs.promises.rm(tempDir, { recursive: true, force: true });
+    await fs.promises.rm(tempDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   // @ana A022, A023
@@ -971,7 +971,7 @@ describe('resolveFindingPaths', () => {
   });
 
   afterEach(async () => {
-    await fs.promises.rm(tempDir, { recursive: true, force: true });
+    await fs.promises.rm(tempDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   // @ana A001, A002, A007
@@ -1150,7 +1150,7 @@ describe('getProofContext', () => {
   });
 
   afterEach(async () => {
-    await fs.promises.rm(tempDir, { recursive: true, force: true });
+    await fs.promises.rm(tempDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   function writeChain(entries: unknown[]): void {
@@ -1453,7 +1453,7 @@ describe('extractScopeSummary', () => {
   });
 
   afterEach(async () => {
-    await fs.promises.rm(tempDir, { recursive: true, force: true });
+    await fs.promises.rm(tempDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   it('extracts first paragraph from Intent section', () => {
@@ -1567,7 +1567,7 @@ describe('generateProofSummary scope_summary', () => {
   });
 
   afterEach(async () => {
-    await fs.promises.rm(tempDir, { recursive: true, force: true });
+    await fs.promises.rm(tempDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   it('populates scope_summary from scope.md Intent section', () => {
@@ -1596,7 +1596,7 @@ describe('generateProofSummary YAML reader', () => {
   });
 
   afterEach(async () => {
-    await fs.promises.rm(tempDir, { recursive: true, force: true });
+    await fs.promises.rm(tempDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   // @ana A015, A016
@@ -1756,7 +1756,7 @@ describe('getProofContext new fields', () => {
   });
 
   afterEach(async () => {
-    await fs.promises.rm(tempDir, { recursive: true, force: true });
+    await fs.promises.rm(tempDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   it('getProofContext returns line, severity, related_assertions', () => {

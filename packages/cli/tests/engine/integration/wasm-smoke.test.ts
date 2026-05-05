@@ -35,7 +35,7 @@ describe.skipIf(!wasmAvailable)('WASM smoke test', () => {
       // Conventions may be null if parsing fails gracefully, but stack should always work
       expect(result.overview.depth).toBe('deep');
     } finally {
-      await rm(testDir, { recursive: true, force: true });
+      await rm(testDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
     }
   }, 30000);
 });

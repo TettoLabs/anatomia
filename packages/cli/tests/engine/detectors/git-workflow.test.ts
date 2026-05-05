@@ -31,7 +31,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  fs.rmSync(tmpDir, { recursive: true });
+  fs.rmSync(tmpDir, { recursive: true, maxRetries: 3, retryDelay: 200 });
 });
 
 describe('git workflow signals', () => {
@@ -170,7 +170,7 @@ describe('git workflow signals', () => {
         expect(result.mergeStrategy).toBeNull();
         expect(result.coAuthor).toBeNull();
       } finally {
-        fs.rmSync(nonGit, { recursive: true });
+        fs.rmSync(nonGit, { recursive: true, maxRetries: 3, retryDelay: 200 });
       }
     });
   });
@@ -192,7 +192,7 @@ describe('git workflow signals', () => {
         expect(result.hooks).not.toBeNull();
         expect(result.hooks!.preCommit.exists).toBe(true);
       } finally {
-        fs.rmSync(emptyRepo, { recursive: true });
+        fs.rmSync(emptyRepo, { recursive: true, maxRetries: 3, retryDelay: 200 });
       }
     });
   });

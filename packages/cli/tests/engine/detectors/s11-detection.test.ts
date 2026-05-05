@@ -21,7 +21,7 @@ describe('TypeScript language detection', () => {
   });
 
   afterEach(async () => {
-    await fs.rm(tempDir, { recursive: true, force: true });
+    await fs.rm(tempDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   it('detects TypeScript when tsconfig.json exists alongside package.json', async () => {
@@ -72,7 +72,7 @@ describe('Prisma provider parsing', () => {
   });
 
   afterEach(async () => {
-    await fs.rm(tempDir, { recursive: true, force: true });
+    await fs.rm(tempDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   it('parses postgresql provider from prisma schema', async () => {
@@ -125,7 +125,7 @@ describe('Package manager inheritance', () => {
   });
 
   afterEach(async () => {
-    await fs.rm(tempDir, { recursive: true, force: true });
+    await fs.rm(tempDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   it('finds pnpm lockfile in parent directory', async () => {

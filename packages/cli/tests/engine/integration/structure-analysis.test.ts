@@ -16,7 +16,7 @@ describe('analyzeStructure integration', () => {
   });
 
   afterEach(async () => {
-    await rm(testDir, { recursive: true, force: true });
+    await rm(testDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   it('returns complete StructureAnalysis for FastAPI project', async () => {
@@ -87,7 +87,7 @@ describe('scanProject() includes structure in output', () => {
   });
 
   afterEach(async () => {
-    await rm(testDir, { recursive: true, force: true });
+    await rm(testDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   it('structure field populated for projects with directories', async () => {

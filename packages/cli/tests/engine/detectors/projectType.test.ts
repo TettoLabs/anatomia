@@ -25,7 +25,7 @@ describe('detectProjectType', () => {
   afterEach(async () => {
     for (const dir of tempDirs) {
       try {
-        await fs.rm(dir, { recursive: true, force: true });
+        await fs.rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
       } catch {
         // Ignore cleanup errors
       }

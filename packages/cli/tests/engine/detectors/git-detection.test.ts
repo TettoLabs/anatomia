@@ -24,7 +24,7 @@ describe('git detection', () => {
         const result = await detectGitInfo(tmpDir);
         expect(result.defaultBranch).toBeNull();
       } finally {
-        fs.rmSync(tmpDir, { recursive: true });
+        fs.rmSync(tmpDir, { recursive: true, maxRetries: 3, retryDelay: 200 });
       }
     });
 
@@ -42,7 +42,7 @@ describe('git detection', () => {
         // Steps 1-2 fail (no remote), step 3 finds "main" locally
         expect(result.defaultBranch).toBe('main');
       } finally {
-        fs.rmSync(tmpDir, { recursive: true });
+        fs.rmSync(tmpDir, { recursive: true, maxRetries: 3, retryDelay: 200 });
       }
     });
 
@@ -56,7 +56,7 @@ describe('git detection', () => {
         expect(result.head).toBeNull();
         expect(result.commitCount).toBe(0);
       } finally {
-        fs.rmSync(tmpDir, { recursive: true });
+        fs.rmSync(tmpDir, { recursive: true, maxRetries: 3, retryDelay: 200 });
       }
     });
   });
@@ -75,7 +75,7 @@ describe('git detection', () => {
         const result = await detectGitInfo(tmpDir);
         expect(result.branches).toBeNull();
       } finally {
-        fs.rmSync(tmpDir, { recursive: true });
+        fs.rmSync(tmpDir, { recursive: true, maxRetries: 3, retryDelay: 200 });
       }
     });
 
@@ -94,7 +94,7 @@ describe('git detection', () => {
         expect(result.branches).toContain('main');
         expect(result.branches).toContain('feature');
       } finally {
-        fs.rmSync(tmpDir, { recursive: true });
+        fs.rmSync(tmpDir, { recursive: true, maxRetries: 3, retryDelay: 200 });
       }
     });
   });

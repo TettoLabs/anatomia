@@ -39,7 +39,7 @@ describe('validateInitPreconditions — SIGKILL recovery detection (S19/NEW-001)
   });
 
   afterEach(async () => {
-    await fs.rm(tmpDir, { recursive: true, force: true });
+    await fs.rm(tmpDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   /**

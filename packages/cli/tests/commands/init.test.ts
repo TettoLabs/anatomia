@@ -24,7 +24,7 @@ describe('ana init', () => {
   });
 
   afterEach(async () => {
-    await fs.rm(tmpDir, { recursive: true, force: true });
+    await fs.rm(tmpDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   describe('directory structure', () => {
@@ -161,13 +161,13 @@ describe('ana init', () => {
       await fs.cp(statePath, backup, { recursive: true });
 
       // Delete .ana/
-      await fs.rm(anaPath, { recursive: true });
+      await fs.rm(anaPath, { recursive: true, maxRetries: 3, retryDelay: 200 });
 
       // Recreate .ana/
       await fs.mkdir(statePath, { recursive: true });
 
       // Restore state/
-      await fs.rm(statePath, { recursive: true });
+      await fs.rm(statePath, { recursive: true, maxRetries: 3, retryDelay: 200 });
       await fs.rename(backup, statePath);
 
       // Verify snapshot preserved

@@ -39,7 +39,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  fs.rmSync(tmpDir, { recursive: true });
+  fs.rmSync(tmpDir, { recursive: true, maxRetries: 3, retryDelay: 200 });
 });
 
 describe('documentation inventory', () => {

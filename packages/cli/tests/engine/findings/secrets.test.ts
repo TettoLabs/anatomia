@@ -25,7 +25,7 @@ describe('Hardcoded secrets rule', () => {
   });
 
   afterEach(() => {
-    fs.rmSync(tmpDir, { recursive: true, force: true });
+    fs.rmSync(tmpDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   it('detects Stripe live key', async () => {

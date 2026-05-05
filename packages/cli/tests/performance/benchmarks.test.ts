@@ -23,7 +23,7 @@ describe('performance benchmarks', () => {
   });
 
   afterEach(async () => {
-    await fs.rm(tmpProject, { recursive: true, force: true });
+    await fs.rm(tmpProject, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   it('ana init completes in <20s', async () => {

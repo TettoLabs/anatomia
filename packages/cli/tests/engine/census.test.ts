@@ -37,7 +37,7 @@ describe('buildCensus', () => {
       expect(census.sourceRoots[0]!.isPrimary).toBe(true);
       expect(Object.keys(census.allDeps)).toHaveLength(0);
     } finally {
-      rmSync(tmpDir, { recursive: true });
+      rmSync(tmpDir, { recursive: true, maxRetries: 3, retryDelay: 200 });
     }
   });
 

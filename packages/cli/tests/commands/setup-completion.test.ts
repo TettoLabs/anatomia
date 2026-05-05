@@ -125,7 +125,7 @@ describe('validateSetupCompletion', () => {
   });
 
   afterEach(async () => {
-    await fs.rm(tmpDir, { recursive: true, force: true });
+    await fs.rm(tmpDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   it('returns complete when What This Project Does has content', async () => {
@@ -285,7 +285,7 @@ describe('ana setup complete CLI', () => {
   });
 
   afterEach(async () => {
-    await fs.rm(tmpDir, { recursive: true, force: true });
+    await fs.rm(tmpDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   it('writes setupPhase to ana.json based on validation', async () => {
@@ -377,7 +377,7 @@ describe('setup-progress.json lifecycle', () => {
   });
 
   afterEach(async () => {
-    await fs.rm(tmpDir, { recursive: true, force: true });
+    await fs.rm(tmpDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
   });
 
   it('Phase 1 sets confirm.completed', async () => {
