@@ -1,0 +1,182 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "CLI UX Polish — First 10 Minutes"
+
+assertions:
+  # AC1: Scan CTA wording
+  - id: A001
+    says: "Scan results tell users to scaffold context, not fix issues"
+    block: "scan CTA uses correct wording"
+    target: "output"
+    matcher: "contains"
+    value: "scaffold context and agents for your project"
+
+  - id: A002
+    says: "Scan results no longer promise to fix issues"
+    block: "scan CTA uses correct wording"
+    target: "output"
+    matcher: "not_contains"
+    value: "to fix them"
+
+  # AC2: Scan examples
+  - id: A003
+    says: "Scan help shows usage examples"
+    block: "scan help includes examples"
+    target: "helpOutput"
+    matcher: "contains"
+    value: "EXAMPLES"
+
+  - id: A004
+    says: "Scan help shows at least two example commands"
+    block: "scan help includes examples"
+    target: "helpOutput"
+    matcher: "contains"
+    value: "$ ana scan"
+
+  # AC3: Init examples
+  - id: A005
+    says: "Init help shows usage examples"
+    block: "init help includes examples"
+    target: "helpOutput"
+    matcher: "contains"
+    value: "$ ana init"
+
+  # AC4: Work start examples
+  - id: A006
+    says: "Work start help shows usage examples"
+    block: "work start help includes examples"
+    target: "helpOutput"
+    matcher: "contains"
+    value: "$ ana work start"
+
+  # AC5: Command grouping
+  - id: A007
+    says: "Top-level help groups commands under Getting Started"
+    block: "help output shows grouped commands"
+    target: "helpOutput"
+    matcher: "contains"
+    value: "GETTING STARTED"
+
+  - id: A008
+    says: "Top-level help groups commands under Pipeline"
+    block: "help output shows grouped commands"
+    target: "helpOutput"
+    matcher: "contains"
+    value: "PIPELINE"
+
+  - id: A009
+    says: "Top-level help groups commands under Intelligence"
+    block: "help output shows grouped commands"
+    target: "helpOutput"
+    matcher: "contains"
+    value: "INTELLIGENCE"
+
+  # AC6: Command order within groups
+  - id: A010
+    says: "Scan appears before init in the help output"
+    block: "command order is correct"
+    target: "scanBeforeInit"
+    matcher: "truthy"
+
+  # AC7: Jargon-free descriptions
+  - id: A011
+    says: "Help output does not contain internal jargon"
+    block: "descriptions are jargon-free"
+    target: "helpOutput"
+    matcher: "not_contains"
+    value: "context framework"
+
+  - id: A012
+    says: "Help output does not reference contract seals"
+    block: "descriptions are jargon-free"
+    target: "helpOutput"
+    matcher: "not_contains"
+    value: "contract seal"
+
+  - id: A013
+    says: "Help output does not reference plan artifacts"
+    block: "descriptions are jargon-free"
+    target: "helpOutput"
+    matcher: "not_contains"
+    value: "plan artifacts"
+
+  - id: A014
+    says: "Help output does not reference deployed agents"
+    block: "descriptions are jargon-free"
+    target: "helpOutput"
+    matcher: "not_contains"
+    value: "deployed agents"
+
+  # AC8: Version format
+  - id: A015
+    says: "Version output uses ana/ prefix instead of anatomia-cli/"
+    block: "version output format is correct"
+    target: "versionOutput"
+    matcher: "contains"
+    value: "ana/"
+
+  - id: A016
+    says: "Version output does not use the old anatomia-cli prefix"
+    block: "version output format is correct"
+    target: "versionOutput"
+    matcher: "not_contains"
+    value: "anatomia-cli/"
+
+  # AC9: Setup index hidden
+  - id: A017
+    says: "Setup help does not show the internal index subcommand"
+    block: "setup index is hidden from help"
+    target: "setupHelpOutput"
+    matcher: "not_contains"
+    value: "index"
+
+  # AC10: ENRICHMENT.md markers
+  - id: A018
+    says: "Every enrichment template starts with an internal marker comment"
+    block: "ENRICHMENT.md files have internal marker"
+    target: "allEnrichmentFilesHaveMarker"
+    matcher: "truthy"
+
+  # AC13: Artifact examples
+  - id: A019
+    says: "Artifact save help shows usage examples"
+    block: "artifact save help includes examples"
+    target: "helpOutput"
+    matcher: "contains"
+    value: "$ ana artifact save"
+
+file_changes:
+  - path: "packages/cli/src/index.ts"
+    action: modify
+  - path: "packages/cli/src/commands/scan.ts"
+    action: modify
+  - path: "packages/cli/src/commands/init/index.ts"
+    action: modify
+  - path: "packages/cli/src/commands/setup.ts"
+    action: modify
+  - path: "packages/cli/src/commands/work.ts"
+    action: modify
+  - path: "packages/cli/src/commands/artifact.ts"
+    action: modify
+  - path: "packages/cli/src/commands/verify.ts"
+    action: modify
+  - path: "packages/cli/src/commands/pr.ts"
+    action: modify
+  - path: "packages/cli/src/commands/agents.ts"
+    action: modify
+  - path: "packages/cli/templates/.claude/skills/coding-standards/ENRICHMENT.md"
+    action: modify
+  - path: "packages/cli/templates/.claude/skills/testing-standards/ENRICHMENT.md"
+    action: modify
+  - path: "packages/cli/templates/.claude/skills/git-workflow/ENRICHMENT.md"
+    action: modify
+  - path: "packages/cli/templates/.claude/skills/deployment/ENRICHMENT.md"
+    action: modify
+  - path: "packages/cli/templates/.claude/skills/troubleshooting/ENRICHMENT.md"
+    action: modify
+  - path: "packages/cli/templates/.claude/skills/ai-patterns/ENRICHMENT.md"
+    action: modify
+  - path: "packages/cli/templates/.claude/skills/api-patterns/ENRICHMENT.md"
+    action: modify
+  - path: "packages/cli/templates/.claude/skills/data-access/ENRICHMENT.md"
+    action: modify
