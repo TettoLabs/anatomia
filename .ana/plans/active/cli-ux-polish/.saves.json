@@ -42,5 +42,18 @@
     "packages/cli/templates/.claude/skills/git-workflow/ENRICHMENT.md",
     "packages/cli/templates/.claude/skills/testing-standards/ENRICHMENT.md",
     "packages/cli/templates/.claude/skills/troubleshooting/ENRICHMENT.md"
-  ]
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:b37cd041989aeedc17d948c2b136fa701862d1c4e0c1f9b4b8f4466504f238fa",
+    "run_at": "2026-05-05T20:23:54.627Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-05T20:23:54.663Z",
+    "hash": "sha256:8baf7242664f14e895f164724e35a8d18a3dc0ddd33c9ae763b127c75fa9bf9e"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-05T20:23:54.664Z",
+    "hash": "sha256:7f761974c3f2f19eabd140873cb571f986a52252204ea11e309b4b2f692c9072"
+  }
 }

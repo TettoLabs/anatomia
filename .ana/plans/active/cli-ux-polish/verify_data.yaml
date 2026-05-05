@@ -1,0 +1,21 @@
+schema: 1
+findings:
+  - category: code
+    summary: "agents.ts file header comment still says 'List deployed agents' — stale after description change"
+    file: "packages/cli/src/commands/agents.ts"
+    line: 1
+    severity: debt
+    suggested_action: accept
+  - category: code
+    summary: "addHelpCommand(false) breaks 'ana help <cmd>' — users who learned that pattern get an error"
+    severity: observation
+    suggested_action: accept
+    related_assertions: ["A007"]
+  - category: test
+    summary: "No contract assertions are covered by @ana-tagged tests — all verified by source inspection and live invocation only"
+    severity: observation
+    suggested_action: monitor
+  - category: upstream
+    summary: "Spec says 'AC9: setup --help does NOT show index subcommand' but the live output shows a 'Commands:' section header — hidden subcommand works correctly but the Commands section header remains visible because non-hidden subcommands exist"
+    severity: observation
+    suggested_action: accept
