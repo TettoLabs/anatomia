@@ -12427,7 +12427,10 @@
             "A011"
           ],
           "id": "proof-intelligence-hardening-C7",
-          "status": "active"
+          "status": "lesson",
+          "closed_reason": "Verified observations — edge cases and process notes. C7: formatHint empty-array edge only triggers if callback intentionally returns []. C12: CI timeout config is operational, not spec-level. C16: template not_contains assertions don't need test files — source inspection is the verification.",
+          "closed_at": "2026-05-05T06:55:09.484Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
@@ -12497,7 +12500,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "proof-intelligence-hardening-C12",
-          "status": "active"
+          "status": "lesson",
+          "closed_reason": "Verified observations — edge cases and process notes. C7: formatHint empty-array edge only triggers if callback intentionally returns []. C12: CI timeout config is operational, not spec-level. C16: template not_contains assertions don't need test files — source inspection is the verification.",
+          "closed_at": "2026-05-05T06:55:09.485Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
@@ -12542,7 +12548,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "proof-intelligence-hardening-C16",
-          "status": "active"
+          "status": "lesson",
+          "closed_reason": "Verified observations — edge cases and process notes. C7: formatHint empty-array edge only triggers if callback intentionally returns []. C12: CI timeout config is operational, not spec-level. C16: template not_contains assertions don't need test files — source inspection is the verification.",
+          "closed_at": "2026-05-05T06:55:09.485Z",
+          "closed_by": "human"
         },
         {
           "category": "code",

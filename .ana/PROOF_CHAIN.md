@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-51 runs · 67 active · 60 lessons · 0 promoted · 159 closed
+51 runs · 64 active · 63 lessons · 0 promoted · 159 closed
 
 ## Hot Modules
 
@@ -9,14 +9,14 @@
 | packages/cli/tests/commands/work.test.ts | 8 | 6 |
 | packages/cli/tests/commands/proof.test.ts | 7 | 3 |
 | packages/cli/src/utils/proofSummary.ts | 6 | 5 |
-| packages/cli/src/commands/proof.ts | 5 | 3 |
+| packages/cli/src/commands/proof.ts | 4 | 3 |
 | packages/cli/tests/templates/agent-proof-context.test.ts | 3 | 2 |
 
 ## Promoted Rules
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 67 total)
+## Active Findings (30 shown of 64 total)
 
 ### .github/workflows/release.yml
 
@@ -38,7 +38,6 @@
 
 ### packages/cli/src/commands/proof.ts
 
-- **code:** createExitError formatHint empty-array return is truthy — prevents fallback to static hints even when callback returns no lines — *Proof Intelligence Hardening*
 - **code:** Lesson command catch block at proof.ts:1141 loses error detail — swallows commit failure cause — *Proof Intelligence Hardening*
 - **code:** Lesson command duplicates close's finding-search loop pattern — 4 identical loops across lesson, close, promote, strengthen — *Proof Intelligence Hardening*
 - **code:** Unknown severity/action values silently dropped from fixed-key objects — by_severity sum can be less than total_active — *Audit JSON Severity Summary*
@@ -64,10 +63,6 @@
 
 - **code:** SLUG_PATTERN exported but only consumed by test file — no source imports the raw regex — *Security Hardening — Command Injection Elimination*
 
-### packages/cli/templates/.claude/agents/ana-learn.md
-
-- **test:** A028/A029 learn template assertions verified by source inspection only — no test file exercises these — *Proof Intelligence Hardening*
-
 ### packages/cli/tests/commands/proof.test.ts
 
 - **test:** A008 active-only test uses fixture with only active findings — no closed finding to prove exclusion — *Audit JSON Severity Summary*
@@ -77,6 +72,8 @@
 ### packages/cli/tests/commands/work.test.ts
 
 - **test:** A016-A019 @ana tags point to pre-existing branchPrefix template tests, not command entry point validation — *Security Hardening — Command Injection Elimination*
+- **test:** A014 nudge check uses specific patterns ('→ claude', '→ ana proof') — a new nudge format would slip through — *Strengthen Weak Test Assertions*
+- **test:** UNVERIFIED test creates full project fixture manually instead of using createMergedProject helper — 60 lines vs ~5 lines — *Strengthen Weak Test Assertions*
 
 ### packages/cli/tests/engine/detectors/documentation.test.ts
 
@@ -88,9 +85,9 @@
 - **test:** Enforcement test (A023) asserts on source code content via grep — violates testing-standards skill rule 'never assert on source code content' but is the only practical way to enforce convention. Spec explicitly requested this pattern. — *Security Hardening — Command Injection Elimination*
 - **test:** Enforcement test comment-filter heuristic checks line prefix only (starts with //, *, /*). An execSync buried mid-line after non-comment code wouldn't be caught if the line also starts with a comment-like pattern. Low probability given codebase conventions. — *Security Hardening — Command Injection Elimination*
 
-### packages/cli/vitest.config.ts
+### packages/cli/tests/utils/proofSummary.test.ts
 
-- **code:** vitest.config.ts timeout changes not in spec — CI-specific testTimeout and hookTimeout added — *Proof Intelligence Hardening*
+- **test:** Remaining toBeGreaterThan(0) in proofSummary.test.ts — 21 instances outside this spec's scope still use weak assertions — *Strengthen Weak Test Assertions*
 
 ### README.md
 
