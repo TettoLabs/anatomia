@@ -42,6 +42,62 @@ const BOX = {
   bottomRight: '\u2518', // ┘
 };
 
+/**
+ * Factory that creates an exitError closure for proof subcommands.
+ *
+ * Each subcommand captures its command name, proof chain path, and JSON mode.
+ * The returned closure reads the chain, formats the error (JSON or console),
+ * prints contextual hints based on the error code, and exits with code 1.
+ *
+ * Hints map: keys are error codes, values are arrays of hint lines.
+ * Context-based hints are handled via a formatHint callback for complex cases
+ * (e.g., checking context keys like 'promoted_to' or 'closed_by').
+ *
+ * @param opts - Factory options
+ * @param opts.commandName - Command name for JSON envelope (e.g., "proof close")
+ * @param opts.proofChainPath - Absolute path to proof_chain.json
+ * @param opts.proofRoot - Project root for reading artifact branch
+ * @param opts.useJson - Whether to output JSON format
+ * @param opts.hints - Static hints map: error code → array of console lines
+ * @param opts.formatHint - Callback for context-dependent hints; returns lines or null to fall through
+ * @returns Closure that formats error output and exits with code 1
+ */
+function createExitError(opts: {
+  commandName: string;
+  proofChainPath: string;
+  proofRoot: string;
+  useJson: boolean;
+  hints?: Record<string, string[]>;
+  formatHint?: (code: string, context: Record<string, unknown>) => string[] | null;
+}): (code: string, message: string, context?: Record<string, unknown>) => never {
+  return (code: string, message: string, context: Record<string, unknown> = {}): never => {
+    let chain: ProofChain | null = null;
+    try {
+      if (fs.existsSync(opts.proofChainPath)) {
+        chain = JSON.parse(fs.readFileSync(opts.proofChainPath, 'utf-8'));
+      }
+    } catch { /* use null */ }
+
+    if (opts.useJson) {
+      console.log(JSON.stringify(wrapJsonError(opts.commandName, code, message, context, chain), null, 2));
+    } else {
+      console.error(chalk.red(`Error: ${message}`));
+      // Try formatHint callback first (for context-dependent hints)
+      const dynamicHints = opts.formatHint?.(code, context);
+      if (dynamicHints) {
+        for (const line of dynamicHints) {
+          console.error(line);
+        }
+      } else if (opts.hints && opts.hints[code]) {
+        for (const line of opts.hints[code]) {
+          console.error(line);
+        }
+      }
+    }
+    process.exit(1);
+  };
+}
+
 // @ana A005, A006
 /**
  * Severity ordering for display sorting: risk → debt → observation → unclassified
@@ -568,36 +624,34 @@ export function registerProofCommand(program: Command): void {
       const parentOpts = proofCommand.opts();
       const useJson = options.json || parentOpts['json'];
 
-      // Helper: output error and exit
-      const exitError = (code: string, message: string, context: Record<string, unknown> = {}): void => {
-        let chain: ProofChain | null = null;
-        try {
-          if (fs.existsSync(proofChainPath)) {
-            chain = JSON.parse(fs.readFileSync(proofChainPath, 'utf-8'));
-          }
-        } catch { /* use null */ }
-
-        if (useJson) {
-          console.log(JSON.stringify(wrapJsonError('proof close', code, message, context, chain), null, 2));
-        } else {
-          console.error(chalk.red(`Error: ${message}`));
-          if (code === 'REASON_REQUIRED') {
-            console.error('  Proof closures must explain why the finding no longer applies.');
-            console.error('  Usage: ana proof close {id} --reason "explanation"');
-          } else if (code === 'FINDING_NOT_FOUND') {
-            console.error('  Run `ana proof audit` to see active findings.');
-          } else if (code === 'ALREADY_CLOSED' && context['closed_by']) {
-            console.error(`  Closed by: ${context['closed_by']} on ${context['closed_at'] ?? 'unknown'}`);
+      // @ana A009
+      const exitError = createExitError({
+        commandName: 'proof close',
+        proofChainPath,
+        proofRoot,
+        useJson,
+        hints: {
+          REASON_REQUIRED: [
+            '  Proof closures must explain why the finding no longer applies.',
+            '  Usage: ana proof close {id} --reason "explanation"',
+          ],
+          FINDING_NOT_FOUND: ['  Run `ana proof audit` to see active findings.'],
+        },
+        formatHint: (code, context) => {
+          if (code === 'ALREADY_CLOSED' && context['closed_by']) {
+            const lines = [`  Closed by: ${context['closed_by']} on ${context['closed_at'] ?? 'unknown'}`];
             if (context['closed_reason']) {
-              console.error(`  Reason: ${context['closed_reason']}`);
+              lines.push(`  Reason: ${context['closed_reason']}`);
             }
-          } else if (code === 'WRONG_BRANCH') {
-            const artifactBranch = readArtifactBranch(proofRoot);
-            console.error(`  Run: git checkout ${artifactBranch}`);
+            return lines;
           }
-        }
-        process.exit(1);
-      };
+          if (code === 'WRONG_BRANCH') {
+            const artifactBranch = readArtifactBranch(proofRoot);
+            return [`  Run: git checkout ${artifactBranch}`];
+          }
+          return null;
+        },
+      });
 
       // Validate --reason is provided
       if (!options.reason) {
@@ -859,41 +913,39 @@ export function registerProofCommand(program: Command): void {
       const skillGlobs = globSync('.claude/skills/*/SKILL.md', { cwd: proofRoot });
       const availableSkills = skillGlobs.map(p => path.basename(path.dirname(p)));
 
-      // Helper: output error and exit
-      const exitError = (code: string, message: string, context: Record<string, unknown> = {}): void => {
-        let chain: ProofChain | null = null;
-        try {
-          if (fs.existsSync(proofChainPath)) {
-            chain = JSON.parse(fs.readFileSync(proofChainPath, 'utf-8'));
+      // @ana A010
+      const exitError = createExitError({
+        commandName: 'proof promote',
+        proofChainPath,
+        proofRoot,
+        useJson,
+        hints: {
+          SKILL_REQUIRED: [
+            `  Available skills: ${availableSkills.join(', ')}`,
+            '  Usage: ana proof promote {id} --skill {name}',
+          ],
+          SKILL_NOT_FOUND: [`  Available skills: ${availableSkills.join(', ')}`],
+          FINDING_NOT_FOUND: ['  Run `ana proof audit` to see active findings.'],
+        },
+        formatHint: (code, context) => {
+          if (code === 'ALREADY_PROMOTED' && context['promoted_to']) {
+            return [`  Promoted to: ${context['promoted_to']}`];
           }
-        } catch { /* use null */ }
-
-        if (useJson) {
-          console.log(JSON.stringify(wrapJsonError('proof promote', code, message, context, chain), null, 2));
-        } else {
-          console.error(chalk.red(`Error: ${message}`));
-          if (code === 'SKILL_REQUIRED') {
-            console.error(`  Available skills: ${availableSkills.join(', ')}`);
-            console.error('  Usage: ana proof promote {id} --skill {name}');
-          } else if (code === 'SKILL_NOT_FOUND') {
-            console.error(`  Available skills: ${availableSkills.join(', ')}`);
-          } else if (code === 'FINDING_NOT_FOUND') {
-            console.error('  Run `ana proof audit` to see active findings.');
-          } else if (code === 'ALREADY_PROMOTED' && context['promoted_to']) {
-            console.error(`  Promoted to: ${context['promoted_to']}`);
-          } else if (code === 'ALREADY_CLOSED' && context['closed_by']) {
-            console.error(`  Closed by: ${context['closed_by']} on ${context['closed_at'] ?? 'unknown'}`);
+          if (code === 'ALREADY_CLOSED' && context['closed_by']) {
+            const lines = [`  Closed by: ${context['closed_by']} on ${context['closed_at'] ?? 'unknown'}`];
             if (context['closed_reason']) {
-              console.error(`  Reason: ${context['closed_reason']}`);
+              lines.push(`  Reason: ${context['closed_reason']}`);
             }
-            console.error('  Use --force to promote a closed finding.');
-          } else if (code === 'WRONG_BRANCH') {
-            const artifactBranch = readArtifactBranch(proofRoot);
-            console.error(`  Run: git checkout ${artifactBranch}`);
+            lines.push('  Use --force to promote a closed finding.');
+            return lines;
           }
-        }
-        process.exit(1);
-      };
+          if (code === 'WRONG_BRANCH') {
+            const artifactBranch = readArtifactBranch(proofRoot);
+            return [`  Run: git checkout ${artifactBranch}`];
+          }
+          return null;
+        },
+      });
 
       // Validate --skill is provided
       if (!options.skill) {
@@ -1224,51 +1276,52 @@ export function registerProofCommand(program: Command): void {
       const parentOpts = proofCommand.opts();
       const useJson = options.json || parentOpts['json'];
 
-      // Helper: output error and exit
-      const exitError = (code: string, message: string, context: Record<string, unknown> = {}): void => {
-        let chain: ProofChain | null = null;
-        try {
-          if (fs.existsSync(proofChainPath)) {
-            chain = JSON.parse(fs.readFileSync(proofChainPath, 'utf-8'));
-          }
-        } catch { /* use null */ }
-
-        if (useJson) {
-          console.log(JSON.stringify(wrapJsonError('proof strengthen', code, message, context, chain), null, 2));
-        } else {
-          console.error(chalk.red(`Error: ${message}`));
-          if (code === 'SKILL_REQUIRED') {
-            console.error('  Usage: ana proof strengthen <ids...> --skill <name> --reason "..."');
-          } else if (code === 'REASON_REQUIRED') {
-            console.error('  Usage: ana proof strengthen <ids...> --skill <name> --reason "..."');
-          } else if (code === 'SKILL_NOT_FOUND') {
+      // @ana A011
+      const exitError = createExitError({
+        commandName: 'proof strengthen',
+        proofChainPath,
+        proofRoot,
+        useJson,
+        hints: {
+          SKILL_REQUIRED: ['  Usage: ana proof strengthen <ids...> --skill <name> --reason "..."'],
+          REASON_REQUIRED: ['  Usage: ana proof strengthen <ids...> --skill <name> --reason "..."'],
+          FINDING_NOT_FOUND: ['  Run `ana proof audit` to see active findings.'],
+        },
+        formatHint: (code, context) => {
+          if (code === 'SKILL_NOT_FOUND') {
             const skillsDir = path.join(proofRoot, '.claude', 'skills');
             if (fs.existsSync(skillsDir)) {
               const available = fs.readdirSync(skillsDir).filter(d => fs.statSync(path.join(skillsDir, d)).isDirectory());
               if (available.length > 0) {
-                console.error(`  Available skills: ${available.join(', ')}`);
+                return [`  Available skills: ${available.join(', ')}`];
               }
             }
-          } else if (code === 'NO_UNCOMMITTED_CHANGES') {
-            console.error('  Edit the skill file first, then run this command to commit the changes.');
-            console.error(`  Usage: ana proof strengthen <ids...> --skill ${options.skill ?? '<name>'} --reason "..."`);
-          } else if (code === 'FINDING_NOT_FOUND') {
-            console.error('  Run `ana proof audit` to see active findings.');
-          } else if (code === 'ALREADY_PROMOTED' && context['promoted_to']) {
-            console.error(`  Promoted to: ${context['promoted_to']}`);
-          } else if (code === 'ALREADY_CLOSED' && context['closed_by']) {
-            console.error(`  Closed by: ${context['closed_by']} on ${context['closed_at'] ?? 'unknown'}`);
-            if (context['closed_reason']) {
-              console.error(`  Reason: ${context['closed_reason']}`);
-            }
-            console.error('  Use --force to strengthen a closed finding.');
-          } else if (code === 'WRONG_BRANCH') {
-            const artifactBranch = readArtifactBranch(proofRoot);
-            console.error(`  Run: git checkout ${artifactBranch}`);
+            return [];
           }
-        }
-        process.exit(1);
-      };
+          if (code === 'NO_UNCOMMITTED_CHANGES') {
+            return [
+              '  Edit the skill file first, then run this command to commit the changes.',
+              `  Usage: ana proof strengthen <ids...> --skill ${options.skill ?? '<name>'} --reason "..."`,
+            ];
+          }
+          if (code === 'ALREADY_PROMOTED' && context['promoted_to']) {
+            return [`  Promoted to: ${context['promoted_to']}`];
+          }
+          if (code === 'ALREADY_CLOSED' && context['closed_by']) {
+            const lines = [`  Closed by: ${context['closed_by']} on ${context['closed_at'] ?? 'unknown'}`];
+            if (context['closed_reason']) {
+              lines.push(`  Reason: ${context['closed_reason']}`);
+            }
+            lines.push('  Use --force to strengthen a closed finding.');
+            return lines;
+          }
+          if (code === 'WRONG_BRANCH') {
+            const artifactBranch = readArtifactBranch(proofRoot);
+            return [`  Run: git checkout ${artifactBranch}`];
+          }
+          return null;
+        },
+      });
 
       // Validate --skill is provided
       if (!options.skill) {
