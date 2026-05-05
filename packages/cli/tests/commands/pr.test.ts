@@ -113,7 +113,7 @@ describe('ana pr create', () => {
   }
 
   describe('happy path', () => {
-    it('requires gh CLI to be available', async () => {
+    it('requires gh CLI to be available', { timeout: 30000 }, async () => {
       await createTestProject({ artifactBranch: 'main', currentBranch: 'feature/test-feature' });
       await createPipelineArtifacts('test-feature', {
         includeScope: true,

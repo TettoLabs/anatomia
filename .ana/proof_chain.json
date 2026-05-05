@@ -9714,7 +9714,10 @@
             "A028"
           ],
           "id": "proof-health-v2-C10",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed by proof-intelligence-hardening Phase 1 — FAIL guard extracted to guardFailResult() at work.ts:716. Single definition called from both single-phase (:769) and multi-phase (:1160) paths.",
+          "closed_at": "2026-05-05T06:40:37.240Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
