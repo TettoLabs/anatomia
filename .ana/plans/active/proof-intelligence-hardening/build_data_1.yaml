@@ -1,0 +1,9 @@
+schema: 1
+concerns:
+  - summary: "guardFailResult changes multi-phase error message format by prepending 'Phase N: ' prefix"
+    file: "packages/cli/src/commands/work.ts"
+    severity: observation
+    suggested_action: monitor
+  - summary: "Contract assertions A004-A008 are structural (code shape) not behavioral — verified by inspection, not unit tests"
+    severity: observation
+    suggested_action: accept
