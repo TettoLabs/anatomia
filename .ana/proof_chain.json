@@ -6796,7 +6796,10 @@
           "severity": "debt",
           "suggested_action": "monitor",
           "id": "proof-promote-C5",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed by proof-intelligence-hardening Phase 2 — promote display at proof.ts:1536/:1550 and strengthen at :1838/:1846 now call truncateSummary(summary, 100). Long summaries no longer break terminal formatting.",
+          "closed_at": "2026-05-05T06:43:54.822Z",
+          "closed_by": "human"
         }
       ],
       "rejection_cycles": 1,
