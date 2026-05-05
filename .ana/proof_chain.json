@@ -12471,7 +12471,10 @@
             "A017"
           ],
           "id": "proof-intelligence-hardening-C11",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Reviewed during Verify — baseline rate (totalTouches/totalEntries) is better than spec's post-finding rate. Post-finding formula is circular: compares touches to a rate derived from those same touches. Implementation improves on spec. Deviation approved.",
+          "closed_at": "2026-05-05T06:54:04.547Z",
+          "closed_by": "human"
         },
         {
           "category": "code",

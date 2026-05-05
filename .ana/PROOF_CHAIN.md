@@ -1,13 +1,13 @@
 # Proof Chain Dashboard
 
-51 runs · 73 active · 57 lessons · 0 promoted · 156 closed
+51 runs · 72 active · 57 lessons · 0 promoted · 157 closed
 
 ## Hot Modules
 
 | File | Active | Entries |
 |------|--------|--------|
-| packages/cli/src/utils/proofSummary.ts | 10 | 6 |
 | packages/cli/tests/commands/work.test.ts | 9 | 7 |
+| packages/cli/src/utils/proofSummary.ts | 9 | 6 |
 | packages/cli/tests/commands/proof.test.ts | 7 | 3 |
 | packages/cli/src/commands/proof.ts | 5 | 3 |
 | packages/cli/tests/templates/agent-proof-context.test.ts | 3 | 2 |
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 73 total)
+## Active Findings (30 shown of 72 total)
 
 ### .github/workflows/release.yml
 
@@ -59,7 +59,6 @@
 
 - **code:** parseACResults heading match is case-sensitive and exact — '## AC walkthrough' or '##  AC Walkthrough' (extra space) would miss — *Proof Intelligence Hardening*
 - **code:** proofSummary.ts now ~1913 lines — past comfort threshold, known from prior cycles — *Proof Intelligence Hardening*
-- **code:** Staleness touchRate uses full-chain baseline rate instead of post-finding rate as specified — *Proof Intelligence Hardening*
 - **code:** proofSummary.ts ~1560+ lines — past comfort threshold, growing each phase — *Proof Intelligence Hardening*
 - **code:** proofSummary.ts ~1550 lines — past comfort threshold, known from prior cycles — *V1 Code Changes*
 
@@ -93,6 +92,10 @@
 ### packages/cli/vitest.config.ts
 
 - **code:** vitest.config.ts timeout changes not in spec — CI-specific testTimeout and hookTimeout added — *Proof Intelligence Hardening*
+
+### README.md
+
+- **code:** README Development section uses absolute GitHub URLs for CONTRIBUTING/ARCHITECTURE — correct since README is at root — *V1 Documentation Overhaul*
 
 ### General
 
