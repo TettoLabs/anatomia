@@ -7429,7 +7429,10 @@
             "A010"
           ],
           "id": "harden-hot-files-C3",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Stale — tag coverage system was entirely removed by the remove-tag-coverage scope. Pre-check COVERED status via @ana tags no longer exists. The concept this finding warns about was deleted.",
+          "closed_at": "2026-05-05T01:25:00.035Z",
+          "closed_by": "human"
         },
         {
           "category": "upstream",
