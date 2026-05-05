@@ -5837,7 +5837,10 @@
           "severity": "observation",
           "suggested_action": "monitor",
           "id": "diff-scoped-tag-search-C3",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "System removed — tag-search and diff-scoped detection code entirely deleted from verify.ts by remove-tag-coverage scope. verify.ts reduced from ~400 to 145 lines. The comment filter, diff parsing, and integration tests this finding references no longer exist.",
+          "closed_at": "2026-05-05T01:28:50.786Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
@@ -5848,7 +5851,10 @@
           "severity": "observation",
           "suggested_action": "monitor",
           "id": "diff-scoped-tag-search-C4",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "System removed — tag-search and diff-scoped detection code entirely deleted from verify.ts by remove-tag-coverage scope. verify.ts reduced from ~400 to 145 lines. The comment filter, diff parsing, and integration tests this finding references no longer exist.",
+          "closed_at": "2026-05-05T01:28:50.787Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
@@ -5858,7 +5864,10 @@
           "severity": "debt",
           "suggested_action": "scope",
           "id": "diff-scoped-tag-search-C5",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "System removed — tag-search and diff-scoped detection code entirely deleted from verify.ts by remove-tag-coverage scope. verify.ts reduced from ~400 to 145 lines. The comment filter, diff parsing, and integration tests this finding references no longer exist.",
+          "closed_at": "2026-05-05T01:28:50.787Z",
+          "closed_by": "human"
         }
       ],
       "rejection_cycles": 0,
