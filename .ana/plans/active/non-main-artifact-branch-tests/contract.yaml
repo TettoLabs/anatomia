@@ -1,0 +1,79 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Non-Main Artifact Branch Tests"
+
+assertions:
+  - id: A001
+    says: "Work status detects the correct stage when the artifact branch is develop"
+    block: "getWorkStatus discovers slugs with artifactBranch develop"
+    target: "output"
+    matcher: "contains"
+    value: "ready-for-plan"
+
+  - id: A002
+    says: "Work status shows the develop branch name in its output"
+    block: "getWorkStatus discovers slugs with artifactBranch develop"
+    target: "output"
+    matcher: "contains"
+    value: "develop"
+
+  - id: A003
+    says: "Work status detects build-in-progress when feature branch exists on develop-based project"
+    block: "getWorkStatus detects build-in-progress with develop artifact branch"
+    target: "output"
+    matcher: "contains"
+    value: "build-in-progress"
+
+  - id: A004
+    says: "Starting work succeeds when on the develop artifact branch"
+    block: "startWork succeeds on develop artifact branch"
+    target: "slugDirExists"
+    matcher: "truthy"
+
+  - id: A005
+    says: "Starting work fails when not on the configured develop branch"
+    block: "startWork rejects when not on develop artifact branch"
+    target: "error"
+    matcher: "contains"
+    value: "develop"
+
+  - id: A006
+    says: "Saving a scope is allowed when on the develop artifact branch"
+    block: "saveArtifact scope allowed on develop artifact branch"
+    target: "throws"
+    matcher: "equals"
+    value: false
+
+  - id: A007
+    says: "Saving a build report is rejected when on the develop artifact branch"
+    block: "saveArtifact build-report rejected on develop artifact branch"
+    target: "throws"
+    matcher: "truthy"
+
+  - id: A008
+    says: "Saving a build report succeeds from a feature branch when artifact branch is develop"
+    block: "saveArtifact build-report allowed on feature branch with develop artifact branch"
+    target: "throws"
+    matcher: "equals"
+    value: false
+
+  - id: A009
+    says: "Completing work succeeds when the artifact branch is develop"
+    block: "completeWork succeeds with develop artifact branch"
+    target: "completionSucceeds"
+    matcher: "truthy"
+
+  - id: A010
+    says: "Init display shows the configured artifact branch instead of the git default"
+    block: "displaySuccessMessage shows configured artifactBranch"
+    target: "state.ts:634"
+    matcher: "contains"
+    value: "anaConfig"
+
+file_changes:
+  - path: "packages/cli/tests/commands/work.test.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/artifact.test.ts"
+    action: modify
+  - path: "packages/cli/src/commands/init/state.ts"
+    action: modify
