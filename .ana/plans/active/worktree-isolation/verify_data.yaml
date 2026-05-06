@@ -1,0 +1,71 @@
+schema: 1
+findings:
+  - category: code
+    summary: "A021 not implemented — completeWork does not write worktree metadata to proof chain entry"
+    file: "packages/cli/src/commands/work.ts"
+    line: 1237
+    severity: risk
+    suggested_action: scope
+    related_assertions: ["A021"]
+
+  - category: test
+    summary: "28 new tests added vs spec estimate of 50-55 — phase detection paths (A001-A003, A006-A011) and guards (A028-A032) have no dedicated tagged tests"
+    file: "packages/cli/tests/utils/worktree.test.ts"
+    severity: debt
+    suggested_action: scope
+
+  - category: code
+    summary: "isWorktreeDirectory may false-positive in git submodules where .git is also a file, blocking init/proof/setup commands inside submodules"
+    file: "packages/cli/src/utils/worktree.ts"
+    line: 54
+    severity: risk
+    suggested_action: monitor
+
+  - category: code
+    summary: "branchExists exported as internal helper purely for test imports — over-building beyond spec"
+    file: "packages/cli/src/utils/worktree.ts"
+    line: 526
+    severity: observation
+    suggested_action: accept
+
+  - category: code
+    summary: "proof.ts WRONG_BRANCH main error message still says 'Switch to main' even in worktree context — misleading, though the formatHint below it is correct"
+    file: "packages/cli/src/commands/proof.ts"
+    line: 752
+    severity: debt
+    suggested_action: scope
+
+  - category: test
+    summary: "A025 stale worktree test only verifies isStale=false (fresh worktree) — cannot trigger true positive without time manipulation"
+    file: "packages/cli/tests/utils/worktree.test.ts"
+    line: 370
+    severity: observation
+    suggested_action: accept
+
+  - category: test
+    summary: "A012 depsInstalled test asserts typeof boolean instead of specific value — passes regardless of install success/failure"
+    file: "packages/cli/tests/utils/worktree.test.ts"
+    line: 186
+    severity: debt
+    suggested_action: accept
+    related_assertions: ["A012"]
+
+  - category: test
+    summary: "A037 submodule test asserts typeof boolean instead of truthy — passes regardless of init success"
+    file: "packages/cli/tests/utils/worktree.test.ts"
+    line: 412
+    severity: debt
+    suggested_action: accept
+    related_assertions: ["A037"]
+
+  - category: code
+    summary: "detectWorktreeSlug uses string path matching — could false-positive if project path itself contains .ana/worktrees/"
+    file: "packages/cli/src/utils/worktree.ts"
+    line: 76
+    severity: observation
+    suggested_action: monitor
+
+  - category: upstream
+    summary: "Spec estimates 50-55 new tests but implementation delivers 28 — spec estimate was aggressive for the utility-focused test strategy used"
+    severity: observation
+    suggested_action: accept
