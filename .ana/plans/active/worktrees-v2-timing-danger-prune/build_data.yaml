@@ -1,0 +1,14 @@
+schema: 1
+concerns:
+  - summary: "Risk Profile renders as subsection under Proof Findings — dual h2 headers in worktree-context.md"
+    file: "packages/cli/src/utils/worktree.ts"
+    severity: debt
+    suggested_action: scope
+  - summary: "verify_agent and build_agent values not directly tested — only code inspection"
+    file: "packages/cli/tests/commands/work.test.ts"
+    severity: observation
+    suggested_action: monitor
+  - summary: "computePipelineStats median_plan tested at type level only, not through full integration path"
+    file: "packages/cli/tests/utils/proofSummary.test.ts"
+    severity: observation
+    suggested_action: accept
