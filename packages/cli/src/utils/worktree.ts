@@ -48,6 +48,37 @@ export interface WorktreeInfo {
  * A worktree's `.git` is a file (containing `gitdir: ...`), not a directory.
  * A normal repo's `.git` is a directory.
  *
+ */
+/**
+ * Resolve the main tree root from inside a worktree.
+ *
+ * Parses the `.git` file (which in a worktree contains `gitdir: /path/.git/worktrees/{name}`)
+ * to find the main repository root. Returns the input directory unchanged if not a worktree.
+ *
+ * @param worktreeRoot - Directory to resolve from
+ * @returns Main tree root path, or the input directory if not a worktree
+ */
+export function getMainTreeRoot(worktreeRoot: string): string {
+  const gitPath = path.join(worktreeRoot, '.git');
+  try {
+    const stat = fs.statSync(gitPath);
+    if (!stat.isFile()) return worktreeRoot; // .git is a directory — already main tree
+    const content = fs.readFileSync(gitPath, 'utf-8');
+    if (!content.includes('/worktrees/')) return worktreeRoot; // submodule, not worktree
+    const match = content.match(/gitdir:\s*(.+)/);
+    if (!match?.[1]) return worktreeRoot;
+    const gitDir = match[1].trim();
+    // gitdir points to /main/.git/worktrees/{name} — main root is grandparent of the worktrees dir
+    const mainGitDir = path.resolve(worktreeRoot, gitDir, '..', '..');
+    return path.dirname(mainGitDir);
+  } catch {
+    return worktreeRoot;
+  }
+}
+
+/**
+ * Check if a directory is a git worktree (not the main tree or a submodule).
+ *
  * @param dir - Directory to check (defaults to cwd)
  * @returns true if inside a worktree
  */

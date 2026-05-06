@@ -22,6 +22,7 @@ import * as yaml from 'yaml';
 import { runContractPreCheck } from './verify.js';
 import { findProjectRoot, validateSlug } from '../utils/validators.js';
 import { readArtifactBranch, readBranchPrefix, getCurrentBranch, readCoAuthor, runGit } from '../utils/git-operations.js';
+import { worktreeExists, getWorktreePath, getMainTreeRoot } from '../utils/worktree.js';
 import type { ContractSchema } from '../types/contract.js';
 
 /**
@@ -842,8 +843,23 @@ function validateBranch(
   } else {
     // Build/verify artifacts must NOT be on artifact branch
     if (currentBranch === artifactBranch) {
-      console.error(chalk.red(`Error: You're on \`${artifactBranch}\`. ${typeInfo.displayName} belongs on a feature branch.`));
-      console.error(chalk.gray(`Run: git checkout ${branchPrefix}${slug}`));
+      const projectRoot = findProjectRoot();
+      if (worktreeExists(projectRoot, slug)) {
+        const wtRel = path.relative(process.cwd(), getWorktreePath(projectRoot, slug)) || '.';
+        const planRel = path.join('.ana', 'plans', 'active', slug, typeInfo.fileName);
+        const mainFilePath = path.join(projectRoot, planRel);
+        if (fs.existsSync(mainFilePath)) {
+          console.error(chalk.red(`Error: ${typeInfo.fileName} is here on main but belongs in the worktree.`));
+          console.error(chalk.gray(`  cp ${planRel} ${path.join(wtRel, planRel)}`));
+          console.error(chalk.gray(`  cd ${wtRel} && ana artifact save ${typeInfo.baseType} ${slug}`));
+        } else {
+          console.error(chalk.red(`Error: You're on \`${artifactBranch}\`. ${typeInfo.displayName} belongs on the feature branch.`));
+          console.error(chalk.gray(`  cd ${wtRel} && ana artifact save ${typeInfo.baseType} ${slug}`));
+        }
+      } else {
+        console.error(chalk.red(`Error: You're on \`${artifactBranch}\`. ${typeInfo.displayName} belongs on a feature branch.`));
+        console.error(chalk.gray(`  git checkout ${branchPrefix}${slug}`));
+      }
       process.exit(1);
     }
   }
@@ -920,6 +936,20 @@ export function saveArtifact(type: string, slug: string): void {
 
   // 6b. Verify file exists
   if (!fs.existsSync(filePath)) {
+    // Check if the file was written to the main tree instead
+    if (typeInfo.category !== 'planning') {
+      const mainRoot = getMainTreeRoot(projectRoot);
+      if (mainRoot !== projectRoot) {
+        const mainPath = path.join(mainRoot, relFilePath);
+        if (fs.existsSync(mainPath)) {
+          const mainRel = path.relative(process.cwd(), mainPath);
+          console.error(chalk.red(`Error: ${typeInfo.fileName} found on main tree, not in worktree.`));
+          console.error(chalk.gray(`  cp ${mainRel} ${relFilePath}`));
+          console.error(chalk.gray(`  ana artifact save ${typeInfo.baseType} ${slug}`));
+          process.exit(1);
+        }
+      }
+    }
     console.error(chalk.red(`Error: No ${typeInfo.displayName.toLowerCase()} found at \`${relFilePath}\`.`));
     console.error(chalk.gray('Write the file first, then run this command.'));
     process.exit(1);
