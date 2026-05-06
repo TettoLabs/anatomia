@@ -10,7 +10,7 @@
     "lint": "turbo run lint",
     "clean": "turbo run clean && rm -rf node_modules .turbo",
     "release": "cd packages/cli && npm version",
-    "prepare": "husky"
+    "prepare": "husky || echo 'husky init failed — run: git config core.hooksPath .husky/_'"
   },
   "devDependencies": {
     "eslint": "^9.0.0",
