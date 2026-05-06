@@ -56,7 +56,12 @@ export function isWorktreeDirectory(dir?: string): boolean {
   const gitPath = path.join(checkDir, '.git');
   try {
     const stat = fs.statSync(gitPath);
-    return stat.isFile();
+    if (!stat.isFile()) return false;
+    // Distinguish worktrees from submodules: both use .git files
+    // Worktrees: gitdir: /path/.git/worktrees/{name}
+    // Submodules: gitdir: ../.git/modules/{name}
+    const content = fs.readFileSync(gitPath, 'utf-8');
+    return content.includes('/worktrees/');
   } catch {
     return false;
   }
@@ -72,7 +77,16 @@ export function isWorktreeDirectory(dir?: string): boolean {
  */
 export function detectWorktreeSlug(dir?: string): string | null {
   const checkDir = path.resolve(dir ?? process.cwd());
-  // Look for `.ana/worktrees/{slug}` in the path
+  // Primary: read .ana/worktree-meta.json (written at creation time)
+  const metaPath = path.join(checkDir, '.ana', 'worktree-meta.json');
+  try {
+    if (fs.existsSync(metaPath)) {
+      const meta = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
+      if (meta.slug && typeof meta.slug === 'string') return meta.slug;
+    }
+  } catch { /* fall through to path-based detection */ }
+
+  // Fallback: parse the filesystem path for `.ana/worktrees/{slug}/`
   const marker = `${path.sep}.ana${path.sep}worktrees${path.sep}`;
   const idx = checkDir.indexOf(marker);
   if (idx === -1) return null;
@@ -170,6 +184,15 @@ export async function createWorktree(
       }
       branchIsNew = true;
     }
+
+    // Step 1b: Write worktree-meta.json for slug detection
+    const metaDir = path.join(wtPath, '.ana');
+    await fsPromises.mkdir(metaDir, { recursive: true });
+    await fsPromises.writeFile(
+      path.join(metaDir, 'worktree-meta.json'),
+      JSON.stringify({ slug, createdAt: new Date().toISOString() }, null, 2),
+      'utf-8'
+    );
 
     // Step 2: Install dependencies
     const depsInstalled = installDependencies(wtPath);
