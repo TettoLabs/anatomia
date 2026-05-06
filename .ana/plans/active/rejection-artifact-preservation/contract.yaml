@@ -1,0 +1,127 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Rejection Cycle Artifact Preservation"
+
+assertions:
+  # AC1: verify_report archiving
+  - id: A001
+    says: "A previously committed verify report is preserved when a new version is saved"
+    block: "archives previous verify_report.md on save"
+    target: "archiveFile.exists"
+    matcher: "truthy"
+
+  - id: A002
+    says: "The archived verify report contains the original content, not the new version"
+    block: "archives previous verify_report.md on save"
+    target: "archiveFile.content"
+    matcher: "equals"
+    value: "original committed content"
+
+  # AC2: verify_data.yaml companion archiving
+  - id: A003
+    says: "A previously committed verify data file is preserved alongside the report"
+    block: "archives previous verify_data.yaml on save"
+    target: "archiveFile.exists"
+    matcher: "truthy"
+
+  - id: A004
+    says: "The archived verify data contains the original content"
+    block: "archives previous verify_data.yaml on save"
+    target: "archiveFile.content"
+    matcher: "equals"
+    value: "original committed content"
+
+  # AC3: build_report archiving
+  - id: A005
+    says: "A previously committed build report is preserved when a new version is saved"
+    block: "archives previous build_report.md on save"
+    target: "archiveFile.exists"
+    matcher: "truthy"
+
+  - id: A006
+    says: "The archived build report contains the original content"
+    block: "archives previous build_report.md on save"
+    target: "archiveFile.content"
+    matcher: "equals"
+    value: "original committed content"
+
+  # AC4: round number incrementing
+  - id: A007
+    says: "Second rejection creates a second archive instead of overwriting the first"
+    block: "increments round number when _r1 already exists"
+    target: "secondArchiveFile.name"
+    matcher: "contains"
+    value: "_r2"
+
+  - id: A008
+    says: "Both archive rounds are preserved after multiple rejections"
+    block: "increments round number when _r1 already exists"
+    target: "archiveCount"
+    matcher: "equals"
+    value: 2
+
+  # AC5: no false archives
+  - id: A009
+    says: "First-time saves do not create spurious archive files"
+    block: "skips archive when no committed version exists"
+    target: "archiveFiles.length"
+    matcher: "equals"
+    value: 0
+
+  - id: A010
+    says: "Saving identical content does not create an archive"
+    block: "skips archive when content is identical"
+    target: "archiveFiles.length"
+    matcher: "equals"
+    value: 0
+
+  # AC8: atomic staging
+  - id: A011
+    says: "Archive files are included in the same commit as the new artifacts"
+    block: "stages archive files in the same commit"
+    target: "commitFiles"
+    matcher: "contains"
+    value: "_r1.md"
+
+  # Multi-phase edge case
+  - id: A012
+    says: "Phase-numbered reports archive with both phase and round suffixes"
+    block: "archives phase-numbered report correctly"
+    target: "archiveFile.name"
+    matcher: "contains"
+    value: "_1_r1"
+
+  # saveAllArtifacts path
+  - id: A013
+    says: "Batch save preserves previous artifact versions just like individual save"
+    block: "save-all archives previous versions"
+    target: "archiveFile.exists"
+    matcher: "truthy"
+
+  # Non-blocking on failure
+  - id: A014
+    says: "Archive failures do not block the artifact save"
+    block: "archive failure warns but does not block save"
+    target: "saveResult"
+    matcher: "equals"
+    value: "success"
+
+  # Deleted file from disk but exists in git
+  - id: A015
+    says: "Files deleted from disk but present in git history are still archived"
+    block: "archives when file deleted from disk but exists in git"
+    target: "archiveFile.exists"
+    matcher: "truthy"
+
+  # build_data.yaml companion
+  - id: A016
+    says: "Build data companion files are preserved alongside build reports"
+    block: "archives previous build_data.yaml on save"
+    target: "archiveFile.exists"
+    matcher: "truthy"
+
+file_changes:
+  - path: "packages/cli/src/commands/artifact.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/artifact.test.ts"
+    action: modify
