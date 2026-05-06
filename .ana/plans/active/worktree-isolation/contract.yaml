@@ -1,0 +1,348 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Worktree Isolation"
+
+assertions:
+  # Phase detection — startWork universal entry
+  - id: A001
+    says: "Starting work on a new slug creates its directory and records the start time"
+    block: "startWork creates directory for new slug"
+    target: "saves.work_started_at"
+    matcher: "exists"
+
+  - id: A002
+    says: "Starting work on a slug with only a scope records the plan start time"
+    block: "startWork records plan_started_at for scope-only slug"
+    target: "saves.plan_started_at"
+    matcher: "exists"
+
+  - id: A003
+    says: "Starting work on a slug with only a scope validates the artifact branch"
+    block: "startWork validates artifact branch for plan phase"
+    target: "exitCode"
+    matcher: "equals"
+    value: 1
+
+  - id: A004
+    says: "Starting work on a slug with spec and contract creates a worktree"
+    block: "startWork creates worktree for build phase"
+    target: "worktreePath"
+    matcher: "exists"
+
+  - id: A005
+    says: "The created worktree is on the correct feature branch"
+    block: "startWork creates worktree for build phase"
+    target: "worktreeBranch"
+    matcher: "contains"
+    value: "feature/"
+
+  - id: A006
+    says: "Starting work records the build start time before worktree creation"
+    block: "startWork records build_started_at"
+    target: "saves.build_started_at"
+    matcher: "exists"
+
+  - id: A007
+    says: "Starting work on a slug with build report prints the existing worktree path"
+    block: "startWork prints worktree for verify phase"
+    target: "output"
+    matcher: "contains"
+    value: "Worktree exists"
+
+  - id: A008
+    says: "Starting work for verify records the verify start time"
+    block: "startWork records verify_started_at"
+    target: "saves.verify_started_at"
+    matcher: "exists"
+
+  - id: A009
+    says: "Starting work after a failed verify prints the worktree path for fixing"
+    block: "startWork prints worktree for fix phase"
+    target: "output"
+    matcher: "contains"
+    value: "Worktree exists"
+
+  - id: A010
+    says: "Starting work from inside the same worktree shows the current path"
+    block: "startWork handles resume from inside worktree"
+    target: "output"
+    matcher: "contains"
+    value: "Already in worktree"
+
+  - id: A011
+    says: "Starting work on a different slug from inside a worktree is rejected"
+    block: "startWork rejects cross-slug from worktree"
+    target: "errorOutput"
+    matcher: "contains"
+    value: "Switch to the main project directory first"
+
+  # Worktree creation — atomic with rollback
+  - id: A012
+    says: "Worktree creation installs dependencies"
+    block: "createWorktree runs dep install"
+    target: "depsInstalled"
+    matcher: "truthy"
+
+  - id: A013
+    says: "Worktree creation symlinks environment files from the main tree"
+    block: "createWorktree symlinks .env files"
+    target: "envSymlinked"
+    matcher: "truthy"
+
+  - id: A014
+    says: "Worktree creation writes a context file with contract assertions"
+    block: "createWorktree writes worktree-context.md"
+    target: "contextFileExists"
+    matcher: "truthy"
+
+  - id: A015
+    says: "If worktree creation fails partway through, the worktree directory is removed"
+    block: "createWorktree rolls back on failure"
+    target: "worktreeDirectoryExists"
+    matcher: "equals"
+    value: false
+
+  - id: A016
+    says: "If worktree creation fails and a new branch was created, the branch is also removed"
+    block: "createWorktree rolls back branch on failure"
+    target: "branchExists"
+    matcher: "equals"
+    value: false
+
+  - id: A017
+    says: "If the feature branch already existed before worktree creation, rollback preserves it"
+    block: "createWorktree preserves existing branch on rollback"
+    target: "branchExists"
+    matcher: "equals"
+    value: true
+
+  # In-flight migration
+  - id: A018
+    says: "When a feature branch exists but no worktree, a worktree is created from the existing branch"
+    block: "in-flight migration creates worktree from existing branch"
+    target: "worktreePath"
+    matcher: "exists"
+
+  # completeWork
+  - id: A019
+    says: "Completing work removes the worktree before deleting the branch"
+    block: "completeWork removes worktree"
+    target: "worktreeDirectoryExists"
+    matcher: "equals"
+    value: false
+
+  - id: A020
+    says: "Completing work succeeds even if the worktree was already removed manually"
+    block: "completeWork handles missing worktree"
+    target: "exitCode"
+    matcher: "equals"
+    value: 0
+
+  - id: A021
+    says: "Completing work writes worktree metadata to the proof chain entry"
+    block: "completeWork records worktree metadata"
+    target: "proofEntry.worktree.used"
+    matcher: "equals"
+    value: true
+
+  # getNextAction simplification
+  - id: A022
+    says: "Pipeline status commands no longer include git checkout prefixes"
+    block: "getNextAction returns commands without git checkout"
+    target: "nextAction"
+    matcher: "not_contains"
+    value: "git checkout"
+
+  - id: A023
+    says: "The ready-to-merge action still shows the review command without git checkout"
+    block: "getNextAction preserves ready-to-merge path"
+    target: "nextAction"
+    matcher: "contains"
+    value: "ana work complete"
+
+  # work status display
+  - id: A024
+    says: "Pipeline status shows worktree path when one exists"
+    block: "work status displays worktree info"
+    target: "output"
+    matcher: "contains"
+    value: "Worktree:"
+
+  - id: A025
+    says: "Pipeline status flags stale worktrees with zero commits after 14 days"
+    block: "work status flags stale worktrees"
+    target: "output"
+    matcher: "contains"
+    value: "stale"
+
+  # isWorktreeDirectory utility
+  - id: A026
+    says: "The worktree detection utility returns true when inside a worktree"
+    block: "isWorktreeDirectory detects worktree"
+    target: "result"
+    matcher: "equals"
+    value: true
+
+  - id: A027
+    says: "The worktree detection utility returns false in a normal git repo"
+    block: "isWorktreeDirectory detects normal repo"
+    target: "result"
+    matcher: "equals"
+    value: false
+
+  # Guards
+  - id: A028
+    says: "Running init from a worktree is rejected with a clear message"
+    block: "init guard rejects worktree"
+    target: "errorOutput"
+    matcher: "contains"
+    value: "Run init from the main project directory"
+
+  - id: A029
+    says: "Running proof commands from a worktree is rejected with a worktree-aware message"
+    block: "proof guard rejects worktree"
+    target: "errorOutput"
+    matcher: "contains"
+    value: "You're in a worktree"
+
+  - id: A030
+    says: "Running setup complete from a worktree is rejected with a clear message"
+    block: "setup guard rejects worktree"
+    target: "errorOutput"
+    matcher: "contains"
+    value: "Run setup from the main project directory"
+
+  - id: A031
+    says: "Running work complete from inside a worktree is rejected with a worktree-aware message"
+    block: "work complete guard rejects worktree"
+    target: "errorOutput"
+    matcher: "contains"
+    value: "Run work complete from the main project directory"
+
+  - id: A032
+    says: "Running scan --save from a worktree shows a warning"
+    block: "scan guard warns in worktree"
+    target: "output"
+    matcher: "contains"
+    value: "probably not intended"
+
+  # saveAllArtifacts filter
+  - id: A033
+    says: "Saving artifacts from a worktree only processes build-verify category items"
+    block: "saveAllArtifacts filters to build-verify in worktree"
+    target: "savedArtifacts"
+    matcher: "not_contains"
+    value: "planning"
+
+  # .gitignore
+  - id: A034
+    says: "The init gitignore template includes worktrees directory"
+    block: "init gitignore includes worktrees"
+    target: "gitignoreContent"
+    matcher: "contains"
+    value: "worktrees/"
+
+  # .env handling
+  - id: A035
+    says: "Environment files from the main tree are linked into the worktree"
+    block: "env files are symlinked"
+    target: "envFileIsSymlink"
+    matcher: "truthy"
+
+  - id: A036
+    says: "When symlinks fail, environment files are copied instead"
+    block: "env files fall back to copy"
+    target: "envFileExists"
+    matcher: "truthy"
+
+  # Submodule handling
+  - id: A037
+    says: "Submodules are initialized in the worktree when gitmodules exists"
+    block: "submodule init runs in worktree"
+    target: "submoduleInitRan"
+    matcher: "truthy"
+
+  # worktree-context.md content
+  - id: A038
+    says: "The worktree context file summarizes what Build should do"
+    block: "worktree-context.md has summary"
+    target: "contextContent"
+    matcher: "contains"
+    value: "## Contract Assertions"
+
+  # Template verification
+  - id: A039
+    says: "The build template no longer instructs agents to run git checkout"
+    block: "build template has no git checkout instructions"
+    target: "buildTemplateContent"
+    matcher: "not_contains"
+    value: "git checkout -b"
+
+  - id: A040
+    says: "The build template tells agents to enter the worktree"
+    block: "build template references worktree entry"
+    target: "buildTemplateContent"
+    matcher: "contains"
+    value: "Enter the Worktree"
+
+  - id: A041
+    says: "The verify template tells agents to enter the worktree"
+    block: "verify template references worktree entry"
+    target: "verifyTemplateContent"
+    matcher: "contains"
+    value: "Enter the Worktree"
+
+  - id: A042
+    says: "The build template warns against running git checkout from the worktree"
+    block: "build template has NEVER checkout warning"
+    target: "buildTemplateContent"
+    matcher: "contains"
+    value: "NEVER run"
+
+  - id: A043
+    says: "Dogfood build agent matches the template exactly"
+    block: "dogfood build matches template"
+    target: "filesIdentical"
+    matcher: "truthy"
+
+  - id: A044
+    says: "Dogfood verify agent matches the template exactly"
+    block: "dogfood verify matches template"
+    target: "filesIdentical"
+    matcher: "truthy"
+
+  # Existing behavior preserved
+  - id: A045
+    says: "All existing tests continue to pass after changes"
+    block: "existing tests pass"
+    target: "testsPassed"
+    matcher: "greater"
+    value: 1882
+
+file_changes:
+  - path: "packages/cli/src/utils/worktree.ts"
+    action: create
+  - path: "packages/cli/src/commands/work.ts"
+    action: modify
+  - path: "packages/cli/src/commands/artifact.ts"
+    action: modify
+  - path: "packages/cli/src/commands/proof.ts"
+    action: modify
+  - path: "packages/cli/src/commands/init/index.ts"
+    action: modify
+  - path: "packages/cli/src/commands/init/assets.ts"
+    action: modify
+  - path: "packages/cli/src/commands/setup.ts"
+    action: modify
+  - path: "packages/cli/templates/.claude/agents/ana-build.md"
+    action: modify
+  - path: "packages/cli/templates/.claude/agents/ana-verify.md"
+    action: modify
+  - path: ".claude/agents/ana-build.md"
+    action: modify
+  - path: ".claude/agents/ana-verify.md"
+    action: modify
+  - path: "packages/cli/tests/utils/worktree.test.ts"
+    action: create
+  - path: "packages/cli/tests/commands/work.test.ts"
+    action: modify
