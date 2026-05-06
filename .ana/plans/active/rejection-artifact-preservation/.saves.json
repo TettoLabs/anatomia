@@ -27,5 +27,18 @@
   "modules_touched": [
     "packages/cli/src/commands/artifact.ts",
     "packages/cli/tests/commands/artifact.test.ts"
-  ]
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:e3cbee6d7997a2b7bdd907e87623e77c2630f42eaafc3db42481d9d0cbe79f10",
+    "run_at": "2026-05-06T19:10:24.725Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-06T19:10:24.761Z",
+    "hash": "sha256:9f2622d68139e4aaaa86093c8441650c3f2956505854aef9dbb7e11a863a8f2d"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-06T19:10:24.761Z",
+    "hash": "sha256:4b30fc11d3dd01610585c6d30ec1334ad5def8076f0431f8d9ff3eddeeeb4155"
+  }
 }
