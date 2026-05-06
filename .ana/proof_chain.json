@@ -13460,6 +13460,444 @@
           "suggested_action": "accept"
         }
       ]
+    },
+    {
+      "slug": "worktree-isolation",
+      "feature": "Worktree Isolation",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 45,
+        "satisfied": 45,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Starting work on a new slug creates its directory and records the start time",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "Starting work on a slug with only a scope records the plan start time",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Starting work on a slug with only a scope validates the artifact branch",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "Starting work on a slug with spec and contract creates a worktree",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "The created worktree is on the correct feature branch",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "Starting work records the build start time before worktree creation",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "Starting work on a slug with build report prints the existing worktree path",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "Starting work for verify records the verify start time",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "Starting work after a failed verify prints the worktree path for fixing",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "Starting work from inside the same worktree shows the current path",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "Starting work on a different slug from inside a worktree is rejected",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "Worktree creation installs dependencies",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "Worktree creation symlinks environment files from the main tree",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "Worktree creation writes a context file with contract assertions",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "If worktree creation fails partway through, the worktree directory is removed",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "If worktree creation fails and a new branch was created, the branch is also removed",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A017",
+          "says": "If the feature branch already existed before worktree creation, rollback preserves it",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A018",
+          "says": "When a feature branch exists but no worktree, a worktree is created from the existing branch",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A019",
+          "says": "Completing work removes the worktree before deleting the branch",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A020",
+          "says": "Completing work succeeds even if the worktree was already removed manually",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A021",
+          "says": "Completing work writes worktree metadata to the proof chain entry",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A022",
+          "says": "Pipeline status commands no longer include git checkout prefixes",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A023",
+          "says": "The ready-to-merge action still shows the review command without git checkout",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A024",
+          "says": "Pipeline status shows worktree path when one exists",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A025",
+          "says": "Pipeline status flags stale worktrees with zero commits after 14 days",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A026",
+          "says": "The worktree detection utility returns true when inside a worktree",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A027",
+          "says": "The worktree detection utility returns false in a normal git repo",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A028",
+          "says": "Running init from a worktree is rejected with a clear message",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A029",
+          "says": "Running proof commands from a worktree is rejected with a worktree-aware message",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A030",
+          "says": "Running setup complete from a worktree is rejected with a clear message",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A031",
+          "says": "Running work complete from inside a worktree is rejected with a worktree-aware message",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A032",
+          "says": "Running scan --save from a worktree shows a warning",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A033",
+          "says": "Saving artifacts from a worktree only processes build-verify category items",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A034",
+          "says": "The init gitignore template includes worktrees directory",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A035",
+          "says": "Environment files from the main tree are linked into the worktree",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A036",
+          "says": "When symlinks fail, environment files are copied instead",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A037",
+          "says": "Submodules are initialized in the worktree when gitmodules exists",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A038",
+          "says": "The worktree context file summarizes what Build should do",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A039",
+          "says": "The build template no longer instructs agents to run git checkout",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A040",
+          "says": "The build template tells agents to enter the worktree",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A041",
+          "says": "The verify template tells agents to enter the worktree",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A042",
+          "says": "The build template warns against running git checkout from the worktree",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A043",
+          "says": "Dogfood build agent matches the template exactly",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A044",
+          "says": "Dogfood verify agent matches the template exactly",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A045",
+          "says": "All existing tests continue to pass after changes",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 33,
+        "met": 30
+      },
+      "timing": {
+        "total_minutes": 99,
+        "think": 3,
+        "plan": 22,
+        "build": 63,
+        "verify": 11
+      },
+      "hashes": {
+        "scope": "sha256:6b17d465e1d0bd62a27f66c9071710d63be02923028f45094afd744ec584c823",
+        "contract": "sha256:bd850d83d0dd9f47973e390afdbe0bcd201b71484595d37f5f769d0f40e14efb",
+        "plan": "sha256:0b63de58317929362a333e69bc1772b2585d88ac6c8b87047a83afc2d3222ef6",
+        "spec": "sha256:ed50f8accbf1c6d8e7931407a2ce2bb009cb7e9cc0c27c2f66457c7a665968de",
+        "build-report": "sha256:6b53ba8c3769754bd47a6ffc0b8891506c244fa4703d5f42b999b80945ab47c7",
+        "build-data": "sha256:aa93ff28f08d594af75c4ed1deb22783238cb4c87aef5272ff6b911e272f8941",
+        "verify-report": "sha256:a77523d102228eb933950e5748046b12497559958159dd445e8841ea4e5ce550",
+        "verify-data": "sha256:8de0ff181d4d4afbb6b233ec4f9cbe9b1a3795fe17b26dcc82f9c3289c7144d2"
+      },
+      "completed_at": "2026-05-06T10:21:53.862Z",
+      "modules_touched": [
+        ".claude/agents/ana-build.md",
+        ".claude/agents/ana-verify.md",
+        "packages/cli/src/commands/artifact.ts",
+        "packages/cli/src/commands/init/assets.ts",
+        "packages/cli/src/commands/init/index.ts",
+        "packages/cli/src/commands/proof.ts",
+        "packages/cli/src/commands/scan.ts",
+        "packages/cli/src/commands/setup.ts",
+        "packages/cli/src/commands/work.ts",
+        "packages/cli/src/types/proof.ts",
+        "packages/cli/src/utils/worktree.ts",
+        "packages/cli/templates/.claude/agents/ana-build.md",
+        "packages/cli/templates/.claude/agents/ana-verify.md",
+        "packages/cli/tests/commands/work.test.ts",
+        "packages/cli/tests/utils/worktree.test.ts"
+      ],
+      "scope_summary": "The pipeline shares a single working directory and git index across all agents. The branch dance — switching, stashing, validating, recovering — is template-enforced, not mechanically enforced. 30+ lines of branch management instructions tell agents what to do. Nothing prevents them from doing it wrong. This produced a real data corruption incident (ANA-CLI-034: two Plan agents shared a git index, one committed the other's staged files) and creates daily friction (stashing, blocking, wrong-branch errors).",
+      "findings": [
+        {
+          "category": "test",
+          "summary": "A021 has no tagged test — verified by source inspection only",
+          "file": "packages/cli/src/commands/work.ts",
+          "anchor": null,
+          "line": 1257,
+          "severity": "debt",
+          "suggested_action": "scope",
+          "related_assertions": [
+            "A021"
+          ],
+          "id": "worktree-isolation-C1",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "Phase detection logic (A001-A003, A006-A011) has no dedicated tagged tests",
+          "file": "packages/cli/src/commands/work.ts",
+          "anchor": null,
+          "severity": "debt",
+          "suggested_action": "scope",
+          "id": "worktree-isolation-C2",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "Guard commands (A028-A032) have no integration tests",
+          "file": "packages/cli/src/commands/init/index.ts",
+          "anchor": null,
+          "severity": "debt",
+          "suggested_action": "monitor",
+          "id": "worktree-isolation-C3",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "A012 and A037 use typeof assertions instead of value assertions",
+          "file": "packages/cli/tests/utils/worktree.test.ts",
+          "anchor": null,
+          "line": 186,
+          "severity": "debt",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A012",
+            "A037"
+          ],
+          "id": "worktree-isolation-C4",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "branchExists exported only for test imports — not used by production code",
+          "file": "packages/cli/src/utils/worktree.ts",
+          "anchor": null,
+          "line": 526,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "worktree-isolation-C5",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "isWorktreeDirectory false-positive risk in git submodules",
+          "file": "packages/cli/src/utils/worktree.ts",
+          "anchor": null,
+          "line": 54,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "worktree-isolation-C6",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "detectWorktreeSlug path-based detection fragile if project root contains .ana/worktrees/",
+          "file": "packages/cli/src/utils/worktree.ts",
+          "anchor": null,
+          "line": 76,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "worktree-isolation-C7",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "proof.ts WRONG_BRANCH primary error still says 'Switch to main' even in worktree context",
+          "file": "packages/cli/src/commands/proof.ts",
+          "anchor": null,
+          "line": 752,
+          "severity": "observation",
+          "suggested_action": "scope",
+          "id": "worktree-isolation-C8",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "Spec estimated 50-55 new tests; build delivered 28",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "worktree-isolation-C9",
+          "status": "lesson"
+        }
+      ],
+      "rejection_cycles": 1,
+      "previous_failures": [
+        {
+          "id": "A021",
+          "summary": "No code in `completeWork` or `writeProofChain` writes worktree metadata"
+        }
+      ],
+      "build_concerns": [
+        {
+          "summary": "Phase detection globSync could be slow with many plans",
+          "file": "packages/cli/src/commands/work.ts",
+          "severity": "observation",
+          "suggested_action": "monitor"
+        },
+        {
+          "summary": "process.exit in startWork prevents unit testing phase detection",
+          "file": "packages/cli/src/commands/work.ts",
+          "severity": "debt",
+          "suggested_action": "scope"
+        },
+        {
+          "summary": "Pre-existing lint warning in git-operations.ts (unused eslint-disable)",
+          "file": "packages/cli/src/utils/git-operations.ts",
+          "severity": "observation",
+          "suggested_action": "accept"
+        },
+        {
+          "summary": "_branchPrefix parameter in getNextAction is unused",
+          "file": "packages/cli/src/commands/work.ts",
+          "severity": "debt",
+          "suggested_action": "accept"
+        },
+        {
+          "summary": "11 phase detection contract assertions lack dedicated tagged tests",
+          "file": null,
+          "severity": "debt",
+          "suggested_action": "monitor"
+        },
+        {
+          "summary": "5 guard contract assertions lack dedicated tagged tests",
+          "file": null,
+          "severity": "observation",
+          "suggested_action": "monitor"
+        }
+      ],
+      "worktree": {
+        "used": false,
+        "created_at": "2026-05-06T08:00:37.276Z",
+        "completed_at": "2026-05-06T10:21:53.858Z",
+        "commit_count": 0
+      }
     }
   ],
   "schema": 1

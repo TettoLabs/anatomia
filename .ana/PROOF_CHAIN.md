@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-54 runs · 76 active · 66 lessons · 0 promoted · 159 closed
+55 runs · 84 active · 67 lessons · 0 promoted · 159 closed
 
 ## Hot Modules
 
@@ -8,39 +8,31 @@
 |------|--------|--------|
 | packages/cli/tests/commands/proof.test.ts | 10 | 4 |
 | packages/cli/tests/commands/work.test.ts | 8 | 6 |
+| packages/cli/src/commands/proof.ts | 7 | 5 |
 | packages/cli/src/utils/proofSummary.ts | 6 | 5 |
-| packages/cli/src/commands/proof.ts | 6 | 4 |
-| packages/cli/tests/templates/agent-proof-context.test.ts | 3 | 2 |
+| packages/cli/src/commands/work.ts | 5 | 4 |
 
 ## Promoted Rules
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 76 total)
-
-### .github/workflows/release.yml
-
-- **code:** release.yml copies README/CHANGELOG separately from prepublishOnly — two sources of truth for doc copying — *V1 Release Prep*
+## Active Findings (30 shown of 84 total)
 
 ### .husky/pre-commit
 
 - **code:** Pre-commit filter also skips for .claude/-only commits — broader than contract A006 specifies (only mentions .ana/). Pragmatic but unspecified. — *Proof System Near-Term — Learn Infrastructure Foundation*
-- **code:** Pre-commit comment claims ~9s / 10s threshold — will drift as test count grows (1807 now) — *V1 Code Changes*
-
-### package.json
-
-- **code:** Release script 'cd packages/cli && npm version' requires a semver argument — no guard or help text — *V1 Release Prep*
-
-### packages/cli/package.json
-
-- **code:** npm pack dry-run doesn't include README.md or CHANGELOG.md — prepublishOnly required first — *V1 Release Prep*
 
 ### packages/cli/src/commands/agents.ts
 
 - **code:** agents.ts file header comment still says 'List deployed agents' — stale after description change — *CLI UX Polish — First 10 Minutes*
 
+### packages/cli/src/commands/init/index.ts
+
+- **test:** Guard commands (A028-A032) have no integration tests — *Worktree Isolation*
+
 ### packages/cli/src/commands/proof.ts
 
+- **code:** proof.ts WRONG_BRANCH primary error still says 'Switch to main' even in worktree context — *Worktree Isolation*
 - **code:** pullBeforeRead calls process.exit(1) on rebase conflict without running git rebase --abort first — leaves dirty rebase state — *Proof System Near-Term — Learn Infrastructure Foundation*
 - **code:** Audit severity filter uses reverse-index splice loop — O(n²) on large finding sets; Array.filter() would be clearer and faster — *Proof System Near-Term — Learn Infrastructure Foundation*
 - **code:** Lesson command catch block at proof.ts:1141 loses error detail — swallows commit failure cause — *Proof Intelligence Hardening*
@@ -48,6 +40,8 @@
 
 ### packages/cli/src/commands/work.ts
 
+- **test:** A021 has no tagged test — verified by source inspection only — *Worktree Isolation*
+- **test:** Phase detection logic (A001-A003, A006-A011) has no dedicated tagged tests — *Worktree Isolation*
 - **code:** guardFailResult JSDoc first line says 'Write proof chain files' — copy-paste from writeProofChain description — *Proof Intelligence Hardening*
 
 ### packages/cli/src/engine/detectors/git.ts
@@ -57,15 +51,16 @@
 ### packages/cli/src/utils/git-operations.ts
 
 - **code:** getCurrentBranch still uses execSync — not hardened by this phase — *Security Hardening — Command Injection Elimination*
-- **code:** runGit defaults exitCode to 1 when spawnSync returns null status (signal kill). This is reasonable but means SIGKILL'd git processes appear as generic failures — no way to distinguish 'command failed' from 'process was killed'. Acceptable for CLI use. — *Security Hardening — Command Injection Elimination*
-
-### packages/cli/src/utils/proofSummary.ts
-
-- **code:** proofSummary.ts ~1550 lines — past comfort threshold, known from prior cycles — *V1 Code Changes*
 
 ### packages/cli/src/utils/validators.ts
 
 - **code:** SLUG_PATTERN exported but only consumed by test file — no source imports the raw regex — *Security Hardening — Command Injection Elimination*
+
+### packages/cli/src/utils/worktree.ts
+
+- **code:** branchExists exported only for test imports — not used by production code — *Worktree Isolation*
+- **code:** isWorktreeDirectory false-positive risk in git submodules — *Worktree Isolation*
+- **code:** detectWorktreeSlug path-based detection fragile if project root contains .ana/worktrees/ — *Worktree Isolation*
 
 ### packages/cli/tests/commands/check.test.ts
 
@@ -89,7 +84,10 @@
 
 - **test:** A010 test mocks process.exit — after mock, readArtifactBranch continues and returns invalid branch to caller. Correct in production but test pattern allows post-exit execution. — *Security Hardening — Command Injection Elimination*
 - **test:** Enforcement test (A023) asserts on source code content via grep — violates testing-standards skill rule 'never assert on source code content' but is the only practical way to enforce convention. Spec explicitly requested this pattern. — *Security Hardening — Command Injection Elimination*
-- **test:** Enforcement test comment-filter heuristic checks line prefix only (starts with //, *, /*). An execSync buried mid-line after non-comment code wouldn't be caught if the line also starts with a comment-like pattern. Low probability given codebase conventions. — *Security Hardening — Command Injection Elimination*
+
+### packages/cli/tests/utils/worktree.test.ts
+
+- **test:** A012 and A037 use typeof assertions instead of value assertions — *Worktree Isolation*
 
 ### General
 
@@ -97,5 +95,4 @@
 - **test:** No contract assertions are covered by @ana-tagged tests — all verified by source inspection and live invocation only — *CLI UX Polish — First 10 Minutes*
 - **test:** No test coverage for pre-commit bypass behavior (A006/A007) — shell hook not exercised in vitest suite — *Proof System Near-Term — Learn Infrastructure Foundation*
 - **test:** No dedicated integration tests for command entry point injection rejection — saveArtifact, completeWork, createPr, strengthen — *Security Hardening — Command Injection Elimination*
-- **test:** No dedicated tests for v1-release-prep contract — assertions verified by source inspection only — *V1 Release Prep*
 
