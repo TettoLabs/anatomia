@@ -1,0 +1,51 @@
+/* License — eyebrow/title from manifesto, monospace body for license text. */
+
+.article {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 0 8px;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-45);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+.eyebrow::before {
+  content: "";
+  width: 18px;
+  height: 1px;
+  background: var(--color-brand);
+}
+
+.title {
+  font-family: var(--font-serif);
+  font-size: clamp(40px, 5.2vw, 56px);
+  font-weight: 400;
+  font-style: italic;
+  line-height: 1.06;
+  letter-spacing: -0.02em;
+  color: var(--fg-strong);
+  margin-bottom: 40px;
+  max-width: 16ch;
+}
+.title :global(em) {
+  font-style: italic;
+  color: var(--color-brand);
+}
+
+.licenseBody {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--ink-75);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
