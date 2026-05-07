@@ -16,5 +16,47 @@
   "spec": {
     "saved_at": "2026-05-07T06:46:56.537Z",
     "hash": "sha256:fd5db807b1f30764296a789fd2da19e419f4b25c28d5887c472c6db7441e6e94"
-  }
+  },
+  "build_started_at": "2026-05-07T07:03:17.925Z",
+  "build_agent": "ana-build",
+  "build-report": {
+    "saved_at": "2026-05-07T07:18:00.811Z",
+    "hash": "sha256:1c915b38da964cdb2359a563c60d049232f725891a1327184c46939c923c076e"
+  },
+  "build-data": {
+    "saved_at": "2026-05-07T07:18:00.812Z",
+    "hash": "sha256:684d71bfa6f275c429200b0536ad45c14139e4b03feb28155142cc2b6559eb85"
+  },
+  "modules_touched": [
+    "website/app/(marketing)/about/page.tsx",
+    "website/app/(marketing)/changelog/page.tsx",
+    "website/app/(marketing)/cli/page.tsx",
+    "website/app/(marketing)/contact/page.tsx",
+    "website/app/(marketing)/docs/page.tsx",
+    "website/app/(marketing)/examples/page.tsx",
+    "website/app/(marketing)/license/page.tsx",
+    "website/app/(marketing)/manifesto/page.tsx",
+    "website/app/(sub)/layout.tsx",
+    "website/app/sitemap.ts",
+    "website/components/about/About.tsx",
+    "website/components/about/about.module.css",
+    "website/components/bento/tiles/AgentsTile.tsx",
+    "website/components/changelog/Changelog.tsx",
+    "website/components/changelog/changelog.module.css",
+    "website/components/cli-ref/CliRef.tsx",
+    "website/components/cli-ref/cli-ref.module.css",
+    "website/components/docs/DocsNext.tsx",
+    "website/components/examples/Examples.tsx",
+    "website/components/examples/examples.module.css",
+    "website/components/footer/Footer.tsx",
+    "website/components/hero/Hero.tsx",
+    "website/components/license/License.tsx",
+    "website/components/license/license.module.css",
+    "website/components/nav/Nav.tsx",
+    "website/components/nav/NavMobile.tsx",
+    "website/components/proof-feed/ProofFeed.tsx",
+    "website/components/sub-nav/SubNav.tsx",
+    "website/lib/copy.ts",
+    "website/lib/proof-feed.ts"
+  ]
 }
