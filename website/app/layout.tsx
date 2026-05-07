@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { geistSans, geistMono, fraunces } from "./fonts";
+import { AnalyticsProvider } from "@/lib/analytics";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -57,7 +58,7 @@ export default function RootLayout({
           Skip to main content
         </a>
         {children}
-        {/* Analytics provider: wire PostHog here when ready */}
+        <AnalyticsProvider />
       </body>
     </html>
   );
