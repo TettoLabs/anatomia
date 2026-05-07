@@ -49,21 +49,62 @@ function mockFeed(): ProofEntry[] {
   ];
 }
 
+const PROOF_CHAIN_URL =
+  "https://raw.githubusercontent.com/TettoLabs/anatomia/main/.ana/proof_chain.json";
+
+interface ProofChainEntry {
+  slug: string;
+  feature: string;
+  result: string;
+  contract: { total: number; satisfied: number };
+  hashes: { scope: string };
+  completed_at: string;
+}
+
+function extractFeatureEm(feature: string): string {
+  const beforeDash = feature.split(" — ")[0];
+  return beforeDash.split(/\s+/).slice(0, 3).join(" ");
+}
+
+function mapEntry(entry: ProofChainEntry): ProofEntry {
+  return {
+    version: "v1.0.2",
+    hash: entry.hashes.scope.slice(7, 14),
+    ts: entry.completed_at,
+    kind: entry.slug.startsWith("fix-") ? "fix" : "feature",
+    feat: entry.feature,
+    feature_em: extractFeatureEm(entry.feature),
+    assertions: entry.contract.total,
+    passed: entry.contract.satisfied,
+    url: `#proof-${entry.slug}`,
+  };
+}
+
 /**
  * Returns proof feed entries. Every component that shows proof data
  * calls this function — Next.js deduplicates across components.
  *
- * To wire to real data, replace the body:
- *
- *   const res = await fetch(
- *     "https://api.github.com/repos/TettoLabs/anatomia/commits?per_page=8",
- *     { next: { revalidate: 60 }, headers: { "User-Agent": "anatomia-web" } }
- *   );
- *   // Cross-reference each sha with proof_chain.json in the repo
- *   // to pull { assertions, passed, kind, feature }.
+ * Fetches from GitHub raw API and maps proof chain entries to ProofEntry.
+ * Falls back to mock data when GitHub is unreachable.
  */
 export async function getProofFeed(): Promise<ProofEntry[]> {
-  return mockFeed();
+  try {
+    const res = await fetch(PROOF_CHAIN_URL, {
+      next: { revalidate: 60 },
+      headers: { "User-Agent": "anatomia-web" },
+    });
+    if (!res.ok) return mockFeed();
+
+    const data: { entries: ProofChainEntry[] } = await res.json();
+    if (!data.entries || data.entries.length === 0) return [];
+
+    return data.entries
+      .sort((a, b) => new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime())
+      .slice(0, 6)
+      .map(mapEntry);
+  } catch {
+    return mockFeed();
+  }
 }
 
 /** "30s ago" / "4m ago" / "3h ago" / "2d ago" */
