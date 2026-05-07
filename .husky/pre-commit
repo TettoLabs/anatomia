@@ -12,7 +12,7 @@ set -e
 # (proof chain updates, skill edits, agent definitions — no TypeScript to check)
 STAGED_FILES=$(git diff --cached --name-only)
 if [ -n "$STAGED_FILES" ]; then
-  NON_ANA_FILES=$(echo "$STAGED_FILES" | grep -v '^\.ana/' | grep -v '^\.claude/' || true)
+  NON_ANA_FILES=$(echo "$STAGED_FILES" | grep -v '^\.ana/' | grep -v '^\.claude/' | grep -v '^website/' || true)
   if [ -z "$NON_ANA_FILES" ]; then
     exit 0
   fi

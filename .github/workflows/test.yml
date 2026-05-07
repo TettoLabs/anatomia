@@ -35,12 +35,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build packages
+      - name: Build CLI
         # Build runs `pnpm typecheck && tsup` internally (Item 1), so this
-        # step also gates production type errors. Kept separate from the
-        # test-typecheck step below because that file's tsconfig is
-        # different and the failures look different in CI logs.
-        run: pnpm build
+        # step also gates production type errors. Scoped to CLI only —
+        # the website has its own CI job. Avoids 6 matrix runners each
+        # building Next.js unnecessarily.
+        run: pnpm --filter anatomia-cli build
 
       - name: Typecheck tests
         # Item 19: test files have their own tsconfig.test.json so that
