@@ -40,5 +40,20 @@
     "website/components/pricing/Pricing.tsx",
     "website/components/pricing/pricing.module.css",
     "website/lib/copy.ts"
-  ]
+  ],
+  "verify_started_at": "2026-05-07T17:44:31.539Z",
+  "verify_agent": "ana-verify",
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:de97c7400321271c3ec4625fb1e0e0d459fef05494aefa15d6c4ac03b86c6b3f",
+    "run_at": "2026-05-07T17:49:22.965Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-07T17:49:22.996Z",
+    "hash": "sha256:aaf8f9f6b5a26745149415b09947b1b55203565d774163dd4963bb4852463970"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-07T17:49:22.996Z",
+    "hash": "sha256:9545dffd3c068e47b3025fc999e09470093e7979a70e1cfbed99708a7ef8bfba"
+  }
 }
