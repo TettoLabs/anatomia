@@ -98,18 +98,19 @@ export async function Footer() {
           <span>{copy.footer.legal}</span>
 
           {latest && (
-            <a
-              href={latest.url}
-              className="border-b pb-px transition-colors duration-150"
+            <span
+              className="rounded-full"
               style={{
                 color: "var(--ink-60)",
-                borderColor: "var(--ink-15)",
+                padding: "3px 10px",
+                border: "1px solid var(--border-soft)",
+                background: "var(--bg-elev)",
               }}
             >
               <span style={{ color: "var(--ink-45)" }}>commit</span> ·{" "}
               <span>{latest.hash}</span> ·{" "}
               <span>{formatAge(latest.ts)}</span>
-            </a>
+            </span>
           )}
         </div>
       </Container>

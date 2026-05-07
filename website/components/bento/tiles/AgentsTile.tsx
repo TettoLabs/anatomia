@@ -5,7 +5,7 @@ const { agents } = copy.bento;
 
 export function AgentsTile() {
   return (
-    <div className={`${styles.tile} ${styles.tAgents}`}>
+    <div id="agents" className={`${styles.tile} ${styles.tAgents}`}>
       <div className={styles.tilePad}>
         <div className={styles.tileEyebrow}>
           <span className={styles.tileNum}>{agents.num}</span>

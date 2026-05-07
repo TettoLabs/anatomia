@@ -96,7 +96,7 @@ export function NavMobile() {
           {/* Bottom CTA */}
           <div className="px-6 pb-8">
             <Link
-              href="#pricing"
+              href="/#pricing"
               onClick={close}
               className="flex w-full items-center justify-center gap-2 rounded-[var(--radius-sm)] py-3.5 font-mono text-sm font-semibold"
               style={{ background: "var(--fg-strong)", color: "var(--bg)" }}

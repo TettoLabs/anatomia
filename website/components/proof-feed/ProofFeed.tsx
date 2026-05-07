@@ -86,10 +86,9 @@ export async function ProofFeed() {
 
           <div className={styles.feed} role="list">
             {entries.map((e) => (
-              <a
+              <div
                 key={e.hash}
                 className={styles.proofRow}
-                href={e.url}
                 role="listitem"
               >
                 <span className={styles.rowHash}>{e.hash}</span>
@@ -103,12 +102,7 @@ export async function ProofFeed() {
                   <span className={styles.rowAssertPass}>{e.passed}</span>/{e.assertions}
                 </span>
                 <span className={styles.rowAgo}>{formatAge(e.ts)}</span>
-                <span className={styles.rowArrow} aria-hidden="true">
-                  <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-                    <path d="M2 5.5h7M6 2.5l3 3-3 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </span>
-              </a>
+              </div>
             ))}
           </div>
 

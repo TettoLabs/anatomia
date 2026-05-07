@@ -43,15 +43,14 @@ export async function Nav() {
           </Link>
 
           {latest && (
-            <a
-              href={latest.url}
-              className="hidden items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 font-mono text-[11px] no-underline transition-all duration-150 min-[900px]:inline-flex"
+            <span
+              className="hidden items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 font-mono text-[11px] min-[900px]:inline-flex"
               style={{
                 color: "var(--ink-60)",
                 background: "var(--bg-elev)",
                 border: "1px solid var(--border-soft)",
               }}
-              aria-label="Latest release proof"
+              aria-label="Latest release"
             >
               <span
                 className="h-1.5 w-1.5 rounded-full"
@@ -63,7 +62,7 @@ export async function Nav() {
               <span>{latest.version}</span>
               <span> · </span>
               <span>{formatAge(latest.ts)}</span>
-            </a>
+            </span>
           )}
         </div>
 
@@ -100,7 +99,7 @@ export async function Nav() {
           </a>
 
           <Link
-            href="#pricing"
+            href="/#pricing"
             className="nav-cta hidden items-center gap-2 whitespace-nowrap rounded-[var(--radius-sm)] px-[16px] py-[9px] font-mono text-[12.5px] font-semibold transition-all duration-150 hover:-translate-y-px sm:inline-flex"
             style={{
               color: "var(--color-brand-ink)",
