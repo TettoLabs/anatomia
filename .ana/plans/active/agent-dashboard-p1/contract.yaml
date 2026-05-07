@@ -52,7 +52,8 @@ assertions:
     says: "Clearing a model removes the model line from frontmatter"
     block: "model clear with --default removes model line"
     target: "frontmatter.model"
-    matcher: "exists"
+    matcher: "equals"
+    value: null
 
   - id: A008
     says: "Clearing a model confirms the agent will use the default"
