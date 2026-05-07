@@ -1,0 +1,194 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Ship Log Polish"
+
+assertions:
+  # Website copy fixes
+  - id: A001
+    says: "The ship log headline says 'receipts' instead of 'commits'"
+    block: "headTitle copy reads 'Every change has receipts'"
+    target: "copy.proofFeed.headTitle"
+    matcher: "contains"
+    value: "receipts"
+
+  - id: A002
+    says: "No instance of the word 'commit' appears in ship log copy"
+    block: "no 'commit' or 'commits' in proof feed copy"
+    target: "copy.proofFeed"
+    matcher: "not_contains"
+    value: "commit"
+
+  - id: A003
+    says: "The proof chain link points to PROOF_CHAIN.md on GitHub"
+    block: "footer link points to PROOF_CHAIN.md"
+    target: "copy.proofFeed.footLink.href"
+    matcher: "contains"
+    value: "PROOF_CHAIN.md"
+
+  - id: A004
+    says: "The footer label reads 'Full proof chain'"
+    block: "footer label says 'Full proof chain'"
+    target: "copy.proofFeed.footLink.label"
+    matcher: "contains"
+    value: "Full proof chain"
+
+  - id: A005
+    says: "The collapsed header says 'verified changes' not 'commits'"
+    block: "collapsed header text says 'verified changes'"
+    target: "ProofFeed.kOpen.text"
+    matcher: "contains"
+    value: "verified changes"
+
+  # Tag display
+  - id: A006
+    says: "Feature tags display as 'feature', not 'new'"
+    block: "kindLabel maps feature to 'feature'"
+    target: "kindLabel.feature"
+    matcher: "equals"
+    value: "feature"
+
+  - id: A007
+    says: "Fix tags display as 'fix'"
+    block: "kindLabel maps fix to 'fix'"
+    target: "kindLabel.fix"
+    matcher: "equals"
+    value: "fix"
+
+  - id: A008
+    says: "Chore tags display as 'improve'"
+    block: "kindLabel maps chore to 'improve'"
+    target: "kindLabel.chore"
+    matcher: "equals"
+    value: "improve"
+
+  # Kind field on types
+  - id: A009
+    says: "Proof chain entries can carry a classification kind"
+    block: "ProofChainEntry has optional kind field"
+    target: "ProofChainEntry.kind"
+    matcher: "exists"
+
+  - id: A010
+    says: "Proof summaries can carry a classification kind"
+    block: "ProofSummary has optional kind field"
+    target: "ProofSummary.kind"
+    matcher: "exists"
+
+  # Parser
+  - id: A011
+    says: "A scope with Kind: fix is correctly parsed as fix"
+    block: "extractScopeKind parses fix from scope"
+    target: "result"
+    matcher: "equals"
+    value: "fix"
+
+  - id: A012
+    says: "A scope with Kind: feature is correctly parsed as feature"
+    block: "extractScopeKind parses feature from scope"
+    target: "result"
+    matcher: "equals"
+    value: "feature"
+
+  - id: A013
+    says: "A scope with Kind: chore is correctly parsed as chore"
+    block: "extractScopeKind parses chore from scope"
+    target: "result"
+    matcher: "equals"
+    value: "chore"
+
+  - id: A014
+    says: "A scope with a capitalized Kind value is still parsed correctly"
+    block: "extractScopeKind handles case-insensitive values"
+    target: "result"
+    matcher: "equals"
+    value: "feature"
+
+  - id: A015
+    says: "An invalid kind value is rejected gracefully"
+    block: "extractScopeKind returns undefined for invalid kind"
+    target: "result"
+    matcher: "equals"
+    value: undefined
+
+  - id: A016
+    says: "A scope without a Kind line returns undefined without crashing"
+    block: "extractScopeKind returns undefined when Kind line missing"
+    target: "result"
+    matcher: "equals"
+    value: undefined
+
+  - id: A017
+    says: "A missing scope file returns undefined without crashing"
+    block: "extractScopeKind returns undefined for nonexistent file"
+    target: "result"
+    matcher: "equals"
+    value: undefined
+
+  # Wiring
+  - id: A018
+    says: "The proof summary generator extracts kind from scope"
+    block: "generateProofSummary calls extractScopeKind"
+    target: "summary.kind"
+    matcher: "exists"
+
+  - id: A019
+    says: "The proof chain writer passes kind through to the entry"
+    block: "writeProofChain includes kind in entry"
+    target: "entry.kind"
+    matcher: "exists"
+
+  # Website wiring
+  - id: A020
+    says: "The website prefers explicit kind from the proof chain entry"
+    block: "mapEntry uses entry.kind when present"
+    target: "mapped.kind"
+    matcher: "equals"
+    value: "fix"
+
+  - id: A021
+    says: "Old entries without kind fall back to slug-based classification"
+    block: "mapEntry falls back to slug heuristic when kind missing"
+    target: "mapped.kind"
+    matcher: "equals"
+    value: "feature"
+
+  - id: A022
+    says: "The website TypeScript interface accepts the kind field from the API"
+    block: "ProofEntry interface includes kind field"
+    target: "ProofEntry.kind"
+    matcher: "exists"
+
+  # Templates
+  - id: A023
+    says: "The scope template tells Ana Think to classify work by kind"
+    block: "template ana.md includes Kind in Complexity Assessment"
+    target: "template.complexityAssessment"
+    matcher: "contains"
+    value: "**Kind:**"
+
+  - id: A024
+    says: "The dogfood ana.md matches the template's Kind line"
+    block: "dogfood ana.md includes Kind in Complexity Assessment"
+    target: "dogfood.complexityAssessment"
+    matcher: "contains"
+    value: "**Kind:**"
+
+file_changes:
+  - path: "website/lib/copy.ts"
+    action: modify
+  - path: "website/components/proof-feed/ProofFeed.tsx"
+    action: modify
+  - path: "website/components/proof-feed/proof-feed.module.css"
+    action: modify
+  - path: "website/lib/proof-feed.ts"
+    action: modify
+  - path: "packages/cli/src/types/proof.ts"
+    action: modify
+  - path: "packages/cli/src/utils/proofSummary.ts"
+    action: modify
+  - path: "packages/cli/src/commands/work.ts"
+    action: modify
+  - path: "packages/cli/templates/.claude/agents/ana.md"
+    action: modify
+  - path: ".claude/agents/ana.md"
+    action: modify
