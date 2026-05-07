@@ -637,7 +637,7 @@ describe('parseFindings', () => {
     expect(findings[1]!.file).toBeNull();
   });
 
-  it('returns empty array when no Callouts section in verify report', () => {
+  it('returns empty array when no Findings section in verify report', () => {
     const content = `## Independent Findings
 Some findings here.
 
@@ -647,7 +647,7 @@ Some ACs here.
     expect(parseFindings(content)).toHaveLength(0);
   });
 
-  it('returns empty array when Callouts section in verify report has no parseable entries', () => {
+  it('returns empty array when Findings section in verify report has no parseable entries', () => {
     const content = `## Findings
 
 Just some plain text with no structured findings.
@@ -1310,7 +1310,7 @@ describe('getProofContext', () => {
     };
     writeChain([legacyEntry]);
     const results = getProofContext(['census.ts'], tempDir);
-    expect(results[0]!.findings.length).toBeGreaterThan(0);
+    expect(results[0]!.findings.length).toBe(1);
   });
 
   // @ana A020
@@ -1342,7 +1342,7 @@ describe('getProofContext', () => {
   it('includes build concerns in results', () => {
     writeChain([baseEntry]);
     const results = getProofContext(['packages/cli/src/engine/census.ts'], tempDir);
-    expect(results[0]!.build_concerns.length).toBeGreaterThan(0);
+    expect(results[0]!.build_concerns.length).toBe(1);
     expect(results[0]!.build_concerns[0]!.summary).toContain('Census dialect');
     expect(results[0]!.build_concerns[0]!.from).toBe('Fix Drizzle schema detection');
   });
@@ -1371,7 +1371,7 @@ describe('getProofContext', () => {
     expect(results).toHaveLength(2);
     expect(results[0]!.query).toBe('census.ts');
     expect(results[1]!.query).toBe('scan-engine.ts');
-    expect(results[0]!.findings.length).toBeGreaterThan(0);
+    expect(results[0]!.findings.length).toBe(2);
   });
 
   // @ana A021
@@ -1385,7 +1385,6 @@ describe('getProofContext', () => {
     };
     writeChain([baseEntry, entry2]);
     const results = getProofContext(['census.ts'], tempDir);
-    expect(results[0]!.touch_count).toBeGreaterThan(0);
     expect(results[0]!.touch_count).toBe(2);
   });
 
@@ -1400,11 +1399,11 @@ describe('getProofContext', () => {
     };
     writeChain([entry2, baseEntry]); // baseEntry is newer (2026-04-24)
     const results = getProofContext(['census.ts'], tempDir);
-    expect(results[0]!.last_touched).toBeDefined();
     expect(results[0]!.last_touched).toBe('2026-04-24T10:00:00Z');
   });
 
   // @ana A016
+  // Source-reading exemption: enforces import boundary — no behavioral surface for this constraint
   it('getProofContext has no CLI dependencies', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../../src/utils/proofSummary.ts'),
@@ -1423,7 +1422,7 @@ describe('getProofContext', () => {
     };
     writeChain([undatedEntry]);
     const results = getProofContext(['census.ts'], tempDir);
-    expect(results[0]!.findings.length).toBeGreaterThan(0);
+    expect(results[0]!.findings.length).toBe(1);
     // Undated entries don't contribute to touch_count
     expect(results[0]!.touch_count).toBe(0);
     expect(results[0]!.last_touched).toBeNull();
@@ -1497,7 +1496,7 @@ describe('getProofContext', () => {
     };
     writeChain([entry]);
     const results = getProofContext(['packages/cli/src/engine/census.ts'], tempDir);
-    expect(results[0]!.findings.length).toBeGreaterThan(0);
+    expect(results[0]!.findings.length).toBe(1);
   });
 
   // @ana A011
@@ -1510,7 +1509,7 @@ describe('getProofContext', () => {
     };
     writeChain([entry]);
     const results = getProofContext(['census.ts'], tempDir);
-    expect(results[0]!.findings.length).toBeGreaterThan(0);
+    expect(results[0]!.findings.length).toBe(1);
   });
 
   // @ana A012
@@ -1523,7 +1522,7 @@ describe('getProofContext', () => {
     };
     writeChain([entry]);
     const results = getProofContext(['packages/cli/src/engine/census.ts'], tempDir);
-    expect(results[0]!.findings.length).toBeGreaterThan(0);
+    expect(results[0]!.findings.length).toBe(1);
   });
 
   it('matches exact paths with directories (both dirs, exact)', () => {
@@ -1535,7 +1534,7 @@ describe('getProofContext', () => {
     };
     writeChain([entry]);
     const results = getProofContext(['packages/cli/src/engine/census.ts'], tempDir);
-    expect(results[0]!.findings.length).toBeGreaterThan(0);
+    expect(results[0]!.findings.length).toBe(1);
   });
 });
 
@@ -1783,7 +1782,7 @@ findings:
 `);
 
     const summary = generateProofSummary(slugDir);
-    expect(summary.findings.length).toBeGreaterThan(0);
+    expect(summary.findings.length).toBe(1);
     expect(summary.findings[0]!.summary).toBe('Structured finding from YAML');
     expect(summary.findings[0]!.severity).toBe('observation');
     expect(summary.findings[0]!.suggested_action).toBe('monitor');
@@ -1804,7 +1803,7 @@ findings:
     // No verify_data.yaml
 
     const summary = generateProofSummary(slugDir);
-    expect(summary.findings.length).toBeGreaterThan(0);
+    expect(summary.findings.length).toBe(1);
     expect(summary.findings[0]!.summary).toContain('Regex-parsed finding');
     expect(summary.findings[0]!.severity).toBeUndefined();
     expect(summary.findings[0]!.line).toBeUndefined();
@@ -1830,7 +1829,7 @@ concerns:
 `);
 
     const summary = generateProofSummary(slugDir);
-    expect(summary.build_concerns.length).toBeGreaterThan(0);
+    expect(summary.build_concerns.length).toBe(1);
     expect(summary.build_concerns[0]!.severity).toBe('debt');
     expect(summary.build_concerns[0]!.suggested_action).toBe('scope');
   });
@@ -1852,7 +1851,7 @@ concerns:
 `);
 
     const summary = generateProofSummary(slugDir);
-    expect(summary.build_concerns.length).toBeGreaterThan(0);
+    expect(summary.build_concerns.length).toBe(1);
     expect(summary.build_concerns[0]!.summary).toBe('Structured concern from YAML');
     expect(summary.build_concerns[0]!.file).toBe('src/test.ts');
   });
@@ -1869,7 +1868,7 @@ None.
     // No build_data.yaml
 
     const summary = generateProofSummary(slugDir);
-    expect(summary.build_concerns.length).toBeGreaterThan(0);
+    expect(summary.build_concerns.length).toBe(1);
     expect(summary.build_concerns[0]!.summary).toContain('Regex-parsed issue');
   });
 
@@ -1889,7 +1888,7 @@ findings:
 `);
 
     const summary = generateProofSummary(slugDir);
-    expect(summary.findings.length).toBeGreaterThan(0);
+    expect(summary.findings.length).toBe(1);
     expect(summary.findings[0]!.summary).toBe('Numbered companion finding');
   });
 });
@@ -1902,7 +1901,7 @@ describe('parseFindings backward compat', () => {
 - **Code — New heading test:** This uses the new heading.
 `;
     const findings = parseFindings(content);
-    expect(findings.length).toBeGreaterThan(0);
+    expect(findings.length).toBe(1);
     expect(findings[0]!.summary).toContain('New heading test');
   });
 
