@@ -1,0 +1,197 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Website Lift"
+
+assertions:
+  - id: A001
+    says: "Installing dependencies from root resolves without conflicts"
+    block: "monorepo workspace integration"
+    target: "pnpm_install.exit_code"
+    matcher: "equals"
+    value: 0
+
+  - id: A002
+    says: "Website builds successfully in the monorepo"
+    block: "monorepo workspace integration"
+    target: "website_build.exit_code"
+    matcher: "equals"
+    value: 0
+
+  - id: A003
+    says: "Website lint passes without errors"
+    block: "website quality checks"
+    target: "website_lint.exit_code"
+    matcher: "equals"
+    value: 0
+
+  - id: A004
+    says: "Website typechecks without errors"
+    block: "website quality checks"
+    target: "website_typecheck.exit_code"
+    matcher: "equals"
+    value: 0
+
+  - id: A005
+    says: "Website package is named anatomia-website"
+    block: "monorepo workspace integration"
+    target: "website_package.name"
+    matcher: "equals"
+    value: "anatomia-website"
+
+  - id: A006
+    says: "Website has build, lint, and check scripts"
+    block: "monorepo workspace integration"
+    target: "website_package.scripts.check"
+    matcher: "exists"
+
+  - id: A007
+    says: "Proof feed fetches from GitHub raw API"
+    block: "proof feed wiring"
+    target: "getProofFeed.fetch_url"
+    matcher: "contains"
+    value: "raw.githubusercontent.com"
+
+  - id: A008
+    says: "Proof feed falls back to mock data when GitHub is unreachable"
+    block: "proof feed wiring"
+    target: "getProofFeed.fallback"
+    matcher: "truthy"
+
+  - id: A009
+    says: "Mapped entries include a 7-character hash from the scope hash"
+    block: "proof feed field mapping"
+    target: "mapped_entry.hash.length"
+    matcher: "equals"
+    value: 7
+
+  - id: A010
+    says: "Mapped entries use completed_at as the timestamp"
+    block: "proof feed field mapping"
+    target: "mapped_entry.ts"
+    matcher: "equals"
+    value: "completed_at"
+
+  - id: A011
+    says: "Slugs starting with fix- are mapped to kind fix"
+    block: "proof feed field mapping"
+    target: "mapped_entry.kind"
+    matcher: "equals"
+    value: "fix"
+
+  - id: A012
+    says: "Slugs not starting with fix- default to kind feature"
+    block: "proof feed field mapping"
+    target: "mapped_entry.kind"
+    matcher: "equals"
+    value: "feature"
+
+  - id: A013
+    says: "Assertions count maps from contract.total"
+    block: "proof feed field mapping"
+    target: "mapped_entry.assertions"
+    matcher: "equals"
+    value: "contract.total"
+
+  - id: A014
+    says: "Passed count maps from contract.satisfied"
+    block: "proof feed field mapping"
+    target: "mapped_entry.passed"
+    matcher: "equals"
+    value: "contract.satisfied"
+
+  - id: A015
+    says: "Entry URL is constructed from the slug"
+    block: "proof feed field mapping"
+    target: "mapped_entry.url"
+    matcher: "contains"
+    value: "#proof-"
+
+  - id: A016
+    says: "Feature emphasis extracts a short label from the feature name"
+    block: "proof feed field mapping"
+    target: "mapped_entry.feature_em"
+    matcher: "exists"
+
+  - id: A017
+    says: "Feed returns the 6 most recent entries"
+    block: "proof feed wiring"
+    target: "getProofFeed.result.length"
+    matcher: "equals"
+    value: 6
+
+  - id: A018
+    says: "Feed entries are ordered most recent first"
+    block: "proof feed wiring"
+    target: "getProofFeed.order"
+    matcher: "equals"
+    value: "descending"
+
+  - id: A019
+    says: "ProofEntry type is unchanged from the prototype"
+    block: "type contract"
+    target: "ProofEntry.fields"
+    matcher: "equals"
+    value: "version,hash,ts,kind,feat,feature_em,assertions,passed,url"
+
+  - id: A020
+    says: "ProofKind type includes feature, fix, and chore"
+    block: "type contract"
+    target: "ProofKind.values"
+    matcher: "equals"
+    value: "feature,fix,chore"
+
+  - id: A021
+    says: "Release workflow builds only the CLI package"
+    block: "CI workflow isolation"
+    target: "release.yml.build_command"
+    matcher: "contains"
+    value: "--filter anatomia-cli"
+
+  - id: A022
+    says: "CLI tests still pass after the website replacement"
+    block: "CLI regression"
+    target: "cli_tests.exit_code"
+    matcher: "equals"
+    value: 0
+
+  - id: A023
+    says: "CLI test count is unchanged"
+    block: "CLI regression"
+    target: "cli_tests.passed_count"
+    matcher: "equals"
+    value: 1950
+
+  - id: A024
+    says: "Old website files are fully removed"
+    block: "cleanup"
+    target: "old_files.anatomia-landing-10x-style.html"
+    matcher: "not_equals"
+    value: "exists"
+
+  - id: A025
+    says: "Prototype lockfile is not committed"
+    block: "cleanup"
+    target: "website.pnpm-lock.yaml"
+    matcher: "not_equals"
+    value: "exists"
+
+  - id: A026
+    says: "Migration handoff document is removed after lift"
+    block: "cleanup"
+    target: "website.MIGRATION_HANDOFF.md"
+    matcher: "not_equals"
+    value: "exists"
+
+  - id: A027
+    says: "Maintenance manual is preserved"
+    block: "cleanup"
+    target: "website.MAINTENANCE_MANUAL.md"
+    matcher: "exists"
+
+file_changes:
+  - path: "website/"
+    action: create
+  - path: "website/lib/proof-feed.ts"
+    action: modify
+  - path: ".github/workflows/release.yml"
+    action: modify
