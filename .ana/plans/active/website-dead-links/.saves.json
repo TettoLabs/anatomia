@@ -17,7 +17,7 @@
     "saved_at": "2026-05-07T06:46:56.537Z",
     "hash": "sha256:fd5db807b1f30764296a789fd2da19e419f4b25c28d5887c472c6db7441e6e94"
   },
-  "build_started_at": "2026-05-07T07:03:17.925Z",
+  "build_started_at": "2026-05-07T07:21:30.798Z",
   "build_agent": "ana-build",
   "build-report": {
     "saved_at": "2026-05-07T07:18:00.811Z",
@@ -58,5 +58,18 @@
     "website/components/sub-nav/SubNav.tsx",
     "website/lib/copy.ts",
     "website/lib/proof-feed.ts"
-  ]
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:603d8d1f63d1e7b27de772501c47fde1a9f55b605ee5a5fe3ea656a8fab66ef0",
+    "run_at": "2026-05-07T07:27:34.150Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-07T07:27:34.180Z",
+    "hash": "sha256:9f28b6306d72f5312ab3539e836575732c469694eff19c2f1b90f922a58be699"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-07T07:27:34.180Z",
+    "hash": "sha256:096b8f3c2ac06409a9dd2a6a7beedb6eabbb51e037ffd896c10bf02b258f429e"
+  }
 }
