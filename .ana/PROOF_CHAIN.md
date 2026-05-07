@@ -1,27 +1,34 @@
 # Proof Chain Dashboard
 
-63 runs · 120 active · 77 lessons · 0 promoted · 160 closed
+64 runs · 125 active · 78 lessons · 0 promoted · 160 closed
 
 ## Hot Modules
 
 | File | Active | Entries |
 |------|--------|--------|
-| packages/cli/tests/commands/work.test.ts | 10 | 8 |
+| packages/cli/tests/commands/work.test.ts | 11 | 9 |
 | packages/cli/tests/commands/proof.test.ts | 10 | 4 |
+| packages/cli/src/commands/work.ts | 9 | 5 |
 | website/lib/proof-feed.ts | 9 | 2 |
 | packages/cli/src/commands/proof.ts | 7 | 5 |
-| packages/cli/src/utils/proofSummary.ts | 6 | 5 |
 
 ## Promoted Rules
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 120 total)
+## Active Findings (30 shown of 125 total)
 
 ### packages/cli/src/commands/agents.ts
 
 - **code:** Double error message on unknown agent in setModel() — throws after console.error, catch block re-prints — *Agent Dashboard Phase 1*
 - **code:** maxModelLen computed inside the loop body on every iteration instead of once before the loop — *Agent Dashboard Phase 1*
+
+### packages/cli/src/commands/work.ts
+
+- **code:** Early-return missing-worktree warning uses misleading message when inside worktree but plan dir absent — *Fix Pipeline Phase Timing*
+- **code:** Early-return phase detection adds 3 globSync calls per work start from inside worktree — not cached — *Fix Pipeline Phase Timing*
+- **code:** Race condition in writeTimestamp: read-modify-write on .saves.json is not atomic — *Fix Pipeline Phase Timing*
+- **test:** A003 has no dedicated tagged test — verified by source inspection only — *Fix Pipeline Phase Timing*
 
 ### packages/cli/src/utils/agent-config.ts
 
@@ -30,27 +37,14 @@
 ### packages/cli/src/utils/worktree.ts
 
 - **code:** detectWorktreeSlug empty-string guard removed — unrelated to website-lift scope — *Website Lift*
-- **code:** Double H2 heading in risk profile — worktree.ts pushes '## Proof Findings' then proofFindings content starts with '## Risk Profile' — *Worktrees V2 — Phase Timing + Danger Map + Prune*
 
 ### packages/cli/tests/commands/agents.test.ts
 
 - **test:** A002 test uses toBeGreaterThan(templateSize) — correct intent but could assert exact expected value since skill content is fixture-controlled — *Agent Dashboard Phase 1*
 
-### packages/cli/tests/commands/artifact.test.ts
-
-- **test:** A014 test does not exercise actual archive failure (catch branch). Tests first-save no-op, not error recovery. — *Rejection Cycle Artifact Preservation*
-
 ### packages/cli/tests/commands/work.test.ts
 
-- **test:** A017 (build_agent) and A020 (verify_agent) lack direct tagged tests — covered by source inspection only — *Worktrees V2 — Phase Timing + Danger Map + Prune*
-
-### packages/cli/tests/utils/proofSummary.test.ts
-
-- **test:** A013/A014 are type-level sentinels — construct PipelineStats manually, don't test computePipelineStats computes median_plan — *Worktrees V2 — Phase Timing + Danger Map + Prune*
-
-### packages/cli/tests/utils/worktree.test.ts
-
-- **test:** detectWorktreeSlug empty-string test is environment-dependent — pre-existing, fails inside worktrees — *Worktrees V2 — Phase Timing + Danger Map + Prune*
+- **test:** Fix-phase test (early-return) has no @ana tag — not linked to any contract assertion — *Fix Pipeline Phase Timing*
 
 ### website/components/about/about.module.css
 
