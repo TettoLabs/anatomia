@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-58 runs · 95 active · 71 lessons · 0 promoted · 160 closed
+59 runs · 100 active · 72 lessons · 0 promoted · 160 closed
 
 ## Hot Modules
 
@@ -16,11 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 95 total)
-
-### .husky/pre-commit
-
-- **code:** Pre-commit filter also skips for .claude/-only commits — broader than contract A006 specifies (only mentions .ana/). Pragmatic but unspecified. — *Proof System Near-Term — Learn Infrastructure Foundation*
+## Active Findings (30 shown of 100 total)
 
 ### packages/cli/src/commands/agents.ts
 
@@ -42,8 +38,6 @@
 ### packages/cli/src/commands/proof.ts
 
 - **code:** proof.ts WRONG_BRANCH primary error still says 'Switch to main' even in worktree context — *Worktree Isolation*
-- **code:** pullBeforeRead calls process.exit(1) on rebase conflict without running git rebase --abort first — leaves dirty rebase state — *Proof System Near-Term — Learn Infrastructure Foundation*
-- **code:** Audit severity filter uses reverse-index splice loop — O(n²) on large finding sets; Array.filter() would be clearer and faster — *Proof System Near-Term — Learn Infrastructure Foundation*
 
 ### packages/cli/src/commands/work.ts
 
@@ -52,6 +46,7 @@
 
 ### packages/cli/src/utils/worktree.ts
 
+- **code:** detectWorktreeSlug empty-string guard removed — unrelated to website-lift scope — *Website Lift*
 - **code:** Double H2 heading in risk profile — worktree.ts pushes '## Proof Findings' then proofFindings content starts with '## Risk Profile' — *Worktrees V2 — Phase Timing + Danger Map + Prune*
 - **code:** branchExists exported only for test imports — not used by production code — *Worktree Isolation*
 - **code:** isWorktreeDirectory false-positive risk in git submodules — *Worktree Isolation*
@@ -69,8 +64,6 @@
 ### packages/cli/tests/commands/proof.test.ts
 
 - **test:** A001 test verifies retry success path, not the failure message — contract matcher/value ('Push failed after retry') never asserted — *Proof System Near-Term — Learn Infrastructure Foundation*
-- **test:** A018 uses toBeGreaterThan(0) — weak assertion; the fixture has exactly 1 unclassified finding, test should use toBe(1) — *Proof System Near-Term — Learn Infrastructure Foundation*
-- **test:** No dedicated push retry tests for lesson, promote, or strengthen — shared helper covers them but no integration test proves the wiring — *Proof System Near-Term — Learn Infrastructure Foundation*
 
 ### packages/cli/tests/commands/work.test.ts
 
@@ -90,6 +83,13 @@
 - **test:** detectWorktreeSlug empty-string test is environment-dependent — pre-existing, fails inside worktrees — *Worktrees V2 — Phase Timing + Danger Map + Prune*
 - **test:** Pre-existing worktree.test.ts failure — detectWorktreeSlug('') returns slug when run inside worktree — *Non-Main Artifact Branch Tests*
 - **test:** A012 and A037 use typeof assertions instead of value assertions — *Worktree Isolation*
+
+### website/lib/proof-feed.ts
+
+- **code:** mapEntry never produces kind 'chore' — only 'fix' or 'feature' — *Website Lift*
+- **code:** Hardcoded version 'v1.0.2' will go stale — *Website Lift*
+- **code:** Empty entries returns [] instead of mockFeed — blank state possible — *Website Lift*
+- **code:** extractFeatureEm on single-word feature returns that word — acceptable for display — *Website Lift*
 
 ### General
 
