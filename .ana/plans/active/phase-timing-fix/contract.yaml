@@ -1,0 +1,138 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Fix Pipeline Phase Timing"
+
+assertions:
+  - id: A001
+    says: "Starting work from inside a worktree during Verify phase records the verify session start time"
+    block: "early-return writes verify_started_at during Verify phase"
+    target: "saves.verify_started_at"
+    matcher: "exists"
+
+  - id: A002
+    says: "Starting work from inside a worktree during Build phase records the build session start time"
+    block: "early-return writes build_started_at during Build phase"
+    target: "saves.build_started_at"
+    matcher: "exists"
+
+  - id: A003
+    says: "Starting work from main during Plan phase records the plan session start time"
+    block: "plan phase writes plan_started_at"
+    target: "saves.plan_started_at"
+    matcher: "exists"
+
+  - id: A004
+    says: "Plan duration uses the actual session start time when available"
+    block: "computeTiming uses plan_started_at when available"
+    target: "timing.plan"
+    matcher: "equals"
+    value: 15
+
+  - id: A005
+    says: "Plan duration falls back to artifact gap when no session start was recorded"
+    block: "computeTiming falls back to artifact-gap when plan_started_at absent"
+    target: "timing.plan"
+    matcher: "equals"
+    value: 30
+
+  - id: A006
+    says: "Plan template tells the agent to record session start"
+    block: "plan template contains work start instruction"
+    target: "templateContent"
+    matcher: "contains"
+    value: "work start"
+
+  - id: A007
+    says: "Dogfood plan template tells the agent to record session start"
+    block: "dogfood plan template contains work start instruction"
+    target: "templateContent"
+    matcher: "contains"
+    value: "work start"
+
+  - id: A008
+    says: "Plan timing rejects session starts that happen after the contract is saved"
+    block: "plan_started_at after contractTime falls back to artifact-gap"
+    target: "timing.plan"
+    matcher: "equals"
+    value: 30
+
+  - id: A009
+    says: "Plan timing rejects durations longer than 24 hours"
+    block: "plan_started_at with duration over 24h falls back to artifact-gap"
+    target: "timing.plan"
+    matcher: "equals"
+    value: 30
+
+  - id: A010
+    says: "Old proof chain entries without session start times still compute correct plan timing"
+    block: "backward compat without plan_started_at"
+    target: "timing.plan"
+    matcher: "equals"
+    value: 30
+
+  - id: A011
+    says: "Verify session start is not overwritten when starting work again"
+    block: "write-once guard preserves existing timestamp"
+    target: "saves.verify_started_at"
+    matcher: "equals"
+    value: "2026-04-01T10:00:00Z"
+
+  - id: A012
+    says: "Build session start is intentionally overwritten when fixing a failed verification"
+    block: "force parameter overwrites existing timestamp"
+    target: "saves.build_started_at"
+    matcher: "not_equals"
+    value: "2026-04-01T10:00:00Z"
+
+  - id: A013
+    says: "A warning appears when the worktree is missing during timestamp write"
+    block: "missing worktree produces warning"
+    target: "output"
+    matcher: "contains"
+    value: "Worktree not found"
+
+  - id: A014
+    says: "Verify template tells the agent to enter the worktree before recording session start"
+    block: "verify template reorders cd before work start"
+    target: "templateContent"
+    matcher: "contains"
+    value: "cd"
+
+  - id: A015
+    says: "Dogfood verify template tells the agent to enter the worktree before recording session start"
+    block: "dogfood verify template reorders cd before work start"
+    target: "templateContent"
+    matcher: "contains"
+    value: "cd"
+
+  - id: A016
+    says: "Starting work during Verify phase does not accidentally record a build session start"
+    block: "early-return during Verify does not write build_started_at"
+    target: "saves.build_started_at"
+    matcher: "not_equals"
+    value: "exists-as-new"
+
+  - id: A017
+    says: "Verify duration still uses actual session start when available"
+    block: "verify_started_at still consumed by computeTiming"
+    target: "timing.verify"
+    matcher: "equals"
+    value: 30
+
+file_changes:
+  - path: "packages/cli/src/commands/work.ts"
+    action: modify
+  - path: "packages/cli/src/utils/proofSummary.ts"
+    action: modify
+  - path: "packages/cli/templates/.claude/agents/ana-plan.md"
+    action: modify
+  - path: ".claude/agents/ana-plan.md"
+    action: modify
+  - path: "packages/cli/templates/.claude/agents/ana-verify.md"
+    action: modify
+  - path: ".claude/agents/ana-verify.md"
+    action: modify
+  - path: "packages/cli/tests/commands/work.test.ts"
+    action: modify
+  - path: "packages/cli/tests/utils/proofSummary.test.ts"
+    action: modify

@@ -4,5 +4,17 @@
   "scope": {
     "saved_at": "2026-05-07T07:33:26.639Z",
     "hash": "sha256:20b93884dc21a93a65d993051ddd6c9ff91b8f0b9b17163fe53d926a9ae9955f"
+  },
+  "contract": {
+    "saved_at": "2026-05-07T07:42:05.955Z",
+    "hash": "sha256:5ac86cd400896f30cbc38dd8adcd59ee015537872bb6665d976a02ee37d365db"
+  },
+  "plan": {
+    "saved_at": "2026-05-07T07:42:05.956Z",
+    "hash": "sha256:a562ee48c8f4eb1a41dc0f65de0b11aa7ada985a2d4b00706fbaf81f8ef82ffb"
+  },
+  "spec": {
+    "saved_at": "2026-05-07T07:42:05.956Z",
+    "hash": "sha256:9fee4dc70089356b338a3059d4fba1c68e7f86762076e998a9faf1d66474b126"
   }
 }
