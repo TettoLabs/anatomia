@@ -1,0 +1,233 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Website Production Infrastructure"
+
+assertions:
+  # C1 + C2: Live version data
+  - id: A001
+    says: "The version pill shows the real latest release tag, not a hardcoded string"
+    block: "getLatestVersion fetches from GitHub tags API"
+    target: "getLatestVersion.fetchUrl"
+    matcher: "contains"
+    value: "api.github.com/repos/TettoLabs/anatomia/tags"
+
+  - id: A002
+    says: "Version data refreshes every hour via ISR caching"
+    block: "getLatestVersion uses 1-hour ISR cache"
+    target: "getLatestVersion.revalidate"
+    matcher: "equals"
+    value: 3600
+
+  - id: A003
+    says: "The site still works when GitHub is unreachable"
+    block: "getLatestVersion falls back on failure"
+    target: "getLatestVersion.fallback"
+    matcher: "equals"
+    value: "v1.0.2"
+
+  - id: A004
+    says: "Proof feed rows use the live version instead of a hardcoded string"
+    block: "mapEntry receives version parameter"
+    target: "mapEntry.parameters"
+    matcher: "contains"
+    value: "version"
+
+  - id: A005
+    says: "The latest commit SHA comes from the GitHub commits API"
+    block: "getLatestCommit fetches from GitHub commits API"
+    target: "getLatestCommit.fetchUrl"
+    matcher: "contains"
+    value: "api.github.com/repos/TettoLabs/anatomia/commits"
+
+  - id: A006
+    says: "Commit data refreshes every five minutes"
+    block: "getLatestCommit uses 5-minute ISR cache"
+    target: "getLatestCommit.revalidate"
+    matcher: "equals"
+    value: 300
+
+  - id: A007
+    says: "The commit pill shows a fallback hash when GitHub is down"
+    block: "getLatestCommit falls back on failure"
+    target: "getLatestCommit.fallbackHash"
+    matcher: "equals"
+    value: "0000000"
+
+  - id: A008
+    says: "GitHub auth token is used when available but not required"
+    block: "GitHub fetch includes conditional auth header"
+    target: "getLatestVersion.authHeader"
+    matcher: "contains"
+    value: "GITHUB_TOKEN"
+
+  # C3: Environment documentation
+  - id: A009
+    says: "Contributors can see which environment variables the site uses"
+    block: "env example file exists"
+    target: "website/.env.example"
+    matcher: "exists"
+
+  - id: A010
+    says: "The GitHub token variable is documented for contributors"
+    block: "env example documents GITHUB_TOKEN"
+    target: "envExample.content"
+    matcher: "contains"
+    value: "GITHUB_TOKEN"
+
+  - id: A011
+    says: "The analytics key variable is documented for contributors"
+    block: "env example documents NEXT_PUBLIC_POSTHOG_KEY"
+    target: "envExample.content"
+    matcher: "contains"
+    value: "NEXT_PUBLIC_POSTHOG_KEY"
+
+  # C4: Analytics
+  - id: A012
+    says: "Analytics are captured when PostHog is configured"
+    block: "AnalyticsProvider initializes PostHog when env var is set"
+    target: "analytics.posthogInit"
+    matcher: "exists"
+
+  - id: A013
+    says: "No analytics code is loaded when PostHog is not configured"
+    block: "AnalyticsProvider no-ops without env var"
+    target: "analytics.envCheck"
+    matcher: "contains"
+    value: "NEXT_PUBLIC_POSTHOG_KEY"
+
+  - id: A014
+    says: "PostHog loads dynamically to avoid bloating the initial bundle"
+    block: "AnalyticsProvider uses dynamic import"
+    target: "analytics.importStyle"
+    matcher: "contains"
+    value: "import("
+
+  - id: A015
+    says: "The analytics provider is wired into the root layout"
+    block: "layout.tsx includes AnalyticsProvider"
+    target: "layout.analyticsProvider"
+    matcher: "exists"
+
+  # C5: OG images
+  - id: A016
+    says: "The landing page has a social sharing preview image"
+    block: "landing page has OG metadata"
+    target: "landingPage.openGraph.images"
+    matcher: "exists"
+
+  - id: A017
+    says: "The docs page has a social sharing preview image"
+    block: "docs page has OG metadata"
+    target: "docsPage.openGraph.images"
+    matcher: "exists"
+
+  - id: A018
+    says: "OG images exist as real files in the public directory"
+    block: "OG image files exist in public/og"
+    target: "public/og/og-home.png"
+    matcher: "exists"
+
+  - id: A019
+    says: "Each OG image is the correct size for social platforms"
+    block: "OG images are 1200x630"
+    target: "ogImage.dimensions"
+    matcher: "equals"
+    value: "1200x630"
+
+  # C6: CI
+  - id: A020
+    says: "CI catches website lint and type errors on every push"
+    block: "test.yml has website job"
+    target: "testYml.jobs.website"
+    matcher: "exists"
+
+  - id: A021
+    says: "The website CI job runs the full check suite"
+    block: "website job runs pnpm check"
+    target: "testYml.jobs.website.checkCommand"
+    matcher: "contains"
+    value: "pnpm --filter anatomia-website check"
+
+  # C7: Smoke test
+  - id: A022
+    says: "A smoke test verifies all expected pages are in the build"
+    block: "smoke test script exists"
+    target: "website/scripts/smoke-test.sh"
+    matcher: "exists"
+
+  - id: A023
+    says: "The smoke test can be run with a single pnpm command"
+    block: "smoke script in package.json"
+    target: "packageJson.scripts.smoke"
+    matcher: "exists"
+
+  - id: A024
+    says: "The smoke test checks the routes manifest for expected pages"
+    block: "smoke test greps routes-manifest.json"
+    target: "smokeTest.content"
+    matcher: "contains"
+    value: "routes-manifest.json"
+
+  # C8: Pre-commit unchanged
+  - id: A025
+    says: "The pre-commit hook stays fast and CLI-only"
+    block: "pre-commit hook has no website commands"
+    target: "husky.preCommit.content"
+    matcher: "not_contains"
+    value: "website"
+
+  # Cross-cutting: build passes
+  - id: A026
+    says: "All website checks pass after the changes"
+    block: "pnpm check passes"
+    target: "checkCommand.exitCode"
+    matcher: "equals"
+    value: 0
+
+  - id: A027
+    says: "PostHog is added as a project dependency"
+    block: "posthog-js in dependencies"
+    target: "packageJson.dependencies.posthog-js"
+    matcher: "exists"
+
+file_changes:
+  - path: "website/lib/proof-feed.ts"
+    action: modify
+  - path: "website/lib/analytics.tsx"
+    action: create
+  - path: "website/app/layout.tsx"
+    action: modify
+  - path: "website/app/(marketing)/page.tsx"
+    action: modify
+  - path: "website/app/(sub)/docs/page.tsx"
+    action: modify
+  - path: "website/app/(sub)/manifesto/page.tsx"
+    action: modify
+  - path: "website/app/(sub)/contact/page.tsx"
+    action: modify
+  - path: "website/public/og/og-home.png"
+    action: create
+  - path: "website/public/og/og-docs.png"
+    action: create
+  - path: "website/public/og/og-manifesto.png"
+    action: create
+  - path: "website/public/og/og-contact.png"
+    action: create
+  - path: "website/public/og/og-changelog.png"
+    action: create
+  - path: "website/public/og/og-cli.png"
+    action: create
+  - path: "website/public/og/og-examples.png"
+    action: create
+  - path: "website/public/og/og-about.png"
+    action: create
+  - path: "website/public/og/og-license.png"
+    action: create
+  - path: "website/.env.example"
+    action: create
+  - path: ".github/workflows/test.yml"
+    action: modify
+  - path: "website/package.json"
+    action: modify
+  - path: "website/scripts/smoke-test.sh"
+    action: create
