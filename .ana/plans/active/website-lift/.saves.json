@@ -136,5 +136,18 @@
     "website/public/fonts/GeistMono-SemiBold.woff2",
     "website/public/fonts/fraunces.zip",
     "website/public/icon.svg"
-  ]
+  ],
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:e8ec1ce1c6e6bfdd41d05b44bcca6f7645b2c3611205bb201f8944db0111eb04",
+    "run_at": "2026-05-07T04:20:54.573Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-07T04:20:54.602Z",
+    "hash": "sha256:957a2bb028ef38d4d92ec967fedf779037443a7f0b6ab9e1ca874836b0fe03ea"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-07T04:20:54.602Z",
+    "hash": "sha256:42c0cf2e6a00c1c63f7f3230c7c8495d67c92845be64932a61f845be1c77a4ce"
+  }
 }
