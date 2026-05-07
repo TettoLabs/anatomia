@@ -52,7 +52,7 @@ export const copy = {
     },
     headline: "Your AI doesn't know your codebase. *ana* does.",
     subhead:
-      "Four specialized agents. Four sealed artifacts. Ana scopes. Plan designs. Build implements and reports honestly. Verify forms an independent account — it never reads Build's report. You compare the two.",
+      "You shipped fast. The codebase is 80% AI-generated. *ana* gives you the senior engineer you don\u2019t have time to hire \u2014 generated from your code, not your intentions.",
     ctas: {
       primary: { label: "Install", command: "npx anatomia init", href: "#pricing" },
       secondary: { label: "See the pipeline", href: "#pipeline" },
@@ -68,7 +68,7 @@ export const copy = {
 
   scan: {
     eyebrow: "Start here · free, local, 2–5s",
-    title: "Before you install anything, run *ana scan*.",
+    title: "Before you install anything, run *ana\u00a0scan*.",
     lede:
       "One command reads your codebase — stack, architecture, git tempo, hot files, docs, secrets. No account, no API key, nothing leaves your machine. If what Ana finds surprises you, keep going.",
     install: "npx anatomia scan",

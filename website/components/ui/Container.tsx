@@ -16,7 +16,7 @@ export function Container({
   return (
     <div
       className={cn(
-        "relative mx-auto w-full max-w-[1320px] px-6 md:px-10",
+        "relative mx-auto max-w-[1320px] px-6 md:px-10",
         className,
       )}
     >

@@ -9,8 +9,10 @@ export function PriceCard({ plan }: { plan: Plan }) {
 
   return (
     <div className={cn(styles.card, highlighted && styles.cardHighlighted)}>
-      <div className={styles.cardFlag}>{plan.flag}</div>
-      <div className={styles.cardName}>{plan.name}</div>
+      <div className="flex items-start justify-between gap-4">
+        <div className={styles.cardName}>{plan.name}</div>
+        <span className={styles.cardFlag}>{plan.flag}</span>
+      </div>
       <div className={styles.cardPrice}>
         <span className={styles.cardPriceValue}>{plan.price}</span>
         {"priceUnit" in plan && (

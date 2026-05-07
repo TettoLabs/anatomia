@@ -79,6 +79,8 @@ export function ScanSlab() {
                 <span><span style={{ color: "#67e8f9" }}>Stripe</span></span>
                 <span style={{ color: "rgba(255,255,255,0.55)" }}>UI</span>
                 <span><span style={{ color: "#67e8f9" }}>shadcn/ui</span> <span style={{ color: "rgba(255,255,255,0.45)" }}>(Tailwind)</span></span>
+                <span style={{ color: "rgba(255,255,255,0.55)" }}>Services</span>
+                <span><span style={{ color: "#67e8f9" }}>S3</span> <span style={{ color: "rgba(255,255,255,0.45)" }}>·</span> <span style={{ color: "#67e8f9" }}>Resend</span> <span style={{ color: "rgba(255,255,255,0.45)" }}>·</span> <span style={{ color: "#67e8f9" }}>PostHog</span> <span style={{ color: "rgba(255,255,255,0.45)" }}>(+2 more)</span></span>
                 <span style={{ color: "rgba(255,255,255,0.55)" }}>Deploy</span>
                 <span><span style={{ color: "#67e8f9" }}>Vercel</span> <span style={{ color: "rgba(255,255,255,0.45)" }}>·</span> <span style={{ color: "#67e8f9" }}>GitHub Actions</span></span>
               </div>
@@ -89,9 +91,9 @@ export function ScanSlab() {
               <div className="mb-1.5 text-[10.5px] uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.45)" }}>Intelligence</div>
               <div className="grid gap-y-0.5" style={{ gridTemplateColumns: "92px 1fr" }}>
                 <span style={{ color: "rgba(255,255,255,0.55)" }}>Activity</span>
-                <span>12 contributors <span style={{ color: "rgba(255,255,255,0.45)" }}>·</span> 8→14→11→9 weekly</span>
+                <span>12 contributors <span style={{ color: "rgba(255,255,255,0.45)" }}>·</span> 8→14→11→9 weekly <span className="ml-2 inline-flex items-end gap-[3px]" style={{ height: "12px", verticalAlign: "-2px" }} aria-hidden="true"><i className="inline-block w-[5px] rounded-[1px]" style={{ height: "4px", background: "var(--color-brand)", opacity: 0.75 }} /><i className="inline-block w-[5px] rounded-[1px]" style={{ height: "8px", background: "var(--color-brand)", opacity: 0.75 }} /><i className="inline-block w-[5px] rounded-[1px]" style={{ height: "6px", background: "var(--color-brand)", opacity: 0.75 }} /><i className="inline-block w-[5px] rounded-[1px]" style={{ height: "5px", background: "var(--color-brand)", opacity: 0.75 }} /></span></span>
                 <span style={{ color: "rgba(255,255,255,0.55)" }}>Hot files</span>
-                <span><span style={{ color: "#67e8f9" }}>documents/[id]/page.tsx</span> <span style={{ color: "rgba(255,255,255,0.45)" }}>(7)</span></span>
+                <span><span style={{ color: "#67e8f9" }}>documents/[id]/page.tsx</span> <span style={{ color: "rgba(255,255,255,0.45)" }}>(7)</span>, <span style={{ color: "#67e8f9" }}>api/upload/route.ts</span> <span style={{ color: "rgba(255,255,255,0.45)" }}>(5)</span></span>
                 <span style={{ color: "rgba(255,255,255,0.55)" }}>Docs</span>
                 <span>README.md <span style={{ color: "rgba(255,255,255,0.45)" }}>only</span></span>
                 <span style={{ color: "rgba(255,255,255,0.55)" }}>Secrets</span>
@@ -120,7 +122,7 @@ export function ScanSlab() {
             </div>
 
             {/* Title */}
-            <h2 className="mt-3.5 mb-4 text-[clamp(28px,3vw,44px)] font-semibold leading-[1.05] tracking-tight" style={{ color: "var(--fg-strong)" }}>
+            <h2 className="mt-3.5 mb-4 text-[clamp(28px,3vw,44px)] font-semibold leading-[1.05] tracking-tight [&>em]:italic [&>em]:text-[var(--color-brand)]" style={{ color: "var(--fg-strong)" }}>
               <Formatted text={copy.scan.title} />
             </h2>
 

@@ -21,7 +21,7 @@ const sizeStyles: Record<Size, string> = {
 };
 
 const base =
-  "inline-flex items-center justify-center font-medium rounded-full transition-all duration-150 cursor-pointer";
+  "inline-flex items-center justify-center font-medium rounded-[var(--radius-sm)] transition-all duration-150 cursor-pointer";
 
 /**
  * Button — renders as <button> or <a> based on presence of `href`.

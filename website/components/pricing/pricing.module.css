@@ -6,13 +6,17 @@
 }
 
 .top {
-  margin-bottom: 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
+  margin-bottom: 48px;
 }
 
 .frame {
   position: relative;
   padding: 40px 64px;
+  width: 100%;
   overflow: hidden;
 }
 @media (max-width: 720px) {
@@ -21,7 +25,11 @@
 
 .inner {
   position: relative;
-  z-index: 2;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  align-items: center;
 }
 
 .grid {
@@ -71,8 +79,12 @@
   color: var(--color-brand);
 }
 .cardHighlighted .cardFlag {
-  background: var(--color-brand);
-  color: #000;
+  background: color-mix(in oklch, var(--bg) 85%, var(--color-brand));
+  color: var(--brand-deep);
+}
+[data-theme="dark"] .cardHighlighted .cardFlag {
+  background: var(--brand-soft);
+  color: var(--color-brand);
 }
 .cardHighlighted .cardFeatures {
   border-top: 1px solid rgba(255,255,255,0.12);
@@ -81,7 +93,7 @@
 .cardHighlighted .cardCta a,
 .cardHighlighted .cardCta button {
   background: var(--color-brand) !important;
-  color: #000 !important;
+  color: var(--color-brand-ink) !important;
 }
 
 .cardFlag {
@@ -96,10 +108,11 @@
   border-radius: 999px;
   background: var(--brand-soft);
   color: var(--brand-deep);
-  margin-bottom: 14px;
+  flex-shrink: 0;
 }
 [data-theme="dark"] .cardFlag {
-  color: var(--color-brand);
+  background: color-mix(in oklch, #F7F7F4 85%, var(--color-brand));
+  color: var(--brand-deep);
 }
 
 .cardName {
