@@ -246,19 +246,17 @@ describe('ana proof', () => {
       expect(exitCode).toBe(0);
 
       const json = JSON.parse(stdout);
-      expect(json).toBeTruthy();
       // 4-key envelope
       expect(json.command).toBe('proof');
-      expect(json.timestamp).toBeDefined();
-      expect(json.results).toBeDefined();
-      expect(json.meta).toBeDefined();
+      expect(json.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}/);
+      expect(json.results).toBeTypeOf('object');
+      expect(json.meta).toBeTypeOf('object');
       // results contains entries
-      expect(json.results.entries).toBeDefined();
-      expect(Array.isArray(json.results.entries)).toBe(true);
+      expect(json.results.entries).toBeInstanceOf(Array);
       expect(json.results.entries).toHaveLength(2);
       // meta contains chain health
-      expect(json.meta.chain_runs).toBeDefined();
-      expect(json.meta.findings).toBeDefined();
+      expect(json.meta.chain_runs).toBeTypeOf('number');
+      expect(json.meta.findings).toBeTypeOf('object');
     });
   });
 
@@ -528,14 +526,14 @@ describe('ana proof', () => {
       const json = JSON.parse(stdout);
       // 4-key envelope
       expect(json.command).toBe('proof context');
-      expect(json.timestamp).toBeDefined();
-      expect(json.meta).toBeDefined();
-      expect(json.meta.chain_runs).toBeDefined();
+      expect(json.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}/);
+      expect(json.meta).toBeTypeOf('object');
+      expect(json.meta.chain_runs).toBeTypeOf('number');
       // results contains context data
-      expect(json.results.results).toBeDefined();
-      expect(json.results.results[0].findings).toBeDefined();
+      expect(json.results.results).toBeInstanceOf(Array);
+      expect(json.results.results[0].findings).toBeInstanceOf(Array);
       expect(json.results.results[0].findings.length).toBeGreaterThan(0);
-      expect(json.results.results[0].build_concerns).toBeDefined();
+      expect(json.results.results[0].build_concerns).toBeInstanceOf(Array);
     });
   });
 
@@ -601,10 +599,10 @@ describe('ana proof', () => {
 
       const json = JSON.parse(stdout);
       expect(json.command).toBe('proof stripe-payments');
-      expect(json.timestamp).toBeDefined();
+      expect(json.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}/);
       expect(json.results.slug).toBe('stripe-payments');
-      expect(json.meta).toBeDefined();
-      expect(json.meta.chain_runs).toBeDefined();
+      expect(json.meta).toBeTypeOf('object');
+      expect(json.meta.chain_runs).toBeTypeOf('number');
     });
   });
 
@@ -744,9 +742,9 @@ describe('ana proof', () => {
         parsed = JSON.parse(stdout);
       }).not.toThrow();
       expect(parsed).toBeTruthy();
-      expect(parsed!['command']).toBeDefined();
-      expect(parsed!['results']).toBeDefined();
-      expect(parsed!['meta']).toBeDefined();
+      expect(parsed!['command']).toBeTypeOf('string');
+      expect(parsed!['results']).toBeTypeOf('object');
+      expect(parsed!['meta']).toBeTypeOf('object');
     });
 
     it('includes slug field in results', async () => {
@@ -755,7 +753,6 @@ describe('ana proof', () => {
 
       const { stdout } = runProof(['stripe-payments', '--json']);
       const json = JSON.parse(stdout);
-      expect(json.results.slug).toBeDefined();
       expect(json.results.slug).toBe('stripe-payments');
     });
 
@@ -765,8 +762,7 @@ describe('ana proof', () => {
 
       const { stdout } = runProof(['stripe-payments', '--json']);
       const json = JSON.parse(stdout);
-      expect(json.results.assertions).toBeDefined();
-      expect(Array.isArray(json.results.assertions)).toBe(true);
+      expect(json.results.assertions).toBeInstanceOf(Array);
     });
 
     it('includes timing information in results', async () => {
@@ -775,7 +771,6 @@ describe('ana proof', () => {
 
       const { stdout } = runProof(['stripe-payments', '--json']);
       const json = JSON.parse(stdout);
-      expect(json.results.timing).toBeDefined();
       expect(json.results.timing.total_minutes).toBe(90);
     });
   });
@@ -1147,13 +1142,13 @@ describe('ana proof', () => {
 
       const json = JSON.parse(stdout);
       expect(json.command).toBe('proof close');
-      expect(json.timestamp).toBeDefined();
+      expect(json.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}/);
       expect(json.results.finding.id).toBe('F001');
       expect(json.results.previous_status).toBe('active');
       expect(json.results.new_status).toBe('closed');
       expect(json.results.closed_by).toBe('human');
-      expect(json.meta.findings.active).toBeDefined();
-      expect(json.meta.chain_runs).toBeDefined();
+      expect(json.meta.findings.active).toBeTypeOf('number');
+      expect(json.meta.chain_runs).toBeTypeOf('number');
     });
   });
 
@@ -1169,7 +1164,7 @@ describe('ana proof', () => {
       const json = JSON.parse(stdout);
       expect(json.command).toBe('proof close');
       expect(json.error.code).toBe('FINDING_NOT_FOUND');
-      expect(json.meta).toBeDefined();
+      expect(json.meta).toBeTypeOf('object');
     });
   });
 
@@ -1499,10 +1494,10 @@ describe('ana proof', () => {
       const json = JSON.parse(stdout);
       expect(json.command).toBe('proof audit');
       expect(json.results.total_active).toBe(5);
-      expect(json.results.by_file).toBeDefined();
+      expect(json.results.by_file).toBeInstanceOf(Array);
       expect(json.results.by_file.length).toBeGreaterThan(0);
-      expect(json.results.by_file[0].findings[0].anchor_present).toBeDefined();
-      expect(json.meta.chain_runs).toBeDefined();
+      expect(json.results.by_file[0].findings[0].anchor_present).toBeTypeOf('boolean');
+      expect(json.meta.chain_runs).toBeTypeOf('number');
     });
   });
 
@@ -1518,8 +1513,7 @@ describe('ana proof', () => {
       const json = JSON.parse(stdout);
       const findings = json.results.by_file[0].findings;
       for (const f of findings) {
-        expect(f.suggested_action).toBeDefined();
-        expect(typeof f.suggested_action).toBe('string');
+        expect(f.suggested_action).toBeTypeOf('string');
       }
     });
   });
@@ -1827,15 +1821,15 @@ describe('ana proof', () => {
       expect(exitCode).toBe(0);
 
       const json = JSON.parse(stdout);
-      // by_severity exists with correct counts
-      expect(json.results.by_severity).toBeDefined();
+      // by_severity with correct counts
+      expect(json.results.by_severity).toBeTypeOf('object');
       expect(json.results.by_severity.risk).toBe(2);
       expect(json.results.by_severity.debt).toBe(1);
       expect(json.results.by_severity.observation).toBe(2);
       expect(json.results.by_severity.unclassified).toBe(0);
 
-      // by_action exists with correct counts
-      expect(json.results.by_action).toBeDefined();
+      // by_action with correct counts
+      expect(json.results.by_action).toBeTypeOf('object');
       expect(json.results.by_action.promote).toBe(1);
       expect(json.results.by_action.scope).toBe(2);
       expect(json.results.by_action.monitor).toBe(1);
@@ -1873,8 +1867,8 @@ describe('ana proof', () => {
 
       const { stdout } = runProof(['audit', '--json', '--full']);
       const json = JSON.parse(stdout);
-      expect(json.results.by_severity).toBeDefined();
-      expect(json.results.by_action).toBeDefined();
+      expect(json.results.by_severity).toBeTypeOf('object');
+      expect(json.results.by_action).toBeTypeOf('object');
       expect(json.results.by_severity.risk).toBe(2);
     });
   });
@@ -1887,8 +1881,8 @@ describe('ana proof', () => {
 
       const { stdout } = runProof(['audit', '--json']);
       const json = JSON.parse(stdout);
-      expect(json.meta.findings.by_severity).toBeDefined();
-      expect(json.meta.findings.by_action).toBeDefined();
+      expect(json.meta.findings.by_severity).toBeTypeOf('object');
+      expect(json.meta.findings.by_action).toBeTypeOf('object');
     });
   });
 
@@ -2023,16 +2017,16 @@ describe('ana proof', () => {
 
       const { stdout } = runProof(['--json']);
       const json = JSON.parse(stdout);
-      expect(json.command).toBeDefined();
-      expect(json.timestamp).toBeDefined();
-      expect(json.results).toBeDefined();
-      expect(json.meta).toBeDefined();
-      expect(json.meta.chain_runs).toBeDefined();
-      expect(json.meta.findings.active).toBeDefined();
-      expect(json.meta.findings.closed).toBeDefined();
-      expect(json.meta.findings.lesson).toBeDefined();
-      expect(json.meta.findings.promoted).toBeDefined();
-      expect(json.meta.findings.total).toBeDefined();
+      expect(json.command).toBeTypeOf('string');
+      expect(json.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}/);
+      expect(json.results).toBeTypeOf('object');
+      expect(json.meta).toBeTypeOf('object');
+      expect(json.meta.chain_runs).toBeTypeOf('number');
+      expect(json.meta.findings.active).toBeTypeOf('number');
+      expect(json.meta.findings.closed).toBeTypeOf('number');
+      expect(json.meta.findings.lesson).toBeTypeOf('number');
+      expect(json.meta.findings.promoted).toBeTypeOf('number');
+      expect(json.meta.findings.total).toBeTypeOf('number');
     });
   });
 
@@ -2495,7 +2489,7 @@ describe('ana proof', () => {
       const { stdout } = runProof(['health', '--json']);
       const json = JSON.parse(stdout);
       // promotions key exists but array is empty when no findings are promoted
-      expect(json.results.promotions).toBeDefined();
+      expect(json.results.promotions).toBeInstanceOf(Array);
       expect(json.results.promotions).toHaveLength(0);
     });
 
@@ -2510,10 +2504,10 @@ describe('ana proof', () => {
       const { stdout } = runProof(['health', '--json']);
       const json = JSON.parse(stdout);
       expect(json.command).toBe('proof health');
-      expect(json.results.trajectory).toBeDefined();
-      expect(json.results.hot_modules).toBeDefined();
-      expect(json.results.promotion_candidates).toBeDefined();
-      expect(json.results.promotions).toBeDefined();
+      expect(json.results.trajectory).toBeTypeOf('object');
+      expect(json.results.hot_modules).toBeInstanceOf(Array);
+      expect(json.results.promotion_candidates).toBeInstanceOf(Array);
+      expect(json.results.promotions).toBeInstanceOf(Array);
     });
 
     // JSON tests
@@ -2528,9 +2522,9 @@ describe('ana proof', () => {
       const { stdout } = runProof(['health', '--json']);
       const json = JSON.parse(stdout);
       expect(json.command).toBe('proof health');
-      expect(json.timestamp).toBeDefined();
-      expect(json.results).toBeDefined();
-      expect(json.meta).toBeDefined();
+      expect(json.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}/);
+      expect(json.results).toBeTypeOf('object');
+      expect(json.meta).toBeTypeOf('object');
     });
 
     // @ana A008
@@ -2540,7 +2534,7 @@ describe('ana proof', () => {
 
       const { stdout } = runProof(['health', '--json']);
       const json = JSON.parse(stdout);
-      expect(json.results.trajectory).toBeDefined();
+      expect(json.results.trajectory).toBeTypeOf('object');
     });
 
     // @ana A009
@@ -2550,7 +2544,7 @@ describe('ana proof', () => {
 
       const { stdout } = runProof(['health', '--json']);
       const json = JSON.parse(stdout);
-      expect(json.results.hot_modules).toBeDefined();
+      expect(json.results.hot_modules).toBeInstanceOf(Array);
     });
 
     // @ana A010
@@ -2560,7 +2554,7 @@ describe('ana proof', () => {
 
       const { stdout } = runProof(['health', '--json']);
       const json = JSON.parse(stdout);
-      expect(json.results.promotion_candidates).toBeDefined();
+      expect(json.results.promotion_candidates).toBeInstanceOf(Array);
     });
 
     // @ana A011
@@ -2570,7 +2564,7 @@ describe('ana proof', () => {
 
       const { stdout } = runProof(['health', '--json']);
       const json = JSON.parse(stdout);
-      expect(json.results.promotions).toBeDefined();
+      expect(json.results.promotions).toBeInstanceOf(Array);
     });
 
     // @ana A012
@@ -2836,10 +2830,10 @@ describe('ana proof', () => {
 
       const { stdout } = runProof(['health', '--json']);
       const json = JSON.parse(stdout);
-      expect(json.results.verification).toBeDefined();
+      expect(json.results.verification).toBeTypeOf('object');
       expect(json.results.verification.first_pass_pct).toBe(80);
       expect(json.results.verification.total_caught).toBe(1);
-      expect(json.results.pipeline).toBeDefined();
+      expect(json.results.pipeline).toBeTypeOf('object');
       expect(json.results.pipeline.median_total).toBeGreaterThan(0);
     });
 
@@ -3139,11 +3133,11 @@ describe('ana proof', () => {
 
       const json = JSON.parse(stdout);
       expect(json.command).toBe('proof promote');
-      expect(json.timestamp).toBeDefined();
-      expect(json.results).toBeDefined();
-      expect(json.results.promoted_to).toBeDefined();
-      expect(json.meta).toBeDefined();
-      expect(json.meta.chain_runs).toBeDefined();
+      expect(json.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}/);
+      expect(json.results).toBeTypeOf('object');
+      expect(json.results.promoted_to).toBeTypeOf('string');
+      expect(json.meta).toBeTypeOf('object');
+      expect(json.meta.chain_runs).toBeTypeOf('number');
     });
   });
 
@@ -3187,7 +3181,7 @@ describe('ana proof', () => {
       expect(exitCode).toBe(0);
 
       const json = JSON.parse(stdout);
-      expect(json.results.duplicate_warning).toBeDefined();
+      expect(json.results.duplicate_warning).toBeTypeOf('string');
     });
   });
 
@@ -3624,13 +3618,13 @@ describe('ana proof', () => {
 
       const json = JSON.parse(stdout);
       expect(json.command).toBe('proof strengthen');
-      expect(json.timestamp).toBeDefined();
-      expect(json.results).toBeDefined();
+      expect(json.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}/);
+      expect(json.results).toBeTypeOf('object');
       expect(json.results.skill).toBe('coding-standards');
       expect(json.results.skill_path).toBe('.claude/skills/coding-standards/SKILL.md');
       expect(json.results.reason).toBe('Added rule');
       expect(json.results.strengthened).toHaveLength(1);
-      expect(json.meta).toBeDefined();
+      expect(json.meta).toBeTypeOf('object');
     });
   });
 
@@ -3888,9 +3882,9 @@ describe('ana proof', () => {
       const json = JSON.parse(stdout);
       expect(json.command).toBe('proof stale');
       expect(json.results.total_stale).toBeGreaterThan(0);
-      expect(json.results.high_confidence).toBeDefined();
-      expect(json.results.medium_confidence).toBeDefined();
-      expect(json.meta.chain_runs).toBeDefined();
+      expect(json.results.high_confidence).toBeInstanceOf(Array);
+      expect(json.results.medium_confidence).toBeInstanceOf(Array);
+      expect(json.meta.chain_runs).toBeTypeOf('number');
     });
   });
 
@@ -3993,8 +3987,8 @@ describe('ana proof', () => {
       expect(exitCode).toBe(0);
 
       const json = JSON.parse(stdout);
-      expect(json.results.actionable_count).toBeDefined();
-      expect(json.results.monitoring_count).toBeDefined();
+      expect(json.results.actionable_count).toBeTypeOf('number');
+      expect(json.results.monitoring_count).toBeTypeOf('number');
       expect(json.results.actionable_count + json.results.monitoring_count).toBe(json.results.total_active);
     });
   });
