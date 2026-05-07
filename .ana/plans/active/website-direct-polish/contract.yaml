@@ -1,0 +1,237 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Website Direct Polish"
+
+assertions:
+  # Fix 1 — Pricing frame border removal
+  - id: A001
+    says: "Pricing frame has no static CSS border"
+    block: "pricing frame matches handoff"
+    target: "pricing.module.css .frame border"
+    matcher: "not_contains"
+    value: "border:"
+
+  - id: A002
+    says: "Pricing frame has no border-radius"
+    block: "pricing frame matches handoff"
+    target: "pricing.module.css .frame border-radius"
+    matcher: "not_contains"
+    value: "border-radius:"
+
+  - id: A003
+    says: "Pricing frame preserves overflow hidden for TetrisSnake containment"
+    block: "pricing frame matches handoff"
+    target: "pricing.module.css .frame overflow"
+    matcher: "contains"
+    value: "overflow: hidden"
+
+  # Fix 1 — Pricing frame centering
+  - id: A004
+    says: "Pricing frame content is centered"
+    block: "pricing content alignment"
+    target: "pricing.module.css .top text-align"
+    matcher: "contains"
+    value: "text-align: center"
+
+  # Fix 1 — Pricing h2 max-width
+  - id: A005
+    says: "Pricing headline has a max-width constraint"
+    block: "pricing content alignment"
+    target: "Pricing.tsx h2 maxWidth"
+    matcher: "contains"
+    value: "18ch"
+
+  # Fix 2 — Pricing frame padding
+  - id: A006
+    says: "Pricing frame has correct desktop padding"
+    block: "pricing frame responsive padding"
+    target: "pricing.module.css .frame padding"
+    matcher: "contains"
+    value: "40px 64px"
+
+  - id: A007
+    says: "Pricing frame has compact padding on mobile"
+    block: "pricing frame responsive padding"
+    target: "pricing.module.css .frame mobile padding"
+    matcher: "contains"
+    value: "28px 20px"
+
+  # Fix 3 — Pricing grid gap and breakpoint
+  - id: A008
+    says: "Pricing grid uses tighter gap between cards"
+    block: "pricing grid layout"
+    target: "pricing.module.css .grid gap"
+    matcher: "contains"
+    value: "gap: 14px"
+
+  - id: A009
+    says: "Pricing grid switches to two columns at the right breakpoint"
+    block: "pricing grid layout"
+    target: "pricing.module.css .grid breakpoint"
+    matcher: "contains"
+    value: "min-width: 820px"
+
+  # Fix 3 — Card responsive padding
+  - id: A010
+    says: "Price cards get more padding on large screens"
+    block: "pricing grid layout"
+    target: "pricing.module.css .card responsive padding"
+    matcher: "contains"
+    value: "padding: 40px"
+
+  # Fix 4 — Footer tagline letter-spacing
+  - id: A011
+    says: "Footer tagline italic text has refined letter-spacing"
+    block: "footer typography"
+    target: "Footer.tsx em letterSpacing"
+    matcher: "contains"
+    value: "-0.02em"
+
+  # Fix 5 — Commit pill de-styling
+  - id: A012
+    says: "Footer commit display has no visible border"
+    block: "footer commit plain text"
+    target: "Footer.tsx commit span border"
+    matcher: "not_contains"
+    value: "border:"
+
+  - id: A013
+    says: "Footer commit display has no pill padding"
+    block: "footer commit plain text"
+    target: "Footer.tsx commit span padding"
+    matcher: "not_contains"
+    value: "padding:"
+
+  # Fix 6 — Footer margin and bonding
+  - id: A014
+    says: "Footer margin comes from CSS, not Tailwind utility"
+    block: "footer proof-feed bonding"
+    target: "Footer.tsx className"
+    matcher: "not_contains"
+    value: "mt-10"
+
+  - id: A015
+    says: "Footer has a default top margin in global CSS"
+    block: "footer proof-feed bonding"
+    target: "globals.css footer margin-top"
+    matcher: "contains"
+    value: "margin-top: 40px"
+
+  - id: A016
+    says: "Collapsed proof feed sits flush against footer with no gap"
+    block: "footer proof-feed bonding"
+    target: "globals.css proof-feed bonding rule"
+    matcher: "contains"
+    value: "margin-top: 0"
+
+  # Fix 7 — Proof feed copy
+  - id: A017
+    says: "Proof feed headline no longer asks users to click"
+    block: "proof feed copy updates"
+    target: "copy.ts proofFeed.headTitle"
+    matcher: "not_contains"
+    value: "Click one"
+
+  - id: A018
+    says: "Proof feed description does not promise clickable rows"
+    block: "proof feed copy updates"
+    target: "copy.ts proofFeed.headSub"
+    matcher: "not_contains"
+    value: "links to"
+
+  # Fix 8 — tCompat hover border
+  - id: A019
+    says: "Compatibility tile does not flash a border on hover"
+    block: "bento tCompat hover fix"
+    target: "bento.module.css .tCompat hover border-color"
+    matcher: "contains"
+    value: "transparent"
+
+  # Fix 9 — MAINTENANCE_MANUAL route references
+  - id: A020
+    says: "Maintenance manual no longer references the deleted sub route group"
+    block: "maintenance manual accuracy"
+    target: "MAINTENANCE_MANUAL.md content"
+    matcher: "not_contains"
+    value: "(sub)"
+
+  - id: A021
+    says: "Maintenance manual does not reference SubNav"
+    block: "maintenance manual accuracy"
+    target: "MAINTENANCE_MANUAL.md content"
+    matcher: "not_contains"
+    value: "SubNav"
+
+  # Fix 10 — Hero headline capitalization
+  - id: A022
+    says: "Hero headline uses lowercase ana to match the brand"
+    block: "hero copy"
+    target: "copy.ts hero.headline"
+    matcher: "contains"
+    value: "*ana*"
+
+  - id: A023
+    says: "Hero headline does not use uppercase Ana"
+    block: "hero copy"
+    target: "copy.ts hero.headline"
+    matcher: "not_contains"
+    value: "*Ana*"
+
+  # Fix 12 — Nav icon button sizing
+  - id: A024
+    says: "Nav icon buttons are 34px visually instead of 44px"
+    block: "nav icon button sizing"
+    target: "Nav.tsx icon button className"
+    matcher: "not_contains"
+    value: "h-11 w-11"
+
+  - id: A025
+    says: "Nav icon buttons have expanded touch targets via pseudo-element"
+    block: "nav icon button sizing"
+    target: "Nav.tsx icon button className"
+    matcher: "contains"
+    value: "after:absolute"
+
+  - id: A026
+    says: "Theme toggle button is 34px visually"
+    block: "nav icon button sizing"
+    target: "ThemeToggle.tsx button className"
+    matcher: "not_contains"
+    value: "h-11 w-11"
+
+  - id: A027
+    says: "Mobile nav hamburger button is 34px visually"
+    block: "nav icon button sizing"
+    target: "NavMobile.tsx hamburger className"
+    matcher: "not_contains"
+    value: "h-11 w-11"
+
+  # Build verification
+  - id: A028
+    says: "Website builds successfully with all changes applied"
+    block: "build passes"
+    target: "build exit code"
+    matcher: "equals"
+    value: 0
+
+file_changes:
+  - path: "website/components/pricing/pricing.module.css"
+    action: modify
+  - path: "website/components/pricing/Pricing.tsx"
+    action: modify
+  - path: "website/components/footer/Footer.tsx"
+    action: modify
+  - path: "website/app/globals.css"
+    action: modify
+  - path: "website/lib/copy.ts"
+    action: modify
+  - path: "website/components/bento/bento.module.css"
+    action: modify
+  - path: "website/MAINTENANCE_MANUAL.md"
+    action: modify
+  - path: "website/components/nav/Nav.tsx"
+    action: modify
+  - path: "website/components/nav/ThemeToggle.tsx"
+    action: modify
+  - path: "website/components/nav/NavMobile.tsx"
+    action: modify
