@@ -1,0 +1,290 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Dead Links & Missing Pages"
+
+assertions:
+  # AC1 — Unified navigation
+  - id: A001
+    says: "Every page uses the same primary navigation bar"
+    block: "SubNav deleted and (sub) route group removed"
+    target: "filesystem.sub-nav-component"
+    matcher: "not_equals"
+    value: "exists"
+
+  - id: A002
+    says: "The sub-page route group no longer exists"
+    block: "SubNav deleted and (sub) route group removed"
+    target: "filesystem.sub-layout"
+    matcher: "not_equals"
+    value: "exists"
+
+  - id: A003
+    says: "No file in the codebase imports the old SubNav component"
+    block: "SubNav deleted and (sub) route group removed"
+    target: "codebase.subnav-imports"
+    matcher: "equals"
+    value: 0
+
+  # AC2 — Zero dead href="#" links
+  - id: A004
+    says: "No placeholder hash links remain in the site copy"
+    block: "copy.ts has zero href # links"
+    target: "copy.ts.href-hash-count"
+    matcher: "equals"
+    value: 0
+
+  # AC3 — Agents anchor
+  - id: A005
+    says: "The agents section has a scroll anchor on the landing page"
+    block: "agents anchor exists"
+    target: "AgentsTile.id"
+    matcher: "equals"
+    value: "agents"
+
+  # AC4 — Proof feed rows delinked
+  - id: A006
+    says: "Proof feed rows display information without being clickable links"
+    block: "proof feed rows are non-linking"
+    target: "ProofFeed.row-element"
+    matcher: "not_equals"
+    value: "a"
+
+  - id: A007
+    says: "The proof entry data no longer carries a URL field"
+    block: "proof feed rows are non-linking"
+    target: "ProofEntry.url-field"
+    matcher: "not_equals"
+    value: "exists"
+
+  - id: A008
+    says: "Proof feed rows have no arrow icon suggesting clickability"
+    block: "proof feed rows are non-linking"
+    target: "ProofFeed.row-arrow-svg"
+    matcher: "not_equals"
+    value: "exists"
+
+  # AC5 — Nav version pill display-only
+  - id: A009
+    says: "The version pill in the navigation bar is not a link"
+    block: "nav version pill is display-only"
+    target: "Nav.version-pill-element"
+    matcher: "not_equals"
+    value: "a"
+
+  # AC6 — Footer commit pill display-only
+  - id: A010
+    says: "The commit pill in the footer is not a link"
+    block: "footer commit pill is display-only span"
+    target: "Footer.commit-pill-element"
+    matcher: "not_equals"
+    value: "a"
+
+  - id: A011
+    says: "The footer commit pill has a rounded pill shape"
+    block: "footer commit pill is display-only span"
+    target: "Footer.commit-pill-classes"
+    matcher: "contains"
+    value: "rounded-full"
+
+  # AC7 — New pages exist
+  - id: A012
+    says: "The changelog page exists and can be built"
+    block: "five new pages created"
+    target: "filesystem.changelog-page"
+    matcher: "exists"
+
+  - id: A013
+    says: "The CLI reference page exists and can be built"
+    block: "five new pages created"
+    target: "filesystem.cli-page"
+    matcher: "exists"
+
+  - id: A014
+    says: "The examples page exists and can be built"
+    block: "five new pages created"
+    target: "filesystem.examples-page"
+    matcher: "exists"
+
+  - id: A015
+    says: "The about page exists and can be built"
+    block: "five new pages created"
+    target: "filesystem.about-page"
+    matcher: "exists"
+
+  - id: A016
+    says: "The license page exists and can be built"
+    block: "five new pages created"
+    target: "filesystem.license-page"
+    matcher: "exists"
+
+  - id: A017
+    says: "Each new page exports SEO metadata with the Anatomia brand"
+    block: "five new pages created"
+    target: "new-pages.metadata-exports"
+    matcher: "equals"
+    value: 5
+
+  # AC8 + AC9 + AC10 — All links resolve
+  - id: A018
+    says: "Footer product links use absolute paths for landing page sections"
+    block: "hash links use absolute paths"
+    target: "copy.footer.columns.product-links"
+    matcher: "contains"
+    value: "/#pipeline"
+
+  - id: A019
+    says: "Navigation links use absolute paths for landing page sections"
+    block: "hash links use absolute paths"
+    target: "copy.nav.links.pipeline-href"
+    matcher: "equals"
+    value: "/#pipeline"
+
+  - id: A020
+    says: "Navigation links point to the agents section with an absolute path"
+    block: "hash links use absolute paths"
+    target: "copy.nav.links.agents-href"
+    matcher: "equals"
+    value: "/#agents"
+
+  - id: A021
+    says: "Navigation links point to pricing with an absolute path"
+    block: "hash links use absolute paths"
+    target: "copy.nav.links.pricing-href"
+    matcher: "equals"
+    value: "/#pricing"
+
+  - id: A022
+    says: "The desktop nav install button links to pricing with an absolute path"
+    block: "hash links use absolute paths"
+    target: "Nav.cta-href"
+    matcher: "equals"
+    value: "/#pricing"
+
+  - id: A023
+    says: "The mobile nav install button links to pricing with an absolute path"
+    block: "hash links use absolute paths"
+    target: "NavMobile.cta-href"
+    matcher: "equals"
+    value: "/#pricing"
+
+  # AC11 — Docs next status
+  - id: A024
+    says: "The CLI reference card on the docs page shows coming soon status"
+    block: "docs next cards show correct status"
+    target: "copy.docs.next.cli-reference.status"
+    matcher: "equals"
+    value: "Coming soon"
+
+  - id: A025
+    says: "The examples card on the docs page shows coming soon status"
+    block: "docs next cards show correct status"
+    target: "copy.docs.next.examples.status"
+    matcher: "equals"
+    value: "Coming soon"
+
+  # AC12 — Full history link
+  - id: A026
+    says: "The proof feed history link points to the real GitHub commit log"
+    block: "proof feed foot link is real"
+    target: "copy.proofFeed.footLink.href"
+    matcher: "equals"
+    value: "https://github.com/TettoLabs/anatomia/commits/main"
+
+  # AC14 — Sitemap
+  - id: A027
+    says: "The sitemap lists all nine public pages"
+    block: "sitemap includes all pages"
+    target: "sitemap.entry-count"
+    matcher: "equals"
+    value: 9
+
+  # AC15 — Build succeeds
+  - id: A028
+    says: "The website builds successfully with no errors"
+    block: "website build succeeds"
+    target: "build.exit-code"
+    matcher: "equals"
+    value: 0
+
+  # Existing pages moved correctly
+  - id: A029
+    says: "The docs page renders inside the marketing layout with the main nav"
+    block: "existing pages moved to marketing route"
+    target: "filesystem.marketing-docs-page"
+    matcher: "exists"
+
+  - id: A030
+    says: "The manifesto page renders inside the marketing layout with the main nav"
+    block: "existing pages moved to marketing route"
+    target: "filesystem.marketing-manifesto-page"
+    matcher: "exists"
+
+  - id: A031
+    says: "The contact page renders inside the marketing layout with the main nav"
+    block: "existing pages moved to marketing route"
+    target: "filesystem.marketing-contact-page"
+    matcher: "exists"
+
+file_changes:
+  - path: "website/lib/copy.ts"
+    action: modify
+  - path: "website/lib/proof-feed.ts"
+    action: modify
+  - path: "website/components/proof-feed/ProofFeed.tsx"
+    action: modify
+  - path: "website/components/nav/Nav.tsx"
+    action: modify
+  - path: "website/components/nav/NavMobile.tsx"
+    action: modify
+  - path: "website/components/footer/Footer.tsx"
+    action: modify
+  - path: "website/components/bento/tiles/AgentsTile.tsx"
+    action: modify
+  - path: "website/app/(sub)/layout.tsx"
+    action: delete
+  - path: "website/app/(sub)/docs/page.tsx"
+    action: delete
+  - path: "website/app/(sub)/manifesto/page.tsx"
+    action: delete
+  - path: "website/app/(sub)/contact/page.tsx"
+    action: delete
+  - path: "website/components/sub-nav/SubNav.tsx"
+    action: delete
+  - path: "website/app/(marketing)/docs/page.tsx"
+    action: create
+  - path: "website/app/(marketing)/manifesto/page.tsx"
+    action: create
+  - path: "website/app/(marketing)/contact/page.tsx"
+    action: create
+  - path: "website/app/(marketing)/changelog/page.tsx"
+    action: create
+  - path: "website/app/(marketing)/cli/page.tsx"
+    action: create
+  - path: "website/app/(marketing)/examples/page.tsx"
+    action: create
+  - path: "website/app/(marketing)/about/page.tsx"
+    action: create
+  - path: "website/app/(marketing)/license/page.tsx"
+    action: create
+  - path: "website/components/changelog/Changelog.tsx"
+    action: create
+  - path: "website/components/changelog/changelog.module.css"
+    action: create
+  - path: "website/components/cli-ref/CliRef.tsx"
+    action: create
+  - path: "website/components/cli-ref/cli-ref.module.css"
+    action: create
+  - path: "website/components/examples/Examples.tsx"
+    action: create
+  - path: "website/components/examples/examples.module.css"
+    action: create
+  - path: "website/components/about/About.tsx"
+    action: create
+  - path: "website/components/about/about.module.css"
+    action: create
+  - path: "website/components/license/License.tsx"
+    action: create
+  - path: "website/components/license/license.module.css"
+    action: create
+  - path: "website/app/sitemap.ts"
+    action: modify
