@@ -1,0 +1,243 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Test Suite Hygiene"
+
+assertions:
+  # Category 1: Source-reading tests removed
+  - id: A001
+    says: "Source-reading test that greps production source for --json option registration is removed"
+    block: "source-reading tests removed from work.test.ts"
+    target: "work.test.ts"
+    matcher: "not_contains"
+    value: "completeCommand registers --json option"
+
+  - id: A002
+    says: "Source-reading test that greps skills.ts for branchPrefix is removed"
+    block: "source-reading tests removed from work.test.ts"
+    target: "work.test.ts"
+    matcher: "not_contains"
+    value: "injectGitWorkflow uses branchPrefix placeholder"
+
+  - id: A003
+    says: "Archaeological source-reading test for step 9a fixup is removed"
+    block: "source-reading tests removed from artifact.test.ts"
+    target: "artifact.test.ts"
+    matcher: "not_contains"
+    value: "step 9a post-commit fixup no longer exists in source"
+
+  # Category 1: Exemption comments on kept tests
+  - id: A004
+    says: "Import boundary test in proofSummary has an exemption comment explaining why source-reading is acceptable"
+    block: "exemption comments added to kept source-reading tests"
+    target: "proofSummary.test.ts.exemption_comment"
+    matcher: "contains"
+    value: "Source-reading exemption"
+
+  - id: A005
+    says: "Import boundary test in verify has an exemption comment"
+    block: "exemption comments added to kept source-reading tests"
+    target: "verify.test.ts.exemption_comment"
+    matcher: "contains"
+    value: "Source-reading exemption"
+
+  - id: A006
+    says: "Template tests have comments explaining templates are shipped artifacts"
+    block: "template comments added to kept template-reading tests"
+    target: "work.test.ts.template_comment"
+    matcher: "contains"
+    value: "templates are shipped artifacts"
+
+  # Category 2: Archaeological tests deleted
+  - id: A007
+    says: "The entire old-system-removed test file is deleted"
+    block: "archaeological test file deleted"
+    target: "tests/cleanup/old-system-removed.test.ts"
+    matcher: "not_equals"
+    value: "exists"
+
+  - id: A008
+    says: "The cleanup directory is deleted after removing its only file"
+    block: "archaeological test file deleted"
+    target: "tests/cleanup/"
+    matcher: "not_equals"
+    value: "exists"
+
+  - id: A009
+    says: "Archaeological test verifying parseDiffAddedCommentLines deletion is removed"
+    block: "archaeological test removed from verify.test.ts"
+    target: "verify.test.ts"
+    matcher: "not_contains"
+    value: "tag coverage tests are removed"
+
+  # Category 3: Mislabeled tests fixed
+  - id: A010
+    says: "Maintenance line test has a name that matches its assertion"
+    block: "mislabeled test renamed in work.test.ts"
+    target: "work.test.ts"
+    matcher: "contains"
+    value: "does not show Maintenance label"
+
+  - id: A011
+    says: "Redundant UNKNOWN result test is removed because it duplicates the PASS path"
+    block: "redundant mislabeled tests removed from work.test.ts"
+    target: "work.test.ts"
+    matcher: "not_contains"
+    value: "allows completion with UNKNOWN result"
+
+  - id: A012
+    says: "Redundant UNKNOWN warning test is removed because it only tests the PASS path"
+    block: "redundant mislabeled tests removed from work.test.ts"
+    target: "work.test.ts"
+    matcher: "not_contains"
+    value: "warns on UNKNOWN result with verify report present"
+
+  - id: A013
+    says: "Callouts section name is updated to Findings in proofSummary test"
+    block: "mislabeled tests renamed in proofSummary.test.ts"
+    target: "proofSummary.test.ts"
+    matcher: "not_contains"
+    value: "no Callouts section"
+
+  # Category 4: Weak assertions strengthened
+  - id: A014
+    says: "Timestamp field uses format assertion instead of just checking it exists"
+    block: "weak assertions strengthened in work.test.ts"
+    target: "work.test.ts.json_timestamp"
+    matcher: "contains"
+    value: "toMatch"
+
+  - id: A015
+    says: "Contract numeric fields use type assertions instead of just checking they exist"
+    block: "weak assertions strengthened in work.test.ts"
+    target: "work.test.ts.contract_fields"
+    matcher: "contains"
+    value: "toBeTypeOf"
+
+  - id: A016
+    says: "JSON envelope fields in proof tests use type assertions instead of toBeDefined"
+    block: "weak assertions strengthened in proof.test.ts"
+    target: "proof.test.ts.envelope"
+    matcher: "contains"
+    value: "toBeTypeOf"
+
+  - id: A017
+    says: "Redundant toBeTruthy guard before value assertion is removed in proof tests"
+    block: "redundant guards removed in proof.test.ts"
+    target: "proof.test.ts.guard_removed"
+    matcher: "truthy"
+
+  - id: A018
+    says: "Seal hash assertion uses format pattern match instead of just checking it exists"
+    block: "weak assertion strengthened in artifact.test.ts"
+    target: "artifact.test.ts.seal_hash"
+    matcher: "contains"
+    value: "toMatch"
+
+  - id: A019
+    says: "Exact fixture counts replace toBeGreaterThan(0) in proofSummary tests"
+    block: "weak assertions strengthened in proofSummary.test.ts"
+    target: "proofSummary.test.ts.exact_counts"
+    matcher: "truthy"
+
+  # Category 5: E2E gaps filled
+  - id: A020
+    says: "E2E init test checks for the ana-learn agent file"
+    block: "E2E agent file assertions updated"
+    target: "init-flow.test.ts.agent_files"
+    matcher: "contains"
+    value: "ana-learn.md"
+
+  - id: A021
+    says: "E2E init test checks for the ai-patterns skill directory"
+    block: "E2E skill directory assertions updated"
+    target: "init-flow.test.ts.skill_dirs"
+    matcher: "contains"
+    value: "ai-patterns"
+
+  - id: A022
+    says: "E2E init test checks for the api-patterns skill directory"
+    block: "E2E skill directory assertions updated"
+    target: "init-flow.test.ts.skill_dirs"
+    matcher: "contains"
+    value: "api-patterns"
+
+  - id: A023
+    says: "E2E init test checks for the data-access skill directory"
+    block: "E2E skill directory assertions updated"
+    target: "init-flow.test.ts.skill_dirs"
+    matcher: "contains"
+    value: "data-access"
+
+  # Category 6: Dead code removed
+  - id: A024
+    says: "Dead loadFixture function is removed from test helpers"
+    block: "dead exports removed from fixtures.ts"
+    target: "fixtures.ts"
+    matcher: "not_contains"
+    value: "loadFixture"
+
+  - id: A025
+    says: "isWasmAvailable is no longer exported but still used internally"
+    block: "dead exports removed from fixtures.ts"
+    target: "fixtures.ts.isWasmAvailable"
+    matcher: "not_contains"
+    value: "export async function isWasmAvailable"
+
+  # Category 7: Console noise removed
+  - id: A026
+    says: "Console timing output is removed from performance benchmarks"
+    block: "console noise removed from benchmarks.test.ts"
+    target: "benchmarks.test.ts"
+    matcher: "not_contains"
+    value: "console.log"
+
+  - id: A027
+    says: "Console skip message is removed from parsing performance test"
+    block: "console noise removed from parsing-performance.test.ts"
+    target: "parsing-performance.test.ts"
+    matcher: "not_contains"
+    value: "console.log"
+
+  - id: A028
+    says: "Console warn for WASM unavailable is removed from fixtures"
+    block: "console noise removed from fixtures.ts"
+    target: "fixtures.ts"
+    matcher: "not_contains"
+    value: "console.warn"
+
+  # Category 8: Suite still passes
+  - id: A029
+    says: "All tests pass after cleanup with no behavioral coverage lost"
+    block: "full test suite passes"
+    target: "test_suite.exit_code"
+    matcher: "equals"
+    value: 0
+
+  - id: A030
+    says: "Test file count decreases by exactly 1 after deleting the archaeological file"
+    block: "full test suite passes"
+    target: "test_suite.file_count"
+    matcher: "equals"
+    value: 95
+
+file_changes:
+  - path: "packages/cli/tests/cleanup/old-system-removed.test.ts"
+    action: delete
+  - path: "packages/cli/tests/commands/work.test.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/proof.test.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/artifact.test.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/verify.test.ts"
+    action: modify
+  - path: "packages/cli/tests/utils/proofSummary.test.ts"
+    action: modify
+  - path: "packages/cli/tests/e2e/init-flow.test.ts"
+    action: modify
+  - path: "packages/cli/tests/engine/fixtures.ts"
+    action: modify
+  - path: "packages/cli/tests/performance/benchmarks.test.ts"
+    action: modify
+  - path: "packages/cli/tests/engine/performance/parsing-performance.test.ts"
+    action: modify
