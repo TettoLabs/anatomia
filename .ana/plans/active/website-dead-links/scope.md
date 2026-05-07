@@ -25,6 +25,7 @@ Eliminate every dead link on the site, unify navigation across all pages, and bu
   - `website/app/(marketing)/examples/page.tsx` — new
   - `website/app/(marketing)/about/page.tsx` — new
   - `website/app/(marketing)/license/page.tsx` — new
+  - `website/app/sitemap.ts` — add 5 new page entries to the hardcoded list
 - **Blast radius:** Navigation and routing changes affect every page. The SubNav removal changes the layout inheritance for 3 existing pages. Hash link fixes affect copy.ts which feeds every component. New pages are additive — no existing code changes for them beyond copy.ts entries.
 - **Estimated effort:** 4–6 hours. The SubNav removal is a structural change that needs careful verification. The 5 new pages follow an established pattern but need real content and craft. The link fixes in copy.ts and proof-feed.ts are mechanical.
 - **Multi-phase:** no
@@ -44,7 +45,7 @@ Three layers, each eliminating a class of dead links:
 - AC3: `#agents` anchor exists and scrolls to the agents tile on the landing page
 - AC4: Proof feed rows are non-linking display elements (no `<a>` wrapper, no dead anchors)
 - AC5: Nav version pill is display-only (no link to dead `#proof-{slug}`)
-- AC6: Footer commit pill is display-only (no link to dead `#proof-{slug}`)
+- AC6: Footer commit pill is a display-only `<span>` styled as a pill (`rounded-full`, `padding: 3px 10px`) — carrying forward the visual shape from Scope A but removing the `<a>` tag, link, and hover states
 - AC7: `/changelog`, `/cli`, `/examples`, `/about`, `/license` all return 200
 - AC8: All footer links resolve to real pages or valid absolute anchors
 - AC9: All nav links resolve to real sections (from any page, not just the landing page)
@@ -52,6 +53,7 @@ Three layers, each eliminating a class of dead links:
 - AC11: Docs "next" cards for CLI reference and Examples show "Coming soon" status, not "Live"
 - AC12: "Full history →" link in proof feed points to `https://github.com/TettoLabs/anatomia/commits/main`
 - AC13: Zero dead links on any page — every `<a>` resolves to a real destination
+- AC14: `sitemap.ts` includes all 9 pages (/, /docs, /manifesto, /contact, /changelog, /cli, /examples, /about, /license)
 
 ## Edge Cases & Risks
 - **Route group move breaks URLs.** Next.js route groups are parenthesized and don't appear in URLs. Moving `/docs` from `(sub)/docs/` to `(marketing)/docs/` preserves the URL `/docs`. No redirects needed. But the build must be verified — if both `(sub)/docs/` and `(marketing)/docs/` exist during the migration, Next.js will error on conflicting routes. The `(sub)` directory must be fully deleted, not just emptied.
@@ -59,7 +61,7 @@ Three layers, each eliminating a class of dead links:
 - **Hash links from the landing page.** The hero CTAs use `#pricing` and `#pipeline` (copy.ts lines 57-58). These only render on the landing page, so relative hashes work fine. Don't change these to absolute — `/#pricing` is semantically identical to `#pricing` on the landing page but adds a full page reload if the user is already there. Leave hero CTAs as relative.
 - **Proof feed row accessibility.** Changing rows from `<a>` to `<div>` changes the semantic role. The rows currently have `role="listitem"` which is fine for non-interactive elements, but the row arrow icon (→) becomes misleading on a non-linking element. Remove the arrow SVG or replace with a non-directional indicator.
 - **New pages need metadata.** Each page must export a `metadata` object with `title` and `description` for SEO. Follow the pattern in existing sub-pages: `"Title · Anatomia"`.
-- **Footer commit pill loses interactivity.** Currently it's an `<a>` tag with hover states (color transition, border-bottom). As a display-only element, the hover states should be removed — a `<span>` that looks clickable but isn't is worse than a plain `<span>`.
+- **Footer commit pill loses interactivity.** Scope A reskins this as a pill shape with hover background (`rounded-full`, `padding: 3px 10px`, hover `border-color` + `background`). Scope B then removes the `<a>` tag and hover states, keeping the pill shape as a display-only `<span>`. The visual form survives — only the interactivity is removed.
 - **Docs "next" cards with "Coming soon" status.** The DocsNext component applies brand-colored styling only when `status === "Live"`. Cards with "Coming soon" will get muted gray styling automatically. But the cards still link to `/cli` and `/examples` via `<Link>` — after B5 ships those pages exist, so the links are valid. The status change is the only fix needed.
 - **Team CTA waitlist link.** The requirements doc notes this as a product decision — a Typeform/Formspree URL is needed. Scope this as: use a temporary destination (the GitHub repo or a contact page link) with a `TODO` comment. The real URL is wired when the waitlist form exists.
 
@@ -113,6 +115,7 @@ Three layers, each eliminating a class of dead links:
 - `website/components/bento/tiles/AgentsTile.tsx` — add `id="agents"` to tile wrapper div
 - `website/components/docs/DocsNext.tsx` — status badge styling (already handles non-"Live" correctly)
 - `website/lib/format.ts` — `splitHeadline()` for dual-font title rendering in new pages
+- `website/app/sitemap.ts` — hardcoded with 4 entries today, needs all 9 pages
 
 ### Patterns to Follow
 - `app/(sub)/manifesto/page.tsx` — page file pattern (metadata + main wrapper + component)
@@ -130,6 +133,5 @@ Three layers, each eliminating a class of dead links:
 - The `/license` page needs the full MIT license text. The CLI package.json or repo root likely has the canonical text — Plan should check `LICENSE` or `LICENSE.md` at the repo root.
 
 ### Things to Investigate
-- Whether the 5 new pages need entries added to `sitemap.ts` and how the existing sitemap generates its list. If it's manual, the new pages need manual additions.
 - The mobile Nav overlay (`NavMobile.tsx`) also renders `copy.nav.links` — the hash link fix in copy.ts will propagate here automatically, but verify the mobile overlay correctly navigates and closes when tapping an absolute hash link like `/#pipeline` from a sub-page.
 - Whether the changelog page should pull version data from the CLI's `package.json` or hardcode entries. Hardcoding is fine for this scope — dynamic version fetching is Scope C territory.
