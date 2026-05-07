@@ -499,6 +499,7 @@ describe('ana work status', () => {
     });
 
     // @ana A016, A017
+    // Reads template file — templates are shipped artifacts, not implementation details
     it('ana-build template uses branchPrefix placeholder', async () => {
       const content = fsSync.readFileSync(
         path.join(__dirname, '../../src/../templates/.claude/agents/ana-build.md'),
@@ -509,6 +510,7 @@ describe('ana work status', () => {
     });
 
     // @ana A018
+    // Reads template file — templates are shipped artifacts, not implementation details
     it('ana-plan template uses branchPrefix placeholder', async () => {
       const content = fsSync.readFileSync(
         path.join(__dirname, '../../src/../templates/.claude/agents/ana-plan.md'),
@@ -518,18 +520,10 @@ describe('ana work status', () => {
     });
 
     // @ana A019
+    // Reads template file — templates are shipped artifacts, not implementation details
     it('ana-verify template uses branchPrefix placeholder', async () => {
       const content = fsSync.readFileSync(
         path.join(__dirname, '../../src/../templates/.claude/agents/ana-verify.md'),
-        'utf-8'
-      );
-      expect(content).toContain('{branchPrefix}');
-    });
-
-    // @ana A020
-    it('injectGitWorkflow uses branchPrefix placeholder', async () => {
-      const content = fsSync.readFileSync(
-        path.join(__dirname, '../../src/commands/init/skills.ts'),
         'utf-8'
       );
       expect(content).toContain('{branchPrefix}');
@@ -823,26 +817,6 @@ describe('ana work status', () => {
         expect(errorOutput).toContain('claude --agent ana-build');
         expect(errorOutput).toContain('FAIL');
         mockExit.mockRestore();
-      });
-
-      // @ana A030
-      it('allows completion with UNKNOWN result', async () => {
-        await createMergedProject({ slug: 'test-slug', phases: 1 });
-
-        // Patch verify report to have no Result line (triggers UNKNOWN path)
-        // But completeWork requires a Result line — UNKNOWN means proof.result is UNKNOWN
-        // after proof summary generation, not from the verify report itself.
-        // The existing test at line 814 confirms PASS works. For UNKNOWN, we need
-        // to verify that the UNKNOWN warning path doesn't block.
-        // Since completeWork step 8 requires PASS/FAIL (not unknown) in verify reports,
-        // UNKNOWN result in proof.result comes from a different path.
-        // The existing behavior: UNKNOWN verify reports are blocked by step 8.
-        // But proof.result UNKNOWN is allowed through writeProofChain with a warning.
-        // Test PASS behavior to confirm non-FAIL results complete successfully.
-        await completeWork('test-slug');
-
-        const completedPath = path.join(tempDir, '.ana', 'plans', 'completed', 'test-slug');
-        expect(fsSync.existsSync(completedPath)).toBe(true);
       });
 
       // @ana A031
@@ -1692,7 +1666,7 @@ file_changes:
       });
 
       // @ana A029, A030
-      it('shows maintenance line when findings were auto-closed', async () => {
+      it('does not show Maintenance label when findings are auto-closed', async () => {
         await createProofProject('test-feature', { existingChain: true });
 
         const chainPath = path.join(tempDir, '.ana', 'proof_chain.json');
@@ -1717,26 +1691,6 @@ file_changes:
 
         expect(output).toContain('findings');
         expect(output).not.toContain('Maintenance:');
-      });
-
-      // @ana A024
-      it('warns on UNKNOWN result with verify report present in completed dir', async () => {
-        await createProofProject('test-feature');
-
-        // Make the verify report have a valid Result for completeWork validation,
-        // but patch the completed copy after move to simulate UNKNOWN scenario.
-        // Instead, we test the warning by directly checking writeProofChain's behavior
-        // through the generated proof_chain.json after completion.
-        // The UNKNOWN warning fires inside writeProofChain which is called during
-        // completeWork. We verify it by ensuring UNKNOWN entries are still written.
-        // Note: completeWork validates PASS/FAIL before calling writeProofChain,
-        // so the UNKNOWN warning protects against future callers, not completeWork itself.
-        await completeWork('test-feature');
-
-        const chainPath = path.join(tempDir, '.ana', 'proof_chain.json');
-        const chain = JSON.parse(fsSync.readFileSync(chainPath, 'utf-8'));
-        // The entry was written with a valid result
-        expect(chain.entries[chain.entries.length - 1].result).toBe('PASS');
       });
 
       // @ana A008, A009
@@ -2066,15 +2020,6 @@ file_changes:
     });
 
     describe('--json output', () => {
-      // @ana A001
-      it('completeCommand registers --json option', () => {
-        const source = fsSync.readFileSync(
-          path.resolve(__dirname, '../../src/commands/work.ts'),
-          'utf-8'
-        );
-        expect(source).toContain("option('--json'");
-      });
-
       // @ana A002, A003, A004, A005
       it('main path outputs four-key JSON envelope', async () => {
         await createMergedProject({ slug: 'json-test', phases: 1 });
@@ -2090,9 +2035,9 @@ file_changes:
         const json = JSON.parse(output);
 
         expect(json.command).toBe('work complete');
-        expect(json.timestamp).toBeDefined();
-        expect(json.results).toBeDefined();
-        expect(json.meta).toBeDefined();
+        expect(json.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}/);
+        expect(json.results).toBeTypeOf('object');
+        expect(json.meta).toBeTypeOf('object');
       });
 
       // @ana A006, A007, A008, A009, A010, A011
@@ -2110,17 +2055,15 @@ file_changes:
         const json = JSON.parse(output);
 
         expect(json.results.slug).toBe('fields-test');
-        expect(json.results.feature).toBeDefined();
+        expect(json.results.feature).toBeTypeOf('string');
         expect(json.results.result).toContain('PASS');
-        expect(json.results.contract).toBeDefined();
-        expect(json.results.contract.satisfied).toBeDefined();
-        expect(json.results.contract.total).toBeDefined();
-        expect(json.results.contract.unsatisfied).toBeDefined();
-        expect(json.results.contract.deviated).toBeDefined();
-        expect(json.results.new_findings).toBeDefined();
-        expect(typeof json.results.new_findings).toBe('number');
-        expect(json.results.rejection_cycles).toBeDefined();
-        expect(typeof json.results.rejection_cycles).toBe('number');
+        expect(json.results.contract).toBeTypeOf('object');
+        expect(json.results.contract.satisfied).toBeTypeOf('number');
+        expect(json.results.contract.total).toBeTypeOf('number');
+        expect(json.results.contract.unsatisfied).toBeTypeOf('number');
+        expect(json.results.contract.deviated).toBeTypeOf('number');
+        expect(json.results.new_findings).toBeTypeOf('number');
+        expect(json.results.rejection_cycles).toBeTypeOf('number');
       });
 
       // @ana A027
@@ -2155,8 +2098,8 @@ file_changes:
         const output = logs.join('\n');
         const json = JSON.parse(output);
 
-        expect(json.meta.findings.by_severity).toBeDefined();
-        expect(json.meta.findings.by_action).toBeDefined();
+        expect(json.meta.findings.by_severity).toBeTypeOf('object');
+        expect(json.meta.findings.by_action).toBeTypeOf('object');
       });
 
       // @ana A014, A015, A016, A001, A002, A011, A012
@@ -2235,8 +2178,8 @@ file_changes:
         const json = JSON.parse(output);
         expect(json.command).toBe('work complete');
         expect(json.results.new_findings).toBe(0);
-        expect(json.meta).toBeDefined();
-        expect(json.meta.findings.by_severity).toBeDefined();
+        expect(json.meta).toBeTypeOf('object');
+        expect(json.meta.findings.by_severity).toBeTypeOf('object');
       });
 
       // @ana A017, A003
@@ -2353,12 +2296,11 @@ file_changes:
         const output = logs.join('\n');
         const json = JSON.parse(output);
 
-        expect(json.results.quality).toBeDefined();
-        expect(json.results.quality.changed).toBeDefined();
-        expect(typeof json.results.quality.changed).toBe('boolean');
-        expect(json.results.quality.trajectory).toBeDefined();
-        expect(json.results.quality.triggers).toBeDefined();
-        expect(Array.isArray(json.results.quality.triggers)).toBe(true);
+        expect(json.results.quality).toBeTypeOf('object');
+        expect(json.results.quality.changed).toBeTypeOf('boolean');
+        // trajectory is null when insufficient entries for trend detection
+        expect(json.results.quality).toHaveProperty('trajectory');
+        expect(json.results.quality.triggers).toBeInstanceOf(Array);
       });
 
       // @ana A011
@@ -3243,7 +3185,7 @@ describe('work start early-return phase detection', () => {
     const savesPath = path.join(slugDir, '.saves.json');
     const saves = JSON.parse(fsSync.readFileSync(savesPath, 'utf-8'));
     expect(saves.build_started_at).toBeUndefined();
-    expect(saves.verify_started_at).toBeDefined();
+    expect(saves.verify_started_at).toMatch(/^\d{4}-\d{2}-\d{2}/);
   });
 
   it('early-return writes build_started_at during Fix phase (FAIL verify)', async () => {
