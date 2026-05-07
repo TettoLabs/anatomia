@@ -1,0 +1,101 @@
+/* Changelog — version entries with eyebrow + title pattern from manifesto. */
+
+.article {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 0 8px;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-45);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+.eyebrow::before {
+  content: "";
+  width: 18px;
+  height: 1px;
+  background: var(--color-brand);
+}
+
+.title {
+  font-family: var(--font-serif);
+  font-size: clamp(40px, 5.2vw, 56px);
+  font-weight: 400;
+  font-style: italic;
+  line-height: 1.06;
+  letter-spacing: -0.02em;
+  color: var(--fg-strong);
+  margin-bottom: 40px;
+  max-width: 16ch;
+}
+.title :global(em) {
+  font-style: italic;
+  color: var(--color-brand);
+}
+
+.entries {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.entry {
+  border-top: 1px solid var(--hairline);
+  padding-top: 24px;
+}
+
+.entryHeader {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.entryVersion {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fg-strong);
+}
+
+.entryDate {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-45);
+}
+
+.entryList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.entryList li {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--ink-75);
+  padding-left: 16px;
+  position: relative;
+}
+.entryList li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 10px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--ink-30);
+}

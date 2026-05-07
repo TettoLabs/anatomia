@@ -1,0 +1,17 @@
+schema: 1
+concerns:
+  - summary: "DocsNext.tsx uses `as string` cast to work around type narrowing after status change"
+    file: "website/components/docs/DocsNext.tsx"
+    severity: debt
+    suggested_action: monitor
+  - summary: "Hero eyebrow pill arrow icon removed — visual change not covered by spec"
+    file: "website/components/hero/Hero.tsx"
+    severity: observation
+    suggested_action: accept
+  - summary: "CSS module eyebrow/title pattern duplicated across 5 new component stylesheets"
+    severity: debt
+    suggested_action: scope
+  - summary: "Pre-existing lint warning in git-operations.ts (unused eslint-disable)"
+    file: "packages/cli/src/utils/git-operations.ts"
+    severity: observation
+    suggested_action: accept

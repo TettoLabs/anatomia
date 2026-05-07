@@ -22,9 +22,8 @@ export async function Hero() {
 
       <Container className={styles.inner}>
         {/* Eyebrow dispatch pill */}
-        <a
+        <span
           className={styles.eyebrow}
-          href={latest?.url ?? "#"}
           aria-label="Latest proof: Proof chains are live"
         >
           <span className={styles.live} aria-hidden="true" />
@@ -36,12 +35,7 @@ export async function Hero() {
           <span className={styles.feature}>
             <Formatted text={copy.hero.eyebrow.feature} />
           </span>
-          <span className={styles.chev} aria-hidden="true">
-            <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-              <path d="M3 8 L8 3 M4 3 H8 V7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </span>
-        </a>
+        </span>
 
         {/* Headline */}
         <h1 className={styles.headline}>

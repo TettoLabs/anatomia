@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { SubNav } from "@/components/sub-nav/SubNav";
 import { Contact } from "@/components/contact/Contact";
 
 export const metadata: Metadata = {
@@ -10,11 +9,8 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   return (
-    <>
-      <SubNav current="contact" />
-      <main id="main" className="relative pt-[140px] pb-24">
-        <Contact />
-      </main>
-    </>
+    <main id="main" className="relative pt-[140px] pb-24">
+      <Contact />
+    </main>
   );
 }

@@ -1,0 +1,39 @@
+schema: 1
+findings:
+  - category: code
+    summary: "proofFeed.headTitle says 'Click one.' but rows are no longer clickable"
+    file: "website/lib/copy.ts"
+    line: 224
+    severity: debt
+    suggested_action: scope
+    related_assertions: ["A006"]
+  - category: code
+    summary: "proofFeed.headSub says 'Each row links to the contract...' but rows no longer link"
+    file: "website/lib/copy.ts"
+    line: 226
+    severity: debt
+    suggested_action: scope
+    related_assertions: ["A006"]
+  - category: code
+    summary: "MAINTENANCE_MANUAL.md still references (sub) route group and SubNav — now deleted"
+    file: "website/MAINTENANCE_MANUAL.md"
+    line: 19
+    severity: debt
+    suggested_action: scope
+  - category: code
+    summary: "Five new CSS modules duplicate identical eyebrow/title blocks — no shared base"
+    file: "website/components/about/about.module.css"
+    severity: observation
+    suggested_action: monitor
+  - category: upstream
+    summary: "Hardcoded version 'v1.0.2' in proof-feed.ts will go stale — still present from Website Lift"
+    file: "website/lib/proof-feed.ts"
+    line: 70
+    severity: observation
+    suggested_action: monitor
+  - category: upstream
+    summary: "mapEntry never produces kind 'chore' — still present from Website Lift"
+    file: "website/lib/proof-feed.ts"
+    line: 74
+    severity: observation
+    suggested_action: monitor

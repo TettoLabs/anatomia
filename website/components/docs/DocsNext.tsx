@@ -29,10 +29,10 @@ export function DocsNext() {
               <span
                 className="rounded-full px-2 py-0.5 font-mono text-[9px] font-bold uppercase tracking-widest"
                 style={{
-                  background: item.status === "Live"
+                  background: (item.status as string) === "Live"
                     ? "color-mix(in oklch, var(--color-brand) 12%, transparent)"
                     : "var(--border-soft)",
-                  color: item.status === "Live"
+                  color: (item.status as string) === "Live"
                     ? "var(--color-brand)"
                     : "var(--ink-45)",
                 }}
