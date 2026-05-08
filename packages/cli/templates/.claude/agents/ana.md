@@ -186,6 +186,7 @@ Write `.ana/plans/active/{slug}/scope.md` with ALL sections:
 What the user wants and why. In their words where possible.
 
 ## Complexity Assessment
+- **Kind:** feature / fix / chore
 - **Size:** small / medium / large
 - **Files affected:** {list}
 - **Blast radius:** what else might be impacted
