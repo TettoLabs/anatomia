@@ -18,5 +18,42 @@
   "spec": {
     "saved_at": "2026-05-07T22:46:02.696Z",
     "hash": "sha256:fac4c780d645dfd809607daad6ccbf0e2bf13929c36d98db5c49bae34d7c2fa7"
+  },
+  "build_started_at": "2026-05-08T01:36:45.868Z",
+  "build_agent": "ana-build",
+  "build-report": {
+    "saved_at": "2026-05-08T01:34:55.152Z",
+    "hash": "sha256:dd9623d2836ea0a666ca49cb5729cebec424373645f00a6e0808280de2816db7"
+  },
+  "build-data": {
+    "saved_at": "2026-05-08T01:34:55.153Z",
+    "hash": "sha256:a51d08c95e713d54f380402e090de450d6ea1c9e3f2191bcf66cacb0884da8a6"
+  },
+  "modules_touched": [
+    "packages/cli/tests/cleanup/old-system-removed.test.ts",
+    "packages/cli/tests/commands/artifact.test.ts",
+    "packages/cli/tests/commands/proof.test.ts",
+    "packages/cli/tests/commands/verify.test.ts",
+    "packages/cli/tests/commands/work.test.ts",
+    "packages/cli/tests/e2e/init-flow.test.ts",
+    "packages/cli/tests/engine/fixtures.ts",
+    "packages/cli/tests/engine/performance/parsing-performance.test.ts",
+    "packages/cli/tests/performance/benchmarks.test.ts",
+    "packages/cli/tests/utils/proofSummary.test.ts"
+  ],
+  "verify_started_at": "2026-05-08T01:13:59.718Z",
+  "verify_agent": "ana-verify",
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:970febcff1c6943ecaae0396cebac6f37f3c404b86b598cb4d5a0847b76f2582",
+    "run_at": "2026-05-08T01:41:16.715Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-08T01:41:16.757Z",
+    "hash": "sha256:e506787f4c26771f0dde28b9359fcf199d9444cb0275970e809b25c3e2313171"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-08T01:41:16.757Z",
+    "hash": "sha256:145771fd68412648cbdb5fa2017bfe00aab34420e6b74d23c6c95e5c8189a20e"
   }
 }

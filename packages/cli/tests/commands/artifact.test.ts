@@ -1250,7 +1250,7 @@ file_changes:
       const saves = JSON.parse(await fs.readFile(savesPath, 'utf-8'));
       expect(saves['pre-check']).toBeDefined();
       expect(saves['pre-check'].seal).toBe('INTACT');
-      expect(saves['pre-check'].seal_hash).toBeDefined();
+      expect(saves['pre-check'].seal_hash).toMatch(/^sha256:[a-f0-9]{64}$/);
       expect(saves['pre-check'].run_at).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
       // No assertions, covered, or uncovered in seal-only data
       expect(saves['pre-check'].assertions).toBeUndefined();
@@ -1275,16 +1275,6 @@ file_changes:
       expect(saves.scope).toBeDefined();
       expect(saves.scope.saved_at).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
       expect(saves.scope.hash).toMatch(/^sha256:[a-f0-9]{64}$/);
-    });
-
-    // @ana A009
-    it('step 9a post-commit fixup no longer exists in source', async () => {
-      const fsSync = await import('node:fs');
-      const sourcePath = path.resolve(__dirname, '../../src/commands/artifact.ts');
-      const source = fsSync.readFileSync(sourcePath, 'utf-8');
-      // Step 9a was the post-commit fixup that re-wrote .saves.json with the real commit hash
-      expect(source).not.toContain('9a.');
-      expect(source).not.toContain('Update .saves.json on disk with the real commit hash');
     });
 
     it('appends to existing .saves.json on subsequent saves', async () => {

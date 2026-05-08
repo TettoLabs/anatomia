@@ -265,6 +265,7 @@ file_changes:
     });
 
     // @ana A007
+    // Source-reading exemption: enforces import boundary — no behavioral surface for this constraint
     it('does not import execSync, glob, readArtifactBranch, yaml, or ContractSchema', async () => {
       const verifySource = await fs.readFile(
         path.join(originalCwd, 'src', 'commands', 'verify.ts'),
@@ -330,13 +331,5 @@ file_changes:
       expect(output.stdout).toContain('no saved contract hash');
     });
 
-    // @ana A020
-    it('tag coverage tests are removed — parseDiffAddedCommentLines is not exported', async () => {
-      const verifySource = await fs.readFile(
-        path.join(originalCwd, 'src', 'commands', 'verify.ts'),
-        'utf-8'
-      );
-      expect(verifySource).not.toContain('parseDiffAddedCommentLines');
-    });
   });
 });

@@ -1,0 +1,32 @@
+schema: 1
+findings:
+  - category: test
+    summary: "proof.test.ts L744 redundant toBeTruthy guard before non-null assertion"
+    file: "packages/cli/tests/commands/proof.test.ts"
+    line: 744
+    severity: debt
+    suggested_action: accept
+  - category: test
+    summary: "proofSummary.test.ts parseFindings uses toBeGreaterThanOrEqual on deterministic fixture data"
+    file: "packages/cli/tests/utils/proofSummary.test.ts"
+    line: 733
+    severity: debt
+    suggested_action: scope
+  - category: test
+    summary: "E2E scan regression test uses 5 sole toBeDefined() assertions on scan.json keys"
+    file: "packages/cli/tests/e2e/init-flow.test.ts"
+    line: 280
+    severity: debt
+    suggested_action: scope
+  - category: test
+    summary: "Previous Callouts in fixture template strings — stale naming preserved as backward-compat fixtures"
+    file: "packages/cli/tests/utils/proofSummary.test.ts"
+    line: 834
+    severity: observation
+    suggested_action: accept
+  - category: upstream
+    summary: "New conditional skills E2E test depends on scan engine heuristics for prisma/anthropic-sdk detection"
+    file: "packages/cli/tests/e2e/init-flow.test.ts"
+    line: 291
+    severity: observation
+    suggested_action: monitor
