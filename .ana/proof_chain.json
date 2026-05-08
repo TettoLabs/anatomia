@@ -17784,6 +17784,135 @@
         "completed_at": "2026-05-08T04:47:42.433Z",
         "commit_count": 0
       }
+    },
+    {
+      "slug": "ci-artifact-path-ignore",
+      "feature": "CI path filtering for artifact-only commits",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 8,
+        "satisfied": 8,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Artifact-only pushes to main skip the CI test suite",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "Agent metadata pushes to main skip the CI test suite",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Artifact-only pull requests skip the CI test suite",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "Agent metadata pull requests skip the CI test suite",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "The push trigger still targets main and staging branches",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "The pull request trigger still targets main and staging branches",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "Website changes are not ignored by CI",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "The release workflow is untouched",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 0,
+        "met": 0
+      },
+      "timing": {
+        "total_minutes": 22,
+        "think": 1,
+        "plan": 8,
+        "build": 1,
+        "verify": 3
+      },
+      "hashes": {
+        "scope": "sha256:9318dde0c292550a2898916ecd87a893a1e1614c7e020d5dffc02a6142915ed4",
+        "contract": "sha256:f5e79bcdd55d93d6a6d80b70304fbf78a3d95d5d36c3f827d58203da0046f934",
+        "plan": "sha256:a9b6fc90b2266179cb90274e4b7e04e01cfcdefea2488c456c92d7e5153732f9",
+        "spec": "sha256:829772be2dac8e92dc918e9a15b10f5b667d5e2ae3100fb9e046a33dd3523d6e",
+        "build-report": "sha256:f57a7e73e0adf74dfe98335d79540956b24d60b38abfbe4bff83a33da957694c",
+        "build-data": "sha256:7b7fe5f4f09e1fd91fc1eefc3fdd147de3411cf16ca992522bb97bd69730b253",
+        "verify-report": "sha256:ecb69882ddc5ee3451f92f221fea08060b85b040fb3f79ccb32383401c09a74f",
+        "verify-data": "sha256:4cc25d194d651877d4e65ca002af3e9209908df9ade2307f58aec61485534c0a"
+      },
+      "completed_at": "2026-05-08T05:04:36.107Z",
+      "modules_touched": [
+        ".github/workflows/test.yml"
+      ],
+      "scope_summary": "Pipeline artifact saves (scope, plan, spec, contract, build-report, verify-report) and work completions push to main but only touch `.ana/` files. Every push triggers the full GitHub Actions test matrix — 6 test runners + 1 website check — against completely unchanged source code. 36% of the last 50 CI runs (18 of 50) were triggered by artifact-only commits. The pre-commit hook already skips these correctly; GitHub Actions does not.",
+      "findings": [
+        {
+          "category": "upstream",
+          "summary": "paths-ignore is workflow-level — website job also skips on .ana/.claude-only commits",
+          "file": ".github/workflows/test.yml",
+          "anchor": null,
+          "line": 6,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A007"
+          ],
+          "id": "ci-artifact-path-ignore-C1",
+          "status": "lesson"
+        },
+        {
+          "category": "upstream",
+          "summary": "Branch protection required checks may block .ana/.claude-only PRs — accepted risk per spec",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "ci-artifact-path-ignore-C2",
+          "status": "lesson"
+        },
+        {
+          "category": "code",
+          "summary": "staging branch in trigger list is a no-op — branch does not exist on remote",
+          "file": ".github/workflows/test.yml",
+          "anchor": null,
+          "line": 5,
+          "severity": "debt",
+          "suggested_action": "scope",
+          "id": "ci-artifact-path-ignore-C3",
+          "status": "active"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": [],
+      "worktree": {
+        "used": true,
+        "created_at": "2026-05-08T04:52:07.926Z",
+        "completed_at": "2026-05-08T05:04:36.103Z",
+        "commit_count": 3
+      }
     }
   ],
   "schema": 1

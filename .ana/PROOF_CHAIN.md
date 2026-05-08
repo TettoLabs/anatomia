@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-69 runs · 147 active · 84 lessons · 0 promoted · 161 closed
+70 runs · 148 active · 86 lessons · 0 promoted · 161 closed
 
 ## Hot Modules
 
@@ -16,7 +16,11 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 147 total)
+## Active Findings (30 shown of 148 total)
+
+### .github/workflows/test.yml
+
+- **code:** staging branch in trigger list is a no-op — branch does not exist on remote — *CI path filtering for artifact-only commits*
 
 ### packages/cli/src/commands/artifact.ts
 
@@ -96,7 +100,6 @@
 
 - **code:** resolveKind falls back to slug heuristic for old entries — chore-type old entries misclassified as feature — *Ship Log Polish*
 - **code:** getLatestCommit() exported but never imported — unused function — *Website Production Infrastructure*
-- **code:** LatestCommit interface exported but never imported — unused type — *Website Production Infrastructure*
 
 ### General
 
