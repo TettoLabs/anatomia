@@ -1,0 +1,191 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Website nav, scroll targets, compat icons, and copy accuracy"
+
+assertions:
+  # AC1: Nav links
+  - id: A001
+    says: "Navigation bar shows exactly three links: Agents, Pricing, Docs"
+    block: "nav contains correct links"
+    target: "copy.nav.links.length"
+    matcher: "equals"
+    value: 3
+
+  - id: A002
+    says: "Pipeline link is removed from the navigation bar"
+    block: "nav contains correct links"
+    target: "copy.nav.links"
+    matcher: "not_contains"
+    value: "Pipeline"
+
+  # AC4: Nav Install CTA
+  - id: A003
+    says: "Navigation Install button links to the npm package page"
+    block: "nav install CTA points to npm"
+    target: "copy.nav.ctaInstallHref"
+    matcher: "equals"
+    value: "https://www.npmjs.com/package/anatomia-cli"
+
+  - id: A004
+    says: "Navigation Install button opens in a new browser tab"
+    block: "nav install CTA opens in new tab"
+    target: "Nav.installCta.target"
+    matcher: "equals"
+    value: "_blank"
+
+  # AC5: Hero primary CTA
+  - id: A005
+    says: "Hero Install button links to the npm package page"
+    block: "hero primary CTA points to npm"
+    target: "copy.hero.ctas.primary.href"
+    matcher: "equals"
+    value: "https://www.npmjs.com/package/anatomia-cli"
+
+  - id: A006
+    says: "Hero Install button opens in a new browser tab"
+    block: "hero primary CTA opens in new tab"
+    target: "Hero.primaryCta.target"
+    matcher: "equals"
+    value: "_blank"
+
+  # AC6: Hero secondary CTA
+  - id: A007
+    says: "See the pipeline button scrolls to the agents section"
+    block: "hero secondary CTA points to agents"
+    target: "copy.hero.ctas.secondary.href"
+    matcher: "equals"
+    value: "#agents"
+
+  # AC7: Pricing free-tier CTA
+  - id: A008
+    says: "Pricing free-tier Install button links to the npm package page"
+    block: "pricing install CTA points to npm"
+    target: "copy.pricing.plans[0].cta.href"
+    matcher: "equals"
+    value: "https://www.npmjs.com/package/anatomia-cli"
+
+  # AC3: Pricing scroll target
+  - id: A009
+    says: "Pricing anchor is on an inner element, not the section wrapper"
+    block: "pricing scroll target is on inner element"
+    target: "Pricing.section.id"
+    matcher: "not_equals"
+    value: "pricing"
+
+  - id: A010
+    says: "Pricing inner anchor has scroll margin to clear the fixed navbar"
+    block: "pricing scroll target has scroll margin"
+    target: "Pricing.innerAnchor.scrollMarginTop"
+    matcher: "equals"
+    value: 72
+
+  # AC2: Pipeline anchor removed
+  - id: A011
+    says: "Pipeline anchor no longer exists on the bento section"
+    block: "pipeline anchor removed from bento"
+    target: "Bento.section.id"
+    matcher: "not_equals"
+    value: "pipeline"
+
+  # AC8: Footer links
+  - id: A012
+    says: "Footer Pipeline link points to the agents section"
+    block: "footer pipeline link corrected"
+    target: "copy.footer.columns[0].links[0].href"
+    matcher: "equals"
+    value: "/#agents"
+
+  # AC9: CompatMarquee icons
+  - id: A013
+    says: "Marquee displays real brand icons instead of placeholder letters"
+    block: "marquee renders brand icons"
+    target: "CompatMarquee.glyphColors"
+    matcher: "not_equals"
+    value: "exists"
+
+  - id: A014
+    says: "Brand icons exist for all ten compatible tools"
+    block: "all ten brand icons defined"
+    target: "brandIcons.keys.length"
+    matcher: "equals"
+    value: 10
+
+  # AC10: CompatTile icons
+  - id: A015
+    says: "Bento compatibility chips show brand icons alongside text"
+    block: "compat tile chips render icons"
+    target: "CompatTile.chips.hasIcons"
+    matcher: "truthy"
+
+  # AC11-12: About page
+  - id: A016
+    says: "About page title makes no claims about team size"
+    block: "about title has no headcount"
+    target: "copy.about.title"
+    matcher: "not_contains"
+    value: "Two people"
+
+  - id: A017
+    says: "About page body references Denver, not San Francisco"
+    block: "about body references Denver"
+    target: "copy.about.body[1]"
+    matcher: "contains"
+    value: "Denver"
+
+  - id: A018
+    says: "About page body makes no claims about team size"
+    block: "about body has no headcount"
+    target: "copy.about.body[1]"
+    matcher: "not_contains"
+    value: "two-person"
+
+  # AC13: Contact page
+  - id: A019
+    says: "Contact page says Based in Denver"
+    block: "contact coda references Denver"
+    target: "copy.contact.coda[0]"
+    matcher: "equals"
+    value: "Based in Denver."
+
+  # AC14-15: Unchanged pages
+  - id: A020
+    says: "Manifesto page content is not modified"
+    block: "manifesto unchanged"
+    target: "copy.manifesto.title"
+    matcher: "equals"
+    value: "Code should come with *proof*."
+
+  - id: A021
+    says: "License page content is not modified"
+    block: "license unchanged"
+    target: "copy.license.title"
+    matcher: "equals"
+    value: "MIT — free *forever*."
+
+  # AC16: Build
+  - id: A022
+    says: "Website builds without errors"
+    block: "site builds cleanly"
+    target: "build.exitCode"
+    matcher: "equals"
+    value: 0
+
+file_changes:
+  - path: "website/lib/copy.ts"
+    action: modify
+  - path: "website/lib/icons.tsx"
+    action: create
+  - path: "website/components/marquee/CompatMarquee.tsx"
+    action: modify
+  - path: "website/components/bento/tiles/CompatTile.tsx"
+    action: modify
+  - path: "website/components/bento/Bento.tsx"
+    action: modify
+  - path: "website/components/pricing/Pricing.tsx"
+    action: modify
+  - path: "website/components/hero/Hero.tsx"
+    action: modify
+  - path: "website/components/nav/Nav.tsx"
+    action: modify
+  - path: "website/components/nav/NavMobile.tsx"
+    action: modify
