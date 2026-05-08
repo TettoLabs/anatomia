@@ -35,12 +35,12 @@ export const copy = {
   nav: {
     brand: "anatomia",
     links: [
-      { label: "Pipeline", href: "/#pipeline" },
       { label: "Agents", href: "/#agents" },
       { label: "Pricing", href: "/#pricing" },
       { label: "Docs", href: "/docs" },
     ],
     ctaInstall: "Install",
+    ctaInstallHref: "https://www.npmjs.com/package/anatomia-cli",
     githubUrl: "https://github.com/TettoLabs/anatomia",
   },
 
@@ -54,8 +54,8 @@ export const copy = {
     subhead:
       "You shipped fast. The codebase is 80% AI-generated. *ana* gives you the senior engineer you don\u2019t have time to hire \u2014 generated from your code, not your intentions.",
     ctas: {
-      primary: { label: "Install", command: "npx anatomia init", href: "#pricing" },
-      secondary: { label: "See the pipeline", href: "#pipeline" },
+      primary: { label: "Install", command: "npx anatomia init", href: "https://www.npmjs.com/package/anatomia-cli" },
+      secondary: { label: "See the pipeline", href: "#agents" },
     },
     meta: [
       "MIT License",
@@ -197,7 +197,7 @@ export const copy = {
           "Configurable agents · pick your model",
           "Works with Claude, Cursor, Codex, Zed",
         ],
-        cta: { label: "Install", command: "npx anatomia init", href: "/#pricing" },
+        cta: { label: "Install", command: "npx anatomia init", href: "https://www.npmjs.com/package/anatomia-cli" },
       },
       {
         name: "Team",
@@ -332,7 +332,7 @@ export const copy = {
           "Everything else. Security reports, partnership questions, a long note you wanted to send. We reply within a few business days, sometimes faster.",
       },
     ],
-    coda: ["Based in San Francisco.", "Mon–Fri, normal hours."],
+    coda: ["Based in Denver.", "Mon–Fri, normal hours."],
   },
 
   changelog: {
@@ -383,10 +383,10 @@ export const copy = {
 
   about: {
     eyebrow: "About",
-    title: "Two people. One *idea*.",
+    title: "One *idea*. Shipped with proof.",
     body: [
       "Anatomia started with a simple observation: AI writes more code every month, and almost none of it arrives with evidence. A diff, a confident summary, no proof. We thought that was a solvable problem.",
-      "We\u2019re a two-person team based in San Francisco. We built Anatomia because we wanted to ship AI-written code we could actually stand behind \u2014 not code we hoped was correct. The pipeline exists to make that possible: four agents, four artifacts, mechanical verification.",
+      "We\u2019re based in Denver and built Anatomia because we wanted to ship AI-written code we could actually stand behind \u2014 not code we hoped was correct. The pipeline exists to make that possible: four agents, four artifacts, mechanical verification.",
       "Everything is open source, MIT-licensed, and runs on your machine. We believe the best way to earn trust is to make the proof readable.",
     ],
   },
@@ -427,7 +427,7 @@ SOFTWARE.`,
       {
         title: "Product",
         links: [
-          { label: "Pipeline", href: "/#pipeline" },
+          { label: "Pipeline", href: "/#agents" },
           { label: "Agents", href: "/#agents" },
           { label: "Pricing", href: "/#pricing" },
           { label: "Changelog", href: "/changelog" },
