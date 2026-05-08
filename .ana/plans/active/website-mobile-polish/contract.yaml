@@ -1,0 +1,187 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Website Mobile Polish + Marquee Overhaul"
+
+assertions:
+  # AC1: Marquee tool roster
+  - id: A001
+    says: "Marquee shows exactly six AI tools"
+    block: "marquee displays correct tool roster"
+    target: "copy.marquee.items.length"
+    matcher: "equals"
+    value: 6
+
+  - id: A002
+    says: "Marquee includes Claude Code, Cursor, Codex, Windsurf, Copilot, and Cline"
+    block: "marquee displays correct tool roster"
+    target: "copy.marquee.items"
+    matcher: "contains"
+    value: "Copilot"
+
+  - id: A003
+    says: "Every marquee tool has a brand icon that renders"
+    block: "all marquee items have matching icons"
+    target: "brandPaths"
+    matcher: "contains"
+    value: "Copilot"
+
+  - id: A004
+    says: "Cline has a brand icon in the registry"
+    block: "all marquee items have matching icons"
+    target: "brandPaths"
+    matcher: "contains"
+    value: "Cline"
+
+  - id: A005
+    says: "Codex icon is no longer the diamond placeholder"
+    block: "codex icon is replaced"
+    target: "brandPaths.Codex"
+    matcher: "not_equals"
+    value: "M12 0L24 12 12 24 0 12Z"
+
+  # AC2: Marquee title
+  - id: A006
+    says: "Marquee title reads 'Works with any AI tool'"
+    block: "marquee title is updated"
+    target: "copy.marquee.title"
+    matcher: "equals"
+    value: "Works with any AI tool"
+
+  # AC3: Marquee speed
+  - id: A007
+    says: "Marquee animation is faster than the original 40 seconds"
+    block: "marquee animation speed scales with item count"
+    target: "marquee.module.css.track.animation-duration"
+    matcher: "not_equals"
+    value: "40s"
+
+  # AC4: Mobile nav opaque background
+  - id: A008
+    says: "Mobile nav overlay escapes the parent nav stacking context"
+    block: "mobile nav overlay uses portal"
+    target: "NavMobile.overlay.rendering"
+    matcher: "contains"
+    value: "createPortal"
+
+  # AC5: Hero meta row
+  - id: A009
+    says: "Hero meta row says 'Works with any AI tool' instead of listing specific tools"
+    block: "hero meta content is updated"
+    target: "copy.hero.meta"
+    matcher: "contains"
+    value: "Works with any AI tool"
+
+  - id: A010
+    says: "Hero meta row stacks vertically on phone screens"
+    block: "hero meta has phone breakpoint"
+    target: "hero.module.css.heroMeta.phone"
+    matcher: "contains"
+    value: "flex-direction"
+
+  - id: A011
+    says: "Dot separators are hidden on phone screens"
+    block: "hero meta has phone breakpoint"
+    target: "hero.module.css.sep.phone"
+    matcher: "contains"
+    value: "display: none"
+
+  # AC6 + AC7: Ship log summary responsive
+  - id: A012
+    says: "Ship dots are hidden on phone to prevent overlap"
+    block: "summary row hides dots on phone"
+    target: "proof-feed.module.css.shipDots.phone"
+    matcher: "contains"
+    value: "display: none"
+
+  - id: A013
+    says: "Verified count label is hidden on phone"
+    block: "summary row hides dots label on phone"
+    target: "proof-feed.module.css.dotsLabel.phone"
+    matcher: "contains"
+    value: "display: none"
+
+  # AC8: Ship log proof rows mobile
+  - id: A014
+    says: "Proof rows use a two-line stacked layout on phone"
+    block: "proof rows switch to flex on mobile"
+    target: "proof-feed.module.css.proofRow.mobile"
+    matcher: "contains"
+    value: "flex"
+
+  - id: A015
+    says: "Assertions are visible on phone in the proof row second line"
+    block: "proof rows show assertions on mobile"
+    target: "proof-feed.module.css.rowAssert.mobile"
+    matcher: "not_contains"
+    value: "display: none"
+
+  # AC9: Dead footer removed
+  - id: A016
+    says: "The dead link to PROOF_CHAIN.md is removed from the page"
+    block: "proof feed footer is removed"
+    target: "ProofFeed.tsx"
+    matcher: "not_contains"
+    value: "PROOF_CHAIN.md"
+
+  - id: A017
+    says: "The 'Full proof chain' link is removed from copy"
+    block: "proof feed footer copy is removed"
+    target: "copy.proofFeed"
+    matcher: "not_contains"
+    value: "footLink"
+
+  # AC11: Consistent tool references
+  - id: A018
+    says: "Bento compat chips list the six AI tools"
+    block: "bento compat chips are updated"
+    target: "copy.bento.compat.chips.length"
+    matcher: "equals"
+    value: 6
+
+  - id: A019
+    says: "Pricing no longer lists specific tool names"
+    block: "pricing features are updated"
+    target: "copy.pricing.plans[0].features"
+    matcher: "contains"
+    value: "Works with any AI tool"
+
+  # AC10 + AC12 + AC13: No regressions
+  - id: A020
+    says: "Website builds successfully with no errors"
+    block: "website build passes"
+    target: "build.exitCode"
+    matcher: "equals"
+    value: 0
+
+  - id: A021
+    says: "Website type checking passes with no errors"
+    block: "website typecheck passes"
+    target: "typecheck.exitCode"
+    matcher: "equals"
+    value: 0
+
+  # Removed unused icons
+  - id: A022
+    says: "Icons for tools no longer in the marquee are removed"
+    block: "unused icons are cleaned up"
+    target: "brandPaths"
+    matcher: "not_contains"
+    value: "Python"
+
+file_changes:
+  - path: "website/lib/copy.ts"
+    action: modify
+  - path: "website/lib/icons.tsx"
+    action: modify
+  - path: "website/components/marquee/CompatMarquee.tsx"
+    action: modify
+  - path: "website/components/marquee/marquee.module.css"
+    action: modify
+  - path: "website/components/nav/NavMobile.tsx"
+    action: modify
+  - path: "website/components/hero/hero.module.css"
+    action: modify
+  - path: "website/components/proof-feed/proof-feed.module.css"
+    action: modify
+  - path: "website/components/proof-feed/ProofFeed.tsx"
+    action: modify
