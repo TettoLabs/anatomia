@@ -1,0 +1,123 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Worktree Artifact Path Mismatch — Prevention and Cleanup"
+
+assertions:
+  # Layer 1 — auto-move from main tree to worktree
+  - id: A001
+    says: "Saving an artifact that was written to the wrong tree auto-moves it to the correct location"
+    block: "auto-moves report from main tree to worktree when file exists only on main"
+    target: "saveResult"
+    matcher: "truthy"
+
+  - id: A002
+    says: "The data companion file moves alongside its report automatically"
+    block: "auto-moves companion file alongside report from main tree"
+    target: "companionExists"
+    matcher: "truthy"
+
+  - id: A003
+    says: "After auto-move, no stale copy remains on the main tree"
+    block: "auto-moves report from main tree to worktree when file exists only on main"
+    target: "mainTreeCopyExists"
+    matcher: "equals"
+    value: false
+
+  - id: A004
+    says: "Files that are tracked by git on the main tree are never auto-moved"
+    block: "does not move tracked files from main tree"
+    target: "saveErrors"
+    matcher: "truthy"
+
+  - id: A005
+    says: "Cross-filesystem moves fall back to copy-then-delete"
+    block: "falls back to copy-delete when renameSync throws EXDEV"
+    target: "fileMoved"
+    matcher: "truthy"
+
+  # Layer 2 — post-save sweep
+  - id: A006
+    says: "After a successful worktree save, stale copies on the main tree are deleted"
+    block: "removes stale main-tree copy after successful worktree save"
+    target: "mainTreeCopyExists"
+    matcher: "equals"
+    value: false
+
+  - id: A007
+    says: "Post-save sweep only removes untracked files"
+    block: "post-save sweep skips tracked files on main tree"
+    target: "trackedFileExists"
+    matcher: "truthy"
+
+  - id: A008
+    says: "A cleanup failure during post-save sweep does not fail the save"
+    block: "post-save sweep failure does not fail the save"
+    target: "saveResult"
+    matcher: "truthy"
+
+  # Layer 3 — refined work complete auto-clean
+  - id: A009
+    says: "Build and verify artifacts are removed from main without checking content"
+    block: "removes build/verify artifacts unconditionally during work complete"
+    target: "buildArtifactRemoved"
+    matcher: "truthy"
+
+  - id: A010
+    says: "Planning artifacts still require content-match before removal"
+    block: "keeps content-match guard for planning artifacts during work complete"
+    target: "planningArtifactRequiresMatch"
+    matcher: "truthy"
+
+  - id: A011
+    says: "When build artifacts and planning artifacts are both untracked, each group gets its own cleanup strategy"
+    block: "handles mixed untracked files with split cleanup strategy"
+    target: "splitCleanupApplied"
+    matcher: "truthy"
+
+  - id: A012
+    says: "Build and verify data companions are also removed unconditionally"
+    block: "removes build/verify data companions unconditionally during work complete"
+    target: "dataCompanionRemoved"
+    matcher: "truthy"
+
+  # Layer 4 — agent template pwd hint
+  - id: A013
+    says: "The Build agent template instructs agents to use pwd for artifact paths"
+    block: "build template contains pwd path guidance"
+    target: "templateContent"
+    matcher: "contains"
+    value: "pwd"
+
+  - id: A014
+    says: "The Verify agent template instructs agents to use pwd for artifact paths"
+    block: "verify template contains pwd path guidance"
+    target: "templateContent"
+    matcher: "contains"
+    value: "pwd"
+
+  # Cross-cutting — best-effort and safety
+  - id: A015
+    says: "Auto-move operations never touch files outside the current slug directory"
+    block: "auto-move is scoped to slug directory"
+    target: "otherSlugFileExists"
+    matcher: "truthy"
+
+  - id: A016
+    says: "When not running from a worktree, auto-move and sweep are silently skipped"
+    block: "skips auto-move and sweep when not in a worktree"
+    target: "saveResult"
+    matcher: "truthy"
+
+file_changes:
+  - path: "packages/cli/src/commands/artifact.ts"
+    action: modify
+  - path: "packages/cli/src/commands/work.ts"
+    action: modify
+  - path: "packages/cli/templates/.claude/agents/ana-build.md"
+    action: modify
+  - path: "packages/cli/templates/.claude/agents/ana-verify.md"
+    action: modify
+  - path: "packages/cli/tests/commands/artifact.test.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/work.test.ts"
+    action: modify
