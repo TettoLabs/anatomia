@@ -35,5 +35,20 @@
     "packages/cli/src/commands/artifact.ts",
     "packages/cli/templates/.claude/agents/ana.md",
     "packages/cli/tests/commands/artifact.test.ts"
-  ]
+  ],
+  "verify_started_at": "2026-05-08T19:07:19.174Z",
+  "verify_agent": "ana-verify",
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:258d09bd9df9ff27b126fcdef70040571951cb921faf60b1655ce81147a9762f",
+    "run_at": "2026-05-08T19:12:39.211Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-08T19:12:39.250Z",
+    "hash": "sha256:ed5b7b0174433d0f0f2f8abfb29bce12749e411097c88e6ba6ff04162b178867"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-08T19:12:39.250Z",
+    "hash": "sha256:bd9aef4b6386bcaa9a71944ac9c36507ada1ed9c30f5a1a76bcb7c8eef5af8c7"
+  }
 }
