@@ -22,6 +22,12 @@ export async function ProofFeed() {
     return styles.kindChore;
   };
 
+  const kindLabel = (kind: string) => {
+    if (kind === "feature") return "feature";
+    if (kind === "fix") return "fix";
+    return "improve";
+  };
+
   return (
     <section className={styles.section} id="proof-feed" data-component="proof-feed">
       <Container>
@@ -35,7 +41,7 @@ export async function ProofFeed() {
                   <span className={styles.psKickerLabel}>{copy.proofFeed.kicker}</span>
                   <span style={{ color: "var(--ink-30)", fontWeight: 400 }}>·</span>
                   <span className={styles.kCollapsed}>{latest.version}</span>
-                  <span className={styles.kOpen}>{entries.length} commits · all verified</span>
+                  <span className={styles.kOpen}>{entries.length} verified changes</span>
                 </span>
                 <span className={styles.psDivider} aria-hidden="true" />
                 <span className={styles.psLatest} aria-label="Most recent ship">
@@ -93,7 +99,7 @@ export async function ProofFeed() {
               >
                 <span className={styles.rowHash}>{e.hash}</span>
                 <span className={cn(styles.rowKind, kindClass(e.kind))}>
-                  {e.kind === "feature" ? "new" : e.kind}
+                  {kindLabel(e.kind)}
                 </span>
                 <span className={styles.rowFeat}>
                   <Formatted text={e.feat} />
