@@ -143,6 +143,7 @@ interface ProofChainEntry {
   contract: { total: number; satisfied: number };
   hashes: { scope: string };
   completed_at: string;
+  kind?: string;
 }
 
 function extractFeatureEm(feature: string): string {
@@ -150,12 +151,20 @@ function extractFeatureEm(feature: string): string {
   return beforeDash.split(/\s+/).slice(0, 3).join(" ");
 }
 
+function resolveKind(entry: ProofChainEntry): ProofKind {
+  if (entry.kind === "feature" || entry.kind === "fix" || entry.kind === "chore") {
+    return entry.kind;
+  }
+  // Fallback: slug heuristic for old entries without explicit kind
+  return entry.slug.startsWith("fix-") ? "fix" : "feature";
+}
+
 function mapEntry(entry: ProofChainEntry, version: string): ProofEntry {
   return {
     version,
     hash: entry.hashes.scope.slice(7, 14),
     ts: entry.completed_at,
-    kind: entry.slug.startsWith("fix-") ? "fix" : "feature",
+    kind: resolveKind(entry),
     feat: entry.feature,
     feature_em: extractFeatureEm(entry.feature),
     assertions: entry.contract.total,

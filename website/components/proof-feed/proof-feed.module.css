@@ -258,7 +258,7 @@
 }
 .proofRow {
   display: grid;
-  grid-template-columns: 86px 54px minmax(0, 1fr) 78px 84px 20px;
+  grid-template-columns: 86px 62px minmax(0, 1fr) 78px 84px 20px;
   gap: 18px;
   align-items: center;
   padding: 18px 4px;
@@ -319,7 +319,7 @@
   transform: translateX(3px);
 }
 @media (max-width: 760px) {
-  .proofRow { grid-template-columns: 54px minmax(0, 1fr) 16px; gap: 12px; }
+  .proofRow { grid-template-columns: 62px minmax(0, 1fr) 16px; gap: 12px; }
   .rowHash, .rowAssert, .rowAgo { display: none; }
 }
 

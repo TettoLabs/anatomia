@@ -1,0 +1,9 @@
+schema: 1
+concerns:
+  - summary: "extractScopeKind regex matches **Kind:** anywhere in file, not section-scoped"
+    file: "packages/cli/src/utils/proofSummary.ts"
+    severity: observation
+    suggested_action: accept
+  - summary: "Website has no test suite — copy/display assertions verified by build only"
+    severity: observation
+    suggested_action: monitor

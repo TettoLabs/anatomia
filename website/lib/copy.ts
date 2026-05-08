@@ -221,11 +221,11 @@ export const copy = {
 
   proofFeed: {
     kicker: "Ship log",
-    headTitle: "Every commit has *receipts*.",
+    headTitle: "Every change has *receipts*.",
     headSub:
       "This isn\u2019t a changelog. Each row is the verification record \u2014 the contract Plan wrote before the work began, with Verify\u2019s independent account stapled to it. The claims, the matchers, the pass/fail \u2014 all there.",
-    footSource: "github.com/TettoLabs/anatomia/commits",
-    footLink: { label: "Full history \u2192", href: "https://github.com/TettoLabs/anatomia/commits/main" },
+    footSource: "PROOF_CHAIN.md",
+    footLink: { label: "Full proof chain \u2192", href: "https://github.com/TettoLabs/anatomia/blob/main/PROOF_CHAIN.md" },
   },
 
   docs: {
