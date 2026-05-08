@@ -182,8 +182,9 @@ function captureModulesTouched(projectRoot: string, slugDir: string): void {
  */
 function archivePreviousVersion(projectRoot: string, relFilePath: string, planDir: string): string | null {
   try {
-    // 1. Get committed version from HEAD
-    const gitResult = runGit(['show', `HEAD:${relFilePath}`], { cwd: projectRoot });
+    // 1. Get committed version from HEAD (use forward slashes for git on Windows)
+    const gitPath = relFilePath.split(path.sep).join('/');
+    const gitResult = runGit(['show', `HEAD:${gitPath}`], { cwd: projectRoot });
     if (gitResult.exitCode !== 0) return null; // No committed version
     const committedContent = gitResult.stdout;
 

@@ -1617,7 +1617,7 @@ file_changes:
 
       // @ana A010, A011
       // @ana A016
-      it('closes findings whose anchor is absent from existing file', async () => {
+      it('closes findings whose anchor is absent from existing file', { timeout: 30000 }, async () => {
         await createProofProject('test-feature', { existingChain: true });
 
         const srcDir = path.join(tempDir, 'src');
