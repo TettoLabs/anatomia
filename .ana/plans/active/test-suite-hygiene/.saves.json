@@ -22,12 +22,12 @@
   "build_started_at": "2026-05-07T22:49:29.739Z",
   "build_agent": "ana-build",
   "build-report": {
-    "saved_at": "2026-05-07T23:19:06.703Z",
-    "hash": "sha256:8dc618301ea8ea18d2a02c9703e89bef391ed51217f597d22afebb726a4a1424"
+    "saved_at": "2026-05-08T01:34:55.152Z",
+    "hash": "sha256:dd9623d2836ea0a666ca49cb5729cebec424373645f00a6e0808280de2816db7"
   },
   "build-data": {
-    "saved_at": "2026-05-07T23:19:06.704Z",
-    "hash": "sha256:270dff393e035fde5ef824c0701c782c7d22ce5eb8af335ea4e73713c9fc68a5"
+    "saved_at": "2026-05-08T01:34:55.153Z",
+    "hash": "sha256:a51d08c95e713d54f380402e090de450d6ea1c9e3f2191bcf66cacb0884da8a6"
   },
   "modules_touched": [
     "packages/cli/tests/cleanup/old-system-removed.test.ts",

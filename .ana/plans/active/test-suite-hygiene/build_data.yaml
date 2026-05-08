@@ -1,14 +1,18 @@
 schema: 1
 concerns:
-  - summary: "Conditional skills (ai-patterns, api-patterns, data-access) have no E2E test coverage"
-    file: "packages/cli/tests/e2e/init-flow.test.ts"
+  - summary: "quality.trajectory assertion uses toHaveProperty instead of toBeTypeOf — field is null with insufficient data"
+    file: "packages/cli/tests/commands/proof.test.ts"
     severity: debt
-    suggested_action: scope
-  - summary: "quality.trajectory assertion uses toHaveProperty instead of toBeTypeOf — null when insufficient entries"
-    file: "packages/cli/tests/commands/work.test.ts"
-    severity: observation
     suggested_action: monitor
   - summary: "5 remaining toBeGreaterThan(0) in proofSummary.test.ts outside spec scope"
     file: "packages/cli/tests/utils/proofSummary.test.ts"
     severity: observation
-    suggested_action: monitor
+    suggested_action: scope
+  - summary: "E2E scan regression test uses 5 toBeDefined() sole assertions on scan.json keys"
+    file: "packages/cli/tests/e2e/init-flow.test.ts"
+    severity: observation
+    suggested_action: scope
+  - summary: "Pre-existing unused eslint-disable directive in git-operations.ts:169"
+    file: "packages/cli/src/utils/git-operations.ts"
+    severity: observation
+    suggested_action: accept
