@@ -10,12 +10,12 @@ import styles from "./pricing.module.css";
  */
 export function Pricing() {
   return (
-    <section id="pricing" data-component="pricing" className={styles.section}>
+    <section data-component="pricing" className={styles.section}>
       <Container>
         <div className={styles.top}>
           <div className={styles.frame}>
             <TetrisSnake />
-            <div className={styles.inner}>
+            <div id="pricing" className={styles.inner} style={{ scrollMarginTop: 72 }}>
               <div className="inline-flex items-center gap-2 font-mono text-[11px] font-semibold uppercase tracking-widest" style={{ color: "var(--ink-60)" }}>
                 <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--color-brand)" }} />
                 {copy.pricing.eyebrow}

@@ -16,7 +16,6 @@ import styles from "./bento.module.css";
 export function Bento() {
   return (
     <section
-      id="pipeline"
       data-component="bento"
       className={styles.section}
     >
