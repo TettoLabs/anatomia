@@ -40,5 +40,20 @@
     "packages/cli/tests/engine/performance/parsing-performance.test.ts",
     "packages/cli/tests/performance/benchmarks.test.ts",
     "packages/cli/tests/utils/proofSummary.test.ts"
-  ]
+  ],
+  "verify_started_at": "2026-05-08T01:13:59.718Z",
+  "verify_agent": "ana-verify",
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:970febcff1c6943ecaae0396cebac6f37f3c404b86b598cb4d5a0847b76f2582",
+    "run_at": "2026-05-08T01:25:48.904Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-08T01:25:48.936Z",
+    "hash": "sha256:c13c608b968d1a62151e4d7ac6dc5c314d6832306d42bc0832e665805ce3991f"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-08T01:25:48.936Z",
+    "hash": "sha256:008d14b3e043f5b19e15f40f17c9dfbe883da1e459d5d6d369accb1fa207b439"
+  }
 }
