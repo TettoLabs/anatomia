@@ -18,5 +18,18 @@
   "spec": {
     "saved_at": "2026-05-08T04:49:43.717Z",
     "hash": "sha256:829772be2dac8e92dc918e9a15b10f5b667d5e2ae3100fb9e046a33dd3523d6e"
-  }
+  },
+  "build_started_at": "2026-05-08T04:52:07.926Z",
+  "build_agent": "ana-build",
+  "build-report": {
+    "saved_at": "2026-05-08T04:53:23.045Z",
+    "hash": "sha256:f57a7e73e0adf74dfe98335d79540956b24d60b38abfbe4bff83a33da957694c"
+  },
+  "build-data": {
+    "saved_at": "2026-05-08T04:53:23.046Z",
+    "hash": "sha256:7b7fe5f4f09e1fd91fc1eefc3fdd147de3411cf16ca992522bb97bd69730b253"
+  },
+  "modules_touched": [
+    ".github/workflows/test.yml"
+  ]
 }
