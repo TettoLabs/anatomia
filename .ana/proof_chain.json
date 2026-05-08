@@ -16696,6 +16696,289 @@
         "completed_at": "2026-05-07T18:08:18.490Z",
         "commit_count": 8
       }
+    },
+    {
+      "slug": "ship-log-polish",
+      "feature": "Ship Log Polish",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 24,
+        "satisfied": 24,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "The ship log headline says 'receipts' instead of 'commits'",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "No instance of the word 'commit' appears in ship log copy",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "The proof chain link points to PROOF_CHAIN.md on GitHub",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "The footer label reads 'Full proof chain'",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "The collapsed header says 'verified changes' not 'commits'",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "Feature tags display as 'feature', not 'new'",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "Fix tags display as 'fix'",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "Chore tags display as 'improve'",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "Proof chain entries can carry a classification kind",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "Proof summaries can carry a classification kind",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "A scope with Kind: fix is correctly parsed as fix",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "A scope with Kind: feature is correctly parsed as feature",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "A scope with Kind: chore is correctly parsed as chore",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "A scope with a capitalized Kind value is still parsed correctly",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "An invalid kind value is rejected gracefully",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "A scope without a Kind line returns undefined without crashing",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A017",
+          "says": "A missing scope file returns undefined without crashing",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A018",
+          "says": "The proof summary generator extracts kind from scope",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A019",
+          "says": "The proof chain writer passes kind through to the entry",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A020",
+          "says": "The website prefers explicit kind from the proof chain entry",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A021",
+          "says": "Old entries without kind fall back to slug-based classification",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A022",
+          "says": "The website TypeScript interface accepts the kind field from the API",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A023",
+          "says": "The scope template tells Ana Think to classify work by kind",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A024",
+          "says": "The dogfood ana.md matches the template's Kind line",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 0,
+        "met": 0
+      },
+      "timing": {
+        "total_minutes": 152,
+        "think": 1,
+        "plan": 8,
+        "build": 9,
+        "verify": 5
+      },
+      "hashes": {
+        "scope": "sha256:3ad3ac74790fed455188c4689b03589cbc505b394a88ad7a7d7d1ffdc709ff9e",
+        "contract": "sha256:549d53088985743538721ab80713b63e7e506e70958696811bd48796bac166ac",
+        "plan": "sha256:c08068fd8cd92d10f2bd2a4096a7745bc2ee0b187c03fe83ac339f2035b813c2",
+        "spec": "sha256:9835a08cd0d2a98edf80f261d6d3e9c58a14499c5dd037ecebba892bb67bdc97",
+        "build-report": "sha256:7e60ec90a264fe91616c668fdbb0809e4243b1c516eda0ac8f2ab3388edaa2ca",
+        "build-data": "sha256:a88eee49999003010ab7c90d09b2263ec69cef016b79789f32d5ef8890026a6b",
+        "verify-report": "sha256:99b18ba497cce08569641a2c140df251f49801ff61f4a4642ef9bc322fd6e084",
+        "verify-data": "sha256:e803d910a844a728322337ed9aecf1e031be87edfcae4c70ce3189eed95892fb"
+      },
+      "completed_at": "2026-05-08T01:37:08.981Z",
+      "modules_touched": [
+        ".claude/agents/ana.md",
+        "packages/cli/src/commands/work.ts",
+        "packages/cli/src/types/proof.ts",
+        "packages/cli/src/utils/proofSummary.ts",
+        "packages/cli/templates/.claude/agents/ana.md",
+        "packages/cli/tests/utils/proofSummary.test.ts",
+        "website/components/proof-feed/ProofFeed.tsx",
+        "website/components/proof-feed/proof-feed.module.css",
+        "website/lib/copy.ts",
+        "website/lib/proof-feed.ts"
+      ],
+      "scope_summary": "The ship log on anatomia.dev calls pipeline runs \"commits,\" displays \"new\" as the tag for features (meaningless), and links to GitHub commits as the source of truth. A verification product whose marketing display is unverified. Fix the copy, add explicit `kind` classification to the proof chain so tags come from data instead of slug heuristics, and make the website read it.",
+      "findings": [
+        {
+          "category": "code",
+          "summary": "extractScopeKind regex matches **Kind:** anywhere in file, not section-scoped",
+          "file": "packages/cli/src/utils/proofSummary.ts",
+          "anchor": null,
+          "line": 435,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A011",
+            "A012",
+            "A013"
+          ],
+          "id": "ship-log-polish-C1",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "kindLabel defaults to 'improve' for any unrecognized kind — silent fallback if ProofKind grows",
+          "file": "website/components/proof-feed/ProofFeed.tsx",
+          "anchor": null,
+          "line": 28,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "related_assertions": [
+            "A006",
+            "A007",
+            "A008"
+          ],
+          "id": "ship-log-polish-C2",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "resolveKind falls back to slug heuristic for old entries — chore-type old entries misclassified as feature",
+          "file": "website/lib/proof-feed.ts",
+          "anchor": null,
+          "line": 159,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A021"
+          ],
+          "id": "ship-log-polish-C3",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "Stale finding 'mapEntry never produces kind chore' resolved by this build — resolveKind now handles chore",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "ship-log-polish-C4",
+          "status": "lesson"
+        },
+        {
+          "category": "upstream",
+          "summary": "Stale finding 'headTitle says Click one but rows not clickable' — not addressed by this build, remains active",
+          "file": "website/lib/copy.ts",
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "ship-log-polish-C5",
+          "status": "lesson"
+        },
+        {
+          "category": "code",
+          "summary": "ProofChainEntryForContext does not include kind field — consistent with projection pattern, no current consumer needs it",
+          "file": "packages/cli/src/utils/proofSummary.ts",
+          "anchor": null,
+          "line": 1855,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "ship-log-polish-C6",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "A001-A010, A018-A024 verified by source inspection only — no tagged tests for website copy, types, or wiring",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "ship-log-polish-C7",
+          "status": "active"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "extractScopeKind regex matches **Kind:** anywhere in file, not section-scoped",
+          "file": "packages/cli/src/utils/proofSummary.ts",
+          "severity": "observation",
+          "suggested_action": "accept"
+        },
+        {
+          "summary": "Website has no test suite — copy/display assertions verified by build only",
+          "file": null,
+          "severity": "observation",
+          "suggested_action": "monitor"
+        }
+      ],
+      "worktree": {
+        "used": true,
+        "created_at": "2026-05-08T01:15:47.940Z",
+        "completed_at": "2026-05-08T01:37:08.978Z",
+        "commit_count": 6
+      }
     }
   ],
   "schema": 1

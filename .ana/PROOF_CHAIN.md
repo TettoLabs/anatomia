@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-65 runs · 129 active · 79 lessons · 0 promoted · 160 closed
+66 runs · 134 active · 81 lessons · 0 promoted · 160 closed
 
 ## Hot Modules
 
@@ -8,20 +8,15 @@
 |------|--------|--------|
 | packages/cli/tests/commands/work.test.ts | 11 | 9 |
 | packages/cli/tests/commands/proof.test.ts | 10 | 4 |
+| website/lib/proof-feed.ts | 10 | 3 |
 | packages/cli/src/commands/work.ts | 9 | 5 |
-| website/lib/proof-feed.ts | 9 | 2 |
-| packages/cli/src/commands/proof.ts | 7 | 5 |
+| packages/cli/src/utils/proofSummary.ts | 8 | 6 |
 
 ## Promoted Rules
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 129 total)
-
-### packages/cli/src/commands/agents.ts
-
-- **code:** Double error message on unknown agent in setModel() — throws after console.error, catch block re-prints — *Agent Dashboard Phase 1*
-- **code:** maxModelLen computed inside the loop body on every iteration instead of once before the loop — *Agent Dashboard Phase 1*
+## Active Findings (30 shown of 134 total)
 
 ### packages/cli/src/commands/work.ts
 
@@ -30,13 +25,10 @@
 - **code:** Race condition in writeTimestamp: read-modify-write on .saves.json is not atomic — *Fix Pipeline Phase Timing*
 - **test:** A003 has no dedicated tagged test — verified by source inspection only — *Fix Pipeline Phase Timing*
 
-### packages/cli/src/utils/agent-config.ts
+### packages/cli/src/utils/proofSummary.ts
 
-- **code:** AgentFrontmatter interface exported but never imported outside agent-config.ts — *Agent Dashboard Phase 1*
-
-### packages/cli/tests/commands/agents.test.ts
-
-- **test:** A002 test uses toBeGreaterThan(templateSize) — correct intent but could assert exact expected value since skill content is fixture-controlled — *Agent Dashboard Phase 1*
+- **code:** extractScopeKind regex matches **Kind:** anywhere in file, not section-scoped — *Ship Log Polish*
+- **code:** ProofChainEntryForContext does not include kind field — consistent with projection pattern, no current consumer needs it — *Ship Log Polish*
 
 ### packages/cli/tests/commands/work.test.ts
 
@@ -74,6 +66,10 @@
 - **code:** TetrisSnake getComputedStyle called every frame — potential performance concern on low-end mobile — *Website Visual Fidelity*
 - **code:** TetrisSnake placed blocks array grows unbounded between lap clears — no cap on array size — *Website Visual Fidelity*
 
+### website/components/proof-feed/ProofFeed.tsx
+
+- **code:** kindLabel defaults to 'improve' for any unrecognized kind — silent fallback if ProofKind grows — *Ship Log Polish*
+
 ### website/lib/analytics.tsx
 
 - **code:** PostHog useEffect has no cleanup return — posthog.init() could be called on remount — *Website Production Infrastructure*
@@ -85,14 +81,18 @@
 
 ### website/lib/proof-feed.ts
 
+- **code:** resolveKind falls back to slug heuristic for old entries — chore-type old entries misclassified as feature — *Ship Log Polish*
 - **code:** getLatestCommit() exported but never imported — unused function — *Website Production Infrastructure*
 - **code:** LatestCommit interface exported but never imported — unused type — *Website Production Infrastructure*
 - **code:** githubHeaders() extras parameter never used with non-default value — YAGNI — *Website Production Infrastructure*
 - **code:** No tag name validation — non-semver GitHub tags would display as-is in version pill — *Website Production Infrastructure*
 - **code:** File header comment still says 'Today: static mock data' — stale after live data wiring — *Website Production Infrastructure*
-- **code:** mapEntry never produces kind 'chore' — only 'fix' or 'feature' — *Website Lift*
 
 ### website/MAINTENANCE_MANUAL.md
 
 - **code:** MAINTENANCE_MANUAL.md still references (sub) route group and SubNav — now deleted — *Dead Links & Missing Pages*
+
+### General
+
+- **test:** A001-A010, A018-A024 verified by source inspection only — no tagged tests for website copy, types, or wiring — *Ship Log Polish*
 
