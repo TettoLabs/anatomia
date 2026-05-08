@@ -98,8 +98,10 @@ export async function Nav() {
             </svg>
           </a>
 
-          <Link
-            href="/#pricing"
+          <a
+            href={copy.nav.ctaInstallHref}
+            target="_blank"
+            rel="noopener noreferrer"
             className="nav-cta hidden items-center gap-2 whitespace-nowrap rounded-[var(--radius-sm)] px-[16px] py-[9px] font-mono text-[12.5px] font-semibold transition-all duration-150 hover:-translate-y-px sm:inline-flex"
             style={{
               color: "var(--color-brand-ink)",
@@ -110,7 +112,7 @@ export async function Nav() {
             <svg className="h-3 w-3" style={{ color: "var(--color-brand)" }} viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M3 6h6M6 3l3 3-3 3" />
             </svg>
-          </Link>
+          </a>
         </div>
       </nav>
     </NavScrollWrapper>

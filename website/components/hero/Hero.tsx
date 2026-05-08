@@ -61,6 +61,8 @@ export async function Hero() {
         <div className={styles.ctas}>
           <a
             href={copy.hero.ctas.primary.href}
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex items-center gap-[10px] whitespace-nowrap rounded-[var(--radius-sm)] px-[18px] py-[12px] font-mono text-[13px] font-semibold transition-all duration-150 hover:-translate-y-px hover:shadow-[0_10px_30px_-14px_var(--fg-strong)]"
             style={{ background: "var(--fg-strong)", color: "var(--bg)" }}
           >
