@@ -1,0 +1,18 @@
+schema: 1
+concerns:
+  - summary: "Bento directory left dead — components/bento/ still exists with unused code"
+    file: "website/components/bento/"
+    severity: debt
+    suggested_action: scope
+  - summary: "proofFeed copy references clickable/linked rows that no longer exist (pre-existing)"
+    file: "website/lib/copy.ts"
+    severity: observation
+    suggested_action: monitor
+  - summary: "CSS module pulse animation targets nested class selectors which may not compose correctly in all CSS module implementations"
+    file: "website/components/system/system.module.css"
+    severity: observation
+    suggested_action: monitor
+  - summary: "Drawer component uses type narrowing via 'in' operator on copy.ts data — works with as const but is fragile if copy structure changes"
+    file: "website/components/system/Drawer.tsx"
+    severity: observation
+    suggested_action: accept
