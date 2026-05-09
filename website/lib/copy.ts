@@ -54,7 +54,7 @@ export const copy = {
     subhead:
       "You shipped fast. The codebase is 80% AI-generated. *ana* gives you the senior engineer you don\u2019t have time to hire \u2014 generated from your code, not your intentions.",
     ctas: {
-      primary: { label: "Install", command: "npx anatomia init", href: "https://www.npmjs.com/package/anatomia-cli" },
+      primary: { label: "Install", command: "npx anatomia-cli init", href: "https://www.npmjs.com/package/anatomia-cli" },
       secondary: { label: "See the pipeline", href: "#agents" },
     },
     meta: [
@@ -70,12 +70,12 @@ export const copy = {
     eyebrow: "Start here · free, local, 2–5s",
     title: "Before you install anything, run *ana\u00a0scan*.",
     lede:
-      "One command reads your codebase — stack, architecture, git tempo, hot files, docs, secrets. No account, no API key, nothing leaves your machine. If what Ana finds surprises you, keep going.",
-    install: "npx anatomia scan",
+      "One command reads your codebase — stack, architecture, git tempo, hot files, docs, secrets. If what Ana finds surprises you, keep going.",
+    install: "npx anatomia-cli scan",
     asserts: [
-      "~20 signals across stack, git, docs & security",
-      "Runs locally. No account. No cloud.",
-      "Works standalone — pipeline optional.",
+      "Zero config. No account. Nothing leaves your machine.",
+      "Stack, auth, AI, payments, deploy — detected in seconds.",
+      "Keep going or stop here. The scan is yours either way.",
     ],
   },
 
@@ -197,7 +197,7 @@ export const copy = {
           "Configurable agents · pick your model",
           "Works with any AI tool",
         ],
-        cta: { label: "Install", command: "npx anatomia init", href: "https://www.npmjs.com/package/anatomia-cli" },
+        cta: { label: "Install", command: "npx anatomia-cli init", href: "https://www.npmjs.com/package/anatomia-cli" },
       },
       {
         name: "Team",
@@ -234,7 +234,7 @@ export const copy = {
     install: {
       tag: "Install",
       reqs: "Requires Node 20+ and Git",
-      commands: ["npx anatomia init", "npm i -g anatomia", "anatomia init"],
+      commands: ["npx anatomia-cli init", "npm i -g anatomia-cli", "ana init"],
       reqNote: "macOS, Linux, Windows (WSL). No data leaves your machine by default.",
     },
     sectionRule: { walkthrough: "Walkthrough · ~5 minutes", next: "Where to next" },
