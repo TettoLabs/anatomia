@@ -178,7 +178,8 @@ Each entry adds to a proof chain. `ana proof health` tracks the trajectory acros
 | `ana setup` | Enrich context with team knowledge (Claude Code agent) |
 | `ana setup check` | Validate context file quality |
 | `ana setup complete` | Validate context and finalize setup |
-| `ana agents` | List deployed agent definitions |
+| `ana agents` | Agent dashboard — list deployed agent definitions |
+| `ana agents model [agent] [model]` | Show or set agent model overrides |
 
 ## Works with
 
