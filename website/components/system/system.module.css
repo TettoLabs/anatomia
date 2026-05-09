@@ -124,13 +124,13 @@
   right: -8px;
   top: 0;
   bottom: 0;
-  background: rgba(168, 60, 50, 0.0);
+  background: color-mix(in srgb, var(--color-brand) 0%, transparent);
   transition: background 0.2s ease;
   pointer-events: none;
   border-radius: 2px;
 }
 .drawerHead:hover::before {
-  background: rgba(0, 0, 0, 0.014);
+  background: color-mix(in srgb, var(--color-brand) 3%, transparent);
 }
 .drawerHead:hover .dName,
 .drawerHead:hover .dToggle {
@@ -195,7 +195,7 @@
   transform: rotate(45deg);
   color: var(--color-brand);
   border-color: var(--color-brand);
-  background: rgba(168, 60, 50, 0.05);
+  background: color-mix(in srgb, var(--color-brand) 5%, transparent);
 }
 .drawerBody {
   display: grid;

@@ -53,12 +53,12 @@ export function SystemSection() {
         <Drawer version={cliPkg.version} />
 
         {/* Section closer */}
-        <div className={styles.closer}>
+        <a href={copy.system.closer.href} className={styles.closer}>
           <span className={`${styles.closerArrow} ${styles.breathe}`}>↓</span>
           <p className={styles.closerText}>
             <Formatted text={copy.system.closer.text} />
           </p>
-        </div>
+        </a>
       </Container>
     </section>
   );
