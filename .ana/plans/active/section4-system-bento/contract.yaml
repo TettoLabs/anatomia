@@ -1,0 +1,253 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Section 4 — The System (replace Bento)"
+
+assertions:
+  # AC1/AC2: Section replacement and page order
+  - id: A001
+    says: "The System section appears on the landing page in place of Bento"
+    block: "page composition replaces Bento with SystemSection"
+    target: "page.imports.SystemSection"
+    matcher: "exists"
+
+  - id: A002
+    says: "Page sections render in the correct order"
+    block: "page composition replaces Bento with SystemSection"
+    target: "page.sectionOrder"
+    matcher: "equals"
+    value: "Hero, CompatMarquee, ScanSlab, SystemSection, DeepDive, Pricing, ProofFeed"
+
+  # AC3: Drawer animation
+  - id: A003
+    says: "All four drawers can open and close"
+    block: "drawer toggle works for all drawers"
+    target: "drawer.count"
+    matcher: "equals"
+    value: 4
+
+  - id: A004
+    says: "Drawers animate open using CSS grid rows"
+    block: "drawer toggle works for all drawers"
+    target: "css.drawerBody.gridTemplateRows"
+    matcher: "contains"
+    value: "0fr"
+
+  # AC4: Dynamic CLI version
+  - id: A005
+    says: "The CLI version in the man page comes from the actual package"
+    block: "man page version is dynamic"
+    target: "manPage.versionSource"
+    matcher: "contains"
+    value: "package.json"
+
+  # AC5: Command count
+  - id: A006
+    says: "The section shows 25 commands, not 23"
+    block: "command count is correct"
+    target: "copy.system.specStrip.cli"
+    matcher: "contains"
+    value: "25"
+
+  - id: A007
+    says: "The plus-more count shows 19 remaining commands"
+    block: "command count is correct"
+    target: "copy.system.manPage.moreCount"
+    matcher: "equals"
+    value: 19
+
+  # AC6: Correct command names in +more
+  - id: A008
+    says: "The trailing command list includes init but excludes check and index"
+    block: "more list names only real commands"
+    target: "copy.system.manPage.moreNames"
+    matcher: "contains"
+    value: "init"
+
+  - id: A009
+    says: "The trailing command list does not include removed commands"
+    block: "more list names only real commands"
+    target: "copy.system.manPage.moreNames"
+    matcher: "not_contains"
+    value: "check"
+
+  # AC7: Context file tree structure
+  - id: A010
+    says: "Context files appear in a nested subfolder in the file tree"
+    block: "context drawer shows correct folder hierarchy"
+    target: "contextTree.nestedFolder"
+    matcher: "equals"
+    value: "context/"
+
+  - id: A011
+    says: "Project context and design principles are shown inside the context subfolder"
+    block: "context drawer shows correct folder hierarchy"
+    target: "contextTree.contextFolderFiles"
+    matcher: "contains"
+    value: "project-context.md"
+
+  # AC8: Agent count
+  - id: A012
+    says: "The section shows exactly 5 pipeline agents"
+    block: "agent count excludes setup"
+    target: "copy.system.agentCount"
+    matcher: "equals"
+    value: 5
+
+  # AC9: Strings in copy.ts
+  - id: A013
+    says: "All section strings live in copy.ts under a system key"
+    block: "copy.ts has system key with all strings"
+    target: "copy.system"
+    matcher: "exists"
+
+  - id: A014
+    says: "The section title text lives in copy.ts"
+    block: "copy.ts has system key with all strings"
+    target: "copy.system.title"
+    matcher: "exists"
+
+  # AC10: Responsive CSS
+  - id: A015
+    says: "The CSS module includes responsive breakpoints for mobile and tablet"
+    block: "responsive breakpoints exist in CSS module"
+    target: "css.mediaQueries"
+    matcher: "contains"
+    value: "480px"
+
+  - id: A016
+    says: "The CSS module includes the tablet breakpoint"
+    block: "responsive breakpoints exist in CSS module"
+    target: "css.mediaQueries"
+    matcher: "contains"
+    value: "720px"
+
+  # AC11: Dark theme
+  - id: A017
+    says: "No hardcoded color values appear in the CSS module"
+    block: "dark theme uses CSS custom properties"
+    target: "css.hardcodedColors"
+    matcher: "equals"
+    value: 0
+
+  # AC12: Accessibility
+  - id: A018
+    says: "Drawer buttons include aria-expanded attribute"
+    block: "drawers use accessible button markup"
+    target: "drawer.ariaExpanded"
+    matcher: "exists"
+
+  - id: A019
+    says: "Drawer buttons include aria-controls attribute"
+    block: "drawers use accessible button markup"
+    target: "drawer.ariaControls"
+    matcher: "exists"
+
+  # AC13/AC18: Build
+  - id: A020
+    says: "The website builds without errors after all changes"
+    block: "website build succeeds"
+    target: "build.exitCode"
+    matcher: "equals"
+    value: 0
+
+  # AC14: Section closer
+  - id: A021
+    says: "The section closer links to the proof section"
+    block: "section closer has correct link and animation"
+    target: "closer.href"
+    matcher: "equals"
+    value: "#proof"
+
+  - id: A022
+    says: "The closer arrow has a breathe animation that respects reduced motion"
+    block: "section closer has correct link and animation"
+    target: "css.breatheAnimation.reducedMotion"
+    matcher: "exists"
+
+  # AC15: Scan thread update
+  - id: A023
+    says: "The scan section thread says feeds the system instead of feeds the pipeline"
+    block: "scan thread text and href updated"
+    target: "scanThread.text"
+    matcher: "contains"
+    value: "system"
+
+  - id: A024
+    says: "The scan section thread links to the system section"
+    block: "scan thread text and href updated"
+    target: "scanThread.href"
+    matcher: "equals"
+    value: "#system"
+
+  # AC16: Orphaned anchors
+  - id: A025
+    says: "ScrollHint links to the system section instead of the pipeline"
+    block: "orphaned anchors updated to system"
+    target: "scrollHint.href"
+    matcher: "equals"
+    value: "#system"
+
+  - id: A026
+    says: "The nav agents link points to the system section"
+    block: "orphaned anchors updated to system"
+    target: "copy.nav.links.agents.href"
+    matcher: "equals"
+    value: "/#system"
+
+  - id: A027
+    says: "The hero secondary CTA points to the system section"
+    block: "orphaned anchors updated to system"
+    target: "copy.hero.ctas.secondary.href"
+    matcher: "equals"
+    value: "#system"
+
+  - id: A028
+    says: "Footer product links point to the system section"
+    block: "orphaned anchors updated to system"
+    target: "copy.footer.columns.product.pipeline.href"
+    matcher: "equals"
+    value: "/#system"
+
+  - id: A029
+    says: "The manifesto outbound link points to the system section"
+    block: "orphaned anchors updated to system"
+    target: "copy.manifesto.outbound.pipeline.href"
+    matcher: "equals"
+    value: "/#system"
+
+  # AC17: SectionThread extraction
+  - id: A030
+    says: "A shared SectionThread component exists for reuse across sections"
+    block: "SectionThread component extracted to ui"
+    target: "components.ui.SectionThread"
+    matcher: "exists"
+
+  - id: A031
+    says: "The scan section uses the shared SectionThread component"
+    block: "SectionThread component extracted to ui"
+    target: "scanSlab.imports.SectionThread"
+    matcher: "exists"
+
+file_changes:
+  - path: "website/lib/copy.ts"
+    action: modify
+  - path: "website/components/ui/SectionThread.tsx"
+    action: create
+  - path: "website/components/system/SystemSection.tsx"
+    action: create
+  - path: "website/components/system/Drawer.tsx"
+    action: create
+  - path: "website/components/system/FileTree.tsx"
+    action: create
+  - path: "website/components/system/ManPage.tsx"
+    action: create
+  - path: "website/components/system/SpecStrip.tsx"
+    action: create
+  - path: "website/components/system/system.module.css"
+    action: create
+  - path: "website/app/(marketing)/page.tsx"
+    action: modify
+  - path: "website/components/scan/ScanSlab.tsx"
+    action: modify
+  - path: "website/components/hero/ScrollHint.tsx"
+    action: modify
