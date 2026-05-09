@@ -160,7 +160,6 @@
 }
 .dTeaser {
   font-size: 14px;
-  font-weight: 400;
   color: var(--ink-45);
   font-family: var(--font-serif);
   font-style: italic;
@@ -309,7 +308,6 @@
   padding-left: 16px;
   color: var(--ink-45);
   font-size: 11px;
-  font-weight: 400;
   font-style: italic;
   font-family: var(--font-serif);
   text-align: right;
@@ -390,7 +388,6 @@
 .manMore {
   margin-top: 12px;
   font-size: 11px;
-  font-weight: 400;
   color: var(--ink-45);
   font-style: italic;
   font-family: var(--font-serif);
