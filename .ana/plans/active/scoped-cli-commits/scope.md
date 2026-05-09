@@ -8,7 +8,7 @@ Every `git commit` in the CLI commits the entire staging index, not the specific
 
 ## Complexity Assessment
 - **Kind:** fix
-- **Size:** small — nine changes across three files plus one new test
+- **Size:** small — nine changes across three files plus one new test (four files total)
 - **Files affected:** `packages/cli/src/commands/artifact.ts` (4 changes), `packages/cli/src/commands/work.ts` (3 changes), `packages/cli/src/commands/proof.ts` (1 change), `packages/cli/tests/commands/work.test.ts` (1 new test)
 - **Blast radius:** Commit behavior only. With a clean index (normal case), behavior is identical. With a dirty index (concurrent work, manual staging), CLI commits no longer sweep in unintended changes. No user-visible output changes.
 - **Estimated effort:** 2-3 hours
@@ -19,7 +19,9 @@ Scope every `git commit` and every `git diff --staged --quiet` check in the CLI 
 
 For sites with simple, obvious paths (work.ts, proof.ts), this is a one-line append. For artifact.ts sites where paths are staged conditionally across multiple `git add`/`git rm` calls, the staging block needs a `stagedPaths` array that accumulates paths alongside each staging call, then passes the array to both the diff check and the commit.
 
-One test proves the fix works: stage an unrelated file, run a CLI commit operation, verify the unrelated file is NOT in the commit and IS still staged afterward.
+One test proves the fix works: stage an unrelated file, run `completeWork` (site 4 — the most complex path, includes directory deletions), verify the unrelated file is NOT in the commit (via `git diff-tree --no-commit-id --name-only -r HEAD`) and IS still staged afterward (via `git diff --cached --name-only`).
+
+**Git semantics note:** `git commit -- <paths>` uses `--only` semantics by default (commits working tree state for named paths, not index state). For our sites, `git add` and `git commit` are adjacent synchronous calls, so working tree and index match — no practical difference. `git commit -- <deleted-dir>/` correctly commits deletions: git sees files in HEAD, doesn't see them in the working tree, records the deletions. This is standard git behavior for missing working-tree files.
 
 ## Acceptance Criteria
 - AC1: `work complete` commit (line 1373) includes only `active/{slug}/`, `completed/{slug}/`, `proof_chain.json`, `PROOF_CHAIN.md` — no other staged files leak in
@@ -32,7 +34,7 @@ One test proves the fix works: stage an unrelated file, run a CLI commit operati
 - AC8: `artifact save` multi diff check (line 1656) checks only the artifacts' staged paths, not the entire index
 - AC9: `commitSaves` diff check (line 1904) checks only `.ana/plans/active/{slug}/.saves.json`, not the entire index
 - AC10: With a clean index, all nine sites produce identical behavior to current code — no regressions
-- AC11: At least one test stages an unrelated file before a CLI commit operation, verifies the unrelated file is NOT in the resulting commit, and verifies it IS still staged afterward
+- AC11: At least one test targeting site 4 (`completeWork` main path) stages an unrelated file, runs `completeWork`, verifies the unrelated file is NOT in the resulting commit (via `git diff-tree --no-commit-id --name-only -r HEAD`), and verifies it IS still staged afterward (via `git diff --cached --name-only`)
 - AC12: `git rm` orphan paths at artifact.ts site 2 (lines 1627-1629) are included in the scoped commit — orphan cleanup is committed, not left staged
 
 ## Edge Cases & Risks
@@ -92,8 +94,11 @@ proof.ts `commitAndPushProofChanges` (lines 156-175) — the cleanest commit sit
 ### Known Gotchas
 - artifact.ts site 2 has `git rm` calls (lines 1627-1629) that must be collected into `stagedPaths`. Easy to miss because they're `rm` not `add`.
 - The `stagedPaths` array should be declared BEFORE the try block at the staging entry point, so all conditional branches can push to it. Declaring inside a conditional branch would miss paths from other branches.
-- `path.relative(projectRoot, ...)` is used inconsistently — some `git add` calls pass relative paths directly, others use `path.relative`. The `stagedPaths` array should collect whatever was passed to `git add`/`git rm` — don't normalize, just mirror.
+- `path.relative(projectRoot, ...)` is used inconsistently — most `git add` calls pass relative paths, but site 2's `planPath` at line 1617 is absolute (`path.join(planDir, 'plan.md')`). A relative version is already computed at line 1616 for the `includes` check. The implementer should use the relative version for `stagedPaths`. For all other paths: collect whatever was passed to `git add`/`git rm`.
+
+### Verified Constraints
+- `git commit -- <dir>/` works correctly for directories. Sites 3 and 4 pass directory paths like `.ana/plans/active/{slug}/`. For deleted directories (site 4 after `fsPromises.rm`), git sees files in HEAD but missing from the working tree and records the deletions. For new directories (site 4's `completed/{slug}/`), `git add` makes the files known first, then `git commit -- <dir>/` commits them. Standard git behavior.
+- `git commit -- <paths>` uses `--only` semantics (the default with pathspecs): commits from the working tree, not the index. Since `git add` and `git commit` are adjacent synchronous lines at every site, working tree and index always match. No semantic difference in practice.
 
 ### Things to Investigate
-- Verify that `git commit -- <dir>/` works correctly for directories (not just individual files). Sites 3 and 4 pass directory paths like `.ana/plans/active/{slug}/`. Git pathspecs with trailing `/` should match all files in the directory.
 - Determine the cleanest pattern for the `stagedPaths` array at artifact.ts sites — declare at the top of the staging block, push inline, or extract path collection into a helper function. Design judgment for the planner.
