@@ -1,6 +1,7 @@
 import { copy } from "@/lib/copy";
 import { Container } from "@/components/ui/Container";
 import { Formatted } from "@/components/ui/Formatted";
+import { SectionThread } from "@/components/ui/SectionThread";
 import { CopyButton } from "./CopyButton";
 
 /**
@@ -156,14 +157,10 @@ export function ScanSlab() {
             </div>
 
             {/* Thread */}
-            <div className="mt-7 flex flex-wrap items-baseline gap-3 border-t pt-5 font-mono text-xs" style={{ borderColor: "var(--hairline)", color: "var(--ink-60)" }}>
-              <span>What Ana finds</span>
-              <span style={{ color: "var(--color-brand)" }}>→</span>
-              <span>feeds the pipeline.</span>
-              <a href="#pipeline" className="border-b font-semibold" style={{ color: "var(--fg-strong)", borderColor: "var(--fg-strong)" }}>
-                See how ↓
-              </a>
-            </div>
+            <SectionThread
+              segments={[copy.scanThread.before, copy.scanThread.after]}
+              link={{ href: copy.scanThread.href, label: copy.scanThread.cta }}
+            />
           </div>
         </div>
       </Container>

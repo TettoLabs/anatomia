@@ -35,7 +35,7 @@ export const copy = {
   nav: {
     brand: "anatomia",
     links: [
-      { label: "Agents", href: "/#agents" },
+      { label: "Agents", href: "/#system" },
       { label: "Pricing", href: "/#pricing" },
       { label: "Docs", href: "/docs" },
     ],
@@ -55,7 +55,7 @@ export const copy = {
       "You shipped fast. The codebase is 80% AI-generated. *ana* gives you the senior engineer you don\u2019t have time to hire \u2014 generated from your code, not your intentions.",
     ctas: {
       primary: { label: "Install", command: "npx anatomia-cli init", href: "https://www.npmjs.com/package/anatomia-cli" },
-      secondary: { label: "See the pipeline", href: "#agents" },
+      secondary: { label: "See the pipeline", href: "#system" },
     },
     meta: [
       "MIT License",
@@ -77,6 +77,141 @@ export const copy = {
       "Stack, auth, AI, payments, deploy — detected in seconds.",
       "Keep going or stop here. The scan is yours either way.",
     ],
+  },
+
+  scanThread: {
+    before: "What Ana finds",
+    after: "feeds the system.",
+    cta: "See how ↓",
+    href: "#system",
+  },
+
+  system: {
+    eyebrow: "The system",
+    title: "Scan reads. *init* ships.",
+    lede: "`ana init` takes the scan and ships a complete development system into your repo. Agents that follow your conventions. Skills matched to your stack. A CLI they use as a toolbelt.",
+    specStrip: [
+      { label: "format", value: "markdown" },
+      { label: "lock-in", value: "zero" },
+      { label: "ships", value: "5 agents" },
+      { label: "skills", value: "8 matched" },
+      { label: "context", value: "4 files" },
+      { label: "cli", value: "25 commands" },
+      { label: "install", value: "~3s" },
+    ],
+    drawers: [
+      {
+        id: "agents",
+        num: "01",
+        name: "Agents",
+        teaser: "five sealed roles · markdown agents in your repo",
+        meta: "5 agents",
+        copy: [
+          "Init ships **five specialized agents** as markdown templates in your repo. Each has a role, a toolset, and an independence guarantee.",
+          "Think doesn't implement. Build doesn't verify. **Verify never reads Build's self-report.** Two agents, two accounts of the same work.",
+        ],
+        tree: {
+          root: "your-repo/",
+          folder: ".claude/agents/",
+          count: "5 files",
+          files: [
+            { name: "ana", ext: ".md", anno: "scopes work, surfaces tradeoffs" },
+            { name: "ana-plan", ext: ".md", anno: "writes spec + sealed contract" },
+            { name: "ana-build", ext: ".md", anno: "implements, tags every test" },
+            { name: "ana-verify", ext: ".md", anno: "fault-finds independently" },
+            { name: "ana-learn", ext: ".md", anno: "tends quality between cycles" },
+          ],
+        },
+      },
+      {
+        id: "skills",
+        num: "02",
+        name: "Skills",
+        teaser: "rules matched to your stack · not generic advice",
+        meta: "8 skills",
+        copy: [
+          "The scan detected your stack. Init turns that into **rules your agents follow** — coding standards for your framework, testing patterns for your test runner, deployment rules for your CI.",
+          "Not generic advice. Your dependencies, your patterns, your conventions.",
+        ],
+        tree: {
+          root: "your-repo/",
+          folder: ".claude/skills/",
+          count: "8 skills",
+          files: [
+            { name: "coding-standards/", anno: "TypeScript strict" },
+            { name: "testing-standards/", anno: "Vitest" },
+            { name: "api-patterns/", anno: "Next.js App Router" },
+            { name: "data-access/", anno: "Prisma · PostgreSQL" },
+            { name: "deployment/", anno: "Vercel · GitHub Actions" },
+            { name: "ai-patterns/", anno: "Anthropic SDK" },
+            { name: "git-workflow/", anno: "conventional commits" },
+            { name: "troubleshooting/", anno: "logs · errors · proof findings" },
+          ],
+        },
+      },
+      {
+        id: "context",
+        num: "03",
+        name: "Context",
+        teaser: "project memory, not chat memory · persists across sessions",
+        meta: "4 files",
+        copy: [
+          "**Project memory, not chat memory.** Architecture, conventions, design principles — files your agents read on every task.",
+          "Persists across sessions because it's files in your repo, not conversation history. Enriched through setup. Compounded by the proof chain.",
+        ],
+        tree: {
+          root: "your-repo/",
+          folder: ".ana/",
+          count: "4 files",
+          nested: [
+            {
+              folder: "context/",
+              files: [
+                { name: "project-context", ext: ".md", anno: "architecture, decisions" },
+                { name: "design-principles", ext: ".md", anno: "craft convictions" },
+              ],
+            },
+          ],
+          files: [
+            { name: "scan", ext: ".json", anno: "structured scan output" },
+            { name: "ana", ext: ".json", anno: "CLI configuration" },
+          ],
+        },
+      },
+      {
+        id: "cli",
+        num: "04",
+        name: "The CLI",
+        teaser: "deterministic commands · the system's hands, human or agent",
+        meta: "25 commands",
+        copy: [
+          "The agent toolbelt. And yours. Every step is a single command — **deterministic, mechanical, the same whether a human runs it or an agent does.**",
+          "This is what makes it a system, not a prompting tool. Without the CLI, the markdown is only suggestions. With it, the system has hands.",
+        ],
+        manPage: {
+          commands: [
+            { cmd: "scan", desc: "read the repo, write scan.json" },
+            { cmd: "work start", desc: "claim work, start the clock" },
+            { cmd: "work status", desc: "track in-flight work" },
+            { cmd: "artifact save", desc: "record, hash, sign" },
+            { cmd: "pr create", desc: "package the run" },
+            { cmd: "proof health", desc: "quality trajectory across runs" },
+          ],
+          moreCount: 19,
+          moreNames: "init, setup, verify, proof, agents",
+        },
+      },
+    ],
+    closer: {
+      text: "That's the system. Next: **the proof**.",
+      href: "#proof",
+    },
+  },
+
+  systemThread: {
+    before: "That's the system. Next:",
+    cta: "the proof",
+    href: "#proof",
   },
 
   marquee: {
@@ -304,7 +439,7 @@ export const copy = {
     ],
     signature: { who: "— Anatomia", when: "Written April 2026" },
     outbound: [
-      { label: "See the pipeline", href: "/#pipeline" },
+      { label: "See the pipeline", href: "/#system" },
       { label: "Get in touch", href: "/contact" },
     ],
   },
@@ -425,8 +560,8 @@ SOFTWARE.`,
       {
         title: "Product",
         links: [
-          { label: "Pipeline", href: "/#agents" },
-          { label: "Agents", href: "/#agents" },
+          { label: "Pipeline", href: "/#system" },
+          { label: "Agents", href: "/#system" },
           { label: "Pricing", href: "/#pricing" },
           { label: "Changelog", href: "/changelog" },
         ],

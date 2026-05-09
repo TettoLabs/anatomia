@@ -1,0 +1,43 @@
+schema: 1
+findings:
+  - category: code
+    summary: "Drawer sectionRef prop is dead code — defined but never passed by SystemSection"
+    file: "website/components/system/Drawer.tsx"
+    line: 19
+    severity: debt
+    suggested_action: accept
+    related_assertions: []
+  - category: code
+    summary: "SectionThread breathe prop applies undefined animate-breathe CSS class — no-op if invoked"
+    file: "website/components/ui/SectionThread.tsx"
+    line: 31
+    severity: debt
+    suggested_action: accept
+  - category: code
+    summary: "ManPage footer date '2026-05' is a hardcoded string — will go stale monthly"
+    file: "website/components/system/ManPage.tsx"
+    line: 60
+    severity: observation
+    suggested_action: monitor
+  - category: code
+    summary: "SystemSection closer does not use SectionThread component — pattern duplication"
+    file: "website/components/system/SystemSection.tsx"
+    line: 56
+    severity: observation
+    suggested_action: accept
+  - category: code
+    summary: "copy.ts systemThread key is defined but never consumed by any component — dead data"
+    file: "website/lib/copy.ts"
+    line: 211
+    severity: debt
+    suggested_action: scope
+  - category: code
+    summary: "color-mix() CSS function used for hover effects — ~93% browser support, older browsers get no hover feedback"
+    file: "website/components/system/system.module.css"
+    line: 127
+    severity: observation
+    suggested_action: accept
+  - category: upstream
+    summary: "Three proof chain findings for #pipeline links resolved by this build — copy.ts, ScanSlab, ScrollHint, manifesto all now point to #system"
+    severity: observation
+    suggested_action: accept

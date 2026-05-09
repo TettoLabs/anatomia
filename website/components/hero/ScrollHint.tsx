@@ -21,9 +21,9 @@ export function ScrollHint() {
 
   return (
     <a
-      href="#pipeline"
+      href="#system"
       className={cn(styles.scrollHint, hidden && styles.scrollHintHidden)}
-      aria-label="Scroll to pipeline"
+      aria-label="Scroll to system"
     >
       <span>{copy.hero.scrollHint.start}</span>
       <span className={styles.shLine}>
