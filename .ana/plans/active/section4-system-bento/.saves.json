@@ -18,5 +18,28 @@
   "spec": {
     "saved_at": "2026-05-09T19:45:50.419Z",
     "hash": "sha256:561046cf6e946d493253d913fb6582e843033c323bc986f3674eb52030a72a33"
-  }
+  },
+  "build_started_at": "2026-05-09T19:50:41.424Z",
+  "build_agent": "ana-build",
+  "build-report": {
+    "saved_at": "2026-05-09T19:58:39.091Z",
+    "hash": "sha256:4675cd65baf0dfe163ad3d14b1bac7cadaef1a0a8eeee3d21f0e1afd0454bd73"
+  },
+  "build-data": {
+    "saved_at": "2026-05-09T19:58:39.092Z",
+    "hash": "sha256:1b54335c4c3a0832445f7cab11c79cb91a1766261a43f437e3055b156d47c114"
+  },
+  "modules_touched": [
+    "website/app/(marketing)/page.tsx",
+    "website/components/hero/ScrollHint.tsx",
+    "website/components/scan/ScanSlab.tsx",
+    "website/components/system/Drawer.tsx",
+    "website/components/system/FileTree.tsx",
+    "website/components/system/ManPage.tsx",
+    "website/components/system/SpecStrip.tsx",
+    "website/components/system/SystemSection.tsx",
+    "website/components/system/system.module.css",
+    "website/components/ui/SectionThread.tsx",
+    "website/lib/copy.ts"
+  ]
 }
