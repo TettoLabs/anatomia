@@ -98,6 +98,7 @@
   --terminal-bg: #0b0b10;
   --terminal-fg: #F7F7F4;
   --paper-texture: radial-gradient(rgba(11, 11, 16, 0.045) 1px, transparent 1px);
+  --brand-mark: var(--color-brand);
 }
 
 /* ===================================================================
@@ -126,6 +127,7 @@
   --terminal-bg: #050507;
   --terminal-fg: #F7F7F4;
   --paper-texture: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  --brand-mark: #FBFAF6;
 }
 
 /* ===================================================================

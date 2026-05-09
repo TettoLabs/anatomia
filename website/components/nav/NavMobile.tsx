@@ -47,7 +47,7 @@ export function NavMobile() {
             <Link
               href="/"
               onClick={close}
-              className="flex items-baseline font-serif text-[20px] font-medium"
+              className="flex items-baseline font-serif text-[24px] font-medium"
               style={{ color: "var(--fg)", letterSpacing: "-0.02em" }}
             >
               <span>{copy.nav.brand}</span>
@@ -56,7 +56,7 @@ export function NavMobile() {
                 style={{
                   width: "0.32em",
                   height: "0.39em",
-                  background: "var(--color-brand)",
+                  background: "var(--brand-mark)",
                   position: "relative",
                   top: "0.03em",
                 }}

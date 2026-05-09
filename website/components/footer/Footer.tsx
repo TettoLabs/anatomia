@@ -28,7 +28,7 @@ export async function Footer() {
           <div className="flex max-w-[44ch] flex-col gap-3.5">
             <Link
               href="/"
-              className="flex items-baseline font-serif text-[20px] font-medium"
+              className="flex items-baseline font-serif text-[24px] font-medium"
               style={{ color: "var(--fg)", letterSpacing: "-0.02em" }}
             >
               <span>{copy.footer.brand}</span>
@@ -37,7 +37,7 @@ export async function Footer() {
                 style={{
                   width: "0.32em",
                   height: "0.39em",
-                  background: "var(--color-brand)",
+                  background: "var(--brand-mark)",
                   position: "relative",
                   top: "0.03em",
                 }}

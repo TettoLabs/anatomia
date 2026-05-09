@@ -33,7 +33,7 @@ export async function Nav() {
         <div className="flex items-center gap-3.5">
           <Link
             href="/"
-            className="flex items-baseline font-serif text-[20px] font-medium"
+            className="flex items-baseline font-serif text-[24px] font-medium"
             style={{ color: "var(--fg)", letterSpacing: "-0.02em" }}
             aria-label={copy.nav.brand}
           >
@@ -43,7 +43,7 @@ export async function Nav() {
               style={{
                 width: "0.32em",
                 height: "0.39em",
-                background: "var(--color-brand)",
+                background: "var(--brand-mark)",
                 position: "relative",
                 top: "0.03em",
               }}
