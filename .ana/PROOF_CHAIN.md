@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-74 runs · 167 active · 90 lessons · 0 promoted · 161 closed
+75 runs · 173 active · 91 lessons · 0 promoted · 161 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 167 total)
+## Active Findings (30 shown of 173 total)
 
 ### .github/workflows/test.yml
 
@@ -29,7 +29,6 @@
 ### packages/cli/src/commands/artifact.ts
 
 - **code:** moveFileCrossFs copy-then-delete is not atomic — if copyFileSync succeeds but unlinkSync fails, source file persists as a stale duplicate — *Worktree Artifact Path Mismatch — Prevention and Cleanup*
-- **code:** Layer 2 post-save sweep calls getMainTreeRoot a second time — already computed in Layer 1 block but not threaded through — *Worktree Artifact Path Mismatch — Prevention and Cleanup*
 
 ### packages/cli/src/commands/work.ts
 
@@ -59,10 +58,6 @@
 - **test:** A010 test creates untracked file after commit — doesn't test scoped staging during commit — *Commit timestamps written by work start*
 - **test:** A011 no-push test relies on absence of remote as indirect proof — no spy or mock verifying git push not called — *Commit timestamps written by work start*
 
-### website/components/hero/ScrollHint.tsx
-
-- **code:** ScrollHint still links to #pipeline — scroll from hero goes nowhere — *Website nav, scroll targets, compat icons, and copy accuracy*
-
 ### website/components/proof-feed/proof-feed.module.css
 
 - **code:** rowArrow CSS class defined but never used in ProofFeed.tsx — *Website Mobile Polish + Marquee Overhaul*
@@ -71,19 +66,33 @@
 
 - **code:** kindLabel defaults to 'improve' for unrecognized kind — pre-existing, not in scope — *Website Mobile Polish + Marquee Overhaul*
 
-### website/components/scan/ScanSlab.tsx
+### website/components/system/Drawer.tsx
 
-- **code:** ScanSlab still links to #pipeline — scan section CTA goes nowhere — *Website nav, scroll targets, compat icons, and copy accuracy*
+- **code:** Drawer sectionRef prop is dead code — defined but never passed by SystemSection — *Section 4 — The System (replace Bento)*
+
+### website/components/system/ManPage.tsx
+
+- **code:** ManPage footer date '2026-05' is a hardcoded string — will go stale monthly — *Section 4 — The System (replace Bento)*
+
+### website/components/system/system.module.css
+
+- **code:** color-mix() CSS function used for hover effects — ~93% browser support, older browsers get no hover feedback — *Section 4 — The System (replace Bento)*
+
+### website/components/system/SystemSection.tsx
+
+- **code:** SystemSection closer does not use SectionThread component — pattern duplication — *Section 4 — The System (replace Bento)*
+
+### website/components/ui/SectionThread.tsx
+
+- **code:** SectionThread breathe prop applies undefined animate-breathe CSS class — no-op if invoked — *Section 4 — The System (replace Bento)*
 
 ### website/lib/copy.ts
 
+- **code:** copy.ts systemThread key is defined but never consumed by any component — dead data — *Section 4 — The System (replace Bento)*
 - **code:** Three dead #pipeline links in copy.ts — pre-existing, not introduced by this build — *Website Mobile Polish + Marquee Overhaul*
-- **code:** Three dead #pipeline links after anchor removal — *Website nav, scroll targets, compat icons, and copy accuracy*
 
 ### website/lib/icons.tsx
 
 - **code:** brandIconNames exported but never imported — pre-existing, out of scope — *Website Mobile Polish + Marquee Overhaul*
 - **code:** Copilot/Cline use currentColor — renders as var(--fg) inside .glyph, works in both themes but contrast depends on --ink-15 background chip — *Website Mobile Polish + Marquee Overhaul*
-- **code:** brandIconNames exported but never imported — *Website nav, scroll targets, compat icons, and copy accuracy*
-- **code:** Codex icon is a geometric diamond placeholder, not an official brand icon — *Website nav, scroll targets, compat icons, and copy accuracy*
 

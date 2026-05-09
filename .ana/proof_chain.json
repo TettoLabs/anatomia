@@ -18933,6 +18933,361 @@
         "completed_at": "2026-05-09T20:38:06.449Z",
         "commit_count": 0
       }
+    },
+    {
+      "slug": "section4-system-bento",
+      "feature": "Section 4 — The System (replace Bento)",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 31,
+        "satisfied": 31,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "The System section appears on the landing page in place of Bento",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "Page sections render in the correct order",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "All four drawers can open and close",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "Drawers animate open using CSS grid rows",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "The CLI version in the man page comes from the actual package",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "The section shows 25 commands, not 23",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "The plus-more count shows 19 remaining commands",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "The trailing command list includes init but excludes check and index",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "The trailing command list does not include removed commands",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "Context files appear in a nested subfolder in the file tree",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "Project context and design principles are shown inside the context subfolder",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "The section shows exactly 5 pipeline agents",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "All section strings live in copy.ts under a system key",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "The section title text lives in copy.ts",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "The CSS module includes responsive breakpoints for mobile and tablet",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "The CSS module includes the tablet breakpoint",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A017",
+          "says": "No hardcoded color values appear in the CSS module",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A018",
+          "says": "Drawer buttons include aria-expanded attribute",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A019",
+          "says": "Drawer buttons include aria-controls attribute",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A020",
+          "says": "The website builds without errors after all changes",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A021",
+          "says": "The section closer links to the proof section",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A022",
+          "says": "The closer arrow has a breathe animation that respects reduced motion",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A023",
+          "says": "The scan section thread says feeds the system instead of feeds the pipeline",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A024",
+          "says": "The scan section thread links to the system section",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A025",
+          "says": "ScrollHint links to the system section instead of the pipeline",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A026",
+          "says": "The nav agents link points to the system section",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A027",
+          "says": "The hero secondary CTA points to the system section",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A028",
+          "says": "Footer product links point to the system section",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A029",
+          "says": "The manifesto outbound link points to the system section",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A030",
+          "says": "A shared SectionThread component exists for reuse across sections",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A031",
+          "says": "The scan section uses the shared SectionThread component",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 18,
+        "met": 17
+      },
+      "timing": {
+        "total_minutes": 66,
+        "think": 9,
+        "plan": 6,
+        "build": 39,
+        "verify": 33
+      },
+      "hashes": {
+        "scope": "sha256:0aebc513fac6e3b8262e19f93c948559585c6496e561b508be2c52a94b7aa5dc",
+        "contract": "sha256:a67daa8f8aa3a01c3c47ad86e3e290dfd3068cb49d89d6d0aea5bf0f84951d75",
+        "plan": "sha256:98afc4d50d1e4d155f7d16b5aa1b607c7da6c0f25c21f6dce2c7d624ba68a341",
+        "spec": "sha256:561046cf6e946d493253d913fb6582e843033c323bc986f3674eb52030a72a33",
+        "build-report": "sha256:648d7ce1e7dde4039d8fd8d53d230c9ff0487246248cde435e370fc10c82bf72",
+        "build-data": "sha256:d976edc6ce805b461d96b1359f0a661e42d57251c7423d7e3bc34343797916b6",
+        "verify-report": "sha256:5be50a30252d69257889c8bcb7c62def870f218ff4d249f4071ab169faffeb35",
+        "verify-data": "sha256:f1bb1573f212af1518ab80445c66bd8e7a24bf857f34fb211feed1c234f646bc"
+      },
+      "completed_at": "2026-05-09T20:48:04.339Z",
+      "modules_touched": [
+        "website/app/(marketing)/page.tsx",
+        "website/components/hero/ScrollHint.tsx",
+        "website/components/scan/ScanSlab.tsx",
+        "website/components/system/Drawer.tsx",
+        "website/components/system/FileTree.tsx",
+        "website/components/system/ManPage.tsx",
+        "website/components/system/SpecStrip.tsx",
+        "website/components/system/SystemSection.tsx",
+        "website/components/system/system.module.css",
+        "website/components/ui/SectionThread.tsx",
+        "website/lib/copy.ts"
+      ],
+      "scope_summary": "Replace the existing Bento section with a new \"System\" section that shows what `ana init` ships into a repo: agents, skills, context files, and the CLI. The design is a four-drawer accordion with file trees and a man-page CLI mock. The handoff HTML is approved and responsive-tested at 375/768/1280. This scope covers re-engineering it into modular Next.js components following existing website patterns, fixing factual errors in the handoff, and making key data (version, command count) maintainable.",
+      "kind": "feature",
+      "findings": [
+        {
+          "category": "code",
+          "summary": "Drawer sectionRef prop is dead code — defined but never passed by SystemSection",
+          "file": "website/components/system/Drawer.tsx",
+          "anchor": null,
+          "line": 19,
+          "severity": "debt",
+          "suggested_action": "accept",
+          "related_assertions": [],
+          "id": "section4-system-bento-C1",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "SectionThread breathe prop applies undefined animate-breathe CSS class — no-op if invoked",
+          "file": "website/components/ui/SectionThread.tsx",
+          "anchor": null,
+          "line": 31,
+          "severity": "debt",
+          "suggested_action": "accept",
+          "id": "section4-system-bento-C2",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "ManPage footer date '2026-05' is a hardcoded string — will go stale monthly",
+          "file": "website/components/system/ManPage.tsx",
+          "anchor": null,
+          "line": 60,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "section4-system-bento-C3",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "SystemSection closer does not use SectionThread component — pattern duplication",
+          "file": "website/components/system/SystemSection.tsx",
+          "anchor": null,
+          "line": 56,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "section4-system-bento-C4",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "copy.ts systemThread key is defined but never consumed by any component — dead data",
+          "file": "website/lib/copy.ts",
+          "anchor": null,
+          "line": 211,
+          "severity": "debt",
+          "suggested_action": "scope",
+          "id": "section4-system-bento-C5",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "color-mix() CSS function used for hover effects — ~93% browser support, older browsers get no hover feedback",
+          "file": "website/components/system/system.module.css",
+          "anchor": null,
+          "line": 127,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "section4-system-bento-C6",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "Three proof chain findings for #pipeline links resolved by this build — copy.ts, ScanSlab, ScrollHint, manifesto all now point to #system",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "section4-system-bento-C7",
+          "status": "lesson"
+        }
+      ],
+      "rejection_cycles": 1,
+      "previous_failures": [
+        {
+          "id": "A017",
+          "summary": "Three hardcoded `rgba()` values in CSS module"
+        },
+        {
+          "id": "A021",
+          "summary": "Closer rendered as `<div>`, not a link"
+        }
+      ],
+      "build_concerns": [
+        {
+          "summary": "Bento directory left dead — unused code remains in components/bento/",
+          "file": "website/components/bento/",
+          "severity": "debt",
+          "suggested_action": "scope"
+        },
+        {
+          "summary": "Pulse animation CSS depends on exact DOM nesting of module-scoped classes",
+          "file": "website/components/system/system.module.css",
+          "severity": "observation",
+          "suggested_action": "monitor"
+        },
+        {
+          "summary": "proofFeed copy references clickable rows but rows are no longer clickable",
+          "file": "website/lib/copy.ts",
+          "severity": "debt",
+          "suggested_action": "scope"
+        },
+        {
+          "summary": "Drawer type narrowing uses in-operator check, fragile to accidental key additions",
+          "file": "website/components/system/Drawer.tsx",
+          "severity": "observation",
+          "suggested_action": "monitor"
+        },
+        {
+          "summary": "SectionThread breathe prop and animate-breathe CSS class are dead code",
+          "file": "website/components/ui/SectionThread.tsx",
+          "severity": "debt",
+          "suggested_action": "scope"
+        },
+        {
+          "summary": "Drawer sectionRef prop is defined but never passed",
+          "file": "website/components/system/Drawer.tsx",
+          "severity": "debt",
+          "suggested_action": "scope"
+        },
+        {
+          "summary": "ManPage date '2026-05' is hardcoded, will become stale monthly",
+          "file": "website/components/system/ManPage.tsx",
+          "severity": "debt",
+          "suggested_action": "scope"
+        },
+        {
+          "summary": "Hover tint changed from neutral black to brand-tinted for token compliance",
+          "file": "website/components/system/system.module.css",
+          "severity": "observation",
+          "suggested_action": "accept"
+        }
+      ],
+      "worktree": {
+        "used": true,
+        "created_at": "2026-05-09T20:30:43.621Z",
+        "completed_at": "2026-05-09T20:48:04.337Z",
+        "commit_count": 0
+      }
     }
   ],
   "schema": 1
