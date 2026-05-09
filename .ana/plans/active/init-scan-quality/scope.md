@@ -9,7 +9,7 @@
 ## Complexity Assessment
 - **Kind:** feature
 - **Size:** medium — new display logic in init, preflight additions, type change for data flow, template update for setup agent
-- **Files affected:** `packages/cli/src/commands/init/preflight.ts`, `packages/cli/src/commands/init/state.ts`, `packages/cli/src/commands/init/types.ts`, `packages/cli/src/commands/init/index.ts`, `packages/cli/src/engine/scan-engine.ts`, `packages/cli/templates/.claude/agents/ana-setup.md`
+- **Files affected:** `packages/cli/src/commands/init/preflight.ts`, `packages/cli/src/commands/init/state.ts`, `packages/cli/src/commands/init/types.ts`, `packages/cli/src/commands/init/index.ts`, `packages/cli/templates/.claude/agents/ana-setup.md`
 - **Blast radius:** Init terminal output only. No changes to scan logic, asset generation, or pipeline commands. The scan engine's blind spot message changes affect `scan.json` content (consumed by agents and `ana scan`'s finding count), but `ana scan` does not render blind spots — only counts them. The enhanced message improves `scan.json` data quality and the new init display.
 - **Estimated effort:** 3-4 hours
 - **Multi-phase:** no
@@ -17,7 +17,7 @@
 ## Approach
 Three layers, each addressing a different disease:
 
-**Layer 1 (scan quality):** After the scan completes and before asset generation, display blind spots from `engineResult.blindSpots`. Distinguish three states: full success (checkmark), degraded (warning — tree-sitter failed, surface-tier only), total failure (existing behavior). Enhance the tree-sitter blind spot message in scan-engine.ts to use language-neutral terms describing what was lost. This data already exists — init just needs to show it instead of hiding it.
+**Layer 1 (scan quality):** After the scan completes and before asset generation, display blind spots from `engineResult.blindSpots`. Distinguish three states: full success (checkmark), degraded (warning — tree-sitter failed, surface-tier only), total failure (existing behavior). The scan-engine.ts blind spot message stays unchanged — `scan.json` is designed for agents and benefits from technical specificity ("Tree-sitter analysis unavailable"). Init translates to language-neutral human terms at display time ("code patterns, conventions, and structure analysis skipped"). Different audiences, different rendering. This data already exists — init just needs to show it instead of hiding it.
 
 **Layer 2 (pipeline dependencies):** Add `git user.name`/`user.email` and `gh` checks to init's preflight. These checks must be guarded: skip git-user checks if `hasGit` is false (git not installed) — otherwise the user sees "git not installed" followed by "git user not configured," which is confusing and redundant. Enhance the existing git remote message at preflight.ts line 180-181 with pipeline context — don't add a duplicate check. All checks are warnings, not gates. The `gh` message notes the pipeline works without it (non-GitHub teams shouldn't feel forced). Capture warnings in `PreflightResult` so they can flow to the success message.
 
@@ -34,7 +34,7 @@ Three layers, each addressing a different disease:
 - AC8: The init success message includes a "Pipeline readiness" section listing any warnings, displayed before "Next:" — only shown if warnings exist
 - AC9: `PreflightResult` carries a `warnings` field that flows from preflight through the orchestrator to `displaySuccessMessage`
 - AC10: The setup agent template includes environment validation commands at the end of the setup flow — after `setupPhase: "complete"` is written but before the summary is printed. The template explicitly instructs: "Report findings. Do not install software or modify git configuration unless the user explicitly asks."
-- AC11: The tree-sitter blind spot message in scan-engine.ts uses language-neutral terms ("code patterns, conventions, and structure analysis") that work for Python, TypeScript, JavaScript, and Go projects
+- AC11: Init's blind spot display renders tree-sitter failures with language-neutral human terms ("code patterns, conventions, and structure analysis"). The scan-engine.ts blind spot message is NOT modified — `scan.json` keeps technical detail ("Tree-sitter analysis unavailable") for agent consumption. The translation happens at display time in init, not at the source.
 - AC12: Re-running `ana init` (reinit) re-runs all dependency checks with updated results
 - AC13: Total analyzer failure ("Analyzer failed — continuing with empty scaffolds") behavior is unchanged
 
@@ -72,7 +72,7 @@ None for Ana. Open questions for AnaPlan:
 
 ### Patterns Discovered
 - `runAnalyzer` (state.ts lines 58-82): returns `EngineResult | null`. Calls `spinner.succeed('Analysis complete')` at line 67 regardless of degradation. `displayDetectionSummary` at line 68 shows what was found but never what was missed.
-- `displayDetectionSummary` (state.ts lines 91-135): shows stack, files, git, patterns, services. Patterns line (119) shows "5 detected (deep scan)" even when tree-sitter failed and patterns came from surface-tier only. Misleading.
+- `displayDetectionSummary` (state.ts lines 91-135): shows stack, files, git, patterns, services. When tree-sitter fails, `patterns` is null and the patterns line (115-119) is skipped entirely — no misleading display. The gap is the absence of any degradation signal, not a wrong signal.
 - Existing preflight git validation (preflight.ts lines 156-190): four-state check (no git, commits but no remote, empty git, validation failed). The "commits but no remote" state at line 180-181 already detects missing remotes with an informational message. R3 enhances this message, doesn't duplicate it.
 - `PreflightResult` type (types.ts): `{ canProceed: boolean; initState: string; anaExisted: boolean }`. No warnings field. R7 requires adding one.
 
@@ -102,7 +102,7 @@ None for Ana. Open questions for AnaPlan:
 - `packages/cli/src/commands/init/types.ts` lines 27-33 — `PreflightResult` type (R7: add warnings field)
 - `packages/cli/src/commands/init/index.ts` line 82 — preflight call (R7: capture warnings)
 - `packages/cli/src/commands/init/index.ts` line 135 — displaySuccessMessage call (R7: pass warnings)
-- `packages/cli/src/engine/scan-engine.ts` lines 898-903 — analyzer blind spot (R6: enhance message)
+- `packages/cli/src/engine/scan-engine.ts` lines 898-903 — analyzer blind spot (R6: NO CHANGE to source; init translates at display time)
 - `packages/cli/templates/.claude/agents/ana-setup.md` — setup agent template (R5: add environment checks)
 
 ### Patterns to Follow
