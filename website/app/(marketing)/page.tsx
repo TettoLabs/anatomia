@@ -1,15 +1,15 @@
 /**
  * Landing page — composition root.
  * Each section is its own component; this file only orders them.
- * Section order mirrors the handoff HTML:
- *   Hero → CompatMarquee → ScanSlab → Bento → DeepDive → Pricing
+ * Section order:
+ *   Hero → CompatMarquee → ScanSlab → SystemSection → DeepDive → Pricing
  *   → ProofFeed (between main and footer) → Footer (in layout)
  */
 import type { Metadata } from "next";
 import { Hero } from "@/components/hero/Hero";
 import { CompatMarquee } from "@/components/marquee/CompatMarquee";
 import { ScanSlab } from "@/components/scan/ScanSlab";
-import { Bento } from "@/components/bento/Bento";
+import { SystemSection } from "@/components/system/SystemSection";
 import { DeepDive } from "@/components/deep/DeepDive";
 import { Pricing } from "@/components/pricing/Pricing";
 import { ProofFeed } from "@/components/proof-feed/ProofFeed";
@@ -27,7 +27,7 @@ export default function LandingPage() {
         <Hero />
         <CompatMarquee />
         <ScanSlab />
-        <Bento />
+        <SystemSection />
         <DeepDive />
         <Pricing />
       </main>
