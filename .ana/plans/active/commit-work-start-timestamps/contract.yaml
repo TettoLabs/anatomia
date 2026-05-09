@@ -1,0 +1,110 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Commit timestamps written by work start"
+
+assertions:
+  - id: A001
+    says: "Starting a new work item commits the timestamp to the artifact branch"
+    block: "Think phase commits .saves.json after writing work_started_at"
+    target: "git.status.saves_json"
+    matcher: "equals"
+    value: "clean"
+
+  - id: A002
+    says: "The start-work commit message identifies the slug"
+    block: "Think phase commits .saves.json after writing work_started_at"
+    target: "git.log.last_commit"
+    matcher: "contains"
+    value: "Start work"
+
+  - id: A003
+    says: "The start-work commit includes the co-author trailer"
+    block: "Think phase commits .saves.json after writing work_started_at"
+    target: "git.log.last_commit_body"
+    matcher: "contains"
+    value: "Co-authored-by:"
+
+  - id: A004
+    says: "Starting a plan phase commits the timestamp to the artifact branch"
+    block: "Plan phase commits .saves.json after writing plan_started_at"
+    target: "git.status.saves_json"
+    matcher: "equals"
+    value: "clean"
+
+  - id: A005
+    says: "The plan-phase commit message identifies the phase"
+    block: "Plan phase commits .saves.json after writing plan_started_at"
+    target: "git.log.last_commit"
+    matcher: "contains"
+    value: "Start plan phase"
+
+  - id: A006
+    says: "The plan-phase commit includes the co-author trailer"
+    block: "Plan phase commits .saves.json after writing plan_started_at"
+    target: "git.log.last_commit_body"
+    matcher: "contains"
+    value: "Co-authored-by:"
+
+  - id: A007
+    says: "Repeating work start for the same phase does not create an empty commit"
+    block: "second call to work start is a no-op — no empty commit"
+    target: "git.log.commit_count"
+    matcher: "equals"
+    value: "unchanged"
+
+  - id: A008
+    says: "Repeating work start for the same phase does not error"
+    block: "second call to work start is a no-op — no empty commit"
+    target: "process.exitCode"
+    matcher: "not_equals"
+    value: 1
+
+  - id: A009
+    says: "The commit only includes the saves file for this work item"
+    block: "commit stages only this slug's .saves.json"
+    target: "git.diff.files_in_commit"
+    matcher: "equals"
+    value: 1
+
+  - id: A010
+    says: "Other files in the slug directory are not included in the commit"
+    block: "commit stages only this slug's .saves.json"
+    target: "untracked_file.status"
+    matcher: "equals"
+    value: "untracked"
+
+  - id: A011
+    says: "Work start does not push to the remote"
+    block: "no git push is executed by work start"
+    target: "git.push.called"
+    matcher: "equals"
+    value: false
+
+  - id: A012
+    says: "Comments saying main when meaning the artifact branch are fixed in work.ts"
+    block: "terminology fixes in work.ts"
+    target: "work.ts.main_as_branch_references"
+    matcher: "equals"
+    value: 0
+
+  - id: A013
+    says: "The artifact branch message in artifact.ts no longer hardcodes main"
+    block: "terminology fix in artifact.ts"
+    target: "artifact.ts.line937.text"
+    matcher: "not_contains"
+    value: "on main but"
+
+  - id: A014
+    says: "References to main project directory and main tree are preserved"
+    block: "terminology fixes preserve correct git terminology"
+    target: "work.ts.main_tree_references"
+    matcher: "greater"
+    value: 0
+
+file_changes:
+  - path: "packages/cli/src/commands/work.ts"
+    action: modify
+  - path: "packages/cli/src/commands/artifact.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/work.test.ts"
+    action: modify
