@@ -1,0 +1,673 @@
+/* System section — drawers, spec strip, file tree, man page.
+   Tokens referenced via var() from globals.css.
+   No @apply — Tailwind v4 doesn't resolve in modules. */
+
+/* ── Section ── */
+.section {
+  padding: var(--spacing-section, 116px) 0 64px;
+  border-top: 1px solid var(--hairline);
+}
+
+/* ── Header ── */
+.header {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  margin-bottom: 0;
+}
+@media (min-width: 900px) {
+  .header {
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    align-items: end;
+  }
+}
+
+.sectionTitle {
+  font-size: clamp(32px, 3.8vw, 52px);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  color: var(--fg-strong);
+  max-width: 20ch;
+  margin-top: 16px;
+}
+.sectionTitle em {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 700;
+  font-variation-settings: "opsz" 144;
+  color: var(--color-brand);
+  position: relative;
+}
+/* Blinking cursor after "init" */
+.sectionTitle em::after {
+  content: "";
+  display: inline-block;
+  width: 2px;
+  height: 0.72em;
+  background: var(--color-brand);
+  margin-left: 3px;
+  vertical-align: baseline;
+  position: relative;
+  top: 0.04em;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sectionTitle em::after {
+    animation: cursorBlink 1.2s ease-in-out infinite;
+  }
+}
+@keyframes cursorBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.lede {
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--ink-60);
+  max-width: 46ch;
+}
+.lede code {
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+  letter-spacing: 0.02em;
+}
+
+/* ── Spec strip ── */
+.specStrip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 28px;
+  padding: 16px 0;
+  margin-top: 48px;
+  margin-bottom: 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--ink-45);
+}
+.specVal {
+  color: var(--fg-strong);
+  font-weight: 600;
+}
+
+/* ── Drawer ── */
+.drawer {
+  border-bottom: 1px solid var(--hairline);
+}
+.drawerFirst {
+  border-top: 1px solid var(--hairline);
+}
+.drawerHead {
+  display: grid;
+  grid-template-columns: 60px max-content 1fr max-content max-content;
+  gap: 28px;
+  align-items: baseline;
+  width: 100%;
+  background: transparent;
+  border: 0;
+  padding: 30px 0 28px;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  color: inherit;
+  transition: background 0.18s ease;
+  position: relative;
+}
+.drawerHead::before {
+  content: "";
+  position: absolute;
+  left: -8px;
+  right: -8px;
+  top: 0;
+  bottom: 0;
+  background: rgba(168, 60, 50, 0.0);
+  transition: background 0.2s ease;
+  pointer-events: none;
+  border-radius: 2px;
+}
+.drawerHead:hover::before {
+  background: rgba(0, 0, 0, 0.014);
+}
+.drawerHead:hover .dName,
+.drawerHead:hover .dToggle {
+  color: var(--color-brand);
+}
+.drawerHead:hover .dToggle {
+  border-color: var(--color-brand);
+}
+.dNum {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-brand);
+  letter-spacing: 0.14em;
+  align-self: center;
+}
+.dName {
+  font-size: 26px;
+  font-weight: 400;
+  color: var(--fg-strong);
+  letter-spacing: -0.02em;
+  font-family: var(--font-serif);
+  font-style: italic;
+  transition: color 0.16s;
+  align-self: center;
+  line-height: 1;
+}
+.dTeaser {
+  font-size: 14px;
+  color: var(--ink-45);
+  font-family: var(--font-serif);
+  font-style: italic;
+  line-height: 1.4;
+  align-self: center;
+}
+.dMeta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-45);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  align-self: center;
+}
+.dToggle {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 300;
+  color: var(--ink-45);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  transition: transform 0.4s cubic-bezier(.2, .85, .2, 1),
+    color 0.18s, border-color 0.18s, background 0.18s;
+  line-height: 1;
+  align-self: center;
+}
+.dToggleOpen {
+  transform: rotate(45deg);
+  color: var(--color-brand);
+  border-color: var(--color-brand);
+  background: rgba(168, 60, 50, 0.05);
+}
+.drawerBody {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 460ms cubic-bezier(.2, .85, .2, 1);
+}
+.drawerBodyOpen {
+  grid-template-rows: 1fr;
+}
+.drawerBodyWrap {
+  overflow: hidden;
+}
+.drawerBodyInner {
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 320ms ease 100ms,
+    transform 460ms cubic-bezier(.2, .85, .2, 1) 80ms;
+  padding: 6px 0 44px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 40px;
+}
+.drawerBodyInnerOpen {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Drawer copy ── */
+.blockCopy {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--ink-60);
+  max-width: 42ch;
+}
+.blockCopy strong {
+  color: var(--fg-strong);
+  font-weight: 600;
+}
+.blockCopyP {
+  margin-top: 14px;
+}
+
+/* ── File tree ── */
+.tree {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.7;
+}
+.tRow {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--hairline);
+}
+.tRowLast {
+  border-bottom: none;
+}
+.tRoot {
+  font-weight: 600;
+  color: var(--ink-45);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+  margin-bottom: 2px;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.tFolder {
+  user-select: none;
+  font-weight: 600;
+  color: var(--fg-strong);
+}
+.tTri {
+  font-size: 9px;
+  color: var(--ink-30);
+  width: 12px;
+  display: inline-block;
+  text-align: center;
+}
+.tTriRight {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  padding-left: 16px;
+}
+.tMeta {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 11.5px;
+  color: var(--ink-45);
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.tName {
+  color: var(--fg-strong);
+  font-weight: 500;
+}
+.tFolderName {
+  color: var(--fg-strong);
+  font-weight: 600;
+}
+.tExt {
+  color: var(--ink-30);
+  font-weight: 400;
+}
+.tAnno {
+  margin-left: auto;
+  padding-left: 16px;
+  color: var(--ink-45);
+  font-size: 11px;
+  font-style: italic;
+  font-family: var(--font-serif);
+  text-align: right;
+  white-space: nowrap;
+}
+.tGroup {
+  transition: opacity 0.18s ease;
+}
+.tGroupRow {
+  padding-left: 30px;
+}
+.tNestedGroupRow {
+  padding-left: 50px;
+}
+
+/* ── Man page ── */
+.man {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--ink-75);
+}
+.manHeader,
+.manFooter {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  color: var(--ink-45);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.manHeader {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 10px;
+  margin-bottom: 18px;
+}
+.manFooter {
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+  margin-top: 18px;
+}
+.manSection {
+  margin-bottom: 18px;
+}
+.manSectionLast {
+  margin-bottom: 0;
+}
+.manSectionName {
+  font-weight: 700;
+  color: var(--fg-strong);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  margin-bottom: 7px;
+}
+.manBody {
+  padding-left: 24px;
+}
+.manBodyText {
+  font-size: 12.5px;
+  color: var(--ink-75);
+}
+.manCmdRow {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 3px 0;
+}
+.manCmd {
+  font-weight: 600;
+  color: var(--fg-strong);
+  min-width: 120px;
+}
+.manDesc {
+  color: var(--ink-60);
+  font-size: 12px;
+}
+.manMore {
+  margin-top: 12px;
+  font-size: 11px;
+  color: var(--ink-45);
+  font-style: italic;
+  font-family: var(--font-serif);
+}
+
+/* ── Closer ── */
+.closer {
+  margin-top: 48px;
+  padding-top: 28px;
+  border-top: 1px solid var(--hairline);
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.closerArrow {
+  color: var(--color-brand);
+  font-size: 14px;
+  font-weight: 600;
+}
+.closerText {
+  font-size: 14.5px;
+  color: var(--ink-45);
+}
+.closerText strong {
+  color: var(--fg-strong);
+  font-weight: 600;
+}
+
+/* ── Breathe animation ── */
+@media (prefers-reduced-motion: no-preference) {
+  .breathe {
+    animation: breathe 3s ease-in-out infinite;
+  }
+}
+@keyframes breathe {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+/* ── Pulse animation (IntersectionObserver-triggered) ── */
+@media (prefers-reduced-motion: no-preference) {
+  .pulseFire .tTriRight .tTri {
+    animation: discPulse 800ms ease-out 1;
+  }
+  .pulseFire .tTriRight .tMeta {
+    animation: discPulseMeta 800ms ease-out 1;
+  }
+}
+@keyframes discPulse {
+  0% { transform: translateY(0); color: var(--ink-30); }
+  25% { transform: translateY(-1.5px); color: var(--color-brand); }
+  55% { transform: translateY(0); color: var(--color-brand); }
+  100% { transform: translateY(0); color: var(--ink-30); }
+}
+@keyframes discPulseMeta {
+  0% { color: var(--ink-45); }
+  25% { color: var(--color-brand); }
+  55% { color: var(--color-brand); }
+  100% { color: var(--ink-45); }
+}
+
+/* ── Responsive: Tablet (≤1023px) ── */
+@media (max-width: 1023px) {
+  .section {
+    --spacing-section: 96px;
+    padding: var(--spacing-section) 0 56px;
+  }
+}
+
+/* ── Responsive: Tablet narrow (≤860px) ── */
+@media (max-width: 860px) {
+  .drawerHead {
+    grid-template-columns: 52px max-content 1fr max-content max-content;
+    gap: 22px;
+    padding: 26px 0;
+  }
+  .dName { font-size: 24px; }
+  .dTeaser { font-size: 13.5px; }
+  .drawerBodyInner,
+  .drawerBodyInnerOpen {
+    gap: 30px;
+    padding: 8px 0 36px;
+  }
+}
+
+/* ── Responsive: ≥860px drawer body 2-col ── */
+@media (min-width: 860px) {
+  .drawerBodyInner,
+  .drawerBodyInnerOpen {
+    grid-template-columns: 1fr 1fr;
+    gap: 56px;
+    padding-left: 88px;
+  }
+}
+
+/* ── Responsive: Small tablet / large mobile (≤720px) ── */
+@media (max-width: 720px) {
+  .section {
+    --spacing-section: 80px;
+  }
+  .sectionTitle {
+    font-size: clamp(30px, 6.4vw, 40px);
+  }
+  .lede {
+    font-size: 15.5px;
+    line-height: 1.55;
+    max-width: none;
+  }
+  .specStrip {
+    gap: 8px 22px;
+    padding: 14px 0;
+    margin-top: 36px;
+    font-size: 10.5px;
+  }
+  /* Drawer head: card layout */
+  .drawerHead {
+    grid-template-columns: max-content 1fr max-content;
+    grid-template-areas:
+      "num    .       toggle"
+      "name   name    name"
+      "teaser teaser  teaser"
+      "meta   meta    meta";
+    column-gap: 16px;
+    row-gap: 4px;
+    padding: 26px 0 24px;
+    align-items: start;
+  }
+  .dNum { grid-area: num; }
+  .dToggle { grid-area: toggle; }
+  .dName {
+    grid-area: name;
+    font-size: 30px;
+    line-height: 1.04;
+    margin-top: 10px;
+  }
+  .dTeaser {
+    grid-area: teaser;
+    display: block;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--ink-60);
+    margin-top: 12px;
+    max-width: 36ch;
+  }
+  .dMeta {
+    grid-area: meta;
+    display: inline-block;
+    margin-top: 14px;
+    font-size: 10.5px;
+    color: var(--ink-45);
+  }
+  .drawerHead:hover::before {
+    background: transparent;
+  }
+  .blockCopy {
+    max-width: none;
+    font-size: 14.5px;
+    line-height: 1.65;
+  }
+  .blockCopyP {
+    margin-top: 12px;
+  }
+  /* Tree rows break to two lines */
+  .tRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    padding: 11px 0;
+  }
+  .tRow.tRoot,
+  .tRow.tFolder {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 8px;
+    padding: 7px 0;
+  }
+  .tAnno {
+    margin-left: 0;
+    padding-left: 0;
+    text-align: left;
+    white-space: normal;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--ink-45);
+  }
+  .tGroupRow {
+    padding-left: 18px;
+  }
+  .tTriRight {
+    padding-left: 8px;
+  }
+  /* Man page mobile */
+  .manBody {
+    padding-left: 14px;
+  }
+  .manCmdRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    padding: 8px 0 10px;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .manCmdRow:last-child {
+    border-bottom: none;
+  }
+  .manCmd {
+    min-width: 0;
+    font-size: 12.5px;
+  }
+  .manDesc {
+    font-size: 12px;
+    line-height: 1.45;
+  }
+  .manHeader,
+  .manFooter {
+    font-size: 9.5px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .manHeaderMiddle,
+  .manFooterMiddle {
+    display: none;
+  }
+  /* Closer */
+  .closer {
+    margin-top: 36px;
+    padding-top: 22px;
+  }
+  .closerText {
+    font-size: 13.5px;
+  }
+}
+
+/* ── Responsive: Phone (≤480px) ── */
+@media (max-width: 480px) {
+  .section {
+    --spacing-section: 64px;
+  }
+  .sectionTitle {
+    font-size: 32px;
+    line-height: 1.06;
+  }
+  .lede {
+    font-size: 14.5px;
+  }
+  .specStrip {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px 0;
+    padding: 16px 0;
+  }
+  .specItem {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    border-bottom: 1px dashed var(--hairline);
+  }
+  .specItemLast {
+    border-bottom: none;
+  }
+  .drawerHead {
+    padding: 22px 0 22px;
+  }
+  .dName {
+    font-size: 26px;
+  }
+  .dTeaser {
+    font-size: 14px;
+    max-width: none;
+  }
+  .blockCopy {
+    font-size: 14px;
+  }
+  .tree,
+  .man {
+    font-size: 12px;
+  }
+  .manHeaderLast,
+  .manFooterLast {
+    display: none;
+  }
+}
