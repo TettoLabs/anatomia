@@ -30,7 +30,7 @@ export async function Nav() {
         aria-label="Primary"
       >
         {/* Left: wordmark + version pill */}
-        <div className="flex items-center gap-3.5">
+        <div className="flex items-baseline gap-3.5">
           <Link
             href="/"
             className="flex items-baseline font-serif text-[24px] font-medium"
