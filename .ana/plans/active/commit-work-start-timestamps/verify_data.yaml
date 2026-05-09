@@ -1,0 +1,32 @@
+schema: 1
+findings:
+  - category: test
+    summary: "A010 test creates untracked file after commit — doesn't test scoped staging during commit"
+    file: "packages/cli/tests/commands/work.test.ts"
+    line: 3124
+    severity: debt
+    suggested_action: scope
+    related_assertions: ["A010"]
+  - category: code
+    summary: "commitSaves silently swallows commit failures — index.lock or other git errors invisible to user"
+    file: "packages/cli/src/commands/work.ts"
+    line: 1914
+    severity: observation
+    suggested_action: accept
+  - category: test
+    summary: "A011 no-push test relies on absence of remote as indirect proof — no spy or mock verifying git push not called"
+    file: "packages/cli/tests/commands/work.test.ts"
+    line: 3134
+    severity: observation
+    suggested_action: accept
+    related_assertions: ["A011"]
+  - category: code
+    summary: "commitSaves mixes runGit (throws) and spawnSync (returns status) for git operations — works correctly but inconsistent API usage"
+    file: "packages/cli/src/commands/work.ts"
+    line: 1897
+    severity: observation
+    suggested_action: accept
+  - category: upstream
+    summary: "Race condition in writeTimestamp still present — read-modify-write on .saves.json is not atomic (pre-existing, from Fix Pipeline Phase Timing)"
+    severity: observation
+    suggested_action: monitor

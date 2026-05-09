@@ -33,5 +33,20 @@
     "packages/cli/src/commands/artifact.ts",
     "packages/cli/src/commands/work.ts",
     "packages/cli/tests/commands/work.test.ts"
-  ]
+  ],
+  "verify_started_at": "2026-05-09T01:22:04.630Z",
+  "verify_agent": "ana-verify",
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:586072a4fe4a9f2a32ad663eed3e057dfec5fba7fabc305411fe1db28b92afc7",
+    "run_at": "2026-05-09T01:26:36.578Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-09T01:26:36.607Z",
+    "hash": "sha256:ff824ac36f46abe008ba8d067e0dc326c88c340cf8cbf752a9917301ecdcb92e"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-09T01:26:36.607Z",
+    "hash": "sha256:5f7479454c1872259ca9d0bafcc8280c62ec1ea76dad6a05bea867bcc465e2cd"
+  }
 }
