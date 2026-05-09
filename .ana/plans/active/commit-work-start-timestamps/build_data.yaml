@@ -1,0 +1,14 @@
+schema: 1
+concerns:
+  - summary: "commitSaves silently swallows commit failures — if git commit fails for a non-lock reason, user gets no feedback"
+    file: "packages/cli/src/commands/work.ts"
+    severity: observation
+    suggested_action: monitor
+  - summary: "A011 test verifies no-push indirectly (no remote configured) rather than asserting git push was never called"
+    file: "packages/cli/tests/commands/work.test.ts"
+    severity: observation
+    suggested_action: accept
+  - summary: "Pre-existing lint warning in git-operations.ts (unused eslint-disable directive) — not introduced by this build"
+    file: "packages/cli/src/utils/git-operations.ts"
+    severity: observation
+    suggested_action: accept

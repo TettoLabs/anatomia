@@ -18,5 +18,20 @@
   "spec": {
     "saved_at": "2026-05-09T00:55:46.162Z",
     "hash": "sha256:6b72ea8141b5646169fb07ef6e557d792dd3571ce4b1b7f18713c62ca2b94794"
-  }
+  },
+  "build_started_at": "2026-05-09T01:07:07.747Z",
+  "build_agent": "ana-build",
+  "build-report": {
+    "saved_at": "2026-05-09T01:13:37.209Z",
+    "hash": "sha256:bc82a09605ab51430913845a17644992bc736dc8352943fe2d46a9051bc499ca"
+  },
+  "build-data": {
+    "saved_at": "2026-05-09T01:13:37.210Z",
+    "hash": "sha256:bdfbaade08eefeebb106aafe59ead3b873d1d0bb6cbcadaa1ffd32e70952b1ca"
+  },
+  "modules_touched": [
+    "packages/cli/src/commands/artifact.ts",
+    "packages/cli/src/commands/work.ts",
+    "packages/cli/tests/commands/work.test.ts"
+  ]
 }
