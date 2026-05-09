@@ -14,6 +14,8 @@ Replace the existing Bento section with a new "System" section that shows what `
   - `website/components/system/` — new directory: SystemSection.tsx, Drawer.tsx (client), FileTree.tsx, ManPage.tsx, SpecStrip.tsx, system.module.css
   - `website/app/(marketing)/page.tsx` — replace Bento import with SystemSection
   - `website/components/bento/` — remove (or leave dead, defer cleanup)
+  - `website/components/scan/ScanSlab.tsx` — update thread text and href
+  - `website/components/hero/ScrollHint.tsx` — update href (or copy.ts `scrollHint`)
   - `website/app/globals.css` — possibly add `--spacing-section` if not already present
 - **Blast radius:** Replaces the Bento section in the landing page. No other pages reference Bento. Pricing, DeepDive, ProofFeed are unaffected.
 - **Estimated effort:** 3-4 hours
@@ -36,6 +38,9 @@ Port the approved handoff HTML into componentized Next.js following the patterns
 - AC11: Dark theme works via existing CSS custom properties (no hardcoded colors)
 - AC12: Drawers use `<button>` with `aria-expanded` and `aria-controls` for accessibility
 - AC13: The website builds without errors
+- AC14: The section closer ("That's the system. Next: **the proof**.") uses the same mechanical pattern as the scan section thread — mono text, oxblood arrow, link to the next section (`#proof`). The arrow has a subtle opacity breathe animation (~3s cycle, 0.4→1→0.4) honoring `prefers-reduced-motion`.
+- AC15: The scan section thread is updated: "feeds the pipeline" → "feeds the system", `href="#pipeline"` → `href="#system"`
+- AC16: The hero scroll hint `href="#pipeline"` is updated to `href="#system"` (first content section after marquee)
 
 ## Edge Cases & Risks
 - **CSS class collisions:** The handoff uses generic names (`.section`, `.container`, `.header`, `.lede`). Using a CSS module eliminates this — all class names are scoped automatically.
@@ -43,6 +48,7 @@ Port the approved handoff HTML into componentized Next.js following the patterns
 - **IntersectionObserver pulse animation:** The handoff stamps `pulse-fire` on `<body>`. In the Next.js version, stamp it on the section root element instead and adjust keyframe selectors.
 - **prefers-reduced-motion:** The blinking cursor honors it. The disclosure pulse does not — wrap it in `@media (prefers-reduced-motion: no-preference)`.
 - **Dark theme for man page:** The handoff uses `--terminal-bg` and `--terminal-fg` which already flip in dark mode. Should work out of the box, but verify.
+- **Orphaned `#pipeline` anchors:** The hero scroll hint and scan thread both link to `#pipeline`. The old Bento used `id="agents"`. The new section uses `id="system"`. Both links need updating (covered in AC15 and AC16).
 
 ## Rejected Approaches
 - **Iframe embed** — The INTEGRATION.md suggests this as a fallback. Rejected: breaks smooth scroll, no dark theme support, no copy.ts integration.
@@ -51,7 +57,7 @@ Port the approved handoff HTML into componentized Next.js following the patterns
 - **Including ana-setup in the agent count** — Setup is a one-time calibration agent, not a pipeline participant. The drawer's story is 5 pipeline agents with 5 distinct jobs and independence guarantees. Setup doesn't fit that narrative.
 
 ## Open Questions
-None — all design decisions are resolved. Copy is approved. Factual corrections are enumerated in acceptance criteria.
+- **DeepDive may overlap:** DeepDive shows a terminal running `ana init` while this section shows what init *produced*. Process vs output — probably fine, but Plan should verify the narrative doesn't feel redundant and flag if DeepDive needs adjustment.
 
 ## Exploration Findings
 
@@ -112,7 +118,21 @@ These are the delta between the handoff HTML and reality:
 | `+ 17 more` | `+ 19 more` | Man page +more line |
 | `setup, check, index, verify, proof, agents` | `init, setup, verify, proof, agents` (drop check/index, add init) | Man page +more line |
 | `2026-04` in man footer | `2026-05` or derive from build date | Man page footer |
+| `install: 3.2s` in spec strip | Unverified — scan takes ~3.3s, init adds file generation on top. Verify or soften to `~3s` | Spec strip |
 | Context files flat under `.ana/` | Show `.ana/context/` subfolder for project-context.md and design-principles.md | Context drawer file tree |
+
+### Section Transition Design
+Each content section ends with a "thread" — a consistent mechanical element teasing the next section. The hero's scroll hint is different (it's a general scroll cue with a falling dot). The threads are section-to-section links.
+
+**Pattern:** mono text · oxblood arrow · anchor link to next section. Arrow has a subtle opacity breathe animation (~3s, 0.4↔1). Honors `prefers-reduced-motion`.
+
+| Section | Thread text | Links to |
+|---------|------------|----------|
+| Scan | What Ana finds **→** feeds the system. See how ↓ | `#system` |
+| System | That's the system. Next: **the proof**. ↓ | `#proof` (future section) |
+
+The scan thread already exists (`ScanSlab.tsx` lines 158-166) and needs the text and href updated. The system closer is new and should follow the same component pattern. Consider extracting a shared `SectionThread` component if the shape is identical.
 
 ### Things to Investigate
 - Best way to import CLI version in a Next.js server component — direct JSON import vs fs.readFileSync vs build-time env variable. Design decision for Plan.
+- Whether `SectionThread` should be a shared component in `components/ui/` or just repeated inline. If future sections (proof, pricing) will also have threads, shared is right.
