@@ -1,0 +1,207 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "work complete --merge flag for structured PR merging"
+
+assertions:
+  # AC1 — Successful merge + complete
+  - id: A001
+    says: "Merging and completing in one command produces a successful completion"
+    block: "merges PR and completes work item"
+    target: "exitCode"
+    matcher: "equals"
+    value: 0
+
+  - id: A002
+    says: "The merge step calls gh pr merge without a strategy flag"
+    block: "merges PR and completes work item"
+    target: "spawnArgs"
+    matcher: "not_contains"
+    value: "--squash"
+
+  - id: A003
+    says: "The merge step never uses --delete-branch"
+    block: "merges PR and completes work item"
+    target: "spawnArgs"
+    matcher: "not_contains"
+    value: "--delete-branch"
+
+  # AC2 — No regression without --merge
+  - id: A004
+    says: "Running without --merge behaves identically to before"
+    block: "without --merge flag behaves identically"
+    target: "exitCode"
+    matcher: "equals"
+    value: 0
+
+  # AC4/AC5 — Checks pending escalation
+  - id: A005
+    says: "Pending checks trigger auto-merge attempt"
+    block: "attempts auto-merge when checks are pending"
+    target: "output"
+    matcher: "contains"
+    value: "auto-merge"
+
+  - id: A006
+    says: "Successful auto-merge tells the user to come back after the PR merges"
+    block: "enables auto-merge when checks are pending"
+    target: "output"
+    matcher: "contains"
+    value: "work complete"
+
+  - id: A007
+    says: "Auto-merge failure tells the user to merge manually"
+    block: "reports auto-merge unavailable"
+    target: "output"
+    matcher: "contains"
+    value: "merge manually"
+
+  # AC6 — Branch behind
+  - id: A008
+    says: "Branch behind shows rebase commands with the worktree path"
+    block: "shows rebase instructions when branch is behind"
+    target: "output"
+    matcher: "contains"
+    value: "rebase"
+
+  - id: A009
+    says: "Branch behind includes force-with-lease push command"
+    block: "shows rebase instructions when branch is behind"
+    target: "output"
+    matcher: "contains"
+    value: "--force-with-lease"
+
+  - id: A010
+    says: "Branch behind warns about approval dismissal"
+    block: "shows rebase instructions when branch is behind"
+    target: "output"
+    matcher: "contains"
+    value: "approvals"
+
+  # AC7 — Already merged
+  - id: A011
+    says: "Already-merged PR skips the merge step and completes normally"
+    block: "skips merge when PR is already merged"
+    target: "output"
+    matcher: "contains"
+    value: "already merged"
+
+  # AC8 — No PR exists
+  - id: A012
+    says: "Missing PR tells the user to create one first"
+    block: "exits when no PR exists"
+    target: "output"
+    matcher: "contains"
+    value: "ana pr create"
+
+  # AC9 — Multiple strategies
+  - id: A013
+    says: "Multiple merge strategies tells the user to merge manually"
+    block: "reports multiple merge strategies"
+    target: "output"
+    matcher: "contains"
+    value: "merge manually"
+
+  # AC10 — Unknown error
+  - id: A014
+    says: "Unknown merge errors show the raw gh output"
+    block: "shows raw stderr for unknown errors"
+    target: "output"
+    matcher: "contains"
+    value: "unexpected gh error text"
+
+  # AC11 — Base branch mismatch
+  - id: A015
+    says: "Base branch mismatch prevents the merge"
+    block: "exits when base branch does not match artifact branch"
+    target: "output"
+    matcher: "contains"
+    value: "must target"
+
+  # AC12 — gh not installed
+  - id: A016
+    says: "Missing gh CLI shows install instructions"
+    block: "exits when gh is not installed"
+    target: "output"
+    matcher: "contains"
+    value: "https://cli.github.com/"
+
+  # AC13 — No partial completion
+  - id: A017
+    says: "Failed merge exits before any archive or commit happens"
+    block: "exits when no PR exists"
+    target: "archiveCalled"
+    matcher: "equals"
+    value: false
+
+  # AC14 — No --admin
+  - id: A018
+    says: "The --admin flag is never passed to gh"
+    block: "merges PR and completes work item"
+    target: "spawnArgs"
+    matcher: "not_contains"
+    value: "--admin"
+
+  # AC15 — Verify template
+  - id: A019
+    says: "Verify agent PASS output mentions the --merge option"
+    block: "verify template includes --merge in PASS output"
+    target: "templateContent"
+    matcher: "contains"
+    value: "ana work complete --merge"
+
+  # AC16 — work status
+  - id: A020
+    says: "Work status next-action for ready-to-merge mentions --merge"
+    block: "getNextAction includes --merge for ready-to-merge"
+    target: "nextAction"
+    matcher: "contains"
+    value: "--merge"
+
+  # AC17 — Verification-passed message
+  - id: A021
+    says: "Verification-passed message mentions the --merge option"
+    block: "verification-passed message includes --merge"
+    target: "output"
+    matcher: "contains"
+    value: "--merge"
+
+  # AC18 — Ana template
+  - id: A022
+    says: "Ana's pipeline state table mentions the --merge option"
+    block: "ana template includes --merge in state table"
+    target: "templateContent"
+    matcher: "contains"
+    value: "ana work complete --merge"
+
+  # AC19 — Guardrails untouched
+  - id: A023
+    says: "Verify agent guardrails are not modified"
+    block: "verify template guardrails unchanged"
+    target: "guardrailLine494"
+    matcher: "equals"
+    value: "- **Don't merge the PR.** You create it. The developer reviews and merges."
+
+  - id: A024
+    says: "Verify agent 'don't run work complete' guardrail is unchanged"
+    block: "verify template guardrails unchanged"
+    target: "guardrailLine498"
+    matcher: "equals"
+    value: "- **Don't run `ana work complete`.** That's the developer's job after merging."
+
+  # Step 3 message update
+  - id: A025
+    says: "Wrong branch error mentions --merge context when the flag is used"
+    block: "shows updated message when --merge used from wrong branch"
+    target: "output"
+    matcher: "contains"
+    value: "--merge handles the merge"
+
+file_changes:
+  - path: "packages/cli/src/commands/work.ts"
+    action: modify
+  - path: "packages/cli/templates/.claude/agents/ana-verify.md"
+    action: modify
+  - path: "packages/cli/templates/.claude/agents/ana.md"
+    action: modify
+  - path: "packages/cli/tests/commands/work.test.ts"
+    action: modify
