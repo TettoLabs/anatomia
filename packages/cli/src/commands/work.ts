@@ -23,6 +23,7 @@ import { readArtifactBranch, readBranchPrefix, getCurrentBranch, readCoAuthor, r
 import { generateProofSummary, resolveFindingPaths, generateDashboard, computeChainHealth, wrapJsonResponse, wrapJsonError, detectHealthChange, getProofContext, type ProofSummary } from '../utils/proofSummary.js';
 import { findProjectRoot, validateSlug } from '../utils/validators.js';
 import { isWorktreeDirectory, detectWorktreeSlug, worktreeExists, getWorktreeInfo, createWorktree, removeWorktree, getWorktreePath } from '../utils/worktree.js';
+import { checkForUpdates } from '../utils/update-check.js';
 import type { ProofChainEntry, ProofChain, ProofChainStats } from '../types/proof.js';
 
 /**
@@ -95,6 +96,8 @@ interface StatusOutput {
   artifactBranch: string;
   currentBranch: string;
   onArtifactBranch: boolean;
+  updateAvailable: { current: string; latest: string } | null;
+  projectMismatch: { cliVersion: string; projectVersion: string } | null;
   items: WorkItem[];
 }
 
@@ -549,6 +552,24 @@ function getNextAction(stage: string, slug: string, _branchPrefix: string): stri
 }
 
 /**
+ * Render version notification lines (update available, project mismatch).
+ *
+ * @param output - Status output with version check results
+ */
+function printVersionNotifications(output: StatusOutput): void {
+  if (output.updateAvailable) {
+    console.log(chalk.gray(
+      `ℹ anatomia-cli v${output.updateAvailable.latest} available (current: v${output.updateAvailable.current}). Run: npm update -g anatomia-cli`
+    ));
+  }
+  if (output.projectMismatch) {
+    console.log(chalk.gray(
+      `ℹ Project initialized with v${output.projectMismatch.projectVersion} (current CLI: v${output.projectMismatch.cliVersion}). Run: ana init`
+    ));
+  }
+}
+
+/**
  * Print human-readable status output
  *
  * @param output - Status output structure
@@ -562,6 +583,7 @@ function printHumanReadable(output: StatusOutput): void {
   }
 
   if (output.items.length === 0) {
+    printVersionNotifications(output);
     console.log(chalk.gray('No active work. Run: claude --agent ana to scope new work.'));
     return;
   }
@@ -632,6 +654,7 @@ function printHumanReadable(output: StatusOutput): void {
     console.log(chalk.cyan(`    → ${item.nextAction}\n`));
   }
 
+  printVersionNotifications(output);
   console.log(chalk.gray('Scope new work: claude --agent ana'));
 }
 
@@ -641,7 +664,7 @@ function printHumanReadable(output: StatusOutput): void {
  * @param options - Command options
  * @param options.json - Output JSON format instead of human-readable
  */
-export function getWorkStatus(options: { json?: boolean }): void {
+export async function getWorkStatus(options: { json?: boolean }): Promise<void> {
   const projectRoot = findProjectRoot();
   const artifactBranch = readArtifactBranch(projectRoot);
   const branchPrefix = readBranchPrefix(projectRoot);
@@ -676,6 +699,9 @@ export function getWorkStatus(options: { json?: boolean }): void {
     }
   }
 
+  // Version awareness checks (best-effort, non-blocking)
+  const versionCheck = await checkForUpdates(projectRoot);
+
   // Discover slugs
   const slugs = discoverSlugs(artifactBranch, onArtifactBranch, projectRoot);
 
@@ -685,9 +711,19 @@ export function getWorkStatus(options: { json?: boolean }): void {
         artifactBranch,
         currentBranch: currentBranch || 'unknown',
         onArtifactBranch,
+        updateAvailable: versionCheck.updateAvailable,
+        projectMismatch: versionCheck.projectMismatch,
         items: [],
       }, null, 2));
     } else {
+      printVersionNotifications({
+        artifactBranch,
+        currentBranch: currentBranch || 'unknown',
+        onArtifactBranch,
+        updateAvailable: versionCheck.updateAvailable,
+        projectMismatch: versionCheck.projectMismatch,
+        items: [],
+      });
       console.log(chalk.gray('\nNo active work. Run: claude --agent ana to scope new work.'));
     }
     return;
@@ -725,6 +761,8 @@ export function getWorkStatus(options: { json?: boolean }): void {
     artifactBranch,
     currentBranch: currentBranch || 'unknown',
     onArtifactBranch,
+    updateAvailable: versionCheck.updateAvailable,
+    projectMismatch: versionCheck.projectMismatch,
     items,
   };
 
@@ -2066,8 +2104,8 @@ export function registerWorkCommand(program: Command): void {
   const statusCommand = new Command('status')
     .description('Show pipeline state for all active work items')
     .option('--json', 'Output JSON format for programmatic consumption')
-    .action((options: { json?: boolean }) => {
-      getWorkStatus(options);
+    .action(async (options: { json?: boolean }) => {
+      await getWorkStatus(options);
     });
 
   const startCommand = new Command('start')
