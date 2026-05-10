@@ -123,7 +123,7 @@
 /* ── Ledger ── */
 .ledger {
   margin: 64px auto 0;
-  max-width: 936px;
+  max-width: 1030px;
   position: relative;
 }
 
@@ -581,7 +581,7 @@
    ══════════════════════════════════════════════════════ */
 .chain {
   margin: 56px auto 0;
-  max-width: 936px;
+  max-width: 1030px;
   padding: 28px 32px 24px;
   background: var(--bg-card);
   border: 1px solid var(--border);
