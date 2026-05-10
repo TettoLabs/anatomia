@@ -19500,6 +19500,329 @@
         "completed_at": "2026-05-10T18:06:25.368Z",
         "commit_count": 0
       }
+    },
+    {
+      "slug": "init-scan-quality",
+      "feature": "Init must surface scan quality and pipeline readiness",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 22,
+        "satisfied": 22,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "A degraded scan shows a warning instead of a success checkmark",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "A degraded scan tells the user what analysis was lost in plain language",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "A clean scan confirms no gaps were detected",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "Tree-sitter failures are described in human terms, not technical jargon",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "The raw tree-sitter error message is not shown to the user",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "Each blind spot shows its area and what went wrong",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "Each blind spot shows how to resolve it",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "No blind spots means no blind spot section is shown",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "Missing git user name produces a warning with a fix command",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "Missing git user email produces a warning with a fix command",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "Git user checks are skipped when git is not installed",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "Missing GitHub CLI produces a warning that says the pipeline still works",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "The remote warning now explains what it means for the pipeline",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "Preflight warnings are captured in the result, not just printed",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "No new check prevents init from completing",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "Pipeline warnings appear in the success message before next steps",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A017",
+          "says": "No warnings means no pipeline readiness section",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A018",
+          "says": "The setup agent checks environment tools after completing setup",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A019",
+          "says": "The setup agent checks git identity configuration",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A020",
+          "says": "The setup agent is told not to install software without permission",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A021",
+          "says": "Total scan failure still shows the existing graceful message",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A022",
+          "says": "Scan engine blind spot messages are not modified",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 15,
+        "met": 14
+      },
+      "timing": {
+        "total_minutes": 1453,
+        "think": 57,
+        "plan": 11,
+        "build": 1278,
+        "verify": 126
+      },
+      "hashes": {
+        "scope": "sha256:f9aeaa5dd9c3db0999016a04c0b70b07a76400c48bd4458c58d01fb812b5757b",
+        "contract": "sha256:fa21c1b5d37ebb49c38a822ea945edb7e56fa7a42bf69bfb6c94aa488b8b3a18",
+        "plan": "sha256:50d38ccbbf1cf9b4ed1fc516cee2434e036b0eea46537555a703b96037a42f81",
+        "spec": "sha256:1d4659af029ff87772ddf69048632aa71f9023501cc808e755a38323782795f0",
+        "build-report": "sha256:2bb251a5e9fc1835c272d94070e08dbd16b1c78b41c1c649e178d74038b85207",
+        "build-data": "sha256:e22143a0341d47cbc34167edc48f0cf927ba87837907bf9068ce8ac8f68be75e",
+        "verify-report": "sha256:799e168b2e6902cb78754227aef318d04b302820e3a56c0958d94c762facf3b9",
+        "verify-data": "sha256:1ce317f26164de1aab9bcc94658b42b8403f7820b5061ead9bc4f6685abd3115"
+      },
+      "completed_at": "2026-05-10T20:40:37.562Z",
+      "modules_touched": [
+        ".claude/agents/ana-setup.md",
+        "packages/cli/src/commands/artifact.ts",
+        "packages/cli/src/commands/init/index.ts",
+        "packages/cli/src/commands/init/preflight.ts",
+        "packages/cli/src/commands/init/state.ts",
+        "packages/cli/src/commands/init/types.ts",
+        "packages/cli/src/commands/proof.ts",
+        "packages/cli/src/commands/work.ts",
+        "packages/cli/templates/.claude/agents/ana-setup.md",
+        "packages/cli/tests/commands/init-preflight.test.ts",
+        "packages/cli/tests/commands/init-spinner.test.ts",
+        "packages/cli/tests/commands/init.test.ts",
+        "packages/cli/tests/commands/work.test.ts"
+      ],
+      "scope_summary": "`ana init` tells users what it found but never what it missed. Tree-sitter failures are silently swallowed — the user sees \"Analysis complete\" with a checkmark and walks away thinking they got a full deep scan when they got surface-tier only. Init also never checks whether the tools needed for the pipeline (`gh`, `git user.name`/`user.email`) are available, leaving users to discover gaps at the worst time — mid-pipeline, after investing real work. The user wants init to be honest about scan quality and upfront about what the pipeline needs.",
+      "kind": "feature",
+      "findings": [
+        {
+          "category": "test",
+          "summary": "A014 uses toBeGreaterThan(0) — weak assertion when specific count is knowable",
+          "file": "packages/cli/tests/commands/init-preflight.test.ts",
+          "anchor": null,
+          "line": 165,
+          "severity": "debt",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A014"
+          ],
+          "id": "init-scan-quality-C1",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "A015 uses toBeGreaterThanOrEqual(3) — specific count should be exactly 3 (user.name, user.email, gh)",
+          "file": "packages/cli/tests/commands/init-preflight.test.ts",
+          "anchor": null,
+          "line": 180,
+          "severity": "debt",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A015"
+          ],
+          "id": "init-scan-quality-C2",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "ana-verify.md wording tweaked — out of scope, harmless formatting change",
+          "file": "packages/cli/templates/.claude/agents/ana-verify.md",
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "init-scan-quality-C3",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "A018/A019/A020 assert on template source content — violates 'never assert on source code content' rule but acceptable for static templates",
+          "file": "packages/cli/tests/commands/init.test.ts",
+          "anchor": null,
+          "line": 575,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A018",
+            "A019",
+            "A020"
+          ],
+          "id": "init-scan-quality-C4",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "A022 asserts on scan-engine.ts source content — same pattern, acceptable for 'not modified' assertion",
+          "file": "packages/cli/tests/commands/init.test.ts",
+          "anchor": null,
+          "line": 589,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A022"
+          ],
+          "id": "init-scan-quality-C5",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "Test files split from init.test.ts into init-spinner.test.ts and init-preflight.test.ts — sound decision for vi.mock isolation but spec said modify init.test.ts only",
+          "file": "packages/cli/tests/commands/init-spinner.test.ts",
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "init-scan-quality-C6",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "Proof chain finding '[test] A010 has no runtime test' on state.ts — still present, predates this build, not addressed by this spec",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "init-scan-quality-C7",
+          "status": "lesson"
+        }
+      ],
+      "rejection_cycles": 1,
+      "previous_failures": [
+        {
+          "id": "A001",
+          "summary": "Test was a sentinel — constructed mock data, never called runAnalyzer or captured spinner"
+        },
+        {
+          "id": "A002",
+          "summary": "Same sentinel as A001"
+        },
+        {
+          "id": "A003",
+          "summary": "Test checked empty array length, never called runAnalyzer"
+        },
+        {
+          "id": "A009",
+          "summary": "Test constructed string literal, never called validateInitPreconditions"
+        },
+        {
+          "id": "A010",
+          "summary": "Same pattern as A009"
+        },
+        {
+          "id": "A011",
+          "summary": "Test created empty array, proved nothing about hasGit guard"
+        },
+        {
+          "id": "A012",
+          "summary": "String literal self-assertion"
+        },
+        {
+          "id": "A013",
+          "summary": "String literal self-assertion"
+        },
+        {
+          "id": "A014",
+          "summary": "Type compilation test — literal object, no function call"
+        },
+        {
+          "id": "A015",
+          "summary": "Same literal object, checked canProceed on hand-constructed data"
+        },
+        {
+          "id": "A021",
+          "summary": "`expect(true).toBe(true)` with \"source inspection\" comment"
+        }
+      ],
+      "build_concerns": [
+        {
+          "summary": "Pre-existing lint warning in git-operations.ts:169 — unused eslint-disable directive",
+          "file": "packages/cli/src/utils/git-operations.ts",
+          "severity": "observation",
+          "suggested_action": "accept"
+        },
+        {
+          "summary": "Dogfood copy .claude/agents/ana-setup.md modified outside spec file_changes list",
+          "file": ".claude/agents/ana-setup.md",
+          "severity": "observation",
+          "suggested_action": "accept"
+        }
+      ],
+      "worktree": {
+        "used": true,
+        "created_at": "2026-05-10T20:05:32.140Z",
+        "completed_at": "2026-05-10T20:40:37.560Z",
+        "commit_count": 8
+      }
     }
   ],
   "schema": 1

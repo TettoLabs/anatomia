@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-76 runs · 177 active · 92 lessons · 0 promoted · 161 closed
+77 runs · 183 active · 93 lessons · 0 promoted · 161 closed
 
 ## Hot Modules
 
@@ -16,11 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 177 total)
-
-### .github/workflows/test.yml
-
-- **code:** staging branch in trigger list is a no-op — branch does not exist on remote — *CI path filtering for artifact-only commits*
+## Active Findings (30 shown of 183 total)
 
 ### .husky/post-merge
 
@@ -39,11 +35,29 @@
 - **code:** commitSaves silently swallows commit failures — index.lock or other git errors invisible to user — *Commit timestamps written by work start*
 - **code:** commitSaves mixes runGit (throws) and spawnSync (returns status) for git operations — works correctly but inconsistent API usage — *Commit timestamps written by work start*
 
+### packages/cli/templates/.claude/agents/ana-verify.md
+
+- **code:** ana-verify.md wording tweaked — out of scope, harmless formatting change — *Init must surface scan quality and pipeline readiness*
+
 ### packages/cli/tests/commands/artifact.test.ts
 
 - **test:** A016 only tests 'Feature' case variant, not 'FIX' — contract says both should be accepted — *Scope Validation Integrity*
 - **code:** Console.error capture pattern repeated verbatim in 8 rejection tests — extraction into a helper would reduce duplication — *Scope Validation Integrity*
 - **test:** Pre-existing scope validation tests (lines 697-746) still use plain toThrow() without checking error message content — *Scope Validation Integrity*
+
+### packages/cli/tests/commands/init-preflight.test.ts
+
+- **test:** A014 uses toBeGreaterThan(0) — weak assertion when specific count is knowable — *Init must surface scan quality and pipeline readiness*
+- **test:** A015 uses toBeGreaterThanOrEqual(3) — specific count should be exactly 3 (user.name, user.email, gh) — *Init must surface scan quality and pipeline readiness*
+
+### packages/cli/tests/commands/init-spinner.test.ts
+
+- **test:** Test files split from init.test.ts into init-spinner.test.ts and init-preflight.test.ts — sound decision for vi.mock isolation but spec said modify init.test.ts only — *Init must surface scan quality and pipeline readiness*
+
+### packages/cli/tests/commands/init.test.ts
+
+- **test:** A018/A019/A020 assert on template source content — violates 'never assert on source code content' rule but acceptable for static templates — *Init must surface scan quality and pipeline readiness*
+- **test:** A022 asserts on scan-engine.ts source content — same pattern, acceptable for 'not modified' assertion — *Init must surface scan quality and pipeline readiness*
 
 ### packages/cli/tests/commands/work-merge.test.ts
 
@@ -57,14 +71,6 @@
 - **test:** A020, A021 assert on source code content instead of testing behavior — *work complete --merge flag for structured PR merging*
 - **test:** A010 test creates untracked file after commit — doesn't test scoped staging during commit — *Commit timestamps written by work start*
 - **test:** A011 no-push test relies on absence of remote as indirect proof — no spy or mock verifying git push not called — *Commit timestamps written by work start*
-
-### website/components/proof-feed/proof-feed.module.css
-
-- **code:** rowArrow CSS class defined but never used in ProofFeed.tsx — *Website Mobile Polish + Marquee Overhaul*
-
-### website/components/proof-feed/ProofFeed.tsx
-
-- **code:** kindLabel defaults to 'improve' for unrecognized kind — pre-existing, not in scope — *Website Mobile Polish + Marquee Overhaul*
 
 ### website/components/system/Drawer.tsx
 
@@ -89,10 +95,4 @@
 ### website/lib/copy.ts
 
 - **code:** copy.ts systemThread key is defined but never consumed by any component — dead data — *Section 4 — The System (replace Bento)*
-- **code:** Three dead #pipeline links in copy.ts — pre-existing, not introduced by this build — *Website Mobile Polish + Marquee Overhaul*
-
-### website/lib/icons.tsx
-
-- **code:** brandIconNames exported but never imported — pre-existing, out of scope — *Website Mobile Polish + Marquee Overhaul*
-- **code:** Copilot/Cline use currentColor — renders as var(--fg) inside .glyph, works in both themes but contrast depends on --ink-15 background chip — *Website Mobile Polish + Marquee Overhaul*
 
