@@ -22,11 +22,6 @@ export function ProofCard() {
 
       {/* The active proof */}
       <article className={styles.proof}>
-        {/* Wax seal */}
-        <div className={styles.seal}>
-          <span className={styles.sealGlyph}>{p.sealGlyph}</span>
-        </div>
-
         <div className={styles.proofMeta}>
           <span className={styles.stamp}>
             <span className={styles.stampNum}>{p.meta.entry}</span>
