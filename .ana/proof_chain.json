@@ -19823,6 +19823,284 @@
         "completed_at": "2026-05-10T20:40:37.560Z",
         "commit_count": 8
       }
+    },
+    {
+      "slug": "version-awareness",
+      "feature": "Version Awareness Notifications",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 25,
+        "satisfied": 25,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Users see when a newer CLI version is available on npm",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "The update notification tells users the exact command to upgrade",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Users see when their project was initialized with a different CLI version",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "The mismatch notification tells users to re-initialize",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "No notifications appear when all versions are current",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "No mismatch notification appears when project version matches CLI",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "Network failures never show errors to the user",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "A fresh cache is not re-fetched within 24 hours",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "An expired cache triggers a new background fetch",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "CI environments skip the npm update check entirely",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "JSON output includes update availability when a newer version exists",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "JSON output includes project version mismatch details",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "JSON output shows null for update fields when versions are current",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "First run after install shows no update notification",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "Old projects with missing anaVersion show mismatch with unknown version",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "Old projects with anaVersion 0.0.0 show mismatch with unknown version",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A017",
+          "says": "Multi-digit version numbers compare correctly",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A018",
+          "says": "Equal versions are not flagged as newer",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A019",
+          "says": "Older npm versions are not flagged as newer",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A020",
+          "says": "Background check process is detached from the parent",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A021",
+          "says": "Background check process is unreferenced so parent can exit",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A022",
+          "says": "Background process hides console window on Windows",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A023",
+          "says": "Cache file path is safely escaped in the spawned script",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A024",
+          "says": "Users with no active work still see version notifications",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A025",
+          "says": "Existing work status tests pass after async conversion",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 0,
+        "met": 0
+      },
+      "timing": {
+        "total_minutes": 63,
+        "think": 2,
+        "plan": 13,
+        "build": 12,
+        "verify": 9
+      },
+      "hashes": {
+        "scope": "sha256:58190b59c07dec0bf3dde8a27bf60d5e06e63c5c975248cba5aadc341bd46b65",
+        "contract": "sha256:9a72139a73b0172ff82418dd80c6f40afce9c6df594912014588c86143018217",
+        "plan": "sha256:31c1dac815901251fed1827fd0e3ff8678e0548ff87a53945095b05858804d49",
+        "spec": "sha256:f202f2d1fd1b98b1d9fc987a0fd7c78cd919aa2b5c71b8fca7e60af4051bc87f",
+        "build-report": "sha256:12a8303dc5dcba859b42d833f52282c036ab57423ad7086ca302bcc00d176e24",
+        "build-data": "sha256:2833dfeaf1efdb5fa4262e29bf7abbe77e85e6e9ce7d43975710eca7e123848a",
+        "verify-report": "sha256:5ae699b3d09579394f234466c92dc4b168f45776f6969bf4a4dd3f54b1c30669",
+        "verify-data": "sha256:daae46f961e7a584d2dcf5ad75a9b0d39219b05c39adfffdb3a2b4120682237c"
+      },
+      "completed_at": "2026-05-10T22:58:56.417Z",
+      "modules_touched": [
+        "packages/cli/src/commands/work.ts",
+        "packages/cli/src/utils/update-check.ts",
+        "packages/cli/tests/commands/work.test.ts",
+        "packages/cli/tests/utils/update-check.test.ts"
+      ],
+      "scope_summary": "Users have zero visibility into version drift. Two silent failures happen today:",
+      "kind": "feature",
+      "findings": [
+        {
+          "category": "code",
+          "summary": "packageName interpolated via template literal without JSON.stringify in spawn script URL",
+          "file": "packages/cli/src/utils/update-check.ts",
+          "anchor": null,
+          "line": 115,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "related_assertions": [
+            "A023"
+          ],
+          "id": "version-awareness-C1",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Four of five exports from update-check.ts are unused in production code — only checkForUpdates is imported",
+          "file": "packages/cli/src/utils/update-check.ts",
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "version-awareness-C2",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "A007 tagged test checks return values not output — contract target is 'output' with not_contains 'Error'",
+          "file": "packages/cli/tests/utils/update-check.test.ts",
+          "anchor": null,
+          "line": 320,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A007"
+          ],
+          "id": "version-awareness-C3",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "A010 tagged test checks spawn not called — contract target is updateAvailable equals null, which is tested in untagged CI test",
+          "file": "packages/cli/tests/utils/update-check.test.ts",
+          "anchor": null,
+          "line": 217,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A010"
+          ],
+          "id": "version-awareness-C4",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Spawn script uses require() (CommonJS) inside node -e — works but inconsistent with ESM codebase",
+          "file": "packages/cli/src/utils/update-check.ts",
+          "anchor": null,
+          "line": 108,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "version-awareness-C5",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "A025 contract assertion is meta — tests that tests pass, not a behavioral contract",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A025"
+          ],
+          "id": "version-awareness-C6",
+          "status": "lesson"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "captureWithVersionMock uses dynamic vi.spyOn on imported ESM module — fragile if Vitest changes interop",
+          "file": "packages/cli/tests/commands/work.test.ts",
+          "severity": "debt",
+          "suggested_action": "monitor"
+        },
+        {
+          "summary": "toThrow changed to rejects.toThrow for async getWorkStatus — functionally equivalent but assertion method differs",
+          "file": "packages/cli/tests/commands/work.test.ts",
+          "severity": "observation",
+          "suggested_action": "accept"
+        },
+        {
+          "summary": "Pre-existing lint warning in git-operations.ts:169 (unused eslint-disable directive)",
+          "file": "packages/cli/src/utils/git-operations.ts",
+          "severity": "observation",
+          "suggested_action": "accept"
+        }
+      ],
+      "worktree": {
+        "used": true,
+        "created_at": "2026-05-10T22:19:30.057Z",
+        "completed_at": "2026-05-10T22:58:56.415Z",
+        "commit_count": 0
+      }
     }
   ],
   "schema": 1
