@@ -39,11 +39,6 @@ export function ChainSparkline() {
         ))}
       </div>
 
-      <div className={styles.chainFoot}>
-        <span className={styles.chainFootLeft}>{c.footLeft}</span>
-        <span className={styles.chainFootRight}>{c.footRight}</span>
-      </div>
-
       <div className={styles.chainStats}>
         {c.stats.map((s) => (
           <div key={s.label} className={styles.chainStat}>
