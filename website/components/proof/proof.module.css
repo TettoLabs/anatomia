@@ -10,8 +10,7 @@
   --color-fail: #7A1B1B;
   --color-brand-soft: rgba(122, 27, 27, 0.06);
   --ink-78: rgba(11, 11, 16, 0.78);
-  padding: var(--spacing-section, 116px) 0 64px;
-  border-top: 1px solid var(--hairline);
+  padding: 0 0 64px;
   position: relative;
 }
 .section::before {

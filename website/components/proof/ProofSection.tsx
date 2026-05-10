@@ -20,7 +20,7 @@ export function ProofSection() {
       data-component="proof"
     >
       <Container>
-        <div className="mx-auto max-w-[1100px]">
+        <div className="mx-auto max-w-[1100px] border-t pt-[var(--spacing-section,116px)]" style={{ borderColor: "var(--hairline)" }}>
         {/* Header: two-column intro */}
         <header className={styles.header}>
           <div>
@@ -57,14 +57,6 @@ export function ProofSection() {
 
         {/* Chain sparkline */}
         <ChainSparkline />
-
-        {/* Closer */}
-        <div className={styles.closer}>
-          <span className={styles.closerArrow}>{"\u2193"}</span>
-          <p className={styles.closerText}>
-            <Formatted text={p.closer} />
-          </p>
-        </div>
       </Container>
     </section>
   );
