@@ -20,6 +20,7 @@ export function ProofSection() {
       data-component="proof"
     >
       <Container>
+        <div className="mx-auto max-w-[1100px]">
         {/* Header: two-column intro */}
         <header className={styles.header}>
           <div>
@@ -46,6 +47,7 @@ export function ProofSection() {
               {item.label}: <span className={styles.specVal}>{item.value}</span>
             </span>
           ))}
+        </div>
         </div>
 
         {/* The ceremony: one sealed proof, six prior runs visible behind */}
