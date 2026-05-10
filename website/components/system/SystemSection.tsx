@@ -15,11 +15,11 @@ export function SystemSection() {
   return (
     <section
       className={`reveal ${styles.section}`}
-      id="system"
       data-component="system"
     >
       <Container>
         <div className="mx-auto max-w-[1100px]">
+        <span id="system" className="scroll-anchor" />
         {/* Header: two-column intro */}
         <header className={styles.header}>
           <div>

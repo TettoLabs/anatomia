@@ -16,11 +16,11 @@ export function ProofSection() {
   return (
     <section
       className={`reveal ${styles.section}`}
-      id="proof"
       data-component="proof"
     >
       <Container>
         <div className="mx-auto max-w-[1100px] pt-[var(--spacing-section,116px)]">
+        <span id="proof" className="scroll-anchor" />
         {/* Header: two-column intro */}
         <header className={styles.header}>
           <div>
