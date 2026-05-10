@@ -49,8 +49,6 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: 20px;
-  max-width: 936px;
-  margin: 0 auto;
 }
 @media (min-width: 900px) {
   .header {
@@ -98,9 +96,6 @@
   gap: 0 16px;
   padding: 18px 0;
   margin-top: 48px;
-  max-width: 936px;
-  margin-left: auto;
-  margin-right: auto;
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.04em;
@@ -747,9 +742,6 @@
   display: flex;
   align-items: baseline;
   gap: 14px;
-  max-width: 936px;
-  margin-left: auto;
-  margin-right: auto;
 }
 .closerArrow {
   font-family: var(--font-serif);
