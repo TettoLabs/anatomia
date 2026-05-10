@@ -209,7 +209,7 @@ section[id] { scroll-margin-top: 96px; }
 }
 .hero-noise-dark { display: none; }
 [data-theme="dark"] .hero-noise {
-  opacity: 0.7;
+  opacity: 0.35;
   mix-blend-mode: screen;
 }
 [data-theme="dark"] .hero-noise-light { display: none; }
