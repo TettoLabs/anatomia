@@ -48,10 +48,15 @@ export function ChainSparkline() {
         {c.stats.map((s) => (
           <div key={s.label} className={styles.chainStat}>
             <span className={styles.chainStatLabel}>{s.label}</span>
-            <span
-              className={styles.chainStatValue}
-              dangerouslySetInnerHTML={{ __html: s.value }}
-            />
+            <span className={styles.chainStatValue}>
+              {s.value}
+              {"unit" in s && s.unit && (
+                <span className={styles.unit}>{s.unit}</span>
+              )}
+              {"trend" in s && s.trend && (
+                <span className={styles.trend}>{s.trend}</span>
+              )}
+            </span>
           </div>
         ))}
       </div>

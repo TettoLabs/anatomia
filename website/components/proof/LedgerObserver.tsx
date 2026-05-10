@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useEffect, type ReactNode } from "react";
+import { copy } from "@/lib/copy";
 import styles from "./proof.module.css";
 
 /**
@@ -9,6 +10,7 @@ import styles from "./proof.module.css";
  */
 export function LedgerObserver({ children }: { children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
+  const r = copy.proof.ledgerRubric;
 
   useEffect(() => {
     const el = ref.current;
@@ -38,6 +40,10 @@ export function LedgerObserver({ children }: { children: ReactNode }) {
 
   return (
     <div ref={ref} className={styles.ledger}>
+      <div className={styles.ledgerRubric}>
+        <span className={styles.rubricL}>{r.left}</span>
+        <span className={styles.rubricR}>{r.right}</span>
+      </div>
       {children}
     </div>
   );

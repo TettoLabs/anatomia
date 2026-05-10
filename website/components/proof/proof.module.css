@@ -4,6 +4,12 @@
 
 /* ── Section ── */
 .section {
+  --ease: cubic-bezier(0.2, 0.65, 0.3, 1);
+  --color-pass: #2E5D3A;
+  --color-warn: #B8862B;
+  --color-fail: #7A1B1B;
+  --color-brand-soft: rgba(122, 27, 27, 0.06);
+  --ink-78: rgba(11, 11, 16, 0.78);
   padding: var(--spacing-section, 116px) 0 64px;
   border-top: 1px solid var(--hairline);
   position: relative;
@@ -95,15 +101,11 @@
   max-width: 936px;
   margin-left: auto;
   margin-right: auto;
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.04em;
   color: var(--ink-45);
   align-items: baseline;
-  border-top: none;
-  border-bottom: none;
 }
 .specStripPrompt {
   color: var(--color-brand);
@@ -128,6 +130,28 @@
   margin: 64px auto 0;
   max-width: 936px;
   position: relative;
+}
+
+/* Top-of-section index strip (chain count, restated) */
+.ledgerRubric {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-45);
+  margin-bottom: 22px;
+  padding: 0 4px;
+}
+.rubricL {
+  color: var(--fg-strong);
+  font-weight: 700;
+}
+.rubricR {
+  color: var(--color-brand);
+  font-weight: 700;
 }
 
 .stack {
@@ -189,6 +213,68 @@
 }
 @media (max-width: 720px) {
   .proof { padding: 32px 22px 28px; }
+}
+
+/* Wax seal */
+.seal {
+  position: absolute;
+  top: 38px;
+  right: 56px;
+  width: 78px;
+  height: 78px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 32% 28%, #B23434 0%, #8A1E1E 38%, #5A1010 75%, #340909 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 230, 220, 0.92);
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 700;
+  font-variation-settings: "opsz" 144;
+  font-size: 36px;
+  letter-spacing: -0.04em;
+  box-shadow:
+    inset 0 2px 3px rgba(255, 200, 180, 0.22),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.28),
+    inset -2px -2px 6px rgba(0, 0, 0, 0.18),
+    0 6px 14px -6px rgba(80, 15, 15, 0.45),
+    0 1px 0 rgba(255, 255, 255, 0.8);
+  transform: scale(0.8) rotate(-6deg);
+  opacity: 0;
+  transition: transform 600ms var(--ease) 220ms, opacity 240ms ease 220ms;
+}
+.seal::before {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border-radius: 50%;
+  border: 1px solid rgba(122, 27, 27, 0.18);
+}
+.seal::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 220, 200, 0.18);
+  pointer-events: none;
+}
+.sealGlyph {
+  position: relative;
+  text-shadow:
+    0 1px 0 rgba(255, 200, 170, 0.18),
+    0 -1px 0 rgba(0, 0, 0, 0.32);
+}
+@media (max-width: 720px) {
+  .seal { width: 60px; height: 60px; font-size: 28px; top: 28px; right: 22px; }
+}
+.inView .seal {
+  transform: scale(1) rotate(-6deg);
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .seal { transition: none; opacity: 1; transform: scale(1) rotate(-6deg); }
 }
 
 /* Document number + date row */
@@ -734,12 +820,17 @@
   .proof { padding: 28px 18px 24px; }
   .proofTitle { font-size: 28px; padding-right: 60px; }
   .ledger { margin-top: 56px; }
+  .ledgerRubric { font-size: 9px; }
   .chainStats { gap: 18px; }
   .chainStatValue { font-size: 18px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .proofH { opacity: 1; transform: none; }
+  .assertsMore { opacity: 1; transform: none; }
   .inView .sealRule { animation: none; transform: scaleX(1); opacity: 0.34; background: var(--ink-30); }
   .inView .assertItem,
-  .inView .findingItem { animation: none; opacity: 1; transform: none; }
+  .inView .findingItem,
+  .inView .proofH,
+  .inView .assertsMore { animation: none; opacity: 1; transform: none; }
 }

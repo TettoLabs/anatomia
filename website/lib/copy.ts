@@ -218,6 +218,10 @@ export const copy = {
       { label: "artifact", value: "hash-signed" },
       { label: "chain", value: "append-only" },
     ],
+    ledgerRubric: {
+      left: "Proof \u00b7 126 of 126",
+      right: "2026\u00b704\u00b729",
+    },
     card: {
       pile: [
         { id: "120", date: "2026 \u00b7 04 \u00b7 11" },
@@ -232,6 +236,7 @@ export const copy = {
         of: "of 126",
         date: "2026 \u00b7 04 \u00b7 29 \u00b7 11:07",
       },
+      sealGlyph: "A",
       title: "Add Stripe Webhooks",
       subjectPrefix: "subject \u00b7",
       subjectSlug: "add-stripe-webhooks",
@@ -293,7 +298,7 @@ export const copy = {
       footLeft: "last 55 proofs",
       footRight: "proof 126 \u2193",
       stats: [
-        { label: "First-pass rate", value: '82<span class="unit">%</span><span class="trend">\u2191 4% last month</span>' },
+        { label: "First-pass rate", value: "82", unit: "%", trend: "\u2191 4% last month" },
         { label: "Assertions verified", value: "2,214" },
         { label: "Findings surfaced", value: "683" },
         { label: "Risks caught", value: "41" },
