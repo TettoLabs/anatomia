@@ -461,9 +461,8 @@ export const copy = {
 
   proofFeed: {
     kicker: "Ship log",
-    headTitle: "Every change has *receipts*.",
-    headSub:
-      "This isn\u2019t a changelog. Each row is the verification record \u2014 the contract Plan wrote before the work began, with Verify\u2019s independent account stapled to it. The claims, the matchers, the pass/fail \u2014 all there.",
+    headTitle: "Our *proofs*.",
+    headSub: "",
   },
 
   docs: {
