@@ -440,8 +440,9 @@ ana pr create {slug}
 ```
 
 After PR creation:
-"All verified. PR created for review. After merging, run: `ana work complete {slug}`
-Or to merge and complete in one step: `ana work complete --merge {slug}`"
+"All verified. PR created for review.
+After reviewing and merging the PR: `ana work complete {slug}`
+Or to skip PR review and merge directly: `ana work complete --merge {slug}`"
 
 **If PASS but more phases remain:**
 
