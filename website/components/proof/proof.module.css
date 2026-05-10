@@ -261,7 +261,7 @@
     0 -1px 0 rgba(0, 0, 0, 0.32);
 }
 @media (max-width: 720px) {
-  .seal { width: 60px; height: 60px; font-size: 28px; top: 28px; right: 22px; }
+  .seal { display: none; }
 }
 .inView .seal {
   transform: scale(1) rotate(-6deg);
@@ -624,9 +624,13 @@
   display: flex;
   gap: 2px;
   padding: 4px 0;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
+.chainSpark::-webkit-scrollbar { display: none; }
 .pip {
   flex: 1;
+  min-width: 6px;
   aspect-ratio: 50 / 61;
   border-radius: 0;
   position: relative;
@@ -809,7 +813,7 @@
   .specStrip > span { width: auto; border-bottom: none; padding: 0; }
   .specStripPrompt { margin-right: 2px; margin-bottom: 4px; }
   .proof { padding: 28px 18px 24px; }
-  .proofTitle { font-size: 28px; padding-right: 60px; }
+  .proofTitle { font-size: 28px; }
   .ledger { margin-top: 56px; }
   .ledgerRubric { font-size: 9px; }
   .chainStats { gap: 18px; }
