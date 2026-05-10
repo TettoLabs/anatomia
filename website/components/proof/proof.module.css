@@ -643,11 +643,18 @@
 /* Hide later pips on smaller screens */
 .pipDesktopOnly {}
 .pipTabletUp {}
+.shownDesktop {}
+.shownTablet { display: none; }
+.shownPhone { display: none; }
 @media (max-width: 720px) {
   .pipDesktopOnly { display: none; }
+  .shownDesktop { display: none; }
+  .shownTablet { display: inline; }
 }
 @media (max-width: 480px) {
   .pipTabletUp { display: none; }
+  .shownTablet { display: none; }
+  .shownPhone { display: inline; }
 }
 .chainFoot {
   display: flex;

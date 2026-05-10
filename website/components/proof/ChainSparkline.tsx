@@ -19,7 +19,9 @@ export function ChainSparkline() {
       <div className={styles.chainHead}>
         <span className={styles.chainTitle}>{c.title}</span>
         <span className={styles.chainCount}>
-          <span className={styles.chainShown}>{c.shown}</span>
+          <span className={`${styles.chainShown} ${styles.shownDesktop}`}>55/</span>
+          <span className={`${styles.chainShown} ${styles.shownTablet}`}>35/</span>
+          <span className={`${styles.chainShown} ${styles.shownPhone}`}>25/</span>
           <strong>{c.count}</strong> {c.countLabel}
         </span>
       </div>
