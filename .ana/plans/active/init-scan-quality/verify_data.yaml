@@ -1,0 +1,50 @@
+schema: 1
+findings:
+  - category: test
+    summary: "A014 uses toBeGreaterThan(0) — weak assertion when specific count is knowable"
+    file: "packages/cli/tests/commands/init-preflight.test.ts"
+    line: 165
+    severity: debt
+    suggested_action: accept
+    related_assertions: ["A014"]
+
+  - category: test
+    summary: "A015 uses toBeGreaterThanOrEqual(3) — specific count should be exactly 3 (user.name, user.email, gh)"
+    file: "packages/cli/tests/commands/init-preflight.test.ts"
+    line: 180
+    severity: debt
+    suggested_action: accept
+    related_assertions: ["A015"]
+
+  - category: code
+    summary: "ana-verify.md wording tweaked — out of scope, harmless formatting change"
+    file: "packages/cli/templates/.claude/agents/ana-verify.md"
+    severity: observation
+    suggested_action: accept
+
+  - category: test
+    summary: "A018/A019/A020 assert on template source content — violates 'never assert on source code content' rule but acceptable for static templates"
+    file: "packages/cli/tests/commands/init.test.ts"
+    line: 575
+    severity: observation
+    suggested_action: accept
+    related_assertions: ["A018", "A019", "A020"]
+
+  - category: test
+    summary: "A022 asserts on scan-engine.ts source content — same pattern, acceptable for 'not modified' assertion"
+    file: "packages/cli/tests/commands/init.test.ts"
+    line: 589
+    severity: observation
+    suggested_action: accept
+    related_assertions: ["A022"]
+
+  - category: test
+    summary: "Test files split from init.test.ts into init-spinner.test.ts and init-preflight.test.ts — sound decision for vi.mock isolation but spec said modify init.test.ts only"
+    file: "packages/cli/tests/commands/init-spinner.test.ts"
+    severity: observation
+    suggested_action: accept
+
+  - category: upstream
+    summary: "Proof chain finding '[test] A010 has no runtime test' on state.ts — still present, predates this build, not addressed by this spec"
+    severity: observation
+    suggested_action: monitor

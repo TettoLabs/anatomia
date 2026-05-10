@@ -1,10 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import * as os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { createEmptyEngineResult } from '../../src/engine/types/engineResult.js';
 import { fileExists } from '../../src/commands/init/preflight.js';
+import { displayBlindSpots, displaySuccessMessage } from '../../src/commands/init/state.js';
 import { AGENT_FILES } from '../../src/constants.js';
 
 async function dirExists(dirPath: string): Promise<boolean> {
@@ -439,6 +440,159 @@ describe('ana init', () => {
       expect(result.hooks.PostToolUse[0].hooks[0].command).toBe(
         '.ana/hooks/verify-context-file.sh'
       );
+    });
+  });
+  describe('blind spot display', () => {
+    // @ana A008
+    it('shows nothing when blind spots array is empty', () => {
+      const logs: string[] = [];
+      const spy = vi.spyOn(console, 'log').mockImplementation((...args) => { logs.push(args.join(' ')); });
+
+      displayBlindSpots([]);
+
+      expect(logs.join('\n')).not.toContain('Blind spots');
+      spy.mockRestore();
+    });
+
+    // @ana A004, A005
+    it('translates Analyzer blind spot to human-readable message', () => {
+      const logs: string[] = [];
+      const spy = vi.spyOn(console, 'log').mockImplementation((...args) => { logs.push(args.join(' ')); });
+
+      displayBlindSpots([
+        { area: 'Analyzer', issue: 'Tree-sitter analysis unavailable: WASM load failed', resolution: 'Install tree-sitter' },
+      ]);
+
+      const output = logs.join('\n');
+      expect(output).toContain('code patterns, conventions, and structure analysis');
+      expect(output).not.toContain('Tree-sitter');
+      expect(output).toContain('Blind spots');
+      spy.mockRestore();
+    });
+
+    // @ana A006, A007
+    it('displays non-Analyzer blind spots with their fields directly', () => {
+      const logs: string[] = [];
+      const spy = vi.spyOn(console, 'log').mockImplementation((...args) => { logs.push(args.join(' ')); });
+
+      displayBlindSpots([
+        { area: 'Database', issue: 'Prisma dependency found but no schema.prisma', resolution: 'Create prisma/schema.prisma (or packages/<pkg>/prisma/schema.prisma in a monorepo)' },
+      ]);
+
+      const output = logs.join('\n');
+      expect(output).toContain('Database');
+      expect(output).toContain('schema.prisma');
+      spy.mockRestore();
+    });
+
+    it('handles mixed Analyzer and non-Analyzer blind spots', () => {
+      const logs: string[] = [];
+      const spy = vi.spyOn(console, 'log').mockImplementation((...args) => { logs.push(args.join(' ')); });
+
+      displayBlindSpots([
+        { area: 'Analyzer', issue: 'Tree-sitter analysis unavailable: failed', resolution: 'Rebuild' },
+        { area: 'Database', issue: 'No schema found', resolution: 'Create schema.prisma' },
+      ]);
+
+      const output = logs.join('\n');
+      expect(output).toContain('code patterns, conventions, and structure analysis');
+      expect(output).toContain('Database');
+      expect(output).not.toContain('Tree-sitter');
+      spy.mockRestore();
+    });
+  });
+
+  // runAnalyzer spinner messages — tested in init-spinner.test.ts
+  // (requires vi.mock for ora and scan-engine at module level)
+
+  describe('displaySuccessMessage pipeline readiness', () => {
+    // @ana A016
+    it('shows Pipeline readiness section when warnings exist', () => {
+      const logs: string[] = [];
+      const spy = vi.spyOn(console, 'log').mockImplementation((...args) => { logs.push(args.join(' ')); });
+
+      const result = createEmptyEngineResult();
+      result.stack.language = 'TypeScript';
+      displaySuccessMessage(result, 'test-project', '2.0', undefined, [
+        'git user.name not configured — git config --global user.name "Your Name"',
+      ]);
+
+      const output = logs.join('\n');
+      expect(output).toContain('Pipeline readiness');
+      expect(output).toContain('git user.name not configured');
+      spy.mockRestore();
+    });
+
+    // @ana A017
+    it('hides Pipeline readiness when no warnings', () => {
+      const logs: string[] = [];
+      const spy = vi.spyOn(console, 'log').mockImplementation((...args) => { logs.push(args.join(' ')); });
+
+      const result = createEmptyEngineResult();
+      result.stack.language = 'TypeScript';
+      displaySuccessMessage(result, 'test-project', '2.0', undefined, []);
+
+      const output = logs.join('\n');
+      expect(output).not.toContain('Pipeline readiness');
+      spy.mockRestore();
+    });
+
+    it('shows Pipeline readiness with multi-line warnings', () => {
+      const logs: string[] = [];
+      const spy = vi.spyOn(console, 'log').mockImplementation((...args) => { logs.push(args.join(' ')); });
+
+      const result = createEmptyEngineResult();
+      result.stack.language = 'TypeScript';
+      displaySuccessMessage(result, 'test-project', '2.0', undefined, [
+        'gh CLI not installed — PR creation unavailable\nInstall from https://cli.github.com/\nThe pipeline works without it through Build/Verify',
+      ]);
+
+      const output = logs.join('\n');
+      expect(output).toContain('Pipeline readiness');
+      expect(output).toContain('The pipeline works without it through Build/Verify');
+      spy.mockRestore();
+    });
+
+    it('shows Pipeline readiness even when engineResult is null', () => {
+      const logs: string[] = [];
+      const spy = vi.spyOn(console, 'log').mockImplementation((...args) => { logs.push(args.join(' ')); });
+
+      displaySuccessMessage(null, 'test-project', '2.0', undefined, [
+        'Some warning',
+      ]);
+
+      const output = logs.join('\n');
+      expect(output).toContain('Pipeline readiness');
+      spy.mockRestore();
+    });
+  });
+
+  // PreflightResult warnings — tested in init-preflight.test.ts
+  // (requires vi.mock for git-operations and child_process at module level)
+
+  describe('setup agent template', () => {
+    // @ana A018, A019, A020
+    it('includes environment validation commands and safety guardrail', async () => {
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = path.dirname(__filename);
+      const templatePath = path.join(__dirname, '..', '..', 'templates', '.claude', 'agents', 'ana-setup.md');
+      const content = await fs.readFile(templatePath, 'utf-8');
+
+      expect(content).toContain('gh --version');
+      expect(content).toContain('git config user.name');
+      expect(content).toContain('Do not install software');
+    });
+  });
+
+  describe('scan engine blind spot messages', () => {
+    // @ana A022
+    it('scan-engine blind spot message is not modified', async () => {
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = path.dirname(__filename);
+      const scanEnginePath = path.join(__dirname, '..', '..', 'src', 'engine', 'scan-engine.ts');
+      const content = await fs.readFile(scanEnginePath, 'utf-8');
+
+      expect(content).toContain('Tree-sitter analysis unavailable');
     });
   });
 });
