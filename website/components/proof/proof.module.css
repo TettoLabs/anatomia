@@ -95,6 +95,7 @@
   gap: 0 16px;
   padding: 18px 0;
   margin-top: 48px;
+  justify-content: center;
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.04em;
@@ -122,7 +123,7 @@
 /* ── Ledger ── */
 .ledger {
   margin: 64px auto 0;
-  max-width: 1030px;
+  max-width: 979px;
   position: relative;
 }
 
@@ -580,7 +581,7 @@
    ══════════════════════════════════════════════════════ */
 .chain {
   margin: 56px auto 0;
-  max-width: 1030px;
+  max-width: 979px;
   padding: 28px 32px 24px;
   background: var(--bg-card);
   border: 1px solid var(--border);
