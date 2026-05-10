@@ -19,28 +19,30 @@
     "saved_at": "2026-05-09T21:06:38.227Z",
     "hash": "sha256:1d4659af029ff87772ddf69048632aa71f9023501cc808e755a38323782795f0"
   },
-  "build_started_at": "2026-05-10T17:48:24.280Z",
+  "build_started_at": "2026-05-10T18:14:33.072Z",
   "build_agent": "ana-build",
   "build-report": {
-    "saved_at": "2026-05-10T17:58:48.485Z",
-    "hash": "sha256:ab62b0096661bc21979399ae49f95429bf163ac2ed60475305290017c2061ff2"
+    "saved_at": "2026-05-10T18:24:28.105Z",
+    "hash": "sha256:2bb251a5e9fc1835c272d94070e08dbd16b1c78b41c1c649e178d74038b85207"
   },
   "build-data": {
-    "saved_at": "2026-05-10T17:58:48.486Z",
-    "hash": "sha256:73ec1681c39e75e44e20d0d6703561cc35e80bd56ba61983f11f97cd2be7cd0c"
+    "saved_at": "2026-05-10T18:24:28.106Z",
+    "hash": "sha256:e22143a0341d47cbc34167edc48f0cf927ba87837907bf9068ce8ac8f68be75e"
   },
   "modules_touched": [
     ".claude/agents/ana-setup.md",
+    "packages/cli/src/commands/artifact.ts",
     "packages/cli/src/commands/init/index.ts",
     "packages/cli/src/commands/init/preflight.ts",
     "packages/cli/src/commands/init/state.ts",
     "packages/cli/src/commands/init/types.ts",
+    "packages/cli/src/commands/proof.ts",
+    "packages/cli/src/commands/work.ts",
     "packages/cli/templates/.claude/agents/ana-setup.md",
+    "packages/cli/tests/commands/init-preflight.test.ts",
+    "packages/cli/tests/commands/init-spinner.test.ts",
     "packages/cli/tests/commands/init.test.ts",
-    "website/components/pricing/Pricing.tsx",
-    "website/components/proof/ProofSection.tsx",
-    "website/components/scan/ScanSlab.tsx",
-    "website/components/system/SystemSection.tsx"
+    "packages/cli/tests/commands/work.test.ts"
   ],
   "verify_started_at": "2026-05-10T18:05:31.439Z",
   "verify_agent": "ana-verify",

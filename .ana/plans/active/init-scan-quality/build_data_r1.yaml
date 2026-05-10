@@ -1,0 +1,10 @@
+schema: 1
+concerns:
+  - summary: "Spinner assertions (A001-A003, A021) use source inspection + data construction, not ora mocks"
+    file: "packages/cli/tests/commands/init.test.ts"
+    severity: debt
+    suggested_action: accept
+  - summary: "Pre-existing lint warning in git-operations.ts:169 — unused eslint-disable directive"
+    file: "packages/cli/src/utils/git-operations.ts"
+    severity: observation
+    suggested_action: monitor
