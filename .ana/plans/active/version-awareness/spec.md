@@ -23,12 +23,12 @@ The npm check uses a detached child process that writes to `.ana/state/cache/upd
 ```
 Pipeline Status (artifact branch: main)
 
-ℹ anatomia-cli v1.2.0 available (current: v1.1.0). Run: npm update -g anatomia-cli
-ℹ Project initialized with v1.0.0 (current CLI: v1.1.0). Run: ana init
-
   some-feature (1 phase):
     scope.md         ✓ main
     ...
+
+ℹ anatomia-cli v1.2.0 available (current: v1.1.0). Run: npm update -g anatomia-cli
+ℹ Project initialized with v1.0.0 (current CLI: v1.1.0). Run: ana init
 
 Scope new work: claude --agent ana
 ```
@@ -37,6 +37,7 @@ Scope new work: claude --agent ana
 
 ```
 ℹ anatomia-cli v1.2.0 available (current: v1.1.0). Run: npm update -g anatomia-cli
+ℹ Project initialized with v1.0.0 (current CLI: v1.1.0). Run: ana init
 
 No active work. Run: claude --agent ana to scope new work.
 ```
@@ -105,8 +106,8 @@ When versions are current, both fields are `null`:
 1. `StatusOutput` interface gains two fields: `updateAvailable: { current: string; latest: string } | null` and `projectMismatch: { cliVersion: string; projectVersion: string } | null`.
 2. `getWorkStatus` signature changes from `function getWorkStatus(options)` to `async function getWorkStatus(options)` with return type `Promise<void>`.
 3. At the top of `getWorkStatus`, after `readArtifactBranch`/`getCurrentBranch`: call `checkForUpdates(projectRoot)` to get version info. Add the results to the `StatusOutput` object.
-4. In `printHumanReadable`: render notification lines after the "behind remote" check and before items. Use `chalk.yellow` with `ℹ` prefix matching the "behind remote" style. Notification text: `ℹ anatomia-cli v{latest} available (current: v{current}). Run: npm update -g anatomia-cli` and `ℹ Project initialized with v{projectVersion} (current CLI: v{cliVersion}). Run: ana init`.
-5. In the `printHumanReadable` empty-items early return (line 564): render notifications before the "No active work" line and return.
+4. In `printHumanReadable`: render notification lines after the items loop and before the "Scope new work" footer (line 635). Use `chalk.gray` with `ℹ` prefix — these are informational, not warnings. Notification text: `ℹ anatomia-cli v{latest} available (current: v{current}). Run: npm update -g anatomia-cli` and `ℹ Project initialized with v{projectVersion} (current CLI: v{cliVersion}). Run: ana init`.
+5. In the `printHumanReadable` empty-items early return (line 564): render notifications before the "No active work" line and return. Same `chalk.gray` style.
 6. In the zero-slugs early return in `getWorkStatus` (line 682): include `updateAvailable` and `projectMismatch` in the JSON output, and for human-readable, render notifications before the "No active work" message.
 7. Action handler (line 2069): add `async` and `await`.
 

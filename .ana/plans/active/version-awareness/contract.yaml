@@ -175,7 +175,7 @@ assertions:
     block: "uses JSON.stringify for cache path in spawn script"
     target: "spawnScript"
     matcher: "contains"
-    value: "JSON.parse"
+    value: "JSON.stringify"
 
   # Additional: no active work still shows notifications
   - id: A024
