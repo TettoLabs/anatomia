@@ -19288,6 +19288,218 @@
         "completed_at": "2026-05-09T20:48:04.337Z",
         "commit_count": 0
       }
+    },
+    {
+      "slug": "scoped-cli-commits",
+      "feature": "CLI commits scoped to intended paths",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 14,
+        "satisfied": 14,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "The work complete commit only contains the files it intended to stage",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "Pre-existing staged files remain staged after a scoped commit",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "The work complete commit includes the archived plan directory",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "The work complete commit includes the proof chain",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "The single artifact save commit uses scoped pathspecs",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "The multi artifact save commit uses scoped pathspecs",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "The single artifact diff check uses scoped pathspecs",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "The multi artifact diff check uses scoped pathspecs",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "The saves-only commit uses a scoped pathspec",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "The saves-only diff check uses a scoped pathspec",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "The proof commit uses scoped pathspecs from options.files",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "The recovery commit uses scoped pathspecs",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "Orphan file removals are included in the scoped multi-artifact commit",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "A clean index produces identical behavior with scoped commits",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 14,
+        "met": 14
+      },
+      "timing": {
+        "total_minutes": 1326,
+        "think": 24,
+        "plan": 10,
+        "build": 7,
+        "verify": 4
+      },
+      "hashes": {
+        "scope": "sha256:a7026c5b9f90cdd2a42a7cbe3865beb6bc4f199b7ad631fce17357f8a627ef3c",
+        "contract": "sha256:49b4b2dc0b2e75843f741116abcd7ea2bc19c7a5f16661e1c3bd171779d8d522",
+        "plan": "sha256:71d051f7260e74f5dd9422ae45ede660a8854a022b4e1c497b6d7e964600605d",
+        "spec": "sha256:f5146bd855dff62c052e52029dbc798c0cbaadd83577a41fd4ee56658af39290",
+        "build-report": "sha256:bfc54376fe22e210b014c43ee688e8e4f72fa5c9fcaf42076a569463e5be5f81",
+        "build-data": "sha256:64c888b6fb81520c2f0753ba44b64e9a27063032d0e4e798b86604190de0dce0",
+        "verify-report": "sha256:2bf986c9b381114e9e11179ce24ac8f4e93827d634e5fd813b10d0e0b98baad5",
+        "verify-data": "sha256:886bf3ff3884e569a35cb2817fe600d82e52f6332985df84446f20c7a0d7a1d8"
+      },
+      "completed_at": "2026-05-10T18:06:25.372Z",
+      "modules_touched": [
+        "packages/cli/src/commands/artifact.ts",
+        "packages/cli/src/commands/proof.ts",
+        "packages/cli/src/commands/work.ts",
+        "packages/cli/tests/commands/work.test.ts",
+        "website/components/pricing/Pricing.tsx",
+        "website/components/proof/ProofSection.tsx",
+        "website/components/scan/ScanSlab.tsx",
+        "website/components/system/SystemSection.tsx"
+      ],
+      "scope_summary": "Every `git commit` in the CLI commits the entire staging index, not the specific files it staged. Pre-existing staged changes from other sessions, manual operations, or concurrent pipeline work leak into unrelated commits. Observed: `work complete commit-work-start-timestamps` (commit `bb2ee1f`) swept `polish-scan-copy`'s staged deletions into its commit — files from a different work item deleted by a different terminal session. The user wants every CLI commit to contain exactly what was intended.",
+      "kind": "fix",
+      "findings": [
+        {
+          "category": "test",
+          "summary": "No integration tests for artifact.ts or proof.ts scoped commit sites — 9 of 14 assertions verified by source inspection only",
+          "file": "packages/cli/tests/commands/work.test.ts",
+          "anchor": null,
+          "severity": "debt",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A005",
+            "A006",
+            "A007",
+            "A008",
+            "A009",
+            "A010",
+            "A011",
+            "A012",
+            "A013"
+          ],
+          "id": "scoped-cli-commits-C1",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "git commit -- uses --only semantics (working tree, not index) — safe because git add and commit are adjacent synchronous calls, but undocumented assumption",
+          "file": "packages/cli/src/commands/artifact.ts",
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "related_assertions": [
+            "A005",
+            "A006"
+          ],
+          "id": "scoped-cli-commits-C2",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Site 2 stages plan.md with absolute path via runGit but tracks relative path in stagedPaths — works correctly but mixed path convention",
+          "file": "packages/cli/src/commands/artifact.ts",
+          "anchor": null,
+          "line": 1629,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "scoped-cli-commits-C3",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "Test uses toContain('completed/') for path matching — works in controlled test but would false-positive if any other path contained 'completed/'",
+          "file": "packages/cli/tests/commands/work.test.ts",
+          "anchor": null,
+          "line": 749,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "scoped-cli-commits-C4",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "commitSaves silently swallows commit failures — pre-existing, still present (see proof context)",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "scoped-cli-commits-C5",
+          "status": "lesson"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "Contract assertions A005-A013 verified by code inspection only, no dedicated per-site tests",
+          "file": null,
+          "severity": "observation",
+          "suggested_action": "accept"
+        },
+        {
+          "summary": "git commit -- <paths> uses --only semantics (working tree, not index) — safe with synchronous staging but a latent assumption",
+          "file": null,
+          "severity": "observation",
+          "suggested_action": "monitor"
+        }
+      ],
+      "worktree": {
+        "used": true,
+        "created_at": "2026-05-10T17:48:10.477Z",
+        "completed_at": "2026-05-10T18:06:25.368Z",
+        "commit_count": 0
+      }
     }
   ],
   "schema": 1

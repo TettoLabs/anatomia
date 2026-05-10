@@ -1,13 +1,13 @@
 # Proof Chain Dashboard
 
-75 runs · 173 active · 91 lessons · 0 promoted · 161 closed
+76 runs · 177 active · 92 lessons · 0 promoted · 161 closed
 
 ## Hot Modules
 
 | File | Active | Entries |
 |------|--------|--------|
+| packages/cli/tests/commands/work.test.ts | 15 | 11 |
 | packages/cli/src/commands/work.ts | 15 | 8 |
-| packages/cli/tests/commands/work.test.ts | 13 | 10 |
 | packages/cli/tests/commands/proof.test.ts | 11 | 5 |
 | website/lib/proof-feed.ts | 10 | 3 |
 | packages/cli/tests/commands/artifact.test.ts | 8 | 4 |
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 173 total)
+## Active Findings (30 shown of 177 total)
 
 ### .github/workflows/test.yml
 
@@ -28,7 +28,8 @@
 
 ### packages/cli/src/commands/artifact.ts
 
-- **code:** moveFileCrossFs copy-then-delete is not atomic — if copyFileSync succeeds but unlinkSync fails, source file persists as a stale duplicate — *Worktree Artifact Path Mismatch — Prevention and Cleanup*
+- **code:** git commit -- uses --only semantics (working tree, not index) — safe because git add and commit are adjacent synchronous calls, but undocumented assumption — *CLI commits scoped to intended paths*
+- **code:** Site 2 stages plan.md with absolute path via runGit but tracks relative path in stagedPaths — works correctly but mixed path convention — *CLI commits scoped to intended paths*
 
 ### packages/cli/src/commands/work.ts
 
@@ -37,15 +38,12 @@
 - **code:** Auto-merge enabled path writes plain text to stdout before JSON output — pollutes stdout for --json consumers — *work complete --merge flag for structured PR merging*
 - **code:** commitSaves silently swallows commit failures — index.lock or other git errors invisible to user — *Commit timestamps written by work start*
 - **code:** commitSaves mixes runGit (throws) and spawnSync (returns status) for git operations — works correctly but inconsistent API usage — *Commit timestamps written by work start*
-- **code:** Layer 3 planning artifact content-match reads file without try-catch — if file is deleted between filter and readFileSync, unhandled ENOENT crashes completeWork — *Worktree Artifact Path Mismatch — Prevention and Cleanup*
 
 ### packages/cli/tests/commands/artifact.test.ts
 
 - **test:** A016 only tests 'Feature' case variant, not 'FIX' — contract says both should be accepted — *Scope Validation Integrity*
 - **code:** Console.error capture pattern repeated verbatim in 8 rejection tests — extraction into a helper would reduce duplication — *Scope Validation Integrity*
 - **test:** Pre-existing scope validation tests (lines 697-746) still use plain toThrow() without checking error message content — *Scope Validation Integrity*
-- **test:** A005 EXDEV test doesn't exercise moveFileCrossFs — tests Node.js copyFileSync/unlinkSync directly instead of mocking renameSync to throw EXDEV — *Worktree Artifact Path Mismatch — Prevention and Cleanup*
-- **test:** A008 sweep-failure test is a no-op — tests absence of sweep (no main tree copy), not an actual cleanup failure — *Worktree Artifact Path Mismatch — Prevention and Cleanup*
 
 ### packages/cli/tests/commands/work-merge.test.ts
 
@@ -54,6 +52,8 @@
 
 ### packages/cli/tests/commands/work.test.ts
 
+- **test:** No integration tests for artifact.ts or proof.ts scoped commit sites — 9 of 14 assertions verified by source inspection only — *CLI commits scoped to intended paths*
+- **test:** Test uses toContain('completed/') for path matching — works in controlled test but would false-positive if any other path contained 'completed/' — *CLI commits scoped to intended paths*
 - **test:** A020, A021 assert on source code content instead of testing behavior — *work complete --merge flag for structured PR merging*
 - **test:** A010 test creates untracked file after commit — doesn't test scoped staging during commit — *Commit timestamps written by work start*
 - **test:** A011 no-push test relies on absence of remote as indirect proof — no spy or mock verifying git push not called — *Commit timestamps written by work start*
