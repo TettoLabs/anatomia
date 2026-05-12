@@ -1,0 +1,124 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Hygiene debt cleanup"
+
+assertions:
+  # AC1: --autostash on all pull --rebase calls
+  - id: A001
+    says: "Git pull in work-complete uses autostash to handle dirty working trees"
+    block: "work complete pull includes --autostash"
+    target: "work.ts line 1206 args"
+    matcher: "contains"
+    value: "--autostash"
+
+  - id: A002
+    says: "Git pull retry in work-complete also uses autostash"
+    block: "work complete retry pull includes --autostash"
+    target: "work.ts line 1287 args"
+    matcher: "contains"
+    value: "--autostash"
+
+  - id: A003
+    says: "Git pull in work-start uses autostash to handle dirty working trees"
+    block: "work start pull includes --autostash"
+    target: "work.ts line 1796 args"
+    matcher: "contains"
+    value: "--autostash"
+
+  # AC2: Dead fixture files deleted
+  - id: A004
+    says: "Dead Python fixture files no longer exist in the repository"
+    block: "python fixture directory is removed"
+    target: "fixtures/python directory"
+    matcher: "not_equals"
+    value: "exists"
+
+  - id: A005
+    says: "Dead Node fixture files no longer exist in the repository"
+    block: "node fixture directory is removed"
+    target: "fixtures/node directory"
+    matcher: "not_equals"
+    value: "exists"
+
+  - id: A006
+    says: "The empty fixtures directory itself is removed"
+    block: "fixtures parent directory is removed"
+    target: "tests/engine/fixtures directory"
+    matcher: "not_equals"
+    value: "exists"
+
+  # AC3: All existing tests pass
+  - id: A007
+    says: "Deleting fixture files causes zero test failures"
+    block: "all existing tests pass after fixture deletion"
+    target: "test suite result"
+    matcher: "equals"
+    value: "pass"
+
+  - id: A008
+    says: "Test count remains stable — no tests lost"
+    block: "test count is unchanged"
+    target: "passing test count"
+    matcher: "equals"
+    value: 2177
+
+  # AC4 + AC5: pnpm update and audit improvement
+  - id: A009
+    says: "Dependency patches are applied within semver ranges"
+    block: "pnpm update has been run"
+    target: "pnpm-lock.yaml"
+    matcher: "exists"
+
+  - id: A010
+    says: "Security audit findings are reduced from the original 20"
+    block: "audit findings decreased"
+    target: "pnpm audit finding count"
+    matcher: "not_equals"
+    value: 20
+
+  # AC6: Testing-standards rule
+  - id: A011
+    says: "Testing standards now warn against standalone manifest fixture files"
+    block: "inline fixture rule exists in testing-standards"
+    target: "testing-standards SKILL.md rules"
+    matcher: "contains"
+    value: "inline fixture data"
+
+  - id: A012
+    says: "The new rule explains why standalone manifests are problematic"
+    block: "inline fixture rule mentions security scanning"
+    target: "testing-standards SKILL.md rules"
+    matcher: "contains"
+    value: "security advisory"
+
+  # AC7: .gitignore committed
+  - id: A013
+    says: "MCP config file is gitignored to prevent committing local paths"
+    block: ".gitignore includes .mcp.json"
+    target: ".gitignore content"
+    matcher: "contains"
+    value: ".mcp.json"
+
+  # AC8: Build succeeds
+  - id: A014
+    says: "No type or compilation regressions from dependency updates"
+    block: "build succeeds after all changes"
+    target: "pnpm run build exit code"
+    matcher: "equals"
+    value: 0
+
+file_changes:
+  - path: "packages/cli/src/commands/work.ts"
+    action: modify
+  - path: "packages/cli/tests/engine/fixtures/python/requirements.txt/simple.txt"
+    action: delete
+  - path: "packages/cli/tests/engine/fixtures/python/requirements.txt/with-extras.txt"
+    action: delete
+  - path: "packages/cli/tests/engine/fixtures/node/package.json/simple.txt"
+    action: delete
+  - path: "packages/cli/templates/.claude/skills/testing-standards/SKILL.md"
+    action: modify
+  - path: ".gitignore"
+    action: modify
+  - path: "pnpm-lock.yaml"
+    action: modify
