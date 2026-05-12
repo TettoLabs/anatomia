@@ -136,7 +136,7 @@ The YAML is authoritative for machines — it's what enters the proof chain. The
 
 ### 7. Load Skills (reference material)
 
-Testing-standards and coding-standards are auto-loaded via frontmatter — they are available as reference material without manual invocation.
+Invoke after reading contracts: `/testing-standards`, `/coding-standards`. These provide the project's testing conventions and code quality rules — use them as reference when evaluating the build.
 
 Read commands from `ana.json` `commands` field for build/test/lint execution. These are the exact commands to run.
 
