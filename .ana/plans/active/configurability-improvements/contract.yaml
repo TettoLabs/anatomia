@@ -1,0 +1,189 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Configurability Improvements"
+
+assertions:
+  # Phase 1: Schema passthrough
+  - id: A001
+    says: "Unknown fields in ana.json survive re-initialization"
+    block: "preserves unknown top-level keys through parse"
+    target: "parsed.scanStaleDays"
+    matcher: "exists"
+
+  - id: A002
+    says: "Legacy fossil fields are preserved instead of stripped"
+    block: "preserves setupMode and setupCompletedAt fossils"
+    target: "parsed.setupMode"
+    matcher: "exists"
+
+  - id: A003
+    says: "Invalid known fields still get safe defaults even with passthrough"
+    block: "catches invalid setupPhase with passthrough active"
+    target: "parsed.setupPhase"
+    matcher: "equals"
+    value: undefined
+
+  - id: A004
+    says: "Custom namespace defaults still work with passthrough"
+    block: "defaults custom to empty object with passthrough"
+    target: "parsed.custom"
+    matcher: "equals"
+    value: {}
+
+  - id: A005
+    says: "Unknown keys coexist with catch defaults in a single parse"
+    block: "passthrough and catch coexistence"
+    target: "parsed.unknownKey"
+    matcher: "equals"
+    value: "preserved"
+
+  # Phase 1: Verify agent skills
+  - id: A006
+    says: "Verify agent template declares testing and coding skills"
+    block: "verify template has skills frontmatter"
+    target: "frontmatter.skills"
+    matcher: "contains"
+    value: "testing-standards"
+
+  - id: A007
+    says: "Verify agent template declares coding-standards skill"
+    block: "verify template has skills frontmatter"
+    target: "frontmatter.skills"
+    matcher: "contains"
+    value: "coding-standards"
+
+  - id: A008
+    says: "Dogfood verify agent matches the template exactly"
+    block: "dogfood sync is byte-identical"
+    target: "templateContent"
+    matcher: "equals"
+    value: "dogfoodContent"
+
+  - id: A009
+    says: "Verify template tells the agent that skills are auto-loaded"
+    block: "verify step 7 reflects auto-loading"
+    target: "step7Content"
+    matcher: "contains"
+    value: "auto-loaded"
+
+  # Phase 2: Config command — display
+  - id: A010
+    says: "Running config with no arguments shows all settings"
+    block: "displays all ana.json fields"
+    target: "output"
+    matcher: "contains"
+    value: "anaVersion"
+
+  - id: A011
+    says: "Config JSON mode outputs valid parseable JSON"
+    block: "outputs valid JSON with --json flag"
+    target: "jsonParsed"
+    matcher: "exists"
+
+  # Phase 2: Config get
+  - id: A012
+    says: "Getting a field returns its value"
+    block: "returns field value for config get"
+    target: "output"
+    matcher: "contains"
+    value: "feature/"
+
+  - id: A013
+    says: "Getting a nested field traverses into objects"
+    block: "traverses dot notation for nested fields"
+    target: "output"
+    matcher: "contains"
+    value: "pnpm run build"
+
+  - id: A014
+    says: "Getting a missing field shows undefined indicator"
+    block: "shows undefined for missing keys"
+    target: "output"
+    matcher: "contains"
+    value: "(undefined)"
+
+  - id: A015
+    says: "Getting a nested custom field works with dot notation"
+    block: "traverses custom namespace with dot notation"
+    target: "output"
+    matcher: "contains"
+    value: "myValue"
+
+  # Phase 2: Config set
+  - id: A016
+    says: "Setting a field writes the value and preserves other fields"
+    block: "writes value and preserves existing fields"
+    target: "fileContent.branchPrefix"
+    matcher: "equals"
+    value: "dev/"
+
+  - id: A017
+    says: "Setting a machine-managed field is rejected with a helpful error"
+    block: "rejects machine-managed fields"
+    target: "errorOutput"
+    matcher: "contains"
+    value: "managed by"
+
+  - id: A018
+    says: "Numeric values are parsed as numbers, not strings"
+    block: "parses numeric values correctly"
+    target: "fileContent.custom.port"
+    matcher: "equals"
+    value: 8080
+
+  - id: A019
+    says: "Boolean values are parsed as booleans, not strings"
+    block: "parses boolean values correctly"
+    target: "fileContent.custom.enabled"
+    matcher: "equals"
+    value: true
+
+  - id: A020
+    says: "Setting a nested custom path creates intermediate objects"
+    block: "creates intermediate objects for deep paths"
+    target: "fileContent.custom.team.name"
+    matcher: "equals"
+    value: "Engineering"
+
+  - id: A021
+    says: "Setting an unknown top-level field warns about collision risk"
+    block: "warns on unknown top-level keys"
+    target: "errorOutput"
+    matcher: "contains"
+    value: "not a known ana.json field"
+
+  - id: A022
+    says: "Config command fails gracefully when no project is initialized"
+    block: "fails with init-first message when no ana.json"
+    target: "errorOutput"
+    matcher: "contains"
+    value: "ana init"
+
+  - id: A023
+    says: "Config get with JSON flag outputs valid JSON"
+    block: "config get outputs valid JSON with --json"
+    target: "jsonParsed"
+    matcher: "exists"
+
+  - id: A024
+    says: "All seven machine-managed fields are rejected by config set"
+    block: "rejects all machine-managed fields"
+    target: "rejectedCount"
+    matcher: "equals"
+    value: 7
+
+file_changes:
+  - path: "packages/cli/src/commands/init/anaJsonSchema.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/init/anaJsonSchema.test.ts"
+    action: modify
+  - path: "packages/cli/templates/.claude/agents/ana-verify.md"
+    action: modify
+  - path: ".claude/agents/ana-verify.md"
+    action: modify
+  - path: "packages/cli/src/commands/config.ts"
+    action: create
+  - path: "packages/cli/src/index.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/config.test.ts"
+    action: create
