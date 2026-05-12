@@ -1,0 +1,37 @@
+schema: 1
+findings:
+  - category: code
+    summary: "Prose classes used without @tailwindcss/typography installed"
+    file: "website/app/docs/[[...slug]]/page.tsx"
+    line: 18
+    severity: debt
+    suggested_action: scope
+    related_assertions: []
+  - category: code
+    summary: "Page tree injections for Reference and Proof Chain omitted from source loader"
+    file: "website/lib/source.ts"
+    line: 4
+    severity: observation
+    suggested_action: monitor
+  - category: code
+    summary: "Empty components/docs directory left after deleting 4 component files"
+    file: "website/components/docs/"
+    severity: debt
+    suggested_action: accept
+  - category: code
+    summary: "eslint.config.mjs modified to ignore .source — not in spec file_changes"
+    file: "website/eslint.config.mjs"
+    line: 15
+    severity: observation
+    suggested_action: accept
+  - category: code
+    summary: "Frontmatter schema allows empty strings — z.string() without .min(1)"
+    file: "website/source.config.ts"
+    line: 8
+    severity: observation
+    suggested_action: monitor
+  - category: code
+    summary: "No error boundary in docs layout — broken MDX crashes entire docs section"
+    file: "website/app/docs/layout.tsx"
+    severity: observation
+    suggested_action: scope

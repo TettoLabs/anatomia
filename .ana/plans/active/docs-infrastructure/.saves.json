@@ -18,5 +18,49 @@
   "spec": {
     "saved_at": "2026-05-12T20:49:21.153Z",
     "hash": "sha256:894a6081fa3935ca7b196a90d86ae4fb1c724b2902090269d7ace5061ac5d0c6"
+  },
+  "build_started_at": "2026-05-12T20:58:34.531Z",
+  "build_agent": "ana-build",
+  "build-report": {
+    "saved_at": "2026-05-12T21:12:15.785Z",
+    "hash": "sha256:8484b0557f853e87041e8da22df353d1c5c387ee038646e0897153dd3356ba2c"
+  },
+  "build-data": {
+    "saved_at": "2026-05-12T21:12:15.786Z",
+    "hash": "sha256:c3545977225ff1226d4ee04ed674a1489c7052731da8524f554e6c685cf6b236"
+  },
+  "modules_touched": [
+    "pnpm-lock.yaml",
+    "website/.gitignore",
+    "website/app/(marketing)/docs/page.tsx",
+    "website/app/docs/[[...slug]]/page.tsx",
+    "website/app/docs/layout.tsx",
+    "website/components/docs/DocsHero.tsx",
+    "website/components/docs/DocsNext.tsx",
+    "website/components/docs/DocsRecap.tsx",
+    "website/components/docs/DocsSteps.tsx",
+    "website/content/docs/index.mdx",
+    "website/eslint.config.mjs",
+    "website/lib/source.ts",
+    "website/next.config.ts",
+    "website/package.json",
+    "website/scripts/smoke-test.sh",
+    "website/source.config.ts",
+    "website/tsconfig.json"
+  ],
+  "verify_started_at": "2026-05-12T21:17:40.850Z",
+  "verify_agent": "ana-verify",
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:ff1cd775dbc742aab856c1fefa808bf5a913161e14a43effd93c236c08a53ce6",
+    "run_at": "2026-05-12T21:23:52.651Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-12T21:23:52.692Z",
+    "hash": "sha256:9827d129ac0e3b9ff972975272b264ed88fe1500e3dfd07e20a43a9fcca5bdce"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-12T21:23:52.692Z",
+    "hash": "sha256:4c3558657797e60588b2d2776fd5c64fe011263980310cbca607b6512ae83ed6"
   }
 }
