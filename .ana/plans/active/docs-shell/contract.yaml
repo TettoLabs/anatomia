@@ -1,0 +1,252 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Docs Shell (Layout + Shared Components)"
+
+assertions:
+  # Layout grid
+  - id: A001
+    says: "The docs page renders a three-column layout with sidebar, content, and right rail"
+    block: "docs layout renders three-column grid"
+    target: "layout.columns"
+    matcher: "equals"
+    value: 3
+
+  - id: A002
+    says: "The right rail disappears on narrower screens"
+    block: "layout collapses to two-column at 1180px"
+    target: "layout.rightRailHidden"
+    matcher: "truthy"
+
+  - id: A003
+    says: "The sidebar disappears on mobile screens"
+    block: "layout collapses to single-column at 880px"
+    target: "layout.sidebarHidden"
+    matcher: "truthy"
+
+  # DocsNav
+  - id: A004
+    says: "The docs navbar shows the anaDocs wordmark with an oxblood mark"
+    block: "DocsNav renders wordmark"
+    target: "docsNav.wordmark"
+    matcher: "contains"
+    value: "anaDocs"
+
+  - id: A005
+    says: "The docs navbar displays the current version number"
+    block: "DocsNav renders version pill"
+    target: "docsNav.versionPill"
+    matcher: "exists"
+
+  - id: A006
+    says: "The docs navbar sticks to the top of the page when scrolling"
+    block: "DocsNav is sticky with backdrop-blur"
+    target: "docsNav.position"
+    matcher: "equals"
+    value: "fixed"
+
+  # Sidebar
+  - id: A007
+    says: "The sidebar shows all five documentation groups"
+    block: "sidebar renders five groups"
+    target: "sidebar.groupCount"
+    matcher: "equals"
+    value: 5
+
+  - id: A008
+    says: "The current page is visually highlighted in the sidebar"
+    block: "sidebar highlights active page"
+    target: "sidebar.activeHighlight"
+    matcher: "truthy"
+
+  - id: A009
+    says: "Featured proofs can be collapsed and expanded"
+    block: "featured proofs toggle works"
+    target: "sidebar.featuredProofsToggle"
+    matcher: "truthy"
+
+  # Page tree transformer
+  - id: A010
+    says: "The page tree includes Reference and Proof Chain sections injected by the transformer"
+    block: "transformer injects Reference section"
+    target: "pageTree.children"
+    matcher: "contains"
+    value: "Reference"
+
+  - id: A011
+    says: "The transformer injects the correct Reference entries into the sidebar"
+    block: "transformer injects Reference entries"
+    target: "pageTree.referenceEntries"
+    matcher: "equals"
+    value: 4
+
+  - id: A012
+    says: "The Proof Chain section appears in the sidebar navigation"
+    block: "transformer injects Proof Chain section"
+    target: "pageTree.children"
+    matcher: "contains"
+    value: "Proof Chain"
+
+  # Right rail
+  - id: A013
+    says: "The right rail shows a table of contents for the current page"
+    block: "right rail renders TOC"
+    target: "rightRail.toc"
+    matcher: "exists"
+
+  - id: A014
+    says: "The table of contents highlights the heading currently visible on screen"
+    block: "scroll spy tracks active heading"
+    target: "rightRail.scrollSpy.activeId"
+    matcher: "exists"
+
+  - id: A015
+    says: "The right rail footer shows the build commit SHA"
+    block: "right rail renders build meta footer"
+    target: "rightRail.footer.commitSha"
+    matcher: "exists"
+
+  # PlatformSwitcher
+  - id: A016
+    says: "Claude Code is the active platform selection in the dropdown"
+    block: "PlatformSwitcher shows Claude Code as active"
+    target: "platformSwitcher.activePlatform"
+    matcher: "equals"
+    value: "claude-code"
+
+  - id: A017
+    says: "Unavailable platforms show a 'soon' label and cannot be selected"
+    block: "PlatformSwitcher shows disabled platforms"
+    target: "platformSwitcher.disabledCount"
+    matcher: "equals"
+    value: 5
+
+  - id: A018
+    says: "The platform dropdown closes when clicking outside of it"
+    block: "PlatformSwitcher closes on outside click"
+    target: "platformSwitcher.closedOnOutsideClick"
+    matcher: "truthy"
+
+  # PlatformProvider
+  - id: A019
+    says: "The selected platform is saved and remembered across page visits"
+    block: "platform selection persists via cookie"
+    target: "platformProvider.cookieSet"
+    matcher: "truthy"
+
+  - id: A020
+    says: "Content blocks can be shown or hidden based on the active platform"
+    block: "ForPlatform conditionally renders children"
+    target: "forPlatform.rendersWhenMatched"
+    matcher: "truthy"
+
+  # Content components
+  - id: A021
+    says: "Code blocks show a header with the programming language label"
+    block: "CodeBlock renders language header"
+    target: "codeBlock.header.language"
+    matcher: "exists"
+
+  - id: A022
+    says: "Code blocks have a copy button that copies content to clipboard"
+    block: "CodeBlock renders copy button"
+    target: "codeBlock.copyButton"
+    matcher: "exists"
+
+  - id: A023
+    says: "Callouts render in both rule and note visual styles"
+    block: "Callout renders both variants"
+    target: "callout.variants"
+    matcher: "equals"
+    value: 2
+
+  - id: A024
+    says: "Navigation cards appear in a two-column grid at the bottom of pages"
+    block: "NextCards renders two-column grid"
+    target: "nextCards.columns"
+    matcher: "equals"
+    value: 2
+
+  - id: A025
+    says: "Reading time and review date appear below the page title"
+    block: "MetaRow renders reading time and date"
+    target: "metaRow.rendered"
+    matcher: "truthy"
+
+  - id: A026
+    says: "The breadcrumb shows the reader's position in the documentation tree"
+    block: "Breadcrumb renders page path"
+    target: "breadcrumb.segments"
+    matcher: "greater"
+    value: 0
+
+  - id: A027
+    says: "The stats strip shows a row of labeled metrics"
+    block: "StatsStrip renders metrics"
+    target: "statsStrip.rendered"
+    matcher: "truthy"
+
+  # Integration
+  - id: A028
+    says: "The full documentation site builds successfully with all new components"
+    block: "pnpm build succeeds"
+    target: "build.exitCode"
+    matcher: "equals"
+    value: 0
+
+  - id: A029
+    says: "The marketing website is completely unaffected by docs changes"
+    block: "marketing pages unaffected"
+    target: "marketing.routesIntact"
+    matcher: "truthy"
+
+  - id: A030
+    says: "Dark and light themes work correctly across all new docs components"
+    block: "theme toggle works in docs"
+    target: "theme.bothModesWork"
+    matcher: "truthy"
+
+  - id: A031
+    says: "Broken MDX content shows an error message instead of crashing the entire docs section"
+    block: "error boundary catches MDX failures"
+    target: "errorBoundary.catchesMdxError"
+    matcher: "truthy"
+
+file_changes:
+  - path: "website/app/docs/layout.tsx"
+    action: modify
+  - path: "website/app/docs/[[...slug]]/page.tsx"
+    action: modify
+  - path: "website/lib/source.ts"
+    action: modify
+  - path: "website/source.config.ts"
+    action: modify
+  - path: "website/content/docs/index.mdx"
+    action: modify
+  - path: "website/components/docs/layout/DocsNav.tsx"
+    action: create
+  - path: "website/components/docs/layout/PlatformSwitcher.tsx"
+    action: create
+  - path: "website/components/docs/layout/Sidebar.tsx"
+    action: create
+  - path: "website/components/docs/layout/RightRail.tsx"
+    action: create
+  - path: "website/components/docs/layout/Breadcrumb.tsx"
+    action: create
+  - path: "website/components/docs/content/CodeBlock.tsx"
+    action: create
+  - path: "website/components/docs/content/CopyButton.tsx"
+    action: create
+  - path: "website/components/docs/content/Callout.tsx"
+    action: create
+  - path: "website/components/docs/content/NextCards.tsx"
+    action: create
+  - path: "website/components/docs/content/MetaRow.tsx"
+    action: create
+  - path: "website/components/docs/content/StatsStrip.tsx"
+    action: create
+  - path: "website/components/docs/content/ForPlatform.tsx"
+    action: create
+  - path: "website/components/docs/providers/PlatformProvider.tsx"
+    action: create
+  - path: "website/app/docs/docs.css"
+    action: create
