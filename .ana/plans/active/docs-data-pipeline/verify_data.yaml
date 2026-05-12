@@ -1,0 +1,35 @@
+schema: 1
+findings:
+  - category: code
+    summary: "Keyword fallback categorization lacks word boundaries — 'scannable' matches /scan/, misassigning proof entries to Engine"
+    file: "website/scripts/extract-docs-data.ts"
+    line: 115
+    severity: risk
+    suggested_action: scope
+    related_assertions: ["A003"]
+  - category: code
+    summary: "Variable shadowing in extractSkillTemplates — inner 'content' shadows outer 'content' in same function"
+    file: "website/scripts/extract-docs-data.ts"
+    line: 512
+    severity: debt
+    suggested_action: accept
+  - category: code
+    summary: "All 13 exported loader functions and 14 types are unused — no page components import from docs-data yet"
+    file: "website/lib/docs-data/index.ts"
+    severity: observation
+    suggested_action: monitor
+  - category: code
+    summary: "No JSDoc on exported loader functions — inconsistent with CLI package coding standards, though website eslint doesn't enforce it"
+    file: "website/lib/docs-data/proofs.ts"
+    severity: observation
+    suggested_action: accept
+  - category: code
+    summary: "process.cwd() in loader DATA_PATH assumes Next.js runs from website/ root — correct for Next.js build, fragile if loaders are ever called from tests or scripts"
+    file: "website/lib/docs-data/proofs.ts"
+    line: 6
+    severity: debt
+    suggested_action: monitor
+  - category: upstream
+    summary: "Spec mockup shows rejections: 0 but contract A006 correctly says 19 — stale mockup in spec"
+    severity: observation
+    suggested_action: accept

@@ -43,5 +43,20 @@
     "website/lib/docs-data/types.ts",
     "website/package.json",
     "website/scripts/extract-docs-data.ts"
-  ]
+  ],
+  "verify_started_at": "2026-05-12T22:26:55.699Z",
+  "verify_agent": "ana-verify",
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:f1a37bd3d80e81b06219b8b3fd1eaae30368444a36824b66b2e53026ad3dcef6",
+    "run_at": "2026-05-12T22:36:38.208Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-12T22:36:38.246Z",
+    "hash": "sha256:7eedf95ee9cf5e036c3ffb7ee6c7752b48703fdaa3c169726bf190a78c644cb3"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-12T22:36:38.246Z",
+    "hash": "sha256:3ffc0e2ab9d1bb4d3a21cee1d5041671cbf8de6d319dcc56c064cfa33bbb23ad"
+  }
 }
