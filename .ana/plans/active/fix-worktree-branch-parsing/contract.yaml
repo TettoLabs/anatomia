@@ -1,0 +1,80 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Fix worktree branch parsing"
+
+assertions:
+  - id: A001
+    says: "Branch names from worktree-checked-out branches have no plus prefix"
+    block: "getWorkStatus returns clean workBranch for worktree-checked-out branch"
+    target: "json.items[0].workBranch"
+    matcher: "not_contains"
+    value: "+"
+
+  - id: A002
+    says: "Branch names from worktree-checked-out branches contain the expected prefix and slug"
+    block: "getWorkStatus returns clean workBranch for worktree-checked-out branch"
+    target: "json.items[0].workBranch"
+    matcher: "contains"
+    value: "feature/"
+
+  - id: A003
+    says: "Pipeline stage advances past build-in-progress when worktree has a build report"
+    block: "getWorkStatus returns clean workBranch for worktree-checked-out branch"
+    target: "json.items[0].stage"
+    matcher: "not_equals"
+    value: "build-in-progress"
+
+  - id: A004
+    says: "Current branch marker is still stripped correctly"
+    block: "getWorkBranch finds branch with custom prefix"
+    target: "json.items[0].workBranch"
+    matcher: "contains"
+    value: "dev/"
+
+  - id: A005
+    says: "The worktree plus-marker regex in work.ts uses a character class that matches both markers"
+    block: "work.ts regex strips both * and + markers"
+    target: "source.work_ts_line_144"
+    matcher: "contains"
+    value: "[*+] "
+
+  - id: A006
+    says: "The worktree plus-marker regex in git.ts uses a character class that matches both markers"
+    block: "git.ts regex strips both * and + markers"
+    target: "source.git_ts_detectBranches"
+    matcher: "contains"
+    value: "[*+] "
+
+  - id: A007
+    says: "Test helper accepts a worktree option for creating real worktrees"
+    block: "createWorkTestProject supports worktree: true"
+    target: "test.helper.slug_options"
+    matcher: "exists"
+
+  - id: A008
+    says: "Worktree cleanup runs before directory removal in test teardown"
+    block: "afterEach cleans up worktrees"
+    target: "test.afterEach.worktree_cleanup"
+    matcher: "exists"
+
+  - id: A009
+    says: "All existing tests continue to pass after the fix"
+    block: "full test suite regression"
+    target: "test.suite.passed"
+    matcher: "greater"
+    value: 2177
+
+  - id: A010
+    says: "Test count increases with the new worktree branch parsing test"
+    block: "full test suite regression"
+    target: "test.suite.total"
+    matcher: "greater"
+    value: 2179
+
+file_changes:
+  - path: "packages/cli/src/commands/work.ts"
+    action: modify
+  - path: "packages/cli/src/engine/detectors/git.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/work.test.ts"
+    action: modify
