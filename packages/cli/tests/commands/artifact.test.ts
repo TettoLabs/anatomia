@@ -694,6 +694,37 @@ work.ts — similar command pattern`;
       expect(() => saveArtifact('scope', 'test-slug')).not.toThrow();
     });
 
+    // @ana A001
+    it('accepts scope with milestone kind', async () => {
+      await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
+      const milestoneScope = `# Scope: test
+
+## Intent
+This is a milestone.
+
+## Complexity Assessment
+- **Kind:** milestone
+- **Size:** medium
+- **Multi-phase:** no
+
+## Approach
+Build using existing patterns.
+
+## Acceptance Criteria
+- AC1: First criterion
+- AC2: Second criterion
+- AC3: Third criterion
+
+## Edge Cases & Risks
+Handle edge cases.
+
+### Structural Analog
+work.ts — similar command pattern`;
+      await createArtifact('test-slug', 'scope.md', milestoneScope);
+
+      expect(() => saveArtifact('scope', 'test-slug')).not.toThrow();
+    });
+
     it('rejects scope without sufficient ACs', async () => {
       await createTestProject({ artifactBranch: 'main', currentBranch: 'main' });
       const invalidScope = `# Scope: test

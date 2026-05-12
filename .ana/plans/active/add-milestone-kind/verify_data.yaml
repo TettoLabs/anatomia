@@ -1,0 +1,38 @@
+schema: 1
+findings:
+  - category: upstream
+    summary: "Contract assertions A015/A016 reference docs-research/supermock/ files that are not tracked in git — untracked directory, cannot be modified in a branch"
+    severity: observation
+    suggested_action: accept
+    related_assertions: ["A015", "A016"]
+  - category: test
+    summary: "A002 test asserts on echoed invalid input ('fix + chore'), not on the four-value error string — source inspection confirms correct text but test would pass even if milestone were missing from the error message"
+    file: "packages/cli/tests/commands/artifact.test.ts"
+    line: 878
+    severity: debt
+    suggested_action: monitor
+    related_assertions: ["A002"]
+  - category: code
+    summary: "extractScopeKind regex matches **Kind:** anywhere in file, not section-scoped — pre-existing issue, milestone addition doesn't change the risk profile"
+    file: "packages/cli/src/utils/proofSummary.ts"
+    line: 436
+    severity: observation
+    suggested_action: monitor
+  - category: code
+    summary: "Dark mode milestone badge has no background override — inherits light-mode color-mix background. Works because transparent mix renders identically in dark mode, but inconsistent with feature badge which doesn't set explicit dark background either"
+    file: "website/components/proof-feed/proof-feed.module.css"
+    line: 291
+    severity: observation
+    suggested_action: accept
+  - category: test
+    summary: "No test verifies milestone badge CSS class or label output — website has no test suite, so ProofFeed rendering is unverified beyond type checking and build compilation"
+    file: "website/components/proof-feed/ProofFeed.tsx"
+    line: 20
+    severity: observation
+    suggested_action: accept
+  - category: code
+    summary: "kindClass and kindLabel use string parameter type instead of ProofKind — the functions accept any string and fall through to chore/improve defaults for unrecognized values"
+    file: "website/components/proof-feed/ProofFeed.tsx"
+    line: 19
+    severity: debt
+    suggested_action: monitor

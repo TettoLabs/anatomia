@@ -421,11 +421,11 @@ function validateScopeFormat(filePath: string): string | null {
   // Check for Kind field (strict — exact match only)
   const kindMatch = content.match(/\*\*Kind:\*\*\s*(.+)/);
   if (!kindMatch || !kindMatch[1]) {
-    return "Missing 'Kind' field in Complexity Assessment. Add: **Kind:** feature / fix / chore";
+    return "Missing 'Kind' field in Complexity Assessment. Add: **Kind:** feature / fix / chore / milestone";
   }
   const kindRaw = kindMatch[1].trim().toLowerCase();
-  if (kindRaw !== 'feature' && kindRaw !== 'fix' && kindRaw !== 'chore') {
-    return `Kind must be exactly one of: feature, fix, chore. Got: '${kindMatch[1].trim()}'`;
+  if (kindRaw !== 'feature' && kindRaw !== 'fix' && kindRaw !== 'chore' && kindRaw !== 'milestone') {
+    return `Kind must be exactly one of: feature, fix, chore, milestone. Got: '${kindMatch[1].trim()}'`;
   }
 
   // Check for Size field (lenient — first valid token)

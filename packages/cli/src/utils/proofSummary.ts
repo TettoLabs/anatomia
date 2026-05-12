@@ -64,7 +64,7 @@ export interface ProofSummary {
   hashes: Record<string, string>;
   completed_at: string;
   scope_summary?: string | undefined;
-  kind?: 'feature' | 'fix' | 'chore' | undefined;
+  kind?: 'feature' | 'fix' | 'chore' | 'milestone' | undefined;
   // Intelligence capture
   findings: Array<{
     category: string;
@@ -427,16 +427,16 @@ export function extractScopeSummary(scopePath: string): string | undefined {
  * Returns undefined if scope.md doesn't exist, has no Kind line, or has an invalid value.
  *
  * @param scopePath - Absolute path to scope.md
- * @returns Parsed kind ('feature' | 'fix' | 'chore'), or undefined
+ * @returns Parsed kind ('feature' | 'fix' | 'chore' | 'milestone'), or undefined
  */
-export function extractScopeKind(scopePath: string): 'feature' | 'fix' | 'chore' | undefined {
+export function extractScopeKind(scopePath: string): 'feature' | 'fix' | 'chore' | 'milestone' | undefined {
   if (!fs.existsSync(scopePath)) return undefined;
   try {
     const content = fs.readFileSync(scopePath, 'utf-8');
     const kindMatch = content.match(/\*\*Kind:\*\*\s*(.+)/);
     if (!kindMatch || !kindMatch[1]) return undefined;
     const raw = kindMatch[1].trim().toLowerCase();
-    if (raw === 'feature' || raw === 'fix' || raw === 'chore') return raw;
+    if (raw === 'feature' || raw === 'fix' || raw === 'chore' || raw === 'milestone') return raw;
     return undefined;
   } catch {
     return undefined;

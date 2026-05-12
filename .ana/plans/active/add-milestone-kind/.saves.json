@@ -18,5 +18,43 @@
   "spec": {
     "saved_at": "2026-05-12T08:46:37.127Z",
     "hash": "sha256:00fbe860ff5d224b3ecb751671e543fd582efccd6baeddb2bc998c1071e17e15"
+  },
+  "build_started_at": "2026-05-12T09:00:16.261Z",
+  "build_agent": "ana-build",
+  "build-report": {
+    "saved_at": "2026-05-12T09:10:27.779Z",
+    "hash": "sha256:620fc2712c02127ba5a3d812bffc39e325133cd26106d8170b0dc4b728688d5e"
+  },
+  "build-data": {
+    "saved_at": "2026-05-12T09:10:27.780Z",
+    "hash": "sha256:01ce6cabd49a51c51c46c63788fe5b5ae948d6ca4465e4665d6ac9a2a8f787ad"
+  },
+  "modules_touched": [
+    ".claude/agents/ana.md",
+    "packages/cli/src/commands/artifact.ts",
+    "packages/cli/src/types/proof.ts",
+    "packages/cli/src/utils/proofSummary.ts",
+    "packages/cli/templates/.claude/agents/ana.md",
+    "packages/cli/tests/commands/artifact.test.ts",
+    "packages/cli/tests/utils/proofSummary.test.ts",
+    "website/MAINTENANCE_MANUAL.md",
+    "website/components/proof-feed/ProofFeed.tsx",
+    "website/components/proof-feed/proof-feed.module.css",
+    "website/lib/proof-feed.ts"
+  ],
+  "verify_started_at": "2026-05-12T09:23:01.167Z",
+  "verify_agent": "ana-verify",
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:fb4204aa9ee80d53ff68c569170e176719449847307c7fbc135a036b150ca44e",
+    "run_at": "2026-05-12T09:28:29.280Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-12T09:28:29.317Z",
+    "hash": "sha256:47869c336dbab3a28494d28df83937ccc4a81992bcd08cd987faa46ce4fb7c2b"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-12T09:28:29.317Z",
+    "hash": "sha256:28e232bd5b8cf80d34378ef4a2b31120759265ef3b759e4a854528d5800c35d0"
   }
 }
