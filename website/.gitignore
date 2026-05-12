@@ -37,6 +37,10 @@ yarn-error.log*
 # vercel
 .vercel
 
+# fumadocs
+.source/
+data/docs/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
