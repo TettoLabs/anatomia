@@ -47,5 +47,20 @@
     "website/scripts/smoke-test.sh",
     "website/source.config.ts",
     "website/tsconfig.json"
-  ]
+  ],
+  "verify_started_at": "2026-05-12T21:17:40.850Z",
+  "verify_agent": "ana-verify",
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:ff1cd775dbc742aab856c1fefa808bf5a913161e14a43effd93c236c08a53ce6",
+    "run_at": "2026-05-12T21:23:52.651Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-12T21:23:52.692Z",
+    "hash": "sha256:9827d129ac0e3b9ff972975272b264ed88fe1500e3dfd07e20a43a9fcca5bdce"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-12T21:23:52.692Z",
+    "hash": "sha256:4c3558657797e60588b2d2776fd5c64fe011263980310cbca607b6512ae83ed6"
+  }
 }
