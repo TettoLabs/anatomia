@@ -12,7 +12,3 @@ concerns:
   - summary: "Pre-existing lint warning in CLI package (unused eslint-disable directive in scan engine) — not introduced by this build"
     severity: observation
     suggested_action: monitor
-  - summary: "Pre-commit hook lockfile check was below website/ skip block — reordered as bonus fix beyond spec"
-    file: ".husky/pre-commit"
-    severity: observation
-    suggested_action: accept

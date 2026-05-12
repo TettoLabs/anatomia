@@ -22,14 +22,15 @@
   "build_started_at": "2026-05-12T21:59:17.945Z",
   "build_agent": "ana-build",
   "build-report": {
-    "saved_at": "2026-05-12T22:19:31.196Z",
-    "hash": "sha256:dcc5a0c49113f5de599bf1ed775e37214526d966a5d5cf96ac32339235b78d6b"
+    "saved_at": "2026-05-12T22:26:02.090Z",
+    "hash": "sha256:9c47fa522960ad2325230bc5487fa39363440ac2d9436a4c69ff774be5549a43"
   },
   "build-data": {
-    "saved_at": "2026-05-12T22:19:31.197Z",
-    "hash": "sha256:3297cdd69469bbf55d44752d05f465886222df05bad89a34d59ef90945701af9"
+    "saved_at": "2026-05-12T22:26:02.091Z",
+    "hash": "sha256:3df8d08dcf34433e7cff52a2a9231c0e85d4f2a001d231959c6a11f769ef8a60"
   },
   "modules_touched": [
+    ".husky/pre-commit",
     "pnpm-lock.yaml",
     "website/lib/docs-data/agents.ts",
     "website/lib/docs-data/commands.ts",

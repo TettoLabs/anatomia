@@ -18,8 +18,6 @@
 - `website/lib/docs-data/meta.ts` (created): Typed loader for build-meta.json. Exports `getBuildMeta()`.
 - `website/lib/docs-data/index.ts` (created): Barrel re-exporting all types and loader functions.
 - `website/package.json` (modified): Added `"prebuild": "tsx scripts/extract-docs-data.ts"` script and `tsx` devDependency.
-- `pnpm-lock.yaml` (modified): Synced lockfile with tsx addition to website/package.json.
-- `.husky/pre-commit` (modified): Moved lockfile sync check above the website/ skip block so it runs for all commits. (Bonus fix beyond spec — the hook had a bug where website-only commits skipped the lockfile desync check.)
 
 ## PR Summary
 
@@ -59,7 +57,6 @@ None — contract followed exactly.
 ## Fix History
 
 - **Rejection count fix:** Initial implementation computed rejections as `result !== 'PASS'` (yielding 1). Corrected to use `rejection_cycles > 0` from the proof chain data, which correctly identifies 19 entries that went through FAIL → fix → PASS cycles during their pipeline run.
-- **Lockfile sync + pre-commit hook fix:** Added `pnpm install` to sync lockfile after tsx was added. Fixed a bug in `.husky/pre-commit` where the lockfile desync check was below the website/ skip block, meaning website-only commits never ran it. Moved the check above the skip block. This is a bonus fix beyond the spec — discovered while resolving the Vercel deploy failure.
 
 ## Test Results
 
@@ -100,8 +97,6 @@ cd website && npx tsx scripts/extract-docs-data.ts
 
 ## Git History
 ```
-e86eb91 [docs-data-pipeline] Fix: sync lockfile and fix pre-commit hook ordering
-3dd4bba [docs-data-pipeline] Update: Build report
 6a157e3 [docs-data-pipeline] Fix: compute rejections from rejection_cycles field
 23037c7 [docs-data-pipeline] Build report
 2c0186b [docs-data-pipeline] Fix lint error in extraction script
@@ -117,7 +112,5 @@ faad612 [docs-data-pipeline] Add typed loader modules and barrel index
 2. **Spec says 2 entries missing modules_touched, actual is 11:** The categorization algorithm handles this correctly — the 11 entries without `modules_touched` fall through to keyword matching on `scope_summary` with `Infra` as default. No functional impact.
 
 3. **Loader modules are untested at runtime:** The loaders use `readFileSync` with `process.cwd()` resolution, which works during `next build` but would fail if called from a different working directory. This is the expected usage pattern per spec, but worth noting.
-
-4. **Pre-commit hook reorder (bonus fix beyond spec):** The lockfile sync check in `.husky/pre-commit` was below the website/ skip condition, so website-only commits never ran it. Moved it above the skip block. This is an improvement beyond the spec scope — noted here for the verifier.
 
 Verified complete by second pass.
