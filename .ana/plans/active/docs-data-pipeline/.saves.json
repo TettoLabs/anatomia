@@ -18,5 +18,45 @@
   "spec": {
     "saved_at": "2026-05-12T21:51:11.572Z",
     "hash": "sha256:51604bc358fac3b4b471489109ecd4c334379aabe440df821951ab52d32e05b4"
+  },
+  "build_started_at": "2026-05-12T21:59:17.945Z",
+  "build_agent": "ana-build",
+  "build-report": {
+    "saved_at": "2026-05-12T22:26:02.090Z",
+    "hash": "sha256:9c47fa522960ad2325230bc5487fa39363440ac2d9436a4c69ff774be5549a43"
+  },
+  "build-data": {
+    "saved_at": "2026-05-12T22:26:02.091Z",
+    "hash": "sha256:3df8d08dcf34433e7cff52a2a9231c0e85d4f2a001d231959c6a11f769ef8a60"
+  },
+  "modules_touched": [
+    ".husky/pre-commit",
+    "pnpm-lock.yaml",
+    "website/lib/docs-data/agents.ts",
+    "website/lib/docs-data/commands.ts",
+    "website/lib/docs-data/context.ts",
+    "website/lib/docs-data/gotchas.ts",
+    "website/lib/docs-data/index.ts",
+    "website/lib/docs-data/meta.ts",
+    "website/lib/docs-data/proofs.ts",
+    "website/lib/docs-data/skills.ts",
+    "website/lib/docs-data/types.ts",
+    "website/package.json",
+    "website/scripts/extract-docs-data.ts"
+  ],
+  "verify_started_at": "2026-05-12T22:26:55.699Z",
+  "verify_agent": "ana-verify",
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:f1a37bd3d80e81b06219b8b3fd1eaae30368444a36824b66b2e53026ad3dcef6",
+    "run_at": "2026-05-12T22:36:38.208Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-12T22:36:38.246Z",
+    "hash": "sha256:7eedf95ee9cf5e036c3ffb7ee6c7752b48703fdaa3c169726bf190a78c644cb3"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-12T22:36:38.246Z",
+    "hash": "sha256:3ffc0e2ab9d1bb4d3a21cee1d5041671cbf8de6d319dcc56c064cfa33bbb23ad"
   }
 }
