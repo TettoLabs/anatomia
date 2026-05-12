@@ -105,8 +105,8 @@ function detectBranches(cwd: string): string[] | null {
   for (const line of output.split('\n')) {
     let name = line.trim();
     if (!name) continue;
-    // Strip leading "* " from current branch
-    if (name.startsWith('* ')) name = name.slice(2);
+    // Strip leading "* " or "+ " (worktree) marker from branch name
+    name = name.replace(/^[*+] /, '');
     // Skip HEAD pointer lines like "remotes/origin/HEAD -> origin/main"
     if (name.includes(' -> ')) continue;
     // Strip remote prefix
