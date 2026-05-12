@@ -1,18 +1,6 @@
 schema: 1
 findings:
   - category: code
-    summary: "Step 7 removes explicit skill invocation — claims auto-loading that doesn't exist. On fresh projects verify agent will never load testing-standards or coding-standards."
-    file: "packages/cli/templates/.claude/agents/ana-verify.md"
-    line: 139
-    severity: risk
-    suggested_action: scope
-    related_assertions: ["A009"]
-  - category: upstream
-    summary: "Contract A009 and spec AC4 encode a false premise — Claude Code does not auto-load skills from frontmatter. ana-build and ana-plan both declare skills in frontmatter AND explicitly invoke them in body text."
-    severity: risk
-    suggested_action: scope
-    related_assertions: ["A009"]
-  - category: code
     summary: "Type widening from passthrough not reflected in AnaJson export — consumers using Object.keys() would silently iterate unknown fields"
     file: "packages/cli/src/commands/init/anaJsonSchema.ts"
     line: 57
