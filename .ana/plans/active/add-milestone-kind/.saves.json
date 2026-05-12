@@ -41,5 +41,20 @@
     "website/components/proof-feed/ProofFeed.tsx",
     "website/components/proof-feed/proof-feed.module.css",
     "website/lib/proof-feed.ts"
-  ]
+  ],
+  "verify_started_at": "2026-05-12T09:23:01.167Z",
+  "verify_agent": "ana-verify",
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:fb4204aa9ee80d53ff68c569170e176719449847307c7fbc135a036b150ca44e",
+    "run_at": "2026-05-12T09:28:29.280Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-12T09:28:29.317Z",
+    "hash": "sha256:47869c336dbab3a28494d28df83937ccc4a81992bcd08cd987faa46ce4fb7c2b"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-12T09:28:29.317Z",
+    "hash": "sha256:28e232bd5b8cf80d34378ef4a2b31120759265ef3b759e4a854528d5800c35d0"
+  }
 }
