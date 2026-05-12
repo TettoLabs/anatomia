@@ -1605,6 +1605,22 @@ describe('extractScopeKind', () => {
     expect(result).toBe('fix');
   });
 
+  // @ana A003
+  it('parses milestone from Kind line', () => {
+    const scopePath = path.join(tempDir, 'scope.md');
+    fs.writeFileSync(scopePath, '# Scope\n\n## Complexity Assessment\n- **Kind:** milestone\n- **Size:** small\n');
+    const result = extractScopeKind(scopePath);
+    expect(result).toBe('milestone');
+  });
+
+  // @ana A004
+  it('handles case-insensitive milestone', () => {
+    const scopePath = path.join(tempDir, 'scope.md');
+    fs.writeFileSync(scopePath, '# Scope\n\n## Complexity Assessment\n- **Kind:** Milestone\n- **Size:** small\n');
+    const result = extractScopeKind(scopePath);
+    expect(result).toBe('milestone');
+  });
+
   // @ana A013
   it('parses chore from Kind line', () => {
     const scopePath = path.join(tempDir, 'scope.md');
