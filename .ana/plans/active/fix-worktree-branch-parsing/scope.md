@@ -30,7 +30,7 @@ Strip both git branch markers (`*` for current branch, `+` for worktree-checked-
 - AC2: `getWorkBranch` continues to return a clean branch name (no `*` prefix) when the branch is the current branch
 - AC3: `getWorkBranch` does not strip legitimate `+` characters in branch names (e.g., `feature/c++fixes`)
 - AC4: `detectBranches()` in `git.ts` strips both `*` and `+` markers from branch names
-- AC5: When a worktree exists with a build report, `work status` shows the correct stage (not stuck at `build-in-progress`)
+- AC5: A test creates a real worktree (via `git worktree add`) with a build report committed on the worktree branch, then runs `getWorkStatus({ json: true })` from the main tree — the `workBranch` field has no `+` prefix and the stage is not stuck at `build-in-progress`
 - AC6: No existing tests break. Test count increases.
 
 ## Edge Cases & Risks
@@ -81,8 +81,5 @@ None. The fix is verified and the edge cases are tested.
 
 ### Known Gotchas
 - **`git worktree add` in tests requires a commit first.** You can't create a worktree from an empty repo — git needs at least one commit. The test must create a temp repo, make an initial commit, then `git worktree add`.
-- **The test must run `getWorkBranch` from the main tree's cwd, not from inside the worktree.** The `+` prefix only appears when listing branches from outside the worktree. From inside, the branch is `*` (current).
-- **`getWorkBranch` is a private function.** It's not exported. The test should exercise it through `getWorkStatus` or by calling it indirectly via the status flow. Alternatively, if the test infrastructure already imports the function for other tests, follow that pattern.
-
-### Things to Investigate
-- Whether `getWorkBranch` is exported or only accessible through `getWorkStatus`. If it's private, the test needs to go through the status flow. If there's a test that already accesses it directly, follow that pattern.
+- **The test must run from the main tree's cwd, not from inside the worktree.** The `+` prefix only appears when listing branches from outside the worktree. From inside, the branch is `*` (current).
+- **Test through `getWorkStatus`, not `getWorkBranch` directly.** `getWorkBranch` is private. The existing test at `work.test.ts:717` already exercises it through `getWorkStatus({ json: true })` and asserts `json.items[0].workBranch`. Follow that same pattern — call `getWorkStatus` with JSON output, assert the `workBranch` field has no `+` prefix and the stage is correct.
