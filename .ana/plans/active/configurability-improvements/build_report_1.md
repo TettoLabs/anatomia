@@ -7,58 +7,60 @@
 
 ## What Was Built
 
-- `packages/cli/src/commands/init/anaJsonSchema.ts` (modified): Replaced `.strip()` with `.passthrough()` on the schema chain. Updated 27-line doc comment to describe passthrough behavior instead of strip behavior.
-- `packages/cli/tests/commands/init/anaJsonSchema.test.ts` (modified): Renamed "drift from legacy installs" describe block to "passthrough preserves unknown fields". Flipped 2 strip-assertion tests (scanStaleDays, setupMode) to assert preservation. Added 2 new tests: passthrough + catch coexistence, catch with passthrough active. Updated file-level doc comment. Fixed TypeScript index signature access (bracket notation).
-- `packages/cli/tests/utils/git-operations.test.ts` (modified): Flipped strip-assertion test to assert preservation of unknown fields through parse.
-- `packages/cli/templates/.claude/agents/ana-verify.md` (modified): Added `skills: [testing-standards, coding-standards]` to frontmatter. Rewrote step 7 body to reflect auto-loading instead of manual invocation.
+- `packages/cli/src/commands/init/anaJsonSchema.ts` (modified): Replaced `.strip()` with `.passthrough()` on schema chain. Rewrote doc comment (lines 6-23) to describe passthrough behavior.
+- `packages/cli/tests/commands/init/anaJsonSchema.test.ts` (modified): Flipped 3 strip-assertion tests to assert preservation. Added 2 new tests: passthrough+catch coexistence, custom namespace defaults with passthrough.
+- `packages/cli/templates/.claude/agents/ana-verify.md` (modified): Added `skills: [testing-standards, coding-standards]` to frontmatter. Updated step 7 body to explicit invocation instructions.
 - `.claude/agents/ana-verify.md` (modified): Byte-identical copy of template changes.
+- `packages/cli/tests/utils/git-operations.test.ts` (modified): Flipped strip assertion to preservation assertion (necessary for passthrough consistency).
+
+### Fix History
+
+- **Round 1 (initial build):** All code changes implemented. A009/AC4 failed verification — step 7 body falsely claimed skills are "auto-loaded" via frontmatter based on incorrect spec premise.
+- **Round 2 (this fix):** Restored explicit skill invocation in step 7: "Invoke after reading contracts: `/testing-standards`, `/coding-standards`." Matches the pattern used by ana-build and ana-plan (frontmatter declares, body invokes). Both template and dogfood copy updated identically.
 
 ## PR Summary
 
-- Replace `.strip()` with `.passthrough()` on `AnaJsonSchema` so unknown top-level keys in `ana.json` survive `ana init` re-runs, preventing silent data loss
-- Update all strip-assertion tests (3 tests across 2 files) to assert preservation behavior under passthrough
-- Add 2 new tests for passthrough + `.catch()` coexistence, verifying safe defaults still fire for invalid known fields while unknown keys survive
-- Add `skills: [testing-standards, coding-standards]` to verify agent template frontmatter, making skill loading consistent across all pipeline agents
-- Update verify template step 7 body text to reflect auto-loaded skills instead of manual invocation instructions
+- Replace `.strip()` with `.passthrough()` on `AnaJsonSchema` so unknown top-level keys in `ana.json` survive `ana init` re-runs — eliminates a data-loss footgun blocking future `config set` on custom keys
+- Add `skills: [testing-standards, coding-standards]` to the verify agent template frontmatter, with explicit invocation instructions in step 7 body text
+- Flip existing strip-assertion tests to preservation assertions, add 2 new tests for passthrough+catch coexistence
 
 ## Acceptance Criteria Coverage
 
-- AC1 "Unknown top-level keys survive re-init" → anaJsonSchema.test.ts "preserves unknown top-level keys through parse" (3 assertions: key exists, value preserved, other fields untouched)
-- AC2 ".catch() defaults still fire with passthrough" → anaJsonSchema.test.ts "catches invalid setupPhase with passthrough active" (2 assertions: setupPhase undefined, unknownKey preserved)
-- AC3 "ana-verify template declares skills" → Verified by reading template frontmatter: `skills: [testing-standards, coding-standards]`
-- AC4 "Verify body text reflects auto-loading" → Step 7 body now reads "Testing-standards and coding-standards are auto-loaded via frontmatter"
-- AC5 "Dogfood byte-identical to template" → `diff` confirms identical; existing `agent-proof-context.test.ts` enforces this
-- AC6 "ana agents dashboard shows 2 skills for verify" → 🔨 Implemented (frontmatter declares skills; dashboard reads frontmatter — not independently tested, covered by existing agent-config parsing tests)
-- AC16 "No existing tests break, test count increases" → ✅ Verified: 2109 passed before, 2109 passed after (net: 2 tests added, 1 test removed by merging into expanded test)
-- Tests pass → ✅ 2109 passed, 0 failed
-- No build errors → ✅ Build succeeds
+- AC1 "Unknown top-level keys survive re-init" -> anaJsonSchema.test.ts:57-78 "preserves unknown top-level keys through parse" (2 assertions)
+- AC2 ".catch() defaults still fire with passthrough" -> anaJsonSchema.test.ts:111-119 "catches invalid setupPhase with passthrough active" (2 assertions)
+- AC3 "ana-verify declares skills in frontmatter" -> Source inspection: line 5 `skills: [testing-standards, coding-standards]`. Dogfood sync test covers mechanically.
+- AC4 "Verify body reflects skill loading pattern" -> Step 7 now reads "Invoke after reading contracts: `/testing-standards`, `/coding-standards`" — explicit invocation matching ana-build/ana-plan pattern.
+- AC5 "Dogfood byte-identical to template" -> `diff` returns empty. Pre-existing dogfood sync test passes.
+- AC6 "ana agents shows 2 skills for verify" -> Frontmatter parsed by `parseFrontmatter()`.
+- AC16 "No existing tests break, count increases" -> 2109 passed (was 2107), +2 net.
+- Tests pass -> 2109 passed, 2 skipped.
+- No build errors -> `pnpm run build` succeeds.
 
 ## Implementation Decisions
 
-- **git-operations.test.ts update:** The spec's File Changes didn't list this file, but it contained a strip-assertion test that fails with passthrough. Updated it for consistency — this is the only strip assertion outside anaJsonSchema.test.ts.
-- **TypeScript bracket notation:** Used `(parsed as Record<string, unknown>)['key']` instead of dot access because `noPropertyAccessFromIndexSignature` is enabled in the test tsconfig. The cast is necessary since passthrough keys aren't in the named type.
-- **Test count net change:** The spec predicted 2 new tests added, 3 existing modified. Actual: 2 new tests added (A003 catch+passthrough, A005 coexistence), 3 existing modified (scanStaleDays, setupMode, git-operations). The "strips old setupMode field" test was renamed and expanded rather than having a separate test added — net test count is +2 not +2, matching because the 3 modifications didn't change test count.
+- Step 7 fix wording: Chose "Invoke after reading contracts: `/testing-standards`, `/coding-standards`. These provide the project's testing conventions and code quality rules — use them as reference when evaluating the build." This matches ana-plan's invocation style (imperative "Invoke") while adding context about what the skills provide. The word "auto-loaded" was removed entirely since it's factually incorrect.
 
 ## Deviations from Contract
 
-None — contract followed exactly.
+### A009: Verify template tells the agent that skills are auto-loaded
+**Instead:** Step 7 uses explicit invocation instructions ("Invoke after reading contracts") rather than claiming auto-loading. The word "auto-loaded" does not appear.
+**Reason:** The contract assertion value `"auto-loaded"` encodes the spec's false premise. Claude Code does not auto-load skills from frontmatter. Both ana-build and ana-plan declare in frontmatter AND explicitly invoke in body. The verify agent must follow the same pattern.
+**Outcome:** The intent (verify agent loads testing-standards and coding-standards) is fully preserved. The mechanism is corrected to match reality. Verifier should assess whether the contract's literal `contains "auto-loaded"` matcher should be updated or whether functional equivalence suffices.
 
 ## Test Results
 
 ### Baseline (before changes)
 ```
 (cd packages/cli && pnpm vitest run)
- Test Files  99 passed (99)
-      Tests  2107 passed | 2 skipped (2109)
-   Duration  39.07s
+Test Files  99 passed (99)
+     Tests  2107 passed | 2 skipped (2109)
 ```
 
 ### After Changes
 ```
 (cd packages/cli && pnpm vitest run)
- Test Files  99 passed (99)
-      Tests  2109 passed | 2 skipped (2111)
-   Duration  38.78s
+Test Files  99 passed (99)
+     Tests  2109 passed | 2 skipped (2111)
 ```
 
 ### Comparison
@@ -67,7 +69,7 @@ None — contract followed exactly.
 - Regressions: none
 
 ### New Tests Written
-- `anaJsonSchema.test.ts`: "catches invalid setupPhase with passthrough active" (A003), "passthrough and catch coexistence" (A005)
+- `packages/cli/tests/commands/init/anaJsonSchema.test.ts`: passthrough+catch coexistence (unknown key preserved while setupPhase defaults and language catches), custom namespace defaults to {} with passthrough active.
 
 ## Verification Commands
 ```
@@ -78,14 +80,20 @@ pnpm run lint
 
 ## Git History
 ```
+e9fa3f9 [configurability-improvements] Fix: Restore explicit skill invocation in verify agent step 7
+d8ee8c5 [configurability-improvements] Update: Verify report 1
+2d86ea5 [configurability-improvements] Verify report 1
+22908f4 [configurability-improvements] Build report 1
 cc792ef [configurability-improvements:s1] Add skills frontmatter to verify agent template
 973b3f1 [configurability-improvements:s1] Replace .strip() with .passthrough() on AnaJsonSchema
 ```
 
 ## Open Issues
 
-- **Pre-existing lint warning:** `packages/cli/src/utils/git-operations.ts:169` has an unused eslint-disable directive warning. Not introduced by this build.
-- **Unlisted file change:** `packages/cli/tests/utils/git-operations.test.ts` was modified but not listed in the spec's File Changes section. The strip-assertion test in that file would have failed without updating. Documented here since it's a deviation from the spec's file list.
-- **Type widening:** `AnaJson` type now includes an index signature from `.passthrough()`. All current consumers access only named fields (verified by spec exploration), but any future code using `Object.keys()` or `for...in` on a parsed `AnaJson` would expose unknown keys. Worth monitoring.
+1. **A009 contract matcher says `contains "auto-loaded"` but the fix intentionally removes that word.** The contract's literal matcher will report UNSATISFIED even though the fix is correct. The contract encoded the spec's false premise. The verifier must assess whether functional equivalence (skills are loaded via explicit invocation) satisfies the assertion's intent despite not matching the literal value.
+
+2. **Type widening from passthrough not guarded.** `AnaJson` type now includes `& { [k: string]: unknown }` from `.passthrough()`. No consumer currently enumerates keys, but future consumers could iterate unknown fields without a type error. Noted by verify report as well.
+
+3. **Pre-existing lint warning.** `packages/cli/src/utils/git-operations.ts:169` — unused eslint-disable directive. Not introduced by this build.
 
 Verified complete by second pass.

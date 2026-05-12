@@ -1,13 +1,14 @@
 schema: 1
 concerns:
-  - summary: "Pre-existing lint warning in git-operations.ts (unused eslint-disable directive) — not introduced by this build"
+  - summary: "A009 contract matcher says contains 'auto-loaded' but fix intentionally removes that word — literal matcher will fail despite correct fix"
+    file: "packages/cli/templates/.claude/agents/ana-verify.md"
+    severity: risk
+    suggested_action: accept
+  - summary: "AnaJson type widened by passthrough — future consumers could enumerate unknown fields without type error"
+    file: "packages/cli/src/commands/init/anaJsonSchema.ts"
+    severity: debt
+    suggested_action: monitor
+  - summary: "Pre-existing unused eslint-disable directive in git-operations.ts:169"
     file: "packages/cli/src/utils/git-operations.ts"
     severity: observation
     suggested_action: accept
-  - summary: "git-operations.test.ts strip assertion was not listed in spec's File Changes but required updating for passthrough consistency"
-    file: "packages/cli/tests/utils/git-operations.test.ts"
-    severity: observation
-    suggested_action: accept
-  - summary: "AnaJson type now includes index signature from passthrough — consumers accessing only named fields are safe, but any future Object.keys() or property enumeration would expose unknown keys"
-    severity: observation
-    suggested_action: monitor
