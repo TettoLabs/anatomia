@@ -1,13 +1,13 @@
 # Proof Chain Dashboard
 
-83 runs · 219 active · 101 lessons · 0 promoted · 161 closed
+84 runs · 223 active · 102 lessons · 0 promoted · 161 closed
 
 ## Hot Modules
 
 | File | Active | Entries |
 |------|--------|--------|
 | packages/cli/src/commands/work.ts | 21 | 11 |
-| packages/cli/tests/commands/work.test.ts | 17 | 13 |
+| packages/cli/tests/commands/work.test.ts | 19 | 14 |
 | packages/cli/tests/commands/proof.test.ts | 11 | 5 |
 | website/lib/proof-feed.ts | 10 | 3 |
 | packages/cli/tests/commands/artifact.test.ts | 9 | 5 |
@@ -16,16 +16,11 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 219 total)
+## Active Findings (30 shown of 223 total)
 
 ### packages/cli/src/commands/artifact.ts
 
 - **code:** Auto-rename overwrites numbered file unconditionally — if the unnumbered file is stale or corrupt, the good numbered version is destroyed — *Fix cycle stage detection breaks on multi-phase builds*
-
-### packages/cli/src/commands/config.ts
-
-- **code:** displayAll shows empty object as JSON.stringify output (e.g., '{}') — inconsistent with nested object display pattern which uses indentation — *Configurability Improvements*
-- **code:** Synchronous fs operations (readFileSync/writeFileSync) — works for a CLI tool but blocks the event loop during file I/O — *Configurability Improvements*
 
 ### packages/cli/src/commands/init/anaJsonSchema.ts
 
@@ -44,6 +39,11 @@
 - **test:** A013/A014 completeWork backward compat assertions have no tagged tests — verified by source inspection only — *Fix cycle stage detection breaks on multi-phase builds*
 - **code:** completeWork fallback lets two multi-phase specs share one unnumbered saves.json entry — phase 2 passes if phase 1's unnumbered key exists — *Fix cycle stage detection breaks on multi-phase builds*
 
+### packages/cli/src/engine/detectors/git.ts
+
+- **test:** A004 and A005 are source-inspection-only assertions — no behavioral test verifies the regex actually strips + markers in git.ts (only work.ts path is integration-tested) — *Fix worktree branch parsing*
+- **test:** Integration test covers work.ts parsing path end-to-end but git.ts detectBranches is not exercised by any new test — the fix is verified only by source inspection — *Fix worktree branch parsing*
+
 ### packages/cli/src/utils/proofSummary.ts
 
 - **code:** extractScopeKind regex matches **Kind:** anywhere in file, not section-scoped — pre-existing issue, milestone addition doesn't change the risk profile — *Add milestone kind*
@@ -54,20 +54,14 @@
 - **code:** Detached HEAD produces branchName '(unknown)' — rev-list and log commands will fail silently, showing 0 commits and 0 days — *Kind-aware branch prefixes*
 - **code:** rev-parse --abbrev-ref HEAD returns literal 'HEAD' on detached HEAD, not '(unknown)' — ternary fallback never triggers for detached state — *Kind-aware branch prefixes*
 
-### packages/cli/templates/.claude/agents/ana-verify.md
-
-- **code:** Step 7 body condensed from 3-line bulleted list to single line — functionally correct but less scannable for agents — *Configurability Improvements*
-
 ### packages/cli/tests/commands/artifact.test.ts
 
 - **test:** A002 test asserts on echoed invalid input ('fix + chore'), not on the four-value error string — source inspection confirms correct text but test would pass even if milestone were missing from the error message — *Add milestone kind*
 
-### packages/cli/tests/commands/config.test.ts
-
-- **test:** A011 assertion uses toBeDefined() — JSON.parse would throw before reaching it, so the assertion is tautological — *Configurability Improvements*
-
 ### packages/cli/tests/commands/work.test.ts
 
+- **test:** No dedicated @ana tag for A003 — existing test satisfies the assertion but is tagged @ana A010 from a prior contract — *Fix worktree branch parsing*
+- **code:** No mutual exclusion between featureBranch and worktree options in createWorkTestProject — setting both creates branch via checkout then fails on worktree add — *Fix worktree branch parsing*
 - **test:** A008 JSON test asserts typeof === 'number' not a specific value — passes even if commitsBehind computation is broken — *Worktree freshness detection*
 - **test:** Stage detection tests use hardcoded timestamps with 1-hour gaps — no boundary test for equal timestamps — *Fix cycle stage detection breaks on multi-phase builds*
 

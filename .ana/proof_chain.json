@@ -21527,6 +21527,186 @@
         "commit_count": 6,
         "base_commit": "b122c50526607eb775d1563da64fff4f892aeee6"
       }
+    },
+    {
+      "slug": "fix-worktree-branch-parsing",
+      "feature": "Fix worktree branch parsing",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 9,
+        "satisfied": 9,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Branch names from worktree-checked-out branches are clean and correct",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "Pipeline stage advances to ready-for-verify when worktree has a build report",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Current branch marker is still stripped correctly",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "The worktree plus-marker regex in work.ts uses a character class that matches both markers",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "The worktree plus-marker regex in git.ts uses a character class that matches both markers",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "Test helper accepts a worktree option for creating real worktrees",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "Worktree cleanup runs before directory removal in test teardown",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "All existing tests continue to pass after the fix",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "Test count increases with the new worktree branch parsing test",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 0,
+        "met": 0
+      },
+      "timing": {
+        "total_minutes": 45,
+        "think": 8,
+        "plan": 8,
+        "build": 7,
+        "verify": 4
+      },
+      "hashes": {
+        "scope": "sha256:460ba0f73c2cc8355d9de62c376ce9c28ab942b9a4ab60a49b83d1fb108cd4f2",
+        "contract": "sha256:2427e481ab399bf9af26425019d672f642f62d01032310a15074e850e6c8aa96",
+        "plan": "sha256:7f30e4158a926da0137c6762837c24a077a0710574d8d70660a3a854db52e05e",
+        "spec": "sha256:1457803502095c01bd859b8e4c99e13c7ad07d0546a35cde1a9b9bb408b920be",
+        "build-report": "sha256:7515ff2e5fb122d2742866783531aee190820adc3958b553c33bdc2632d31f1e",
+        "build-data": "sha256:e66b2a3c54a8c2a4690ac98320b26dfe6bda99bb108a51e2321fef24f0f47481",
+        "verify-report": "sha256:9a5725646e996015a7515584bdb43ce0b961fb9c9801727452f3c45505cf7158",
+        "verify-data": "sha256:c51fd662c5b8afea000473419d58fda156ddcecd5fa40f4ae3568a5c1108f50d"
+      },
+      "completed_at": "2026-05-12T20:23:06.254Z",
+      "modules_touched": [
+        "packages/cli/src/commands/work.ts",
+        "packages/cli/src/engine/detectors/git.ts",
+        "packages/cli/tests/commands/work.test.ts"
+      ],
+      "scope_summary": "`git branch -a` marks branches checked out in linked worktrees with a `+ ` prefix. `getWorkBranch()` at `work.ts:144` strips the `* ` prefix (current branch) but not the `+ ` prefix (worktree branch). The result: when a worktree is active, `getWorkBranch` returns `\"+ feature/slug\"` — an invalid git ref — to every caller. Build reports become invisible, pipeline stage detection breaks, `--merge` fails, and `work status` shows wrong stages for every work item with an active worktree.",
+      "kind": "fix",
+      "findings": [
+        {
+          "category": "test",
+          "summary": "No dedicated @ana tag for A003 — existing test satisfies the assertion but is tagged @ana A010 from a prior contract",
+          "file": "packages/cli/tests/commands/work.test.ts",
+          "anchor": null,
+          "line": 781,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A003"
+          ],
+          "id": "fix-worktree-branch-parsing-C1",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "A004 and A005 are source-inspection-only assertions — no behavioral test verifies the regex actually strips + markers in git.ts (only work.ts path is integration-tested)",
+          "file": "packages/cli/src/engine/detectors/git.ts",
+          "anchor": null,
+          "line": 109,
+          "severity": "debt",
+          "suggested_action": "monitor",
+          "related_assertions": [
+            "A004",
+            "A005"
+          ],
+          "id": "fix-worktree-branch-parsing-C2",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "No mutual exclusion between featureBranch and worktree options in createWorkTestProject — setting both creates branch via checkout then fails on worktree add",
+          "file": "packages/cli/tests/commands/work.test.ts",
+          "anchor": null,
+          "line": 107,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "fix-worktree-branch-parsing-C3",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "Integration test covers work.ts parsing path end-to-end but git.ts detectBranches is not exercised by any new test — the fix is verified only by source inspection",
+          "file": "packages/cli/src/engine/detectors/git.ts",
+          "anchor": null,
+          "line": 109,
+          "severity": "debt",
+          "suggested_action": "monitor",
+          "related_assertions": [
+            "A005"
+          ],
+          "id": "fix-worktree-branch-parsing-C4",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "Proof chain shows 'Phase detection logic (A001-A003, A006-A011) has no dedicated tagged tests' from prior cycle — still present, not addressed by this build",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "fix-worktree-branch-parsing-C5",
+          "status": "lesson"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "Pre-existing lint warning: unused eslint-disable directive in git-operations.ts:198",
+          "file": "packages/cli/src/utils/git-operations.ts",
+          "severity": "observation",
+          "suggested_action": "monitor"
+        },
+        {
+          "summary": "Pre-existing proof chain test errors (F004 promoted, F999 not found) produce stderr noise but don't fail tests",
+          "file": null,
+          "severity": "observation",
+          "suggested_action": "monitor"
+        }
+      ],
+      "worktree": {
+        "used": true,
+        "created_at": "2026-05-12T20:02:16.566Z",
+        "completed_at": "2026-05-12T20:23:06.250Z",
+        "commit_count": 4,
+        "base_commit": "b2e65b6b141b1d53a7a9b4e20cd8da7c817dcc18"
+      }
     }
   ],
   "schema": 1
