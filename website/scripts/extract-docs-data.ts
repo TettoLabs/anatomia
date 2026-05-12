@@ -126,7 +126,8 @@ function extractProofEntries(): ProofEntry[] {
   const raw = JSON.parse(fs.readFileSync(chainPath, 'utf-8'));
   const entries: unknown[] = raw.entries;
 
-  return entries.map((entry: any) => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- proof chain entries have dynamic shape
+  return entries.map((entry: Record<string, any>) => ({
     slug: entry.slug,
     feature: entry.feature,
     result: entry.result,
