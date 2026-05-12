@@ -445,9 +445,9 @@ When `verify_report.md` (or `verify_report_{N}.md` for multi-phase) exists with 
 10. Regenerate `build_report.md` (or `build_report_{N}.md` for multi-phase) from scratch as a clean snapshot of final state. Do not surgically edit the existing report — after multiple fix cycles, surgical edits produce unreadable palimpsests. Sections: "What Was Built" (original + fixes as one unified list), "Fix History" (brief summary per cycle), current test counts, current git log, current open issues. Old versions are in git history.
 11. Save the updated build report:
     ```bash
-    ana artifact save build-report {slug}
+    ana artifact save build-report-{N} {slug}
     ```
-    For multi-phase: `ana artifact save build-report-{N} {slug}`
+    For single-spec (no phase number): `ana artifact save build-report {slug}`
 
 ---
 
@@ -518,7 +518,7 @@ ana artifact save build-report-1 {slug}
 **Spec location:** `.ana/plans/active/{slug}/spec.md` (or `spec-N.md` for multi-phase)
 **Plan location:** `.ana/plans/active/{slug}/plan.md` (always — required for all work items)
 **Build report output:** `.ana/plans/active/{slug}/build_report.md` (or `build_report_N.md` for multi-phase)
-**Verify report (if resuming):** `.ana/plans/active/{slug}/verify_report.md`
+**Verify report (if resuming):** `.ana/plans/active/{slug}/verify_report.md` (or `verify_report_N.md` for multi-phase)
 
 **Skills:** `/git-workflow` (always). Coding-standards, testing-standards, api-patterns, data-access, ai-patterns, deployment available on demand — Build Brief in spec is the primary source.
 
