@@ -124,10 +124,10 @@ function categorizeEntry(entry: { modules_touched?: string[]; scope_summary?: st
 function extractProofEntries(): ProofEntry[] {
   const chainPath = path.join(MONOREPO_ROOT, '.ana', 'proof_chain.json');
   const raw = JSON.parse(fs.readFileSync(chainPath, 'utf-8'));
-  const entries: unknown[] = raw.entries;
-
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- proof chain entries have dynamic shape
-  return entries.map((entry: Record<string, any>) => ({
+  const entries: Record<string, any>[] = raw.entries;
+
+  return entries.map((entry) => ({
     slug: entry.slug,
     feature: entry.feature,
     result: entry.result,
@@ -138,6 +138,7 @@ function extractProofEntries(): ProofEntry[] {
     },
     assertionCount: entry.contract?.total ?? 0,
     findingCount: (entry.findings || []).length,
+    rejectionCycles: entry.rejection_cycles ?? 0,
     completedAt: entry.completed_at || '',
     scopeSummary: entry.scope_summary || null,
     modulesTouched: entry.modules_touched || [],

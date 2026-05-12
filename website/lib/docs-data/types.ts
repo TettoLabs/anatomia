@@ -14,6 +14,7 @@ export interface ProofEntry {
   };
   assertionCount: number;
   findingCount: number;
+  rejectionCycles: number;
   completedAt: string;
   scopeSummary: string | null;
   modulesTouched: string[];

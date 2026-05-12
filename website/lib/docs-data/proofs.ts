@@ -27,7 +27,7 @@ export function getProofStats(): ProofStats {
   for (const entry of entries) {
     assertions += entry.assertionCount;
     findings += entry.findingCount;
-    if (entry.result !== 'PASS') {
+    if (entry.rejectionCycles > 0) {
       rejections++;
     }
   }
