@@ -141,7 +141,7 @@ function getWorkBranch(slug: string): string | null {
   if (result.exitCode !== 0 || !result.stdout) return null;
 
   // Parse branches — prefer local over remote
-  const branches = result.stdout.split('\n').map(b => b.trim().replace(/^\* /, '').replace(/^remotes\//, ''));
+  const branches = result.stdout.split('\n').map(b => b.trim().replace(/^[*+] /, '').replace(/^remotes\//, ''));
   const local = branches.find(b => b.endsWith('/' + slug) || b === slug);
   const remote = branches.find(b => (b.startsWith('origin/') && (b.endsWith('/' + slug) || b === `origin/${slug}`)));
 
