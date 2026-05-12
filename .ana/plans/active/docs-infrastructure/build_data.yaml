@@ -1,0 +1,17 @@
+schema: 1
+concerns:
+  - summary: "source.config.ts schema uses frontmatterSchema.extend() — Zod 4 .extend() API may differ from Zod 3"
+    file: "website/source.config.ts"
+    severity: observation
+    suggested_action: monitor
+  - summary: "Vite peer dependency warning from fumadocs-mdx (wants 7.x/8.x, got 6.4.2)"
+    severity: observation
+    suggested_action: monitor
+  - summary: "Page tree injections (Reference, Proof Chain sections) omitted — attachFolder API does not exist in fumadocs-core 16.x loader()"
+    file: "website/lib/source.ts"
+    severity: debt
+    suggested_action: scope
+  - summary: "eslint.config.mjs modified to ignore .source/ — not in original spec file list"
+    file: "website/eslint.config.mjs"
+    severity: observation
+    suggested_action: accept
