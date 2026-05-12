@@ -36,5 +36,20 @@
     "packages/cli/src/utils/worktree.ts",
     "packages/cli/tests/commands/work.test.ts",
     "packages/cli/tests/utils/worktree.test.ts"
-  ]
+  ],
+  "verify_started_at": "2026-05-12T17:26:32.901Z",
+  "verify_agent": "ana-verify",
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:16753070a4ce245e8922daaa810df0b901592c29783bed28971e03502923d309",
+    "run_at": "2026-05-12T17:32:15.023Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-12T17:32:15.062Z",
+    "hash": "sha256:29b33bedf71ebd93b648d59eecd54d08cf7d97e4e74f48d7b5f87625a74befde"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-12T17:32:15.063Z",
+    "hash": "sha256:af4351dca4760635e2a430bf8558477c2b99b855eae884bb1761a927d031b442"
+  }
 }
