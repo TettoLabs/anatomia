@@ -71,7 +71,7 @@ export default function SkillIndexPage() {
             marginBottom: "24px",
           }}
         >
-          <span><b>Skills</b> · 8</span>
+          <span><b>Skills</b> · {skills.length}</span>
           <span><b>Template path</b> · .claude/skills/&#123;name&#125;/SKILL.md</span>
         </div>
 

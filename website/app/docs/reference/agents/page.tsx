@@ -73,7 +73,7 @@ export default function AgentIndexPage() {
             marginBottom: "24px",
           }}
         >
-          <span><b>Agents</b> · 6</span>
+          <span><b>Agents</b> · {agents.length}</span>
           <span><b>Template path</b> · .claude/agents/</span>
         </div>
 
