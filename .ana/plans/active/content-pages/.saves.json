@@ -49,7 +49,14 @@
     "website/components/docs/content/ResourceStrip.tsx",
     "website/components/docs/layout/DocsNav.tsx",
     "website/components/docs/layout/RightRail.tsx",
+    "website/content/docs/concepts/artifacts.mdx",
+    "website/content/docs/concepts/context.mdx",
+    "website/content/docs/concepts/contract.mdx",
+    "website/content/docs/concepts/findings.mdx",
     "website/content/docs/concepts/meta.json",
+    "website/content/docs/concepts/pipeline.mdx",
+    "website/content/docs/concepts/skills.mdx",
+    "website/content/docs/concepts/toolbelt.mdx",
     "website/content/docs/guides/meta.json",
     "website/content/docs/index.mdx",
     "website/content/docs/meta.json",
@@ -69,5 +76,13 @@
   "verify-data-1": {
     "saved_at": "2026-05-13T00:41:02.189Z",
     "hash": "sha256:3d2f74646d20d0f8a1d2e76e2495e9203d4c48b53d52e3064ff2afe8950f79ea"
+  },
+  "build-report-2": {
+    "saved_at": "2026-05-13T00:54:53.498Z",
+    "hash": "sha256:ea4dcfd0b8fe580fdfffbf9200fddbbc3535bdebbeef6e8756005ffcb9bd2125"
+  },
+  "build-data-2": {
+    "saved_at": "2026-05-13T00:54:53.499Z",
+    "hash": "sha256:7be8b14ae95bc775fcc432715b0730de24213f74369bab1330fc1c17ed74a385"
   }
 }
