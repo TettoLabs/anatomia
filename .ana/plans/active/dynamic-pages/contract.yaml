@@ -1,0 +1,445 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Dynamic Pages — Reference & Proof Chain"
+
+assertions:
+  # ── Phase 1: Prerequisites ──
+
+  - id: A001
+    says: "Keyword fallback categorization uses word boundaries so partial matches like 'scannable' don't trigger 'scan'"
+    block: "word boundary regex fix"
+    target: "extract-docs-data.keyword-fallback-regex"
+    matcher: "contains"
+    value: "\\b"
+
+  - id: A002
+    says: "Sidebar reference links point to the blueprint route paths"
+    block: "transformer URL fix"
+    target: "source.ts.reference-urls"
+    matcher: "contains"
+    value: "/docs/reference/cli"
+
+  - id: A003
+    says: "Sidebar reference link for agents uses the blueprint route"
+    block: "transformer URL fix"
+    target: "source.ts.reference-urls"
+    matcher: "contains"
+    value: "/docs/reference/agents"
+
+  # ── Phase 1: Extraction Pipeline Extension ──
+
+  - id: A004
+    says: "Proof entries include the full assertions array with id, says, and status for each assertion"
+    block: "proof entry has assertions array"
+    target: "proofEntry.assertions"
+    matcher: "exists"
+
+  - id: A005
+    says: "Proof entries include the full findings array for downstream components"
+    block: "proof entry has findings array"
+    target: "proofEntry.findings"
+    matcher: "exists"
+
+  - id: A006
+    says: "Proof entries include timing breakdown with think, plan, build, and verify stages"
+    block: "proof entry has timing object"
+    target: "proofEntry.timing"
+    matcher: "exists"
+
+  - id: A007
+    says: "Missing timing stages default to zero so components never receive undefined"
+    block: "timing defaults to zero"
+    target: "proofEntry.timing.verify"
+    matcher: "equals"
+    value: 0
+
+  - id: A008
+    says: "Contract object is normalized to the three common fields regardless of source shape"
+    block: "contract normalization"
+    target: "proofEntry.contract.unsatisfied"
+    matcher: "exists"
+
+  - id: A009
+    says: "Proof entries include SHA-256 hashes for integrity verification"
+    block: "proof entry has hashes"
+    target: "proofEntry.hashes"
+    matcher: "exists"
+
+  - id: A010
+    says: "Finding severity counts are pre-computed so components don't need to aggregate"
+    block: "proof entry has severity counts"
+    target: "proofEntry.findingSeverity"
+    matcher: "exists"
+
+  - id: A011
+    says: "Duration is extracted as total minutes for consistent formatting"
+    block: "proof entry has duration"
+    target: "proofEntry.duration"
+    matcher: "exists"
+
+  - id: A012
+    says: "Adjacent proof slugs are pre-computed so detail pages don't need index lookups"
+    block: "proof entry has adjacent slugs"
+    target: "proofEntry.nextSlug"
+    matcher: "exists"
+
+  - id: A013
+    says: "Findings without a severity field default to observation"
+    block: "finding severity default"
+    target: "proofEntry.findings[0].severity"
+    matcher: "equals"
+    value: "observation"
+
+  - id: A014
+    says: "Skill templates include whether they are conditional or core"
+    block: "skill template has conditional flag"
+    target: "skillTemplate.conditional"
+    matcher: "exists"
+
+  - id: A015
+    says: "Skill templates include the rule count for index page display"
+    block: "skill template has rules count"
+    target: "skillTemplate.rules"
+    matcher: "exists"
+
+  - id: A016
+    says: "Skill templates include the full markdown body for detail pages"
+    block: "skill template has content"
+    target: "skillTemplate.content"
+    matcher: "exists"
+
+  - id: A017
+    says: "Agent templates include the role field for card display"
+    block: "agent template has role"
+    target: "agentTemplate.role"
+    matcher: "exists"
+
+  # ── Phase 1: Reference Pages ──
+
+  - id: A018
+    says: "The CLI reference page builds successfully at its route"
+    block: "CLI reference page builds"
+    target: "build.route./docs/reference/cli"
+    matcher: "exists"
+
+  - id: A019
+    says: "The CLI reference page displays command groups from extracted data"
+    block: "CLI reference shows commands"
+    target: "cli-page.commandGroups"
+    matcher: "greater"
+    value: 0
+
+  - id: A020
+    says: "The agent templates index page builds successfully"
+    block: "agent index page builds"
+    target: "build.route./docs/reference/agents"
+    matcher: "exists"
+
+  - id: A021
+    says: "Agent index shows pipeline and system agent sections"
+    block: "agent index has sections"
+    target: "agent-index.sections"
+    matcher: "equals"
+    value: 2
+
+  - id: A022
+    says: "Agent detail pages build for all six agents"
+    block: "agent detail pages build"
+    target: "build.routes.agent-details"
+    matcher: "equals"
+    value: 6
+
+  - id: A023
+    says: "Agent detail pages include a working GitHub link to the actual template file"
+    block: "agent detail has GitHub link"
+    target: "agent-detail.githubLink"
+    matcher: "contains"
+    value: "packages/cli/templates/.claude/agents/"
+
+  - id: A024
+    says: "The skill files index page builds successfully"
+    block: "skill index page builds"
+    target: "build.route./docs/reference/skills"
+    matcher: "exists"
+
+  - id: A025
+    says: "Skill index shows core and conditional skill sections"
+    block: "skill index has sections"
+    target: "skill-index.sections"
+    matcher: "equals"
+    value: 2
+
+  - id: A026
+    says: "Skill detail pages build for all eight skills"
+    block: "skill detail pages build"
+    target: "build.routes.skill-details"
+    matcher: "equals"
+    value: 8
+
+  - id: A027
+    says: "Skill detail pages include a working GitHub link to the actual template file"
+    block: "skill detail has GitHub link"
+    target: "skill-detail.githubLink"
+    matcher: "contains"
+    value: "packages/cli/templates/.claude/skills/"
+
+  - id: A028
+    says: "The context files reference page builds successfully"
+    block: "context reference page builds"
+    target: "build.route./docs/reference/context"
+    matcher: "exists"
+
+  - id: A029
+    says: "All reference pages use the docs-content-area class on their content container"
+    block: "reference pages use content area class"
+    target: "reference-pages.contentClass"
+    matcher: "equals"
+    value: "docs-content-area"
+
+  - id: A030
+    says: "All reference pages render their own RightRail component"
+    block: "reference pages have right rail"
+    target: "reference-pages.rightRail"
+    matcher: "truthy"
+
+  - id: A031
+    says: "Reference card grids collapse responsively at the documented breakpoints"
+    block: "reference grid responsive rules"
+    target: "docs.css.ref-grid-responsive"
+    matcher: "exists"
+
+  - id: A032
+    says: "The full website build succeeds with all Phase 1 routes"
+    block: "website build succeeds"
+    target: "build.exit-code"
+    matcher: "equals"
+    value: 0
+
+  # ── Phase 2: Proof Explorer ──
+
+  - id: A033
+    says: "The proof explorer page builds successfully at its route"
+    block: "proof explorer page builds"
+    target: "build.route./docs/proof"
+    matcher: "exists"
+
+  - id: A034
+    says: "The explorer is a client component with interactive filter and sort state"
+    block: "explorer is client component"
+    target: "ProofExplorer.directive"
+    matcher: "equals"
+    value: "use client"
+
+  - id: A035
+    says: "Filter chips are computed from the actual proof data, not hardcoded"
+    block: "filter chips computed from data"
+    target: "explorer.stageChips"
+    matcher: "greater"
+    value: 0
+
+  - id: A036
+    says: "The explorer table has all seven required columns"
+    block: "explorer table columns"
+    target: "explorer.columns"
+    matcher: "equals"
+    value: 7
+
+  - id: A037
+    says: "Assertions, Findings, Duration, and Shipped columns are sortable"
+    block: "sortable columns"
+    target: "explorer.sortableColumns"
+    matcher: "equals"
+    value: 4
+
+  - id: A038
+    says: "The explorer hides the right rail and uses full-width content"
+    block: "explorer full width"
+    target: "proof-page.contentClass"
+    matcher: "contains"
+    value: "docs-content-full"
+
+  - id: A039
+    says: "Explorer table rows navigate to the proof detail page when clicked"
+    block: "clickable explorer rows"
+    target: "explorer.rowClick"
+    matcher: "exists"
+
+  - id: A040
+    says: "The filter bar shows how many proofs are currently visible out of the total"
+    block: "showing X of Y counter"
+    target: "explorer.showingCounter"
+    matcher: "exists"
+
+  # ── Phase 2: Proof Detail Pages ──
+
+  - id: A041
+    says: "Proof detail pages are statically generated for every proof entry"
+    block: "proof detail static generation"
+    target: "proof-detail.generateStaticParams"
+    matcher: "exists"
+
+  - id: A042
+    says: "Proof detail pages display the hero section with verdict, score, and findings breakdown"
+    block: "proof hero renders"
+    target: "proof-detail.ProofHero"
+    matcher: "exists"
+
+  - id: A043
+    says: "The pipeline Gantt chart shows four timing bars with proportional widths"
+    block: "pipeline Gantt renders"
+    target: "proof-detail.PipelineGantt"
+    matcher: "exists"
+
+  - id: A044
+    says: "The Gantt chart handles entries with zero-duration stages without breaking"
+    block: "Gantt handles zero stages"
+    target: "PipelineGantt.zeroStageHandling"
+    matcher: "exists"
+
+  - id: A045
+    says: "The assertion ledger shows the first eight assertions with a toggle to reveal the rest"
+    block: "assertion ledger with toggle"
+    target: "proof-detail.AssertionLedger"
+    matcher: "exists"
+
+  - id: A046
+    says: "Finding cards display severity badges with correct colors for risk, debt, and observation"
+    block: "finding severity badges"
+    target: "FindingsList.severityBadges"
+    matcher: "exists"
+
+  - id: A047
+    says: "Risk findings display with a red badge"
+    block: "risk badge color"
+    target: "fnd-sev.risk.color"
+    matcher: "contains"
+    value: "--fail"
+
+  - id: A048
+    says: "Debt findings display with an amber badge"
+    block: "debt badge color"
+    target: "fnd-sev.debt.color"
+    matcher: "contains"
+    value: "--warn"
+
+  - id: A049
+    says: "Observation findings display with a blue badge"
+    block: "observation badge color"
+    target: "fnd-sev.obs.color"
+    matcher: "contains"
+    value: "--info"
+
+  - id: A050
+    says: "The integrity seal displays all hash keys including phase-specific ones"
+    block: "integrity seal renders hashes"
+    target: "proof-detail.IntegritySeal"
+    matcher: "exists"
+
+  - id: A051
+    says: "Each proof detail page shows navigation links to the previous and next proof"
+    block: "adjacent proof navigation"
+    target: "proof-detail.adjacentNav"
+    matcher: "exists"
+
+  - id: A052
+    says: "The right rail on proof detail pages shows 'On this proof' instead of the standard label"
+    block: "proof right rail variant"
+    target: "RightRail.variant"
+    matcher: "equals"
+    value: "proof"
+
+  - id: A053
+    says: "Proof detail right rail shows proof-specific links instead of the standard Ask AI links"
+    block: "proof right rail links"
+    target: "RightRail.proofLinks"
+    matcher: "exists"
+
+  - id: A054
+    says: "Duration formatting shows hours and minutes for durations over 60 minutes"
+    block: "duration formatting"
+    target: "formatDuration.over60"
+    matcher: "contains"
+    value: "h"
+
+  - id: A055
+    says: "Duration formatting shows only minutes for durations under 60 minutes"
+    block: "duration formatting short"
+    target: "formatDuration.under60"
+    matcher: "contains"
+    value: "m"
+
+  # ── Phase 2: Responsive & Mobile ──
+
+  - id: A056
+    says: "The explorer table scrolls horizontally on mobile with a sticky first column"
+    block: "explorer mobile scroll"
+    target: "docs.css.explorer-mobile"
+    matcher: "exists"
+
+  - id: A057
+    says: "Proof components have className props for CSS targeting"
+    block: "proof component className props"
+    target: "proof-components.className"
+    matcher: "exists"
+
+  - id: A058
+    says: "The full website build succeeds with all proof routes statically generated"
+    block: "final build succeeds"
+    target: "build.exit-code"
+    matcher: "equals"
+    value: 0
+
+file_changes:
+  # Phase 1
+  - path: "website/scripts/extract-docs-data.ts"
+    action: modify
+  - path: "website/lib/docs-data/types.ts"
+    action: modify
+  - path: "website/lib/source.ts"
+    action: modify
+  - path: "website/lib/docs-data/proofs.ts"
+    action: modify
+  - path: "website/lib/docs-data/index.ts"
+    action: modify
+  - path: "website/app/docs/reference/cli/page.tsx"
+    action: create
+  - path: "website/app/docs/reference/agents/page.tsx"
+    action: create
+  - path: "website/app/docs/reference/agents/[name]/page.tsx"
+    action: create
+  - path: "website/app/docs/reference/skills/page.tsx"
+    action: create
+  - path: "website/app/docs/reference/skills/[name]/page.tsx"
+    action: create
+  - path: "website/app/docs/reference/context/page.tsx"
+    action: create
+  - path: "website/components/docs/reference/ReferenceGrid.tsx"
+    action: create
+  - path: "website/components/docs/reference/AgentCard.tsx"
+    action: create
+  - path: "website/components/docs/reference/SkillCard.tsx"
+    action: create
+  - path: "website/components/docs/reference/CommandGroup.tsx"
+    action: create
+  - path: "website/app/docs/docs.css"
+    action: modify
+
+  # Phase 2
+  - path: "website/app/docs/proof/page.tsx"
+    action: create
+  - path: "website/app/docs/proof/[slug]/page.tsx"
+    action: create
+  - path: "website/components/docs/proof/ProofExplorer.tsx"
+    action: create
+  - path: "website/components/docs/proof/ProofHero.tsx"
+    action: create
+  - path: "website/components/docs/proof/PipelineGantt.tsx"
+    action: create
+  - path: "website/components/docs/proof/AssertionLedger.tsx"
+    action: create
+  - path: "website/components/docs/proof/FindingsList.tsx"
+    action: create
+  - path: "website/components/docs/proof/IntegritySeal.tsx"
+    action: create
+  - path: "website/components/docs/layout/RightRail.tsx"
+    action: modify
