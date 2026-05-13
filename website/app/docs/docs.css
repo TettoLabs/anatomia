@@ -368,6 +368,23 @@
     display: none !important;
   }
 
+  /* But show sidebar when inside the mobile slide-over panel */
+  .docs-mobile-sidebar-panel .docs-sidebar {
+    display: block !important;
+    position: static !important;
+    height: auto !important;
+    width: 100% !important;
+    border-right: none !important;
+    padding: 0 !important;
+  }
+
+  /* Hide theme toggle + GitHub + anatomia from navbar on mobile */
+  .docs-nav-theme,
+  .docs-nav-github,
+  .docs-nav-back {
+    display: none !important;
+  }
+
   /* Show hamburger button */
   .docs-mobile-hamburger {
     display: flex !important;
@@ -378,9 +395,8 @@
     display: none !important;
   }
 
-  /* Platform switcher: icon only */
-  .docs-platform-label,
-  .docs-platform-chevron {
+  /* Platform switcher: icon only, keep chevron */
+  .docs-platform-label {
     display: none !important;
   }
 

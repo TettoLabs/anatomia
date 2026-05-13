@@ -79,6 +79,7 @@ export function MobileSidebarToggle() {
       {/* Slide-over sidebar */}
       {open && (
         <div
+          className="docs-mobile-sidebar-panel"
           style={{
             position: "fixed",
             top: "58px",
@@ -90,6 +91,7 @@ export function MobileSidebarToggle() {
             borderRight: "1px solid var(--hairline)",
             overflowY: "auto",
             boxShadow: "var(--shadow)",
+            padding: "22px 14px 30px",
           }}
         >
           <Sidebar />

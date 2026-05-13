@@ -129,11 +129,12 @@ export function DocsNav() {
 
       {/* Column 4: Theme toggle + GitHub + anatomia */}
       <div style={{ justifySelf: "end", display: "flex", alignItems: "center", gap: "4px" }}>
-        <ThemeToggle />
+        <span className="docs-nav-theme"><ThemeToggle /></span>
         <a
           href="https://github.com/TettoLabs/anatomia"
           target="_blank"
           rel="noopener noreferrer"
+          className="docs-nav-github"
           style={{
             padding: "6px 8px",
             color: "var(--ink-60)",
