@@ -62,7 +62,7 @@ export function DocsNav() {
           style={{
             fontFamily: "var(--font-mono)",
             fontSize: "11px",
-            color: "var(--ink-45)",
+            color: "var(--fg)",
             fontWeight: 400,
           }}
         >
