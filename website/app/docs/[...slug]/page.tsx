@@ -51,7 +51,36 @@ export default async function DocsPage({ params }: DocsPageProps) {
     <div style={{ display: "flex" }}>
       <article className="docs-prose min-w-0 flex-1" style={{ padding: "32px 40px 96px" }}>
         <Breadcrumb segments={segments} />
-        <h1>{page.data.title}</h1>
+        {/* Title — matches supermock h1.page-title */}
+        <h1
+          style={{
+            fontFamily: "var(--font-serif)",
+            fontWeight: 500,
+            fontSize: "36px",
+            lineHeight: 1.1,
+            letterSpacing: "-0.02em",
+            marginBottom: "14px",
+            textWrap: "balance",
+            color: "var(--fg)",
+          }}
+        >
+          {page.data.title}
+        </h1>
+        {/* Lede — matches supermock .lede */}
+        {page.data.description && (
+          <p
+            style={{
+              fontSize: "15.5px",
+              lineHeight: 1.55,
+              color: "var(--ink-75)",
+              marginBottom: "24px",
+              maxWidth: "62ch",
+              textWrap: "pretty",
+            }}
+          >
+            {page.data.description}
+          </p>
+        )}
         <MetaRow
           readingTime={page.data.readingTime}
           lastReviewed={page.data.lastReviewed}

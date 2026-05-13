@@ -5,10 +5,6 @@ readingTime: 6
 lastReviewed: May 2026
 ---
 
-# The toolbelt
-
-Each agent invokes a specific set of `ana` CLI commands — the toolbelt. These commands validate artifact structure, compute integrity hashes, and reject malformed output before it enters the pipeline. The CLI is the enforcement layer that makes "verified over trusted" mechanical.
-
 ## What the toolbelt is
 
 Claude Code gives every agent baseline tools — file read, file write, bash, web fetch. The toolbelt is the Anatomia layer on top: the `ana` CLI commands agents invoke to manage work, save artifacts, verify seals, and create PRs. Agents still use git directly for code commits during Build — but pipeline operations go through the CLI, which validates structure and records integrity hashes.

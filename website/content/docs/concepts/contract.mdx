@@ -5,10 +5,6 @@ readingTime: 7
 lastReviewed: May 2026
 ---
 
-# The contract
-
-A contract is the seal between Plan and Build. It defines "done" as a list of assertions with matchers — mechanical, testable, unambiguous. Once sealed, it can't be changed. Both Build and Verify work against the frozen version.
-
 ## What a contract is
 
 A YAML file with three parts: header fields (`version`, `sealed_by`, `feature`), an `assertions` array, and a `file_changes` list declaring which files will be created, modified, or deleted. Plan writes it. The CLI validates the structure and seals it with a content hash.

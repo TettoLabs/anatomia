@@ -5,10 +5,6 @@ readingTime: 6
 lastReviewed: May 2026
 ---
 
-# Artifacts
-
-Eight artifact types define a pipeline run. Each is written by one agent, read by specific others, and sealed with a SHA-256 hash at save time. Together they form a complete, auditable record of intent to implementation.
-
 ## Where artifacts live
 
 All artifacts for a work item live in a single directory. During work: `.ana/plans/active/{slug}/`. After `ana work complete`: archived to `.ana/plans/completed/{slug}/`. Artifacts are committed to the artifact branch configured in `ana.json`. Everything is plain text — markdown and YAML, human-readable, version-controlled.
