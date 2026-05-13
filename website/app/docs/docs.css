@@ -447,18 +447,22 @@
   nav[aria-label="Documentation"] > div:nth-child(3) { order: 2; flex: 1; } /* search → middle, flex */
   nav[aria-label="Documentation"] > div:nth-child(4) { order: 4; } /* right icons (hidden) */
 
-  /* Search: compact but still visible with some width */
+  /* Search: takes available space between logo and platform icon */
   .docs-nav-search {
     width: auto !important;
     max-width: none !important;
-    min-width: 0 !important;
+    min-width: 80px !important;
     flex: 1 !important;
     padding: 6px 10px !important;
+    justify-content: flex-start !important;
   }
   .docs-nav-search-text {
-    display: none !important;
+    display: block !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px !important;
   }
-  /* Keep kbd badge on tablet, hide on small mobile */
   .docs-nav-search-kbd {
     display: none !important;
   }

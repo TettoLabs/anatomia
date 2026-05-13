@@ -80,7 +80,7 @@ export function PlatformSwitcher() {
           style={{
             position: "absolute",
             top: "calc(100% + 6px)",
-            left: 0,
+            right: 0,
             minWidth: "180px",
             padding: "4px",
             background: "var(--bg-card)",
