@@ -50,6 +50,7 @@ export class DocsErrorBoundary extends Component<Props, State> {
             This page encountered an error while rendering. Try refreshing,
             or go back to the docs home page.
           </p>
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- Using <a> intentionally: error boundary catches when React tree is broken, <Link> depends on Next.js router which may be unavailable */}
           <a
             href="/docs"
             className="inline-block rounded-[var(--radius-sm)] px-4 py-2 font-mono text-[13px] font-medium"
