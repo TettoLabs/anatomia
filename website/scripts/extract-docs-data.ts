@@ -150,12 +150,19 @@ function extractProofEntries(): ProofEntry[] {
 
     // Normalize timing — default missing stages to 0
     const rawTiming = entry.timing || {};
+    const stageThink = rawTiming.think ?? 0;
+    const stagePlan = rawTiming.plan ?? 0;
+    const stageBuild = rawTiming.build ?? 0;
+    const stageVerify = rawTiming.verify ?? 0;
+    const rawTotal = rawTiming.total_minutes ?? 0;
+    // If total_minutes is 0 but stages have data, compute from stages
+    const computedTotal = stageThink + stagePlan + stageBuild + stageVerify;
     const timing = {
-      think: rawTiming.think ?? 0,
-      plan: rawTiming.plan ?? 0,
-      build: rawTiming.build ?? 0,
-      verify: rawTiming.verify ?? 0,
-      totalMinutes: rawTiming.total_minutes ?? 0,
+      think: stageThink,
+      plan: stagePlan,
+      build: stageBuild,
+      verify: stageVerify,
+      totalMinutes: rawTotal > 0 ? rawTotal : computedTotal,
     };
 
     // Normalize contract — only 3 common fields
