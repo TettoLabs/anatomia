@@ -1,0 +1,51 @@
+schema: 1
+findings:
+  - category: code
+    summary: "formatDuration defined but unused in PipelineGantt — duration column uses raw `{value}m` instead"
+    file: "website/components/docs/proof/PipelineGantt.tsx"
+    line: 8
+    severity: debt
+    suggested_action: scope
+    related_assertions: ["A054", "A055"]
+
+  - category: code
+    summary: "formatDuration duplicated in 4 files (ProofExplorer, ProofHero, PipelineGantt, detail page) — extract to shared utility"
+    file: "website/components/docs/proof/ProofExplorer.tsx"
+    line: 16
+    severity: debt
+    suggested_action: scope
+
+  - category: code
+    summary: "PipelineGantt left-offset uses Math.round per-stage — cumulative rounding can exceed 100% and cause visual overflow on entries with many small stages"
+    file: "website/components/docs/proof/PipelineGantt.tsx"
+    line: 54
+    severity: observation
+    suggested_action: monitor
+
+  - category: code
+    summary: "RightRail 'Download artifacts' and 'Open in Claude' links point to '#' — placeholder hrefs with no target"
+    file: "website/components/docs/layout/RightRail.tsx"
+    line: 152
+    severity: observation
+    suggested_action: scope
+
+  - category: code
+    summary: "IntegritySeal last hash row retains bottom border — CSS rule `.integ-row:last-child { border-bottom: 0 }` from supermock not applied since rows use inline styles"
+    file: "website/components/docs/proof/IntegritySeal.tsx"
+    line: 24
+    severity: observation
+    suggested_action: accept
+
+  - category: code
+    summary: "FindingsList shows max 5 findings with no toggle to expand — AssertionLedger has expand/collapse but FindingsList truncates permanently"
+    file: "website/components/docs/proof/FindingsList.tsx"
+    line: 28
+    severity: observation
+    suggested_action: monitor
+
+  - category: code
+    summary: "ProofExplorer inline styles heavily duplicated across 7 column headers — same 9-property object repeated per th element"
+    file: "website/components/docs/proof/ProofExplorer.tsx"
+    line: 194
+    severity: debt
+    suggested_action: accept
