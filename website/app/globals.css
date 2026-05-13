@@ -53,9 +53,7 @@
   --color-ink-60: var(--ink-60);
   --color-ink-45: var(--ink-45);
   --color-ink-30: var(--ink-30);
-  --color-ink-25: var(--ink-25);
   --color-ink-15: var(--ink-15);
-  --color-code-bg: var(--code-bg);
 
   /* Layout */
   --spacing-section: 116px;
@@ -94,26 +92,13 @@
   --ink-45: rgba(11, 11, 16, 0.48);
   --ink-30: rgba(11, 11, 16, 0.32);
   --ink-15: rgba(11, 11, 16, 0.15);
-  --ink-25: rgba(11, 11, 16, 0.18);
-  --code-bg: rgba(11, 11, 16, 0.04);
   --btn-2-bg: transparent;
   --btn-2-border: rgba(11, 11, 16, 0.22);
   --btn-2-text: #0b0b10;
   --terminal-bg: #0b0b10;
   --terminal-fg: #F7F7F4;
   --paper-texture: radial-gradient(rgba(11, 11, 16, 0.045) 1px, transparent 1px);
-  --brand-light: #9B2E2E;
-  --info: #1d4ed8;
-  --pass: #15803d;
-  --pass-bg: rgba(21, 128, 61, 0.07);
-  --pass-border: rgba(21, 128, 61, 0.22);
-  --warn: #b45309;
-  --warn-bg: rgba(180, 83, 9, 0.06);
-  --fail: #dc2626;
-  --fail-bg: rgba(220, 38, 38, 0.06);
-  --info-bg: rgba(29, 78, 216, 0.05);
   --brand-mark: var(--color-brand);
-  --shadow: 0 1px 2px rgba(11, 11, 16, 0.04), 0 8px 24px -8px rgba(11, 11, 16, 0.10);
 }
 
 /* ===================================================================
@@ -136,26 +121,13 @@
   --ink-45: rgba(255, 255, 255, 0.50);
   --ink-30: rgba(255, 255, 255, 0.34);
   --ink-15: rgba(255, 255, 255, 0.16);
-  --ink-25: rgba(255, 255, 255, 0.22);
-  --code-bg: rgba(255, 255, 255, 0.04);
   --btn-2-bg: rgba(255, 255, 255, 0.04);
   --btn-2-border: rgba(255, 255, 255, 0.18);
   --btn-2-text: #F7F7F4;
   --terminal-bg: #050507;
   --terminal-fg: #F7F7F4;
   --paper-texture: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-  --brand-light: #9B2E2E;
-  --info: #93bbfd;
-  --pass: #4ade80;
-  --pass-bg: rgba(74, 222, 128, 0.10);
-  --pass-border: rgba(74, 222, 128, 0.25);
-  --warn: #fbbf24;
-  --warn-bg: rgba(251, 191, 36, 0.08);
-  --fail: #f87171;
-  --fail-bg: rgba(248, 113, 113, 0.08);
-  --info-bg: rgba(147, 187, 253, 0.07);
   --brand-mark: var(--color-brand);
-  --shadow: 0 1px 0 rgba(255, 255, 255, 0.04), 0 8px 24px -8px rgba(0, 0, 0, 0.6);
 }
 
 /* ===================================================================

@@ -11,7 +11,7 @@ type TreeNode = (typeof source.pageTree)["children"][number];
 
 /**
  * MobileSidebarToggle — hamburger + full-viewport overlay for docs mobile.
- * Pattern matches NavMobile: createPortal to body, fixed inset-0, full bg.
+ * Pattern matches NavMobile from the marketing site.
  * Only visible at ≤880px via CSS.
  */
 export function MobileSidebarToggle() {
@@ -23,7 +23,6 @@ export function MobileSidebarToggle() {
 
   return (
     <>
-      {/* Hamburger button — shown at ≤880px by CSS */}
       <button
         className="docs-mobile-hamburger"
         onClick={toggle}
@@ -54,10 +53,8 @@ export function MobileSidebarToggle() {
         )}
       </button>
 
-      {/* Full-viewport overlay — portaled to body */}
       {open && typeof document !== "undefined" && createPortal(
         <div
-          className="docs-mobile-overlay"
           style={{
             position: "fixed",
             inset: 0,
@@ -65,6 +62,7 @@ export function MobileSidebarToggle() {
             display: "flex",
             flexDirection: "column",
             background: "var(--bg)",
+            overflow: "hidden",
           }}
         >
           {/* Header */}
@@ -75,6 +73,7 @@ export function MobileSidebarToggle() {
               justifyContent: "space-between",
               padding: "14px 24px",
               borderBottom: "1px solid var(--hairline)",
+              flexShrink: 0,
             }}
           >
             <Link
@@ -129,21 +128,21 @@ export function MobileSidebarToggle() {
             </div>
           </div>
 
-          {/* Sidebar navigation */}
-          <nav
+          {/* Navigation — vertical scroll */}
+          <div
             style={{
               flex: 1,
               overflowY: "auto",
-              padding: "22px 24px 30px",
+              overflowX: "hidden",
+              padding: "16px 24px 24px",
             }}
-            aria-label="Documentation"
           >
             {tree.children.map((node, i) => (
               <MobileNavNode key={i} node={node} pathname={pathname} close={close} depth={0} />
             ))}
-          </nav>
+          </div>
 
-          {/* Bottom links */}
+          {/* Footer */}
           <div
             style={{
               padding: "16px 24px",
@@ -151,6 +150,7 @@ export function MobileSidebarToggle() {
               display: "flex",
               alignItems: "center",
               gap: "16px",
+              flexShrink: 0,
             }}
           >
             <a
@@ -158,8 +158,18 @@ export function MobileSidebarToggle() {
               target="_blank"
               rel="noopener noreferrer"
               onClick={close}
-              style={{ color: "var(--ink-60)", fontSize: "13px", textDecoration: "none" }}
+              style={{
+                color: "var(--ink-60)",
+                fontSize: "13px",
+                textDecoration: "none",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+              }}
             >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
+              </svg>
               GitHub
             </a>
             <a
@@ -179,6 +189,11 @@ export function MobileSidebarToggle() {
   );
 }
 
+/**
+ * Mobile nav node — renders vertically, collapsible folders.
+ * Get Started pages are always visible (separator + pages).
+ * Folders default COLLAPSED on mobile except when a child is active.
+ */
 function MobileNavNode({
   node,
   pathname,
@@ -190,7 +205,16 @@ function MobileNavNode({
   close: () => void;
   depth: number;
 }) {
-  const [open, setOpen] = useState(true);
+  // Check if any child in this folder is active
+  const hasActiveChild = node.type === "folder"
+    ? node.children.some((c) =>
+        c.type === "page" ? pathname === c.url :
+        c.type === "folder" ? c.children.some((gc) => gc.type === "page" && pathname === gc.url) :
+        false
+      )
+    : false;
+
+  const [open, setOpen] = useState(hasActiveChild);
 
   if (node.type === "separator") {
     return (
@@ -202,7 +226,7 @@ function MobileNavNode({
           letterSpacing: "0.06em",
           color: "var(--ink-45)",
           padding: "4px 0 8px",
-          marginTop: depth === 0 ? "18px" : "8px",
+          marginTop: "20px",
         }}
       >
         {node.name}
@@ -218,14 +242,14 @@ function MobileNavNode({
         onClick={close}
         style={{
           display: "block",
-          padding: "8px 12px",
+          padding: "10px 12px",
           borderRadius: "var(--radius-sm)",
-          fontSize: "15px",
+          fontSize: "16px",
           color: active ? "var(--fg)" : "var(--ink-60)",
           background: active ? "var(--brand-soft)" : "transparent",
           fontWeight: active ? 500 : 400,
           textDecoration: "none",
-          marginLeft: depth > 0 ? "12px" : "0",
+          marginLeft: depth > 0 ? "8px" : "0",
         }}
       >
         {node.name}
@@ -234,6 +258,7 @@ function MobileNavNode({
   }
 
   if (node.type === "folder") {
+    const isTopLevel = depth === 0;
     return (
       <div>
         <button
@@ -241,26 +266,26 @@ function MobileNavNode({
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "6px",
+            gap: "8px",
             width: "100%",
-            padding: depth === 0 ? "4px 0 8px" : "8px 12px",
-            marginTop: depth === 0 ? "18px" : "0",
+            padding: isTopLevel ? "4px 0 8px" : "10px 12px",
+            marginTop: isTopLevel ? "20px" : "0",
             border: "none",
             background: "none",
             cursor: "pointer",
-            fontSize: depth === 0 ? "11px" : "15px",
-            fontWeight: depth === 0 ? 600 : 400,
-            textTransform: depth === 0 ? "uppercase" : "none",
-            letterSpacing: depth === 0 ? "0.06em" : "normal",
-            color: depth === 0 ? "var(--ink-45)" : "var(--ink-60)",
+            fontSize: isTopLevel ? "11px" : "16px",
+            fontWeight: isTopLevel ? 600 : 400,
+            textTransform: isTopLevel ? "uppercase" : "none",
+            letterSpacing: isTopLevel ? "0.06em" : "normal",
+            color: isTopLevel ? "var(--ink-45)" : "var(--ink-60)",
             fontFamily: "inherit",
             textAlign: "left",
           }}
           aria-expanded={open}
         >
           <svg
-            width="8"
-            height="8"
+            width="10"
+            height="10"
             viewBox="0 0 10 10"
             fill="none"
             stroke="currentColor"
@@ -276,7 +301,7 @@ function MobileNavNode({
           <span>{node.name}</span>
         </button>
         {open && (
-          <div style={{ marginLeft: depth === 0 ? "0" : "12px" }}>
+          <div style={{ marginLeft: isTopLevel ? "0" : "8px" }}>
             {node.children.map((child, i) => (
               <MobileNavNode key={i} node={child} pathname={pathname} close={close} depth={depth + 1} />
             ))}
