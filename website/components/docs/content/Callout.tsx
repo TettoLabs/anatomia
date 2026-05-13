@@ -26,30 +26,44 @@ const variantStyles: Record<
   },
 };
 
+/**
+ * Callout — matches supermock .callout exactly.
+ * Flex row: label (mono 10px uppercase) + content.
+ * margin: 8px 0 22px. border + border-left colored. bg-card.
+ * Children p: 13.5px, line-height 1.55, ink-80, margin 0.
+ */
 export function Callout({ variant = "note", children }: CalloutProps) {
   const styles = variantStyles[variant];
 
   return (
     <div
       role="note"
-      className="my-[8px_0_22px] rounded-[var(--radius-md)] text-[13.5px] leading-[1.55]"
+      className="docs-callout"
       style={{
         display: "flex",
         gap: "12px",
         padding: "14px 16px",
-        border: "1px solid var(--border-soft)",
+        border: "1px solid var(--border)",
         borderLeft: `3px solid ${styles.borderColor}`,
         background: "var(--bg-card)",
-        color: "var(--ink-80, var(--fg))",
+        borderRadius: "var(--radius-md)",
+        margin: "8px 0 22px",
+        fontSize: "13.5px",
+        lineHeight: 1.55,
+        color: "var(--ink-75)",
       }}
     >
       <span
-        className="shrink-0 font-mono text-[10px] font-semibold uppercase"
         style={{
+          fontFamily: "var(--font-mono)",
+          fontSize: "10px",
+          fontWeight: 600,
+          textTransform: "uppercase",
           letterSpacing: "0.06em",
           color: styles.labelColor,
           paddingTop: "3px",
           whiteSpace: "nowrap",
+          flexShrink: 0,
         }}
       >
         {LABELS[variant]}

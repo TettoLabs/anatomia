@@ -105,9 +105,14 @@
   opacity: 1 !important;
 }
 
-/* Callout — remove bottom margin on last paragraph inside callout */
-.docs-prose [role="note"] p:last-child {
-  margin-bottom: 0;
+/* Callout — force children to inherit callout sizing, remove margins.
+   Matches supermock .callout p { margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--ink-80) } */
+.docs-callout p {
+  margin: 0 !important;
+  font-size: 13.5px !important;
+  line-height: 1.55 !important;
+  color: var(--ink-75) !important;
+  max-width: none !important;
 }
 
 /* Copy button hover — matches supermock .code-head .copy:hover */
@@ -239,6 +244,7 @@
 .docs-prose ol {
   margin: 0 0 16px 18px;
   padding: 0;
+  list-style: decimal;
 }
 
 .docs-prose ol li {
