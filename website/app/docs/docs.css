@@ -380,6 +380,18 @@
 }
 
 /* -------------------------------------------------------------------
+   REFERENCE CARDS — matches supermock .ref-grid, .ref-card
+   ------------------------------------------------------------------- */
+.docs-ref-card:hover {
+  border-color: var(--brand-light) !important;
+}
+
+/* Full-width content area (no right rail padding) — Phase 2 explorer */
+.docs-content-full {
+  padding-right: 40px !important;
+}
+
+/* -------------------------------------------------------------------
    RESPONSIVE COLLAPSE
    ------------------------------------------------------------------- */
 
@@ -510,6 +522,13 @@
     align-items: center !important;
     padding: 12px 16px !important;
     gap: 8px !important;
+  }
+}
+
+/* ≤660px: collapse reference grids to single column */
+@media (max-width: 660px) {
+  .docs-ref-grid {
+    grid-template-columns: 1fr !important;
   }
 }
 

@@ -622,14 +622,49 @@ async function extractGotchas(): Promise<GotchaEntry[]> {
 // 6. Context files extraction
 // ---------------------------------------------------------------------------
 
-function extractContextFiles(): ContextFile[] {
-  const contextDir = path.join(MONOREPO_ROOT, '.ana', 'context');
-  const files = ['project-context.md', 'design-principles.md'];
+const CONTEXT_FILE_DEFS: { filename: string; dir: string; path: string; description: string }[] = [
+  {
+    filename: 'project-context.md',
+    dir: 'context',
+    path: '.ana/context/project-context.md',
+    description: 'Product purpose, architecture, domain vocabulary, where to make changes. The file that makes agents understand THIS project.',
+  },
+  {
+    filename: 'design-principles.md',
+    dir: 'context',
+    path: '.ana/context/design-principles.md',
+    description: 'How your team defines "good." Each principle shapes scoping and design decisions. If a principle wouldn\'t change a decision, it doesn\'t belong here.',
+  },
+  {
+    filename: 'scan.json',
+    dir: '',
+    path: '.ana/scan.json',
+    description: 'Machine-detected project data. Stack, file counts, patterns, conventions. Regenerated on every ana scan. Don\'t edit manually.',
+  },
+  {
+    filename: 'ana.json',
+    dir: '',
+    path: '.ana/ana.json',
+    description: 'CLI configuration. Build, test, and lint commands, co-author trailer, artifact branch. Some fields are yours to edit; others are managed by the CLI.',
+  },
+];
 
-  return files.map(filename => {
-    const content = fs.readFileSync(path.join(contextDir, filename), 'utf-8');
-    const name = filename.replace('.md', '');
-    return { name, filename, content };
+function extractContextFiles(): ContextFile[] {
+  const anaDir = path.join(MONOREPO_ROOT, '.ana');
+
+  return CONTEXT_FILE_DEFS.map(def => {
+    const fullPath = def.dir
+      ? path.join(anaDir, def.dir, def.filename)
+      : path.join(anaDir, def.filename);
+    const content = fs.readFileSync(fullPath, 'utf-8');
+    const name = def.filename.replace(/\.(md|json)$/, '');
+    return {
+      name,
+      filename: def.filename,
+      path: def.path,
+      description: def.description,
+      content,
+    };
   });
 }
 
@@ -699,7 +734,7 @@ async function main(): Promise<void> {
   if (agentTemplates.length !== 6) errors.push(`Expected 6 agent templates, got ${agentTemplates.length}`);
   if (skillTemplates.length !== 8) errors.push(`Expected 8 skill templates, got ${skillTemplates.length}`);
   if (gotchas.length === 0) errors.push('No gotchas extracted');
-  if (contextFiles.length !== 2) errors.push(`Expected 2 context files, got ${contextFiles.length}`);
+  if (contextFiles.length !== 4) errors.push(`Expected 4 context files, got ${contextFiles.length}`);
   if (!buildMeta.version) errors.push('Build meta missing version');
 
   if (errors.length > 0) {

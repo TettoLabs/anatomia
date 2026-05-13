@@ -128,6 +128,8 @@ export interface GotchaEntry {
 export interface ContextFile {
   name: string;
   filename: string;
+  path: string;
+  description: string;
   content: string;
 }
 
