@@ -26,5 +26,31 @@
   "spec-3": {
     "saved_at": "2026-05-13T00:00:53.692Z",
     "hash": "sha256:bf7d4fd9007f438fc8af0d668e5f486407a7060eea0ccecde077977eb4c522a2"
-  }
+  },
+  "build_started_at": "2026-05-13T00:01:44.440Z",
+  "build_agent": "ana-build",
+  "build-report-1": {
+    "saved_at": "2026-05-13T00:13:55.028Z",
+    "hash": "sha256:072fb69483d0833bf0ddb6225872413a6ae3a75ce81ed2596cecf19ae1b26742"
+  },
+  "build-data-1": {
+    "saved_at": "2026-05-13T00:13:55.030Z",
+    "hash": "sha256:48ab39e3c1c88632f497c6830185be84c064b214f0dd40adcb720b3f1c4bd679"
+  },
+  "modules_touched": [
+    "website/app/docs/[...slug]/page.tsx",
+    "website/app/docs/page.tsx",
+    "website/components/docs/content/AudienceCards.tsx",
+    "website/components/docs/content/Callout.tsx",
+    "website/components/docs/content/CuratedProofs.tsx",
+    "website/components/docs/content/PipelineDiagram.tsx",
+    "website/components/docs/content/ResourceStrip.tsx",
+    "website/components/docs/layout/DocsNav.tsx",
+    "website/components/docs/layout/RightRail.tsx",
+    "website/content/docs/concepts/meta.json",
+    "website/content/docs/guides/meta.json",
+    "website/content/docs/index.mdx",
+    "website/content/docs/meta.json",
+    "website/content/docs/start.mdx"
+  ]
 }
