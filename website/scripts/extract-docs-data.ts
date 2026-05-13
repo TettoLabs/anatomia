@@ -112,11 +112,11 @@ function categorizeEntry(entry: { modules_touched?: string[]; scope_summary?: st
 
   // Keyword fallback on scope_summary
   const summary = (entry.scope_summary || '').toLowerCase();
-  if (summary.match(/scan|detect/)) return 'Engine';
-  if (summary.match(/command|cli/)) return 'Commands';
-  if (summary.match(/proof|verify|pipeline/)) return 'Pipeline';
-  if (summary.match(/template/)) return 'Templates';
-  if (summary.match(/website|docs/)) return 'Website';
+  if (summary.match(/\b(?:scan|detect)\b/)) return 'Engine';
+  if (summary.match(/\b(?:command|cli)\b/)) return 'Commands';
+  if (summary.match(/\b(?:proof|verify|pipeline)\b/)) return 'Pipeline';
+  if (summary.match(/\b(?:template)\b/)) return 'Templates';
+  if (summary.match(/\b(?:website|docs)\b/)) return 'Website';
 
   return 'Infra';
 }
