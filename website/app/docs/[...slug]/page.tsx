@@ -48,8 +48,8 @@ export default async function DocsPage({ params }: DocsPageProps) {
   }));
 
   return (
-    <div className="flex gap-8">
-      <article className="docs-prose min-w-0 flex-1">
+    <div style={{ display: "flex" }}>
+      <article className="docs-prose min-w-0 flex-1" style={{ padding: "32px 40px 96px" }}>
         <Breadcrumb segments={segments} />
         <h1>{page.data.title}</h1>
         <MetaRow

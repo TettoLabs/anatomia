@@ -48,8 +48,8 @@ export default function DocsOverview() {
   ];
 
   return (
-    <div style={{ display: "flex", gap: "32px" }}>
-    <article className="docs-prose min-w-0 flex-1">
+    <div style={{ display: "flex" }}>
+    <article className="docs-prose min-w-0 flex-1" style={{ padding: "32px 40px 96px" }}>
       <h1 id="welcome">Documentation</h1>
       <p
         className="text-[15px] leading-relaxed"

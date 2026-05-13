@@ -20,7 +20,7 @@ export default function DocsLayout({ children }: { children: ReactNode }) {
         <DocsNav />
         <div className="flex">
           <Sidebar />
-          <main className="min-w-0 flex-1" style={{ padding: "32px 40px 96px" }}>
+          <main className="min-w-0 flex-1">
             <DocsErrorBoundary>
               {children}
             </DocsErrorBoundary>

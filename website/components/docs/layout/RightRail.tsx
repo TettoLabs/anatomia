@@ -223,41 +223,39 @@ export function RightRail({ toc, commitSha, buildTimestamp, editUrl }: RightRail
 }
 
 /**
- * Scroll spy — IntersectionObserver tracks visible headings.
+ * Scroll spy — matches supermock approach: scroll-position-based,
+ * runs immediately on mount, always defaults to first item.
+ * The last heading whose offsetTop <= scrollY + 120 wins.
  */
 function useScrollSpy(toc: TocItem[]): string {
-  const [activeId, setActiveId] = useState("");
+  const firstId = toc.length > 0 ? toc[0].url.replace(/^#/, "") : "";
+  const [activeId, setActiveId] = useState(firstId);
 
   useEffect(() => {
     if (toc.length === 0) return;
 
     const ids = toc.map((item) => item.url.replace(/^#/, ""));
-    const elements = ids
-      .map((id) => document.getElementById(id))
-      .filter(Boolean) as HTMLElement[];
 
-    if (elements.length === 0) return;
+    function spy() {
+      const targets = ids
+        .map((id) => document.getElementById(id))
+        .filter(Boolean) as HTMLElement[];
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            setActiveId(entry.target.id);
-            break;
-          }
-        }
-      },
-      {
-        rootMargin: "-80px 0px -60% 0px",
-        threshold: 0,
-      },
-    );
+      if (targets.length === 0) return;
 
-    for (const el of elements) {
-      observer.observe(el);
+      let active = 0;
+      const y = window.scrollY + 120;
+      targets.forEach((t, i) => {
+        if (t.offsetTop <= y) active = i;
+      });
+      setActiveId(ids[active]);
     }
 
-    return () => observer.disconnect();
+    window.addEventListener("scroll", spy, { passive: true });
+    // Run immediately to set initial active state
+    spy();
+
+    return () => window.removeEventListener("scroll", spy);
   }, [toc]);
 
   return activeId;
