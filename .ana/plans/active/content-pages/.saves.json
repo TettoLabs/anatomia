@@ -54,5 +54,20 @@
     "website/content/docs/index.mdx",
     "website/content/docs/meta.json",
     "website/content/docs/start.mdx"
-  ]
+  ],
+  "verify_started_at": "2026-05-13T00:34:52.241Z",
+  "verify_agent": "ana-verify",
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:896416df802a4fce8b0542d20c16951270dd5e1d97df0ee616209bcfbeac1613",
+    "run_at": "2026-05-13T00:41:02.149Z"
+  },
+  "verify-report-1": {
+    "saved_at": "2026-05-13T00:41:02.189Z",
+    "hash": "sha256:2cb18c8df7da974bd694d9d5803c64dea17920bbcf722d127f0ce196fcb6a094"
+  },
+  "verify-data-1": {
+    "saved_at": "2026-05-13T00:41:02.189Z",
+    "hash": "sha256:3d2f74646d20d0f8a1d2e76e2495e9203d4c48b53d52e3064ff2afe8950f79ea"
+  }
 }

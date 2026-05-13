@@ -4,7 +4,7 @@
 
 ## Phases
 
-- [ ] Overview page, quickstart, bug fixes, sidebar ordering
+- [x] Overview page, quickstart, bug fixes, sidebar ordering
   - Spec: spec-1.md
 - [ ] Seven concept pages (pipeline, skills, context, toolbelt, artifacts, contract, findings)
   - Spec: spec-2.md
