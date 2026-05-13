@@ -7,7 +7,10 @@ type PreProps = ComponentPropsWithoutRef<"pre">;
  * CodeBlock — matches supermock .code exactly.
  * Container: bg-card, border, border-radius, mono 12.5px.
  * Header: bg-elev, language uppercase 10px, "Copy" always visible.
- * Body: padding 14px 16px, ink-80 color.
+ * Body: padding 14px 16px, ink-75 color.
+ *
+ * Language comes from data-language attribute set by the custom
+ * Shiki transformer in source.config.ts.
  */
 export function CodeBlock(props: PreProps) {
   const { children, ...rest } = props;
@@ -19,7 +22,7 @@ export function CodeBlock(props: PreProps) {
     | undefined;
 
   const textContent = extractText(children);
-  const showHeader = language || title;
+  const label = title ?? language;
 
   return (
     <div
@@ -34,32 +37,30 @@ export function CodeBlock(props: PreProps) {
         overflow: "hidden",
       }}
     >
-      {showHeader && (
-        <div
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "8px 14px",
+          borderBottom: "1px solid var(--hairline)",
+          background: "var(--bg-elev)",
+          fontSize: "11px",
+          color: "var(--ink-60)",
+        }}
+      >
+        <span
           style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "8px 14px",
-            borderBottom: "1px solid var(--hairline)",
-            background: "var(--bg-elev)",
-            fontSize: "11px",
-            color: "var(--ink-60)",
+            color: "var(--ink-45)",
+            textTransform: "uppercase",
+            letterSpacing: "0.06em",
+            fontSize: "10px",
           }}
         >
-          <span
-            style={{
-              color: "var(--ink-45)",
-              textTransform: "uppercase",
-              letterSpacing: "0.06em",
-              fontSize: "10px",
-            }}
-          >
-            {title ?? language}
-          </span>
-          <CopyButton text={textContent} />
-        </div>
-      )}
+          {label || ""}
+        </span>
+        <CopyButton text={textContent} />
+      </div>
       <pre
         {...rest}
         style={{
