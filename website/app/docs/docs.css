@@ -82,121 +82,172 @@
 }
 
 /* -------------------------------------------------------------------
-   PROSE — MDX content area typography
+   PROSE — matches supermock .prose exactly
    ------------------------------------------------------------------- */
 .docs-prose {
-  font-size: 15px;
-  line-height: 1.75;
-  color: var(--ink-75);
+  max-width: var(--content-max, 780px);
 }
 
+/* Page title — supermock h1.page-title */
 .docs-prose h1 {
-  font-size: 2rem;
-  font-weight: 700;
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: 36px;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
   margin-top: 0;
-  margin-bottom: 0.75rem;
-  color: var(--fg-strong);
+  margin-bottom: 14px;
+  text-wrap: balance;
+  color: var(--fg);
 }
 
+/* Section heading — supermock .prose h2 */
 .docs-prose h2 {
-  font-size: 1.4rem;
-  font-weight: 600;
-  margin-top: 2.5rem;
-  margin-bottom: 0.75rem;
-  color: var(--fg-strong);
-  border-bottom: 1px solid var(--hairline);
-  padding-bottom: 0.5rem;
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: 22px;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  margin: 44px 0 12px;
+  scroll-margin-top: 120px;
+  color: var(--fg);
 }
 
+/* Sub-heading — supermock .prose h3 */
 .docs-prose h3 {
-  font-size: 1.1rem;
+  font-size: 13px;
   font-weight: 600;
-  margin-top: 2rem;
-  margin-bottom: 0.5rem;
-  color: var(--fg-strong);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-60);
+  margin: 28px 0 10px;
 }
 
 .docs-prose h4 {
-  font-size: 1rem;
+  font-size: 14px;
   font-weight: 600;
-  margin-top: 1.5rem;
-  margin-bottom: 0.5rem;
-  color: var(--fg-strong);
+  margin: 20px 0 8px;
+  color: var(--fg);
 }
 
+/* Body text — supermock .prose p */
 .docs-prose p {
-  margin-top: 0;
-  margin-bottom: 1.25rem;
-}
-
-.docs-prose a {
-  color: var(--color-brand);
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  margin-bottom: 16px;
+  color: var(--ink-75);
+  text-wrap: pretty;
+  max-width: 62ch;
+  font-size: 14px;
+  line-height: 1.62;
 }
 
 .docs-prose strong {
+  color: var(--fg);
   font-weight: 600;
-  color: var(--fg-strong);
 }
 
+.docs-prose em {
+  color: var(--ink-60);
+  font-style: italic;
+}
+
+/* Inline code — supermock .prose code:not(pre code) */
 .docs-prose code {
+  background: var(--code-bg);
+  border: 1px solid var(--hairline);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 0.86em;
   font-family: var(--font-mono);
-  font-size: 0.875em;
-  padding: 0.15em 0.35em;
-  border-radius: 4px;
-  background: var(--border-soft);
-  color: var(--fg);
 }
 
 .docs-prose pre code {
   padding: 0;
   border-radius: 0;
   background: transparent;
+  border: none;
 }
 
-.docs-prose ul,
+/* Links — supermock .prose a.link */
+.docs-prose a {
+  color: var(--fg);
+  border-bottom: 1px solid var(--ink-25);
+  text-decoration: none;
+  transition: border-color 0.12s;
+}
+
+.docs-prose a:hover {
+  border-color: var(--color-brand);
+}
+
+/* Lists — supermock .prose ul/ol */
+.docs-prose ul {
+  margin: 0 0 16px 18px;
+  padding: 0;
+}
+
+.docs-prose ul li {
+  margin-bottom: 5px;
+  color: var(--ink-75);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
 .docs-prose ol {
-  margin-top: 0;
-  margin-bottom: 1.25rem;
-  padding-left: 1.5rem;
+  margin: 0 0 16px 18px;
+  padding: 0;
 }
 
-.docs-prose li {
-  margin-bottom: 0.35rem;
+.docs-prose ol li {
+  margin-bottom: 8px;
+  color: var(--ink-75);
+  font-size: 14px;
+  line-height: 1.6;
 }
 
 .docs-prose blockquote {
-  margin: 1.5rem 0;
-  padding: 0.75rem 1rem;
-  border-left: 3px solid var(--ink-15);
+  margin: 16px 0;
+  padding: 10px 14px;
+  border-left: 2px solid var(--ink-25);
   color: var(--ink-60);
+  font-size: 13.5px;
+  line-height: 1.55;
 }
 
 .docs-prose hr {
-  margin: 2.5rem 0;
+  margin: 32px 0;
   border: none;
   border-top: 1px solid var(--hairline);
 }
 
+/* Tables — supermock .prose table */
 .docs-prose table {
   width: 100%;
   border-collapse: collapse;
-  margin: 1.5rem 0;
-  font-size: 0.9em;
+  margin: 8px 0 22px;
+  font-size: 13px;
 }
 
-.docs-prose th,
-.docs-prose td {
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--border-soft);
+.docs-prose table th {
   text-align: left;
+  padding: 8px 12px;
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-45);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-elev);
 }
 
-.docs-prose th {
-  background: var(--bg-deep);
-  font-weight: 600;
-  color: var(--fg-strong);
+.docs-prose table td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--hairline);
+  color: var(--ink-75);
+  vertical-align: top;
+}
+
+.docs-prose table tr:hover td {
+  background: var(--code-bg);
 }
 
 /* -------------------------------------------------------------------
