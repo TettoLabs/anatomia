@@ -403,6 +403,10 @@
   background: var(--code-bg);
 }
 
+.docs-exp-th-sort:hover {
+  color: var(--ink-60) !important;
+}
+
 /* -------------------------------------------------------------------
    PROOF DETAIL — assertion table row hover
    ------------------------------------------------------------------- */

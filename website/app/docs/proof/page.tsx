@@ -12,7 +12,7 @@ export default function ProofExplorerPage() {
   return (
     <div style={{ display: "flex" }}>
       <article className="docs-prose docs-content-area docs-content-full min-w-0 flex-1" style={{ padding: "32px 40px 96px 40px" }}>
-        <Breadcrumb segments={[{ name: "Proof Chain" }]} />
+        <Breadcrumb segments={[{ name: "Docs", url: "/docs" }, { name: "Proof Chain" }]} />
         <h1 style={{
           fontFamily: "var(--font-serif)",
           fontWeight: 500,

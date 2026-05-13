@@ -74,13 +74,13 @@ export function FindingsList({ findings, className }: FindingsListProps) {
                   {f.file}
                 </span>
               )}
-              {f.suggestedAction && (
+              {(f.status && f.status !== "active" ? f.status : f.suggestedAction) && (
                 <span style={{
                   marginLeft: "auto",
                   color: "var(--ink-40)",
                   fontSize: "10.5px",
                 }}>
-                  → {f.suggestedAction}
+                  → {f.status && f.status !== "active" ? f.status : f.suggestedAction}
                 </span>
               )}
             </div>

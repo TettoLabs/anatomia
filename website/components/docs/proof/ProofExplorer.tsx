@@ -124,15 +124,24 @@ export function ProofExplorer({ entries, stats, className }: ProofExplorerProps)
   };
 
   return (
-    <section className={className} style={{ marginBottom: 0 }}>
-      <header>
+    <section className={className} style={{
+      marginBottom: 0,
+      border: "1px solid var(--border)",
+      borderRadius: "var(--r-md)",
+      background: "var(--bg-card)",
+      overflow: "hidden",
+    }}>
+      <header style={{
+        padding: "18px 20px 16px",
+        borderBottom: "1px solid var(--hairline)",
+      }}>
         <div className="docs-exp-filters" style={{
           display: "flex",
           flexWrap: "wrap",
           alignItems: "center",
           gap: "6px",
-          fontSize: "12px",
-          marginBottom: "16px",
+          fontFamily: "var(--font-mono)",
+          fontSize: "11px",
         }}>
           <span style={{
             color: "var(--ink-40)",
@@ -204,7 +213,7 @@ export function ProofExplorer({ entries, stats, className }: ProofExplorerProps)
                 background: "var(--bg-elev)",
                 borderBottom: "1px solid var(--border)",
               }}>Stage</th>
-              <th onClick={() => handleSort("assertions")} style={{
+              <th onClick={() => handleSort("assertions")} className="docs-exp-th-sort" style={{
                 fontSize: "10.5px",
                 fontWeight: 600,
                 textTransform: "uppercase",
@@ -217,7 +226,7 @@ export function ProofExplorer({ entries, stats, className }: ProofExplorerProps)
                 cursor: "pointer",
                 userSelect: "none",
               }}>Assertions{sortArrow("assertions")}</th>
-              <th onClick={() => handleSort("findings")} style={{
+              <th onClick={() => handleSort("findings")} className="docs-exp-th-sort" style={{
                 fontSize: "10.5px",
                 fontWeight: 600,
                 textTransform: "uppercase",
@@ -230,7 +239,7 @@ export function ProofExplorer({ entries, stats, className }: ProofExplorerProps)
                 cursor: "pointer",
                 userSelect: "none",
               }}>Findings{sortArrow("findings")}</th>
-              <th onClick={() => handleSort("duration")} style={{
+              <th onClick={() => handleSort("duration")} className="docs-exp-th-sort" style={{
                 fontSize: "10.5px",
                 fontWeight: 600,
                 textTransform: "uppercase",
@@ -243,7 +252,7 @@ export function ProofExplorer({ entries, stats, className }: ProofExplorerProps)
                 cursor: "pointer",
                 userSelect: "none",
               }}>Duration{sortArrow("duration")}</th>
-              <th onClick={() => handleSort("completed")} style={{
+              <th onClick={() => handleSort("completed")} className="docs-exp-th-sort" style={{
                 fontSize: "10.5px",
                 fontWeight: 600,
                 textTransform: "uppercase",
@@ -397,6 +406,16 @@ export function ProofExplorer({ entries, stats, className }: ProofExplorerProps)
             ))}
           </tbody>
         </table>
+      </div>
+      <div style={{
+        padding: "14px 18px",
+        borderTop: "1px solid var(--hairline)",
+        background: "var(--bg-elev)",
+        fontFamily: "var(--font-mono)",
+        fontSize: "11px",
+        color: "var(--ink-60)",
+      }}>
+        {sorted.length} of {stats.entries} proofs
       </div>
     </section>
   );
