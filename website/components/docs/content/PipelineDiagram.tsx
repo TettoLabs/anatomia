@@ -70,6 +70,7 @@ export function PipelineDiagram({ variant = "overview" }: { variant?: "overview"
   return (
     <div>
       <div
+        className="docs-pipeline-grid"
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(5, 1fr)",

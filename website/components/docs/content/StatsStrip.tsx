@@ -17,6 +17,7 @@ interface StatsStripProps {
 export function StatsStrip({ items }: StatsStripProps) {
   return (
     <div
+      className="docs-stats-grid"
       style={{
         display: "grid",
         gridTemplateColumns: `repeat(${items.length}, 1fr)`,

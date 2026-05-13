@@ -68,6 +68,7 @@ export function DocsGrid({ proofCount }: DocsGridProps) {
 
   return (
     <div
+      className="docs-qgrid"
       style={{
         display: "grid",
         gridTemplateColumns: "repeat(3, 1fr)",

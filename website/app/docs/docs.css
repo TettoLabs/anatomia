@@ -343,15 +343,38 @@
    ------------------------------------------------------------------- */
 
 /* ≤1180px: hide right rail */
+/* ≤1180px: hide right rail, collapse wide grids — matches supermock */
 @media (max-width: 1180px) {
   .docs-right-rail {
     display: none !important;
   }
+  .docs-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .docs-stats-grid > div {
+    border-bottom: 1px solid var(--hairline);
+  }
+  .docs-pipeline-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .docs-aud-grid {
+    grid-template-columns: 1fr !important;
+  }
 }
 
-/* ≤880px: hide sidebar */
+/* ≤880px: hide sidebar, stack everything, tighten padding — matches supermock */
 @media (max-width: 880px) {
   .docs-sidebar {
     display: none !important;
+  }
+  .docs-qgrid,
+  .docs-res-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .docs-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .docs-pipeline-grid {
+    grid-template-columns: 1fr !important;
   }
 }

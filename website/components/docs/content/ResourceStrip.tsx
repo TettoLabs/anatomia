@@ -39,6 +39,7 @@ const RESOURCES: Resource[] = [
 export function ResourceStrip() {
   return (
     <div
+      className="docs-res-grid"
       style={{
         display: "grid",
         gridTemplateColumns: "repeat(3, 1fr)",

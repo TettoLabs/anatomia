@@ -44,6 +44,7 @@ const CARDS: AudienceCard[] = [
 export function AudienceCards() {
   return (
     <div
+      className="docs-aud-grid"
       style={{
         display: "grid",
         gridTemplateColumns: "repeat(3, 1fr)",
