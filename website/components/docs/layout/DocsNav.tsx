@@ -2,10 +2,15 @@ import Link from "next/link";
 import { getBuildMeta } from "@/lib/docs-data/meta";
 import { ThemeToggle } from "@/components/nav/ThemeToggle";
 import { PlatformSwitcher } from "./PlatformSwitcher";
+import { MobileSidebarToggle } from "./MobileSidebarToggle";
 
 /**
- * DocsNav — docs-specific navbar, completely separate from marketing Nav.
- * Server component. Sticky, backdrop-blur. Matches supermock .navbar exactly.
+ * DocsNav — docs-specific navbar.
+ * Server component. Sticky, backdrop-blur.
+ *
+ * Responsive behavior:
+ * - ≤880px: hamburger appears, platform switcher shows icon only,
+ *   search becomes icon, "anatomia" becomes oxblood mark only
  */
 export function DocsNav() {
   const meta = getBuildMeta();
@@ -28,8 +33,11 @@ export function DocsNav() {
       }}
       aria-label="Documentation"
     >
-      {/* Column 1: Logo + version */}
+      {/* Column 1: Hamburger (mobile) + Logo + version */}
       <div style={{ display: "flex", alignItems: "baseline", gap: "14px", justifySelf: "start" }}>
+        {/* Hamburger — shown at ≤880px by CSS */}
+        <MobileSidebarToggle />
+
         <Link
           href="/docs"
           style={{
@@ -43,7 +51,7 @@ export function DocsNav() {
             textDecoration: "none",
           }}
         >
-          <span style={{ display: "inline-flex", alignItems: "baseline" }}>
+          <span className="docs-nav-wordmark-text" style={{ display: "inline-flex", alignItems: "baseline" }}>
             anaDocs
             <span
               style={{
@@ -58,7 +66,9 @@ export function DocsNav() {
             />
           </span>
         </Link>
+
         <span
+          className="docs-nav-version"
           style={{
             fontFamily: "var(--font-mono)",
             fontSize: "11px",
@@ -76,6 +86,7 @@ export function DocsNav() {
       {/* Column 3: Search bar (centered in 1fr column) */}
       <div style={{ justifySelf: "center", gridColumn: 3 }}>
         <button
+          className="docs-nav-search"
           style={{
             display: "flex",
             alignItems: "center",
@@ -98,8 +109,9 @@ export function DocsNav() {
             <circle cx="11" cy="11" r="8" />
             <path d="m21 21-4.35-4.35" />
           </svg>
-          <span>Search docs, commands, proofs...</span>
+          <span className="docs-nav-search-text">Search docs, commands, proofs...</span>
           <span
+            className="docs-nav-search-kbd"
             style={{
               marginLeft: "auto",
               fontFamily: "var(--font-mono)",
@@ -139,6 +151,7 @@ export function DocsNav() {
           href="https://anatomia.dev"
           target="_blank"
           rel="noopener noreferrer"
+          className="docs-nav-back"
           style={{
             fontFamily: "var(--font-serif)",
             fontSize: "13px",
@@ -152,7 +165,8 @@ export function DocsNav() {
             textDecoration: "none",
           }}
         >
-          anatomia<span style={{ fontSize: "11px" }}>↗</span>
+          <span className="docs-nav-back-text">anatomia</span>
+          <span style={{ fontSize: "11px" }}>↗</span>
         </a>
       </div>
     </nav>

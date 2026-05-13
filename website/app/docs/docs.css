@@ -362,11 +362,45 @@
   }
 }
 
-/* ≤880px: hide sidebar, stack everything, tighten padding — matches supermock */
+/* ≤880px: hide sidebar, show hamburger, collapse navbar, stack grids */
 @media (max-width: 880px) {
   .docs-sidebar {
     display: none !important;
   }
+
+  /* Show hamburger button */
+  .docs-mobile-hamburger {
+    display: flex !important;
+  }
+
+  /* Hide version pill */
+  .docs-nav-version {
+    display: none !important;
+  }
+
+  /* Platform switcher: icon only */
+  .docs-platform-label,
+  .docs-platform-chevron {
+    display: none !important;
+  }
+
+  /* Search: collapse to icon-only */
+  .docs-nav-search {
+    width: auto !important;
+    max-width: none !important;
+    padding: 6px 8px !important;
+  }
+  .docs-nav-search-text,
+  .docs-nav-search-kbd {
+    display: none !important;
+  }
+
+  /* "anatomia ↗": hide text, keep arrow as mark */
+  .docs-nav-back-text {
+    display: none !important;
+  }
+
+  /* Grid collapses */
   .docs-qgrid,
   .docs-res-grid {
     grid-template-columns: 1fr !important;
@@ -376,5 +410,14 @@
   }
   .docs-pipeline-grid {
     grid-template-columns: 1fr !important;
+  }
+}
+
+/* ≤640px: further compress navbar */
+@media (max-width: 640px) {
+  /* Tighten navbar padding */
+  nav[aria-label="Documentation"] {
+    padding: 12px 16px !important;
+    gap: 12px !important;
   }
 }

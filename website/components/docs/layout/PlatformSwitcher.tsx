@@ -60,8 +60,9 @@ export function PlatformSwitcher() {
         aria-haspopup="listbox"
       >
         <BrandIcon name={activePlatform?.label ?? "Claude Code"} size={14} />
-        <span>{activePlatform?.label}</span>
+        <span className="docs-platform-label">{activePlatform?.label}</span>
         <svg
+          className="docs-platform-chevron"
           width="10"
           height="10"
           viewBox="0 0 24 24"
