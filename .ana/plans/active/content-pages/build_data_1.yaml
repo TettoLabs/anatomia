@@ -1,0 +1,17 @@
+schema: 1
+concerns:
+  - summary: "Next.js 16 route conflict required [[...slug]] → [...slug] conversion"
+    file: "website/app/docs/[...slug]/page.tsx"
+    severity: observation
+    suggested_action: accept
+  - summary: "DocsGrid component created but not in spec File Changes — required for supermock fidelity"
+    file: "website/components/docs/content/DocsGrid.tsx"
+    severity: observation
+    suggested_action: accept
+  - summary: "globals.css modified to add --brand-light and --info tokens — not in spec but required for Callout colors"
+    file: "website/app/globals.css"
+    severity: observation
+    suggested_action: accept
+  - summary: "Pre-existing lint errors in DocsErrorBoundary.tsx and PlatformProvider.tsx block website lint"
+    severity: debt
+    suggested_action: scope

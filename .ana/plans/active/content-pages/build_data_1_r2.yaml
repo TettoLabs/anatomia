@@ -1,0 +1,21 @@
+schema: 1
+concerns:
+  - summary: "Next.js 16 route conflict required [[...slug]] → [...slug] conversion"
+    file: "website/app/docs/[...slug]/page.tsx"
+    severity: observation
+    suggested_action: accept
+  - summary: "DocsGrid component created but not in spec File Changes — required for supermock fidelity"
+    file: "website/components/docs/content/DocsGrid.tsx"
+    severity: observation
+    suggested_action: accept
+  - summary: "Callout uses --brand-light and --info CSS vars with fallbacks — verify site defines them"
+    file: "website/components/docs/content/Callout.tsx"
+    severity: debt
+    suggested_action: monitor
+  - summary: "3 curated proof slugs (security-hardening, worktree-isolation, proof-promote) may not exist in proof-entries.json — table silently shrinks"
+    file: "website/components/docs/content/CuratedProofs.tsx"
+    severity: debt
+    suggested_action: monitor
+  - summary: "Pre-existing lint errors in DocsErrorBoundary.tsx and PlatformProvider.tsx block website lint"
+    severity: debt
+    suggested_action: scope

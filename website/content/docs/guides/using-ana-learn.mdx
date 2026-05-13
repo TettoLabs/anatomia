@@ -1,0 +1,118 @@
+---
+title: Using ana-learn
+description: "Findings accumulate. Learn tends them \u2014 closing what\u2019s resolved, promoting recurring patterns into skill rules, and routing what needs engineering work back to Think. Run it between pipeline cycles."
+readingTime: 7
+lastReviewed: "2026-05-13"
+---
+
+## Starting a session
+
+<div style={{background:"var(--bg-card)",border:"1px solid var(--border)",borderRadius:"var(--radius-md)",margin:"8px 0 18px",fontFamily:"var(--font-mono)",fontSize:"12.5px",lineHeight:1.65,overflow:"hidden"}}>
+<div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 14px",borderBottom:"1px solid var(--hairline)",background:"var(--bg-elev)",fontSize:"11px",color:"var(--ink-60)"}}>
+<span style={{color:"var(--ink-45)",textTransform:"uppercase",letterSpacing:"0.06em",fontSize:"10px"}}>bash</span>
+</div>
+<pre style={{padding:"14px 16px",color:"var(--ink-75)",overflowX:"auto",whiteSpace:"pre",margin:0,background:"transparent",fontSize:"inherit",lineHeight:"inherit",fontFamily:"inherit"}}>
+{"$ "}<span style={{color:"var(--pass)"}}>claude --agent ana-learn</span>{"\n\nProof chain: 78 runs, 188 active findings\n  9 risk · 63 debt · 116 observation\n  45 scope · 73 monitor · 70 accept (closeable)\n\nBefore we start \u2014 anything you've noticed since the last session?"}
+</pre>
+</div>
+
+Learn reads the proof chain, checks health, detects staleness, and presents the shape. Then it offers options:
+
+- Review risks (9 risk findings)
+- Review debt (63 debt findings)
+- Focus on a hot module (work.ts: 15 findings across 8 runs)
+- Promote patterns
+
+You pick the focus. Learn does the homework — reads the code, checks git history, verifies each finding's claim against the current state. Nothing executes without your sign-off.
+
+<p style={{fontSize:"13px",color:"var(--ink-60)",margin:"0 0 16px"}}>The "anything you've noticed?" prompt isn't rhetorical. If you say "auth calls are slow" or "why does this pattern keep appearing," Learn traces it: missing skill rule? Curation gap where Plan doesn't load the skill? A bug that needs its own scope? Observations can surface at any point, not just at session start.</p>
+
+## Triage: close and keep
+
+For each finding, Learn extracts the claim, verifies it against current code, and recommends an action. A real example from the chain:
+
+<div style={{margin:"12px 0",padding:"12px 16px",borderRadius:"var(--radius-sm)",background:"var(--bg-card)",border:"1px solid var(--border-soft)"}}>
+<div style={{fontSize:"13px"}}>
+<span style={{display:"inline-block",padding:"2px 7px",borderRadius:"3px",fontWeight:500,letterSpacing:"0.06em",fontSize:"10px",fontFamily:"var(--font-mono)",textTransform:"uppercase",background:"var(--fail-bg)",color:"var(--fail)",marginRight:"8px"}}>risk · scope</span>
+<span style={{color:"var(--ink-60)"}}>find-project-root-C1</span>
+</div>
+<div style={{fontSize:"13px",marginTop:"6px",color:"var(--ink-75)"}}><code>findProjectRoot</code> checks for <code>.ana/</code> directory existence, not <code>.ana/ana.json</code>. A stale directory causes false root detection.</div>
+<div style={{fontSize:"12px",marginTop:"8px",color:"var(--ink-45)"}}>Closed — Stale: code at validators.ts:105 now checks .ana/ana.json not .ana/ directory</div>
+</div>
+
+Learn verified the code changed, confirmed the finding no longer applies, and recommended closure with a specific reason. Every close reason describes what was checked — not "resolved" but exactly what changed and where.
+
+Findings that are still real get a **keep** with an exit condition: "Keep until test coverage for `work.ts` exceeds threshold" or "Keep for 3 more pipeline runs, then re-evaluate." When Learn can't determine resolution — code changed but the effect is ambiguous — it says so and asks you to verify manually.
+
+## Staleness detection
+
+The fastest part of triage. `ana proof stale` pre-identifies findings whose referenced files were modified by later pipeline runs — likely resolved without anyone explicitly closing them.
+
+<div style={{background:"var(--bg-card)",border:"1px solid var(--border)",borderRadius:"var(--radius-md)",margin:"8px 0 18px",fontFamily:"var(--font-mono)",fontSize:"12.5px",lineHeight:1.65,overflow:"hidden"}}>
+<div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 14px",borderBottom:"1px solid var(--hairline)",background:"var(--bg-elev)",fontSize:"11px",color:"var(--ink-60)"}}>
+<span style={{color:"var(--ink-45)",textTransform:"uppercase",letterSpacing:"0.06em",fontSize:"10px"}}>bash</span>
+</div>
+<pre style={{padding:"14px 16px",color:"var(--ink-75)",overflowX:"auto",whiteSpace:"pre",margin:0,background:"transparent",fontSize:"inherit",lineHeight:"inherit",fontFamily:"inherit"}}>
+{"$ "}<span style={{color:"var(--pass)"}}>ana proof stale</span>{"\n\nStale Findings: 79 findings with staleness signals\n\nHigh confidence (3+ subsequent entries modified the file):\n  security-hardening-C1 [debt] A016-A019 @ana tags point to\n    pre-existing tests, not command entry point validation\n    Modified by: worktree-isolation, phase-timing-fix, ... (10 entries)\n    Created in: security-hardening (2026-05-04)"}
+</pre>
+</div>
+
+<p style={{fontSize:"13px",color:"var(--ink-60)",margin:"0 0 16px"}}>Staleness is a signal, not proof. Learn reads the code before recommending closure — a file being modified doesn't mean the specific issue was fixed.</p>
+
+## Promote and strengthen
+
+When a pattern recurs across multiple proofs, it belongs in a skill rule. Three conditions:
+
+1. The finding describes a **pattern**, not a one-off bug
+2. The pattern would have been caught earlier if the skill had the right rule
+3. The rule can be stated in one sentence
+
+Two operations:
+
+<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",margin:"12px 0 16px"}}>
+<div style={{padding:"12px 14px",borderRadius:"var(--radius-sm)",background:"var(--bg-card)",border:"1px solid var(--border-soft)"}}>
+<div style={{fontWeight:600,fontSize:"13px",marginBottom:"4px",color:"var(--fg)"}}>Promote</div>
+<div style={{fontSize:"12.5px",color:"var(--ink-60)",lineHeight:1.5}}>No rule exists. Create a new one from the finding's pattern.</div>
+<div style={{fontFamily:"var(--font-mono)",fontSize:"11px",marginTop:"8px",color:"var(--ink-45)"}}>ana proof promote C1 --skill coding-standards --text "..."</div>
+</div>
+<div style={{padding:"12px 14px",borderRadius:"var(--radius-sm)",background:"var(--bg-card)",border:"1px solid var(--border-soft)"}}>
+<div style={{fontWeight:600,fontSize:"13px",marginBottom:"4px",color:"var(--fg)"}}>Strengthen</div>
+<div style={{fontSize:"12.5px",color:"var(--ink-60)",lineHeight:1.5}}>Rule exists but lacks specificity. Edit the skill file, then commit atomically.</div>
+<div style={{fontFamily:"var(--font-mono)",fontSize:"11px",marginTop:"8px",color:"var(--ink-45)"}}>ana proof strengthen C1 --skill testing-standards --reason "..."</div>
+</div>
+</div>
+
+Both commands handle the full workflow: stage the skill file and proof chain, commit, push. The finding transitions from `active` to `promoted`. The rule reaches Build through Plan's Build Brief on the next pipeline run.
+
+On the next pipeline run touching the same code, Plan includes the promoted rule in the Build Brief. Build follows it. Verify doesn't re-find the same issue. That's the loop.
+
+<p style={{fontSize:"13px",color:"var(--ink-60)",margin:"0 0 16px"}}>Two other terminal states: `ana proof close` for resolved findings, and `ana proof lesson` for observations worth remembering but not worth encoding as rules.</p>
+
+## The session delta
+
+After executing approved actions, Learn re-reads the chain and reports the impact:
+
+```text
+Session complete.
+  Active findings: 188 → 171 (14 closed, 3 promoted)
+  Risk: 9 → 7
+  Promoted this session: testing-standards, coding-standards
+```
+{/* Dynamic: session greeting numbers (78 runs, 188 findings, severity/action splits) and delta numbers above are from supermock snapshot — update on data change */}
+
+If actionable work remains — scope-action findings, real debt, recurring patterns that need code fixes before they can become rules — Learn drafts a prompt for Think that synthesizes the remaining work.
+
+<NextCards cards={[
+  {
+    eyebrow: "Next guide",
+    title: "Configurability",
+    href: "/docs/guides/configurability",
+    description: "What you can change, what you edit directly, what's fixed."
+  },
+  {
+    eyebrow: "Browse",
+    title: "Proof chain",
+    href: "/docs/proof",
+    description: "78 proofs, 443 findings to triage." /* Dynamic: update on data change */
+  }
+]} />

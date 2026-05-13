@@ -1,0 +1,46 @@
+schema: 1
+findings:
+  - category: code
+    summary: "DocsGrid component created but not in spec file_changes"
+    file: "website/components/docs/content/DocsGrid.tsx"
+    severity: observation
+    suggested_action: accept
+    related_assertions: []
+  - category: code
+    summary: "Stats strip has 5 items (added MIT/free forever) vs spec mockup showing 4"
+    file: "website/app/docs/page.tsx"
+    line: 34
+    severity: observation
+    suggested_action: accept
+  - category: code
+    summary: "Callout label stores titlecase (Rule/Note), relies on CSS text-transform for uppercase display"
+    file: "website/components/docs/content/Callout.tsx"
+    line: 13
+    severity: observation
+    suggested_action: accept
+    related_assertions: ["A020"]
+  - category: code
+    summary: "Catch-all route renamed from [[...slug]] to [...slug] — not specified in spec but necessary"
+    file: "website/app/docs/[...slug]/page.tsx"
+    severity: observation
+    suggested_action: accept
+  - category: code
+    summary: "ResourceStrip uses <a> for Manifesto link (internal anatomia.dev URL) instead of Next.js Link"
+    file: "website/components/docs/content/ResourceStrip.tsx"
+    line: 29
+    severity: debt
+    suggested_action: monitor
+  - category: code
+    summary: "globals.css modified to add --brand-light and --info CSS variables — not in spec file_changes"
+    file: "website/app/globals.css"
+    severity: observation
+    suggested_action: accept
+  - category: upstream
+    summary: "RightRail breakpoint mismatch finding from prior proof cycle resolved by this build"
+    severity: observation
+    suggested_action: accept
+    anchor: "website/components/docs/layout/RightRail.tsx"
+  - category: test
+    summary: "No unit tests for any new components — build verification is pnpm build only"
+    severity: observation
+    suggested_action: monitor

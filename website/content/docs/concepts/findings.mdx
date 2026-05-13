@@ -1,0 +1,81 @@
+---
+title: Findings
+description: A finding is a specific, located observation from verification — a named file, a concrete issue, and a recommended action. Findings accumulate in the proof chain and are triaged by Learn between pipeline cycles.
+readingTime: 6
+lastReviewed: "2026-05-13"
+---
+
+## Severity levels
+
+<table>
+<thead><tr><th>Severity</th><th>Meaning</th><th>Typical action</th></tr></thead>
+<tbody>
+<tr><td><span style={{display:"inline-block",padding:"2px 7px",borderRadius:"3px",fontWeight:500,letterSpacing:"0.06em",fontSize:"10px",fontFamily:"var(--font-mono)",textTransform:"uppercase",background:"var(--fail-bg)",color:"var(--fail)"}}>risk</span></td><td>Could hurt you. Security flaw, data loss, silent failure.</td><td>Fix before merging — usually `scope`.</td></tr>
+<tr><td><span style={{display:"inline-block",padding:"2px 7px",borderRadius:"3px",fontWeight:500,letterSpacing:"0.06em",fontSize:"10px",fontFamily:"var(--font-mono)",textTransform:"uppercase",background:"var(--warn-bg)",color:"var(--warn)"}}>debt</span></td><td>Making the codebase worse. Duplication, fragile patterns, missing tests.</td><td>`scope` for follow-up or `promote` to a skill rule.</td></tr>
+<tr><td><span style={{display:"inline-block",padding:"2px 7px",borderRadius:"3px",fontWeight:500,letterSpacing:"0.06em",fontSize:"10px",fontFamily:"var(--font-mono)",textTransform:"uppercase",background:"var(--info-bg)",color:"var(--info)"}}>obs</span></td><td>Worth knowing. Not wrong, but useful for the next engineer.</td><td>`accept`, `monitor`, or record as `lesson`.</td></tr>
+</tbody>
+</table>
+
+## Suggested actions
+
+Every finding carries a `suggested_action` — the classifier's recommendation for what to do. This is the second word in the terminal notation `[debt · scope]`.
+
+| Action | Meaning |
+|--------|---------|
+| `promote` | Encode as a permanent rule in a skill file. The pattern should never recur. |
+| `scope` | Needs engineering work. Create a new pipeline scope to address it. |
+| `monitor` | Watch across future cycles. Not urgent, but track for recurrence. |
+| `accept` | Acknowledged. Valid observation, no action needed. Can be closed. |
+
+## Categories
+
+Each finding is categorized: `code` (implementation issue), `test` (test quality or coverage), or `upstream` (spec, scope, or tooling issue). The category tells you what kind of thing is wrong — severity tells you how much it matters.
+
+## Lifecycle
+
+Every finding starts as **active**. From there, three terminal states:
+
+- **closed** — resolved or acknowledged. The `closed_by` field records who: `mechanical` (the referenced file was removed), `human` (developer decision), or `agent` (Learn triage).
+- **promoted** — the finding describes a recurring pattern. It becomes a rule in a skill file via `ana proof promote`. The `promoted_to` field records which skill received the rule.
+- **lesson** — recorded as institutional knowledge without becoming a rule. Worth remembering, not worth encoding.
+
+Between pipeline cycles, run `claude --agent ana-learn` to triage active findings. Learn presents them by severity, recommends actions, and executes closes and promotions with your approval.
+
+<Callout variant="note">
+A finding without a follow-up is wasted. The lifecycle ensures every finding either informs the next cycle or is explicitly acknowledged.
+</Callout>
+
+## A real finding
+
+From the `security-hardening` proof:
+
+```json
+{
+  "id": "security-hardening-C2",
+  "category": "test",
+  "summary": "No dedicated integration tests for command entry point injection rejection",
+  "file": null,
+  "severity": "debt",
+  "suggested_action": "scope",
+  "status": "active"
+}
+```
+
+Active. Categorized as a test gap. Severity: debt — the codebase is getting worse without these tests. Action: scope — needs engineering work as a follow-up. No single file to point at because it's a structural gap, not a line-level bug.
+
+Build also produces **build concerns** — lighter-weight observations that enter the proof chain with severity and action but without lifecycle tracking. Findings are Verify's output; concerns are Build's honest admissions.
+
+<NextCards cards={[
+  {
+    eyebrow: "Guide",
+    title: "Verifying changes",
+    href: "/docs/guides/verifying-changes",
+    description: "The verification process — how Verify works independently and what its report contains."
+  },
+  {
+    eyebrow: "Real example",
+    title: "security-hardening",
+    href: "/docs/proof/security-hardening",
+    description: "10 findings from a security audit."
+  }
+]} />

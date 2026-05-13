@@ -1,0 +1,9 @@
+schema: 1
+concerns:
+  - summary: "PipelineDiagram uses overview descriptions, not the detailed concept-page variant from supermock"
+    file: "website/content/docs/concepts/pipeline.mdx"
+    severity: observation
+    suggested_action: monitor
+  - summary: "Toolbelt, context, and skills pages link to reference pages that don't exist yet"
+    severity: observation
+    suggested_action: monitor

@@ -18,176 +18,357 @@
 }
 
 /* -------------------------------------------------------------------
-   SIDEBAR — scrollbar hiding + active state
+   DOCS TOKEN OVERRIDES — scoped to docs pages only.
+   These differ from the marketing site's globals.css values.
+   ------------------------------------------------------------------- */
+[data-theme="light"] .docs-layout {
+  --bg-card: #FFFFFF;
+  --bg-elev: #FFFFFF;
+  --nav-bg: rgba(247, 247, 244, 0.88);
+  --brand-soft: rgba(122, 27, 27, 0.10);
+  --ink-25: rgba(11, 11, 16, 0.18);
+  --code-bg: rgba(11, 11, 16, 0.04);
+  --brand-light: #9B2E2E;
+  --info: #1d4ed8;
+  --info-bg: rgba(29, 78, 216, 0.05);
+  --pass: #15803d;
+  --pass-bg: rgba(21, 128, 61, 0.07);
+  --pass-border: rgba(21, 128, 61, 0.22);
+  --warn: #b45309;
+  --warn-bg: rgba(180, 83, 9, 0.06);
+  --fail: #dc2626;
+  --fail-bg: rgba(220, 38, 38, 0.06);
+  --shadow: 0 1px 2px rgba(11, 11, 16, 0.04), 0 8px 24px -8px rgba(11, 11, 16, 0.10);
+}
+
+[data-theme="dark"] .docs-layout {
+  --brand-soft: rgba(122, 27, 27, 0.10);
+  --ink-25: rgba(255, 255, 255, 0.22);
+  --code-bg: rgba(255, 255, 255, 0.04);
+  --brand-light: #9B2E2E;
+  --info: #93bbfd;
+  --info-bg: rgba(147, 187, 253, 0.07);
+  --pass: #4ade80;
+  --pass-bg: rgba(74, 222, 128, 0.10);
+  --pass-border: rgba(74, 222, 128, 0.25);
+  --warn: #fbbf24;
+  --warn-bg: rgba(251, 191, 36, 0.08);
+  --fail: #f87171;
+  --fail-bg: rgba(248, 113, 113, 0.08);
+  --shadow: 0 1px 0 rgba(255, 255, 255, 0.04), 0 8px 24px -8px rgba(0, 0, 0, 0.6);
+}
+
+/* -------------------------------------------------------------------
+   SIDEBAR — show-on-hover scrollbar + active/hover states
    ------------------------------------------------------------------- */
 .docs-sidebar {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+.docs-sidebar:hover {
+  scrollbar-color: var(--ink-25) transparent;
 }
 .docs-sidebar::-webkit-scrollbar {
-  display: none;
+  width: 6px;
+  background: transparent;
+}
+.docs-sidebar::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 3px;
+}
+.docs-sidebar:hover::-webkit-scrollbar-thumb {
+  background: var(--ink-25);
 }
 
 .sidebar-link:hover {
   color: var(--fg) !important;
-  background: var(--border-soft) !important;
+  background: var(--code-bg) !important;
 }
 
 /* -------------------------------------------------------------------
-   RIGHT RAIL — TOC timeline
+   RIGHT RAIL — scrollbar + hover states
    ------------------------------------------------------------------- */
-.toc-list {
-  position: relative;
-  padding-left: 0;
+.docs-right-rail {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+.docs-right-rail:hover {
+  scrollbar-color: var(--ink-25) transparent;
+}
+.docs-right-rail::-webkit-scrollbar {
+  width: 6px;
+  background: transparent;
+}
+.docs-right-rail::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 3px;
+}
+.docs-right-rail:hover::-webkit-scrollbar-thumb {
+  background: var(--ink-25);
 }
 
-.toc-list::before {
+/* TOC timeline vertical line — matches supermock .toc::before */
+.right-rail-toc::before {
   content: "";
   position: absolute;
-  left: 2px;
-  top: 4px;
-  bottom: 4px;
+  left: 3px;
+  top: 7px;
+  bottom: 7px;
   width: 1px;
   background: var(--hairline);
 }
 
-.toc-link {
-  position: relative;
+.toc-link:hover {
+  color: var(--fg) !important;
 }
 
-.toc-link::before {
-  content: "";
-  position: absolute;
-  left: -2px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--ink-15);
-  transition: background 0.15s ease;
+/* DocsGrid link hover — matches supermock .qcard ul a:hover */
+.qcard-link:hover {
+  color: var(--brand-light) !important;
 }
 
-.toc-link[data-active]::before {
-  background: var(--color-brand);
+/* CuratedProofs row hover — matches supermock .exp-tbl tbody tr:hover */
+.curated-row:hover {
+  background: var(--code-bg);
+}
+
+/* Heading anchor — matches supermock .prose h2 .anchor exactly */
+.heading-anchor {
+  color: var(--ink-25) !important;
+  border: none !important;
+  border-bottom: none !important;
+  text-decoration: none !important;
+  font-family: var(--font-mono) !important;
+  font-size: 14px !important;
+}
+
+.docs-prose h2:hover .heading-anchor {
+  opacity: 1 !important;
+}
+
+/* Callout — force children to inherit callout sizing, remove margins.
+   Matches supermock .callout p { margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--ink-80) } */
+.docs-callout p {
+  margin: 0 !important;
+  font-size: 13.5px !important;
+  line-height: 1.55 !important;
+  color: var(--ink-75) !important;
+  max-width: none !important;
+}
+
+/* Copy button hover — matches supermock .code-head .copy:hover */
+.copy-btn:hover {
+  color: var(--fg) !important;
+}
+
+/* TroubleCard — fix children styling */
+.docs-trouble-card p {
+  margin: 0 !important;
+  font-size: 13px !important;
+  line-height: 1.55 !important;
+  color: var(--ink-75) !important;
+  max-width: none !important;
+}
+
+.docs-trouble-card ol {
+  margin: 8px 0 0 16px !important;
+  font-size: 13px !important;
+  list-style: decimal !important;
+}
+
+.docs-trouble-card ol li {
+  margin-bottom: 4px !important;
+  font-size: 13px !important;
+  line-height: 1.55 !important;
+}
+
+/* CuratedProofs browse link hover — matches supermock .exp-foot a:hover */
+.curated-browse:hover {
+  color: var(--brand-light) !important;
 }
 
 /* -------------------------------------------------------------------
-   PROSE — MDX content area typography
+   PROSE — matches supermock .prose exactly
    ------------------------------------------------------------------- */
+/* No max-width on the container — individual elements (p, li) have
+   their own max-width: 62ch. The container fills the flex column.
+   Supermock's .prose { max-width } works in CSS grid; in our flex
+   layout it would shrink the article and create a gap before the
+   right rail. */
 .docs-prose {
-  font-size: 15px;
-  line-height: 1.75;
-  color: var(--ink-75);
 }
 
+/* Page title — supermock h1.page-title */
 .docs-prose h1 {
-  font-size: 2rem;
-  font-weight: 700;
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: 36px;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
   margin-top: 0;
-  margin-bottom: 0.75rem;
-  color: var(--fg-strong);
+  margin-bottom: 14px;
+  text-wrap: balance;
+  color: var(--fg);
 }
 
+/* Section heading — supermock .prose h2 */
 .docs-prose h2 {
-  font-size: 1.4rem;
-  font-weight: 600;
-  margin-top: 2.5rem;
-  margin-bottom: 0.75rem;
-  color: var(--fg-strong);
-  border-bottom: 1px solid var(--hairline);
-  padding-bottom: 0.5rem;
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: 22px;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  margin: 44px 0 12px;
+  scroll-margin-top: 120px;
+  color: var(--fg);
 }
 
+/* Sub-heading — supermock .prose h3 */
 .docs-prose h3 {
-  font-size: 1.1rem;
+  font-size: 13px;
   font-weight: 600;
-  margin-top: 2rem;
-  margin-bottom: 0.5rem;
-  color: var(--fg-strong);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-60);
+  margin: 28px 0 10px;
 }
 
 .docs-prose h4 {
-  font-size: 1rem;
+  font-size: 14px;
   font-weight: 600;
-  margin-top: 1.5rem;
-  margin-bottom: 0.5rem;
-  color: var(--fg-strong);
+  margin: 20px 0 8px;
+  color: var(--fg);
 }
 
+/* Body text — supermock .prose p */
 .docs-prose p {
-  margin-top: 0;
-  margin-bottom: 1.25rem;
-}
-
-.docs-prose a {
-  color: var(--color-brand);
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  margin-bottom: 16px;
+  color: var(--ink-75);
+  text-wrap: pretty;
+  max-width: 62ch;
+  font-size: 14px;
+  line-height: 1.62;
 }
 
 .docs-prose strong {
+  color: var(--fg);
   font-weight: 600;
-  color: var(--fg-strong);
 }
 
+.docs-prose em {
+  color: var(--ink-60);
+  font-style: italic;
+}
+
+/* Inline code — supermock .prose code:not(pre code) */
 .docs-prose code {
+  background: var(--code-bg);
+  border: 1px solid var(--hairline);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 0.86em;
   font-family: var(--font-mono);
-  font-size: 0.875em;
-  padding: 0.15em 0.35em;
-  border-radius: 4px;
-  background: var(--border-soft);
-  color: var(--fg);
 }
 
 .docs-prose pre code {
   padding: 0;
   border-radius: 0;
   background: transparent;
+  border: none;
 }
 
-.docs-prose ul,
+/* Links — supermock .prose a.link */
+.docs-prose a {
+  color: var(--fg);
+  border-bottom: 1px solid var(--ink-25);
+  text-decoration: none;
+  transition: border-color 0.12s;
+}
+
+.docs-prose a:hover {
+  border-color: var(--color-brand);
+}
+
+/* Lists — supermock .prose ul/ol */
+.docs-prose ul {
+  margin: 0 0 16px 18px;
+  padding: 0;
+  list-style: disc;
+}
+
+.docs-prose ul li {
+  margin-bottom: 5px;
+  color: var(--ink-75);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
 .docs-prose ol {
-  margin-top: 0;
-  margin-bottom: 1.25rem;
-  padding-left: 1.5rem;
+  margin: 0 0 16px 18px;
+  padding: 0;
+  list-style: decimal;
 }
 
-.docs-prose li {
-  margin-bottom: 0.35rem;
+.docs-prose ol li {
+  margin-bottom: 8px;
+  color: var(--ink-75);
+  font-size: 14px;
+  line-height: 1.6;
 }
 
+/* Blockquote — matches supermock inline styled blockquote */
 .docs-prose blockquote {
-  margin: 1.5rem 0;
-  padding: 0.75rem 1rem;
-  border-left: 3px solid var(--ink-15);
+  margin: 16px 0;
+  padding: 0 0 0 16px;
+  border-left: 2px solid var(--ink-25);
   color: var(--ink-60);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+.docs-prose blockquote p {
+  color: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  max-width: none;
+  margin-bottom: 0;
 }
 
 .docs-prose hr {
-  margin: 2.5rem 0;
+  margin: 32px 0;
   border: none;
   border-top: 1px solid var(--hairline);
 }
 
+/* Tables — supermock .prose table */
 .docs-prose table {
   width: 100%;
   border-collapse: collapse;
-  margin: 1.5rem 0;
-  font-size: 0.9em;
+  margin: 8px 0 22px;
+  font-size: 13px;
 }
 
-.docs-prose th,
-.docs-prose td {
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--border-soft);
+.docs-prose table th {
   text-align: left;
+  padding: 8px 12px;
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-45);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-elev);
 }
 
-.docs-prose th {
-  background: var(--bg-deep);
-  font-weight: 600;
-  color: var(--fg-strong);
+.docs-prose table td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--hairline);
+  color: var(--ink-75);
+  vertical-align: top;
+}
+
+.docs-prose table tr:hover td {
+  background: var(--code-bg);
 }
 
 /* -------------------------------------------------------------------
@@ -203,15 +384,140 @@
    ------------------------------------------------------------------- */
 
 /* ≤1180px: hide right rail */
+/* ≤1180px: hide right rail, collapse wide grids — matches supermock */
 @media (max-width: 1180px) {
   .docs-right-rail {
     display: none !important;
   }
+  .docs-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .docs-stats-grid > div {
+    border-bottom: 1px solid var(--hairline);
+  }
+  .docs-pipeline-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .docs-aud-grid {
+    grid-template-columns: 1fr !important;
+  }
 }
 
-/* ≤880px: hide sidebar */
+/* ≤880px: hide sidebar, show hamburger, collapse navbar, stack grids */
 @media (max-width: 880px) {
   .docs-sidebar {
     display: none !important;
+  }
+
+  /* But show sidebar when inside the mobile slide-over panel */
+  .docs-mobile-sidebar-panel .docs-sidebar {
+    display: block !important;
+    position: static !important;
+    height: auto !important;
+    width: 100% !important;
+    border-right: none !important;
+    padding: 0 !important;
+  }
+
+  /* Hide theme toggle + GitHub + anatomia from navbar on mobile */
+  .docs-nav-theme,
+  .docs-nav-github,
+  .docs-nav-back {
+    display: none !important;
+  }
+
+  /* Show hamburger button */
+  .docs-mobile-hamburger {
+    display: flex !important;
+  }
+
+  /* Hide version pill */
+  .docs-nav-version {
+    display: none !important;
+  }
+
+  /* Platform switcher: icon + chevron only, reorder to far right */
+  .docs-platform-label {
+    display: none !important;
+  }
+
+  /* Reorder nav items for mobile: hamburger+logo, search, platform */
+  nav[aria-label="Documentation"] > div:nth-child(1) { order: 1; flex: 1; } /* logo group — takes remaining space */
+  nav[aria-label="Documentation"] > div:nth-child(2) { order: 3; } /* platform → far right */
+  nav[aria-label="Documentation"] > div:nth-child(3) { order: 2; } /* search icon → left of platform */
+  nav[aria-label="Documentation"] > div:nth-child(4) { order: 4; } /* right icons (hidden) */
+
+  /* Search: icon-only button next to platform dropdown */
+  .docs-nav-search {
+    width: 34px !important;
+    min-width: 34px !important;
+    max-width: 34px !important;
+    padding: 6px !important;
+    justify-content: center !important;
+    border: none !important;
+    background: none !important;
+  }
+  .docs-nav-search-text,
+  .docs-nav-search-kbd {
+    display: none !important;
+  }
+
+  /* Reorder: search (order 2) sits left of platform (order 3) */
+
+  /* "anatomia ↗": hide completely on mobile */
+  .docs-nav-back {
+    display: none !important;
+  }
+
+  /* Grid collapses */
+  .docs-qgrid,
+  .docs-res-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .docs-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .docs-pipeline-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ≤880px: additional mobile fixes (second 880px block for content) */
+@media (max-width: 880px) {
+  .docs-content-area {
+    padding: 24px 20px !important;
+  }
+
+  .docs-layout {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  /* Hide pipeline arrows on mobile */
+  .docs-pipeline-grid span[style*="right: -13px"] {
+    display: none !important;
+  }
+
+  /* Prose tables: allow horizontal scroll */
+  .docs-prose table {
+    display: block;
+    overflow-x: auto;
+  }
+
+  nav[aria-label="Documentation"] {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    padding: 12px 16px !important;
+    gap: 8px !important;
+  }
+}
+
+/* ≤640px: compress navbar + table adjustments */
+@media (max-width: 640px) {
+  /* Tighten navbar padding */
+  nav[aria-label="Documentation"] {
+    padding: 12px 16px !important;
+    gap: 12px !important;
   }
 }

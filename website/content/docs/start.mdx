@@ -1,0 +1,96 @@
+---
+title: Quickstart
+description: Install Anatomia, run init in your repo, and ship a verified change. Two minutes to scaffold. Twenty minutes to your first proof.
+readingTime: 8
+lastReviewed: "2026-05-13"
+---
+
+## Prerequisites
+
+- Node.js 20 or later
+- Git with `user.name` and `user.email` configured
+- A Git repository with at least one commit
+- [Claude Code](https://claude.ai/code) with an active subscription — needed for pipeline agents (Steps 3–4)
+- [GitHub CLI](https://cli.github.com/) (`gh`) — used by Verify to create PRs after a passing run
+
+## Step 1: Install
+
+```bash
+npm i -g anatomia-cli
+```
+
+Also available via `pnpm add -g anatomia-cli` or `bun add -g anatomia-cli`. This installs the `ana` command.
+
+## Step 2: Initialize
+
+```bash
+ana init
+```
+
+Init scans your project, detects your stack, and scaffolds the pipeline into your repo — agents, skills matched to your stack, and project context. Runs entirely on your machine. Your output will reflect your project:
+
+<div style={{background:"var(--bg-card)",border:"1px solid var(--border)",borderRadius:"var(--radius-md)",margin:"8px 0 18px",fontFamily:"var(--font-mono)",fontSize:"12.5px",lineHeight:1.65,overflow:"hidden"}}>
+<div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 14px",borderBottom:"1px solid var(--hairline)",background:"var(--bg-elev)",fontSize:"11px",color:"var(--ink-60)"}}>
+<span style={{color:"var(--ink-45)",textTransform:"uppercase",letterSpacing:"0.06em",fontSize:"10px"}}>terminal</span>
+</div>
+<pre style={{padding:"14px 16px",color:"var(--ink-75)",overflowX:"auto",whiteSpace:"pre",margin:0,background:"transparent",fontSize:"inherit",lineHeight:"inherit",fontFamily:"inherit"}}>
+<span style={{color:"var(--pass)"}}>✓</span>{" Scanned my-saas-app "}<span style={{color:"var(--ink-45)"}}>{"(3.2s)"}</span>{"\n\n"}{"  "}<span style={{color:"var(--brand-light)"}}>Stack:</span>{"    TypeScript · Next.js · Prisma → PostgreSQL · Vitest\n"}{"  "}<span style={{color:"var(--brand-light)"}}>Deploy:</span>{"   Vercel\n\n"}<span style={{color:"var(--pass)"}}>✓</span>{" Context → .ana/context/ (2 files)\n"}<span style={{color:"var(--pass)"}}>✓</span>{" Skills → .claude/skills/ (7 skills)\n"}{"    "}<span style={{color:"var(--ink-45)"}}>Core:</span>{"      coding-standards, testing-standards, git-workflow,\n"}{"               deployment, troubleshooting\n"}{"    "}<span style={{color:"var(--ink-45)"}}>Detected:</span>{"  api-patterns, data-access\n"}{"  "}<span style={{color:"var(--pass)"}}>✓</span>{" 4 gotchas pre-populated\n"}{"  "}<span style={{color:"var(--pass)"}}>✓</span>{" Cross-tool: CLAUDE.md + AGENTS.md\n\n"}{"  "}<span style={{color:"var(--brand-light)"}}>Branch:</span>{"   main\n"}{"  "}<span style={{color:"var(--brand-light)"}}>Test:</span>{"     pnpm run test -- --run\n"}{"  "}<span style={{color:"var(--brand-light)"}}>Build:</span>{"    pnpm run build\n\n"}{"  "}<span style={{color:"var(--brand-light)"}}>Next:</span>{"\n"}{"    "}<span style={{color:"var(--info)"}}>claude --agent ana</span>{"          Start working\n"}{"    "}<span style={{color:"var(--info)"}}>claude --agent ana-setup</span>{"    Enrich with team knowledge (optional, ~10 min)"}
+</pre>
+</div>
+
+<Callout variant="note">
+**Optional but recommended:** Run `claude --agent ana-setup` to calibrate project knowledge (~10 min). Setup investigates your codebase, asks 2–3 questions, and writes rich context.
+</Callout>
+
+## Step 3: First pipeline run
+
+Describe a small change — a single-file fix or a feature you'd normally spend 30 minutes on.
+
+```bash
+claude --agent ana
+```
+
+Ana investigates the codebase, surfaces tradeoffs, and writes a scope. You confirm the scope, then run each pipeline agent in a separate Claude Code session:
+
+1. **Plan:** `claude --agent ana-plan` — reads the scope, writes `spec.md`, and seals `contract.yaml`
+2. **Build:** `claude --agent ana-build` — implements the spec, writes tests tagged to contract assertions
+3. **Verify:** `claude --agent ana-verify` — independently verifies against the contract, writes findings, creates PR on pass
+
+<Callout variant="note">
+Each agent runs CLI commands like `ana work start` and `ana artifact save` under the hood — managing worktrees, validating artifact structure, and computing integrity hashes. You don't run these manually.
+</Callout>
+
+If Verify finds issues, it produces a FAIL report. Run `claude --agent ana-build` to fix, then `claude --agent ana-verify` again. This is normal — 17 of Anatomia's own 78 proofs had rejection cycles. {/* Dynamic: update on data change */}
+
+## Step 4: Review, merge, and complete
+
+After Verify passes, it creates a PR. Review the PR — compare Build's report with Verify's findings. This is the moment the two independent accounts meet. When you're satisfied, merge the PR, then complete the work item:
+
+```bash
+ana work complete <slug>
+```
+
+This archives the plan and writes a proof chain entry — assertions, findings, timing, and SHA-256 hashes of every artifact. The proof is a JSON record committed to your repo. It travels with the code.
+
+View it:
+
+```bash
+ana proof <slug>
+```
+
+You'll see the contract score, findings by severity, and timing per stage. Every assertion the contract defined, independently verified. The proof chain grows with every pipeline run — a permanent record of what was built, how it was verified, and what was found.
+
+<NextCards cards={[
+  {
+    eyebrow: "Next concept",
+    title: "The pipeline",
+    href: "/docs/concepts/pipeline",
+    description: "Five stages, independence guarantees, and what each artifact proves."
+  },
+  {
+    eyebrow: "Guide",
+    title: "Reading a proof",
+    href: "/docs/guides/reading-a-proof",
+    description: "What each section of a proof page means."
+  }
+]} />
