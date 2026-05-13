@@ -11,7 +11,8 @@ import Link from "next/link";
 interface Stage {
   number: string;
   name: string;
-  description: string;
+  overview: string;
+  concept: string;
   artifacts: string[];
   agent: string;
   href: string;
@@ -21,7 +22,8 @@ const STAGES: Stage[] = [
   {
     number: "01",
     name: "Think",
-    description: "Investigate. Push back. Scope.",
+    overview: "Investigate. Push back. Scope.",
+    concept: "Understand intent. Bound the change. Write scope.md.",
     artifacts: ["scope.md"],
     agent: "ana",
     href: "/docs/reference/agents/ana",
@@ -29,7 +31,8 @@ const STAGES: Stage[] = [
   {
     number: "02",
     name: "Plan",
-    description: "Spec the solution. Seal the contract.",
+    overview: "Spec the solution. Seal the contract.",
+    concept: "Architect the solution. Write plan.md, spec.md, seal contract.yaml.",
     artifacts: ["spec.md", "contract.yaml"],
     agent: "ana-plan",
     href: "/docs/reference/agents/ana-plan",
@@ -37,7 +40,8 @@ const STAGES: Stage[] = [
   {
     number: "03",
     name: "Build",
-    description: "Implement. Tag tests to contract.",
+    overview: "Implement. Tag tests to contract.",
+    concept: "Implement. Tag tests to contract assertions. Write build_report.md.",
     artifacts: ["build_report.md"],
     agent: "ana-build",
     href: "/docs/reference/agents/ana-build",
@@ -45,7 +49,8 @@ const STAGES: Stage[] = [
   {
     number: "04",
     name: "Verify",
-    description: "Independent fault-finding.",
+    overview: "Independent fault-finding.",
+    concept: "Independent fault-finding. Write verify_report.md.",
     artifacts: ["verify_report.md"],
     agent: "ana-verify",
     href: "/docs/reference/agents/ana-verify",
@@ -53,14 +58,15 @@ const STAGES: Stage[] = [
   {
     number: "05",
     name: "Learn",
-    description: "Promote findings to rules.",
+    overview: "Promote findings to rules.",
+    concept: "Promote findings to skill rules. Tend the proof chain.",
     artifacts: ["skill files"],
     agent: "ana-learn",
     href: "/docs/reference/agents/ana-learn",
   },
 ];
 
-export function PipelineDiagram() {
+export function PipelineDiagram({ variant = "overview" }: { variant?: "overview" | "concept" }) {
   return (
     <div>
       <div
@@ -137,7 +143,7 @@ export function PipelineDiagram() {
                 lineHeight: 1.45,
               }}
             >
-              {stage.description}
+              {variant === "concept" ? stage.concept : stage.overview}
             </span>
             <span style={{ fontSize: "10.5px", marginTop: "2px" }}>
               {stage.artifacts.map((art, j) => (
