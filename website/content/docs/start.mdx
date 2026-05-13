@@ -29,28 +29,14 @@ ana init
 
 Init scans your project, detects your stack, and scaffolds the pipeline into your repo — agents, skills matched to your stack, and project context. Runs entirely on your machine. Your output will reflect your project:
 
-```text
-✓ Scanned my-saas-app (3.2s)
-
-  Stack:    TypeScript · Next.js · Prisma → PostgreSQL · Vitest
-  Deploy:   Vercel
-
-✓ Context → .ana/context/ (2 files)
-✓ Skills → .claude/skills/ (7 skills)
-    Core:      coding-standards, testing-standards, git-workflow,
-               deployment, troubleshooting
-    Detected:  api-patterns, data-access
-  ✓ 4 gotchas pre-populated
-  ✓ Cross-tool: CLAUDE.md + AGENTS.md
-
-  Branch:   main
-  Test:     pnpm run test -- --run
-  Build:    pnpm run build
-
-  Next:
-    claude --agent ana          Start working
-    claude --agent ana-setup    Enrich with team knowledge (optional, ~10 min)
-```
+<div style={{background:"var(--bg-card)",border:"1px solid var(--border)",borderRadius:"var(--radius-md)",margin:"8px 0 18px",fontFamily:"var(--font-mono)",fontSize:"12.5px",lineHeight:1.65,overflow:"hidden"}}>
+<div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 14px",borderBottom:"1px solid var(--hairline)",background:"var(--bg-elev)",fontSize:"11px",color:"var(--ink-60)"}}>
+<span style={{color:"var(--ink-45)",textTransform:"uppercase",letterSpacing:"0.06em",fontSize:"10px"}}>terminal</span>
+</div>
+<pre style={{padding:"14px 16px",color:"var(--ink-75)",overflowX:"auto",whiteSpace:"pre",margin:0,background:"transparent",fontSize:"inherit",lineHeight:"inherit",fontFamily:"inherit"}}>
+<span style={{color:"var(--pass)"}}>✓</span>{" Scanned my-saas-app "}<span style={{color:"var(--ink-45)"}}>{"(3.2s)"}</span>{"\n\n"}{"  "}<span style={{color:"var(--brand-light)"}}>Stack:</span>{"    TypeScript · Next.js · Prisma → PostgreSQL · Vitest\n"}{"  "}<span style={{color:"var(--brand-light)"}}>Deploy:</span>{"   Vercel\n\n"}<span style={{color:"var(--pass)"}}>✓</span>{" Context → .ana/context/ (2 files)\n"}<span style={{color:"var(--pass)"}}>✓</span>{" Skills → .claude/skills/ (7 skills)\n"}{"    "}<span style={{color:"var(--ink-45)"}}>Core:</span>{"      coding-standards, testing-standards, git-workflow,\n"}{"               deployment, troubleshooting\n"}{"    "}<span style={{color:"var(--ink-45)"}}>Detected:</span>{"  api-patterns, data-access\n"}{"  "}<span style={{color:"var(--pass)"}}>✓</span>{" 4 gotchas pre-populated\n"}{"  "}<span style={{color:"var(--pass)"}}>✓</span>{" Cross-tool: CLAUDE.md + AGENTS.md\n\n"}{"  "}<span style={{color:"var(--brand-light)"}}>Branch:</span>{"   main\n"}{"  "}<span style={{color:"var(--brand-light)"}}>Test:</span>{"     pnpm run test -- --run\n"}{"  "}<span style={{color:"var(--brand-light)"}}>Build:</span>{"    pnpm run build\n\n"}{"  "}<span style={{color:"var(--brand-light)"}}>Next:</span>{"\n"}{"    "}<span style={{color:"var(--info)"}}>claude --agent ana</span>{"          Start working\n"}{"    "}<span style={{color:"var(--info)"}}>claude --agent ana-setup</span>{"    Enrich with team knowledge (optional, ~10 min)"}
+</pre>
+</div>
 
 <Callout variant="note">
 **Optional but recommended:** Run `claude --agent ana-setup` to calibrate project knowledge (~10 min). Setup investigates your codebase, asks 2–3 questions, and writes rich context.
