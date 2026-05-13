@@ -9,8 +9,9 @@ type TreeNode = (typeof source.pageTree)["children"][number];
 
 /**
  * Sidebar — renders the Fumadocs page tree.
- * Folders (Concepts, Guides) render as collapsible groups, default open.
- * Styling matches the supermock sidebar spec.
+ * All 5 groups are folders (Get Started, Concepts, Guides, Reference, Proof Chain).
+ * Top-level folders styled as group labels with chevron toggles.
+ * Nested folders (Featured Proofs) styled as lighter sub-toggles.
  */
 export function Sidebar() {
   const pathname = usePathname();
@@ -32,7 +33,7 @@ export function Sidebar() {
     >
       <nav aria-label="Sidebar">
         {tree.children.map((node, i) => (
-          <SidebarNode key={i} node={node} pathname={pathname} />
+          <SidebarNode key={i} node={node} pathname={pathname} depth={0} />
         ))}
       </nav>
     </aside>
@@ -42,11 +43,15 @@ export function Sidebar() {
 function SidebarNode({
   node,
   pathname,
+  depth,
 }: {
   node: TreeNode;
   pathname: string;
+  depth: number;
 }) {
   if (node.type === "separator") {
+    // Separators shouldn't appear anymore (all groups are folders now)
+    // but handle gracefully just in case
     return (
       <div
         style={{
@@ -56,7 +61,7 @@ function SidebarNode({
           letterSpacing: "0.06em",
           color: "var(--ink-45)",
           padding: "4px 10px 8px",
-          marginTop: "18px",
+          marginTop: depth === 0 ? "18px" : "8px",
         }}
       >
         {node.name}
@@ -89,7 +94,7 @@ function SidebarNode({
   }
 
   if (node.type === "folder") {
-    return <FolderNode node={node} pathname={pathname} />;
+    return <FolderNode node={node} pathname={pathname} depth={depth} />;
   }
 
   return null;
@@ -98,42 +103,74 @@ function SidebarNode({
 function FolderNode({
   node,
   pathname,
+  depth,
 }: {
   node: Extract<TreeNode, { type: "folder" }>;
   pathname: string;
+  depth: number;
 }) {
   const isFeaturedProofs =
     typeof node.name === "string" && node.name.includes("Featured");
-  const [open, setOpen] = useState(!isFeaturedProofs);
+
+  // Default open unless it's Featured Proofs or has defaultOpen: false
+  const defaultOpen = isFeaturedProofs
+    ? false
+    : (node as { defaultOpen?: boolean }).defaultOpen !== false;
+  const [open, setOpen] = useState(defaultOpen);
+
+  // Top-level folders (depth 0) = group label style
+  // Nested folders (depth 1+) = link-like style (smaller, lighter)
+  const isTopLevel = depth === 0;
 
   return (
-    <div style={{ marginBottom: "0px" }}>
-      {/* Folder toggle — styled like a group label with a chevron */}
+    <div>
       <button
         onClick={() => setOpen((o) => !o)}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "6px",
-          width: "100%",
-          padding: "4px 10px 8px",
-          marginTop: "18px",
-          border: "none",
-          background: "none",
-          cursor: "pointer",
-          fontSize: "11px",
-          fontWeight: 600,
-          textTransform: "uppercase",
-          letterSpacing: "0.06em",
-          color: "var(--ink-45)",
-          fontFamily: "inherit",
-          textAlign: "left",
-        }}
+        style={
+          isTopLevel
+            ? {
+                // Group label style — matches supermock .s-label
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                width: "100%",
+                padding: "4px 10px 8px",
+                marginTop: "18px",
+                border: "none",
+                background: "none",
+                cursor: "pointer",
+                fontSize: "11px",
+                fontWeight: 600,
+                textTransform: "uppercase",
+                letterSpacing: "0.06em",
+                color: "var(--ink-45)",
+                fontFamily: "inherit",
+                textAlign: "left",
+              }
+            : {
+                // Nested toggle style — link-like, slightly dimmer
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                width: "100%",
+                padding: "5px 10px",
+                border: "none",
+                background: "none",
+                cursor: "pointer",
+                fontSize: "13px",
+                fontWeight: 400,
+                color: "var(--ink-60)",
+                fontFamily: "inherit",
+                textAlign: "left",
+                borderRadius: "var(--radius-sm)",
+                transition: "background 0.12s, color 0.12s",
+              }
+        }
         aria-expanded={open}
       >
         <svg
-          width="8"
-          height="8"
+          width={isTopLevel ? "8" : "8"}
+          height={isTopLevel ? "8" : "8"}
           viewBox="0 0 10 10"
           fill="none"
           stroke="currentColor"
@@ -142,6 +179,7 @@ function FolderNode({
             transition: "transform 0.15s",
             transform: open ? "rotate(90deg)" : "rotate(0deg)",
             flexShrink: 0,
+            opacity: isTopLevel ? 1 : 0.6,
           }}
         >
           <path d="M3 2L7 5L3 8" />
@@ -157,7 +195,7 @@ function FolderNode({
           }}
         >
           {node.children.map((child, i) => (
-            <SidebarNode key={i} node={child} pathname={pathname} />
+            <SidebarNode key={i} node={child} pathname={pathname} depth={depth + 1} />
           ))}
         </div>
       )}

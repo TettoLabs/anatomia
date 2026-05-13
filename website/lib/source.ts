@@ -2,9 +2,10 @@ import { loader } from "fumadocs-core/source";
 import { docs } from "collections/server";
 
 /**
- * Page tree transformer — restructures the sidebar:
- * 1. Wraps Overview + Quickstart in a "Get Started" folder
- * 2. Appends Reference and Proof Chain sections
+ * Page tree transformer — restructures the sidebar into 5 folder groups:
+ * Get Started, Concepts, Guides (from MDX), Reference, Proof Chain (injected).
+ * All folders use the same dropdown pattern. Featured Proofs is a nested
+ * folder inside Proof Chain.
  */
 export const source = loader({
   baseUrl: "/docs",
@@ -36,26 +37,38 @@ export const source = loader({
             children: getStartedChildren,
           });
 
-          // Append Reference and Proof Chain at the bottom
+          // Append Reference and Proof Chain as folders
           node.children.push(
             // ── Reference ──
-            { type: "separator", name: "Reference" },
-            { type: "page", name: "CLI Commands", url: "/docs/reference/cli-commands" },
-            { type: "page", name: "Agent Templates", url: "/docs/reference/agent-templates" },
-            { type: "page", name: "Skill Files", url: "/docs/reference/skill-files" },
-            { type: "page", name: "Context Files", url: "/docs/reference/context-files" },
-
-            // ── Proof Chain ──
-            { type: "separator", name: "Proof Chain" },
-            { type: "page", name: "Browse All", url: "/docs/proof" },
             {
               type: "folder",
-              name: "Featured Proofs",
-              defaultOpen: false,
+              name: "Reference",
+              defaultOpen: true,
               children: [
-                { type: "page", name: "security-hardening", url: "/docs/proof/security-hardening" },
-                { type: "page", name: "proof-promote", url: "/docs/proof/proof-promote" },
-                { type: "page", name: "worktree-isolation", url: "/docs/proof/worktree-isolation" },
+                { type: "page", name: "CLI Commands", url: "/docs/reference/cli-commands" },
+                { type: "page", name: "Agent Templates", url: "/docs/reference/agent-templates" },
+                { type: "page", name: "Skill Files", url: "/docs/reference/skill-files" },
+                { type: "page", name: "Context Files", url: "/docs/reference/context-files" },
+              ],
+            },
+
+            // ── Proof Chain ──
+            {
+              type: "folder",
+              name: "Proof Chain",
+              defaultOpen: true,
+              children: [
+                { type: "page", name: "Browse All", url: "/docs/proof" },
+                {
+                  type: "folder",
+                  name: "Featured Proofs",
+                  defaultOpen: false,
+                  children: [
+                    { type: "page", name: "security-hardening", url: "/docs/proof/security-hardening" },
+                    { type: "page", name: "proof-promote", url: "/docs/proof/proof-promote" },
+                    { type: "page", name: "worktree-isolation", url: "/docs/proof/worktree-isolation" },
+                  ],
+                },
               ],
             },
           );
