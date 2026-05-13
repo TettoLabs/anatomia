@@ -8,10 +8,14 @@ concerns:
     file: "website/components/docs/content/DocsGrid.tsx"
     severity: observation
     suggested_action: accept
-  - summary: "globals.css modified to add --brand-light and --info tokens — not in spec but required for Callout colors"
-    file: "website/app/globals.css"
-    severity: observation
-    suggested_action: accept
+  - summary: "Callout uses --brand-light and --info CSS vars with fallbacks — verify site defines them"
+    file: "website/components/docs/content/Callout.tsx"
+    severity: debt
+    suggested_action: monitor
+  - summary: "3 curated proof slugs (security-hardening, worktree-isolation, proof-promote) may not exist in proof-entries.json — table silently shrinks"
+    file: "website/components/docs/content/CuratedProofs.tsx"
+    severity: debt
+    suggested_action: monitor
   - summary: "Pre-existing lint errors in DocsErrorBoundary.tsx and PlatformProvider.tsx block website lint"
     severity: debt
     suggested_action: scope

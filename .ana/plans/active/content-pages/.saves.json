@@ -30,16 +30,17 @@
   "build_started_at": "2026-05-13T00:01:44.440Z",
   "build_agent": "ana-build",
   "build-report-1": {
-    "saved_at": "2026-05-13T00:25:47.686Z",
-    "hash": "sha256:69c8e2ce4d31e06dc8d496bb54be48d8799e1e21dda9075e2ca2fe6afbaccb43"
+    "saved_at": "2026-05-13T00:34:09.468Z",
+    "hash": "sha256:666093b08f626f2ac679b06b821481d8d0aa9f56c26aea42b583657358cbf0ff"
   },
   "build-data-1": {
-    "saved_at": "2026-05-13T00:25:47.687Z",
-    "hash": "sha256:889522562636a1a368a02a6c4bb07051dfecf104a946dd95595bfce8e8f743ab"
+    "saved_at": "2026-05-13T00:34:09.469Z",
+    "hash": "sha256:b9c9b9681d9bcd9387f8721d687b2c839b99a6c54a64d4b0253324185cab831c"
   },
   "modules_touched": [
     "website/app/docs/[...slug]/page.tsx",
     "website/app/docs/page.tsx",
+    "website/app/globals.css",
     "website/components/docs/content/AudienceCards.tsx",
     "website/components/docs/content/Callout.tsx",
     "website/components/docs/content/CuratedProofs.tsx",

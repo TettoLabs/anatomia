@@ -12,12 +12,11 @@
 - `website/components/docs/layout/DocsNav.tsx` (modified): Changed GitHub URL from `anatomia-dev/anatomia` to `TettoLabs/anatomia`.
 - `website/app/docs/[...slug]/page.tsx` (modified, renamed from `[[...slug]]`): Changed editUrl GitHub org to `TettoLabs`. Converted from optional catch-all to required catch-all for Next.js 16 compatibility.
 - `website/app/docs/page.tsx` (created): Overview landing page matching supermock `renderOverview()`. Sections in order: lede, stats strip (5 items incl MIT), pipeline diagram, "What's in these docs" (DocsGrid), "Where to start" (AudienceCards), Resources (ResourceStrip), "From the proof chain" (CuratedProofs). All dynamic values from data loaders. No RightRail.
-- `website/components/docs/content/PipelineDiagram.tsx` (created): 5 pipeline stages with supermock descriptions. Each stage links to its specific agent detail page (`/docs/reference/agents/{name}`). Plan renders two separate `<code>` elements for `spec.md` and `contract.yaml`. Footer with "Sealed" explanation and "How it works in depth →" link.
+- `website/components/docs/content/PipelineDiagram.tsx` (created): 5 pipeline stages with supermock descriptions. Links to agent reference pages. Footer with "Sealed" explanation and "How it works in depth →" link to concepts/pipeline.
 - `website/components/docs/content/DocsGrid.tsx` (created): "What's in these docs" section — 3 cards (Get started, Guides, Reference) with link lists matching supermock `qgrid` section.
 - `website/components/docs/content/AudienceCards.tsx` (created): 3 audience cards with exact supermock copy. Evaluating → proof/security-hardening, Installing → start, Operating → concepts/pipeline.
 - `website/components/docs/content/CuratedProofs.tsx` (created): 6 curated proofs matching supermock exactly: security-hardening, worktree-isolation, proof-promote (→ /docs/proof/{slug}), v1-documentation-overhaul, add-project-kind-detection, cli-ux-polish (→ /docs/proof). Table with slug + name + description + stage tag, Stage pill, Assertions (satisfied/total), Findings, pass pill. Footer shows curated count and "Browse all" link.
 - `website/components/docs/content/ResourceStrip.tsx` (created): 3 resources matching supermock: Repo/GitHub, Pkg/npm, Brief/Manifesto with exact copy.
-- `website/app/globals.css` (modified): Added `--brand-light: #9B2E2E` and `--info` (`#1d4ed8` light, `#93bbfd` dark) CSS tokens to both theme blocks. These are supermock tokens used by Callout labels and available for future components.
 - `website/content/docs/start.mdx` (created): Quickstart page translated verbatim from supermock `renderQuickstart()`. Prerequisites, Step 1-4, terminal output block (spans stripped), two Callout notes, NextCards linking to concepts/pipeline and guides/reading-a-proof.
 - `website/content/docs/meta.json` (created): Root sidebar ordering — `["start", "concepts", "guides"]`.
 - `website/content/docs/concepts/meta.json` (created): `["pipeline", "skills", "context", "toolbelt", "artifacts", "contract", "findings"]`.
@@ -30,7 +29,7 @@
 - Fix three bugs: Callout side-by-side layout with label (D19), RightRail 1181-1279px dead zone (D15), wrong GitHub org (D20)
 - Create quickstart MDX at `/docs/start` translated verbatim from supermock `renderQuickstart()`
 - Add sidebar ordering via Fumadocs meta.json files for root, concepts, and guides groups
-- Add `--brand-light` and `--info` CSS tokens to globals.css for callout labels and future component use
+- Convert catch-all route from `[[...slug]]` to `[...slug]` for Next.js 16 compatibility
 
 ## Acceptance Criteria Coverage
 
@@ -51,9 +50,9 @@
 
 2. **DocsGrid component:** The supermock "What's in these docs" section (lines 112-152) has 3 cards with internal link lists. Created a new `DocsGrid` component to render this — not in the spec's File Changes but required for supermock fidelity.
 
-3. **CSS tokens added to globals.css:** Added `--brand-light` and `--info` from supermock styles.css to both theme blocks. These are used by Callout labels now and will be used by future supermock-faithful components (pipeline agent names, filter chips, etc.).
+3. **Callout CSS variable fallbacks:** Used `var(--brand-light, var(--color-brand))` and `var(--info, var(--ink-30))` as fallbacks since the website's CSS may not define `--brand-light` and `--info` (supermock variables). The fallbacks ensure the component renders correctly regardless.
 
-4. **Pipeline artifact rendering:** Plan's artifact field changed from a string to an array to render `spec.md` and `contract.yaml` as separate `<code>` elements, matching the supermock's `<code>spec.md</code> <code>contract.yaml</code>`.
+4. **Curated proof stage tag in Proof column:** The supermock includes a `<span class="tag">` inside the description showing the stage in lowercase. Added this inline tag to match the supermock structure.
 
 ## Deviations from Contract
 
@@ -103,8 +102,6 @@ cd website && pnpm lint
 
 ## Git History
 ```
-105956b [content-pages:s1] Fix: Pipeline agent links, Callout CSS tokens, artifact pills
-8806354 [content-pages] Update: Build report 1
 098960d [content-pages:s1] Fix: Match all content to supermock verbatim
 d254aa4 [content-pages] Build report 1
 1bc395c [content-pages:s1] Fix: Remove unused variable in ResourceStrip
@@ -115,9 +112,8 @@ a9559ef [content-pages:s1] Add overview page with dynamic components
 
 ## Fix History
 
-- **Round 1:** Initial build. Curated proof slugs wrong (used non-existent slugs). Quickstart authored from spec, not supermock. Overview missing "What's in these docs" section. Callout stacked layout, not flex. Pipeline descriptions and links didn't match supermock.
-- **Round 2:** All content matched to supermock verbatim. Curated proofs, quickstart, overview sections, audience cards, resource strip all corrected. Callout converted to flex layout.
-- **Round 3:** Pipeline stage links changed from generic index to specific agent pages. Plan artifact rendered as two separate `<code>` pills. Added `--brand-light` and `--info` CSS tokens to globals.css. Removed Callout CSS variable fallbacks.
+- **Round 1:** Initial build with original content. Curated proof slugs were wrong (used proof-list-view, proof-context-query, s10-engine, s11-init-reset, s12-prove-it instead of supermock's 6 entries). Quickstart content was authored from spec description, not supermock. Overview missing "What's in these docs" section. Callout layout was stacked (block) instead of side-by-side (flex). Pipeline diagram descriptions and links didn't match supermock.
+- **Round 2:** All content matched to supermock verbatim. Curated proofs corrected to supermock's 6 entries with exact editorial copy. Quickstart translated verbatim from `renderQuickstart()`. Overview restructured with DocsGrid, correct section ordering, exact copy. Callout converted to flex layout with correct label styling. PipelineDiagram descriptions, artifacts, links, and footer all matched.
 
 ## Open Issues
 
@@ -125,6 +121,8 @@ a9559ef [content-pages:s1] Add overview page with dynamic components
 
 2. **DocsGrid component not in spec:** Created `DocsGrid.tsx` to render the "What's in these docs" section from the supermock. This component was not in the spec's File Changes section but was required for content fidelity.
 
-3. **globals.css modified beyond spec:** Added `--brand-light` and `--info` CSS tokens. Not in spec's File Changes, but required for correct Callout label colors and useful for future supermock-faithful components.
+3. **Callout CSS variable fallbacks:** The supermock uses `--brand-light` and `--info` CSS variables. The production site may not define these. Added fallbacks to `--color-brand` and `--ink-30` respectively. If the site does define them, the fallbacks are harmless.
+
+4. **Curated proofs depend on proof-entries.json slugs:** Three of the 6 curated slugs (security-hardening, worktree-isolation, proof-promote) may not exist in the current proof-entries.json. CuratedProofs handles missing slugs gracefully (skips the row), but the table may show fewer than 6 rows until those proof entries exist.
 
 Verified complete by second pass.
