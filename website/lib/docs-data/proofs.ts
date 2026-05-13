@@ -18,6 +18,10 @@ export function getProofEntries(): ProofEntry[] {
   return load();
 }
 
+export function getProofBySlug(slug: string): ProofEntry | null {
+  return load().find(e => e.slug === slug) ?? null;
+}
+
 export function getProofStats(): ProofStats {
   const entries = load();
   let assertions = 0;

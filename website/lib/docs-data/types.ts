@@ -3,6 +3,30 @@
  * Used by both the extraction script (output) and loader modules (input).
  */
 
+export interface ProofAssertion {
+  id: string;
+  says: string;
+  status: string;
+}
+
+export interface ProofFinding {
+  id?: string;
+  category?: string;
+  summary: string;
+  file?: string;
+  severity: string;
+  suggestedAction?: string;
+  status?: string;
+}
+
+export interface ProofTiming {
+  think: number;
+  plan: number;
+  build: number;
+  verify: number;
+  totalMinutes: number;
+}
+
 export interface ProofEntry {
   slug: string;
   feature: string;
@@ -11,6 +35,7 @@ export interface ProofEntry {
   contract: {
     total: number;
     satisfied: number;
+    unsatisfied: number;
   };
   assertionCount: number;
   findingCount: number;
@@ -18,6 +43,14 @@ export interface ProofEntry {
   completedAt: string;
   scopeSummary: string | null;
   modulesTouched: string[];
+  assertions: ProofAssertion[];
+  findings: ProofFinding[];
+  timing: ProofTiming;
+  hashes: Record<string, string>;
+  findingSeverity: { risk: number; debt: number; observation: number };
+  duration: number;
+  prevSlug: string | null;
+  nextSlug: string | null;
 }
 
 export interface ProofStats {
@@ -38,6 +71,8 @@ export interface AgentTemplate {
   writes: string[];
   forbidden: string[];
   bodyMarkdown: string;
+  role: string;
+  displayDescription: string;
 }
 
 export interface CommandOption {
@@ -78,6 +113,9 @@ export interface SkillTemplate {
   name: string;
   description: string;
   sections: SkillSection[];
+  conditional: boolean;
+  rules: number;
+  content: string;
 }
 
 export interface GotchaEntry {
