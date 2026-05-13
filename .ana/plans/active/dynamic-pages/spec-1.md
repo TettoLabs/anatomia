@@ -23,15 +23,16 @@ Three data normalization issues to handle:
 
 **Reference pages:** 4 index routes + 14 detail routes. All follow the catch-all page pattern (`[...slug]/page.tsx`): import data from loaders, render with `docs-content-area` class, render RightRail alongside. Content is translated verbatim from the supermock render functions — not authored from descriptions.
 
-**Agent roles map (6 values):**
-| Agent | Role |
-|-------|------|
-| ana | your project-aware thinking partner |
-| ana-plan | The architect |
-| ana-build | The builder |
-| ana-verify | fault-finder and code reviewer |
-| ana-learn | quality gardener |
-| ana-setup | Setup orchestrator |
+**Agent display map (6 entries, two fields each):** The supermock has curated `role` and `description` fields for each agent that differ from the CLI frontmatter. The static map must use the supermock values verbatim — do NOT parse from frontmatter descriptions.
+
+| Agent | role (card subtitle) | description (card body) |
+|-------|---------------------|------------------------|
+| ana | Think agent | Scoper, navigator, advisor. Understands intent, bounds scope, identifies tradeoffs. |
+| ana-plan | Plan agent | Architect. Reads scope, writes spec + sealed contract. |
+| ana-build | Build agent | Builder. Implements spec, writes tests tagged to contract, produces build report. |
+| ana-verify | Verify agent | Fault-finder. Independent verification against the sealed contract. Never reads the build report. |
+| ana-learn | Learn agent | Quality gardener. Tends the proof chain between cycles. Promotes findings to skill rules. |
+| ana-setup | Setup orchestrator | Calibrates project knowledge during init. Guess-and-confirm pattern. |
 
 **Conditional skills list (3 values):** `api-patterns`, `data-access`, `ai-patterns`. Static list — matches `CONDITIONAL_SKILL_TRIGGERS` in the CLI constants.
 
@@ -213,12 +214,12 @@ Files · 4    Path · .ana/context/ and .ana/
 ## File Changes
 
 ### `website/scripts/extract-docs-data.ts` (modify)
-**What changes:** Word boundary fix on 5 keyword regexes. Extraction pipeline extension: ProofEntry gets assertions array, findings array, timing object, hashes, findingSeverity counts, duration, prevSlug/nextSlug. SkillTemplate gets conditional, rules, content. AgentTemplate gets role via static map. Contract object normalized to 3 common fields.
+**What changes:** Word boundary fix on 5 keyword regexes. Extraction pipeline extension: ProofEntry gets assertions array, findings array, timing object, hashes, findingSeverity counts, duration, prevSlug/nextSlug. SkillTemplate gets conditional, rules, content. AgentTemplate gets `role` and `displayDescription` via static `AGENT_DISPLAY` map (values from supermock, NOT from CLI frontmatter). Contract object normalized to 3 common fields.
 **Pattern to follow:** Existing `extractProofEntries()`, `extractAgentTemplates()`, `extractSkillTemplates()` functions in the same file.
 **Why:** Without pipeline extension, Phase 2 proof pages have no data. Without normalization, components break on entries with missing fields.
 
 ### `website/lib/docs-data/types.ts` (modify)
-**What changes:** ProofEntry type extended with new fields (assertions array, findings array, timing, hashes, findingSeverity, duration, prevSlug, nextSlug). SkillTemplate extended with conditional, rules, content. AgentTemplate extended with role. New sub-interfaces for ProofAssertion, ProofFinding, ProofTiming.
+**What changes:** ProofEntry type extended with new fields (assertions array, findings array, timing, hashes, findingSeverity, duration, prevSlug, nextSlug). SkillTemplate extended with conditional, rules, content. AgentTemplate extended with `role` and `displayDescription` (the supermock's curated description, distinct from the frontmatter `description`). New sub-interfaces for ProofAssertion, ProofFinding, ProofTiming.
 **Pattern to follow:** Existing type definitions in the same file.
 **Why:** Type safety for all downstream consumers.
 
@@ -231,16 +232,6 @@ Files · 4    Path · .ana/context/ and .ana/
 **What changes:** Add `getProofBySlug(slug)` function. Update `getProofStats()` to use new fields.
 **Pattern to follow:** Existing `getAgentByName()` in agents.ts — same cache + find pattern.
 **Why:** Proof detail pages need individual entry lookup. Phase 2 needs stats from new fields.
-
-### `website/lib/docs-data/skills.ts` (modify)
-**What changes:** No changes needed — existing `getSkillTemplates()` and `getSkillByName()` already return the full object. The new fields come from the type extension.
-**Pattern to follow:** N/A
-**Why:** Listed for completeness — the loader code doesn't need changes, only the types and extraction.
-
-### `website/lib/docs-data/agents.ts` (modify)
-**What changes:** No changes needed — same as skills. The new `role` field comes from the type extension.
-**Pattern to follow:** N/A
-**Why:** Listed for completeness.
 
 ### `website/lib/docs-data/index.ts` (modify)
 **What changes:** Export `getProofBySlug` from proofs module.
@@ -308,7 +299,7 @@ Files · 4    Path · .ana/context/ and .ana/
 - [ ] AC2: Transformer URLs in `source.ts` match blueprint: `/docs/reference/cli`, `/docs/reference/agents`, `/docs/reference/skills`, `/docs/reference/context`.
 - [ ] AC3: `ProofEntry` type extended with: `assertions` array (id, says, status), `findings` array (severity, file, summary, suggestedAction, status), `timing` object (think, plan, build, verify, totalMinutes), `hashes` object, `findingSeverity` object (risk, debt, observation), `duration` (totalMinutes), `prevSlug`, `nextSlug`.
 - [ ] AC4: `SkillTemplate` type extended with `conditional` (boolean), `rules` (number), `content` (full markdown body).
-- [ ] AC5: AgentTemplate type extended with `role` field.
+- [ ] AC5: AgentTemplate type extended with `role` and `displayDescription` fields (supermock values, not frontmatter).
 - [ ] AC6: Extraction script produces the extended data for all proof entries. Findings without severity default to `"observation"`. Missing timing stages default to 0. Contract normalized to total/satisfied/unsatisfied.
 - [ ] AC7: `prevSlug` and `nextSlug` pre-computed based on chronological sort. First has `prevSlug: null`, last has `nextSlug: null`.
 - [ ] AC8: CLI reference page renders at `/docs/reference/cli` from `commands.json`.
@@ -401,7 +392,7 @@ return (
 .ref-card-name { font-size: 14px; font-weight: 600; color: var(--ink); }
 .ref-card-badge {
   font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
-  padding: 2px 6px; border-radius: 3px; background: var(--bg-code); color: var(--ink-60);
+  padding: 2px 6px; border-radius: 3px; background: var(--code-bg); color: var(--ink-60);
 }
 .ref-card-role { font-size: 12px; color: var(--ink-40); margin-bottom: 4px; }
 .ref-card-desc { font-size: 13px; color: var(--ink-80); line-height: 1.45; }

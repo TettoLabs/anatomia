@@ -49,7 +49,7 @@ assertions:
   - id: A007
     says: "Missing timing stages default to zero so components never receive undefined"
     block: "timing defaults to zero"
-    target: "proofEntry.timing.verify"
+    target: "proofEntry['findings-lifecycle-foundation'].timing.build"
     matcher: "equals"
     value: 0
 
@@ -86,7 +86,7 @@ assertions:
   - id: A013
     says: "Findings without a severity field default to observation"
     block: "finding severity default"
-    target: "proofEntry.findings[0].severity"
+    target: "proofEntry['add-project-kind-detection'].findings[0].severity"
     matcher: "equals"
     value: "observation"
 
@@ -109,9 +109,15 @@ assertions:
     matcher: "exists"
 
   - id: A017
-    says: "Agent templates include the role field for card display"
-    block: "agent template has role"
+    says: "Agent templates include curated role and description from the supermock for card display"
+    block: "agent template has display fields"
     target: "agentTemplate.role"
+    matcher: "exists"
+
+  - id: A017b
+    says: "Agent templates include the supermock description distinct from the CLI frontmatter description"
+    block: "agent template has display description"
+    target: "agentTemplate.displayDescription"
     matcher: "exists"
 
   # ── Phase 1: Reference Pages ──
