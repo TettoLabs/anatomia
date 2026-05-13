@@ -1,9 +1,11 @@
 import Link from "next/link";
 import type { ProofEntry } from "@/lib/docs-data/types";
 
-interface CuratedConfig {
+interface CuratedEntry {
   slug: string;
+  name: string;
   description: string;
+  href: string;
 }
 
 interface CuratedProofsProps {
@@ -11,30 +13,42 @@ interface CuratedProofsProps {
   totalCount: number;
 }
 
-const CURATED: CuratedConfig[] = [
+const CURATED: CuratedEntry[] = [
   {
-    slug: "proof-list-view",
-    description: "Added proof browsing with summary table and pagination",
+    slug: "security-hardening",
+    name: "Eliminate command injection across the CLI",
+    description: "All slug args validated before reaching shell.",
+    href: "/docs/proof/security-hardening",
+  },
+  {
+    slug: "worktree-isolation",
+    name: "Isolate every pipeline run in its own worktree",
+    description: "Largest contract in the chain. 1 rejection cycle.",
+    href: "/docs/proof/worktree-isolation",
+  },
+  {
+    slug: "proof-promote",
+    name: "Promote a finding into a skill rule",
+    description: "The learning loop: finding → rule → better builds.",
+    href: "/docs/proof/proof-promote",
+  },
+  {
+    slug: "v1-documentation-overhaul",
+    name: "Rewrite every public-facing document for v1",
+    description: "README, CHANGELOG, CONTRIBUTING, ARCHITECTURE.",
+    href: "/docs/proof",
   },
   {
     slug: "add-project-kind-detection",
-    description: "Detect project kind (CLI, API, web app) during scan",
+    name: "Detect CLI, library, web app, API server, full-stack",
+    description: "Scan-time classifier. Findings later mechanically closed.",
+    href: "/docs/proof",
   },
   {
-    slug: "proof-context-query",
-    description: "Query proof chain context for worktree briefings",
-  },
-  {
-    slug: "s10-engine",
-    description: "Verification engine with contract-based assertion checking",
-  },
-  {
-    slug: "s11-init-reset",
-    description: "Init and reset commands with safe file management",
-  },
-  {
-    slug: "s12-prove-it",
-    description: "Proof chain recording and sealed contract generation",
+    slug: "cli-ux-polish",
+    name: "Make the first 10 minutes feel professional",
+    description: "Help text, command grouping, jargon-free descriptions.",
+    href: "/docs/proof",
   },
 ];
 
@@ -43,7 +57,7 @@ export function CuratedProofs({ entries, totalCount }: CuratedProofsProps) {
     const entry = entries.find((e) => e.slug === c.slug);
     if (!entry) return null;
     return { ...c, entry };
-  }).filter(Boolean) as { slug: string; description: string; entry: ProofEntry }[];
+  }).filter(Boolean) as (CuratedEntry & { entry: ProofEntry })[];
 
   return (
     <div className="my-10">
@@ -58,7 +72,7 @@ export function CuratedProofs({ entries, totalCount }: CuratedProofsProps) {
               <th className="pb-2 pr-4 font-semibold">Stage</th>
               <th className="pb-2 pr-4 font-semibold">Assertions</th>
               <th className="pb-2 pr-4 font-semibold">Findings</th>
-              <th className="pb-2 font-semibold">Result</th>
+              <th className="pb-2 font-semibold"></th>
             </tr>
           </thead>
           <tbody>
@@ -77,22 +91,42 @@ export function CuratedProofs({ entries, totalCount }: CuratedProofsProps) {
                   </span>
                   <span
                     className="block text-[12px]"
+                    style={{ color: "var(--ink-60)" }}
+                  >
+                    {row.name}
+                  </span>
+                  <span
+                    className="block text-[12px]"
                     style={{ color: "var(--ink-45)" }}
                   >
-                    {row.description}
+                    {row.description}{" "}
+                    <span
+                      className="inline-block font-mono text-[10px]"
+                      style={{ color: "var(--ink-30)" }}
+                    >
+                      {row.entry.stage.toLowerCase()}
+                    </span>
+                  </span>
+                </td>
+                <td className="py-2.5 pr-4">
+                  <span
+                    className="inline-block rounded-sm px-1.5 py-0.5 font-mono text-[10px]"
+                    style={{
+                      background: "var(--border-soft)",
+                      color: "var(--ink-60)",
+                    }}
+                  >
+                    {row.entry.stage}
                   </span>
                 </td>
                 <td
                   className="py-2.5 pr-4 font-mono text-[12px]"
                   style={{ color: "var(--ink-60)" }}
                 >
-                  {row.entry.stage}
-                </td>
-                <td
-                  className="py-2.5 pr-4 font-mono text-[12px]"
-                  style={{ color: "var(--ink-60)" }}
-                >
-                  {row.entry.contract.satisfied}/{row.entry.contract.total}
+                  {row.entry.contract.satisfied}
+                  <span style={{ color: "var(--ink-30)" }}>
+                    /{row.entry.contract.total}
+                  </span>
                 </td>
                 <td
                   className="py-2.5 pr-4 font-mono text-[12px]"
@@ -108,7 +142,7 @@ export function CuratedProofs({ entries, totalCount }: CuratedProofsProps) {
                       color: "var(--color-brand)",
                     }}
                   >
-                    {row.entry.result}
+                    {row.entry.result.toLowerCase()}
                   </span>
                 </td>
               </tr>

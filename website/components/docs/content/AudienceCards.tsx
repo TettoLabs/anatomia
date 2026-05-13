@@ -11,26 +11,26 @@ interface AudienceCard {
 const CARDS: AudienceCard[] = [
   {
     tag: "Evaluating",
-    heading: "See a real proof",
+    heading: "I want to see if this is real",
     description:
-      "Browse a verified proof chain entry — scope, contract, build report, and verification result.",
-    cta: "Open a proof →",
-    href: "/docs/proof",
+      "Read one complete proof end to end — scope, contract, build report, verify findings, integrity seal. Five minutes; no install.",
+    cta: "→ Open a real proof",
+    href: "/docs/proof/security-hardening",
   },
   {
     tag: "Installing",
-    heading: "Get started in 8 minutes",
+    heading: "I want to run this on my repo",
     description:
-      "Install Anatomia, run your first scan, and complete a pipeline run end to end.",
-    cta: "Quickstart →",
+      "Scan in three seconds, no login. Init ships the pipeline into your repo. Requires Claude Code.",
+    cta: "→ Quickstart",
     href: "/docs/start",
   },
   {
     tag: "Operating",
-    heading: "Understand the pipeline",
+    heading: "I have it running and want depth",
     description:
-      "Learn how five agents scope, plan, build, verify, and learn from every change.",
-    cta: "How it works →",
+      "How sealed agents work, how to read a verify report, when to promote a finding, how to recover from a rejection cycle.",
+    cta: "→ How it works",
     href: "/docs/concepts/pipeline",
   },
 ];

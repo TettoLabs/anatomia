@@ -7,14 +7,22 @@ interface CalloutProps {
   children: ReactNode;
 }
 
-const variantStyles: Record<CalloutVariant, { borderColor: string; background: string }> = {
+const LABELS: Record<CalloutVariant, string> = {
+  rule: "Rule",
+  note: "Note",
+};
+
+const variantStyles: Record<
+  CalloutVariant,
+  { borderColor: string; labelColor: string }
+> = {
   rule: {
     borderColor: "var(--color-brand)",
-    background: "var(--brand-soft)",
+    labelColor: "var(--brand-light, var(--color-brand))",
   },
   note: {
-    borderColor: "var(--ink-30)",
-    background: "var(--border-soft)",
+    borderColor: "var(--info, var(--ink-30))",
+    labelColor: "var(--info, var(--ink-30))",
   },
 };
 
@@ -24,20 +32,29 @@ export function Callout({ variant = "note", children }: CalloutProps) {
   return (
     <div
       role="note"
-      className="my-6 rounded-[var(--radius-sm)] px-5 py-4 text-[14.5px] leading-relaxed"
+      className="my-[8px_0_22px] rounded-[var(--radius-md)] text-[13.5px] leading-[1.55]"
       style={{
+        display: "flex",
+        gap: "12px",
+        padding: "14px 16px",
+        border: "1px solid var(--border-soft)",
         borderLeft: `3px solid ${styles.borderColor}`,
-        background: styles.background,
-        color: "var(--fg)",
+        background: "var(--bg-card)",
+        color: "var(--ink-80, var(--fg))",
       }}
     >
       <span
-        className="mb-2 block font-mono text-[11px] font-semibold uppercase tracking-wider"
-        style={{ color: styles.borderColor }}
+        className="shrink-0 font-mono text-[10px] font-semibold uppercase"
+        style={{
+          letterSpacing: "0.06em",
+          color: styles.labelColor,
+          paddingTop: "3px",
+          whiteSpace: "nowrap",
+        }}
       >
-        {variant.toUpperCase()}
+        {LABELS[variant]}
       </span>
-      {children}
+      <div>{children}</div>
     </div>
   );
 }

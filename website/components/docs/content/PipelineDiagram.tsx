@@ -13,90 +13,108 @@ const STAGES: Stage[] = [
   {
     number: "01",
     name: "Think",
-    description: "Scope the change, define acceptance criteria",
+    description: "Investigate. Push back. Scope.",
     artifact: "scope.md",
     agent: "ana",
-    href: "/docs/concepts/pipeline",
+    href: "/docs/reference/agent-templates",
   },
   {
     number: "02",
     name: "Plan",
-    description: "Design the spec, seal the contract",
-    artifact: "spec.md",
+    description: "Spec the solution. Seal the contract.",
+    artifact: "spec.md contract.yaml",
     agent: "ana-plan",
-    href: "/docs/concepts/pipeline",
+    href: "/docs/reference/agent-templates",
   },
   {
     number: "03",
     name: "Build",
-    description: "Implement the spec, write tests, commit",
+    description: "Implement. Tag tests to contract.",
     artifact: "build_report.md",
     agent: "ana-build",
-    href: "/docs/concepts/pipeline",
+    href: "/docs/reference/agent-templates",
   },
   {
     number: "04",
     name: "Verify",
-    description: "Run the contract, compare reports, judge",
+    description: "Independent fault-finding.",
     artifact: "verify_report.md",
     agent: "ana-verify",
-    href: "/docs/concepts/pipeline",
+    href: "/docs/reference/agent-templates",
   },
   {
     number: "05",
     name: "Learn",
-    description: "Triage findings, promote rules, evolve",
-    artifact: "findings",
+    description: "Promote findings to rules.",
+    artifact: "skill files",
     agent: "ana-learn",
-    href: "/docs/concepts/pipeline",
+    href: "/docs/reference/agent-templates",
   },
 ];
 
 export function PipelineDiagram() {
   return (
-    <div className="my-10 grid grid-cols-1 gap-3 sm:grid-cols-5">
-      {STAGES.map((stage) => (
+    <div>
+      <div className="my-10 grid grid-cols-1 gap-3 sm:grid-cols-5">
+        {STAGES.map((stage) => (
+          <Link
+            key={stage.number}
+            href={stage.href}
+            className="group rounded-[var(--radius-md)] p-4 transition-colors duration-150"
+            style={{
+              background: "var(--bg-card)",
+              border: "1px solid var(--border-soft)",
+            }}
+          >
+            <span
+              className="mb-1 block font-mono text-[11px] font-semibold"
+              style={{ color: "var(--ink-30)" }}
+            >
+              {stage.number}
+            </span>
+            <span
+              className="mb-1 block text-[15px] font-semibold"
+              style={{ color: "var(--fg-strong)" }}
+            >
+              {stage.name}
+            </span>
+            <span
+              className="mb-2 block text-[12.5px] leading-snug"
+              style={{ color: "var(--ink-60)" }}
+            >
+              {stage.description}
+            </span>
+            <span
+              className="block font-mono text-[11px]"
+              style={{ color: "var(--ink-30)" }}
+            >
+              <code>{stage.artifact}</code>
+            </span>
+            <span
+              className="block font-mono text-[11px]"
+              style={{ color: "var(--ink-30)" }}
+            >
+              {stage.agent}
+            </span>
+          </Link>
+        ))}
+      </div>
+      <div
+        className="flex items-center justify-between text-[13px]"
+        style={{ color: "var(--ink-60)" }}
+      >
+        <span>
+          <strong>Sealed</strong> — each agent sees only the artifacts it needs.
+          Independent verification by design.
+        </span>
         <Link
-          key={stage.number}
-          href={stage.href}
-          className="group rounded-[var(--radius-md)] p-4 transition-colors duration-150"
-          style={{
-            background: "var(--bg-card)",
-            border: "1px solid var(--border-soft)",
-          }}
+          href="/docs/concepts/pipeline"
+          className="shrink-0 font-medium"
+          style={{ color: "var(--color-brand)" }}
         >
-          <span
-            className="mb-1 block font-mono text-[11px] font-semibold"
-            style={{ color: "var(--ink-30)" }}
-          >
-            {stage.number}
-          </span>
-          <span
-            className="mb-1 block text-[15px] font-semibold"
-            style={{ color: "var(--fg-strong)" }}
-          >
-            {stage.name}
-          </span>
-          <span
-            className="mb-2 block text-[12.5px] leading-snug"
-            style={{ color: "var(--ink-60)" }}
-          >
-            {stage.description}
-          </span>
-          <span
-            className="block font-mono text-[11px]"
-            style={{ color: "var(--ink-30)" }}
-          >
-            {stage.artifact}
-          </span>
-          <span
-            className="block font-mono text-[11px]"
-            style={{ color: "var(--ink-30)" }}
-          >
-            {stage.agent}
-          </span>
+          How it works in depth →
         </Link>
-      ))}
+      </div>
     </div>
   );
 }

@@ -8,25 +8,25 @@ interface Resource {
 
 const RESOURCES: Resource[] = [
   {
-    type: "Repository",
-    name: "GitHub",
-    description: "Source code, issues, and pull requests",
+    type: "Repo",
+    name: "GitHub ↗",
+    description: "Source, issues, releases",
     href: "https://github.com/TettoLabs/anatomia",
     external: true,
   },
   {
-    type: "Package",
-    name: "npm",
-    description: "Install with npm install -g anatomia-cli",
+    type: "Pkg",
+    name: "npm: anatomia-cli ↗",
+    description: "v1.0.2 · MIT",
     href: "https://www.npmjs.com/package/anatomia-cli",
     external: true,
   },
   {
-    type: "Philosophy",
+    type: "Brief",
     name: "Manifesto",
-    description: "Why verified AI development matters",
-    href: "/manifesto",
-    external: false,
+    description: "Why proofs, not promises",
+    href: "https://anatomia.dev/manifesto",
+    external: true,
   },
 ];
 
