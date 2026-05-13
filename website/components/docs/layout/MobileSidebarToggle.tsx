@@ -86,7 +86,7 @@ export function MobileSidebarToggle() {
             left: 0,
             bottom: 0,
             zIndex: 50,
-            width: "280px",
+            width: "min(300px, 85vw)",
             background: "var(--bg)",
             borderRight: "1px solid var(--hairline)",
             overflowY: "auto",
