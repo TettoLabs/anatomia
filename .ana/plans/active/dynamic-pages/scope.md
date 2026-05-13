@@ -83,24 +83,28 @@ This separation means Verify catches data shape issues before any proof UI is bu
 - AC19: Filter chips computed from proof data — stage categories (All + each category present in data), finding filters (≥5, Any), cycle filters (First-try, Rejected ≥1). Categories are NOT hardcoded.
 - AC20: Explorer table has 7 columns: Proof (slug + feature + tags), Stage, Assertions, Findings, Duration, Shipped, Verdict.
 - AC21: Column headers for Assertions, Findings, Duration, and Shipped are sortable.
-- AC22: Proof explorer page hides the right rail. Content container does NOT use the 120px right padding — either a modifier class (`docs-content-area--full`) or a custom container style removes the gap.
+- AC22: Proof explorer page hides the right rail. Content container does NOT use the 120px right padding — use `docs-content-full` class or custom padding on the explorer container. AnaPlan decides the naming (note: existing docs.css uses single-dash kebab throughout, not BEM double-dash).
 - AC23: Proof detail pages render at `/docs/proof/{slug}` via `generateStaticParams` for all proof entries.
 - AC24: Proof detail pages display: ProofHero (slug, feature, scope summary, verdict, score, findings breakdown, duration, rejection cycles, shipped date), PipelineGantt (4-bar timing chart), AssertionLedger (table with id/says/matcher/status, show-all toggle for >8 assertions), FindingsList (finding cards with severity badge, file location, summary, action), IntegritySeal (hash display with audit command).
-- AC25: Finding severity badges render: `risk` (red), `debt` (amber), `obs` (gray). Findings without severity display as `obs`.
+- AC25: Finding severity badges render: `risk` (red/`--fail`), `debt` (amber/`--warn`), `obs` (blue/`--info`). Findings without severity display as `obs`.
 - AC26: Adjacent proof navigation at bottom of each detail page using pre-computed `prevSlug`/`nextSlug`.
 - AC27: RightRail on proof detail pages uses a variant prop showing placeholder links: "View on GitHub" (links to `.ana/plans/completed/{slug}/`), "Download artifacts" (placeholder), "Open in Claude" (placeholder).
 - AC28: Proof explorer mobile: horizontal scroll on the table with sticky first column (Proof). Works at ≤880px without truncation.
 - AC29: All proof components have className props for CSS targeting. Responsive rules in `docs.css` for ≤1180px, ≤880px, and ≤640px breakpoints.
 - AC30: `pnpm build` succeeds with all proof routes statically generated.
 - AC31: Duration formatting: `${Math.floor(m/60)}h ${m%60}m` for >60 minutes, `${m}m` otherwise. Input is `timing.total_minutes` (integer) from proof_chain.json.
+- AC32: Explorer table rows are fully clickable — clicking anywhere on a row navigates to that proof's detail page. Not just a link in the slug column. (Supermock: app.js lines 262–264, `tr[data-route]` click handler.)
+- AC33: Explorer filter bar displays "showing X of Y" text that updates live as filters change. X is the filtered count, Y is the total. (Supermock: pages.js line 1395.)
+- AC34: All reference page content (ledes, callouts, section headings, meta rows) is translated verbatim from the supermock render functions — not authored from descriptions. The CLI reference lede, the agent index Callout about template identity, the skill index lede about four sections, the context reference lede — all come from the supermock.
+- AC35: Agent detail and skill detail pages render a working "View on GitHub ↗" link pointing to the actual template file: `https://github.com/TettoLabs/anatomia/blob/main/packages/cli/templates/.claude/agents/{name}.md` (agents) and `.../skills/{name}/SKILL.md` (skills). These are functional links, not placeholders. (Supermock: pages.js lines 1682, 1698, 1753, 1762.)
 
 ## Edge Cases & Risks
 
 - **Growing data counts in contracts.** Any assertion that pins to a specific count (89 proofs, 32 commands, 532 findings) will be stale within days. All count-based assertions must use `greater 0` or range matchers.
-- **Findings without severity.** 62 findings across 19 early proof entries lack the `severity` field. The extraction script defaults these to `"observation"`. The finding cards render them with the `obs` badge (gray). No special handling needed in components — the data layer normalizes it.
+- **Findings without severity.** 62 findings across 19 early proof entries lack the `severity` field. The extraction script defaults these to `"observation"`. The finding cards render them with the `obs` badge (blue/`--info`). No special handling needed in components — the data layer normalizes it.
 - **Proof entries without modules_touched.** 11 entries lack this field. They're already handled by keyword fallback in the extraction script. The word boundary fix (AC1) corrects the one miscategorization.
 - **Proof entries without rejection_cycles.** 2 early entries lack this field. Default to `0` in the extraction script.
-- **SkillTemplate conditional detection.** The extraction script must determine whether a skill is conditional or core. This is derivable from the skill template directory structure or from whether the skill has trigger conditions in the gotcha library. AnaPlan should investigate the cleanest approach.
+- **SkillTemplate conditional detection.** Closed: use a static list in the extraction script. The 3 conditional skills are `api-patterns`, `data-access`, and `ai-patterns`. This changes only when a new skill is added to the CLI — a static list is simpler and more reliable than inferring from gotcha triggers.
 - **ProofExplorer filter chip count.** The supermock hardcodes 7 stage chips (All, Engine, Pipeline, Templates, CLI, Infra, Website). Production must compute these from the data — if a category has zero entries, the chip still appears (it just filters to zero results). The chip set should match whatever categories the extraction produces.
 - **Multi-phase proof entries.** Some proofs have phase-specific hashes (e.g., `build-report-1`, `build-report-2`, `build-report-3` instead of `build-report`). The IntegritySeal component must handle both shapes.
 - **Large assertion tables.** Some proofs have 30+ assertions. The AssertionLedger should show the first 8 with a "show all →" toggle, matching the supermock's pattern.
@@ -202,13 +206,11 @@ Scope 4's hardest lesson: Build without supermock access had to be rebuilt TWICE
 - `page.data.toc` is only accessible inside page components, not layout — RightRail must render in page.tsx
 - Next.js route specificity: `/docs/proof/page.tsx` takes priority over `/docs/[...slug]/page.tsx` automatically
 - `generateStaticParams` returns must match the dynamic segment name exactly (`{ name }` for `[name]`, `{ slug }` for `[slug]`)
-- Proof explorer is a `'use client'` component — state management for filters and sorting is local React state, not URL params
-- The `docs-content-area` class provides 120px right padding. Proof explorer must NOT use this padding when right rail is hidden — use a modifier class or custom container.
+- Proof explorer is a `'use client'` component — state management for filters and sorting is local React state, not URL params. This is a closed decision — URL params are a future enhancement.
+- The `docs-content-area` class provides 120px right padding. Proof explorer must NOT use this padding when right rail is hidden — use `docs-content-full` or custom container padding. Existing docs.css uses single-dash kebab naming (not BEM double-dash).
 - Multi-phase hashes: some proof entries have `build-report-1`, `build-report-2` etc. instead of `build-report`. IntegritySeal must render whatever keys exist.
 - Content in JSX blocks, not markdown: reference cards (ref-card), filter chips (fchip), proof hero (proof-hero), Gantt bars (gantt), assertion ledger (assn-tbl), finding cards (fnd), severity badges (fnd-sev), verdict pills (verdict, pass-pill), integrity seal (integ) — all need `<div style={{...}}>` JSX blocks. See Scope 4 guide pages for working examples.
 - Existing components to REUSE: Breadcrumb, MetaRow, Callout, CodeBlock, StatsStrip, NextCards, RightRail. See ARCHITECTURE_BLUEPRINT.md "Built components" table for the full 21-component inventory.
 
 ### Things to Investigate
 - AgentTemplate `role` field: is it a separate frontmatter field, or does it need to be parsed from the description string? Check `packages/cli/templates/.claude/agents/*.md` frontmatter.
-- SkillTemplate `conditional` detection: what's the cleanest way to determine core vs conditional? Options: check if the skill directory name appears in gotcha triggers, or check for a `triggers` field in the template, or maintain a static list.
-- ProofExplorer: should filter state be stored in URL search params (shareable filtered views) or local state only? The supermock uses local state. URL params would be a small enhancement but adds complexity.
