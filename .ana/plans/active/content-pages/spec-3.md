@@ -139,7 +139,7 @@ Setup reads your codebase, forms...     ← lede
 - Same MDX conventions as Phase 2: frontmatter schema, component usage, markdown formatting.
 - TroubleCard follows the Callout component pattern: typed props, CSS custom properties, children as ReactNode.
 - Links to reference pages that don't exist yet: use the correct href anyway. They'll resolve in Scope 5.
-- Use real data when hardcoding stats (87 entries, 19 rejection cycles, 1903 assertions, 503 findings). Don't copy the supermock's stale numbers.
+- When hardcoding proof stats in guide prose, use current values from the proof chain at build time (run `getProofStats()` or check `proof-entries.json`). Don't copy the supermock's stale numbers — they're from an older snapshot.
 
 ### Pattern Extracts
 

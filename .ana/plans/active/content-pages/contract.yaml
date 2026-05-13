@@ -12,11 +12,10 @@ assertions:
     value: "/docs"
 
   - id: A002
-    says: "Overview stats strip shows real proof count from data loader"
+    says: "Overview stats strip shows proof count from data loader, not a hardcoded string"
     block: "overview stats strip uses dynamic values"
-    target: "overview.statsStrip.proofCount"
-    matcher: "equals"
-    value: 87
+    target: "overview.statsStrip.dataLoaderUsage"
+    matcher: "truthy"
 
   - id: A003
     says: "Overview pipeline diagram shows all 5 stages"
