@@ -392,6 +392,25 @@
 }
 
 /* -------------------------------------------------------------------
+   PROOF EXPLORER — filter chips, table, rows
+   ------------------------------------------------------------------- */
+.docs-fchip:hover {
+  border-color: var(--ink-25) !important;
+  color: var(--ink) !important;
+}
+
+.docs-exp-row:hover {
+  background: var(--code-bg);
+}
+
+/* -------------------------------------------------------------------
+   PROOF DETAIL — assertion table row hover
+   ------------------------------------------------------------------- */
+.docs-assn-row:hover td {
+  background: var(--code-bg);
+}
+
+/* -------------------------------------------------------------------
    RESPONSIVE COLLAPSE
    ------------------------------------------------------------------- */
 
@@ -412,6 +431,25 @@
   }
   .docs-aud-grid {
     grid-template-columns: 1fr !important;
+  }
+}
+
+/* ≤880px: explorer table horizontal scroll with sticky first column */
+@media (max-width: 880px) {
+  .docs-exp-tbl-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .docs-exp-tbl th:first-child,
+  .docs-exp-tbl td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--bg-card);
+    box-shadow: 4px 0 8px -2px rgba(0, 0, 0, 0.08);
+  }
+  .docs-exp-tbl th:first-child {
+    background: var(--bg-elev);
   }
 }
 
@@ -538,5 +576,23 @@
   nav[aria-label="Documentation"] {
     padding: 12px 16px !important;
     gap: 12px !important;
+  }
+
+  /* Proof explorer: compress stats row */
+  .docs-proof-stats-row {
+    flex-wrap: wrap !important;
+    gap: 12px !important;
+    font-size: 12px !important;
+  }
+
+  /* Proof explorer: stack filter chips more aggressively */
+  .docs-exp-filters {
+    font-size: 11px !important;
+  }
+
+  /* Proof detail: compress meta */
+  .docs-content-full {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
   }
 }

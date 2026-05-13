@@ -9,11 +9,17 @@ interface TocItem {
   depth: number;
 }
 
+interface ProofLinks {
+  githubUrl: string;
+}
+
 interface RightRailProps {
   toc: TocItem[];
   commitSha?: string;
   buildTimestamp?: string;
   editUrl?: string;
+  variant?: "proof";
+  proofLinks?: ProofLinks;
 }
 
 /**
@@ -23,7 +29,7 @@ interface RightRailProps {
  * Ask AI: 3 bordered link rows.
  * Footer: mono 10.5px, dotted underlines, short SHA link.
  */
-export function RightRail({ toc, commitSha, buildTimestamp, editUrl }: RightRailProps) {
+export function RightRail({ toc, commitSha, buildTimestamp, editUrl, variant, proofLinks }: RightRailProps) {
   const activeId = useScrollSpy(toc);
   const shortSha = commitSha?.slice(0, 7);
 
@@ -55,7 +61,7 @@ export function RightRail({ toc, commitSha, buildTimestamp, editUrl }: RightRail
               marginBottom: "14px",
             }}
           >
-            On this page
+            {variant === "proof" ? "On this proof" : "On this page"}
           </div>
           <ul
             className="right-rail-toc"
@@ -138,16 +144,25 @@ export function RightRail({ toc, commitSha, buildTimestamp, editUrl }: RightRail
             marginBottom: "6px",
           }}
         >
-          Ask AI about this page
+          {variant === "proof" ? "This proof, elsewhere" : "Ask AI about this page"}
         </div>
-        {[
-          { text: "Copy as Markdown", arr: "⌘C" },
-          { text: "Open in Claude", arr: "↗" },
-          { text: "Open in ChatGPT", arr: "↗" },
-        ].map((link) => (
+        {(variant === "proof"
+          ? [
+              { text: "View on GitHub", arr: "↗", href: proofLinks?.githubUrl ?? "#" },
+              { text: "Download artifacts", arr: "↗", href: "#" },
+              { text: "Open in Claude", arr: "↗", href: "#" },
+            ]
+          : [
+              { text: "Copy as Markdown", arr: "⌘C", href: "#" },
+              { text: "Open in Claude", arr: "↗", href: "#" },
+              { text: "Open in ChatGPT", arr: "↗", href: "#" },
+            ]
+        ).map((link) => (
           <a
             key={link.text}
-            href="#"
+            href={link.href}
+            target={link.href !== "#" ? "_blank" : undefined}
+            rel={link.href !== "#" ? "noopener noreferrer" : undefined}
             style={{
               display: "flex",
               alignItems: "center",
