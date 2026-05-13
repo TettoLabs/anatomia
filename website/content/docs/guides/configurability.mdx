@@ -9,21 +9,28 @@ lastReviewed: May 2026
 
 Settings the CLI manages for you. Change them with commands or `ana.json` edits — both survive `ana init`.
 
-**Agent models**
-Each agent can run a different model.
-`ana agents model ana-build sonnet`
-
-**Any ana.json field**
-Read or write config values. Validates field types.
-`ana config set branchPrefix "ana/"`
-
-**Build / test / lint commands**
-Every agent reads these. Init detects them; you override.
-`ana config set commands.test "pnpm vitest run"`
-
-**Custom data**
-The `custom` namespace stores arbitrary team data. Collision-safe.
-`ana config set custom.teamId "anatomia"`
+<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",margin:"14px 0 18px"}}>
+<div style={{padding:"12px 14px",borderRadius:"var(--radius-sm)",background:"var(--bg-card)",border:"1px solid var(--border-soft)"}}>
+<div style={{fontWeight:600,fontSize:"13px",marginBottom:"4px",color:"var(--fg)"}}>Agent models</div>
+<div style={{fontSize:"12.5px",color:"var(--ink-60)",lineHeight:1.5}}>Each agent can run a different model.</div>
+<div style={{fontFamily:"var(--font-mono)",fontSize:"11px",marginTop:"8px",color:"var(--ink-45)"}}>ana agents model ana-build sonnet</div>
+</div>
+<div style={{padding:"12px 14px",borderRadius:"var(--radius-sm)",background:"var(--bg-card)",border:"1px solid var(--border-soft)"}}>
+<div style={{fontWeight:600,fontSize:"13px",marginBottom:"4px",color:"var(--fg)"}}>Any ana.json field</div>
+<div style={{fontSize:"12.5px",color:"var(--ink-60)",lineHeight:1.5}}>Read or write config values. Validates field types.</div>
+<div style={{fontFamily:"var(--font-mono)",fontSize:"11px",marginTop:"8px",color:"var(--ink-45)"}}>ana config set branchPrefix "ana/"</div>
+</div>
+<div style={{padding:"12px 14px",borderRadius:"var(--radius-sm)",background:"var(--bg-card)",border:"1px solid var(--border-soft)"}}>
+<div style={{fontWeight:600,fontSize:"13px",marginBottom:"4px",color:"var(--fg)"}}>Build / test / lint commands</div>
+<div style={{fontSize:"12.5px",color:"var(--ink-60)",lineHeight:1.5}}>Every agent reads these. Init detects them; you override.</div>
+<div style={{fontFamily:"var(--font-mono)",fontSize:"11px",marginTop:"8px",color:"var(--ink-45)"}}>ana config set commands.test "pnpm vitest run"</div>
+</div>
+<div style={{padding:"12px 14px",borderRadius:"var(--radius-sm)",background:"var(--bg-card)",border:"1px solid var(--border-soft)"}}>
+<div style={{fontWeight:600,fontSize:"13px",marginBottom:"4px",color:"var(--fg)"}}>Custom data</div>
+<div style={{fontSize:"12.5px",color:"var(--ink-60)",lineHeight:1.5}}>The <code>custom</code> namespace stores arbitrary team data. Collision-safe.</div>
+<div style={{fontFamily:"var(--font-mono)",fontSize:"11px",marginTop:"8px",color:"var(--ink-45)"}}>ana config set custom.teamId "anatomia"</div>
+</div>
+</div>
 
 ### What ana.json looks like
 
@@ -41,7 +48,7 @@ The `custom` namespace stores arbitrary team data. Collision-safe.
 }
 ```
 
-User fields (`branchPrefix`, `coAuthor`, `artifactBranch`, `commands`, `custom`) are yours. Machine fields (`anaVersion`, `lastScanAt`, `language`, `framework`) refresh on `ana init`. Unknown top-level keys you add are preserved across re-init.
+<p style={{fontSize:"13px",color:"var(--ink-60)",margin:"0 0 16px"}}>User fields (`branchPrefix`, `coAuthor`, `artifactBranch`, `commands`, `custom`) are yours. Machine fields (`anaVersion`, `lastScanAt`, `language`, `framework`) refresh on `ana init`. Unknown top-level keys you add are preserved across re-init.</p>
 
 ## Edit the files
 
@@ -151,21 +158,28 @@ The nuclear option. Anatomia is MIT-licensed. Fork to change artifact formats, c
 
 Updating the CLI (`npm update anatomia-cli`) changes the binary only. Your installed agents, skills, and config don't change until you choose to run `ana init` again. When you do:
 
-**Preserved:**
-
-- context/ directory (copied wholesale)
-- ana.json user fields + unknown keys
-- Skill Rules, Gotchas, Examples
-- proof\_chain.json + PROOF\_CHAIN.md
-- plans/completed/ (all archives)
-- Agent files in .claude/agents/
-- CLAUDE.md + AGENTS.md
-
-**Refreshed:**
-
-- ana.json anaVersion + lastScanAt
-- scan.json (full regeneration)
-- Skill Detected sections
+<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",margin:"14px 0 18px"}}>
+<div style={{padding:"12px 14px",borderRadius:"var(--radius-sm)",border:"1px solid var(--pass-border)",background:"var(--pass-bg)"}}>
+<div style={{fontWeight:600,fontSize:"13px",color:"var(--pass)",marginBottom:"6px"}}>Preserved</div>
+<ul style={{fontSize:"12.5px",color:"var(--ink-75)",lineHeight:1.6,margin:0,paddingLeft:"16px"}}>
+<li>context/ directory (copied wholesale)</li>
+<li>ana.json user fields + unknown keys</li>
+<li>Skill Rules, Gotchas, Examples</li>
+<li>proof_chain.json + PROOF_CHAIN.md</li>
+<li>plans/completed/ (all archives)</li>
+<li>Agent files in .claude/agents/</li>
+<li>CLAUDE.md + AGENTS.md</li>
+</ul>
+</div>
+<div style={{padding:"12px 14px",borderRadius:"var(--radius-sm)",border:"1px solid rgba(248,113,113,0.25)",background:"var(--fail-bg)"}}>
+<div style={{fontWeight:600,fontSize:"13px",color:"var(--fail)",marginBottom:"6px"}}>Refreshed</div>
+<ul style={{fontSize:"12.5px",color:"var(--ink-75)",lineHeight:1.6,margin:0,paddingLeft:"16px"}}>
+<li>ana.json anaVersion + lastScanAt</li>
+<li>scan.json (full regeneration)</li>
+<li>Skill Detected sections</li>
+</ul>
+</div>
+</div>
 
 ## What's fixed
 
@@ -177,7 +191,7 @@ Load-bearing opinions. Fixed because changing them breaks the verification guara
 - **Proof seal** — SHA-256 hashes of every artifact.
 - **Artifact structure** — the save commands validate format.
 
-These constraints are what make the proof chain trustworthy. Every customization above works because these five things don't change.
+<p style={{fontSize:"13px",color:"var(--ink-60)",margin:"0 0 16px"}}>These constraints are what make the proof chain trustworthy. Every customization above works because these five things don't change.</p>
 
 <NextCards cards={[
   {

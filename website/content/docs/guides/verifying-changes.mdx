@@ -22,24 +22,14 @@ Verify reads the spec and the code — never the build report. Eight steps:
 
 Both agents read the same planning artifacts and project config. The difference is one file: `build_report.md`. Only the developer sees both reports.
 
-```yaml
-# ana-build reads:
-- spec.md           # how to build it
-- contract.yaml     # what done means (sealed)
-- plan.md           # sequencing and phasing
-- ana.json          # build/test/lint commands
-- scan.json         # stack awareness
-- the codebase      # current state
-
-# ana-verify reads:
-- spec.md           # same
-- contract.yaml     # same
-- plan.md           # same
-- ana.json          # same
-- scan.json         # same
-- the codebase      # the diff at HEAD
-- ❌ build_report.md  # forbidden
-```
+<div style={{background:"var(--bg-card)",border:"1px solid var(--border)",borderRadius:"var(--radius-md)",margin:"8px 0 18px",fontFamily:"var(--font-mono)",fontSize:"12.5px",lineHeight:1.65,overflow:"hidden"}}>
+<div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 14px",borderBottom:"1px solid var(--hairline)",background:"var(--bg-elev)",fontSize:"11px",color:"var(--ink-60)"}}>
+<span style={{color:"var(--ink-45)",textTransform:"uppercase",letterSpacing:"0.06em",fontSize:"10px"}}>yaml</span>
+</div>
+<pre style={{padding:"14px 16px",color:"var(--ink-75)",overflowX:"auto",whiteSpace:"pre",margin:0,background:"transparent",fontSize:"inherit",lineHeight:"inherit",fontFamily:"inherit"}}>
+<span style={{color:"var(--ink-45)"}}>{"# ana-build reads:"}</span>{"\n"}<span style={{color:"var(--brand-light)"}}>-</span>{" "}<span style={{color:"var(--info)"}}>spec.md</span>{"           "}<span style={{color:"var(--ink-45)"}}>{"# how to build it"}</span>{"\n"}<span style={{color:"var(--brand-light)"}}>-</span>{" "}<span style={{color:"var(--info)"}}>contract.yaml</span>{"     "}<span style={{color:"var(--ink-45)"}}>{"# what done means (sealed)"}</span>{"\n"}<span style={{color:"var(--brand-light)"}}>-</span>{" "}<span style={{color:"var(--info)"}}>plan.md</span>{"           "}<span style={{color:"var(--ink-45)"}}>{"# sequencing and phasing"}</span>{"\n"}<span style={{color:"var(--brand-light)"}}>-</span>{" "}<span style={{color:"var(--info)"}}>ana.json</span>{"          "}<span style={{color:"var(--ink-45)"}}>{"# build/test/lint commands"}</span>{"\n"}<span style={{color:"var(--brand-light)"}}>-</span>{" "}<span style={{color:"var(--info)"}}>scan.json</span>{"         "}<span style={{color:"var(--ink-45)"}}>{"# stack awareness"}</span>{"\n"}<span style={{color:"var(--brand-light)"}}>-</span>{" "}<span style={{color:"var(--info)"}}>the codebase</span>{"      "}<span style={{color:"var(--ink-45)"}}>{"# current state"}</span>{"\n\n"}<span style={{color:"var(--ink-45)"}}>{"# ana-verify reads:"}</span>{"\n"}<span style={{color:"var(--brand-light)"}}>-</span>{" "}<span style={{color:"var(--info)"}}>spec.md</span>{"           "}<span style={{color:"var(--ink-45)"}}>{"# same"}</span>{"\n"}<span style={{color:"var(--brand-light)"}}>-</span>{" "}<span style={{color:"var(--info)"}}>contract.yaml</span>{"     "}<span style={{color:"var(--ink-45)"}}>{"# same"}</span>{"\n"}<span style={{color:"var(--brand-light)"}}>-</span>{" "}<span style={{color:"var(--info)"}}>plan.md</span>{"           "}<span style={{color:"var(--ink-45)"}}>{"# same"}</span>{"\n"}<span style={{color:"var(--brand-light)"}}>-</span>{" "}<span style={{color:"var(--info)"}}>ana.json</span>{"          "}<span style={{color:"var(--ink-45)"}}>{"# same"}</span>{"\n"}<span style={{color:"var(--brand-light)"}}>-</span>{" "}<span style={{color:"var(--info)"}}>scan.json</span>{"         "}<span style={{color:"var(--ink-45)"}}>{"# same"}</span>{"\n"}<span style={{color:"var(--brand-light)"}}>-</span>{" "}<span style={{color:"var(--info)"}}>the codebase</span>{"      "}<span style={{color:"var(--ink-45)"}}>{"# the diff at HEAD"}</span>{"\n"}<span style={{color:"var(--brand-light)"}}>-</span>{" "}<span style={{color:"var(--ink-45)"}}>{"❌ build_report.md  # forbidden"}</span>
+</pre>
+</div>
 
 ## The verify report
 
@@ -59,11 +49,18 @@ After the ledger: **Findings** (categorized observations with severity and sugge
 
 ## PASS and FAIL
 
-**PASS:** Every assertion SATISFIED. Every AC passing. Tests green. Findings are informational — a PASS with 10 findings is normal.
+<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px",marginBottom:"16px"}}>
+<div style={{padding:"14px 16px",borderRadius:"var(--radius-sm)",border:"1px solid var(--pass-border)",background:"var(--pass-bg)"}}>
+<div style={{fontWeight:600,fontSize:"13px",color:"var(--pass)",marginBottom:"6px"}}>PASS</div>
+<div style={{fontSize:"13px",color:"var(--ink-75)",lineHeight:1.5}}>Every assertion SATISFIED. Every AC passing. Tests green. Findings are informational — a PASS with 10 findings is normal.</div>
+</div>
+<div style={{padding:"14px 16px",borderRadius:"var(--radius-sm)",border:"1px solid rgba(248,113,113,0.25)",background:"var(--fail-bg)"}}>
+<div style={{fontWeight:600,fontSize:"13px",color:"var(--fail)",marginBottom:"6px"}}>FAIL</div>
+<div style={{fontSize:"13px",color:"var(--ink-75)",lineHeight:1.5}}>Any assertion UNSATISFIED. Any AC failed. Test failures or regressions. One unsatisfied assertion is enough.</div>
+</div>
+</div>
 
-**FAIL:** Any assertion UNSATISFIED. Any AC failed. Test failures or regressions. One unsatisfied assertion is enough.
-
-Findings measure depth of review. The verdict measures contract compliance. They're independent.
+<p style={{fontSize:"13px",color:"var(--ink-60)",margin:"0 0 16px"}}>Findings measure depth of review. The verdict measures contract compliance. They're independent.</p>
 
 ## When Verify fails
 
@@ -75,22 +72,22 @@ FAIL sends the work back to Build. 17 of Anatomia's own 78 proofs had rejection 
 
 Re-verification is a full pass. Every assertion is re-evaluated. The previous report provides a checklist, not a shortcut.
 
-If the failure isn't obvious from the report, see [Troubleshooting](/docs/guides/troubleshooting).
+<p style={{fontSize:"13px",color:"var(--ink-60)",margin:"0 0 16px"}}>If the failure isn't obvious from the report, see [Troubleshooting](/docs/guides/troubleshooting).</p>
 
 ## Running verify
 
 Verify runs in the worktree Build created — no branch switching or setup needed.
 
-```bash
-# After Build finishes, open a new session:
-$ claude --agent ana-verify
+<div style={{background:"var(--bg-card)",border:"1px solid var(--border)",borderRadius:"var(--radius-md)",margin:"8px 0 18px",fontFamily:"var(--font-mono)",fontSize:"12.5px",lineHeight:1.65,overflow:"hidden"}}>
+<div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 14px",borderBottom:"1px solid var(--hairline)",background:"var(--bg-elev)",fontSize:"11px",color:"var(--ink-60)"}}>
+<span style={{color:"var(--ink-45)",textTransform:"uppercase",letterSpacing:"0.06em",fontSize:"10px"}}>bash</span>
+</div>
+<pre style={{padding:"14px 16px",color:"var(--ink-75)",overflowX:"auto",whiteSpace:"pre",margin:0,background:"transparent",fontSize:"inherit",lineHeight:"inherit",fontFamily:"inherit"}}>
+<span style={{color:"var(--ink-45)"}}>{"# After Build finishes, open a new session:"}</span>{"\n$ "}<span style={{color:"var(--pass)"}}>claude --agent ana-verify</span>{"\n\n"}<span style={{color:"var(--ink-45)"}}>{"# Verify finds the work item, enters the worktree,"}</span>{"\n"}<span style={{color:"var(--ink-45)"}}>{"# runs the 8-step process, writes the report."}</span>{"\n"}<span style={{color:"var(--ink-45)"}}>{"# On PASS, it creates a PR for review."}</span>
+</pre>
+</div>
 
-# Verify finds the work item, enters the worktree,
-# runs the 8-step process, writes the report.
-# On PASS, it creates a PR for review.
-```
-
-Under the hood: `ana work status` → `ana work start` → `ana verify pre-check` → verification → `ana artifact save verify-report` → `ana pr create`. The save runs the seal check again — tampered contracts are blocked.
+<p style={{fontSize:"13px",color:"var(--ink-60)",margin:"12px 0 16px"}}>Under the hood: `ana work status` → `ana work start` → `ana verify pre-check` → verification → `ana artifact save verify-report` → `ana pr create`. The save runs the seal check again — tampered contracts are blocked.</p>
 
 After the PR is created: read both reports, merge, then `ana work complete` to archive and record the proof chain entry.
 
