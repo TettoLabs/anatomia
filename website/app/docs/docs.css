@@ -81,6 +81,11 @@
   color: var(--fg) !important;
 }
 
+/* DocsGrid link hover — matches supermock .qcard ul a:hover */
+.qcard-link:hover {
+  color: var(--brand-light) !important;
+}
+
 /* -------------------------------------------------------------------
    PROSE — matches supermock .prose exactly
    ------------------------------------------------------------------- */
