@@ -105,6 +105,11 @@
   opacity: 1 !important;
 }
 
+/* Callout — remove bottom margin on last paragraph inside callout */
+.docs-prose [role="note"] p:last-child {
+  margin-bottom: 0;
+}
+
 /* Copy button hover — matches supermock .code-head .copy:hover */
 .copy-btn:hover {
   color: var(--fg) !important;
