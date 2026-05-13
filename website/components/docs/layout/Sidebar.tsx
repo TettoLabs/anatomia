@@ -8,9 +8,9 @@ import { source } from "@/lib/source";
 type TreeNode = (typeof source.pageTree)["children"][number];
 
 /**
- * Sidebar — renders the Fumadocs page tree as a nested list.
- * Five groups: Get Started, Concepts, Guides, Reference, Proof Chain.
- * Active state highlights current page. Featured proofs section toggleable.
+ * Sidebar — renders the Fumadocs page tree.
+ * Folders (Concepts, Guides) render as collapsible groups, default open.
+ * Styling matches the supermock sidebar spec.
  */
 export function Sidebar() {
   const pathname = usePathname();
@@ -18,12 +18,21 @@ export function Sidebar() {
 
   return (
     <aside
-      className="docs-sidebar sticky top-[58px] hidden h-[calc(100vh-58px)] w-[248px] shrink-0 overflow-y-auto md:block"
-      style={{ borderRight: "1px solid var(--hairline)" }}
+      className="docs-sidebar"
+      style={{
+        position: "sticky",
+        top: "58px",
+        height: "calc(100vh - 58px)",
+        width: "248px",
+        flexShrink: 0,
+        overflowY: "auto",
+        borderRight: "1px solid var(--hairline)",
+        padding: "22px 14px 30px",
+      }}
     >
-      <nav className="px-4 py-6" aria-label="Sidebar">
+      <nav aria-label="Sidebar">
         {tree.children.map((node, i) => (
-          <SidebarNode key={i} node={node} pathname={pathname} depth={0} />
+          <SidebarNode key={i} node={node} pathname={pathname} />
         ))}
       </nav>
     </aside>
@@ -33,17 +42,22 @@ export function Sidebar() {
 function SidebarNode({
   node,
   pathname,
-  depth,
 }: {
   node: TreeNode;
   pathname: string;
-  depth: number;
 }) {
   if (node.type === "separator") {
     return (
       <div
-        className="mb-2 mt-6 px-2 font-mono text-[11px] font-semibold uppercase tracking-wider first:mt-0"
-        style={{ color: "var(--ink-30)" }}
+        style={{
+          fontSize: "11px",
+          fontWeight: 600,
+          textTransform: "uppercase",
+          letterSpacing: "0.06em",
+          color: "var(--ink-45)",
+          padding: "4px 10px 8px",
+          marginTop: "18px",
+        }}
       >
         {node.name}
       </div>
@@ -55,11 +69,17 @@ function SidebarNode({
     return (
       <Link
         href={node.url}
-        className="sidebar-link mb-0.5 block rounded-[var(--radius-sm)] px-2 py-1.5 text-[13.5px] transition-colors duration-100"
+        className="sidebar-link"
         style={{
-          color: active ? "var(--fg-strong)" : "var(--ink-60)",
-          background: active ? "var(--border-soft)" : "transparent",
-          fontWeight: active ? 600 : 400,
+          display: "block",
+          padding: "5px 10px",
+          borderRadius: "var(--radius-sm)",
+          fontSize: "13px",
+          color: active ? "var(--fg)" : "var(--ink-60)",
+          background: active ? "var(--brand-soft)" : "transparent",
+          fontWeight: active ? 500 : 400,
+          textDecoration: "none",
+          transition: "background 0.12s, color 0.12s",
         }}
         aria-current={active ? "page" : undefined}
       >
@@ -69,7 +89,7 @@ function SidebarNode({
   }
 
   if (node.type === "folder") {
-    return <FolderNode node={node} pathname={pathname} depth={depth} />;
+    return <FolderNode node={node} pathname={pathname} />;
   }
 
   return null;
@@ -78,40 +98,66 @@ function SidebarNode({
 function FolderNode({
   node,
   pathname,
-  depth,
 }: {
   node: Extract<TreeNode, { type: "folder" }>;
   pathname: string;
-  depth: number;
 }) {
-  const isFeaturedProofs = typeof node.name === "string" && node.name.includes("Featured");
+  const isFeaturedProofs =
+    typeof node.name === "string" && node.name.includes("Featured");
   const [open, setOpen] = useState(!isFeaturedProofs);
 
   return (
-    <div className="mb-0.5">
+    <div style={{ marginBottom: "0px" }}>
+      {/* Folder toggle — styled like a group label with a chevron */}
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center gap-1.5 rounded-[var(--radius-sm)] px-2 py-1.5 text-left text-[13.5px] transition-colors duration-100"
-        style={{ color: "var(--ink-60)" }}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "6px",
+          width: "100%",
+          padding: "4px 10px 8px",
+          marginTop: "18px",
+          border: "none",
+          background: "none",
+          cursor: "pointer",
+          fontSize: "11px",
+          fontWeight: 600,
+          textTransform: "uppercase",
+          letterSpacing: "0.06em",
+          color: "var(--ink-45)",
+          fontFamily: "inherit",
+          textAlign: "left",
+        }}
         aria-expanded={open}
       >
         <svg
-          width="10"
-          height="10"
+          width="8"
+          height="8"
           viewBox="0 0 10 10"
           fill="none"
           stroke="currentColor"
           strokeWidth="1.5"
-          className={`transition-transform duration-150 ${open ? "rotate-90" : ""}`}
+          style={{
+            transition: "transform 0.15s",
+            transform: open ? "rotate(90deg)" : "rotate(0deg)",
+            flexShrink: 0,
+          }}
         >
           <path d="M3 2L7 5L3 8" />
         </svg>
         <span>{node.name}</span>
       </button>
       {open && (
-        <div className="ml-2 border-l" style={{ borderColor: "var(--hairline)" }}>
+        <div
+          style={{
+            marginLeft: "8px",
+            borderLeft: "1px solid var(--hairline)",
+            paddingLeft: "4px",
+          }}
+        >
           {node.children.map((child, i) => (
-            <SidebarNode key={i} node={child} pathname={pathname} depth={depth + 1} />
+            <SidebarNode key={i} node={child} pathname={pathname} />
           ))}
         </div>
       )}

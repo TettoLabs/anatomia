@@ -18,19 +18,30 @@
 }
 
 /* -------------------------------------------------------------------
-   SIDEBAR — scrollbar hiding + active state
+   SIDEBAR — show-on-hover scrollbar + active/hover states
    ------------------------------------------------------------------- */
 .docs-sidebar {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+.docs-sidebar:hover {
+  scrollbar-color: var(--ink-25) transparent;
 }
 .docs-sidebar::-webkit-scrollbar {
-  display: none;
+  width: 6px;
+  background: transparent;
+}
+.docs-sidebar::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 3px;
+}
+.docs-sidebar:hover::-webkit-scrollbar-thumb {
+  background: var(--ink-25);
 }
 
 .sidebar-link:hover {
   color: var(--fg) !important;
-  background: var(--border-soft) !important;
+  background: var(--code-bg) !important;
 }
 
 /* -------------------------------------------------------------------

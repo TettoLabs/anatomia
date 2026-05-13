@@ -2,9 +2,8 @@ import { loader } from "fumadocs-core/source";
 import { docs } from "collections/server";
 
 /**
- * Page tree transformer — injects Reference and Proof Chain sections
- * into the sidebar tree. These sections link to routes that don't exist
- * yet (future content scopes) so they'll 404 until those scopes land.
+ * Page tree transformer — injects Overview at the top, plus Reference
+ * and Proof Chain sections at the bottom.
  */
 export const source = loader({
   baseUrl: "/docs",
@@ -13,6 +12,11 @@ export const source = loader({
     transformers: [
       {
         root(node) {
+          // Inject Overview at the very top (before MDX-generated entries)
+          node.children.unshift(
+            { type: "page", name: "Overview", url: "/docs" },
+          );
+
           node.children.push(
             // ── Reference ──
             { type: "separator", name: "Reference" },
@@ -24,7 +28,16 @@ export const source = loader({
             // ── Proof Chain ──
             { type: "separator", name: "Proof Chain" },
             { type: "page", name: "Browse All", url: "/docs/proof" },
-            { type: "page", name: "Featured Proofs", url: "/docs/proof/featured" },
+            {
+              type: "folder",
+              name: "Featured Proofs",
+              defaultOpen: false,
+              children: [
+                { type: "page", name: "security-hardening", url: "/docs/proof/security-hardening" },
+                { type: "page", name: "proof-promote", url: "/docs/proof/proof-promote" },
+                { type: "page", name: "worktree-isolation", url: "/docs/proof/worktree-isolation" },
+              ],
+            },
           );
           return node;
         },
