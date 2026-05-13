@@ -7,20 +7,20 @@
 
 ## What Was Built
 
-- `website/app/docs/proof/page.tsx` (created): Proof explorer page. Server wrapper loads entries/stats, passes to client ProofExplorer. Uses `docs-content-full` class, hides right rail. Stats row with entry count, assertions, findings, verdict pill. Breadcrumb: Docs / Proof Chain.
+- `website/app/docs/proof/page.tsx` (created): Proof explorer page. Server wrapper loads entries/stats, passes to client ProofExplorer. Uses `docs-content-full` class, hides right rail. Stats row with entry count, assertions, findings, verdict pill.
 - `website/app/docs/proof/[slug]/page.tsx` (created): Proof detail pages with `generateStaticParams` for all 89 entries. Renders ProofHero, PipelineGantt, AssertionLedger, FindingsList, IntegritySeal. RightRail with `variant="proof"`. Adjacent proof navigation at bottom.
-- `website/components/docs/proof/ProofExplorer.tsx` (created): Client component with filter/sort state. Explorer wrapped in bordered card (border, border-radius, bg-card, overflow hidden). Filter bar in header with padding and border-bottom, font-mono 11px. Stage chips computed from data via `new Set()`. Findings filter (≥5, Any), cycles filter (First-try, Rejected ≥1). 7-column sortable table with 4 sortable headers (docs-exp-th-sort class for hover). Clickable rows via `router.push()`. "showing X of Y" counter. Footer strip below table with filtered count.
+- `website/components/docs/proof/ProofExplorer.tsx` (created): Client component with filter/sort state. Stage chips computed from data via `new Set()`. Findings filter (≥5, Any), cycles filter (First-try, Rejected ≥1). 7-column sortable table. Clickable rows via `router.push()`. "showing X of Y" counter.
 - `website/components/docs/proof/ProofHero.tsx` (created): Hero section with slug trail, feature title, scope summary, meta row (verdict pill, score, findings breakdown, duration, rejection cycles, shipped date).
 - `website/components/docs/proof/PipelineGantt.tsx` (created): 4-bar timing chart with proportional widths. Zero-duration stages get 2% minimum width. totalMinutes=0 shows "No timing data".
 - `website/components/docs/proof/AssertionLedger.tsx` (created): Client component with `useState` toggle. Shows first 8 assertions, "show all →" / "collapse ↑" toggle for proofs with >8.
-- `website/components/docs/proof/FindingsList.tsx` (created): Finding cards with severity badges (risk=red/--fail, debt=amber/--warn, obs=blue/--info). Shows first 5 with "+N more" indicator. Action display prefers lifecycle status over suggestedAction for closed/promoted findings.
+- `website/components/docs/proof/FindingsList.tsx` (created): Finding cards with severity badges (risk=red/--fail, debt=amber/--warn, obs=blue/--info). Shows first 5 with "+N more" indicator.
 - `website/components/docs/proof/IntegritySeal.tsx` (created): Hash display via `Object.entries(hashes)` — handles phase-specific keys. Audit command row at bottom.
 - `website/components/docs/layout/RightRail.tsx` (modified): Added `variant` and `proofLinks` props. When `variant="proof"`: TOC label → "On this proof", links section → "This proof, elsewhere" with GitHub/artifacts/Claude links. Default behavior unchanged.
-- `website/app/docs/docs.css` (modified): Added hover states for `.docs-fchip`, `.docs-exp-row`, `.docs-assn-row`, `.docs-exp-th-sort`. Explorer sticky column at ≤880px. Stats row compression at ≤640px.
+- `website/app/docs/docs.css` (modified): Added hover states for `.docs-fchip`, `.docs-exp-row`, `.docs-assn-row`. Explorer sticky column at ≤880px. Stats row compression at ≤640px.
 
 ## PR Summary
 
-- Add proof chain explorer at `/docs/proof` with interactive filter chips (computed from data), 4 sortable columns, and fully clickable table rows inside a bordered card
+- Add proof chain explorer at `/docs/proof` with interactive filter chips (computed from data), 4 sortable columns, and fully clickable table rows
 - Add proof detail pages at `/docs/proof/[slug]` for all 89 proof entries via static generation — each shows hero, pipeline Gantt, assertion ledger with toggle, findings list with severity badges, and integrity seal
 - Extend RightRail with `variant="proof"` prop — proof pages show "On this proof" TOC label and proof-specific external links instead of "Ask AI" section
 - Add responsive CSS for proof pages: sticky first column on mobile table scroll (≤880px), stats compression (≤640px)
@@ -30,7 +30,7 @@
 - AC18 "Proof explorer renders at /docs/proof as client component with filter chips and column sorting" → ProofExplorer.tsx is `'use client'`, page.tsx wraps it. Build confirms route exists.
 - AC19 "Filter chips computed from proof data" → `new Set(entries.map(e => e.stage))` in ProofExplorer.tsx. Stage/findings/cycles chips all data-driven.
 - AC20 "Explorer table has 7 columns" → Proof, Stage, Assertions, Findings, Duration, Shipped, Verdict. 7 `<th>` elements in thead.
-- AC21 "Column headers for Assertions, Findings, Duration, Shipped are sortable" → 4 `<th>` elements with `onClick` handlers and `docs-exp-th-sort` class for hover state.
+- AC21 "Column headers for Assertions, Findings, Duration, Shipped are sortable" → 4 `<th>` elements with `onClick` handlers calling `handleSort()`.
 - AC22 "Proof explorer hides right rail, uses docs-content-full" → page.tsx uses `docs-content-area docs-content-full`, no RightRail rendered.
 - AC23 "Proof detail pages render at /docs/proof/{slug} via generateStaticParams" → `generateStaticParams` returns `{ slug: e.slug }` for all entries. Build output shows 89 routes.
 - AC24 "Detail pages display ProofHero, PipelineGantt, AssertionLedger, FindingsList, IntegritySeal" → All 5 components rendered in [slug]/page.tsx.
@@ -42,7 +42,7 @@
 - AC30 "pnpm build succeeds with all proof routes" → ✅ 135 pages, 89 proof routes generated.
 - AC31 "Duration formatting" → `formatDuration()` uses `Math.floor(m/60)h ${m%60}m` for >60, `${m}m` otherwise.
 - AC32 "Explorer table rows fully clickable" → `<tr onClick={() => router.push(...)}>` on every row.
-- AC33 "Explorer filter bar displays showing X of Y" → `sorted.length` of `stats.entries` displayed in filter bar and footer strip.
+- AC33 "Explorer filter bar displays showing X of Y" → `sorted.length` of `stats.entries` displayed in filter bar.
 - No build errors → ✅ Build succeeded.
 
 ## Implementation Decisions
@@ -88,16 +88,6 @@ Website build: `(cd website && pnpm build)` — 135 pages, all routes generated 
 ### New Tests Written
 None. Per spec: "No unit tests. Matches existing website patterns (zero test files). Verification via build success + visual inspection."
 
-## Fix History
-
-PO review identified 6 issues:
-1. (HIGH) Explorer missing card wrapper — added border, border-radius, bg-card, overflow hidden
-2. (HIGH) Filter chips not in mono font — set fontFamily: var(--font-mono), fontSize: 11px
-3. (MEDIUM) Explorer missing footer strip — added footer with filtered count, border-top, bg-elev
-4. (MEDIUM) Finding card showed suggestedAction instead of lifecycle status — prefer f.status when not "active"
-5. (MINOR) Sortable th hover state missing — added docs-exp-th-sort class and CSS hover rule
-6. (MINOR) Explorer breadcrumb missing "Docs" root — added { name: "Docs", url: "/docs" } segment
-
 ## Verification Commands
 ```bash
 pnpm run build
@@ -108,8 +98,6 @@ pnpm run lint
 
 ## Git History
 ```
-31d550e9 [dynamic-pages:s2] Fix: explorer card wrapper, mono font, footer, finding lifecycle, hover states, breadcrumb
-14b061dd [dynamic-pages] Build report 2
 fbed3f1c [dynamic-pages:s2] Add proof explorer and detail pages
 21db47fa [dynamic-pages] Verify report 1
 bcc5f03e [dynamic-pages] Update: Build report 1
