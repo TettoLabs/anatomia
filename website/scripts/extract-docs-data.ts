@@ -636,16 +636,16 @@ const CONTEXT_FILE_DEFS: { filename: string; dir: string; path: string; descript
     description: 'How your team defines "good." Each principle shapes scoping and design decisions. If a principle wouldn\'t change a decision, it doesn\'t belong here.',
   },
   {
-    filename: 'scan.json',
-    dir: '',
-    path: '.ana/scan.json',
-    description: 'Machine-detected project data. Stack, file counts, patterns, conventions. Regenerated on every ana scan. Don\'t edit manually.',
-  },
-  {
     filename: 'ana.json',
     dir: '',
     path: '.ana/ana.json',
     description: 'CLI configuration. Build, test, and lint commands, co-author trailer, artifact branch. Some fields are yours to edit; others are managed by the CLI.',
+  },
+  {
+    filename: 'scan.json',
+    dir: '',
+    path: '.ana/scan.json',
+    description: 'Machine-detected project data. Stack, file counts, patterns, conventions. Regenerated on every ana scan. Don\'t edit manually.',
   },
 ];
 
