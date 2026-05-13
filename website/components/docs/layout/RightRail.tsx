@@ -17,8 +17,11 @@ interface RightRailProps {
 }
 
 /**
- * RightRail — sticky right sidebar matching supermock .right spec.
- * TOC with scroll spy, "Ask AI about this page" links, footer meta.
+ * RightRail — matches supermock .right exactly.
+ * Container: 220px, padding 24px 18px, font-size 12.5px, border-left.
+ * TOC: 18px padding-left, ::before line via CSS, 7px hollow dots on li.
+ * Ask AI: 3 bordered link rows.
+ * Footer: mono 10.5px, dotted underlines, short SHA link.
  */
 export function RightRail({ toc, commitSha, buildTimestamp, editUrl }: RightRailProps) {
   const activeId = useScrollSpy(toc);
@@ -41,7 +44,7 @@ export function RightRail({ toc, commitSha, buildTimestamp, editUrl }: RightRail
     >
       {/* TOC */}
       {toc.length > 0 && (
-        <div>
+        <>
           <div
             style={{
               fontSize: "11px",
@@ -55,26 +58,14 @@ export function RightRail({ toc, commitSha, buildTimestamp, editUrl }: RightRail
             On this page
           </div>
           <ul
-            className="toc-list"
+            className="right-rail-toc"
             style={{
               listStyle: "none",
               position: "relative",
               paddingLeft: "18px",
-              marginTop: 0,
-              marginBottom: "22px",
+              margin: "0 0 22px 0",
             }}
           >
-            {/* Vertical timeline line */}
-            <div
-              style={{
-                position: "absolute",
-                left: "3px",
-                top: "7px",
-                bottom: "7px",
-                width: "1px",
-                background: "var(--hairline)",
-              }}
-            />
             {toc.map((item) => {
               const id = item.url.replace(/^#/, "");
               const active = activeId === id;
@@ -87,7 +78,7 @@ export function RightRail({ toc, commitSha, buildTimestamp, editUrl }: RightRail
                     lineHeight: 1.4,
                   }}
                 >
-                  {/* Dot */}
+                  {/* Dot — rendered as span, positioned like supermock li::before */}
                   <span
                     style={{
                       position: "absolute",
@@ -125,7 +116,7 @@ export function RightRail({ toc, commitSha, buildTimestamp, editUrl }: RightRail
               );
             })}
           </ul>
-        </div>
+        </>
       )}
 
       {/* Ask AI about this page */}
@@ -149,60 +140,36 @@ export function RightRail({ toc, commitSha, buildTimestamp, editUrl }: RightRail
         >
           Ask AI about this page
         </div>
-        <a
-          href="#"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            padding: "6px 10px",
-            border: "1px solid var(--hairline)",
-            borderRadius: "var(--radius-sm)",
-            fontSize: "11.5px",
-            color: "var(--ink-60)",
-            textDecoration: "none",
-          }}
-        >
-          Copy as Markdown
-          <span style={{ marginLeft: "auto", color: "var(--ink-25)" }}>⌘C</span>
-        </a>
-        <a
-          href="#"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            padding: "6px 10px",
-            border: "1px solid var(--hairline)",
-            borderRadius: "var(--radius-sm)",
-            fontSize: "11.5px",
-            color: "var(--ink-60)",
-            textDecoration: "none",
-          }}
-        >
-          Open in Claude
-          <span style={{ marginLeft: "auto", color: "var(--ink-25)" }}>↗</span>
-        </a>
-        <a
-          href="#"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            padding: "6px 10px",
-            border: "1px solid var(--hairline)",
-            borderRadius: "var(--radius-sm)",
-            fontSize: "11.5px",
-            color: "var(--ink-60)",
-            textDecoration: "none",
-          }}
-        >
-          Open in ChatGPT
-          <span style={{ marginLeft: "auto", color: "var(--ink-25)" }}>↗</span>
-        </a>
+        {[
+          { text: "Copy as Markdown", arr: "⌘C" },
+          { text: "Open in Claude", arr: "↗" },
+          { text: "Open in ChatGPT", arr: "↗" },
+        ].map((link) => (
+          <a
+            key={link.text}
+            href="#"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "6px 10px",
+              border: "1px solid var(--hairline)",
+              borderRadius: "var(--radius-sm)",
+              fontSize: "11.5px",
+              color: "var(--ink-60)",
+              textDecoration: "none",
+              transition: "border-color 0.12s, color 0.12s",
+            }}
+          >
+            {link.text}
+            <span style={{ marginLeft: "auto", color: "var(--ink-25)" }}>
+              {link.arr}
+            </span>
+          </a>
+        ))}
       </div>
 
-      {/* Footer meta */}
+      {/* Footer */}
       <div
         style={{
           marginTop: "32px",
@@ -213,7 +180,10 @@ export function RightRail({ toc, commitSha, buildTimestamp, editUrl }: RightRail
         }}
       >
         {buildTimestamp && (
-          <>Generated {new Date(buildTimestamp).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }).replace(",", "")}<br /></>
+          <>
+            Generated {new Date(buildTimestamp).toISOString().slice(0, 10)}
+            <br />
+          </>
         )}
         {shortSha && (
           <>

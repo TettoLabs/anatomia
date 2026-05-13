@@ -12,6 +12,8 @@ import { DocsGrid } from "@/components/docs/content/DocsGrid";
 import { AudienceCards } from "@/components/docs/content/AudienceCards";
 import { CuratedProofs } from "@/components/docs/content/CuratedProofs";
 import { ResourceStrip } from "@/components/docs/content/ResourceStrip";
+import { RightRail } from "@/components/docs/layout/RightRail";
+import { getBuildMeta } from "@/lib/docs-data/meta";
 
 export const metadata: Metadata = {
   title: "Anatomia Documentation",
@@ -34,9 +36,21 @@ export default function DocsOverview() {
     { value: "MIT", label: "free forever" },
   ];
 
+  const buildMeta = getBuildMeta();
+
+  // Manual TOC for overview — matches supermock overview right rail
+  const overviewToc = [
+    { title: "Welcome", url: "welcome", depth: 2 },
+    { title: "The pipeline", url: "pipeline", depth: 2 },
+    { title: "What's in these docs", url: "in-these-docs", depth: 2 },
+    { title: "Where to start", url: "where-to-start", depth: 2 },
+    { title: "From the proof chain", url: "proof-chain", depth: 2 },
+  ];
+
   return (
+    <div style={{ display: "flex", gap: "32px" }}>
     <article className="docs-prose min-w-0 flex-1">
-      <h1>Documentation</h1>
+      <h1 id="welcome">Documentation</h1>
       <p
         className="text-[15px] leading-relaxed"
         style={{ color: "var(--ink-60)" }}
@@ -50,7 +64,7 @@ export default function DocsOverview() {
 
       <StatsStrip items={stats} />
 
-      <h2>The pipeline at a glance</h2>
+      <h2 id="pipeline">The pipeline at a glance</h2>
       <p
         className="text-[14px] leading-relaxed"
         style={{ color: "var(--ink-60)" }}
@@ -62,7 +76,7 @@ export default function DocsOverview() {
       </p>
       <PipelineDiagram />
 
-      <h2>What&apos;s in these docs</h2>
+      <h2 id="in-these-docs">What&apos;s in these docs</h2>
       <p
         className="text-[14px] leading-relaxed"
         style={{ color: "var(--ink-60)" }}
@@ -72,7 +86,7 @@ export default function DocsOverview() {
       </p>
       <DocsGrid proofCount={proofStats.entries} />
 
-      <h2>Where to start</h2>
+      <h2 id="where-to-start">Where to start</h2>
       <p
         className="text-[14px] leading-relaxed"
         style={{ color: "var(--ink-60)" }}
@@ -89,7 +103,7 @@ export default function DocsOverview() {
       </h3>
       <ResourceStrip />
 
-      <h2>From the proof chain</h2>
+      <h2 id="proof-chain">From the proof chain</h2>
       <p
         className="text-[14px] leading-relaxed"
         style={{ color: "var(--ink-60)" }}
@@ -100,5 +114,11 @@ export default function DocsOverview() {
       </p>
       <CuratedProofs entries={proofEntries} totalCount={proofStats.entries} />
     </article>
+    <RightRail
+      toc={overviewToc}
+      commitSha={buildMeta.commitSha}
+      buildTimestamp={buildMeta.buildTimestamp}
+    />
+    </div>
   );
 }

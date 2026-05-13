@@ -66,6 +66,17 @@
   background: var(--ink-25);
 }
 
+/* TOC timeline vertical line — matches supermock .toc::before */
+.right-rail-toc::before {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 7px;
+  bottom: 7px;
+  width: 1px;
+  background: var(--hairline);
+}
+
 .toc-link:hover {
   color: var(--fg) !important;
 }
