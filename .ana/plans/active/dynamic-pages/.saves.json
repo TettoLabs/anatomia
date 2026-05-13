@@ -22,5 +22,33 @@
   "spec-2": {
     "saved_at": "2026-05-13T21:51:49.071Z",
     "hash": "sha256:47e0c85173031f914bc14bb457b71acb2aff2777027fd989be31ce5a9c60b85d"
-  }
+  },
+  "build_started_at": "2026-05-13T22:02:40.945Z",
+  "build_agent": "ana-build",
+  "build-report-1": {
+    "saved_at": "2026-05-13T22:14:32.665Z",
+    "hash": "sha256:41ae7b4067f569034fd9026580f5019f8686593f067c9c1bfcdd6f981e0fe3cc"
+  },
+  "build-data-1": {
+    "saved_at": "2026-05-13T22:14:32.666Z",
+    "hash": "sha256:2c370e1ee524b5c78e711f6508818d7aca3fe98dd54e4e4345b2acf37e4bd08b"
+  },
+  "modules_touched": [
+    "website/app/docs/docs.css",
+    "website/app/docs/reference/agents/[name]/page.tsx",
+    "website/app/docs/reference/agents/page.tsx",
+    "website/app/docs/reference/cli/page.tsx",
+    "website/app/docs/reference/context/page.tsx",
+    "website/app/docs/reference/skills/[name]/page.tsx",
+    "website/app/docs/reference/skills/page.tsx",
+    "website/components/docs/reference/AgentCard.tsx",
+    "website/components/docs/reference/CommandGroup.tsx",
+    "website/components/docs/reference/ReferenceGrid.tsx",
+    "website/components/docs/reference/SkillCard.tsx",
+    "website/lib/docs-data/index.ts",
+    "website/lib/docs-data/proofs.ts",
+    "website/lib/docs-data/types.ts",
+    "website/lib/source.ts",
+    "website/scripts/extract-docs-data.ts"
+  ]
 }
