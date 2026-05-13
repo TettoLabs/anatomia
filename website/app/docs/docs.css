@@ -91,7 +91,16 @@
   background: var(--code-bg);
 }
 
-/* Heading anchor hover — matches supermock .prose h2:hover .anchor */
+/* Heading anchor — matches supermock .prose h2 .anchor exactly */
+.heading-anchor {
+  color: var(--ink-25) !important;
+  border: none !important;
+  border-bottom: none !important;
+  text-decoration: none !important;
+  font-family: var(--font-mono) !important;
+  font-size: 14px !important;
+}
+
 .docs-prose h2:hover .heading-anchor {
   opacity: 1 !important;
 }

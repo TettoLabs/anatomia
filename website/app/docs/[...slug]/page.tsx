@@ -43,6 +43,8 @@ function HeadingWithAnchor({
             opacity: 0,
             transition: "opacity 0.12s",
             textDecoration: "none",
+            border: "none",
+            borderBottom: "none",
           }}
         >
           #
