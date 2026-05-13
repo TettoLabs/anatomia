@@ -1504,6 +1504,32 @@ function computeTiming(saves: SavesData): ProofSummary['timing'] {
     return entry?.saved_at ? new Date(entry.saved_at).getTime() : null;
   };
 
+  /**
+   * Get the latest timestamp for an artifact key, handling multi-phase naming.
+   * Single-spec: exact match ("build-report" → saves["build-report"])
+   * Multi-phase: latest numbered match ("build-report" → max of saves["build-report-1"], "-2", "-3"])
+   *
+   * @param baseKey - Artifact key prefix (e.g., "build-report", "verify-report")
+   * @returns Epoch milliseconds of the latest matching save, or null if none found
+   */
+  const getLatestTime = (baseKey: string): number | null => {
+    // Try exact key first (single-spec fast path)
+    const exact = getTime(baseKey);
+    if (exact !== null) return exact;
+
+    // Find all phase-numbered keys and return the latest timestamp
+    let latest: number | null = null;
+    for (const key of Object.keys(saves)) {
+      if (key.startsWith(baseKey + '-') && /\d+$/.test(key)) {
+        const t = getTime(key);
+        if (t !== null && (latest === null || t > latest)) {
+          latest = t;
+        }
+      }
+    }
+    return latest;
+  };
+
   // Top-level ISO strings for raw timestamps (not { saved_at, hash } objects)
   const readRawTimestamp = (key: string): number | null => {
     const raw = saves[key];
@@ -1517,8 +1543,8 @@ function computeTiming(saves: SavesData): ProofSummary['timing'] {
 
   const scopeTime = getTime('scope');
   const contractTime = getTime('contract');
-  const buildTime = getTime('build-report');
-  const verifyTime = getTime('verify-report');
+  const buildTime = getLatestTime('build-report');
+  const verifyTime = getLatestTime('verify-report');
 
   // Total includes think phase when work_started_at is available
   const startTime = workStartedAt ?? scopeTime;
