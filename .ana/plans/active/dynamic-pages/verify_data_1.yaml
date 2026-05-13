@@ -1,0 +1,31 @@
+schema: 1
+findings:
+  - category: code
+    summary: "Hardcoded 'Last reviewed · 2026-05-11' in CLI reference page will become stale"
+    file: "website/app/docs/reference/cli/page.tsx"
+    line: 71
+    severity: debt
+    suggested_action: scope
+    related_assertions: ["A018"]
+  - category: code
+    summary: "Variable shadowing in extractSkillTemplates — inner 'content' (line 584) shadows outer 'content' (line 566), latent confusion risk"
+    file: "website/scripts/extract-docs-data.ts"
+    line: 584
+    severity: observation
+    suggested_action: monitor
+    anchor: "extractSkillTemplates"
+  - category: code
+    summary: "docs-content-full CSS class added in Phase 1 but only used by Phase 2 explorer — harmless dead code until Phase 2 ships"
+    file: "website/app/docs/docs.css"
+    severity: observation
+    suggested_action: accept
+  - category: code
+    summary: "Reference grid responsive collapse only at 660px — no intermediate 2-col→1-col at 880px. Supermock shows collapse at 660px so this matches, but the spec text mentions 1180px and 880px rules"
+    file: "website/app/docs/docs.css"
+    severity: observation
+    suggested_action: accept
+  - category: upstream
+    summary: "Spec AC2 says transformer URLs match blueprint but contract A002/A003 only check for substring contains — a partial match could satisfy the contract even with a broken URL"
+    severity: observation
+    suggested_action: monitor
+    related_assertions: ["A002", "A003"]

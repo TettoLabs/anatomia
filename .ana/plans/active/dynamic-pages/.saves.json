@@ -50,5 +50,20 @@
     "website/lib/docs-data/types.ts",
     "website/lib/source.ts",
     "website/scripts/extract-docs-data.ts"
-  ]
+  ],
+  "verify_started_at": "2026-05-13T22:26:17.536Z",
+  "verify_agent": "ana-verify",
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:00f899ef966a211fafb1851aedac9a391a6e310ebe09bfca809feaf0c51df8a1",
+    "run_at": "2026-05-13T22:38:15.880Z"
+  },
+  "verify-report-1": {
+    "saved_at": "2026-05-13T22:38:15.917Z",
+    "hash": "sha256:83154c5bd56a547ae423ce60b065ac41e5e568dec436dbeedd712f2e0c9f8ed5"
+  },
+  "verify-data-1": {
+    "saved_at": "2026-05-13T22:38:15.917Z",
+    "hash": "sha256:4a4eb5c0cd25e00d909000b08a7e620634679c891b02bbf388db7f1efe6c461b"
+  }
 }
