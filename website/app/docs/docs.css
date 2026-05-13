@@ -395,7 +395,7 @@
    CONTEXT FILES — max height on code blocks for long files
    ------------------------------------------------------------------- */
 .docs-context-code pre {
-  max-height: 420px;
+  max-height: 630px;
   overflow-y: auto;
 }
 
