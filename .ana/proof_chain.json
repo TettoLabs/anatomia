@@ -11219,7 +11219,10 @@
           "severity": "observation",
           "suggested_action": "monitor",
           "id": "v1-documentation-overhaul-C3",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Monorepo structural invariant: packages/cli at depth 2 is the product's fixed location. ../../ at package.json:53 matches this depth. Moving the package would break imports, CI, release scripts, workspace config, and test paths — ../../ is the least fragile thing that would break. The monorepo layout is a structural constant, not a variable.",
+          "closed_at": "2026-05-14T18:55:15.746Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
