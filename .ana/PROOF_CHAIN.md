@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-96 runs · 196 active · 117 lessons · 0 promoted · 276 closed
+96 runs · 195 active · 117 lessons · 0 promoted · 277 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 196 total)
+## Active Findings (30 shown of 195 total)
 
 ### packages/cli/src/commands/artifact.ts
 
@@ -83,6 +83,7 @@
 ### website/components/docs/proof/ProofExplorer.tsx
 
 - **code:** formatDuration duplicated in 4 files (ProofExplorer, ProofHero, PipelineGantt, detail page) — extract to shared utility — *Dynamic Pages — Reference & Proof Chain*
+- **code:** ProofExplorer inline styles heavily duplicated across 7 column headers — same 9-property object repeated per th element — *Dynamic Pages — Reference & Proof Chain*
 
 ### website/content/docs/concepts/pipeline.mdx
 
@@ -93,7 +94,6 @@
 - **code:** LLMS_SECTIONS constant declared but never used in extract-docs-data.ts — *Docs Search + Polish*
 - **code:** Unused variable 'other' in generateLlmsTxt — pages filtered but remainder never referenced — *Docs Search + Polish*
 - **code:** Duplicate stripJsx implementation — one in website/lib/docs-data/stripJsx.ts, another inlined in extract-docs-data.ts — *Docs Search + Polish*
-- **code:** Variable shadowing in extractSkillTemplates — inner 'content' (line 584) shadows outer 'content' (line 566), latent confusion risk — *Dynamic Pages — Reference & Proof Chain*
 
 ### General
 
