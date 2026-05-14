@@ -746,6 +746,15 @@ function generateSearchIndex(
   }
   scanMdxDir(contentDir, '');
 
+  // Static pages not from MDX
+  entries.push(
+    { type: 'page', title: 'Proof Chain Explorer', description: 'Browse all verified pipeline runs — filter by stage, findings, rejection cycles', route: '/docs/proof' },
+    { type: 'page', title: 'CLI Commands', description: 'Every command in the ana CLI, grouped by category', route: '/docs/reference/cli' },
+    { type: 'page', title: 'Agent Templates', description: 'The 6 agent definitions that ship on ana init', route: '/docs/reference/agents' },
+    { type: 'page', title: 'Skill Files', description: 'All 8 skill templates — core and conditional', route: '/docs/reference/skills' },
+    { type: 'page', title: 'Context Files', description: 'The files in .ana/ that give agents project-specific knowledge', route: '/docs/reference/context' },
+  );
+
   // Commands — flatten all groups
   for (const group of commandsData.groups) {
     function addCommands(cmds: Command[], prefix: string): void {
