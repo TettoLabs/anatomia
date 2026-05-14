@@ -1,9 +1,10 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 
 interface CardData {
   eyebrow: string;
   title: string;
-  description: string;
+  description: ReactNode;
   href: string;
 }
 
