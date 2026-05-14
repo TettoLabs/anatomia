@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-96 runs · 147 active · 117 lessons · 0 promoted · 325 closed
+96 runs · 146 active · 117 lessons · 0 promoted · 326 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 147 total)
+## Active Findings (30 shown of 146 total)
 
 ### packages/cli/src/commands/artifact.ts
 
@@ -92,13 +92,13 @@
 
 - **code:** pipeline.mdx rejectionProofCount stale (17 vs 19) — regex marker placement broken, extra text between value and ana:dynamic comment — *Docs Search + Polish*
 
+### website/content/docs/concepts/skills.mdx
+
+- **code:** Skills page inline-links 8 individual skill reference pages that don't exist and aren't scoped in any phase — *Content Pages — 16 editorial docs pages with bug fixes and sidebar ordering*
+
 ### website/scripts/extract-docs-data.ts
 
 - **code:** LLMS_SECTIONS constant declared but never used in extract-docs-data.ts — *Docs Search + Polish*
 - **code:** Unused variable 'other' in generateLlmsTxt — pages filtered but remainder never referenced — *Docs Search + Polish*
 - **code:** Duplicate stripJsx implementation — one in website/lib/docs-data/stripJsx.ts, another inlined in extract-docs-data.ts — *Docs Search + Polish*
-
-### General
-
-- **code:** NextCards link to 6 pages that don't exist yet (guides, reference, proof) — *Content Pages — 16 editorial docs pages with bug fixes and sidebar ordering*
 

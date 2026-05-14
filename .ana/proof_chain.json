@@ -23695,7 +23695,10 @@
             "A030"
           ],
           "id": "content-pages-C9",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Stale: all 6 linked pages now exist. Verified: guides/reading-a-proof, guides/using-ana-setup, guides/using-ana-learn (MDX content files), reference/cli, reference/agents, reference/skills (app route directories). These were built by subsequent phases of the content-pages scope and later scopes.",
+          "closed_at": "2026-05-14T19:45:23.291Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
