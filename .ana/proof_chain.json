@@ -20510,7 +20510,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "configurability-improvements-C4",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Intentional: git-operations.test.ts assertion was flipped from strip to preservation to match the configurability-improvements behavior change. Finding says 'necessary and correct.' The test was updated to align with changed production behavior — modifying the test was required even though it wasn't in the spec's file_changes.",
+          "closed_at": "2026-05-14T17:26:47.578Z",
+          "closed_by": "human"
         },
         {
           "category": "upstream",
