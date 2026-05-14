@@ -13444,7 +13444,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "code-comment-cleanup-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Intentional: expect(true).toBe(true) at types.test.ts:140 is the standard sentinel pattern for compile-time type tests. The real assertions are the TypeScript type assignments above it (lines 136-138) — if types are incompatible, the build fails. The runtime assertion exists so Vitest counts it as a test.",
+          "closed_at": "2026-05-14T16:40:51.521Z",
+          "closed_by": "human"
         },
         {
           "category": "upstream",
