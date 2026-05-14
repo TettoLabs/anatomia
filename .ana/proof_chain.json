@@ -16511,7 +16511,10 @@
           "severity": "observation",
           "suggested_action": "monitor",
           "id": "phase-timing-fix-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Negligible: 3 globSync calls at work.ts:1750-1752 scan a slug directory with <10 files for specific patterns (spec-*.md, build_report_*.md, verify_report_*.md). Sub-millisecond per call against a command (ana work start) that takes 5-30 seconds for worktree creation, dep install, and build. The overhead is unmeasurable in context.",
+          "closed_at": "2026-05-14T19:04:32.678Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
