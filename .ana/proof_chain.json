@@ -9416,7 +9416,10 @@
           "severity": "observation",
           "suggested_action": "monitor",
           "id": "fix-type-lies-C4",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Intentional: init.test.ts:262 groups ana-build, ana-verify, ana-learn because they share the same baseline (model: opus, no tools, no memory). The assertions check exactly what SHOULD be identical. Fields that differ (skills, descriptions) are correctly not asserted in this branch. If one agent diverges on model/tools/memory, Vitest reports which file in the iteration failed.",
+          "closed_at": "2026-05-14T18:54:08.968Z",
+          "closed_by": "human"
         }
       ],
       "rejection_cycles": 1,
