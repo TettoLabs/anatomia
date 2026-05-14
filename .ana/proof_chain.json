@@ -20534,7 +20534,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "configurability-improvements-C6",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Intentional: Step 7 in ana-verify.md template (lines 139-143) was condensed from bullets to prose. Both lines are clear and actionable — 'invoke these skills as reference' and 'read commands from ana.json.' Agents parse prose as well as bullets. The content is identical; only the format changed. Historical observation about a build decision, not a current defect.",
+          "closed_at": "2026-05-14T17:27:49.790Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
