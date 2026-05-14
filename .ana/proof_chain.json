@@ -13209,7 +13209,10 @@
           "severity": "observation",
           "suggested_action": "monitor",
           "id": "cli-ux-polish-C3",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Completed scope: cli-ux-polish was about UX improvements (help text, descriptions, error messages). 'Live invocation' verification is the appropriate method for UX changes — it's a manual acceptance test. No @ana tags because the scope modified output formatting, not testable behavior. Same missing-tags pattern; systemic note captured.",
+          "closed_at": "2026-05-14T19:04:01.827Z",
+          "closed_by": "human"
         },
         {
           "category": "upstream",
