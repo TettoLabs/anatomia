@@ -19124,7 +19124,10 @@
             "A021"
           ],
           "id": "work-complete-merge-C1",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Accepted: A020 at work.test.ts:3222 reads work.ts source and asserts retry message strings exist. The source-code assertion is weak (matches anywhere in file) but the behavioral alternative requires mocking spawnSync mid-function to fail only at the git commit step — non-trivial because earlier git operations (pull, add) would also fail with the same mock. The test pragmatically verifies the message exists; the commit failure path is structurally difficult to test.",
+          "closed_at": "2026-05-14T23:01:33.988Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
