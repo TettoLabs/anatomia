@@ -15337,7 +15337,10 @@
           "severity": "debt",
           "suggested_action": "accept",
           "id": "agent-dashboard-p1-C3",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed in 79580933 — hoisted maxModelLen computation from agents.ts:130 (inside loop) to line 115 (before loop), alongside maxNameLen/maxCharsLen/maxSkillLen. models array is const — result identical on every iteration. Zero behavioral change.",
+          "closed_at": "2026-05-14T22:30:31.392Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
