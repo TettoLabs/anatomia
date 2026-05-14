@@ -1784,7 +1784,7 @@ export async function startWork(slug: string): Promise<void> {
           await writeTimestamp(localActivePath, 'build_started_at', 'ana-build');
         }
       } else if (!worktreeExists(projectRoot, slug)) {
-        console.log(chalk.yellow('⚠') + ` Worktree not found for \`${slug}\`. Timestamp skipped.`);
+        console.log(chalk.yellow('⚠') + ` Plan artifacts not found for \`${slug}\`. Timestamp skipped.`);
       }
 
       console.log(`Already in worktree for \`${slug}\`.`);
