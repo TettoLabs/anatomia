@@ -22122,7 +22122,10 @@
             "A007"
           ],
           "id": "hygiene-debt-cleanup-C5",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Positive observation: planningOnlyInMerge flag at work.test.ts improved test fidelity by modeling the real production scenario where planning artifacts are committed on main but build/verify artifacts are untracked in the worktree. Finding notes the improvement, not a problem.",
+          "closed_at": "2026-05-14T17:38:06.205Z",
+          "closed_by": "human"
         }
       ],
       "rejection_cycles": 1,
