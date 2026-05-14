@@ -11823,7 +11823,10 @@
           "severity": "debt",
           "suggested_action": "accept",
           "id": "v1-release-prep-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Acceptable: release script at package.json:12 without args prints npm version dump (exit 0) — confusing but immediately recognizable as 'forgot the arg.' Single-user workflow where the operator knows the tool. Adding a shell guard is non-trivial due to pnpm arg passing mechanics (pnpm appends args to the command string, doesn't set $1). Risk of breaking the release workflow outweighs benefit of preventing 10 seconds of confusion.",
+          "closed_at": "2026-05-14T22:26:42.697Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
