@@ -18621,7 +18621,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "commit-work-start-timestamps-C4",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Intentional: commitSaves uses runGit (throws, caught at line 2220) for staging and spawnSync (status check) for diff and commit. Both patterns are correct for their use — runGit early-returns on nothing-to-stage, spawnSync checks exit codes. Not worth normalizing.",
+          "closed_at": "2026-05-14T08:17:47.189Z",
+          "closed_by": "human"
         },
         {
           "category": "upstream",
