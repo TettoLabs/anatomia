@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-96 runs · 143 active · 117 lessons · 0 promoted · 329 closed
+96 runs · 142 active · 117 lessons · 0 promoted · 330 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 143 total)
+## Active Findings (30 shown of 142 total)
 
 ### packages/cli/src/commands/artifact.ts
 
@@ -62,6 +62,10 @@
 
 - **code:** ResourceStrip uses <a> for Manifesto link (internal anatomia.dev URL) instead of Next.js Link — *Content Pages — 16 editorial docs pages with bug fixes and sidebar ordering*
 
+### website/components/docs/content/TroubleCard.tsx
+
+- **code:** TroubleCard has no aria/role attribute for accessibility — Callout uses role=note — *Content Pages — 16 editorial docs pages with bug fixes and sidebar ordering*
+
 ### website/components/docs/layout/RightRail.tsx
 
 - **code:** pageTitle and pageDescription props accepted by RightRail but never used in any rendering logic — *Docs Search + Polish*
@@ -84,10 +88,6 @@
 
 - **code:** formatDuration duplicated in 4 files (ProofExplorer, ProofHero, PipelineGantt, detail page) — extract to shared utility — *Dynamic Pages — Reference & Proof Chain*
 - **code:** ProofExplorer inline styles heavily duplicated across 7 column headers — same 9-property object repeated per th element — *Dynamic Pages — Reference & Proof Chain*
-
-### website/content/docs/concepts/context.mdx
-
-- **code:** Context page links to /docs/reference/context twice — page doesn't exist and isn't scoped — *Content Pages — 16 editorial docs pages with bug fixes and sidebar ordering*
 
 ### website/content/docs/concepts/pipeline.mdx
 

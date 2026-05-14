@@ -23720,7 +23720,10 @@
           "severity": "observation",
           "suggested_action": "monitor",
           "id": "content-pages-C11",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Stale on both claims: (1) /docs/reference/context page EXISTS at app/docs/reference/context/page.tsx. (2) The 'twice' claim is also incorrect — grep shows exactly 1 reference to /docs/reference/context in context.mdx. Either the duplicate was removed or the finding miscounted.",
+          "closed_at": "2026-05-14T19:47:40.289Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
