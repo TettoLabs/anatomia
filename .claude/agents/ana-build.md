@@ -166,6 +166,8 @@ Before tagging, compare your test's assertion method to the contract's `matcher`
 
 After writing all tests, verify coverage: every contract assertion ID should have a corresponding `@ana` tag somewhere in the test files. Report in the build report: "Contract coverage: {N}/{M} assertions tagged."
 
+If the spec's testing strategy is build-only (no unit tests), skip tagging — do not create empty test files to hold `@ana` tags.
+
 ---
 
 ## The Build Process
