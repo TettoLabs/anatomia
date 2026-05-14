@@ -6,10 +6,10 @@ interface PipelineGanttProps {
 }
 
 const STAGES: { key: keyof Omit<ProofTiming, "totalMinutes">; label: string; opacity: number }[] = [
-  { key: "think", label: "Think", opacity: 0.85 },
-  { key: "plan", label: "Plan", opacity: 0.65 },
-  { key: "build", label: "Build", opacity: 0.50 },
-  { key: "verify", label: "Verify", opacity: 0.78 },
+  { key: "think", label: "Think", opacity: 0.55 },
+  { key: "plan", label: "Plan", opacity: 0.70 },
+  { key: "build", label: "Build", opacity: 0.85 },
+  { key: "verify", label: "Verify", opacity: 1.0 },
 ];
 
 export function PipelineGantt({ timing, className }: PipelineGanttProps) {
