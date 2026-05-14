@@ -16987,7 +16987,10 @@
             "A013"
           ],
           "id": "ship-log-polish-C1",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Intentional: extractScopeKind regex at proofSummary.ts:444 matches first **Kind:** in file. In practice, **Kind:** only appears in the Complexity Assessment section (scope template placement). Value is enum-validated (feature/fix/chore/milestone) — false matches from other sections would need to exactly match a valid kind. First-match semantics means the actual Kind line wins over any later references. Pre-existing, acknowledged in add-milestone-kind verify_data.",
+          "closed_at": "2026-05-14T16:53:50.741Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
