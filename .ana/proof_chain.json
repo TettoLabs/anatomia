@@ -12190,7 +12190,10 @@
           "severity": "observation",
           "suggested_action": "monitor",
           "id": "security-hardening-C10",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Intentional: runGit at git-operations.ts:47 defaults exitCode to 1 when spawnSync returns status:null (signal kill or spawn failure). This is the safest behavior — treats exceptional conditions (OOM kill, git not found) as failures, letting callers handle through existing error paths. The alternative (throwing or special exit code) would crash commands instead of degrading gracefully. Finding says 'reasonable.'",
+          "closed_at": "2026-05-14T19:02:30.808Z",
+          "closed_by": "human"
         }
       ],
       "rejection_cycles": 0,
