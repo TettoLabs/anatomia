@@ -24958,7 +24958,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "capture-think-time-C5",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Intentional: finding itself says spawnSync is 'better choice, structured exit code handling.' The implementation deviated from spec by using a better pattern. No issue to fix.",
+          "closed_at": "2026-05-14T16:25:08.587Z",
+          "closed_by": "human"
         },
         {
           "category": "upstream",

@@ -1,12 +1,12 @@
 # Proof Chain Dashboard
 
-96 runs · 291 active · 117 lessons · 0 promoted · 181 closed
+96 runs · 290 active · 117 lessons · 0 promoted · 182 closed
 
 ## Hot Modules
 
 | File | Active | Entries |
 |------|--------|--------|
-| packages/cli/src/commands/work.ts | 20 | 11 |
+| packages/cli/src/commands/work.ts | 19 | 10 |
 | packages/cli/tests/commands/work.test.ts | 17 | 13 |
 | packages/cli/tests/commands/proof.test.ts | 11 | 5 |
 | packages/cli/src/utils/worktree.ts | 11 | 6 |
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 291 total)
+## Active Findings (30 shown of 290 total)
 
 ### packages/cli/src/commands/artifact.ts
 
@@ -26,10 +26,6 @@
 ### packages/cli/src/commands/proof.ts
 
 - **code:** formatHumanReadable exported solely for test access — was previously private, scope widened for testing — *Multi-phase Gantt visualization for proof timeline*
-
-### packages/cli/src/commands/work.ts
-
-- **code:** spawnSync used instead of spec-recommended execSync — better choice, structured exit code handling — *Capture actual think time from Ana session start*
 
 ### packages/cli/src/types/proof.ts
 
@@ -90,6 +86,7 @@
 
 - **code:** LLMS_SECTIONS constant declared but never used in extract-docs-data.ts — *Docs Search + Polish*
 - **code:** Unused variable 'other' in generateLlmsTxt — pages filtered but remainder never referenced — *Docs Search + Polish*
+- **code:** Duplicate stripJsx implementation — one in website/lib/docs-data/stripJsx.ts, another inlined in extract-docs-data.ts — *Docs Search + Polish*
 
 ### General
 
