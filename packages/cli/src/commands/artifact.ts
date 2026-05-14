@@ -43,7 +43,7 @@ interface SaveMetadata {
  * @param content - The artifact content for hashing
  * @returns true if metadata was written, false if skipped (hash unchanged)
  */
-function writeSaveMetadata(slugDir: string, artifactType: string, content: string): boolean {
+export function writeSaveMetadata(slugDir: string, artifactType: string, content: string): boolean {
   const savesPath = path.join(slugDir, '.saves.json');
 
   // Read existing .saves.json or start fresh
