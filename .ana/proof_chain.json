@@ -16539,7 +16539,10 @@
             "A013"
           ],
           "id": "phase-timing-fix-C1",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Scoped for direct fix: work.ts:1787 says 'Worktree not found' when user IS inside the worktree but plan directory is missing. Message is misleading — the worktree is found (we're in it). Think prompt delivered to validate the full flow, check case 2 (silent skip), and commit the corrected message. String-only change, zero behavioral impact.",
+          "closed_at": "2026-05-14T23:27:32.095Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
