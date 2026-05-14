@@ -15,6 +15,8 @@ import { execSync } from 'node:child_process';
 
 import type {
   ProofEntry,
+  ProofAssertion,
+  ProofFinding,
   AgentTemplate,
   SkillTemplate,
   CommandGroup,
@@ -112,11 +114,11 @@ function categorizeEntry(entry: { modules_touched?: string[]; scope_summary?: st
 
   // Keyword fallback on scope_summary
   const summary = (entry.scope_summary || '').toLowerCase();
-  if (summary.match(/scan|detect/)) return 'Engine';
-  if (summary.match(/command|cli/)) return 'Commands';
-  if (summary.match(/proof|verify|pipeline/)) return 'Pipeline';
-  if (summary.match(/template/)) return 'Templates';
-  if (summary.match(/website|docs/)) return 'Website';
+  if (summary.match(/\b(?:scan|detect)\b/)) return 'Engine';
+  if (summary.match(/\b(?:command|cli)\b/)) return 'Commands';
+  if (summary.match(/\b(?:proof|verify|pipeline)\b/)) return 'Pipeline';
+  if (summary.match(/\b(?:template)\b/)) return 'Templates';
+  if (summary.match(/\b(?:website|docs)\b/)) return 'Website';
 
   return 'Infra';
 }
@@ -127,22 +129,87 @@ function extractProofEntries(): ProofEntry[] {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- proof chain entries have dynamic shape
   const entries: Record<string, any>[] = raw.entries;
 
-  return entries.map((entry) => ({
-    slug: entry.slug,
-    feature: entry.feature,
-    result: entry.result,
-    stage: categorizeEntry(entry),
-    contract: {
+  const mapped = entries.map((entry) => {
+    // Normalize assertions
+    const assertions: ProofAssertion[] = (entry.assertions || []).map((a: Record<string, unknown>) => ({
+      id: a.id as string,
+      says: a.says as string,
+      status: a.status as string,
+    }));
+
+    // Normalize findings — default severity to "observation"
+    const findings: ProofFinding[] = (entry.findings || []).map((f: Record<string, unknown>) => ({
+      id: f.id as string | undefined,
+      category: f.category as string | undefined,
+      summary: f.summary as string,
+      file: f.file as string | undefined,
+      severity: (f.severity as string) || 'observation',
+      suggestedAction: f.suggested_action as string | undefined,
+      status: f.status as string | undefined,
+    }));
+
+    // Normalize timing — default missing stages to 0
+    const rawTiming = entry.timing || {};
+    const stageThink = rawTiming.think ?? 0;
+    const stagePlan = rawTiming.plan ?? 0;
+    const stageBuild = rawTiming.build ?? 0;
+    const stageVerify = rawTiming.verify ?? 0;
+    const rawTotal = rawTiming.total_minutes ?? 0;
+    // If total_minutes is 0 but stages have data, compute from stages
+    const computedTotal = stageThink + stagePlan + stageBuild + stageVerify;
+    const timing = {
+      think: stageThink,
+      plan: stagePlan,
+      build: stageBuild,
+      verify: stageVerify,
+      totalMinutes: rawTotal > 0 ? rawTotal : computedTotal,
+    };
+
+    // Normalize contract — only 3 common fields
+    const contract = {
       total: entry.contract?.total ?? 0,
       satisfied: entry.contract?.satisfied ?? 0,
-    },
-    assertionCount: entry.contract?.total ?? 0,
-    findingCount: (entry.findings || []).length,
-    rejectionCycles: entry.rejection_cycles ?? 0,
-    completedAt: entry.completed_at || '',
-    scopeSummary: entry.scope_summary || null,
-    modulesTouched: entry.modules_touched || [],
-  }));
+      unsatisfied: entry.contract?.unsatisfied ?? 0,
+    };
+
+    // Pre-compute finding severity counts
+    const findingSeverity = { risk: 0, debt: 0, observation: 0 };
+    for (const f of findings) {
+      if (f.severity === 'risk') findingSeverity.risk++;
+      else if (f.severity === 'debt') findingSeverity.debt++;
+      else findingSeverity.observation++;
+    }
+
+    return {
+      slug: entry.slug,
+      feature: entry.feature,
+      result: entry.result,
+      stage: categorizeEntry(entry),
+      contract,
+      assertionCount: entry.contract?.total ?? 0,
+      findingCount: findings.length,
+      rejectionCycles: entry.rejection_cycles ?? 0,
+      completedAt: entry.completed_at || '',
+      scopeSummary: entry.scope_summary || null,
+      modulesTouched: entry.modules_touched || [],
+      assertions,
+      findings,
+      timing,
+      hashes: entry.hashes || {},
+      findingSeverity,
+      duration: timing.totalMinutes,
+      prevSlug: null as string | null,
+      nextSlug: null as string | null,
+    };
+  });
+
+  // Pre-compute adjacent slugs (chronological order = array order)
+  for (let i = 0; i < mapped.length; i++) {
+    mapped[i].prevSlug = i > 0 ? mapped[i - 1].slug : null;
+    mapped[i].nextSlug = i < mapped.length - 1 ? mapped[i + 1].slug : null;
+  }
+
+  return mapped;
 }
 
 // ---------------------------------------------------------------------------
@@ -357,7 +424,9 @@ function extractCommands(): CommandsData {
   const groupPositions: { name: string; pos: number }[] = [];
 
   while ((groupMatch = groupRegex.exec(indexContent)) !== null) {
-    groupPositions.push({ name: groupMatch[1], pos: groupMatch.index });
+    // Commander uses UPPERCASE for help display; convert to title case for docs
+    const titleCase = groupMatch[1].toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+    groupPositions.push({ name: titleCase, pos: groupMatch.index });
   }
 
   // Find register calls and their positions
@@ -422,6 +491,15 @@ function extractCommands(): CommandsData {
 // 3. Agent templates extraction
 // ---------------------------------------------------------------------------
 
+const AGENT_DISPLAY: Record<string, { role: string; displayDescription: string }> = {
+  ana: { role: 'Think agent', displayDescription: 'Scoper, navigator, advisor. Understands intent, bounds scope, identifies tradeoffs.' },
+  'ana-plan': { role: 'Plan agent', displayDescription: 'Architect. Reads scope, writes spec + sealed contract.' },
+  'ana-build': { role: 'Build agent', displayDescription: 'Builder. Implements spec, writes tests tagged to contract, produces build report.' },
+  'ana-verify': { role: 'Verify agent', displayDescription: 'Fault-finder. Independent verification against the sealed contract. Never reads the build report.' },
+  'ana-learn': { role: 'Learn agent', displayDescription: 'Quality gardener. Tends the proof chain between cycles. Promotes findings to skill rules.' },
+  'ana-setup': { role: 'Setup orchestrator', displayDescription: 'Calibrates project knowledge during init. Guess-and-confirm pattern.' },
+};
+
 const AGENT_READS_WRITES: Record<string, { reads: string[]; writes: string[] }> = {
   ana: { reads: ['codebase', '.ana/context/*', '.ana/scan.json'], writes: ['scope.md'] },
   'ana-plan': { reads: ['scope.md', 'codebase'], writes: ['plan.md', 'spec.md', 'contract.yaml'] },
@@ -457,6 +535,7 @@ function extractAgentTemplates(): AgentTemplate[] {
     const { frontmatter, body } = parseFrontmatter(content);
     const name = (frontmatter.name as string) || file.replace('.md', '');
     const readsWrites = AGENT_READS_WRITES[name] || { reads: [], writes: [] };
+    const display = AGENT_DISPLAY[name] || { role: '', displayDescription: '' };
 
     // Parse skills — could be array or null
     let skills: string[] | null = null;
@@ -475,6 +554,8 @@ function extractAgentTemplates(): AgentTemplate[] {
       writes: readsWrites.writes,
       forbidden: extractForbidden(body),
       bodyMarkdown: body.trim(),
+      role: display.role,
+      displayDescription: display.displayDescription,
     };
   });
 }
@@ -513,10 +594,24 @@ function extractSkillTemplates(): SkillTemplate[] {
       sections.push({ heading: sectionPositions[i].heading, content });
     }
 
+    // Count rules: bullet items in the ## Rules section
+    const rulesSection = sections.find(s => s.heading === 'Rules');
+    const rulesCount = rulesSection
+      ? (rulesSection.content.match(/^- /gm) || []).length
+      : 0;
+
+    // Conditional skills: api-patterns, data-access, ai-patterns
+    const CONDITIONAL_SKILLS = ['api-patterns', 'data-access', 'ai-patterns'];
+    const skillName = (frontmatter.name as string) || dir;
+    const isConditional = CONDITIONAL_SKILLS.includes(skillName);
+
     return {
-      name: (frontmatter.name as string) || dir,
+      name: skillName,
       description: (frontmatter.description as string) || '',
       sections,
+      conditional: isConditional,
+      rules: rulesCount,
+      content: body,
     };
   });
 }
@@ -536,14 +631,49 @@ async function extractGotchas(): Promise<GotchaEntry[]> {
 // 6. Context files extraction
 // ---------------------------------------------------------------------------
 
-function extractContextFiles(): ContextFile[] {
-  const contextDir = path.join(MONOREPO_ROOT, '.ana', 'context');
-  const files = ['project-context.md', 'design-principles.md'];
+const CONTEXT_FILE_DEFS: { filename: string; dir: string; path: string; description: string }[] = [
+  {
+    filename: 'project-context.md',
+    dir: 'context',
+    path: '.ana/context/project-context.md',
+    description: 'Product purpose, architecture, domain vocabulary, where to make changes. The file that makes agents understand THIS project.',
+  },
+  {
+    filename: 'design-principles.md',
+    dir: 'context',
+    path: '.ana/context/design-principles.md',
+    description: 'How your team defines "good." Each principle shapes scoping and design decisions. If a principle wouldn\'t change a decision, it doesn\'t belong here.',
+  },
+  {
+    filename: 'ana.json',
+    dir: '',
+    path: '.ana/ana.json',
+    description: 'CLI configuration. Build, test, and lint commands, co-author trailer, artifact branch. Some fields are yours to edit; others are managed by the CLI.',
+  },
+  {
+    filename: 'scan.json',
+    dir: '',
+    path: '.ana/scan.json',
+    description: 'Machine-detected project data. Stack, file counts, patterns, conventions. Regenerated on every ana scan. Don\'t edit manually.',
+  },
+];
 
-  return files.map(filename => {
-    const content = fs.readFileSync(path.join(contextDir, filename), 'utf-8');
-    const name = filename.replace('.md', '');
-    return { name, filename, content };
+function extractContextFiles(): ContextFile[] {
+  const anaDir = path.join(MONOREPO_ROOT, '.ana');
+
+  return CONTEXT_FILE_DEFS.map(def => {
+    const fullPath = def.dir
+      ? path.join(anaDir, def.dir, def.filename)
+      : path.join(anaDir, def.filename);
+    const content = fs.readFileSync(fullPath, 'utf-8');
+    const name = def.filename.replace(/\.(md|json)$/, '');
+    return {
+      name,
+      filename: def.filename,
+      path: def.path,
+      description: def.description,
+      content,
+    };
   });
 }
 
@@ -613,7 +743,7 @@ async function main(): Promise<void> {
   if (agentTemplates.length !== 6) errors.push(`Expected 6 agent templates, got ${agentTemplates.length}`);
   if (skillTemplates.length !== 8) errors.push(`Expected 8 skill templates, got ${skillTemplates.length}`);
   if (gotchas.length === 0) errors.push('No gotchas extracted');
-  if (contextFiles.length !== 2) errors.push(`Expected 2 context files, got ${contextFiles.length}`);
+  if (contextFiles.length !== 4) errors.push(`Expected 4 context files, got ${contextFiles.length}`);
   if (!buildMeta.version) errors.push('Build meta missing version');
 
   if (errors.length > 0) {

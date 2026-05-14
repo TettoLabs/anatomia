@@ -1,5 +1,8 @@
 export type {
   ProofEntry,
+  ProofAssertion,
+  ProofFinding,
+  ProofTiming,
   ProofStats,
   AgentTemplate,
   CommandOption,
@@ -14,7 +17,7 @@ export type {
   BuildMeta,
 } from './types';
 
-export { getProofEntries, getProofStats } from './proofs';
+export { getProofEntries, getProofBySlug, getProofStats } from './proofs';
 export { getAgentTemplates, getAgentByName, getAgentCount } from './agents';
 export { getSkillTemplates, getSkillByName, getSkillCount } from './skills';
 export { getCommands, getCommandCount, getCommandGroups } from './commands';

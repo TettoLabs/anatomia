@@ -40,10 +40,10 @@ export const source = loader({
               name: "Reference",
               defaultOpen: true,
               children: [
-                { type: "page", name: "CLI Commands", url: "/docs/reference/cli-commands" },
-                { type: "page", name: "Agent Templates", url: "/docs/reference/agent-templates" },
-                { type: "page", name: "Skill Files", url: "/docs/reference/skill-files" },
-                { type: "page", name: "Context Files", url: "/docs/reference/context-files" },
+                { type: "page", name: "CLI Commands", url: "/docs/reference/cli" },
+                { type: "page", name: "Agent Templates", url: "/docs/reference/agents" },
+                { type: "page", name: "Skill Files", url: "/docs/reference/skills" },
+                { type: "page", name: "Context Files", url: "/docs/reference/context" },
               ],
             },
 

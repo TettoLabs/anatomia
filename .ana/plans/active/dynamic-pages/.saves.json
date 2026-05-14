@@ -22,5 +22,73 @@
   "spec-2": {
     "saved_at": "2026-05-13T21:51:49.071Z",
     "hash": "sha256:47e0c85173031f914bc14bb457b71acb2aff2777027fd989be31ce5a9c60b85d"
+  },
+  "build_started_at": "2026-05-13T22:02:40.945Z",
+  "build_agent": "ana-build",
+  "build-report-1": {
+    "saved_at": "2026-05-13T22:24:30.251Z",
+    "hash": "sha256:b41d20076646b043837b0c7f843dfec1e11a7e2da5f551ff3eab3d7d8143287a"
+  },
+  "build-data-1": {
+    "saved_at": "2026-05-13T22:24:30.251Z",
+    "hash": "sha256:3a4165dc6f98833bb092e0c141f0d0242d400378146fc96bc5865ac959fb275b"
+  },
+  "modules_touched": [
+    "website/app/docs/docs.css",
+    "website/app/docs/proof/[slug]/page.tsx",
+    "website/app/docs/proof/page.tsx",
+    "website/app/docs/reference/agents/[name]/page.tsx",
+    "website/app/docs/reference/agents/page.tsx",
+    "website/app/docs/reference/cli/page.tsx",
+    "website/app/docs/reference/context/page.tsx",
+    "website/app/docs/reference/skills/[name]/page.tsx",
+    "website/app/docs/reference/skills/page.tsx",
+    "website/components/docs/layout/RightRail.tsx",
+    "website/components/docs/proof/AssertionLedger.tsx",
+    "website/components/docs/proof/FindingsList.tsx",
+    "website/components/docs/proof/IntegritySeal.tsx",
+    "website/components/docs/proof/PipelineGantt.tsx",
+    "website/components/docs/proof/ProofExplorer.tsx",
+    "website/components/docs/proof/ProofHero.tsx",
+    "website/components/docs/reference/AgentCard.tsx",
+    "website/components/docs/reference/CommandGroup.tsx",
+    "website/components/docs/reference/ReferenceGrid.tsx",
+    "website/components/docs/reference/SkillCard.tsx",
+    "website/lib/docs-data/index.ts",
+    "website/lib/docs-data/proofs.ts",
+    "website/lib/docs-data/types.ts",
+    "website/lib/source.ts",
+    "website/scripts/extract-docs-data.ts"
+  ],
+  "verify_started_at": "2026-05-13T22:26:17.536Z",
+  "verify_agent": "ana-verify",
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:00f899ef966a211fafb1851aedac9a391a6e310ebe09bfca809feaf0c51df8a1",
+    "run_at": "2026-05-13T23:07:02.791Z"
+  },
+  "verify-report-1": {
+    "saved_at": "2026-05-13T22:38:15.917Z",
+    "hash": "sha256:83154c5bd56a547ae423ce60b065ac41e5e568dec436dbeedd712f2e0c9f8ed5"
+  },
+  "verify-data-1": {
+    "saved_at": "2026-05-13T22:38:15.917Z",
+    "hash": "sha256:4a4eb5c0cd25e00d909000b08a7e620634679c891b02bbf388db7f1efe6c461b"
+  },
+  "build-report-2": {
+    "saved_at": "2026-05-13T22:58:35.463Z",
+    "hash": "sha256:58942d48c442629cd56acf4322056ab906c898c6e4f8928c3190620f4ae8d1ea"
+  },
+  "build-data-2": {
+    "saved_at": "2026-05-13T22:50:53.720Z",
+    "hash": "sha256:a84886eff6bd57f7f838d8686a6048bf2ad4e7c65bef6222637f5edfde60300a"
+  },
+  "verify-report-2": {
+    "saved_at": "2026-05-13T23:07:02.827Z",
+    "hash": "sha256:8b2e19fb5af33f25453fda4929d18f71043b6251dc78957fc10066fd0da14c14"
+  },
+  "verify-data-2": {
+    "saved_at": "2026-05-13T23:07:02.827Z",
+    "hash": "sha256:d8fbc7ea127b474880d30305c7912e3db344a09a4c90c2e4d041cf9c961e75c6"
   }
 }

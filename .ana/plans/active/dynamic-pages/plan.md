@@ -4,8 +4,8 @@
 
 ## Phases
 
-- [ ] Data pipeline extension + reference pages + prerequisite fixes
+- [x] Data pipeline extension + reference pages + prerequisite fixes
   - Spec: spec-1.md
-- [ ] Proof explorer + proof detail pages
+- [x] Proof explorer + proof detail pages
   - Spec: spec-2.md
   - Depends on: Phase 1

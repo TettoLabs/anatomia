@@ -23,6 +23,8 @@ Also available via `pnpm add -g anatomia-cli` or `bun add -g anatomia-cli`. This
 
 ## Step 2: Initialize
 
+From inside your cloned repo:
+
 ```bash
 ana init
 ```
@@ -50,7 +52,7 @@ Describe a small change — a single-file fix or a feature you'd normally spend 
 claude --agent ana
 ```
 
-Ana investigates the codebase, surfaces tradeoffs, and writes a scope. You confirm the scope, then run each pipeline agent in a separate Claude Code session:
+Ana investigates the codebase, surfaces tradeoffs, and writes a scope. You can scope several work items before building any of them — each runs through the pipeline independently. When you're ready to build, run each pipeline agent in a separate Claude Code session:
 
 1. **Plan:** `claude --agent ana-plan` — reads the scope, writes `spec.md`, and seals `contract.yaml`
 2. **Build:** `claude --agent ana-build` — implements the spec, writes tests tagged to contract assertions

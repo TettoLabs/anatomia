@@ -1,0 +1,9 @@
+schema: 1
+concerns:
+  - summary: "Pre-existing CLI test failures (283 tests) on Node.js v25.9.0 — MODULE_NOT_FOUND"
+    severity: observation
+    suggested_action: monitor
+  - summary: "Pre-existing lint warning in git-operations.ts:198 — unused eslint-disable directive"
+    file: "packages/cli/src/utils/git-operations.ts"
+    severity: observation
+    suggested_action: accept
