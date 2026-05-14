@@ -18243,7 +18243,10 @@
           "suggested_action": "monitor",
           "related_assertions": [],
           "id": "website-mobile-polish-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Duplicate: identical to website-nav-copy-polish-C4 (closed this session). brandIconNames at icons.tsx:74 is still exported with zero imports. Same dead code, same file, same line — flagged by a different pipeline run.",
+          "closed_at": "2026-05-14T18:07:07.657Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
