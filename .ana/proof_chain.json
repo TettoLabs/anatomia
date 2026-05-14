@@ -21759,7 +21759,10 @@
             "A003"
           ],
           "id": "worktree-freshness-detection-C1",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Intentional asymmetry: commitCount at worktree.ts:318 uses local artifactBranch because it answers 'commits since branching' (branch point is local). commitsBehind at line 332 uses origin/artifactBranch because it answers 'how far behind remote' (what needs rebasing). Using local for behind-count would miss remote-only commits. Using remote for commit-count would under-count after local main commits. Each question requires its correct ref.",
+          "closed_at": "2026-05-14T19:31:25.953Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
