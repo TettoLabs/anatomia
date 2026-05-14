@@ -24698,7 +24698,10 @@
           "severity": "debt",
           "suggested_action": "monitor",
           "id": "fix-timing-accuracy-C3",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Bounded by pipeline workflow: history at artifact.ts:75 grows one entry per re-save. Typical scopes produce 0-2 history entries (max observed: 3 from content-pages investigation). The pipeline doesn't re-save the same artifact repeatedly — sequential phases save different artifact types. 3 entries × ~80 bytes = ~240 bytes. The 'unbounded' concern requires manual repetitive saves that don't occur in pipeline workflow. Connected to archive behavior investigated earlier in this session.",
+          "closed_at": "2026-05-14T22:06:52.169Z",
+          "closed_by": "human"
         },
         {
           "category": "test",

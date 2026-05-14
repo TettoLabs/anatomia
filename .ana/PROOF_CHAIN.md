@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-96 runs · 131 active · 117 lessons · 0 promoted · 341 closed
+96 runs · 130 active · 117 lessons · 0 promoted · 342 closed
 
 ## Hot Modules
 
@@ -16,11 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 131 total)
-
-### packages/cli/src/commands/artifact.ts
-
-- **code:** Unbounded history array growth — each rejection cycle appends with no cap — *Fix pipeline timing accuracy for multi-phase and rejection cycles*
+## Active Findings (30 shown of 130 total)
 
 ### packages/cli/src/types/proof.ts
 
@@ -107,4 +103,5 @@
 - **code:** LLMS_SECTIONS constant declared but never used in extract-docs-data.ts — *Docs Search + Polish*
 - **code:** Unused variable 'other' in generateLlmsTxt — pages filtered but remainder never referenced — *Docs Search + Polish*
 - **code:** Duplicate stripJsx implementation — one in website/lib/docs-data/stripJsx.ts, another inlined in extract-docs-data.ts — *Docs Search + Polish*
+- **code:** Keyword fallback categorization lacks word boundaries — 'scannable' matches /scan/, misassigning proof entries to Engine — *Docs Data Pipeline*
 
