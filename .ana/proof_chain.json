@@ -21031,7 +21031,10 @@
           "severity": "observation",
           "suggested_action": "monitor",
           "id": "fix-cycle-stage-detection-C5",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Current ordering is correct — closing, not fixing. The finding suggested swapping archive-before-rename, but this would BREAK the mechanism: (1) archive compares disk with HEAD, (2) before rename, disk matches HEAD (both are original), (3) archive skips (no change), (4) rename overwrites original with fix content, (5) original lost with no archive. The CURRENT order (rename first → archive second) works: after rename, disk has fix content, archive compares fix vs HEAD (original), they differ, original is archived as _r1. The 'data loss' scenario requires an uncommitted artifact from a crashed Build — outside normal pipeline flow.",
+          "closed_at": "2026-05-14T23:36:05.643Z",
+          "closed_by": "human"
         },
         {
           "category": "upstream",
