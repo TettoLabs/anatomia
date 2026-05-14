@@ -11803,7 +11803,10 @@
             "A031"
           ],
           "id": "v1-release-prep-C1",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Duplicate: identical concern to v1-documentation-overhaul-C4 (closed this session). README.md and CHANGELOG.md are copied from monorepo root by prepublishOnly — they don't exist in packages/cli/ during development. npm pack --dry-run can't verify them, and that's expected. Standard monorepo publish pattern.",
+          "closed_at": "2026-05-14T18:55:33.088Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
