@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-96 runs · 225 active · 117 lessons · 0 promoted · 247 closed
+96 runs · 224 active · 117 lessons · 0 promoted · 248 closed
 
 ## Hot Modules
 
@@ -16,12 +16,13 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 225 total)
+## Active Findings (30 shown of 224 total)
 
 ### packages/cli/src/commands/artifact.ts
 
 - **code:** CommitHygieneFinding and runCommitHygieneChecks exported for test access — widens module public API — *Commit hygiene checks at build-report save*
 - **code:** Secret scan reads full file content for every non-test file in modules_touched — large binary files or generated bundles would be read entirely into memory — *Commit hygiene checks at build-report save*
+- **code:** Unbounded history array growth — each rejection cycle appends with no cap — *Fix pipeline timing accuracy for multi-phase and rejection cycles*
 
 ### packages/cli/src/types/proof.ts
 
@@ -56,7 +57,6 @@
 
 ### packages/cli/tests/utils/worktree.test.ts
 
-- **test:** A010 assertion uses toContain('## Build Status') — confirms heading exists but not that content follows the spec mockup format — *Run build command during worktree creation*
 - **test:** A008 uses toBeDefined() for depsInstalled — weaker than contract's 'exists' intent, passes even if value is false — *Run build command during worktree creation*
 
 ### website/app/docs/[...slug]/page.tsx

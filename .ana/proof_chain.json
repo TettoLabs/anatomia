@@ -25989,7 +25989,10 @@
             "A010"
           ],
           "id": "worktree-build-step-C5",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Intentional: toContain('## Build Status') at worktree.test.ts:350 verifies the section exists in the worktree context file — matching A010's scope. The content under the heading (success/failure messages) is tested separately in the A004/A005/A006 test at line 353 which covers the build-failure scenario. Heading assertion + content assertion across two tests provides full coverage.",
+          "closed_at": "2026-05-14T17:29:28.818Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
