@@ -22539,7 +22539,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "docs-data-pipeline-C4",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Website code is not governed by CLI package coding standards. Finding's own text acknowledges 'website eslint doesn't enforce it.' getMedianTimings has JSDoc; getProofEntries and getProofBySlug are self-documenting one-liners. No standard requires JSDoc on website exports.",
+          "closed_at": "2026-05-14T16:31:45.881Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
