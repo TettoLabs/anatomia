@@ -4770,8 +4770,11 @@
           "line": 357,
           "severity": "observation",
           "id": "clean-ground-C3",
-          "status": "active",
-          "suggested_action": "monitor"
+          "status": "closed",
+          "suggested_action": "monitor",
+          "closed_reason": "Unreachable: resolveFindingPaths is called 4 times in writeProofChain (work.ts:940-949) sharing one globCache. All calls are synchronous with no I/O between them — no files can be created between calls. The cache lives for one writeProofChain invocation and is discarded. Cache staleness requires file creation between sync calls, which can't happen in a single-threaded Node.js process.",
+          "closed_at": "2026-05-14T18:42:02.915Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
