@@ -8410,7 +8410,10 @@
             "A022"
           ],
           "id": "learn-v3-cli-commands-C12",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Finding description is inaccurate: assertions at proof.test.ts:3885-3886 use toBeInstanceOf(Array), not toBeDefined(). This verifies the confidence tier fields are arrays (correct type). Content accuracy is tested in the companion human-output test at line 3820 (toContain('High confidence')). The JSON structure test + human output test together provide adequate coverage — structure from one, content from the other.",
+          "closed_at": "2026-05-14T22:04:52.405Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
