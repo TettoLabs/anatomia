@@ -34,5 +34,20 @@
     "packages/cli/src/utils/proofSummary.ts",
     "packages/cli/tests/utils/proofSummary.test.ts",
     "pnpm-lock.yaml"
-  ]
+  ],
+  "verify_started_at": "2026-05-14T02:37:14.432Z",
+  "verify_agent": "ana-verify",
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:8b3ed93f870eae7bb17c7f5f4a9f55a10fe42076044c2687ddee9004057ab115",
+    "run_at": "2026-05-14T02:41:37.014Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-14T02:41:37.049Z",
+    "hash": "sha256:8cf9d8fc2a3f72f16f895348550115034cc175d2f796ac41c6abaf165e2149d4"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-14T02:41:37.049Z",
+    "hash": "sha256:265c9415ea07c764968d8730a430345f519934321cb14e2565d0d199ed705c19"
+  }
 }
