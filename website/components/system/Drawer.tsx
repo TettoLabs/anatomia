@@ -16,10 +16,8 @@ import type { TreeData } from "./FileTree";
  */
 export function Drawer({
   version,
-  sectionRef,
 }: {
   version: string;
-  sectionRef?: React.RefObject<HTMLElement | null>;
 }) {
   const [openSet, setOpenSet] = useState<Set<string>>(new Set());
   const containerRef = useRef<HTMLDivElement>(null);
@@ -39,7 +37,7 @@ export function Drawer({
 
   // IntersectionObserver for pulse animation
   useEffect(() => {
-    const target = sectionRef?.current ?? containerRef.current;
+    const target = containerRef.current;
     if (!target || pulsed) return;
 
     const obs = new IntersectionObserver(
@@ -55,7 +53,7 @@ export function Drawer({
     );
     obs.observe(target);
     return () => obs.disconnect();
-  }, [sectionRef, pulsed]);
+  }, [pulsed]);
 
   const drawers = copy.system.drawers;
 

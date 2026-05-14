@@ -9,13 +9,11 @@ export function SectionThread({
   segments,
   arrow = "→",
   link,
-  breathe = false,
   className = "",
 }: {
   segments: ReactNode[];
   arrow?: string;
   link?: { href: string; label: string };
-  breathe?: boolean;
   className?: string;
 }) {
   return (
@@ -28,7 +26,6 @@ export function SectionThread({
       ))}
       <span
         style={{ color: "var(--color-brand)" }}
-        className={breathe ? "animate-breathe" : ""}
       >
         {arrow}
       </span>
