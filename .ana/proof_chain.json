@@ -16385,7 +16385,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "phase-timing-fix-C5",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Stale — test at this location now has @ana A009 tag (work.test.ts:3234). The untagged test the finding described was either tagged or replaced by subsequent pipeline runs.",
+          "closed_at": "2026-05-14T08:18:16.701Z",
+          "closed_by": "human"
         },
         {
           "category": "upstream",
