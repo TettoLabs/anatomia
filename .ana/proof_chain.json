@@ -18634,7 +18634,10 @@
             "A011"
           ],
           "id": "commit-work-start-timestamps-C3",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Intentional — no-push test at work.test.ts:3134 creates project without remote. If completeWork attempted push, it would throw (no remote configured). Test passing is sufficient proof no push was attempted.",
+          "closed_at": "2026-05-14T08:29:07.431Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
