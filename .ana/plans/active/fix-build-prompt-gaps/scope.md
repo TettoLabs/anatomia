@@ -33,15 +33,15 @@ Bug 1: Add numbered data companion naming to two locations in ana-build.md — t
 
 Bug 2: Replace the binary STOP rule (line 111) with a nuanced rule that distinguishes pre-existing failures in unrelated modules from failures in spec-touched modules. The boundary is mechanically checkable — the spec lists file changes, so "in modules the spec touches" is not a judgment call. Mirror Verify's existing edge case at lines 484-485.
 
-Improvement 1: Add inline notes (2-3 lines each) to Build's tagging section and Verify's assertion-checking section. NOT full subsections — the existing fallback paths already handle the mechanics. The new content is a guardrail ("do not create empty test files to hold tags") and a pointer to the existing fallback behavior. Every character earns its place.
+Improvement 1: Add one line each to Build's tagging section and Verify's assertion-checking section. The disease is that LLMs manufacture artifacts to satisfy instructions they can't fulfill — without the guardrail, Build might create empty test files just to hold `@ana` tags. One line prevents it. Don't prescribe how to document without tests — Build already knows how to write a build report.
 
 All changes applied to both template and dogfood copies identically.
 
 ## Acceptance Criteria
 - AC1: Bug 1 — ana-build.md multi-phase section includes `build_data_{N}.yaml` naming alongside `build_report_{N}.md`, and the `build_data.yaml` introduction notes the numbered variant for multi-phase.
 - AC2: Bug 2 — ana-build.md baseline test section replaces the binary STOP with a nuanced rule: STOP if failures are in spec-touched modules, proceed-with-documentation if failures are in unrelated modules.
-- AC3: Improvement 1 — ana-build.md tagging section includes an inline note for the no-test scenario with the "do not create empty test files" guardrail.
-- AC4: Improvement 1 — ana-verify.md assertion-checking section includes an inline note for the no-test scenario pointing to source inspection and build output evidence.
+- AC3: Improvement 1 — ana-build.md tagging section includes a one-line guardrail: if no unit tests, skip tagging, don't create empty test files to hold tags.
+- AC4: Improvement 1 — ana-verify.md assertion-checking section includes a one-line note: if no unit tests, no `@ana` tags expected, verify by source inspection.
 - AC5: All changes are identical in template and dogfood copies (4 files total).
 
 ## Edge Cases & Risks
@@ -50,7 +50,8 @@ All changes applied to both template and dogfood copies identically.
 - **Distribution gap:** Template fixes only reach new installations. Existing users with agent files already installed won't get these fixes until they manually update. This is a known architectural constraint of `ana init` (confirmed `assets.ts:264`), not something to solve here.
 
 ## Rejected Approaches
-- **Full "When No Unit Tests Exist" subsections (Improvement 1):** The BUGS.md proposal adds ~10 lines per agent. Both agents already handle the no-test case through existing fallback paths (Build line 143: "verify each contract assertion is testable"; Verify line 220: "check the build report for coverage claims and verify by source inspection"). The genuinely new content is the "don't create empty test files" guardrail — that earns 2 lines, not 10. Rejected because every character earns its place.
+- **Full "When No Unit Tests Exist" subsections (Improvement 1):** The BUGS.md proposal adds ~10 lines per agent. Both agents already handle the no-test case through existing fallback paths (Build line 143: "verify each contract assertion is testable"; Verify line 220: "check the build report for coverage claims and verify by source inspection"). The genuinely new content is the "don't create empty test files" guardrail. Rejected because every character earns its place — one line prevents the antipattern without prescribing how to document without tests.
+- **Two-line Improvement 1 with documentation guidance:** An earlier draft added "document contract coverage via build output evidence in the build report" alongside the guardrail. Rejected because Build already knows how to write a build report — prescribing the documentation method solves our internal problem, not a universal one. The disease is manufactured artifacts, not missing workflow documentation.
 - **Leaving Bug 2 as-is with documentation:** Could document "if you hit pre-existing failures, tell the developer and wait." But this doesn't solve the deadlock — it just moves it from agent deadlock to pipeline deadlock. The nuanced rule lets Build proceed safely for the common case (environmental failures in unrelated packages).
 
 ## Open Questions
