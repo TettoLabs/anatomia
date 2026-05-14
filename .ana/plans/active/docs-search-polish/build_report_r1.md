@@ -146,14 +146,8 @@ pnpm run build
 pnpm run lint
 ```
 
-## Fix History
-
-- **Fix 1:** `buildProofMarkdown` compared `entry.result` against lowercase `"pass"` and `a.status` against lowercase `"satisfied"`, but proof chain data uses uppercase `"PASS"` / `"SATISFIED"`. Every proof's Copy as Markdown would have shown FAIL verdict and ✗ on all assertions. Fixed to uppercase comparisons.
-
 ## Git History
 ```
-f341531c [docs-search-polish] Fix: case-sensitive status checks in proof sharing template
-eb5ee10e [docs-search-polish] Build report
 267992c0 [docs-search-polish] Add generated llms.txt and llms-full.txt
 ebcc1c69 [docs-search-polish] Add search overlay and AI link CSS
 c093f536 [docs-search-polish] Add search index, llms.txt, link validation, dynamic MDX values
