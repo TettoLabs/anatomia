@@ -3725,6 +3725,10 @@ describe('writeSaveMetadata history preservation', () => {
   it('preserves history when overwriting with different content', async () => {
     const { writeSaveMetadata } = await import('../../src/commands/artifact.js');
 
+    // Use fake timers to guarantee distinct timestamps between writes
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-05-13T10:00:00Z'));
+
     // First write
     writeSaveMetadata(slugDir, 'build-report', 'content v1');
     const saves1 = JSON.parse(fs.readFileSync(path.join(slugDir, '.saves.json'), 'utf-8'));
@@ -3734,6 +3738,9 @@ describe('writeSaveMetadata history preservation', () => {
     expect(firstHash).toBeDefined();
     expect(saves1['build-report'].history).toBeUndefined();
 
+    // Advance time to ensure distinct timestamps
+    vi.setSystemTime(new Date('2026-05-13T10:30:00Z'));
+
     // Second write with different content
     writeSaveMetadata(slugDir, 'build-report', 'content v2');
     const saves2 = JSON.parse(fs.readFileSync(path.join(slugDir, '.saves.json'), 'utf-8'));
@@ -3742,6 +3749,8 @@ describe('writeSaveMetadata history preservation', () => {
     expect(saves2['build-report'].history[0].hash).toBe(firstHash);
     expect(saves2['build-report'].saved_at).not.toBe(firstSavedAt);
     expect(saves2['build-report'].hash).not.toBe(firstHash);
+
+    vi.useRealTimers();
   });
 
   // @ana A003
