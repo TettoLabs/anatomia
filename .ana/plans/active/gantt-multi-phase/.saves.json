@@ -47,5 +47,20 @@
     "website/public/llms-full.txt",
     "website/public/search-index.json",
     "website/scripts/extract-docs-data.ts"
-  ]
+  ],
+  "verify_started_at": "2026-05-14T06:13:35.470Z",
+  "verify_agent": "ana-verify",
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:460e8b3f42f3d5519597caa564039e03bdc80c417c9eff510120dfe7d356486b",
+    "run_at": "2026-05-14T06:19:21.186Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-14T06:19:21.224Z",
+    "hash": "sha256:46d20eab27ac55553c046270111408c370a81d9afee8279cd3e6473c07367c49"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-14T06:19:21.224Z",
+    "hash": "sha256:a9f4f83446545465df63545a4d9c506da7b191c46f33817defeaa0dc6329bc2d"
+  }
 }
