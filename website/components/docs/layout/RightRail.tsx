@@ -180,26 +180,6 @@ export function RightRail({ toc, commitSha, buildTimestamp, editUrl, variant, pr
         </div>
         {variant === "proof" ? (
           <>
-            <a
-              href={proofLinks?.githubUrl ?? "#"}
-              target={proofLinks?.githubUrl ? "_blank" : undefined}
-              rel={proofLinks?.githubUrl ? "noopener noreferrer" : undefined}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "6px 10px",
-                border: "1px solid var(--hairline)",
-                borderRadius: "var(--radius-sm)",
-                fontSize: "11.5px",
-                color: "var(--ink-60)",
-                textDecoration: "none",
-                transition: "border-color 0.12s, color 0.12s",
-              }}
-            >
-              View on GitHub
-              <span style={{ marginLeft: "auto", color: "var(--ink-25)" }}>↗</span>
-            </a>
             <button
               onClick={handleCopyMarkdown}
               style={{
@@ -221,6 +201,26 @@ export function RightRail({ toc, commitSha, buildTimestamp, editUrl, variant, pr
               {copyFeedback ? "Copied!" : "Copy as Markdown"}
               <span style={{ marginLeft: "auto", color: "var(--ink-25)" }}>⌘C</span>
             </button>
+            <a
+              href={proofLinks?.githubUrl ?? "#"}
+              target={proofLinks?.githubUrl ? "_blank" : undefined}
+              rel={proofLinks?.githubUrl ? "noopener noreferrer" : undefined}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "6px 10px",
+                border: "1px solid var(--hairline)",
+                borderRadius: "var(--radius-sm)",
+                fontSize: "11.5px",
+                color: "var(--ink-60)",
+                textDecoration: "none",
+                transition: "border-color 0.12s, color 0.12s",
+              }}
+            >
+              View on GitHub
+              <span style={{ marginLeft: "auto", color: "var(--ink-25)" }}>↗</span>
+            </a>
             <a
               className="docs-ai-link-claude"
               href={claudeUrl}
