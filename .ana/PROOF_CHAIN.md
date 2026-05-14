@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-96 runs · 215 active · 117 lessons · 0 promoted · 257 closed
+96 runs · 214 active · 117 lessons · 0 promoted · 258 closed
 
 ## Hot Modules
 
@@ -9,18 +9,17 @@
 | packages/cli/src/commands/work.ts | 19 | 10 |
 | packages/cli/tests/commands/work.test.ts | 13 | 10 |
 | packages/cli/src/utils/worktree.ts | 10 | 6 |
-| packages/cli/src/commands/artifact.ts | 9 | 6 |
 | packages/cli/src/utils/proofSummary.ts | 9 | 8 |
+| packages/cli/src/commands/artifact.ts | 8 | 6 |
 
 ## Promoted Rules
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 215 total)
+## Active Findings (30 shown of 214 total)
 
 ### packages/cli/src/commands/artifact.ts
 
-- **code:** CommitHygieneFinding and runCommitHygieneChecks exported for test access — widens module public API — *Commit hygiene checks at build-report save*
 - **code:** Secret scan reads full file content for every non-test file in modules_touched — large binary files or generated bundles would be read entirely into memory — *Commit hygiene checks at build-report save*
 - **code:** Unbounded history array growth — each rejection cycle appends with no cap — *Fix pipeline timing accuracy for multi-phase and rejection cycles*
 
@@ -66,6 +65,10 @@
 ### website/app/docs/proof/[slug]/page.tsx
 
 - **code:** Multi-phase timeline text derives phase count via Math.max on filtered segments — works correctly but couples rendering to segment internals when entry.phases field exists for this purpose — *Multi-phase Gantt visualization for proof timeline*
+
+### website/app/docs/reference/cli/page.tsx
+
+- **code:** Hardcoded 'Last reviewed · 2026-05-11' in CLI reference page will become stale — *Dynamic Pages — Reference & Proof Chain*
 
 ### website/components/docs/layout/RightRail.tsx
 
