@@ -11790,7 +11790,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "v1-release-prep-C4",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Intentional: v1-release-prep was a one-time release configuration scope (version bumps, package.json metadata, publish config). Source inspection is the appropriate verification for static configuration changes — there's no repeatable behavior to test. No code reference (null file).",
+          "closed_at": "2026-05-14T16:52:42.055Z",
+          "closed_by": "human"
         }
       ],
       "rejection_cycles": 0,
