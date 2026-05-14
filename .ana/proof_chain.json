@@ -15261,7 +15261,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "agent-dashboard-p1-C4",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Intentional: toBeGreaterThan(templateSize) at agents.test.ts:141 proves skill content IS added to charCount without coupling to exact byte count. The assertion catches the critical regression — if skill resolution returns 0, charCount equals templateSize and the test fails. Exact assertion would require duplicating stat logic and would break on any skill template content change.",
+          "closed_at": "2026-05-14T17:04:42.588Z",
+          "closed_by": "human"
         },
         {
           "category": "upstream",
