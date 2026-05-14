@@ -151,7 +151,7 @@ Six independent work items that ship together as the final production-readiness 
 
 ### Known Gotchas
 
-- Supermock CSS token names differ from production. `--bg-code` in supermock = `--code-bg` in docs.css. `--r-md` = `--radius-md`. `var(--brand)` doesn't exist — use `var(--color-brand)`. Verify EVERY token against docs.css before use.
+- Supermock CSS token names differ from production. Confirmed mappings: `--bg-code` → `--code-bg`, `--r-sm` → `--radius-sm` (6px), `--r-md` → `--radius-md` (10px), `--brand` → `--color-brand`. Verify EVERY token against docs.css before use. Build Brief must include this mapping table.
 - Contract assertions must NEVER pin to specific counts. Use `greater 0` or `exists`, not `equals 90`.
 - RightRail is a client component (`"use client"`). AI link construction (URL encoding, prompt text) can happen there, but data for Copy as Markdown must be passed as props from the server page component.
 - The `claude://` protocol pre-fills without auto-submitting. The `chatgpt.com/?q=` URL auto-submits. Different UX — the prompts should be written accordingly (Claude prompt can be longer since user reviews before sending).
@@ -172,7 +172,7 @@ Per product owner direction, proof page "Copy as Markdown" produces a structured
 
 ```
 # {Feature} — {PASS/FAIL}
-{assertionCount}/{assertionCount} assertions · {findingCount} findings · {duration}
+{contract.satisfied}/{contract.total} assertions · {findingCount} findings · {duration}
 Shipped {completedDate}
 → https://anatomia.dev/docs/proof/{slug}
 
