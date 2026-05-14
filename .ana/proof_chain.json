@@ -22462,7 +22462,10 @@
           "severity": "debt",
           "suggested_action": "accept",
           "id": "docs-data-pipeline-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed in bc2167a4 — renamed inner 'content' to 'sectionContent' at extract-docs-data.ts:596, eliminating variable shadowing with outer 'content' at line 578.",
+          "closed_at": "2026-05-14T08:18:48.000Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
