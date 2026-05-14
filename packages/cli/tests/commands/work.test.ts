@@ -660,8 +660,7 @@ describe('ana work status', () => {
       const output = await captureOutput(async () => await getWorkStatus({ json: true }));
       const json = JSON.parse(output);
       expect(json.items[0].worktreeInfo).toBeDefined();
-      expect(json.items[0].worktreeInfo.commitsBehind).toBeDefined();
-      expect(typeof json.items[0].worktreeInfo.commitsBehind).toBe('number');
+      expect(json.items[0].worktreeInfo.commitsBehind).toBe(0);
     });
   });
 

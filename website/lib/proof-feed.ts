@@ -60,16 +60,12 @@ const VERSION_FALLBACK = "v1.0.2";
 
 /**
  * Build GitHub API headers with conditional auth.
- * @param extras - additional headers to merge
  * @returns headers object for fetch
  */
-function githubHeaders(
-  extras: Record<string, string> = {},
-): Record<string, string> {
+function githubHeaders(): Record<string, string> {
   const headers: Record<string, string> = {
     "User-Agent": "anatomia-web",
     Accept: "application/vnd.github.v3+json",
-    ...extras,
   };
   if (process.env.GITHUB_TOKEN) {
     headers["Authorization"] = `Bearer ${process.env.GITHUB_TOKEN}`;
