@@ -11226,7 +11226,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "v1-documentation-overhaul-C7",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Intentional: README.md is at repo root but gets copied to packages/cli/ by prepublishOnly. Absolute GitHub URLs to CONTRIBUTING.md and ARCHITECTURE.md (line 198) work in both locations — relative paths would break on npm where the README's location changes.",
+          "closed_at": "2026-05-14T16:46:12.136Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
