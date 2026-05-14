@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-96 runs · 211 active · 117 lessons · 0 promoted · 261 closed
+96 runs · 210 active · 117 lessons · 0 promoted · 262 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 211 total)
+## Active Findings (30 shown of 210 total)
 
 ### packages/cli/src/commands/artifact.ts
 
@@ -53,10 +53,6 @@
 
 - **test:** Gantt bar assertions (A014-A018, A022) test a re-implemented copy of buildGanttBars, not the production function in PipelineGantt.tsx — *Multi-phase Gantt visualization for proof timeline*
 
-### packages/cli/tests/utils/worktree.test.ts
-
-- **test:** A008 uses toBeDefined() for depsInstalled — weaker than contract's 'exists' intent, passes even if value is false — *Run build command during worktree creation*
-
 ### website/app/docs/[...slug]/page.tsx
 
 - **code:** Dynamic components not registered in catch-all mdxComponents map — contract specifies registration but builder used build-time regex approach instead — *Docs Search + Polish*
@@ -86,6 +82,7 @@
 
 - **code:** OPACITY_MAP duplicates opacity values already in STAGES array — two sources of truth for the same constants — *Multi-phase Gantt visualization for proof timeline*
 - **code:** 60px label column may be tight for 'VERIFY 3' at 10.5px mono with 0.06em letter-spacing — fits now but fragile for higher phase counts — *Multi-phase Gantt visualization for proof timeline*
+- **code:** formatDuration defined but unused in PipelineGantt — duration column uses raw `{value}m` instead — *Dynamic Pages — Reference & Proof Chain*
 
 ### website/content/docs/concepts/pipeline.mdx
 

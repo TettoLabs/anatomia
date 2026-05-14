@@ -26045,7 +26045,10 @@
             "A008"
           ],
           "id": "worktree-build-step-C6",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Intentional: A008 contract says depsInstalled 'exists' — toBeDefined() at worktree.test.ts:392 literally means 'exists and is not undefined.' depsInstalled is typed boolean (worktree.ts:28) — it's always true or false, never undefined. The assertion matches the contract's intent exactly. In this fixture (no lockfile), the value is deterministically false, which toBeDefined() accepts correctly.",
+          "closed_at": "2026-05-14T17:49:04.076Z",
+          "closed_by": "human"
         },
         {
           "category": "upstream",
