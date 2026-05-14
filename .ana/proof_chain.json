@@ -19453,7 +19453,10 @@
           "severity": "debt",
           "suggested_action": "accept",
           "id": "section4-system-bento-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed in 6000e283 — removed broken breathe prop from SectionThread.tsx. Prop applied nonexistent 'animate-breathe' CSS class (the CSS module class is styles.breathe in system.module.css, used directly by SystemSection at line 58). Prop was never passed as true by any consumer (ScanSlab.tsx:160 omits it). The arrow span now renders without a className.",
+          "closed_at": "2026-05-14T22:42:50.790Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
