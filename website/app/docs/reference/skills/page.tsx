@@ -110,6 +110,11 @@ export default function SkillIndexPage() {
         toc={tocItems}
         commitSha={meta.commitSha}
         buildTimestamp={meta.buildTimestamp}
+        editUrl="https://github.com/TettoLabs/anatomia/tree/main/packages/cli/templates/.claude/skills"
+        pageUrl="https://anatomia.dev/docs/reference/skills"
+        pageTitle="Skill Files"
+        pageDescription="Templates that ship on ana init — core and conditional skills."
+        pageContent={`# Skill Files\n\n${skills.map(s => `## ${s.name}\n${s.conditional ? "Conditional" : "Core"} · ${s.rules} rules\n${s.description}`).join("\n\n")}`}
       />
     </div>
   );

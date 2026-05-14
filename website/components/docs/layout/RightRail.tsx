@@ -20,6 +20,10 @@ interface RightRailProps {
   editUrl?: string;
   variant?: "proof";
   proofLinks?: ProofLinks;
+  pageUrl?: string;
+  pageContent?: string;
+  pageTitle?: string;
+  pageDescription?: string;
 }
 
 /**
@@ -29,9 +33,39 @@ interface RightRailProps {
  * Ask AI: 3 bordered link rows.
  * Footer: mono 10.5px, dotted underlines, short SHA link.
  */
-export function RightRail({ toc, commitSha, buildTimestamp, editUrl, variant, proofLinks }: RightRailProps) {
+export function RightRail({ toc, commitSha, buildTimestamp, editUrl, variant, proofLinks, pageUrl, pageContent, pageTitle, pageDescription }: RightRailProps) {
   const activeId = useScrollSpy(toc);
   const shortSha = commitSha?.slice(0, 7);
+  const [copyFeedback, setCopyFeedback] = useState(false);
+
+  // AI link URL construction
+  const contentPrompt = pageUrl
+    ? `Read this Anatomia documentation page and answer questions about it. ${pageUrl}`
+    : "";
+  const proofPrompt = pageUrl
+    ? `This is a proof chain entry from Anatomia — a verified AI development methodology. Each proof records contract assertions, independent findings, timing, and integrity hashes. Assess the quality of this proof: what the assertions cover, what the findings reveal, and whether the verification was thorough. ${pageUrl}`
+    : "";
+  const prompt = variant === "proof" ? proofPrompt : contentPrompt;
+
+  const claudeUrl = prompt
+    ? `claude://claude.ai/new?q=${encodeURIComponent(prompt)}`
+    : "#";
+  const chatgptUrl = prompt
+    ? `https://chatgpt.com/?q=${encodeURIComponent(prompt)}`
+    : "#";
+
+  function handleCopyMarkdown(): void {
+    const content = pageContent || "";
+    navigator.clipboard.writeText(content).then(
+      () => {
+        setCopyFeedback(true);
+        setTimeout(() => setCopyFeedback(false), 2000);
+      },
+      () => {
+        // Clipboard API unavailable — silent fail
+      },
+    );
+  }
 
   return (
     <aside
@@ -146,42 +180,157 @@ export function RightRail({ toc, commitSha, buildTimestamp, editUrl, variant, pr
         >
           {variant === "proof" ? "Grade this proof" : "Ask AI about this page"}
         </div>
-        {(variant === "proof"
-          ? [
-              { text: "View on GitHub", arr: "↗", href: proofLinks?.githubUrl ?? "#" },
-              { text: "Download artifacts", arr: "↗", href: "#" },
-              { text: "Open in Claude", arr: "↗", href: "#" },
-            ]
-          : [
-              { text: "Copy as Markdown", arr: "⌘C", href: "#" },
-              { text: "Open in Claude", arr: "↗", href: "#" },
-              { text: "Open in ChatGPT", arr: "↗", href: "#" },
-            ]
-        ).map((link) => (
-          <a
-            key={link.text}
-            href={link.href}
-            target={link.href !== "#" ? "_blank" : undefined}
-            rel={link.href !== "#" ? "noopener noreferrer" : undefined}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              padding: "6px 10px",
-              border: "1px solid var(--hairline)",
-              borderRadius: "var(--radius-sm)",
-              fontSize: "11.5px",
-              color: "var(--ink-60)",
-              textDecoration: "none",
-              transition: "border-color 0.12s, color 0.12s",
-            }}
-          >
-            {link.text}
-            <span style={{ marginLeft: "auto", color: "var(--ink-25)" }}>
-              {link.arr}
-            </span>
-          </a>
-        ))}
+        {variant === "proof" ? (
+          <>
+            <a
+              href={proofLinks?.githubUrl ?? "#"}
+              target={proofLinks?.githubUrl ? "_blank" : undefined}
+              rel={proofLinks?.githubUrl ? "noopener noreferrer" : undefined}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "6px 10px",
+                border: "1px solid var(--hairline)",
+                borderRadius: "var(--radius-sm)",
+                fontSize: "11.5px",
+                color: "var(--ink-60)",
+                textDecoration: "none",
+                transition: "border-color 0.12s, color 0.12s",
+              }}
+            >
+              View on GitHub
+              <span style={{ marginLeft: "auto", color: "var(--ink-25)" }}>↗</span>
+            </a>
+            <button
+              onClick={handleCopyMarkdown}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "6px 10px",
+                border: "1px solid var(--hairline)",
+                borderRadius: "var(--radius-sm)",
+                fontSize: "11.5px",
+                color: "var(--ink-60)",
+                background: "none",
+                cursor: "pointer",
+                fontFamily: "inherit",
+                transition: "border-color 0.12s, color 0.12s",
+                width: "100%",
+              }}
+            >
+              {copyFeedback ? "Copied!" : "Copy as Markdown"}
+              <span style={{ marginLeft: "auto", color: "var(--ink-25)" }}>⌘C</span>
+            </button>
+            <a
+              className="docs-ai-link-claude"
+              href={claudeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "6px 10px",
+                border: "1px solid var(--hairline)",
+                borderRadius: "var(--radius-sm)",
+                fontSize: "11.5px",
+                color: "var(--ink-60)",
+                textDecoration: "none",
+                transition: "border-color 0.12s, color 0.12s",
+              }}
+            >
+              Open in Claude
+              <span style={{ marginLeft: "auto", color: "var(--ink-25)" }}>↗</span>
+            </a>
+            <a
+              href={chatgptUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "6px 10px",
+                border: "1px solid var(--hairline)",
+                borderRadius: "var(--radius-sm)",
+                fontSize: "11.5px",
+                color: "var(--ink-60)",
+                textDecoration: "none",
+                transition: "border-color 0.12s, color 0.12s",
+              }}
+            >
+              Open in ChatGPT
+              <span style={{ marginLeft: "auto", color: "var(--ink-25)" }}>↗</span>
+            </a>
+          </>
+        ) : (
+          <>
+            <button
+              onClick={handleCopyMarkdown}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "6px 10px",
+                border: "1px solid var(--hairline)",
+                borderRadius: "var(--radius-sm)",
+                fontSize: "11.5px",
+                color: "var(--ink-60)",
+                background: "none",
+                cursor: "pointer",
+                fontFamily: "inherit",
+                transition: "border-color 0.12s, color 0.12s",
+                width: "100%",
+              }}
+            >
+              {copyFeedback ? "Copied!" : "Copy as Markdown"}
+              <span style={{ marginLeft: "auto", color: "var(--ink-25)" }}>⌘C</span>
+            </button>
+            <a
+              className="docs-ai-link-claude"
+              href={claudeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "6px 10px",
+                border: "1px solid var(--hairline)",
+                borderRadius: "var(--radius-sm)",
+                fontSize: "11.5px",
+                color: "var(--ink-60)",
+                textDecoration: "none",
+                transition: "border-color 0.12s, color 0.12s",
+              }}
+            >
+              Open in Claude
+              <span style={{ marginLeft: "auto", color: "var(--ink-25)" }}>↗</span>
+            </a>
+            <a
+              href={chatgptUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "6px 10px",
+                border: "1px solid var(--hairline)",
+                borderRadius: "var(--radius-sm)",
+                fontSize: "11.5px",
+                color: "var(--ink-60)",
+                textDecoration: "none",
+                transition: "border-color 0.12s, color 0.12s",
+              }}
+            >
+              Open in ChatGPT
+              <span style={{ marginLeft: "auto", color: "var(--ink-25)" }}>↗</span>
+            </a>
+          </>
+        )}
       </div>
 
       {/* Footer */}
