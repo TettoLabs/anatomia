@@ -12950,7 +12950,10 @@
           "severity": "debt",
           "suggested_action": "accept",
           "id": "proof-system-near-term-C4",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed in 0eea04a7 — replaced two reverse-index splice loops with Array.filter() in proof.ts audit command. Changed const activeFindings to let. Same predicates, same order, same result — O(n) instead of O(n²). All 3 filter tests pass (--severity, --entry, --severity+json).",
+          "closed_at": "2026-05-14T23:40:02.330Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
