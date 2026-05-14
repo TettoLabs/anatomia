@@ -19325,7 +19325,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "section4-system-bento-C4",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Intentional: SystemSection closer (lines 57-62) and SectionThread serve different visual purposes. SectionThread is a horizontal section-to-section connector (→ arrow, Tailwind classes, mono text). The closer is a vertical call-to-action within a section (↓ arrow, CSS module classes, styled link). Different layout, different styling system, different semantic purpose. Not duplication.",
+          "closed_at": "2026-05-14T16:57:17.205Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
