@@ -23395,7 +23395,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "content-pages-C12",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Stale — ana:dynamic grep-friendly tags were implemented and are used consistently across 9+ locations in website/content/. Example: {/* ana:dynamic rejectionProofCount */} at pipeline.mdx:24. The finding's claim ('no grep-friendly tag') is no longer true.",
+          "closed_at": "2026-05-14T16:32:10.207Z",
+          "closed_by": "human"
         },
         {
           "category": "upstream",
