@@ -16139,7 +16139,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "website-production-infra-C6",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed in bc2167a4 — updated proof-feed.ts header comment from 'Today: static mock data' to 'Live data via GitHub API' to reflect actual wiring.",
+          "closed_at": "2026-05-14T08:18:56.304Z",
+          "closed_by": "human"
         },
         {
           "category": "upstream",
