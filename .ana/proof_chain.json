@@ -21098,7 +21098,10 @@
           "severity": "observation",
           "suggested_action": "monitor",
           "id": "add-milestone-kind-C3",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Duplicate: identical to ship-log-polish-C1 (closed this session). extractScopeKind regex at proofSummary.ts:444 matches first **Kind:** in file with enum validation. First-match semantics means the actual Kind line wins. Finding itself says 'pre-existing issue, milestone addition doesn't change the risk profile.'",
+          "closed_at": "2026-05-14T18:07:28.377Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
