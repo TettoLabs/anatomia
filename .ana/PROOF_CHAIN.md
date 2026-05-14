@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-93 runs · 289 active · 114 lessons · 0 promoted · 162 closed
+94 runs · 297 active · 115 lessons · 0 promoted · 162 closed
 
 ## Hot Modules
 
@@ -16,12 +16,16 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 289 total)
+## Active Findings (30 shown of 297 total)
 
 ### packages/cli/src/commands/artifact.ts
 
 - **code:** writeSaveMetadata export scope widened for tests — only consumed by test files, widens module public API — *Fix pipeline timing accuracy for multi-phase and rejection cycles*
 - **code:** Unbounded history array growth — each rejection cycle appends with no cap — *Fix pipeline timing accuracy for multi-phase and rejection cycles*
+
+### packages/cli/src/commands/proof.ts
+
+- **code:** formatHumanReadable exported solely for test access — was previously private, scope widened for testing — *Multi-phase Gantt visualization for proof timeline*
 
 ### packages/cli/src/commands/work.ts
 
@@ -40,6 +44,7 @@
 
 ### packages/cli/tests/utils/proofSummary.test.ts
 
+- **test:** Gantt bar assertions (A014-A018, A022) test a re-implemented copy of buildGanttBars, not the production function in PipelineGantt.tsx — *Multi-phase Gantt visualization for proof timeline*
 - **test:** A019 asserts on source code content — reads proofSummary.ts and checks string patterns instead of behavioral assertion — *Fix pipeline timing accuracy for multi-phase and rejection cycles*
 
 ### website/app/docs/[...slug]/page.tsx
@@ -51,45 +56,29 @@
 - **code:** docs-content-full CSS class added in Phase 1 but only used by Phase 2 explorer — harmless dead code until Phase 2 ships — *Dynamic Pages — Reference & Proof Chain*
 - **code:** Reference grid responsive collapse only at 660px — no intermediate 2-col→1-col at 880px. Supermock shows collapse at 660px so this matches, but the spec text mentions 1180px and 880px rules — *Dynamic Pages — Reference & Proof Chain*
 
-### website/app/docs/page.tsx
+### website/app/docs/proof/[slug]/page.tsx
 
-- **code:** Stats strip has 5 items (added MIT/free forever) vs spec mockup showing 4 — *Content Pages — 16 editorial docs pages with bug fixes and sidebar ordering*
+- **code:** Multi-phase timeline text derives phase count via Math.max on filtered segments — works correctly but couples rendering to segment internals when entry.phases field exists for this purpose — *Multi-phase Gantt visualization for proof timeline*
 
 ### website/app/docs/reference/cli/page.tsx
 
 - **code:** Hardcoded 'Last reviewed · 2026-05-11' in CLI reference page will become stale — *Dynamic Pages — Reference & Proof Chain*
 
-### website/components/docs/content/DocsGrid.tsx
-
-- **code:** DocsGrid component created but not in spec file_changes — *Content Pages — 16 editorial docs pages with bug fixes and sidebar ordering*
-
 ### website/components/docs/layout/RightRail.tsx
 
 - **code:** pageTitle and pageDescription props accepted by RightRail but never used in any rendering logic — *Docs Search + Polish*
 - **code:** Clipboard API failure silently swallowed — no user feedback when writeText fails on insecure context — *Docs Search + Polish*
-- **code:** RightRail 'Download artifacts' and 'Open in Claude' links point to '#' — placeholder hrefs with no target — *Dynamic Pages — Reference & Proof Chain*
 
 ### website/components/docs/layout/SearchOverlay.tsx
 
 - **code:** Search index fetched on every overlay open without cache invalidation awareness — 69KB JSON loaded client-side — *Docs Search + Polish*
 
-### website/components/docs/proof/FindingsList.tsx
-
-- **code:** FindingsList shows max 5 findings with no toggle to expand — AssertionLedger has expand/collapse but FindingsList truncates permanently — *Dynamic Pages — Reference & Proof Chain*
-
-### website/components/docs/proof/IntegritySeal.tsx
-
-- **code:** IntegritySeal last hash row retains bottom border — CSS rule `.integ-row:last-child { border-bottom: 0 }` from supermock not applied since rows use inline styles — *Dynamic Pages — Reference & Proof Chain*
-
 ### website/components/docs/proof/PipelineGantt.tsx
 
+- **code:** buildGanttBars and GanttBar exported from PipelineGantt.tsx but never imported — YAGNI exports for potential cross-package testing that doesn't happen — *Multi-phase Gantt visualization for proof timeline*
+- **code:** OPACITY_MAP duplicates opacity values already in STAGES array — two sources of truth for the same constants — *Multi-phase Gantt visualization for proof timeline*
+- **code:** 60px label column may be tight for 'VERIFY 3' at 10.5px mono with 0.06em letter-spacing — fits now but fragile for higher phase counts — *Multi-phase Gantt visualization for proof timeline*
 - **code:** formatDuration defined but unused in PipelineGantt — duration column uses raw `{value}m` instead — *Dynamic Pages — Reference & Proof Chain*
-- **code:** PipelineGantt left-offset uses Math.round per-stage — cumulative rounding can exceed 100% and cause visual overflow on entries with many small stages — *Dynamic Pages — Reference & Proof Chain*
-
-### website/components/docs/proof/ProofExplorer.tsx
-
-- **code:** formatDuration duplicated in 4 files (ProofExplorer, ProofHero, PipelineGantt, detail page) — extract to shared utility — *Dynamic Pages — Reference & Proof Chain*
-- **code:** ProofExplorer inline styles heavily duplicated across 7 column headers — same 9-property object repeated per th element — *Dynamic Pages — Reference & Proof Chain*
 
 ### website/content/docs/concepts/pipeline.mdx
 
@@ -101,4 +90,9 @@
 - **code:** Unused variable 'other' in generateLlmsTxt — pages filtered but remainder never referenced — *Docs Search + Polish*
 - **code:** Duplicate stripJsx implementation — one in website/lib/docs-data/stripJsx.ts, another inlined in extract-docs-data.ts — *Docs Search + Polish*
 - **code:** Variable shadowing in extractSkillTemplates — inner 'content' (line 584) shadows outer 'content' (line 566), latent confusion risk — *Dynamic Pages — Reference & Proof Chain*
+
+### General
+
+- **test:** A013 (phases population) and A021 (extraction passthrough) have no tagged tests — verified by source inspection only — *Multi-phase Gantt visualization for proof timeline*
+- **code:** Website content files updated with dynamic proof counts (90→93, 19→21) — not in spec but harmless build-time content refresh — *Multi-phase Gantt visualization for proof timeline*
 
