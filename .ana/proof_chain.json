@@ -10255,7 +10255,10 @@
             "A008"
           ],
           "id": "audit-json-severity-summary-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Covered by A014 test: proof.test.ts:1891 creates a chain with 1 closed finding (severity: risk) and asserts total_active:0 and by_severity.risk:0 — proving closed findings are excluded from counts. A008 test at line 1847 correctly verifies count arithmetic with 5 active findings. Together they cover both halves: correct counting + exclusion of closed.",
+          "closed_at": "2026-05-14T16:41:53.157Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
