@@ -1,0 +1,93 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Run build command during worktree creation"
+
+assertions:
+  - id: A001
+    says: "Worktree creation runs the project's build command automatically"
+    block: "runs build command when commands.build is configured"
+    target: "result.buildSucceeded"
+    matcher: "equals"
+    value: true
+
+  - id: A002
+    says: "The build produces artifacts inside the worktree"
+    block: "runs build command when commands.build is configured"
+    target: "markerFileExists"
+    matcher: "equals"
+    value: true
+
+  - id: A003
+    says: "The build runs inside the worktree directory, not the main tree"
+    block: "runs build command when commands.build is configured"
+    target: "markerInMainTree"
+    matcher: "equals"
+    value: false
+
+  - id: A004
+    says: "A failed build does not block worktree creation"
+    block: "completes worktree creation when build fails"
+    target: "createWorktreeThrows"
+    matcher: "equals"
+    value: false
+
+  - id: A005
+    says: "A failed build is reported in the result"
+    block: "completes worktree creation when build fails"
+    target: "result.buildSucceeded"
+    matcher: "equals"
+    value: false
+
+  - id: A006
+    says: "All worktree setup steps complete even when the build fails"
+    block: "completes worktree creation when build fails"
+    target: "result.contextFileWritten"
+    matcher: "equals"
+    value: true
+
+  - id: A007
+    says: "Projects without a build command skip the build step"
+    block: "skips build when no build command is configured"
+    target: "result.buildSucceeded"
+    matcher: "equals"
+    value: null
+
+  - id: A008
+    says: "Skipping the build does not affect other worktree setup steps"
+    block: "skips build when no build command is configured"
+    target: "result.depsInstalled"
+    matcher: "exists"
+
+  - id: A009
+    says: "The worktree result includes a build status field"
+    block: "runs build command when commands.build is configured"
+    target: "result.buildSucceeded"
+    matcher: "exists"
+
+  - id: A010
+    says: "Build status is recorded in the worktree context file"
+    block: "runs build command when commands.build is configured"
+    target: "contextContent"
+    matcher: "contains"
+    value: "## Build Status"
+
+  - id: A011
+    says: "Failed build status is recorded in the worktree context file"
+    block: "completes worktree creation when build fails"
+    target: "contextContent"
+    matcher: "contains"
+    value: "failed"
+
+  - id: A012
+    says: "The build step runs after env files are linked"
+    block: "runs build command when commands.build is configured"
+    target: "result.envFilesLinked"
+    matcher: "exists"
+
+file_changes:
+  - path: "packages/cli/src/utils/worktree.ts"
+    action: modify
+  - path: "packages/cli/src/commands/work.ts"
+    action: modify
+  - path: "packages/cli/tests/utils/worktree.test.ts"
+    action: modify
