@@ -1,13 +1,13 @@
 # Proof Chain Dashboard
 
-92 runs · 284 active · 113 lessons · 0 promoted · 162 closed
+93 runs · 289 active · 114 lessons · 0 promoted · 162 closed
 
 ## Hot Modules
 
 | File | Active | Entries |
 |------|--------|--------|
-| packages/cli/src/commands/work.ts | 22 | 12 |
-| packages/cli/tests/commands/work.test.ts | 20 | 15 |
+| packages/cli/src/commands/work.ts | 24 | 13 |
+| packages/cli/tests/commands/work.test.ts | 23 | 16 |
 | packages/cli/tests/commands/proof.test.ts | 11 | 5 |
 | packages/cli/src/commands/artifact.ts | 10 | 6 |
 | packages/cli/src/utils/proofSummary.ts | 10 | 8 |
@@ -16,16 +16,27 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 284 total)
+## Active Findings (30 shown of 289 total)
 
 ### packages/cli/src/commands/artifact.ts
 
 - **code:** writeSaveMetadata export scope widened for tests — only consumed by test files, widens module public API — *Fix pipeline timing accuracy for multi-phase and rejection cycles*
 - **code:** Unbounded history array growth — each rejection cycle appends with no cap — *Fix pipeline timing accuracy for multi-phase and rejection cycles*
 
+### packages/cli/src/commands/work.ts
+
+- **code:** Async/sync IO inconsistency — session file written with fsPromises.writeFile but read with fs.readFileSync — *Capture actual think time from Ana session start*
+- **code:** spawnSync used instead of spec-recommended execSync — better choice, structured exit code handling — *Capture actual think time from Ana session start*
+
 ### packages/cli/src/utils/proofSummary.ts
 
 - **code:** Non-null assertion on missing verify phase — verifyPhases[i-1]! crashes if verify-report-(N-1) missing when build-report-N exists — *Fix pipeline timing accuracy for multi-phase and rejection cycles*
+
+### packages/cli/tests/commands/work.test.ts
+
+- **test:** Conditional PID guard makes 8 tests potential no-ops in environments where getClaudePid() returns null — *Capture actual think time from Ana session start*
+- **test:** A015 reads source code instead of testing runtime behavior — pragmatic for Commander registration — *Capture actual think time from Ana session start*
+- **test:** A008 ordering verified by inspection only — no test enforces delete-before-use sequence — *Capture actual think time from Ana session start*
 
 ### packages/cli/tests/utils/proofSummary.test.ts
 
@@ -34,7 +45,6 @@
 ### website/app/docs/[...slug]/page.tsx
 
 - **code:** Dynamic components not registered in catch-all mdxComponents map — contract specifies registration but builder used build-time regex approach instead — *Docs Search + Polish*
-- **code:** Catch-all route renamed from [[...slug]] to [...slug] — not specified in spec but necessary — *Content Pages — 16 editorial docs pages with bug fixes and sidebar ordering*
 
 ### website/app/docs/docs.css
 
@@ -49,21 +59,9 @@
 
 - **code:** Hardcoded 'Last reviewed · 2026-05-11' in CLI reference page will become stale — *Dynamic Pages — Reference & Proof Chain*
 
-### website/app/globals.css
-
-- **code:** globals.css modified to add --brand-light and --info CSS variables — not in spec file_changes — *Content Pages — 16 editorial docs pages with bug fixes and sidebar ordering*
-
-### website/components/docs/content/Callout.tsx
-
-- **code:** Callout label stores titlecase (Rule/Note), relies on CSS text-transform for uppercase display — *Content Pages — 16 editorial docs pages with bug fixes and sidebar ordering*
-
 ### website/components/docs/content/DocsGrid.tsx
 
 - **code:** DocsGrid component created but not in spec file_changes — *Content Pages — 16 editorial docs pages with bug fixes and sidebar ordering*
-
-### website/components/docs/content/ResourceStrip.tsx
-
-- **code:** ResourceStrip uses <a> for Manifesto link (internal anatomia.dev URL) instead of Next.js Link — *Content Pages — 16 editorial docs pages with bug fixes and sidebar ordering*
 
 ### website/components/docs/layout/RightRail.tsx
 
@@ -103,8 +101,4 @@
 - **code:** Unused variable 'other' in generateLlmsTxt — pages filtered but remainder never referenced — *Docs Search + Polish*
 - **code:** Duplicate stripJsx implementation — one in website/lib/docs-data/stripJsx.ts, another inlined in extract-docs-data.ts — *Docs Search + Polish*
 - **code:** Variable shadowing in extractSkillTemplates — inner 'content' (line 584) shadows outer 'content' (line 566), latent confusion risk — *Dynamic Pages — Reference & Proof Chain*
-
-### General
-
-- **test:** No unit tests for any new components — build verification is pnpm build only — *Content Pages — 16 editorial docs pages with bug fixes and sidebar ordering*
 

@@ -24613,6 +24613,261 @@
         "commit_count": 0,
         "base_commit": "50e9d05f7ca7ce30f1007a3d697798498a23958c"
       }
+    },
+    {
+      "slug": "capture-think-time",
+      "feature": "Capture actual think time from Ana session start",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 17,
+        "satisfied": 15,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "The CLI can resolve the Claude Code process ID from the current process tree",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "PID resolution returns null when the process lookup fails",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "PID resolution returns null when ps output is not a valid number",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "Running work status with --session creates a session file in .ana/state/",
+          "status": "UNVERIFIED"
+        },
+        {
+          "id": "A005",
+          "says": "The session file contains a valid UTC timestamp",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "Running work status without --session does not create a session file",
+          "status": "UNVERIFIED"
+        },
+        {
+          "id": "A007",
+          "says": "Starting a new work item with a session file uses the session timestamp instead of now",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "The session file is deleted before the timestamp is written to saves",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "Starting a new work item without a session file uses the current time",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "The writeTimestamp function accepts an optional timestamp parameter",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "The writeTimestamp function uses now() when no timestamp is provided",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "Session files with invalid JSON are ignored and work start falls back to now",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "The session file is still deleted even when it contains invalid JSON",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "Only the new-slug path in startWork reads session files",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "The --session flag is registered on the status subcommand only",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "Ana's dogfood prompt tells it to run work status with the session flag",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A017",
+          "says": "The template prompt for new installations includes the session flag",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 10,
+        "met": 10
+      },
+      "timing": {
+        "total_minutes": 106,
+        "think": 2,
+        "plan": 5,
+        "build": 72,
+        "verify": 0
+      },
+      "hashes": {
+        "scope": "sha256:1bb0af7d63e746fa3076a6ddcee881fab4ce9551579f897262f453fea292daf8",
+        "contract": "sha256:7339ff7c7b13a794ccbacb4944362e51a0e86732818f8989356f212f64b15b52",
+        "plan": "sha256:e6fc05b5ee0080be205491807efc7f993f792e67069b478c7e5eabdb26a74483",
+        "spec": "sha256:fd954256b5e73661f59e066441d33e517a5547e5d22b025b4f327233e2bfdd64",
+        "build-report": "sha256:eee148c17579d86fff7bab83dbe74b0c3541ec739d047e47f20d419fb9d91752",
+        "build-data": "sha256:70312df53233294a01c39ad9768a9c6686097d7cdc59f500ce90d09134d78c13",
+        "verify-report": "sha256:5b0997e763783299d1e470c8dd49e3e2e728bdb29918aac833347c635e0bdbd1",
+        "verify-data": "sha256:0d469ba9d01f633487f6891523255d0709f7f7add439d204a3c87eb0056d6fe7"
+      },
+      "completed_at": "2026-05-14T04:00:05.955Z",
+      "modules_touched": [
+        ".claude/agents/ana.md",
+        "packages/cli/src/commands/work.ts",
+        "packages/cli/templates/.claude/agents/ana.md",
+        "packages/cli/tests/commands/work.test.ts",
+        "pnpm-lock.yaml"
+      ],
+      "scope_summary": "The think phase in pipeline timing systematically undercounts. Every proof shows 1-2 minutes of \"think\" time because the clock starts at `ana work start` (when the slug directory is created), not when the Ana conversation actually began. The real thinking — investigation, navigation, tradeoff discussion, scope drafting — happens before `work start`. A 45-minute scoping conversation records as 1 minute.",
+      "kind": "fix",
+      "findings": [
+        {
+          "category": "test",
+          "summary": "Conditional PID guard makes 8 tests potential no-ops in environments where getClaudePid() returns null",
+          "file": "packages/cli/tests/commands/work.test.ts",
+          "anchor": null,
+          "severity": "risk",
+          "suggested_action": "scope",
+          "related_assertions": [
+            "A004",
+            "A005",
+            "A007",
+            "A008",
+            "A010",
+            "A012",
+            "A013",
+            "A014"
+          ],
+          "id": "capture-think-time-C1",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "A015 reads source code instead of testing runtime behavior — pragmatic for Commander registration",
+          "file": "packages/cli/tests/commands/work.test.ts",
+          "anchor": null,
+          "line": 4835,
+          "severity": "debt",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A015"
+          ],
+          "id": "capture-think-time-C2",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "A008 ordering verified by inspection only — no test enforces delete-before-use sequence",
+          "file": "packages/cli/tests/commands/work.test.ts",
+          "anchor": null,
+          "line": 4697,
+          "severity": "debt",
+          "suggested_action": "monitor",
+          "related_assertions": [
+            "A008"
+          ],
+          "id": "capture-think-time-C3",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Async/sync IO inconsistency — session file written with fsPromises.writeFile but read with fs.readFileSync",
+          "file": "packages/cli/src/commands/work.ts",
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "capture-think-time-C4",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "spawnSync used instead of spec-recommended execSync — better choice, structured exit code handling",
+          "file": "packages/cli/src/commands/work.ts",
+          "anchor": null,
+          "line": 2128,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "capture-think-time-C5",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "Proof context finding 'race condition in writeTimestamp read-modify-write' remains — not introduced by this build but sessionTimestamp now flows through writeTimestamp",
+          "file": "packages/cli/src/commands/work.ts",
+          "anchor": null,
+          "line": 2156,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "capture-think-time-C6",
+          "status": "lesson"
+        }
+      ],
+      "rejection_cycles": 1,
+      "previous_failures": [
+        {
+          "id": "A003",
+          "summary": "Test was tautological — `pid === null \\"
+        }
+      ],
+      "build_concerns": [
+        {
+          "summary": "8 tests use conditional PID guard — zero assertions in CI/Docker environments",
+          "file": "packages/cli/tests/commands/work.test.ts",
+          "severity": "debt",
+          "suggested_action": "scope"
+        },
+        {
+          "summary": "A015 tests source code content instead of runtime behavior",
+          "file": "packages/cli/tests/commands/work.test.ts",
+          "severity": "debt",
+          "suggested_action": "accept"
+        },
+        {
+          "summary": "A008 delete-before-use ordering not enforced by test — only verified by source inspection",
+          "file": "packages/cli/tests/commands/work.test.ts",
+          "severity": "observation",
+          "suggested_action": "monitor"
+        },
+        {
+          "summary": "Async writeFile in getWorkStatus vs sync readFileSync in startWork for session files",
+          "file": "packages/cli/src/commands/work.ts",
+          "severity": "observation",
+          "suggested_action": "accept"
+        }
+      ],
+      "worktree": {
+        "used": true,
+        "created_at": "2026-05-14T03:38:28.324Z",
+        "completed_at": "2026-05-14T04:00:05.952Z",
+        "commit_count": 0,
+        "base_commit": "6522f286a79c0f39d57f65267c353074eeef972f"
+      }
     }
   ],
   "schema": 1
