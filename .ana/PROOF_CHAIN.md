@@ -1,13 +1,13 @@
 # Proof Chain Dashboard
 
-96 runs · 214 active · 117 lessons · 0 promoted · 258 closed
+96 runs · 213 active · 117 lessons · 0 promoted · 259 closed
 
 ## Hot Modules
 
 | File | Active | Entries |
 |------|--------|--------|
 | packages/cli/src/commands/work.ts | 19 | 10 |
-| packages/cli/tests/commands/work.test.ts | 13 | 10 |
+| packages/cli/tests/commands/work.test.ts | 12 | 10 |
 | packages/cli/src/utils/worktree.ts | 10 | 6 |
 | packages/cli/src/utils/proofSummary.ts | 9 | 8 |
 | packages/cli/src/commands/artifact.ts | 8 | 6 |
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 214 total)
+## Active Findings (30 shown of 213 total)
 
 ### packages/cli/src/commands/artifact.ts
 
@@ -47,7 +47,6 @@
 ### packages/cli/tests/commands/work.test.ts
 
 - **test:** Conditional PID guard makes 8 tests potential no-ops in environments where getClaudePid() returns null — *Capture actual think time from Ana session start*
-- **test:** A015 reads source code instead of testing runtime behavior — pragmatic for Commander registration — *Capture actual think time from Ana session start*
 - **test:** A008 ordering verified by inspection only — no test enforces delete-before-use sequence — *Capture actual think time from Ana session start*
 
 ### packages/cli/tests/utils/proofSummary.test.ts
@@ -94,6 +93,7 @@
 - **code:** LLMS_SECTIONS constant declared but never used in extract-docs-data.ts — *Docs Search + Polish*
 - **code:** Unused variable 'other' in generateLlmsTxt — pages filtered but remainder never referenced — *Docs Search + Polish*
 - **code:** Duplicate stripJsx implementation — one in website/lib/docs-data/stripJsx.ts, another inlined in extract-docs-data.ts — *Docs Search + Polish*
+- **code:** Variable shadowing in extractSkillTemplates — inner 'content' (line 584) shadows outer 'content' (line 566), latent confusion risk — *Dynamic Pages — Reference & Proof Chain*
 
 ### General
 
