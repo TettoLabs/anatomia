@@ -19439,7 +19439,10 @@
           "suggested_action": "accept",
           "related_assertions": [],
           "id": "section4-system-bento-C1",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed in 6000e283 — removed dead sectionRef prop from Drawer.tsx. Prop was never passed by SystemSection (the only consumer at line 54). IntersectionObserver at line 40 now uses containerRef.current directly instead of sectionRef?.current ?? containerRef.current. Zero behavioral change.",
+          "closed_at": "2026-05-14T22:42:37.785Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
