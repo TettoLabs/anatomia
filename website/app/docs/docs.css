@@ -463,14 +463,29 @@
   padding: 8px;
   flex: 1;
   scrollbar-width: thin;
-  scrollbar-color: var(--ink-25) transparent;
 }
-[data-theme] .docs-search-results::-webkit-scrollbar {
+/* Scrollbar colors use raw rgba — the overlay is portaled to body,
+   outside .docs-layout where --ink-25 is defined */
+[data-theme="light"] .docs-search-results {
+  scrollbar-color: rgba(11, 11, 16, 0.18) transparent;
+}
+[data-theme="dark"] .docs-search-results {
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+[data-theme="light"] .docs-search-results::-webkit-scrollbar {
   width: 6px;
   background: transparent;
 }
-[data-theme] .docs-search-results::-webkit-scrollbar-thumb {
-  background: var(--ink-25);
+[data-theme="light"] .docs-search-results::-webkit-scrollbar-thumb {
+  background: rgba(11, 11, 16, 0.18);
+  border-radius: 3px;
+}
+[data-theme="dark"] .docs-search-results::-webkit-scrollbar {
+  width: 6px;
+  background: transparent;
+}
+[data-theme="dark"] .docs-search-results::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.22);
   border-radius: 3px;
 }
 
