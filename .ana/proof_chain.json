@@ -17637,7 +17637,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "website-nav-copy-polish-C6",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Finding's characterization is incorrect: the Codex SVG at icons.tsx:33-34 IS the OpenAI logomark, not a placeholder. File header (line 6) documents: 'Codex uses the OpenAI logomark.' Codex is an OpenAI product — using the OpenAI logo is the correct brand icon. Paths sourced from Simple Icons (CC0-licensed).",
+          "closed_at": "2026-05-14T16:56:48.859Z",
+          "closed_by": "human"
         }
       ],
       "rejection_cycles": 0,
