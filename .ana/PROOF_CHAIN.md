@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-89 runs · 261 active · 110 lessons · 0 promoted · 161 closed
+90 runs · 272 active · 111 lessons · 0 promoted · 161 closed
 
 ## Hot Modules
 
@@ -16,23 +16,24 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 261 total)
+## Active Findings (30 shown of 272 total)
 
 ### website/app/docs/[...slug]/page.tsx
 
 - **code:** Catch-all route renamed from [[...slug]] to [...slug] — not specified in spec but necessary — *Content Pages — 16 editorial docs pages with bug fixes and sidebar ordering*
 
-### website/app/docs/[[...slug]]/page.tsx
+### website/app/docs/docs.css
 
-- **code:** Prose classes used without @tailwindcss/typography installed — *Docs Infrastructure — Fumadocs MDX Pipeline*
-
-### website/app/docs/layout.tsx
-
-- **code:** data-hide-rail attribute from spec not implemented — prep mechanism for future proof-explorer route — *Docs Shell (Layout + Shared Components)*
+- **code:** docs-content-full CSS class added in Phase 1 but only used by Phase 2 explorer — harmless dead code until Phase 2 ships — *Dynamic Pages — Reference & Proof Chain*
+- **code:** Reference grid responsive collapse only at 660px — no intermediate 2-col→1-col at 880px. Supermock shows collapse at 660px so this matches, but the spec text mentions 1180px and 880px rules — *Dynamic Pages — Reference & Proof Chain*
 
 ### website/app/docs/page.tsx
 
 - **code:** Stats strip has 5 items (added MIT/free forever) vs spec mockup showing 4 — *Content Pages — 16 editorial docs pages with bug fixes and sidebar ordering*
+
+### website/app/docs/reference/cli/page.tsx
+
+- **code:** Hardcoded 'Last reviewed · 2026-05-11' in CLI reference page will become stale — *Dynamic Pages — Reference & Proof Chain*
 
 ### website/app/globals.css
 
@@ -42,10 +43,6 @@
 
 - **code:** Callout label stores titlecase (Rule/Note), relies on CSS text-transform for uppercase display — *Content Pages — 16 editorial docs pages with bug fixes and sidebar ordering*
 - **code:** Callout label renders 'Rule' with CSS uppercase — contract A020 expects literal 'RULE'. Visually correct but DOM text differs from contract value. — *Content Pages — 16 editorial docs pages with bug fixes and sidebar ordering*
-
-### website/components/docs/content/CopyButton.tsx
-
-- **code:** CopyButton uses inline event handlers for hover styles instead of CSS — fragile pattern, state survives re-renders differently than CSS hover — *Docs Shell (Layout + Shared Components)*
 
 ### website/components/docs/content/DocsGrid.tsx
 
@@ -64,17 +61,28 @@
 
 - **code:** Lint error: DocsErrorBoundary uses <a> tag instead of Next.js <Link> for /docs/ navigation — *Docs Shell (Layout + Shared Components)*
 
-### website/components/docs/layout/PlatformSwitcher.tsx
-
-- **code:** PlatformSwitcher labelMap duplicates data already in platforms array — two sources of truth for platform labels — *Docs Shell (Layout + Shared Components)*
-
 ### website/components/docs/layout/RightRail.tsx
 
+- **code:** RightRail 'Download artifacts' and 'Open in Claude' links point to '#' — placeholder hrefs with no target — *Dynamic Pages — Reference & Proof Chain*
 - **code:** Right rail responsive breakpoint mismatch — hidden from 1181-1279px where spec says visible above 1180px — *Docs Shell (Layout + Shared Components)*
 
-### website/components/docs/layout/Sidebar.tsx
+### website/components/docs/proof/FindingsList.tsx
 
-- **code:** Sidebar md:block (768px) is redundant — overridden by docs.css @media (max-width: 880px) with !important — *Docs Shell (Layout + Shared Components)*
+- **code:** FindingsList shows max 5 findings with no toggle to expand — AssertionLedger has expand/collapse but FindingsList truncates permanently — *Dynamic Pages — Reference & Proof Chain*
+
+### website/components/docs/proof/IntegritySeal.tsx
+
+- **code:** IntegritySeal last hash row retains bottom border — CSS rule `.integ-row:last-child { border-bottom: 0 }` from supermock not applied since rows use inline styles — *Dynamic Pages — Reference & Proof Chain*
+
+### website/components/docs/proof/PipelineGantt.tsx
+
+- **code:** formatDuration defined but unused in PipelineGantt — duration column uses raw `{value}m` instead — *Dynamic Pages — Reference & Proof Chain*
+- **code:** PipelineGantt left-offset uses Math.round per-stage — cumulative rounding can exceed 100% and cause visual overflow on entries with many small stages — *Dynamic Pages — Reference & Proof Chain*
+
+### website/components/docs/proof/ProofExplorer.tsx
+
+- **code:** formatDuration duplicated in 4 files (ProofExplorer, ProofHero, PipelineGantt, detail page) — extract to shared utility — *Dynamic Pages — Reference & Proof Chain*
+- **code:** ProofExplorer inline styles heavily duplicated across 7 column headers — same 9-property object repeated per th element — *Dynamic Pages — Reference & Proof Chain*
 
 ### website/components/docs/providers/PlatformProvider.tsx
 
@@ -100,23 +108,12 @@
 
 - **code:** Stale dynamic-value comment in verifying-changes and troubleshooting — says 17 of 78 proofs but real count may differ — *Content Pages — 16 editorial docs pages with bug fixes and sidebar ordering*
 
-### website/lib/docs-data/index.ts
-
-- **code:** All 13 exported loader functions and 14 types are unused — no page components import from docs-data yet — *Docs Data Pipeline*
-
-### website/lib/docs-data/proofs.ts
-
-- **code:** No JSDoc on exported loader functions — inconsistent with CLI package coding standards, though website eslint doesn't enforce it — *Docs Data Pipeline*
-- **code:** process.cwd() in loader DATA_PATH assumes Next.js runs from website/ root — correct for Next.js build, fragile if loaders are ever called from tests or scripts — *Docs Data Pipeline*
-
 ### website/scripts/extract-docs-data.ts
 
-- **code:** Keyword fallback categorization lacks word boundaries — 'scannable' matches /scan/, misassigning proof entries to Engine — *Docs Data Pipeline*
-- **code:** Variable shadowing in extractSkillTemplates — inner 'content' shadows outer 'content' in same function — *Docs Data Pipeline*
+- **code:** Variable shadowing in extractSkillTemplates — inner 'content' (line 584) shadows outer 'content' (line 566), latent confusion risk — *Dynamic Pages — Reference & Proof Chain*
 
 ### General
 
 - **test:** No unit tests for any new components — build verification is pnpm build only — *Content Pages — 16 editorial docs pages with bug fixes and sidebar ordering*
 - **code:** NextCards link to 6 pages that don't exist yet (guides, reference, proof) — *Content Pages — 16 editorial docs pages with bug fixes and sidebar ordering*
-- **test:** No tests exist for website package — all 31 assertions verified by source inspection only. No regression safety net for component behavior. — *Docs Shell (Layout + Shared Components)*
 
