@@ -31,6 +31,7 @@ import type { ContractSchema } from '../types/contract.js';
 interface SaveMetadata {
   saved_at: string;
   hash: string;
+  history?: Array<{ saved_at: string; hash: string }>;
 }
 
 /**
@@ -66,11 +67,23 @@ function writeSaveMetadata(slugDir: string, artifactType: string, content: strin
     return false;
   }
 
-  // Write entry for this artifact type
-  saves[artifactType] = {
-    saved_at: new Date().toISOString(),
-    hash: fullHash,
-  };
+  // Preserve previous timestamp and hash in history before overwriting
+  if (existing && existing.saved_at && existing.hash) {
+    const historyEntry = { saved_at: existing.saved_at, hash: existing.hash };
+    const history = existing.history ?? [];
+    history.push(historyEntry);
+    saves[artifactType] = {
+      saved_at: new Date().toISOString(),
+      hash: fullHash,
+      history,
+    };
+  } else {
+    // First write — no history to preserve
+    saves[artifactType] = {
+      saved_at: new Date().toISOString(),
+      hash: fullHash,
+    };
+  }
 
   fs.writeFileSync(savesPath, JSON.stringify(saves, null, 2));
   return true;

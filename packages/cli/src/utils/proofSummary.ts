@@ -93,6 +93,7 @@ interface SaveEntry {
   saved_at?: string;
   commit?: string;
   hash?: string;
+  history?: Array<{ saved_at: string; hash: string }>;
 }
 
 /**
@@ -1499,6 +1500,8 @@ export function parseRejectionCycles(content: string): {
  * @returns Timing breakdown in minutes
  */
 function computeTiming(saves: SavesData): ProofSummary['timing'] {
+  const MAX_PHASE_MS = 24 * 60 * 60 * 1000; // 24 hours
+
   const getTime = (key: string): number | null => {
     const entry = saves[key] as SaveEntry | undefined;
     return entry?.saved_at ? new Date(entry.saved_at).getTime() : null;
@@ -1536,6 +1539,40 @@ function computeTiming(saves: SavesData): ProofSummary['timing'] {
     return typeof raw === 'string' ? new Date(raw).getTime() : null;
   };
 
+  /**
+   * Enumerate numbered phase keys (e.g., "build-report-1", "build-report-2")
+   * sorted by phase number. Only matches exact `{baseKey}-{N}` patterns —
+   * excludes companion data keys like "build-data-1".
+   *
+   * @param baseKey - Artifact key prefix (e.g., "build-report", "verify-report")
+   * @returns Sorted array of phase number and key pairs
+   */
+  const getNumberedPhases = (baseKey: string): Array<{ phase: number; key: string }> => {
+    const phases: Array<{ phase: number; key: string }> = [];
+    const pattern = new RegExp(`^${baseKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}-(\\d+)$`);
+    for (const key of Object.keys(saves)) {
+      const match = key.match(pattern);
+      if (match?.[1]) {
+        phases.push({ phase: parseInt(match[1], 10), key });
+      }
+    }
+    return phases.sort((a, b) => a.phase - b.phase);
+  };
+
+  /**
+   * Detect multi-phase: numbered build-report keys present
+   */
+  const buildPhases = getNumberedPhases('build-report');
+  const verifyPhases = getNumberedPhases('verify-report');
+  const isMultiPhase = buildPhases.length > 0;
+
+  /**
+   * Detect rejection cycles: history arrays on build-report or verify-report
+   */
+  const buildReportEntry = saves['build-report'] as SaveEntry | undefined;
+  const verifyReportEntry = saves['verify-report'] as SaveEntry | undefined;
+  const hasRejectionHistory = !!(buildReportEntry?.history?.length || verifyReportEntry?.history?.length);
+
   const workStartedAt = readRawTimestamp('work_started_at');
   const planStartedAt = readRawTimestamp('plan_started_at');
   const buildStartedAt = readRawTimestamp('build_started_at');
@@ -1553,12 +1590,11 @@ function computeTiming(saves: SavesData): ProofSummary['timing'] {
   const timing: ProofSummary['timing'] = {
     total_minutes: Math.round(totalMs / 60000),
   };
+
+  // Think and plan computation (unchanged by segment logic)
   if (workStartedAt && scopeTime && contractTime) {
-    // New behavior: separate think and plan using work_started_at
     timing.think = Math.round((scopeTime - workStartedAt) / 60000);
 
-    // Plan duration: prefer plan_started_at over artifact-gap timing
-    const MAX_PHASE_MS = 24 * 60 * 60 * 1000; // 24 hours
     let usedPlanStartedAt = false;
     if (planStartedAt !== null && planStartedAt <= contractTime) {
       const durationMs = contractTime - planStartedAt;
@@ -1571,41 +1607,135 @@ function computeTiming(saves: SavesData): ProofSummary['timing'] {
       timing.plan = Math.round((contractTime - scopeTime) / 60000);
     }
   } else if (contractTime && scopeTime) {
-    // Fallback: identical think and plan (backward compat for old entries)
     timing.think = Math.round((contractTime - scopeTime) / 60000);
     timing.plan = Math.round((contractTime - scopeTime) / 60000);
   }
 
-  // Build duration: prefer _started_at over artifact-gap timing
-  const MAX_PHASE_MS = 24 * 60 * 60 * 1000; // 24 hours
-  if (buildTime && contractTime) {
-    let usedStartedAt = false;
-    if (buildStartedAt !== null && buildStartedAt <= buildTime) {
-      const durationMs = buildTime - buildStartedAt;
-      if (durationMs >= 0 && durationMs <= MAX_PHASE_MS) {
-        timing.build = Math.round(durationMs / 60000);
-        usedStartedAt = true;
+  // --- Segment-based build/verify computation ---
+  if (isMultiPhase && contractTime) {
+    // Multi-phase: sum per-phase segments
+    let buildMs = 0;
+    let verifyMs = 0;
+
+    for (let i = 0; i < buildPhases.length; i++) {
+      const buildPhase = buildPhases[i]!;
+      const verifyPhase = verifyPhases[i];
+
+      // Build segment: previous verify (or contract for phase 1) → this build
+      const segStart = i === 0
+        ? contractTime
+        : getTime(verifyPhases[i - 1]!.key);
+      const segEnd = getTime(buildPhase.key);
+
+      if (segStart !== null && segEnd !== null) {
+        const durationMs = segEnd - segStart;
+        if (durationMs >= 0 && durationMs <= MAX_PHASE_MS) {
+          buildMs += durationMs;
+        }
+      }
+
+      // Verify segment: this build → this verify
+      if (verifyPhase) {
+        const vStart = getTime(buildPhase.key);
+        const vEnd = getTime(verifyPhase.key);
+        if (vStart !== null && vEnd !== null) {
+          const durationMs = vEnd - vStart;
+          if (durationMs >= 0 && durationMs <= MAX_PHASE_MS) {
+            verifyMs += durationMs;
+          }
+        }
       }
     }
-    if (!usedStartedAt) {
-      timing.build = Math.round((buildTime - contractTime) / 60000);
+
+    timing.build = Math.round(buildMs / 60000);
+    timing.verify = Math.round(verifyMs / 60000);
+  } else if (hasRejectionHistory && contractTime) {
+    // Rejection cycles: reconstruct timeline from history entries
+    let buildMs = 0;
+    let verifyMs = 0;
+
+    // Collect all build timestamps: history (oldest first) + current
+    const buildTimestamps: number[] = [];
+    if (buildReportEntry?.history) {
+      for (const h of buildReportEntry.history) {
+        const t = new Date(h.saved_at).getTime();
+        if (!isNaN(t)) buildTimestamps.push(t);
+      }
+    }
+    if (buildReportEntry?.saved_at) {
+      const t = new Date(buildReportEntry.saved_at).getTime();
+      if (!isNaN(t)) buildTimestamps.push(t);
+    }
+
+    const verifyTimestamps: number[] = [];
+    if (verifyReportEntry?.history) {
+      for (const h of verifyReportEntry.history) {
+        const t = new Date(h.saved_at).getTime();
+        if (!isNaN(t)) verifyTimestamps.push(t);
+      }
+    }
+    if (verifyReportEntry?.saved_at) {
+      const t = new Date(verifyReportEntry.saved_at).getTime();
+      if (!isNaN(t)) verifyTimestamps.push(t);
+    }
+
+    // Build segments: contract → build[0], verify[0] → build[1], verify[1] → build[2], ...
+    for (let i = 0; i < buildTimestamps.length; i++) {
+      const segStart = i === 0 ? contractTime : verifyTimestamps[i - 1];
+      const segEnd = buildTimestamps[i]!;
+      if (segStart !== undefined && segStart !== null) {
+        const durationMs = segEnd - segStart;
+        if (durationMs >= 0 && durationMs <= MAX_PHASE_MS) {
+          buildMs += durationMs;
+        }
+      }
+    }
+
+    // Verify segments: build[0] → verify[0], build[1] → verify[1], ...
+    for (let i = 0; i < verifyTimestamps.length; i++) {
+      const segStart = buildTimestamps[i];
+      const segEnd = verifyTimestamps[i]!;
+      if (segStart !== undefined && segStart !== null) {
+        const durationMs = segEnd - segStart;
+        if (durationMs >= 0 && durationMs <= MAX_PHASE_MS) {
+          verifyMs += durationMs;
+        }
+      }
+    }
+
+    timing.build = Math.round(buildMs / 60000);
+    timing.verify = Math.round(verifyMs / 60000);
+  } else {
+    // Fallback: existing endpoint-subtraction for single-phase without history
+    if (buildTime && contractTime) {
+      let usedStartedAt = false;
+      if (buildStartedAt !== null && buildStartedAt <= buildTime) {
+        const durationMs = buildTime - buildStartedAt;
+        if (durationMs >= 0 && durationMs <= MAX_PHASE_MS) {
+          timing.build = Math.round(durationMs / 60000);
+          usedStartedAt = true;
+        }
+      }
+      if (!usedStartedAt) {
+        timing.build = Math.round((buildTime - contractTime) / 60000);
+      }
+    }
+
+    if (verifyTime && buildTime) {
+      let usedStartedAt = false;
+      if (verifyStartedAt !== null && verifyStartedAt <= verifyTime) {
+        const durationMs = verifyTime - verifyStartedAt;
+        if (durationMs >= 0 && durationMs <= MAX_PHASE_MS) {
+          timing.verify = Math.round(durationMs / 60000);
+          usedStartedAt = true;
+        }
+      }
+      if (!usedStartedAt) {
+        timing.verify = Math.round((verifyTime - buildTime) / 60000);
+      }
     }
   }
 
-  // Verify duration: prefer _started_at over artifact-gap timing
-  if (verifyTime && buildTime) {
-    let usedStartedAt = false;
-    if (verifyStartedAt !== null && verifyStartedAt <= verifyTime) {
-      const durationMs = verifyTime - verifyStartedAt;
-      if (durationMs >= 0 && durationMs <= MAX_PHASE_MS) {
-        timing.verify = Math.round(durationMs / 60000);
-        usedStartedAt = true;
-      }
-    }
-    if (!usedStartedAt) {
-      timing.verify = Math.round((verifyTime - buildTime) / 60000);
-    }
-  }
   return timing;
 }
 
