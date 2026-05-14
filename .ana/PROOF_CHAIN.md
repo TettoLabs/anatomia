@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-96 runs · 145 active · 117 lessons · 0 promoted · 327 closed
+96 runs · 144 active · 117 lessons · 0 promoted · 328 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 145 total)
+## Active Findings (30 shown of 144 total)
 
 ### packages/cli/src/commands/artifact.ts
 
@@ -80,7 +80,6 @@
 - **code:** OPACITY_MAP duplicates opacity values already in STAGES array — two sources of truth for the same constants — *Multi-phase Gantt visualization for proof timeline*
 - **code:** 60px label column may be tight for 'VERIFY 3' at 10.5px mono with 0.06em letter-spacing — fits now but fragile for higher phase counts — *Multi-phase Gantt visualization for proof timeline*
 - **code:** formatDuration defined but unused in PipelineGantt — duration column uses raw `{value}m` instead — *Dynamic Pages — Reference & Proof Chain*
-- **code:** PipelineGantt left-offset uses Math.round per-stage — cumulative rounding can exceed 100% and cause visual overflow on entries with many small stages — *Dynamic Pages — Reference & Proof Chain*
 
 ### website/components/docs/proof/ProofExplorer.tsx
 
@@ -98,6 +97,10 @@
 ### website/content/docs/concepts/skills.mdx
 
 - **code:** Skills page inline-links 8 individual skill reference pages that don't exist and aren't scoped in any phase — *Content Pages — 16 editorial docs pages with bug fixes and sidebar ordering*
+
+### website/content/docs/guides/using-ana-setup.mdx
+
+- **code:** NextCards link to unbuilt reference/proof pages — will 404 until Scope 5 — *Content Pages — 16 editorial docs pages with bug fixes and sidebar ordering*
 
 ### website/scripts/extract-docs-data.ts
 
