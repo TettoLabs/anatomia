@@ -18351,7 +18351,10 @@
             "A004"
           ],
           "id": "website-mobile-polish-C3",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Intentional design: icons.tsx header (line 7) documents 'Copilot, Cline use currentColor for dark-mode safety (their brand colors are near-black).' The --ink-15 chip is deliberately subtle — 15% opacity dark (light mode) or 16% opacity white (dark mode). currentColor has good contrast against background, and the chip is transparent enough not to affect it. Considered design decision documented in the file header.",
+          "closed_at": "2026-05-14T19:20:41.714Z",
+          "closed_by": "human"
         },
         {
           "category": "upstream",
