@@ -12059,7 +12059,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "security-hardening-C6",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Intentional: process.exit mock at git-operations.test.ts:237 is the standard Vitest pattern for testing exit behavior. Post-exit continuation is a mock artifact — in production, process.exit(1) terminates. Test correctly asserts exitCode === 1 and error message contains 'Invalid artifactBranch.'",
+          "closed_at": "2026-05-14T16:25:58.771Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
