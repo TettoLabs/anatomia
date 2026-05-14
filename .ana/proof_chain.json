@@ -21085,7 +21085,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "add-milestone-kind-C4",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Intentional: NO badge type overrides background in dark mode — kindFeature, kindFix, kindChore all use the same pattern. color-mix(..., transparent) at proof-feed.module.css:290 produces semi-transparent tints that work on both themes because transparency lets the underlying background show through. Only text color is overridden for dark mode (line 291). Consistent pattern across all 4 badge types.",
+          "closed_at": "2026-05-14T17:21:29.788Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
