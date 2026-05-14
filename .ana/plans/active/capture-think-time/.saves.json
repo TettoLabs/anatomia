@@ -18,5 +18,22 @@
   "spec": {
     "saved_at": "2026-05-14T02:18:41.360Z",
     "hash": "sha256:fd954256b5e73661f59e066441d33e517a5547e5d22b025b4f327233e2bfdd64"
-  }
+  },
+  "build_started_at": "2026-05-14T02:29:01.192Z",
+  "build_agent": "ana-build",
+  "build-report": {
+    "saved_at": "2026-05-14T02:41:41.426Z",
+    "hash": "sha256:7c705e1fad2f79cc34d064595be807cc859c53f452cfcf66933b49d3e31683ac"
+  },
+  "build-data": {
+    "saved_at": "2026-05-14T02:41:41.427Z",
+    "hash": "sha256:bb6254af2e7913c8d1d46d148568e21f88853dc0324d4ac0eeca2b90e3386649"
+  },
+  "modules_touched": [
+    ".claude/agents/ana.md",
+    "packages/cli/src/commands/work.ts",
+    "packages/cli/templates/.claude/agents/ana.md",
+    "packages/cli/tests/commands/work.test.ts",
+    "pnpm-lock.yaml"
+  ]
 }
