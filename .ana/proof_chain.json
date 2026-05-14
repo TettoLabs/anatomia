@@ -19776,7 +19776,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "init-scan-quality-C3",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Process observation — notes that init-scan-quality scope made a minor wording tweak to ana-verify.md template that was technically out of scope. Template is correct and functional. Not a code issue.",
+          "closed_at": "2026-05-14T16:26:39.116Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
