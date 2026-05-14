@@ -58,15 +58,27 @@ export function SearchOverlay({ open, onClose }: SearchOverlayProps) {
   const results = useMemo(() => {
     if (!query.trim()) return [];
     const q = query.toLowerCase();
+    // Normalize: strip hyphens for matching (ana-build → anabuild, AnaBuild → anabuild)
+    const qNorm = q.replace(/-/g, "");
+    // Basic depluralization: "proofs" → "proof", "skills" → "skill"
+    const qStem = q.endsWith("s") && q.length > 3 ? q.slice(0, -1) : q;
+    const qStemNorm = qStem.replace(/-/g, "");
 
     const scored = entries
       .map((entry) => {
         const titleLower = entry.title.toLowerCase();
         const descLower = entry.description.toLowerCase();
+        // Also create normalized versions (no hyphens) for fuzzy matching
+        const titleNorm = titleLower.replace(/-/g, "");
+        const descNorm = descLower.replace(/-/g, "");
+
         let score = 0;
-        if (titleLower === q) score = 3; // Exact title match
-        else if (titleLower.includes(q)) score = 2; // Title contains
-        else if (descLower.includes(q)) score = 1; // Description contains
+        // Exact matches (highest priority)
+        if (titleLower === q || titleNorm === qNorm) score = 3;
+        // Title contains (direct or normalized or stemmed)
+        else if (titleLower.includes(q) || titleNorm.includes(qNorm) || titleLower.includes(qStem) || titleNorm.includes(qStemNorm)) score = 2;
+        // Description contains
+        else if (descLower.includes(q) || descNorm.includes(qNorm) || descLower.includes(qStem) || descNorm.includes(qStemNorm)) score = 1;
         return { entry, score };
       })
       .filter((s) => s.score > 0)
