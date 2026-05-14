@@ -42,16 +42,25 @@ export function buildGanttBars(timing: ProofTiming): GanttBar[] {
 
   if (timing.segments && timing.segments.length > 0) {
     // Multi-phase: build bars from segments
+    // Compute left positions from cumulative minutes, derive widths as gaps between
+    // adjacent positions. The last bar always reaches 100% — no rounding gaps.
     const bars: GanttBar[] = [];
-    let cumulativeMinutes = 0;
+    let cumulative = 0;
+    const lefts: number[] = [];
 
     for (const seg of timing.segments) {
+      lefts.push(total > 0 ? (cumulative / total) * 100 : 0);
+      cumulative += seg.minutes;
+    }
+    lefts.push(100); // sentinel — right edge of last bar
+
+    for (let i = 0; i < timing.segments.length; i++) {
+      const seg = timing.segments[i];
       const label = seg.phase != null
         ? `${seg.stage.charAt(0).toUpperCase() + seg.stage.slice(1)} ${seg.phase}`
         : seg.stage.charAt(0).toUpperCase() + seg.stage.slice(1);
-      const pct = total > 0 ? Math.round((seg.minutes / total) * 100) : 0;
-      const widthPct = seg.minutes === 0 ? 2 : pct;
-      const leftPct = total > 0 ? Math.round((cumulativeMinutes / total) * 100) : 0;
+      const leftPct = lefts[i];
+      const widthPct = seg.minutes === 0 ? 2 : lefts[i + 1] - lefts[i];
 
       bars.push({
         label,
@@ -60,22 +69,28 @@ export function buildGanttBars(timing: ProofTiming): GanttBar[] {
         leftPct,
         widthPct,
       });
-
-      cumulativeMinutes += seg.minutes;
     }
 
     return bars;
   }
 
   // Fallback: 4-bar layout from flat fields
+  // Same gap-free math as multi-phase: derive widths from adjacent left positions
   const bars: GanttBar[] = [];
-  let cumulativeMinutes = 0;
+  let cumulative = 0;
+  const lefts: number[] = [];
 
   for (const stage of STAGES) {
+    lefts.push(total > 0 ? (cumulative / total) * 100 : 0);
+    cumulative += timing[stage.key];
+  }
+  lefts.push(100);
+
+  for (let i = 0; i < STAGES.length; i++) {
+    const stage = STAGES[i];
     const value = timing[stage.key];
-    const pct = total > 0 ? Math.round((value / total) * 100) : 0;
-    const widthPct = value === 0 ? 2 : pct;
-    const leftPct = total > 0 ? Math.round((cumulativeMinutes / total) * 100) : 0;
+    const leftPct = lefts[i];
+    const widthPct = value === 0 ? 2 : lefts[i + 1] - lefts[i];
 
     bars.push({
       label: stage.label,
@@ -84,8 +99,6 @@ export function buildGanttBars(timing: ProofTiming): GanttBar[] {
       leftPct,
       widthPct,
     });
-
-    cumulativeMinutes += value;
   }
 
   return bars;
