@@ -21513,7 +21513,10 @@
             "A018"
           ],
           "id": "kind-aware-branch-prefixes-C4",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Finding's premise is incorrect: rev-parse --abbrev-ref HEAD returns 'HEAD' (exitCode 0) on detached state, not '(unknown)'. branchName is 'HEAD' which is a valid git ref — rev-list, log, and all downstream commands work correctly with it. The '(unknown)' fallback at worktree.ts:310 only triggers on rev-parse failure (e.g., corrupt git state), not on detached HEAD.",
+          "closed_at": "2026-05-14T19:30:30.808Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
