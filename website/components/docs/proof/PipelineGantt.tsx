@@ -5,19 +5,18 @@ interface PipelineGanttProps {
   className?: string;
 }
 
-const STAGES: { key: keyof Omit<ProofTiming, "totalMinutes" | "segments">; label: string; opacity: number }[] = [
-  { key: "think", label: "Think", opacity: 0.55 },
-  { key: "plan", label: "Plan", opacity: 0.70 },
-  { key: "build", label: "Build", opacity: 0.85 },
-  { key: "verify", label: "Verify", opacity: 1.0 },
+const STAGES: { key: keyof Omit<ProofTiming, "totalMinutes" | "segments">; label: string }[] = [
+  { key: "think", label: "Think" },
+  { key: "plan", label: "Plan" },
+  { key: "build", label: "Build" },
+  { key: "verify", label: "Verify" },
 ];
 
-const OPACITY_MAP: Record<string, number> = {
-  think: 0.55,
-  plan: 0.70,
-  build: 0.85,
-  verify: 1.0,
-};
+/** Progressive opacity from 0.55 (first bar) to 1.0 (last bar). */
+function progressiveOpacity(index: number, count: number): number {
+  if (count <= 1) return 1.0;
+  return 0.55 + (index / (count - 1)) * 0.45;
+}
 
 export interface GanttBar {
   label: string;
@@ -65,7 +64,7 @@ export function buildGanttBars(timing: ProofTiming): GanttBar[] {
       bars.push({
         label,
         minutes: seg.minutes,
-        opacity: OPACITY_MAP[seg.stage] ?? 0.85,
+        opacity: progressiveOpacity(i, timing.segments.length),
         leftPct,
         widthPct,
       });
@@ -95,7 +94,7 @@ export function buildGanttBars(timing: ProofTiming): GanttBar[] {
     bars.push({
       label: stage.label,
       minutes: value,
-      opacity: stage.opacity,
+      opacity: progressiveOpacity(i, STAGES.length),
       leftPct,
       widthPct,
     });

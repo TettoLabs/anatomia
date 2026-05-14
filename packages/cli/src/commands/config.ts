@@ -200,7 +200,7 @@ function displayAll(config: Record<string, unknown>, json: boolean): void {
       console.log(`${key}:`);
       const entries = Object.entries(value as Record<string, unknown>);
       if (entries.length === 0) {
-        console.log(`  ${formatValue(value)}`);
+        console.log('  (empty)');
       } else {
         const maxSubKeyLen = Math.max(...entries.map(([k]) => k.length));
         for (const [subKey, subValue] of entries) {
