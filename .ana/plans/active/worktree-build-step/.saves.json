@@ -34,5 +34,20 @@
     "packages/cli/src/utils/worktree.ts",
     "packages/cli/tests/utils/worktree.test.ts"
   ],
-  "commit_hygiene": []
+  "commit_hygiene": [],
+  "verify_started_at": "2026-05-14T07:47:25.973Z",
+  "verify_agent": "ana-verify",
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:9df90d101d04a86ee1d1ed8d9490d6027c0ff81fced2b776d282ca20a425b06f",
+    "run_at": "2026-05-14T07:52:03.578Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-14T07:52:03.623Z",
+    "hash": "sha256:c24694fdffd6a870ea091ebef31af7963dd2b655ec9251aeba1b004a4bcdb3f8"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-14T07:52:03.623Z",
+    "hash": "sha256:6186d43e4d140d91f32c88a10e11e60c264d10450bc1227ef653116f15befb53"
+  }
 }
