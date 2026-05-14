@@ -13814,7 +13814,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "worktree-isolation-C5",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Intentional: branchExists exported at worktree.ts:675, used internally at lines 201/207, imported by worktree.test.ts:15. Exporting internal helpers for unit test access is standard practice — not dead code.",
+          "closed_at": "2026-05-14T08:18:38.300Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
