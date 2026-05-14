@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-96 runs · 148 active · 117 lessons · 0 promoted · 324 closed
+96 runs · 147 active · 117 lessons · 0 promoted · 325 closed
 
 ## Hot Modules
 
@@ -16,11 +16,10 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 148 total)
+## Active Findings (30 shown of 147 total)
 
 ### packages/cli/src/commands/artifact.ts
 
-- **code:** Secret scan reads full file content for every non-test file in modules_touched — large binary files or generated bundles would be read entirely into memory — *Commit hygiene checks at build-report save*
 - **code:** Unbounded history array growth — each rejection cycle appends with no cap — *Fix pipeline timing accuracy for multi-phase and rejection cycles*
 
 ### packages/cli/src/types/proof.ts
@@ -98,4 +97,8 @@
 - **code:** LLMS_SECTIONS constant declared but never used in extract-docs-data.ts — *Docs Search + Polish*
 - **code:** Unused variable 'other' in generateLlmsTxt — pages filtered but remainder never referenced — *Docs Search + Polish*
 - **code:** Duplicate stripJsx implementation — one in website/lib/docs-data/stripJsx.ts, another inlined in extract-docs-data.ts — *Docs Search + Polish*
+
+### General
+
+- **code:** NextCards link to 6 pages that don't exist yet (guides, reference, proof) — *Content Pages — 16 editorial docs pages with bug fixes and sidebar ordering*
 
