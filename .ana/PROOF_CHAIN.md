@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-96 runs · 279 active · 117 lessons · 0 promoted · 193 closed
+96 runs · 278 active · 117 lessons · 0 promoted · 194 closed
 
 ## Hot Modules
 
@@ -16,16 +16,12 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 279 total)
+## Active Findings (30 shown of 278 total)
 
 ### packages/cli/src/commands/artifact.ts
 
 - **code:** CommitHygieneFinding and runCommitHygieneChecks exported for test access — widens module public API — *Commit hygiene checks at build-report save*
 - **code:** Secret scan reads full file content for every non-test file in modules_touched — large binary files or generated bundles would be read entirely into memory — *Commit hygiene checks at build-report save*
-
-### packages/cli/src/commands/proof.ts
-
-- **code:** formatHumanReadable exported solely for test access — was previously private, scope widened for testing — *Multi-phase Gantt visualization for proof timeline*
 
 ### packages/cli/src/types/proof.ts
 
@@ -71,6 +67,7 @@
 ### website/components/docs/layout/RightRail.tsx
 
 - **code:** pageTitle and pageDescription props accepted by RightRail but never used in any rendering logic — *Docs Search + Polish*
+- **code:** Clipboard API failure silently swallowed — no user feedback when writeText fails on insecure context — *Docs Search + Polish*
 
 ### website/components/docs/proof/PipelineGantt.tsx
 
