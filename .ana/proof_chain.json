@@ -21678,7 +21678,10 @@
             "A005"
           ],
           "id": "worktree-freshness-detection-C4",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Intentional: A005 test at worktree.test.ts:492 creates a worktree without origin/main — git rev-list fails, catch block triggers, commitsBehind defaults to 0. Line 502 asserts toBe(0). The test uses real git commands in a fresh temp repo — absence of origin/main IS the failure condition. Comment at line 498-499 explains: 'In test env without origin/main, it should still default to 0.'",
+          "closed_at": "2026-05-14T17:47:57.528Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
