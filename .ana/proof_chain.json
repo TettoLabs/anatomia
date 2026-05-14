@@ -22235,7 +22235,10 @@
             "A010"
           ],
           "id": "hygiene-debt-cleanup-C3",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Upstream dependency: 12 remaining npm audit findings are postcss dev-only transitive dependencies — not shipped to users, not exploitable in production. Vulnerabilities are in upstream packages (postcss dependency chain) awaiting maintainer fixes. Anatomia can't fix upstream CVEs. The count will drop when upstream patches land and pnpm-lock.yaml updates.",
+          "closed_at": "2026-05-14T19:42:53.181Z",
+          "closed_by": "human"
         },
         {
           "category": "upstream",
