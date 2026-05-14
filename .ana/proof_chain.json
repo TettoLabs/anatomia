@@ -16831,7 +16831,10 @@
             "A025"
           ],
           "id": "website-direct-polish-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Finding references nonexistent code: no pseudo-element touch targets exist on nav buttons. Nav.tsx uses plain <a> tags with padding for click area (line 100: px-[16px] py-[9px]). grep for ::before/::after/touch-target in Nav.tsx and globals.css nav rules returns zero matches. The concern about overflow:hidden breaking pseudo-elements is moot — there are no pseudo-elements to break.",
+          "closed_at": "2026-05-14T19:20:07.724Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
