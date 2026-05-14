@@ -26,7 +26,7 @@ The user also wants `www.anatomia.dev` to redirect to `anatomia.dev` so URLs wor
 
 Add documentation URLs at three user-facing moments — init success, `ana setup` bare command, and the setup agent's design principles phase — plus a linked element on the docs page's design principles section pointing to Anatomia's own principles as a reference example.
 
-Centralize all documentation URLs as named constants in one file in the CLI. These URLs become stable contracts: the website must redirect if pages ever move. This keeps the CLI side maintainable (one place to update) and shifts the durability responsibility to the website (where redirects are trivial).
+Centralize the two CLI output URLs (init success, `ana setup` bare command) as named constants in one file. The agent template URL and docs page URL are hardcoded strings by necessity — templates and MDX files can't read from constants. All four URLs are stable contracts: the website must redirect if pages ever move. Constants keep the CLI side maintainable (one place to update); website redirects cover all four surfaces including old CLI versions and previously-copied templates.
 
 Use full `https://` URLs everywhere. No OSC 8 terminal hyperlinks, no shorthand — plain URLs that every modern terminal auto-links. Zero new rendering dependencies.
 
