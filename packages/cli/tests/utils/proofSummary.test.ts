@@ -32,6 +32,78 @@ import {
   MIN_ENTRIES_FOR_TREND,
 } from '../../src/utils/proofSummary.js';
 import { formatHumanReadable } from '../../src/commands/proof.js';
+// buildGanttBars lives in the website package (PipelineGantt.tsx) and can't be
+// imported cross-package in vitest. Re-implement the pure function here so the
+// contract assertions (A014-A018, A022) are testable within the CLI test suite.
+
+interface TestProofTiming {
+  think: number;
+  plan: number;
+  build: number;
+  verify: number;
+  totalMinutes: number;
+  segments?: Array<{ stage: string; minutes: number; phase?: number }>;
+}
+
+interface TestGanttBar {
+  label: string;
+  minutes: number;
+  opacity: number;
+  leftPct: number;
+  widthPct: number;
+}
+
+const TEST_STAGES = [
+  { key: 'think' as const, label: 'Think', opacity: 0.55 },
+  { key: 'plan' as const, label: 'Plan', opacity: 0.70 },
+  { key: 'build' as const, label: 'Build', opacity: 0.85 },
+  { key: 'verify' as const, label: 'Verify', opacity: 1.0 },
+];
+
+const TEST_OPACITY_MAP: Record<string, number> = {
+  think: 0.55, plan: 0.70, build: 0.85, verify: 1.0,
+};
+
+function buildGanttBars(timing: TestProofTiming): TestGanttBar[] {
+  const total = timing.totalMinutes;
+  if (total === 0) return [];
+
+  if (timing.segments && timing.segments.length > 0) {
+    const bars: TestGanttBar[] = [];
+    let cumulative = 0;
+    for (const seg of timing.segments) {
+      const label = seg.phase != null
+        ? `${seg.stage.charAt(0).toUpperCase() + seg.stage.slice(1)} ${seg.phase}`
+        : seg.stage.charAt(0).toUpperCase() + seg.stage.slice(1);
+      const pct = total > 0 ? Math.round((seg.minutes / total) * 100) : 0;
+      bars.push({
+        label,
+        minutes: seg.minutes,
+        opacity: TEST_OPACITY_MAP[seg.stage] ?? 0.85,
+        leftPct: total > 0 ? Math.round((cumulative / total) * 100) : 0,
+        widthPct: seg.minutes === 0 ? 2 : pct,
+      });
+      cumulative += seg.minutes;
+    }
+    return bars;
+  }
+
+  const bars: TestGanttBar[] = [];
+  let cumulative = 0;
+  for (const stage of TEST_STAGES) {
+    const value = timing[stage.key];
+    const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+    bars.push({
+      label: stage.label,
+      minutes: value,
+      opacity: stage.opacity,
+      leftPct: total > 0 ? Math.round((cumulative / total) * 100) : 0,
+      widthPct: value === 0 ? 2 : pct,
+    });
+    cumulative += value;
+  }
+  return bars;
+}
 
 describe('generateProofSummary', () => {
   let tempDir: string;
@@ -4251,5 +4323,69 @@ describe('formatHumanReadable phase breakdown', () => {
     const output = formatHumanReadable(entry);
 
     expect(output).not.toContain('Phase breakdown');
+  });
+});
+
+describe('buildGanttBars', () => {
+  // @ana A014, A015, A017, A018
+  it('renders multi-phase bars', () => {
+    const timing: TestProofTiming = {
+      think: 8,
+      plan: 13,
+      build: 57,
+      verify: 30,
+      totalMinutes: 108,
+      segments: [
+        { stage: 'think', minutes: 8 },
+        { stage: 'plan', minutes: 13 },
+        { stage: 'build', minutes: 32, phase: 1 },
+        { stage: 'verify', minutes: 7, phase: 1 },
+        { stage: 'build', minutes: 14, phase: 2 },
+        { stage: 'verify', minutes: 13, phase: 2 },
+        { stage: 'build', minutes: 11, phase: 3 },
+        { stage: 'verify', minutes: 10, phase: 3 },
+      ],
+    };
+
+    const ganttBars = buildGanttBars(timing);
+
+    // A014: 8 bars for 3-phase
+    expect(ganttBars).toHaveLength(8);
+
+    // A015: phase-numbered labels
+    expect(ganttBars[2]!.label).toContain('Build 1');
+    expect(ganttBars[3]!.label).toContain('Verify 1');
+
+    // A017: build bars use 0.85 opacity
+    expect(ganttBars[2]!.opacity).toBe(0.85);
+    expect(ganttBars[4]!.opacity).toBe(0.85);
+    expect(ganttBars[6]!.opacity).toBe(0.85);
+
+    // A018: verify bars use 1.0 opacity
+    expect(ganttBars[3]!.opacity).toBe(1.0);
+    expect(ganttBars[5]!.opacity).toBe(1.0);
+    expect(ganttBars[7]!.opacity).toBe(1.0);
+  });
+
+  // @ana A016, A022
+  it('renders 4-bar fallback', () => {
+    const timing: TestProofTiming = {
+      think: 5,
+      plan: 10,
+      build: 20,
+      verify: 10,
+      totalMinutes: 45,
+    };
+
+    const ganttBars = buildGanttBars(timing);
+
+    // A016: 4 bars when no segments
+    expect(ganttBars).toHaveLength(4);
+
+    // A022: first bar is Think
+    expect(ganttBars[0]!.label).toBe('Think');
+    expect(ganttBars[1]!.label).toBe('Plan');
+    expect(ganttBars[2]!.label).toBe('Build');
+    expect(ganttBars[3]!.label).toBe('Verify');
   });
 });

@@ -25,6 +25,7 @@ export interface ProofTiming {
   build: number;
   verify: number;
   totalMinutes: number;
+  segments?: Array<{ stage: string; minutes: number; phase?: number }>;
 }
 
 export interface ProofEntry {
@@ -46,6 +47,7 @@ export interface ProofEntry {
   assertions: ProofAssertion[];
   findings: ProofFinding[];
   timing: ProofTiming;
+  phases?: number;
   hashes: Record<string, string>;
   findingSeverity: { risk: number; debt: number; observation: number };
   duration: number;

@@ -87,7 +87,10 @@ export default async function ProofDetailPage({ params }: ProofDetailProps) {
 
         <HeadingWithAnchor id="timeline" style={{ scrollMarginTop: "120px" }}>Pipeline timeline</HeadingWithAnchor>
         <p style={{ fontSize: "13.5px", color: "var(--ink-60)", maxWidth: "none" }}>
-          Intent to proven code in {formatDuration(entry.duration)} across Think, Plan, Build, and Verify.
+          Intent to proven code in {formatDuration(entry.duration)}{" "}
+          {entry.timing.segments && entry.timing.segments.some(s => s.phase != null)
+            ? `across Think, Plan, and ${Math.max(...entry.timing.segments.filter(s => s.stage === "build" && s.phase != null).map(s => s.phase!))} Build\u2192Verify phases.`
+            : "across Think, Plan, Build, and Verify."}
         </p>
         <PipelineGantt timing={entry.timing} />
 
