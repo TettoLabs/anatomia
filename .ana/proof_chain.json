@@ -15203,7 +15203,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "agent-dashboard-p1-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Intentional: AgentFrontmatter is the return type of the exported parseFrontmatter function (agent-config.ts:49). Exporting a function's return type alongside the function is standard API design — callers who need to type the result explicitly should have access to it. No current import is expected for a type that serves as API contract.",
+          "closed_at": "2026-05-14T16:40:05.539Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
