@@ -17738,7 +17738,10 @@
             "A005"
           ],
           "id": "worktree-artifact-cleanup-C3",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Intentional: moveFileCrossFs at artifact.ts:1031 tries renameSync (atomic) first, falls back to copyFileSync+unlinkSync only on EXDEV. This is the standard Node.js cross-filesystem move pattern. Non-atomic path requires cross-fs + permission error on delete — theoretical only.",
+          "closed_at": "2026-05-14T08:17:58.777Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
