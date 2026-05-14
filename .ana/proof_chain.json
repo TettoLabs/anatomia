@@ -10058,7 +10058,10 @@
           "severity": "debt",
           "suggested_action": "accept",
           "id": "strengthen-weak-test-assertions-C6",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Stale — line 1138 is now inside createMergedProject helper (work.test.ts:1086-1180), not a manual fixture. The test that manually built fixtures at this location was refactored into the helper.",
+          "closed_at": "2026-05-14T08:28:49.910Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
