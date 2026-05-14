@@ -25688,7 +25688,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "gantt-multi-phase-C3",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed in 99e2e862 — replaced OPACITY_MAP and STAGES.opacity with progressiveOpacity(index, count) function at PipelineGantt.tsx:16-18. Opacity now interpolates 0.55→1.0 across all bars based on position, not stage type. Works for any bar count (4/6/8). Eliminates the two-source-of-truth duplication entirely.",
+          "closed_at": "2026-05-14T22:39:27.103Z",
+          "closed_by": "human"
         },
         {
           "category": "code",

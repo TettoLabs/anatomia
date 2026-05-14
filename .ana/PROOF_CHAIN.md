@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-96 runs · 124 active · 117 lessons · 0 promoted · 348 closed
+96 runs · 123 active · 117 lessons · 0 promoted · 349 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 124 total)
+## Active Findings (30 shown of 123 total)
 
 ### packages/cli/src/types/proof.ts
 
@@ -50,6 +50,10 @@
 
 - **code:** Dynamic components not registered in catch-all mdxComponents map — contract specifies registration but builder used build-time regex approach instead — *Docs Search + Polish*
 
+### website/app/docs/[[...slug]]/page.tsx
+
+- **code:** Prose classes used without @tailwindcss/typography installed — *Docs Infrastructure — Fumadocs MDX Pipeline*
+
 ### website/app/docs/reference/cli/page.tsx
 
 - **code:** Hardcoded 'Last reviewed · 2026-05-11' in CLI reference page will become stale — *Dynamic Pages — Reference & Proof Chain*
@@ -74,7 +78,6 @@
 
 ### website/components/docs/proof/PipelineGantt.tsx
 
-- **code:** OPACITY_MAP duplicates opacity values already in STAGES array — two sources of truth for the same constants — *Multi-phase Gantt visualization for proof timeline*
 - **code:** formatDuration defined but unused in PipelineGantt — duration column uses raw `{value}m` instead — *Dynamic Pages — Reference & Proof Chain*
 
 ### website/components/docs/proof/ProofExplorer.tsx
