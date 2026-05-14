@@ -22,12 +22,12 @@
   "build_started_at": "2026-05-14T02:29:29.642Z",
   "build_agent": "ana-build",
   "build-report": {
-    "saved_at": "2026-05-14T02:36:19.248Z",
-    "hash": "sha256:aa573a877671734b0ce62407a50103e4876c1b0c07b5af806289aeb05c8e10c4"
+    "saved_at": "2026-05-14T02:46:52.641Z",
+    "hash": "sha256:f1261733255eed7745450209df87294c22f083de89d73ab75e65e07a85e8b365"
   },
   "build-data": {
-    "saved_at": "2026-05-14T02:36:19.249Z",
-    "hash": "sha256:1b6f29f154d8413fc0e07b8541479fc575c44d90305bba1d171118aa7f2498dd"
+    "saved_at": "2026-05-14T02:46:52.641Z",
+    "hash": "sha256:733ac084cc87888d687ccb7b5102cf0fffb14fa4c3d3a45be8dbef69669c3eac"
   },
   "modules_touched": [
     "packages/cli/src/commands/artifact.ts",

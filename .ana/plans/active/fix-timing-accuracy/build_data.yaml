@@ -1,12 +1,17 @@
 schema: 1
 concerns:
-  - summary: "writeSaveMetadata exported for testing — expands public API surface of artifact.ts"
+  - summary: "writeSaveMetadata exported for testing — widens public API surface"
     file: "packages/cli/src/commands/artifact.ts"
     severity: debt
-    suggested_action: monitor
-  - summary: "Pre-existing test failures in check.test.ts (7 files, 283 tests) — MODULE_NOT_FOUND"
-    severity: observation
+    suggested_action: accept
+  - summary: "Non-null assertion on verifyPhases[i-1]!.key — crashes if verify-report-(N-1) missing"
+    file: "packages/cli/src/utils/proofSummary.ts"
+    severity: debt
     suggested_action: scope
+  - summary: "History array grows without bound across rejection cycles"
+    file: "packages/cli/src/commands/artifact.ts"
+    severity: observation
+    suggested_action: monitor
   - summary: "Pre-existing lint warning in git-operations.ts:198 unused eslint-disable"
     file: "packages/cli/src/utils/git-operations.ts"
     severity: observation
