@@ -3704,3 +3704,326 @@ describe('computePipelineStats with median_plan', () => {
     expect(stats.median_plan).toBeNull();
   });
 });
+
+// --- Fix-timing-accuracy tests ---
+
+describe('writeSaveMetadata history preservation', () => {
+  let tempDir: string;
+  let slugDir: string;
+
+  beforeEach(async () => {
+    tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'history-test-'));
+    slugDir = path.join(tempDir, 'test-slug');
+    await fs.promises.mkdir(slugDir, { recursive: true });
+  });
+
+  afterEach(async () => {
+    await fs.promises.rm(tempDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
+  });
+
+  // @ana A001, A002
+  it('preserves history when overwriting with different content', async () => {
+    const { writeSaveMetadata } = await import('../../src/commands/artifact.js');
+
+    // Use fake timers to guarantee distinct timestamps between writes
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-05-13T10:00:00Z'));
+
+    // First write
+    writeSaveMetadata(slugDir, 'build-report', 'content v1');
+    const saves1 = JSON.parse(fs.readFileSync(path.join(slugDir, '.saves.json'), 'utf-8'));
+    const firstSavedAt = saves1['build-report'].saved_at;
+    const firstHash = saves1['build-report'].hash;
+    expect(firstSavedAt).toBeDefined();
+    expect(firstHash).toBeDefined();
+    expect(saves1['build-report'].history).toBeUndefined();
+
+    // Advance time to ensure distinct timestamps
+    vi.setSystemTime(new Date('2026-05-13T10:30:00Z'));
+
+    // Second write with different content
+    writeSaveMetadata(slugDir, 'build-report', 'content v2');
+    const saves2 = JSON.parse(fs.readFileSync(path.join(slugDir, '.saves.json'), 'utf-8'));
+    expect(saves2['build-report'].history).toHaveLength(1);
+    expect(saves2['build-report'].history[0].saved_at).toBe(firstSavedAt);
+    expect(saves2['build-report'].history[0].hash).toBe(firstHash);
+    expect(saves2['build-report'].saved_at).not.toBe(firstSavedAt);
+    expect(saves2['build-report'].hash).not.toBe(firstHash);
+
+    vi.useRealTimers();
+  });
+
+  // @ana A003
+  it('accumulates history entries across multiple overwrites', async () => {
+    const { writeSaveMetadata } = await import('../../src/commands/artifact.js');
+
+    writeSaveMetadata(slugDir, 'build-report', 'content v1');
+    writeSaveMetadata(slugDir, 'build-report', 'content v2');
+    writeSaveMetadata(slugDir, 'build-report', 'content v3');
+
+    const saves = JSON.parse(fs.readFileSync(path.join(slugDir, '.saves.json'), 'utf-8'));
+    expect(saves['build-report'].history).toHaveLength(2);
+    // Chronological order: oldest first
+    const h0Time = new Date(saves['build-report'].history[0].saved_at).getTime();
+    const h1Time = new Date(saves['build-report'].history[1].saved_at).getTime();
+    expect(h0Time).toBeLessThanOrEqual(h1Time);
+  });
+
+  // @ana A004
+  it('does not create history on idempotent re-save', async () => {
+    const { writeSaveMetadata } = await import('../../src/commands/artifact.js');
+
+    writeSaveMetadata(slugDir, 'build-report', 'same content');
+    const result = writeSaveMetadata(slugDir, 'build-report', 'same content');
+
+    expect(result).toBe(false);
+    const saves = JSON.parse(fs.readFileSync(path.join(slugDir, '.saves.json'), 'utf-8'));
+    expect(saves['build-report'].history).toBeUndefined();
+  });
+
+  // @ana A005
+  it('SaveMetadata type includes optional history field', async () => {
+    const { writeSaveMetadata } = await import('../../src/commands/artifact.js');
+
+    // Type-level test: if this compiles and runs, the type accepts history
+    writeSaveMetadata(slugDir, 'build-report', 'v1');
+    writeSaveMetadata(slugDir, 'build-report', 'v2');
+    const saves = JSON.parse(fs.readFileSync(path.join(slugDir, '.saves.json'), 'utf-8'));
+    // Verify the shape is correct
+    expect(saves['build-report']).toHaveProperty('saved_at');
+    expect(saves['build-report']).toHaveProperty('hash');
+    expect(saves['build-report']).toHaveProperty('history');
+  });
+});
+
+describe('computeTiming segment-based computation', () => {
+  let tempDir: string;
+  let slugDir: string;
+
+  beforeEach(async () => {
+    tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'segment-timing-'));
+    slugDir = path.join(tempDir, 'test-timing');
+    await fs.promises.mkdir(slugDir, { recursive: true });
+  });
+
+  afterEach(async () => {
+    await fs.promises.rm(tempDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
+  });
+
+  // @ana A006
+  it('SaveEntry type includes optional history field', () => {
+    // Type-level test: construct a saves object with history and verify it parses
+    const saves = {
+      scope: { saved_at: '2026-04-01T10:00:00Z' },
+      contract: { saved_at: '2026-04-01T10:30:00Z' },
+      'build-report': {
+        saved_at: '2026-04-01T11:30:00Z',
+        history: [{ saved_at: '2026-04-01T11:00:00Z', hash: 'sha256:old' }],
+      },
+      'verify-report': { saved_at: '2026-04-01T12:00:00Z' },
+    };
+    fs.writeFileSync(path.join(slugDir, '.saves.json'), JSON.stringify(saves));
+
+    const summary = generateProofSummary(slugDir);
+    // If the type didn't accept history, this would fail at parse/runtime
+    expect(summary.timing).toBeDefined();
+  });
+
+  // @ana A007, A008, A011
+  it('computes accurate build time for 2-phase pipeline', async () => {
+    // Phase 1 build: contract(10:30) → build-report-1(11:00) = 30min
+    // Phase 1 verify: build-report-1(11:00) → verify-report-1(11:08) = 8min
+    // Phase 2 build: verify-report-1(11:08) → build-report-2(11:23) = 15min
+    // Phase 2 verify: build-report-2(11:23) → verify-report-2(11:37) = 14min
+    // Total build = 30 + 15 = 45min, total verify = 8 + 14 = 22min
+    const saves = {
+      scope: { saved_at: '2026-04-01T10:00:00Z' },
+      contract: { saved_at: '2026-04-01T10:30:00Z' },
+      'build-report-1': { saved_at: '2026-04-01T11:00:00Z' },
+      'verify-report-1': { saved_at: '2026-04-01T11:08:00Z' },
+      'build-report-2': { saved_at: '2026-04-01T11:23:00Z' },
+      'verify-report-2': { saved_at: '2026-04-01T11:37:00Z' },
+    };
+    fs.writeFileSync(path.join(slugDir, '.saves.json'), JSON.stringify(saves));
+
+    const summary = generateProofSummary(slugDir);
+
+    expect(summary.timing.build).toBe(45);
+    expect(summary.timing.verify).toBe(22);
+    expect(summary.timing.total_minutes).toBe(97); // 10:00 → 11:37
+  });
+
+  // @ana A009, A010
+  it('computes accurate timing for 3-phase pipeline', async () => {
+    // Phase 1: build 20min, verify 5min
+    // Phase 2: build 15min, verify 8min
+    // Phase 3: build 10min, verify 7min
+    const saves = {
+      scope: { saved_at: '2026-04-01T10:00:00Z' },
+      contract: { saved_at: '2026-04-01T10:30:00Z' },
+      'build-report-1': { saved_at: '2026-04-01T10:50:00Z' },
+      'verify-report-1': { saved_at: '2026-04-01T10:55:00Z' },
+      'build-report-2': { saved_at: '2026-04-01T11:10:00Z' },
+      'verify-report-2': { saved_at: '2026-04-01T11:18:00Z' },
+      'build-report-3': { saved_at: '2026-04-01T11:28:00Z' },
+      'verify-report-3': { saved_at: '2026-04-01T11:35:00Z' },
+    };
+    fs.writeFileSync(path.join(slugDir, '.saves.json'), JSON.stringify(saves));
+
+    const summary = generateProofSummary(slugDir);
+
+    expect(summary.timing.build).toBe(45); // 20 + 15 + 10
+    expect(summary.timing.verify).toBe(20); // 5 + 8 + 7
+  });
+
+  // @ana A012, A013
+  it('computes accurate timing for rejection cycle with history', async () => {
+    // Cycle 1: build = contract(10:30) → build[0](11:00) = 30min
+    //          verify = build[0](11:00) → verify[0](11:10) = 10min
+    // Cycle 2: build = verify[0](11:10) → build.current(11:40) = 30min
+    //          verify = build.current(11:40) → verify.current(11:50) = 10min
+    const saves = {
+      scope: { saved_at: '2026-04-01T10:00:00Z' },
+      contract: { saved_at: '2026-04-01T10:30:00Z' },
+      'build-report': {
+        saved_at: '2026-04-01T11:40:00Z',
+        hash: 'sha256:v2',
+        history: [{ saved_at: '2026-04-01T11:00:00Z', hash: 'sha256:v1' }],
+      },
+      'verify-report': {
+        saved_at: '2026-04-01T11:50:00Z',
+        hash: 'sha256:vr2',
+        history: [{ saved_at: '2026-04-01T11:10:00Z', hash: 'sha256:vr1' }],
+      },
+    };
+    fs.writeFileSync(path.join(slugDir, '.saves.json'), JSON.stringify(saves));
+
+    const summary = generateProofSummary(slugDir);
+
+    expect(summary.timing.build).toBe(60); // 30 + 30
+    expect(summary.timing.verify).toBe(20); // 10 + 10
+  });
+
+  // @ana A014, A015
+  it('falls back to existing computation for old proofs', async () => {
+    const saves = {
+      scope: { saved_at: '2026-04-01T10:00:00Z' },
+      contract: { saved_at: '2026-04-01T10:30:00Z' },
+      'build-report': { saved_at: '2026-04-01T11:30:00Z' },
+      'verify-report': { saved_at: '2026-04-01T12:00:00Z' },
+    };
+    fs.writeFileSync(path.join(slugDir, '.saves.json'), JSON.stringify(saves));
+
+    const summary = generateProofSummary(slugDir);
+
+    expect(summary.timing.build).toBe(60);
+    expect(summary.timing.verify).toBe(30);
+  });
+
+  // @ana A016
+  it('timing schema is unchanged', async () => {
+    const saves = {
+      scope: { saved_at: '2026-04-01T10:00:00Z' },
+      contract: { saved_at: '2026-04-01T10:30:00Z' },
+      'build-report-1': { saved_at: '2026-04-01T11:00:00Z' },
+      'verify-report-1': { saved_at: '2026-04-01T11:10:00Z' },
+    };
+    fs.writeFileSync(path.join(slugDir, '.saves.json'), JSON.stringify(saves));
+
+    const summary = generateProofSummary(slugDir);
+
+    // Verify the timing shape has exactly the expected fields
+    expect(summary.timing).toHaveProperty('total_minutes');
+    expect(typeof summary.timing.total_minutes).toBe('number');
+    if (summary.timing.think !== undefined) expect(typeof summary.timing.think).toBe('number');
+    if (summary.timing.plan !== undefined) expect(typeof summary.timing.plan).toBe('number');
+    if (summary.timing.build !== undefined) expect(typeof summary.timing.build).toBe('number');
+    if (summary.timing.verify !== undefined) expect(typeof summary.timing.verify).toBe('number');
+  });
+
+  // @ana A017
+  it('ignores build-data-N and verify-data-N keys in timing', async () => {
+    // build-data-1 and verify-data-1 should not affect timing computation
+    const saves = {
+      scope: { saved_at: '2026-04-01T10:00:00Z' },
+      contract: { saved_at: '2026-04-01T10:30:00Z' },
+      'build-report-1': { saved_at: '2026-04-01T11:00:00Z' },
+      'verify-report-1': { saved_at: '2026-04-01T11:10:00Z' },
+      'build-data-1': { saved_at: '2026-04-01T11:00:00Z', hash: 'sha256:bd1' },
+      'verify-data-1': { saved_at: '2026-04-01T11:10:00Z', hash: 'sha256:vd1' },
+    };
+    fs.writeFileSync(path.join(slugDir, '.saves.json'), JSON.stringify(saves));
+
+    const summary = generateProofSummary(slugDir);
+
+    // Should compute as single-phase: build = 30min, verify = 10min
+    // NOT double-count from data keys
+    expect(summary.timing.build).toBe(30);
+    expect(summary.timing.verify).toBe(10);
+  });
+
+  // @ana A018
+  it('excludes segments exceeding MAX_PHASE_MS', async () => {
+    // Phase 1: build 30min (normal)
+    // Phase 2: build > 24h (stale — should be excluded)
+    const saves = {
+      scope: { saved_at: '2026-04-01T10:00:00Z' },
+      contract: { saved_at: '2026-04-01T10:30:00Z' },
+      'build-report-1': { saved_at: '2026-04-01T11:00:00Z' },
+      'verify-report-1': { saved_at: '2026-04-01T11:10:00Z' },
+      'build-report-2': { saved_at: '2026-04-03T11:10:00Z' }, // 2 days later
+      'verify-report-2': { saved_at: '2026-04-03T11:20:00Z' },
+    };
+    fs.writeFileSync(path.join(slugDir, '.saves.json'), JSON.stringify(saves));
+
+    const summary = generateProofSummary(slugDir);
+
+    // Phase 1 build = 30min, Phase 2 build excluded (>24h)
+    expect(summary.timing.build).toBe(30);
+    // Phase 1 verify = 10min, Phase 2 verify = 10min
+    expect(summary.timing.verify).toBe(20);
+  });
+
+  // @ana A019
+  it('MAX_PHASE_MS consolidated to single declaration', async () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../../src/utils/proofSummary.ts'),
+      'utf-8'
+    );
+
+    // Find computeTiming function body
+    const funcStart = source.indexOf('function computeTiming(');
+    expect(funcStart).toBeGreaterThan(-1);
+
+    // Count MAX_PHASE_MS declarations within computeTiming
+    const funcBody = source.slice(funcStart);
+    // Find the end of the function (next top-level function or end of file)
+    const nextFunc = funcBody.indexOf('\nfunction ', 1);
+    const relevantBody = nextFunc > 0 ? funcBody.slice(0, nextFunc) : funcBody;
+
+    const declarations = relevantBody.match(/const MAX_PHASE_MS/g);
+    expect(declarations).toHaveLength(1);
+  });
+
+  it('multi-phase with _started_at values prefers segment computation', async () => {
+    // When numbered keys are detected, segment computation should take precedence
+    // over _started_at-based computation for build/verify
+    const saves = {
+      work_started_at: '2026-04-01T09:40:00Z',
+      build_started_at: '2026-04-01T10:25:00Z', // Would give 35min if used
+      scope: { saved_at: '2026-04-01T10:00:00Z' },
+      contract: { saved_at: '2026-04-01T10:30:00Z' },
+      'build-report-1': { saved_at: '2026-04-01T11:00:00Z' }, // segment: 30min
+      'verify-report-1': { saved_at: '2026-04-01T11:10:00Z' }, // segment: 10min
+    };
+    fs.writeFileSync(path.join(slugDir, '.saves.json'), JSON.stringify(saves));
+
+    const summary = generateProofSummary(slugDir);
+
+    // Segment-based: 30min, not _started_at-based: 35min
+    expect(summary.timing.build).toBe(30);
+    expect(summary.timing.verify).toBe(10);
+    // Think/plan still use work_started_at
+    expect(summary.timing.think).toBe(20);
+  });
+});
