@@ -103,7 +103,7 @@ export function spawnUpdateCheck(projectRoot: string, packageName: string): void
   const cacheDir = path.dirname(cacheFile);
 
   // Inline Node.js script for the child process
-  // Uses JSON.stringify for safe path interpolation (ANA-SEC-001 class)
+  // Uses JSON.stringify for safe path interpolation and encodeURIComponent for URL interpolation (ANA-SEC-001 class)
   const script = `
 const https = require('https');
 const fs = require('fs');
@@ -112,7 +112,7 @@ const path = require('path');
 const cacheFile = ${JSON.stringify(cacheFile)};
 const cacheDir = ${JSON.stringify(cacheDir)};
 
-const req = https.get('https://registry.npmjs.org/${packageName}/latest', { timeout: 3000 }, (res) => {
+const req = https.get('https://registry.npmjs.org/${encodeURIComponent(packageName)}/latest', { timeout: 3000 }, (res) => {
   let data = '';
   res.on('data', (chunk) => { data += chunk; });
   res.on('end', () => {
