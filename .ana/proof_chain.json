@@ -14496,7 +14496,10 @@
             "A014"
           ],
           "id": "worktrees-v2-timing-danger-prune-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Intentional — type-sentinel tests at proofSummary.test.ts:3756-3778 verify PipelineStats type includes median_plan. computePipelineStats is internal (not exported), so behavioral testing goes through computeChainHealth integration tests elsewhere. Type sentinels catch type-signature regressions.",
+          "closed_at": "2026-05-14T08:29:49.157Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
