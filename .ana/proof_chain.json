@@ -10272,7 +10272,10 @@
             "A013"
           ],
           "id": "audit-json-severity-summary-C3",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Intentional: A013 test at proof.test.ts:1878 uses toBeTypeOf('object') for meta.findings.by_severity and by_action. The meta block is a pass-through of computeChainHealth output, which has dedicated unit tests. Shape validation is sufficient for the 'meta envelope still contains health counts' assertion.",
+          "closed_at": "2026-05-14T16:45:31.883Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
