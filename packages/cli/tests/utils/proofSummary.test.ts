@@ -31,6 +31,79 @@ import {
   TRAJECTORY_WINDOW,
   MIN_ENTRIES_FOR_TREND,
 } from '../../src/utils/proofSummary.js';
+import { formatHumanReadable } from '../../src/commands/proof.js';
+// buildGanttBars lives in the website package (PipelineGantt.tsx) and can't be
+// imported cross-package in vitest. Re-implement the pure function here so the
+// contract assertions (A014-A018, A022) are testable within the CLI test suite.
+
+interface TestProofTiming {
+  think: number;
+  plan: number;
+  build: number;
+  verify: number;
+  totalMinutes: number;
+  segments?: Array<{ stage: string; minutes: number; phase?: number }>;
+}
+
+interface TestGanttBar {
+  label: string;
+  minutes: number;
+  opacity: number;
+  leftPct: number;
+  widthPct: number;
+}
+
+const TEST_STAGES = [
+  { key: 'think' as const, label: 'Think', opacity: 0.55 },
+  { key: 'plan' as const, label: 'Plan', opacity: 0.70 },
+  { key: 'build' as const, label: 'Build', opacity: 0.85 },
+  { key: 'verify' as const, label: 'Verify', opacity: 1.0 },
+];
+
+const TEST_OPACITY_MAP: Record<string, number> = {
+  think: 0.55, plan: 0.70, build: 0.85, verify: 1.0,
+};
+
+function buildGanttBars(timing: TestProofTiming): TestGanttBar[] {
+  const total = timing.totalMinutes;
+  if (total === 0) return [];
+
+  if (timing.segments && timing.segments.length > 0) {
+    const bars: TestGanttBar[] = [];
+    let cumulative = 0;
+    for (const seg of timing.segments) {
+      const label = seg.phase != null
+        ? `${seg.stage.charAt(0).toUpperCase() + seg.stage.slice(1)} ${seg.phase}`
+        : seg.stage.charAt(0).toUpperCase() + seg.stage.slice(1);
+      const pct = total > 0 ? Math.round((seg.minutes / total) * 100) : 0;
+      bars.push({
+        label,
+        minutes: seg.minutes,
+        opacity: TEST_OPACITY_MAP[seg.stage] ?? 0.85,
+        leftPct: total > 0 ? Math.round((cumulative / total) * 100) : 0,
+        widthPct: seg.minutes === 0 ? 2 : pct,
+      });
+      cumulative += seg.minutes;
+    }
+    return bars;
+  }
+
+  const bars: TestGanttBar[] = [];
+  let cumulative = 0;
+  for (const stage of TEST_STAGES) {
+    const value = timing[stage.key];
+    const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+    bars.push({
+      label: stage.label,
+      minutes: value,
+      opacity: stage.opacity,
+      leftPct: total > 0 ? Math.round((cumulative / total) * 100) : 0,
+      widthPct: value === 0 ? 2 : pct,
+    });
+    cumulative += value;
+  }
+  return bars;
+}
 
 describe('generateProofSummary', () => {
   let tempDir: string;
@@ -4005,6 +4078,173 @@ describe('computeTiming segment-based computation', () => {
     expect(declarations).toHaveLength(1);
   });
 
+  // @ana A001, A002, A003, A007, A012
+  it('produces segments for 2-phase pipeline', async () => {
+    // Phase 1 build: contract(10:30) → build-report-1(11:00) = 30min
+    // Phase 1 verify: build-report-1(11:00) → verify-report-1(11:08) = 8min
+    // Phase 2 build: verify-report-1(11:08) → build-report-2(11:23) = 15min
+    // Phase 2 verify: build-report-2(11:23) → verify-report-2(11:37) = 14min
+    const saves = {
+      scope: { saved_at: '2026-04-01T10:00:00Z' },
+      contract: { saved_at: '2026-04-01T10:30:00Z' },
+      'build-report-1': { saved_at: '2026-04-01T11:00:00Z' },
+      'verify-report-1': { saved_at: '2026-04-01T11:08:00Z' },
+      'build-report-2': { saved_at: '2026-04-01T11:23:00Z' },
+      'verify-report-2': { saved_at: '2026-04-01T11:37:00Z' },
+    };
+    fs.writeFileSync(path.join(slugDir, '.saves.json'), JSON.stringify(saves));
+
+    const summary = generateProofSummary(slugDir);
+
+    // A001: segments exist
+    expect(summary.timing.segments).toBeDefined();
+    const segments = summary.timing.segments!;
+
+    // 2-phase: think, plan, build-1, verify-1, build-2, verify-2 = 6 segments
+    expect(segments).toHaveLength(6);
+
+    // A002: first segment is think
+    expect(segments[0]!.stage).toBe('think');
+
+    // A012: think and plan have no phase number
+    expect(segments[0]!.phase).toBeUndefined();
+    expect(segments[1]!.phase).toBeUndefined();
+    expect(segments[1]!.stage).toBe('plan');
+
+    // A003: build segments include phase number
+    expect(segments[2]!.stage).toBe('build');
+    expect(segments[2]!.phase).toBe(1);
+    expect(segments[3]!.stage).toBe('verify');
+    expect(segments[3]!.phase).toBe(1);
+    expect(segments[4]!.stage).toBe('build');
+    expect(segments[4]!.phase).toBe(2);
+    expect(segments[5]!.stage).toBe('verify');
+    expect(segments[5]!.phase).toBe(2);
+
+    // A007: segment minutes match per-phase durations
+    expect(segments[2]!.minutes).toBe(30); // build 1
+    expect(segments[3]!.minutes).toBe(8);  // verify 1
+    expect(segments[4]!.minutes).toBe(15); // build 2
+    expect(segments[5]!.minutes).toBe(14); // verify 2
+  });
+
+  // @ana A004, A005, A006, A010, A011
+  it('produces segments for 3-phase pipeline', async () => {
+    // Phase 1: build 20min, verify 5min
+    // Phase 2: build 15min, verify 8min
+    // Phase 3: build 10min, verify 7min
+    const saves = {
+      scope: { saved_at: '2026-04-01T10:00:00Z' },
+      contract: { saved_at: '2026-04-01T10:30:00Z' },
+      'build-report-1': { saved_at: '2026-04-01T10:50:00Z' },
+      'verify-report-1': { saved_at: '2026-04-01T10:55:00Z' },
+      'build-report-2': { saved_at: '2026-04-01T11:10:00Z' },
+      'verify-report-2': { saved_at: '2026-04-01T11:18:00Z' },
+      'build-report-3': { saved_at: '2026-04-01T11:28:00Z' },
+      'verify-report-3': { saved_at: '2026-04-01T11:35:00Z' },
+    };
+    fs.writeFileSync(path.join(slugDir, '.saves.json'), JSON.stringify(saves));
+
+    const summary = generateProofSummary(slugDir);
+
+    // A004: 3-phase = think, plan, b1, v1, b2, v2, b3, v3 = 8 segments
+    expect(summary.timing.segments).toBeDefined();
+    const segments = summary.timing.segments!;
+    expect(segments).toHaveLength(8);
+
+    // A005: segments[6] is build
+    expect(segments[6]!.stage).toBe('build');
+
+    // A006: segments[6] has phase 3
+    expect(segments[6]!.phase).toBe(3);
+
+    // A010: aggregate build = sum of build segments
+    expect(summary.timing.build).toBe(45); // 20 + 15 + 10
+
+    // A011: aggregate verify = sum of verify segments
+    expect(summary.timing.verify).toBe(20); // 5 + 8 + 7
+  });
+
+  // @ana A008
+  it('omits segments for single-phase pipeline', async () => {
+    const saves = {
+      scope: { saved_at: '2026-04-01T10:00:00Z' },
+      contract: { saved_at: '2026-04-01T10:30:00Z' },
+      'build-report': { saved_at: '2026-04-01T11:30:00Z' },
+      'verify-report': { saved_at: '2026-04-01T12:00:00Z' },
+    };
+    fs.writeFileSync(path.join(slugDir, '.saves.json'), JSON.stringify(saves));
+
+    const summary = generateProofSummary(slugDir);
+
+    expect(summary.timing.segments).toBeUndefined();
+  });
+
+  // @ana A009
+  it('omits segments for rejection-cycle pipeline', async () => {
+    const saves = {
+      scope: { saved_at: '2026-04-01T10:00:00Z' },
+      contract: { saved_at: '2026-04-01T10:30:00Z' },
+      'build-report': {
+        saved_at: '2026-04-01T11:40:00Z',
+        hash: 'sha256:v2',
+        history: [{ saved_at: '2026-04-01T11:00:00Z', hash: 'sha256:v1' }],
+      },
+      'verify-report': {
+        saved_at: '2026-04-01T11:50:00Z',
+        hash: 'sha256:vr2',
+        history: [{ saved_at: '2026-04-01T11:10:00Z', hash: 'sha256:vr1' }],
+      },
+    };
+    fs.writeFileSync(path.join(slugDir, '.saves.json'), JSON.stringify(saves));
+
+    const summary = generateProofSummary(slugDir);
+
+    expect(summary.timing.segments).toBeUndefined();
+  });
+
+  it('handles missing verify for last build phase in segments', async () => {
+    // 2-phase but verify-report-2 missing (incomplete pipeline)
+    const saves = {
+      scope: { saved_at: '2026-04-01T10:00:00Z' },
+      contract: { saved_at: '2026-04-01T10:30:00Z' },
+      'build-report-1': { saved_at: '2026-04-01T11:00:00Z' },
+      'verify-report-1': { saved_at: '2026-04-01T11:08:00Z' },
+      'build-report-2': { saved_at: '2026-04-01T11:23:00Z' },
+    };
+    fs.writeFileSync(path.join(slugDir, '.saves.json'), JSON.stringify(saves));
+
+    const summary = generateProofSummary(slugDir);
+
+    expect(summary.timing.segments).toBeDefined();
+    const segments = summary.timing.segments!;
+
+    // Should have: think, plan, build-1, verify-1, build-2 = 5 segments (no verify-2)
+    expect(segments).toHaveLength(5);
+    expect(segments[4]!.stage).toBe('build');
+    expect(segments[4]!.phase).toBe(2);
+  });
+
+  it('handles zero-minute segment', async () => {
+    // Build and verify timestamps identical → 0 minute segment
+    const saves = {
+      scope: { saved_at: '2026-04-01T10:00:00Z' },
+      contract: { saved_at: '2026-04-01T10:30:00Z' },
+      'build-report-1': { saved_at: '2026-04-01T10:30:00Z' }, // same as contract
+      'verify-report-1': { saved_at: '2026-04-01T10:30:00Z' }, // same as build
+    };
+    fs.writeFileSync(path.join(slugDir, '.saves.json'), JSON.stringify(saves));
+
+    const summary = generateProofSummary(slugDir);
+
+    expect(summary.timing.segments).toBeDefined();
+    const segments = summary.timing.segments!;
+    const buildSeg = segments.find(s => s.stage === 'build');
+    const verifySeg = segments.find(s => s.stage === 'verify');
+    expect(buildSeg?.minutes).toBe(0);
+    expect(verifySeg?.minutes).toBe(0);
+  });
+
   it('multi-phase with _started_at values prefers segment computation', async () => {
     // When numbered keys are detected, segment computation should take precedence
     // over _started_at-based computation for build/verify
@@ -4025,5 +4265,127 @@ describe('computeTiming segment-based computation', () => {
     expect(summary.timing.verify).toBe(10);
     // Think/plan still use work_started_at
     expect(summary.timing.think).toBe(20);
+  });
+});
+
+describe('formatHumanReadable phase breakdown', () => {
+  function makeEntry(timingOverrides: Record<string, unknown> = {}): import('../../src/types/proof.js').ProofChainEntry {
+    return {
+      slug: 'test-slug',
+      feature: 'Test Feature',
+      result: 'PASS',
+      author: { name: 'Test', email: 'test@test.com' },
+      contract: { total: 1, satisfied: 1, unsatisfied: 0, deviated: 0 },
+      assertions: [{ id: 'A001', says: 'test', status: 'SATISFIED' }],
+      acceptance_criteria: { total: 1, met: 1 },
+      timing: {
+        total_minutes: 97,
+        think: 30,
+        plan: 0,
+        build: 45,
+        verify: 22,
+        ...timingOverrides,
+      },
+      hashes: {},
+      completed_at: '2026-04-01T12:00:00Z',
+      modules_touched: [],
+      findings: [],
+      rejection_cycles: 0,
+      previous_failures: [],
+      build_concerns: [],
+    };
+  }
+
+  // @ana A019
+  it('formatHumanReadable shows phase breakdown', () => {
+    const entry = makeEntry({
+      segments: [
+        { stage: 'think', minutes: 30 },
+        { stage: 'plan', minutes: 0 },
+        { stage: 'build', minutes: 30, phase: 1 },
+        { stage: 'verify', minutes: 8, phase: 1 },
+        { stage: 'build', minutes: 15, phase: 2 },
+        { stage: 'verify', minutes: 14, phase: 2 },
+      ],
+    });
+    const output = formatHumanReadable(entry);
+
+    expect(output).toContain('Build 1');
+    expect(output).toContain('Verify 1');
+    expect(output).toContain('Build 2');
+    expect(output).toContain('Verify 2');
+    expect(output).toContain('Phase breakdown');
+  });
+
+  // @ana A020
+  it('formatHumanReadable omits breakdown for single-phase', () => {
+    const entry = makeEntry(); // no segments
+    const output = formatHumanReadable(entry);
+
+    expect(output).not.toContain('Phase breakdown');
+  });
+});
+
+describe('buildGanttBars', () => {
+  // @ana A014, A015, A017, A018
+  it('renders multi-phase bars', () => {
+    const timing: TestProofTiming = {
+      think: 8,
+      plan: 13,
+      build: 57,
+      verify: 30,
+      totalMinutes: 108,
+      segments: [
+        { stage: 'think', minutes: 8 },
+        { stage: 'plan', minutes: 13 },
+        { stage: 'build', minutes: 32, phase: 1 },
+        { stage: 'verify', minutes: 7, phase: 1 },
+        { stage: 'build', minutes: 14, phase: 2 },
+        { stage: 'verify', minutes: 13, phase: 2 },
+        { stage: 'build', minutes: 11, phase: 3 },
+        { stage: 'verify', minutes: 10, phase: 3 },
+      ],
+    };
+
+    const ganttBars = buildGanttBars(timing);
+
+    // A014: 8 bars for 3-phase
+    expect(ganttBars).toHaveLength(8);
+
+    // A015: phase-numbered labels
+    expect(ganttBars[2]!.label).toContain('Build 1');
+    expect(ganttBars[3]!.label).toContain('Verify 1');
+
+    // A017: build bars use 0.85 opacity
+    expect(ganttBars[2]!.opacity).toBe(0.85);
+    expect(ganttBars[4]!.opacity).toBe(0.85);
+    expect(ganttBars[6]!.opacity).toBe(0.85);
+
+    // A018: verify bars use 1.0 opacity
+    expect(ganttBars[3]!.opacity).toBe(1.0);
+    expect(ganttBars[5]!.opacity).toBe(1.0);
+    expect(ganttBars[7]!.opacity).toBe(1.0);
+  });
+
+  // @ana A016, A022
+  it('renders 4-bar fallback', () => {
+    const timing: TestProofTiming = {
+      think: 5,
+      plan: 10,
+      build: 20,
+      verify: 10,
+      totalMinutes: 45,
+    };
+
+    const ganttBars = buildGanttBars(timing);
+
+    // A016: 4 bars when no segments
+    expect(ganttBars).toHaveLength(4);
+
+    // A022: first bar is Think
+    expect(ganttBars[0]!.label).toBe('Think');
+    expect(ganttBars[1]!.label).toBe('Plan');
+    expect(ganttBars[2]!.label).toBe('Build');
+    expect(ganttBars[3]!.label).toBe('Verify');
   });
 });

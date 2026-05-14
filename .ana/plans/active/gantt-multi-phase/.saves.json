@@ -18,5 +18,49 @@
   "spec": {
     "saved_at": "2026-05-14T05:19:29.480Z",
     "hash": "sha256:8ed5dbd7fb16a8feda4e8486ed6d9edc6e33b5754a667d756a7019df9103646c"
+  },
+  "build_started_at": "2026-05-14T05:21:10.926Z",
+  "build_agent": "ana-build",
+  "build-report": {
+    "saved_at": "2026-05-14T05:34:08.674Z",
+    "hash": "sha256:7d446d7f9ef3d878c3111c90b3b18b6ed58e8f50b4db38255b74121fd7424a36"
+  },
+  "build-data": {
+    "saved_at": "2026-05-14T05:34:08.675Z",
+    "hash": "sha256:90f37cda086f999c3fe810488426fc7f5d55e54e5780ccca907300b937260e40"
+  },
+  "modules_touched": [
+    "packages/cli/src/commands/proof.ts",
+    "packages/cli/src/commands/work.ts",
+    "packages/cli/src/types/proof.ts",
+    "packages/cli/src/utils/proofSummary.ts",
+    "packages/cli/tests/utils/proofSummary.test.ts",
+    "website/app/docs/proof/[slug]/page.tsx",
+    "website/components/docs/proof/PipelineGantt.tsx",
+    "website/content/docs/concepts/pipeline.mdx",
+    "website/content/docs/guides/reading-a-proof.mdx",
+    "website/content/docs/guides/troubleshooting.mdx",
+    "website/content/docs/guides/using-ana-learn.mdx",
+    "website/content/docs/guides/verifying-changes.mdx",
+    "website/content/docs/start.mdx",
+    "website/lib/docs-data/types.ts",
+    "website/public/llms-full.txt",
+    "website/public/search-index.json",
+    "website/scripts/extract-docs-data.ts"
+  ],
+  "verify_started_at": "2026-05-14T06:13:35.470Z",
+  "verify_agent": "ana-verify",
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:460e8b3f42f3d5519597caa564039e03bdc80c417c9eff510120dfe7d356486b",
+    "run_at": "2026-05-14T06:19:21.186Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-14T06:19:21.224Z",
+    "hash": "sha256:46d20eab27ac55553c046270111408c370a81d9afee8279cd3e6473c07367c49"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-14T06:19:21.224Z",
+    "hash": "sha256:a9f4f83446545465df63545a4d9c506da7b191c46f33817defeaa0dc6329bc2d"
   }
 }

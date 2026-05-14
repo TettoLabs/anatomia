@@ -1,0 +1,54 @@
+schema: 1
+findings:
+  - category: test
+    summary: "Gantt bar assertions (A014-A018, A022) test a re-implemented copy of buildGanttBars, not the production function in PipelineGantt.tsx"
+    file: "packages/cli/tests/utils/proofSummary.test.ts"
+    line: 57
+    severity: debt
+    suggested_action: monitor
+    related_assertions: ["A014", "A015", "A016", "A017", "A018", "A022"]
+  - category: code
+    summary: "buildGanttBars and GanttBar exported from PipelineGantt.tsx but never imported — YAGNI exports for potential cross-package testing that doesn't happen"
+    file: "website/components/docs/proof/PipelineGantt.tsx"
+    line: 22
+    severity: observation
+    suggested_action: accept
+  - category: code
+    summary: "OPACITY_MAP duplicates opacity values already in STAGES array — two sources of truth for the same constants"
+    file: "website/components/docs/proof/PipelineGantt.tsx"
+    line: 15
+    severity: observation
+    suggested_action: accept
+  - category: code
+    summary: "formatHumanReadable exported solely for test access — was previously private, scope widened for testing"
+    file: "packages/cli/src/commands/proof.ts"
+    line: 234
+    severity: observation
+    suggested_action: accept
+  - category: code
+    summary: "Multi-phase timeline text derives phase count via Math.max on filtered segments — works correctly but couples rendering to segment internals when entry.phases field exists for this purpose"
+    file: "website/app/docs/proof/[slug]/page.tsx"
+    line: 92
+    severity: observation
+    suggested_action: accept
+  - category: code
+    summary: "60px label column may be tight for 'VERIFY 3' at 10.5px mono with 0.06em letter-spacing — fits now but fragile for higher phase counts"
+    file: "website/components/docs/proof/PipelineGantt.tsx"
+    line: 122
+    severity: observation
+    suggested_action: monitor
+  - category: upstream
+    summary: "Cumulative left-offset rounding (Math.round per-bar) can exceed 100% with 8+ bars — known pre-existing issue from proof context, now higher risk with multi-phase rendering"
+    file: "website/components/docs/proof/PipelineGantt.tsx"
+    line: 53
+    severity: risk
+    suggested_action: scope
+  - category: test
+    summary: "A013 (phases population) and A021 (extraction passthrough) have no tagged tests — verified by source inspection only"
+    related_assertions: ["A013", "A021"]
+    severity: observation
+    suggested_action: monitor
+  - category: code
+    summary: "Website content files updated with dynamic proof counts (90→93, 19→21) — not in spec but harmless build-time content refresh"
+    severity: observation
+    suggested_action: accept

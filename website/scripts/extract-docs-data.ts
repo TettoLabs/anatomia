@@ -157,12 +157,14 @@ function extractProofEntries(): ProofEntry[] {
     const rawTotal = rawTiming.total_minutes ?? 0;
     // If total_minutes is 0 but stages have data, compute from stages
     const computedTotal = stageThink + stagePlan + stageBuild + stageVerify;
-    const timing = {
+    const rawSegments = rawTiming.segments as Array<{ stage: string; minutes: number; phase?: number }> | undefined;
+    const timing: import('../lib/docs-data/types.js').ProofTiming = {
       think: stageThink,
       plan: stagePlan,
       build: stageBuild,
       verify: stageVerify,
       totalMinutes: rawTotal > 0 ? rawTotal : computedTotal,
+      ...(rawSegments ? { segments: rawSegments } : {}),
     };
 
     // Normalize contract — only 3 common fields
@@ -195,6 +197,7 @@ function extractProofEntries(): ProofEntry[] {
       assertions,
       findings,
       timing,
+      ...(entry.phases ? { phases: entry.phases as number } : {}),
       hashes: entry.hashes || {},
       findingSeverity,
       duration: timing.totalMinutes,
