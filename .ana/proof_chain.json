@@ -14268,7 +14268,10 @@
             "A010"
           ],
           "id": "rejection-artifact-preservation-C5",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Stale — artifact.test.ts:2766 is now a validateVerifyDataFormat severity-values test (@ana A008), unrelated to the original finding about process.exit(0) catch pattern. Test was refactored or moved.",
+          "closed_at": "2026-05-14T08:29:17.580Z",
+          "closed_by": "human"
         }
       ],
       "rejection_cycles": 0,
