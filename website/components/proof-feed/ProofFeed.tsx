@@ -27,6 +27,7 @@ export async function ProofFeed() {
     if (kind === "milestone") return "milestone";
     if (kind === "feature") return "feature";
     if (kind === "fix") return "fix";
+    if (kind === "chore") return "chore";
     return "improve";
   };
 

@@ -112,6 +112,7 @@ export function listAgents(): void {
     const label = a.skillCount === 1 ? '1 skill' : `${a.skillCount} skills`;
     return label.length;
   }), 8);
+  const maxModelLen = Math.max(...models.map(m => m.length), 7);
 
   console.log(chalk.bold('Agents:'));
   console.log('');
@@ -127,7 +128,6 @@ export function listAgents(): void {
       console.log(`  ${namePart}  ${charsPart}  ${skillPart}  ${desc}`);
     } else {
       const modelDisplay = agent.model ?? '(default)';
-      const maxModelLen = Math.max(...models.map(m => m.length), 7);
       const modelPart = modelDisplay.padEnd(maxModelLen);
       const desc = agent.description ? truncate(agent.description, 50) : '';
       console.log(`  ${namePart}  ${charsPart}  ${skillPart}  ${chalk.gray(modelPart)}  ${desc}`);
