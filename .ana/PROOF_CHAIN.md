@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-96 runs · 142 active · 117 lessons · 0 promoted · 330 closed
+96 runs · 141 active · 117 lessons · 0 promoted · 331 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 142 total)
+## Active Findings (30 shown of 141 total)
 
 ### packages/cli/src/commands/artifact.ts
 
@@ -70,6 +70,7 @@
 
 - **code:** pageTitle and pageDescription props accepted by RightRail but never used in any rendering logic — *Docs Search + Polish*
 - **code:** RightRail 'Download artifacts' and 'Open in Claude' links point to '#' — placeholder hrefs with no target — *Dynamic Pages — Reference & Proof Chain*
+- **code:** Right rail responsive breakpoint mismatch — hidden from 1181-1279px where spec says visible above 1180px — *Docs Shell (Layout + Shared Components)*
 
 ### website/components/docs/layout/SearchOverlay.tsx
 
@@ -96,10 +97,6 @@
 ### website/content/docs/concepts/skills.mdx
 
 - **code:** Skills page inline-links 8 individual skill reference pages that don't exist and aren't scoped in any phase — *Content Pages — 16 editorial docs pages with bug fixes and sidebar ordering*
-
-### website/content/docs/guides/using-ana-setup.mdx
-
-- **code:** NextCards link to unbuilt reference/proof pages — will 404 until Scope 5 — *Content Pages — 16 editorial docs pages with bug fixes and sidebar ordering*
 
 ### website/content/docs/guides/verifying-changes.mdx
 

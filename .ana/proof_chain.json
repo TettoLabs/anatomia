@@ -23759,7 +23759,10 @@
           "suggested_action": "monitor",
           "related_assertions": [],
           "id": "content-pages-C14",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Stale: both /docs/reference/ and /docs/proof/ routes exist with content. reference/ contains cli, agents, skills, context subdirectories. proof/ contains page.tsx (explorer) and [slug] (individual proofs). The pages the finding says 'will 404' are live and functional.",
+          "closed_at": "2026-05-14T19:47:54.012Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
