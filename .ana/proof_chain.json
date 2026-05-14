@@ -19708,7 +19708,10 @@
             "A006"
           ],
           "id": "scoped-cli-commits-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Standard git usage: 'git commit -- {paths}' at artifact.ts:1465 commits only the listed paths from the index. The -- separator is standard git pathspec syntax, not --only semantics (finding's characterization is imprecise). git add (lines 1394-1446) and git commit are synchronous with no interleaving — single-threaded CLI guarantees the index isn't modified between them. Scoped commits intentionally don't touch user's staged work.",
+          "closed_at": "2026-05-14T19:29:28.044Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
