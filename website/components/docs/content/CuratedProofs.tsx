@@ -47,21 +47,21 @@ const CURATED: CuratedEntry[] = [
     name: "Rewrite every public-facing document for v1",
     description: "README, CHANGELOG, CONTRIBUTING, ARCHITECTURE.",
     stageTag: "infra",
-    href: "/docs/proof",
+    href: "/docs/proof/v1-documentation-overhaul",
   },
   {
     slug: "add-project-kind-detection",
     name: "Detect CLI, library, web app, API server, full-stack",
     description: "Scan-time classifier. Findings later mechanically closed.",
     stageTag: "engine",
-    href: "/docs/proof",
+    href: "/docs/proof/add-project-kind-detection",
   },
   {
     slug: "cli-ux-polish",
     name: "Make the first 10 minutes feel professional",
     description: "Help text, command grouping, jargon-free descriptions.",
     stageTag: "cli",
-    href: "/docs/proof",
+    href: "/docs/proof/cli-ux-polish",
   },
 ];
 
@@ -206,6 +206,10 @@ export function CuratedProofs({ entries, totalCount }: CuratedProofsProps) {
             >
               {/* Proof cell — slug + name(desc + tag) nested like supermock */}
               <td style={{ padding: "13px 16px", verticalAlign: "middle" }}>
+                <Link
+                  href={row.href}
+                  style={{ textDecoration: "none", color: "inherit", display: "block" }}
+                >
                 <div
                   style={{
                     fontFamily: "var(--font-mono)",
@@ -236,6 +240,7 @@ export function CuratedProofs({ entries, totalCount }: CuratedProofsProps) {
                     {row.description} {tag(row.stageTag)}
                   </span>
                 </div>
+                </Link>
               </td>
               {/* Stage */}
               <td style={{ padding: "13px 16px", verticalAlign: "middle" }}>
