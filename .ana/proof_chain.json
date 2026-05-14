@@ -16814,7 +16814,10 @@
             "A005"
           ],
           "id": "website-direct-polish-C1",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Finding is incorrect: the parent .inner at pricing.module.css:26-33 is display:flex, flex-direction:column, align-items:center. Flex column + align-items:center centers children regardless of maxWidth. The h2 (maxWidth:18ch) and blurb (maxWidth:52ch) ARE centered by the parent flex container. No margin:auto needed — flex alignment handles it.",
+          "closed_at": "2026-05-14T19:19:11.678Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
