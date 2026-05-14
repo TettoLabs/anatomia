@@ -1879,7 +1879,7 @@ export function registerProofCommand(program: Command): void {
       }
 
       // Collect all active findings with entry context
-      const activeFindings: Array<{
+      let activeFindings: Array<{
         id: string;
         category: string;
         summary: string;
@@ -1945,21 +1945,13 @@ export function registerProofCommand(program: Command): void {
           if (sev === '—' && allowedSeverities.has('unclassified')) return true;
           return false;
         };
-        for (let i = activeFindings.length - 1; i >= 0; i--) {
-          if (!matchesSeverity(activeFindings[i]!.severity)) {
-            activeFindings.splice(i, 1);
-          }
-        }
+        activeFindings = activeFindings.filter(f => matchesSeverity(f.severity));
       }
 
       // Apply --entry filter (post-collection, before grouping)
       if (options.entry) {
         const entrySlug = options.entry;
-        for (let i = activeFindings.length - 1; i >= 0; i--) {
-          if (activeFindings[i]!.entry_slug !== entrySlug) {
-            activeFindings.splice(i, 1);
-          }
-        }
+        activeFindings = activeFindings.filter(f => f.entry_slug === entrySlug);
       }
 
       // Zero findings
