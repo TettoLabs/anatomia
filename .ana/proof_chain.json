@@ -6159,7 +6159,10 @@
             "A013"
           ],
           "id": "work-complete-json-proof-card-C4",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Intentional: writeProofChain returns ProofChainStats (aggregate counts at work.ts:1037-1051), not the full chain. The re-read at line 1639-1643 needs the full entries array for detectHealthChange and computeChainHealth. The file was written milliseconds earlier and is in OS page cache — negligible cost. Finding says 'matches known build concern' — acknowledged and accepted during build.",
+          "closed_at": "2026-05-14T18:42:27.512Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
