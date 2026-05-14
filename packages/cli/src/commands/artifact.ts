@@ -350,7 +350,8 @@ function archivePreviousVersion(projectRoot: string, relFilePath: string, planDi
     const absPath = path.join(projectRoot, relFilePath);
     if (fs.existsSync(absPath)) {
       const diskContent = fs.readFileSync(absPath, 'utf-8');
-      if (diskContent === committedContent) return null; // No change
+      // Normalize CRLF→LF for Windows autocrlf compatibility (git show returns LF)
+      if (diskContent.replace(/\r\n/g, '\n') === committedContent) return null; // No change
     }
     // If file doesn't exist on disk but does in git, that's a valid archive case
 
