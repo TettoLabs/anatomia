@@ -1,0 +1,278 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Docs Search + Polish"
+
+assertions:
+  # Search overlay — AC1, AC2, AC3, AC20
+  - id: A001
+    says: "Pressing Cmd+K opens the search overlay"
+    block: "search overlay opens and closes"
+    target: "SearchOverlay.open"
+    matcher: "truthy"
+
+  - id: A002
+    says: "Typing in the search box filters results by relevance"
+    block: "search filtering and ranking"
+    target: "filteredResults.length"
+    matcher: "greater"
+    value: 0
+
+  - id: A003
+    says: "Search results are grouped into Pages, Commands, and Proofs sections"
+    block: "search result grouping"
+    target: "resultGroups"
+    matcher: "contains"
+    value: "Pages"
+
+  - id: A004
+    says: "Pressing Escape closes the search overlay"
+    block: "search overlay opens and closes"
+    target: "SearchOverlay.closed"
+    matcher: "truthy"
+
+  - id: A005
+    says: "Arrow keys move the selection highlight through search results"
+    block: "keyboard navigation in search"
+    target: "selectedIndex.afterArrowDown"
+    matcher: "greater"
+    value: 0
+
+  - id: A006
+    says: "Selection clamps at boundaries instead of wrapping"
+    block: "keyboard navigation in search"
+    target: "selectedIndex.atBoundary"
+    matcher: "equals"
+    value: 0
+
+  - id: A007
+    says: "Exact title matches rank above partial title matches"
+    block: "search filtering and ranking"
+    target: "results.firstMatch.type"
+    matcher: "equals"
+    value: "exactTitle"
+
+  # Search index — AC4
+  - id: A008
+    says: "Search index includes more than 100 entries across all content types"
+    block: "search index generation"
+    target: "searchIndex.length"
+    matcher: "greater"
+    value: 100
+
+  - id: A009
+    says: "Search index contains MDX pages, CLI commands, proof entries, agents, and skills"
+    block: "search index content types"
+    target: "searchIndex.types"
+    matcher: "contains"
+    value: "page"
+
+  # Mobile — AC5, AC9
+  - id: A010
+    says: "Search modal reduces padding on small screens for keyboard clearance"
+    block: "mobile search responsiveness"
+    target: "docs.css"
+    matcher: "contains"
+    value: "max-width: 640px"
+
+  - id: A011
+    says: "Claude protocol links are hidden on mobile screens"
+    block: "mobile claude link hiding"
+    target: "docs.css.mobileRule"
+    matcher: "contains"
+    value: "docs-ai-link-claude"
+
+  # AI links — AC6, AC7, AC8, AC10
+  - id: A012
+    says: "Copy as Markdown writes structured content to the clipboard"
+    block: "copy as markdown functionality"
+    target: "clipboard.content"
+    matcher: "exists"
+
+  - id: A013
+    says: "Proof page copy produces a sharing template with verdict, stats, and URL"
+    block: "copy as markdown for proof pages"
+    target: "clipboard.proofContent"
+    matcher: "contains"
+    value: "assertions"
+
+  - id: A014
+    says: "Open in Claude constructs a claude:// protocol URL for content pages"
+    block: "claude link construction"
+    target: "claudeLink.href"
+    matcher: "contains"
+    value: "claude://claude.ai/new"
+
+  - id: A015
+    says: "Proof pages use an enriched grading prompt that explains what Anatomia is"
+    block: "claude link for proof pages"
+    target: "claudeLink.proofPrompt"
+    matcher: "contains"
+    value: "proof chain entry from Anatomia"
+
+  - id: A016
+    says: "Open in ChatGPT constructs a chatgpt.com URL with the prompt"
+    block: "chatgpt link construction"
+    target: "chatgptLink.href"
+    matcher: "contains"
+    value: "chatgpt.com"
+
+  - id: A017
+    says: "Download artifacts link is removed from proof detail pages"
+    block: "proof page link cleanup"
+    target: "proofLinks"
+    matcher: "not_contains"
+    value: "Download artifacts"
+
+  # editUrl — AC11
+  - id: A018
+    says: "Every page route with a right rail passes an editUrl prop"
+    block: "editUrl wiring across routes"
+    target: "editUrl.present"
+    matcher: "truthy"
+
+  # llms.txt — AC12, AC13
+  - id: A019
+    says: "llms.txt is generated in the public directory after build"
+    block: "llms.txt generation"
+    target: "publicFiles"
+    matcher: "contains"
+    value: "llms.txt"
+
+  - id: A020
+    says: "llms.txt contains the project name and navigation sections"
+    block: "llms.txt content structure"
+    target: "llmsTxt.content"
+    matcher: "contains"
+    value: "# Anatomia"
+
+  - id: A021
+    says: "llms-full.txt contains concatenated page content with JSX stripped"
+    block: "llms-full.txt generation"
+    target: "llmsFullTxt.content"
+    matcher: "not_contains"
+    value: "<Callout"
+
+  # Build validation — AC14, AC15
+  - id: A022
+    says: "Build fails when an MDX file contains a broken internal link"
+    block: "internal link validation"
+    target: "buildValidation.brokenLinks"
+    matcher: "equals"
+    value: 0
+
+  - id: A023
+    says: "Extraction script validates that proof entries exist before proceeding"
+    block: "data completeness validation"
+    target: "validation.proofCount"
+    matcher: "greater"
+    value: 0
+
+  - id: A024
+    says: "Extraction script validates that commands exist before proceeding"
+    block: "data completeness validation"
+    target: "validation.commandCount"
+    matcher: "greater"
+    value: 0
+
+  # Dynamic values — AC16, AC17
+  - id: A025
+    says: "ProofCount component renders the current number of proof entries"
+    block: "dynamic MDX components"
+    target: "ProofCount.rendered"
+    matcher: "truthy"
+
+  - id: A026
+    says: "RejectionCount component renders the count of proofs with rejection cycles"
+    block: "dynamic MDX components"
+    target: "RejectionCount.rendered"
+    matcher: "truthy"
+
+  - id: A027
+    says: "MedianTimings renders computed median values from proof data"
+    block: "median timing computation"
+    target: "MedianTimings.rendered"
+    matcher: "truthy"
+
+  - id: A028
+    says: "Median computation filters out zero-valued stages before calculating"
+    block: "median timing computation"
+    target: "getMedianTimings.filtersZeros"
+    matcher: "truthy"
+
+  - id: A029
+    says: "Dynamic components are registered in the catch-all mdxComponents map"
+    block: "dynamic component registration"
+    target: "mdxComponents.ProofCount"
+    matcher: "exists"
+
+  # Build integrity — AC18, AC19
+  - id: A030
+    says: "Website builds successfully with all 124+ pages after all changes"
+    block: "build integrity"
+    target: "build.success"
+    matcher: "truthy"
+
+  - id: A031
+    says: "No CSS changes appear in globals.css — all styles are in docs.css"
+    block: "CSS isolation"
+    target: "globals.css.unchanged"
+    matcher: "truthy"
+
+  - id: A032
+    says: "Search overlay CSS is scoped under docs-layout class"
+    block: "CSS isolation"
+    target: "docs.css"
+    matcher: "contains"
+    value: "docs-search-overlay"
+
+file_changes:
+  - path: "website/components/docs/layout/SearchOverlay.tsx"
+    action: create
+  - path: "website/components/docs/layout/SearchTrigger.tsx"
+    action: create
+  - path: "website/components/docs/content/DynamicStat.tsx"
+    action: create
+  - path: "website/lib/docs-data/stripJsx.ts"
+    action: create
+  - path: "website/components/docs/layout/DocsNav.tsx"
+    action: modify
+  - path: "website/components/docs/layout/RightRail.tsx"
+    action: modify
+  - path: "website/lib/docs-data/proofs.ts"
+    action: modify
+  - path: "website/lib/docs-data/index.ts"
+    action: modify
+  - path: "website/scripts/extract-docs-data.ts"
+    action: modify
+  - path: "website/app/docs/[...slug]/page.tsx"
+    action: modify
+  - path: "website/app/docs/proof/[slug]/page.tsx"
+    action: modify
+  - path: "website/app/docs/reference/cli/page.tsx"
+    action: modify
+  - path: "website/app/docs/reference/agents/page.tsx"
+    action: modify
+  - path: "website/app/docs/reference/agents/[name]/page.tsx"
+    action: modify
+  - path: "website/app/docs/reference/skills/page.tsx"
+    action: modify
+  - path: "website/app/docs/reference/skills/[name]/page.tsx"
+    action: modify
+  - path: "website/app/docs/reference/context/page.tsx"
+    action: modify
+  - path: "website/app/docs/docs.css"
+    action: modify
+  - path: "website/content/docs/start.mdx"
+    action: modify
+  - path: "website/content/docs/concepts/pipeline.mdx"
+    action: modify
+  - path: "website/content/docs/concepts/skills.mdx"
+    action: modify
+  - path: "website/content/docs/guides/verifying-changes.mdx"
+    action: modify
+  - path: "website/content/docs/guides/troubleshooting.mdx"
+    action: modify
+  - path: "website/content/docs/guides/using-ana-learn.mdx"
+    action: modify
+  - path: "website/content/docs/guides/reading-a-proof.mdx"
+    action: modify
