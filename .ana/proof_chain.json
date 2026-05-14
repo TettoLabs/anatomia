@@ -17129,7 +17129,10 @@
             "A008"
           ],
           "id": "ship-log-polish-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed in 79580933 — added if (kind === 'chore') return 'chore' to kindLabel at ProofFeed.tsx:30. 5 proof entries (website-direct-polish, ship-log-polish, test-suite-hygiene, ci-artifact-path-ignore, hygiene-debt-cleanup) now display 'chore' instead of 'improve' on the ship log.",
+          "closed_at": "2026-05-14T22:30:08.340Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
