@@ -3,6 +3,7 @@ import { getBuildMeta } from "@/lib/docs-data/meta";
 import { ThemeToggle } from "@/components/nav/ThemeToggle";
 import { PlatformSwitcher } from "./PlatformSwitcher";
 import { MobileSidebarToggle } from "./MobileSidebarToggle";
+import { SearchTrigger } from "./SearchTrigger";
 
 /**
  * DocsNav — docs-specific navbar.
@@ -85,46 +86,7 @@ export function DocsNav() {
 
       {/* Column 3: Search bar (centered in 1fr column) */}
       <div style={{ justifySelf: "center", gridColumn: 3 }}>
-        <button
-          className="docs-nav-search"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "9px",
-            padding: "6px 11px",
-            background: "var(--bg-card)",
-            border: "1px solid var(--border)",
-            borderRadius: "var(--radius-sm)",
-            width: "420px",
-            maxWidth: "50vw",
-            fontSize: "13px",
-            color: "var(--ink-45)",
-            cursor: "pointer",
-            fontFamily: "inherit",
-          }}
-          aria-label="Search docs"
-          disabled
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.35-4.35" />
-          </svg>
-          <span className="docs-nav-search-text">Search docs, commands, proofs...</span>
-          <span
-            className="docs-nav-search-kbd"
-            style={{
-              marginLeft: "auto",
-              fontFamily: "var(--font-mono)",
-              fontSize: "10px",
-              border: "1px solid var(--border)",
-              padding: "1px 5px",
-              borderRadius: "3px",
-              color: "var(--ink-60)",
-            }}
-          >
-            ⌘K
-          </span>
-        </button>
+        <SearchTrigger />
       </div>
 
       {/* Column 4: Theme toggle + GitHub + anatomia */}

@@ -7,6 +7,7 @@ import { PipelineGantt } from "@/components/docs/proof/PipelineGantt";
 import { AssertionLedger } from "@/components/docs/proof/AssertionLedger";
 import { FindingsList } from "@/components/docs/proof/FindingsList";
 import { IntegritySeal } from "@/components/docs/proof/IntegritySeal";
+import type { ProofEntry } from "@/lib/docs-data/types";
 import { getProofEntries, getProofBySlug } from "@/lib/docs-data";
 import { getBuildMeta } from "@/lib/docs-data/meta";
 import { HeadingWithAnchor } from "@/components/docs/content/HeadingWithAnchor";
@@ -18,6 +19,27 @@ function formatDuration(minutes: number): string {
     return `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
   }
   return `${minutes}m`;
+}
+
+function buildProofMarkdown(entry: ProofEntry): string {
+  const verdict = entry.result === "PASS" ? "PASS" : "FAIL";
+  const date = entry.completedAt ? new Date(entry.completedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "";
+  const lines = [
+    `# ${entry.feature} — ${verdict}`,
+    `${entry.assertionCount}/${entry.contract.total} assertions · ${entry.findingCount} findings · ${formatDuration(entry.duration)}`,
+    date ? `Shipped ${date}` : "",
+    `→ https://anatomia.dev/docs/proof/${entry.slug}`,
+    "",
+    "## Assertions",
+    ...entry.assertions.map(a => `- ${a.status === "SATISFIED" ? "✓" : "✗"} ${a.id}: ${a.says}`),
+    "",
+    "## Findings",
+    ...entry.findings.map(f => `- [${f.severity}] ${f.summary}`),
+    "",
+    "## Integrity",
+    ...Object.entries(entry.hashes).map(([key, hash]) => `${key}: ${hash}`),
+  ];
+  return lines.filter(l => l !== undefined).join("\n");
 }
 
 interface ProofDetailProps {
@@ -117,8 +139,11 @@ export default async function ProofDetailPage({ params }: ProofDetailProps) {
         toc={tocItems}
         commitSha={meta.commitSha}
         buildTimestamp={meta.buildTimestamp}
+        editUrl={`${GITHUB_BASE}${entry.slug}`}
         variant="proof"
         proofLinks={{ githubUrl }}
+        pageUrl={`https://anatomia.dev/docs/proof/${entry.slug}`}
+        pageContent={buildProofMarkdown(entry)}
       />
     </div>
   );

@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { source } from "@/lib/source";
@@ -12,6 +14,7 @@ import { StatsStrip } from "@/components/docs/content/StatsStrip";
 import { ForPlatform } from "@/components/docs/content/ForPlatform";
 import { PipelineDiagram } from "@/components/docs/content/PipelineDiagram";
 import { TroubleCard } from "@/components/docs/content/TroubleCard";
+import { stripJsx } from "@/lib/docs-data/stripJsx";
 
 import { HeadingWithAnchor } from "@/components/docs/content/HeadingWithAnchor";
 
@@ -41,6 +44,21 @@ export default async function DocsPage({ params }: DocsPageProps) {
   const MDXContent = page.data.body;
   const toc = page.data.toc ?? [];
   const meta = getBuildMeta();
+
+  // Read raw MDX source for Copy as Markdown
+  const mdxPath = join(process.cwd(), "content", "docs", ...slug) + ".mdx";
+  let pageContent = "";
+  try {
+    const rawMdx = readFileSync(mdxPath, "utf-8");
+    const bodyStart = rawMdx.indexOf("---", rawMdx.indexOf("---") + 3);
+    const body = bodyStart !== -1 ? rawMdx.slice(bodyStart + 3).trim() : rawMdx;
+    pageContent = `# ${page.data.title}\n\n${page.data.description ? `> ${page.data.description}\n\nSource: https://anatomia.dev/docs/${slug.join("/")}\n\n---\n\n` : ""}${stripJsx(body)}`;
+  } catch {
+    // File may not exist for some routes; graceful fallback
+    pageContent = "";
+  }
+
+  const pageUrl = `https://anatomia.dev/docs/${slug.join("/")}`;
 
   // Build breadcrumb segments from the page tree path
   const segments = buildBreadcrumb(slug);
@@ -97,6 +115,8 @@ export default async function DocsPage({ params }: DocsPageProps) {
         commitSha={meta.commitSha}
         buildTimestamp={meta.buildTimestamp}
         editUrl={`https://github.com/TettoLabs/anatomia/edit/main/website/content/docs/${slug.join("/")}.mdx`}
+        pageUrl={pageUrl}
+        pageContent={pageContent}
       />
     </div>
   );

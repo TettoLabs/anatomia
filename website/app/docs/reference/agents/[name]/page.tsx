@@ -145,6 +145,9 @@ export default async function AgentDetailPage({ params }: AgentDetailProps) {
         toc={tocItems}
         commitSha={meta.commitSha}
         buildTimestamp={meta.buildTimestamp}
+        editUrl={`${GITHUB_BASE}${agent.name}.md`}
+        pageUrl={`https://anatomia.dev/docs/reference/agents/${agent.name}`}
+        pageContent={agent.bodyMarkdown}
       />
     </div>
   );

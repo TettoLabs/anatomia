@@ -17,7 +17,7 @@ export type {
   BuildMeta,
 } from './types';
 
-export { getProofEntries, getProofBySlug, getProofStats } from './proofs';
+export { getProofEntries, getProofBySlug, getProofStats, getMedianTimings } from './proofs';
 export { getAgentTemplates, getAgentByName, getAgentCount } from './agents';
 export { getSkillTemplates, getSkillByName, getSkillCount } from './skills';
 export { getCommands, getCommandCount, getCommandGroups } from './commands';

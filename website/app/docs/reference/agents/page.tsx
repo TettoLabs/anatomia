@@ -119,6 +119,9 @@ export default function AgentIndexPage() {
         toc={tocItems}
         commitSha={meta.commitSha}
         buildTimestamp={meta.buildTimestamp}
+        editUrl="https://github.com/TettoLabs/anatomia/tree/main/packages/cli/templates/.claude/agents"
+        pageUrl="https://anatomia.dev/docs/reference/agents"
+        pageContent={`# Agent Templates\n\n${agents.map(a => `## ${a.name}\n**${a.role}** · ${a.model}\n${a.displayDescription}`).join("\n\n")}`}
       />
     </div>
   );

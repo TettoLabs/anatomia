@@ -1,0 +1,1116 @@
+# Anatomia — Full Documentation
+
+> Anatomia is an open-source methodology and CLI tool for verified AI development. It exports a framework — think, plan, build, verify — that turns AI coding tools from fast-but-unreliable into structured-and-proven. The CLI (`ana`) is the delivery mechanism: it scans a project, generates validated context, and runs every change through a four-agent pipeline (Think, Plan, Build, Verify) with a fifth agent (Learn) that tends the proof chain between cycles
+
+---
+
+## Artifacts
+
+> Eight artifact types define a pipeline run. Each is written by one agent, read by specific others, and sealed with a SHA-256 hash at save time. Together they form a complete, auditable record of intent to implementation.
+
+## Where artifacts live
+
+All artifacts for a work item live in a single directory. During work: `.ana/plans/active/{slug}/`. After `ana work complete`: archived to `.ana/plans/completed/{slug}/`. Artifacts are committed to the artifact branch configured in `ana.json`. Everything is plain text — markdown and YAML, human-readable, version-controlled.
+
+Build and Verify each produce a pair: a markdown report for the developer and a YAML companion for the CLI. Think and Plan produce markdown and YAML separately.
+
+## scope.md
+
+**Written by:** ana (Think). **Read by:** ana-plan.
+
+Bounds the change. Contains the intent, the acceptance criteria, rejected approaches, and edge cases. A good scope is an agreement between the developer and the pipeline — it says what "done" means in human terms before the machines translate it into assertions.
+
+## plan.md
+
+**Written by:** ana-plan. **Read by:** developer, ana-build, ana-verify (checkbox updates in multi-phase).
+
+Sequencing, phasing decisions, and the rationale behind the spec. For multi-phase work, plan.md explains why the work was split and what order the specs should be built in. For single-phase work, it's a brief summary of the approach.
+
+## spec.md
+
+**Written by:** ana-plan. **Read by:** ana-build, ana-verify.
+
+The implementation specification. File changes, testing strategy, pattern references, gotchas, and a Build Brief with curated skill rules. The spec is guidance — it tells Build *how* to implement. The contract tells Build *what done means*. In multi-phase work, specs are numbered: `spec-1.md`, `spec-2.md`.
+
+## contract.yaml
+
+**Written by:** ana-plan. **Read by:** ana-build, ana-verify. **Sealed after Plan signs off.**
+
+The mechanical definition of "done." Contains assertions with IDs, human-readable descriptions, and matchers. Once sealed, neither Build nor Verify can modify it. This is how you get independent verification — both agents work against the same frozen contract.
+
+## build_report.md
+
+**Written by:** ana-build. **Read by:** developer, ana-build (on rejection). **Forbidden from:** ana-verify.
+
+What Build claims to have done. Test results, acceptance criteria coverage, deviations from the contract, implementation decisions, open issues. The developer reads this alongside Verify's report — discrepancies are the signal.
+
+## build_data.yaml
+
+**Written by:** ana-build. **Read by:** CLI (for proof chain entry).
+
+Structured companion to the build report. Machine-readable: acceptance criteria status, test counts, timing, concerns. The CLI reads this to populate the proof chain entry.
+
+## verify_report.md
+
+**Written by:** ana-verify. **Read by:** developer, ana-build (on rejection).
+
+What Verify found independently. Contract assertion evaluation, code findings with severity and location, concerns. This is the second opinion — written without reading Build's claims.
+
+## verify_data.yaml
+
+**Written by:** ana-verify. **Read by:** CLI (for proof chain entry).
+
+Structured companion to the verify report. Machine-readable assertion results, findings with severity and lifecycle, timing. The CLI reads this alongside build_data.yaml to compose the proof chain entry.
+
+---
+
+## Context
+
+> Context files are how agents know your project. Not chat memory — file-based knowledge that persists across sessions, enriched by setup, and kept honest by the proof chain.
+
+## What context files are
+
+Two curated files in `.ana/context/` give Think, Plan, and Learn project-specific knowledge:
+
+- `project-context.md` — product purpose, architecture, domain vocabulary, where to make changes, what looks wrong but is intentional. The file that transforms a generic agent into THIS project's engineer.
+- `design-principles.md` — how your team defines "good." Each principle shapes scoping and design decisions. If a principle wouldn't change a decision, it doesn't belong here.
+
+Two more files in `.ana/` complete the picture:
+
+- `scan.json` — machine-detected project data. Stack, file counts, patterns, conventions. Regenerated on every `ana scan`. Don't edit manually.
+- `ana.json` — CLI configuration. Build, test, and lint commands, co-author trailer, artifact branch. Some fields are yours to edit (`commands`, `coAuthor`, `artifactBranch`); others are managed by the CLI (`anaVersion`, `lastScanAt`).
+
+## Context vs skills
+
+Context describes the project — what it does, who it serves, how it's organized. Skills describe how to work in it — coding patterns, testing conventions, deployment rules. Context is read on startup by Think, Plan, and Learn to inform decisions. Skills are loaded by specific agents and curated into the Build Brief. The test: if it would change *what* you build, it's context. If it would change *how* you build it, it's a skill.
+
+## How context is created
+
+1. **Scan** — `ana init` scans your project and writes `scan.json`. Machine-detected: language, framework, testing tools, patterns, file counts.
+2. **Init** — scaffolds `project-context.md` and `design-principles.md` with thin, accurate starting content seeded from the scan.
+3. **Setup** — `claude --agent ana-setup` investigates the codebase, asks 2–3 questions, and writes rich context. Guess-and-confirm: the agent presents its understanding, you correct, the correction becomes content.
+4. **Manual editing** — edit the files directly at any time. Setup is a starting point, not a lock. Your edits are always preserved.
+
+**Thin is better than wrong.** Init scaffolds are intentionally sparse. Two accurate sentences beat ten with three fabrications. Setup enriches when you're ready.
+
+## What each file does
+
+### [project-context.md](/docs/reference/context)
+
+Read by: `ana` (Think), `ana-plan`, `ana-learn`. The most important context file — it tells agents why the product exists, who it serves, what decisions the team has made and why, and what looks wrong but is intentional. Without this, agents understand your stack but not your product.
+
+### [design-principles.md](/docs/reference/context)
+
+Read by: `ana` (Think), `ana-plan`, `ana-learn`. When building costs zero, knowing *what* to build is the only differentiation. Design principles are how Ana evaluates tradeoffs, how Plan makes design decisions, and how Learn judges whether a finding is worth promoting. They encode your team's taste — the thing that makes your product yours and not a generic implementation.
+
+The gatekeeping rule: if a principle wouldn't change how you scope or design, it doesn't belong here. Principles that don't change decisions are decoration.
+
+### [scan.json](/docs/reference/context)
+
+Read by: all agents. The machine-detected truth about your project. Stack, file counts, patterns, conventions, dependencies. Regenerated from scratch on each `ana scan`. Don't edit this file — run `ana scan` to refresh it.
+
+### [ana.json](/docs/reference/context)
+
+Read by: all agents, the CLI. The configuration file for the [toolbelt](/docs/concepts/toolbelt) — build, test, and lint commands that agents run mechanically, co-author trailer for commits, artifact branch. On re-init, user fields (`commands`, `coAuthor`, `artifactBranch`) are preserved; machine fields (`anaVersion`, `lastScanAt`) are refreshed.
+
+## Who reads context — and who doesn't
+
+Think, Plan, and Learn read context files on every startup. Build and Verify do not — they're explicitly forbidden. This is intentional: Build and Verify get project knowledge through the spec that Plan wrote, not directly from context. Plan distills what's relevant for the current task. This prevents agents from being influenced by context that Plan didn't consider relevant.
+
+## How context stays fresh
+
+Re-running `ana init` preserves context files completely — the entire `context/` directory is copied wholesale. Your edits are never overwritten. `scan.json` is regenerated from scratch. `ana.json` is merged: your configuration survives, version and timestamps refresh.
+
+The proof chain provides a second freshness signal: when Learn surfaces a finding that suggests context may be outdated — a shifted architecture, a changed test pattern — it flags the observation for you to update. Context evolves through your judgment, not through automation.
+
+---
+
+## The contract
+
+> A contract is the seal between Plan and Build. It defines \u201Cdone\u201D as a list of assertions with matchers \u2014 mechanical, testable, unambiguous. Once sealed, it can\u2019t be changed. Both Build and Verify work against the frozen version.
+
+## What a contract is
+
+A YAML file with three parts: header fields (`version`, `sealed_by`, `feature`), an `assertions` array, and a `file_changes` list declaring which files will be created, modified, or deleted. Plan writes it. The CLI validates the structure and seals it with a content hash.
+
+Each assertion has required fields: `id` (A001, A002...), `says` (human-readable description), `block` (test block name), `target` (what's checked), and `matcher` (how it's checked). `value` is required for most matchers.
+
+```yaml
+# contract.yaml (from security-hardening — real data)
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Security Hardening — Command Injection Elimination"
+
+assertions:
+  - id: A001
+    says: "Slugs with shell injection characters are rejected before any operation"
+    block: "rejects slug with shell metacharacters"
+    target: "error.message"
+    matcher: "contains"
+    value: "Invalid slug"
+
+  - id: A003
+    says: "Valid kebab-case slugs pass validation"
+    block: "accepts valid kebab-case slugs"
+    target: "result"
+    matcher: "truthy"
+
+  - id: A005
+    says: "Branch names with shell injection characters are rejected"
+    block: "rejects branch name with shell metacharacters"
+    target: "error.message"
+    matcher: "contains"
+    value: "invalid"
+
+file_changes:
+  - path: "packages/cli/src/utils/validators.ts"
+    action: modify
+  - path: "packages/cli/tests/utils/validators.test.ts"
+    action: create
+```
+
+## Matcher types
+
+| Matcher | Checks | Example |
+|---------|--------|---------|
+| `equals` | Exact match | Regex pattern is exactly `/^[a-z0-9]...$/` |
+| `contains` | Substring present | Error message contains "Invalid slug" |
+| `not_contains` | Substring absent | Test output does not contain "pwned" |
+| `not_equals` | Not equal | Exit code is not 0 |
+| `exists` | Exists or is present | Test for early-validation exists |
+| `greater` | Numeric comparison | Test count is greater than 10 |
+| `truthy` | Value is truthy | Validation result is truthy |
+
+## The sealing moment
+
+When `ana artifact save contract` runs, the CLI validates the YAML structure, checks that every assertion has the required fields, and computes a SHA-256 hash. This hash is stored in `.saves.json`. From that point forward, any modification is detectable — `ana verify pre-check` compares the current hash against the sealed version before verification begins.
+
+A contract is what makes a verifier possible. Without it, "done" is opinion.
+
+## How assertions become tests
+
+Plan writes assertion A001. Build writes a test tagged `// @ana A001` whose describe/it text matches the assertion's `block` field. Verify checks that each assertion ID has a matching test tag and that the test passes independently. The `block` field is the bridge — it tells Build what the test should be named, and Verify uses it to locate the test.
+
+## Writing good assertions
+
+Good assertions are specific, testable, and mechanical. "The code is well-structured" is not an assertion. "Slugs with shell injection characters are rejected before any operation" is. The `says` field is for humans; the `matcher`, `target`, and `value` are for machines. The `block` names the test.
+
+---
+
+## Findings
+
+> A finding is a specific, located observation from verification — a named file, a concrete issue, and a recommended action. Findings accumulate in the proof chain and are triaged by Learn between pipeline cycles.
+
+## Severity levels
+
+<table>
+<thead><tr><th>Severity</th><th>Meaning</th><th>Typical action</th></tr></thead>
+<tbody>
+<tr><td>risk</td><td>Could hurt you. Security flaw, data loss, silent failure.</td><td>Fix before merging — usually `scope`.</td></tr>
+<tr><td>debt</td><td>Making the codebase worse. Duplication, fragile patterns, missing tests.</td><td>`scope` for follow-up or `promote` to a skill rule.</td></tr>
+<tr><td>obs</td><td>Worth knowing. Not wrong, but useful for the next engineer.</td><td>`accept`, `monitor`, or record as `lesson`.</td></tr>
+</tbody>
+</table>
+
+## Suggested actions
+
+Every finding carries a `suggested_action` — the classifier's recommendation for what to do. This is the second word in the terminal notation `[debt · scope]`.
+
+| Action | Meaning |
+|--------|---------|
+| `promote` | Encode as a permanent rule in a skill file. The pattern should never recur. |
+| `scope` | Needs engineering work. Create a new pipeline scope to address it. |
+| `monitor` | Watch across future cycles. Not urgent, but track for recurrence. |
+| `accept` | Acknowledged. Valid observation, no action needed. Can be closed. |
+
+## Categories
+
+Each finding is categorized: `code` (implementation issue), `test` (test quality or coverage), or `upstream` (spec, scope, or tooling issue). The category tells you what kind of thing is wrong — severity tells you how much it matters.
+
+## Lifecycle
+
+Every finding starts as **active**. From there, three terminal states:
+
+- **closed** — resolved or acknowledged. The `closed_by` field records who: `mechanical` (the referenced file was removed), `human` (developer decision), or `agent` (Learn triage).
+- **promoted** — the finding describes a recurring pattern. It becomes a rule in a skill file via `ana proof promote`. The `promoted_to` field records which skill received the rule.
+- **lesson** — recorded as institutional knowledge without becoming a rule. Worth remembering, not worth encoding.
+
+Between pipeline cycles, run `claude --agent ana-learn` to triage active findings. Learn presents them by severity, recommends actions, and executes closes and promotions with your approval.
+
+A finding without a follow-up is wasted. The lifecycle ensures every finding either informs the next cycle or is explicitly acknowledged.
+
+## A real finding
+
+From the `security-hardening` proof:
+
+```json
+{
+  "id": "security-hardening-C2",
+  "category": "test",
+  "summary": "No dedicated integration tests for command entry point injection rejection",
+  "file": null,
+  "severity": "debt",
+  "suggested_action": "scope",
+  "status": "active"
+}
+```
+
+Active. Categorized as a test gap. Severity: debt — the codebase is getting worse without these tests. Action: scope — needs engineering work as a follow-up. No single file to point at because it's a structural gap, not a line-level bug.
+
+Build also produces **build concerns** — lighter-weight observations that enter the proof chain with severity and action but without lifecycle tracking. Findings are Verify's output; concerns are Build's honest admissions.
+
+---
+
+## The pipeline
+
+> Five stages. Five agents. Each runs in its own session with restricted access — it reads what it needs, produces typed artifacts, and never sees the full picture. No agent grades its own work.
+
+## Five stages
+
+Think understands what should change and why. Plan designs the solution and defines what "done" means. Build implements it. Verify makes sure everyone else did their job. Learn tends the record and makes the next cycle better.
+
+## Why independence matters
+
+If one agent scopes, plans, builds, and verifies, it's grading its own homework. The pipeline splits work across agents that never share a session. The value isn't in the separation — it's in what the separation catches.
+
+Each agent runs in a separate Claude Code session with no shared memory. The contract seal (SHA-256 hash) prevents artifact tampering after Plan signs off.
+
+> Build's report said all 14 assertions satisfied. Verify found independently: A003's test uses `toBeDefined()` — a matcher that passes on both correct and incorrect implementations. The discrepancy is what caught the bug. Independence prevents anchoring to Build's framing.
+
+## When Verify fails
+
+Verify can return FAIL. When it does, the work goes back to Build: fix the issues, re-run Verify. This is normal — 19 of Anatomia's own 90 proofs had rejection cycles.  The pipeline is designed for iteration, not perfection on the first pass.
+
+## What each stage produces
+
+| Stage | Agent | Produces | Consumes |
+|-------|-------|----------|----------|
+| Think | `ana` | `scope.md` | Codebase, context, scan, proof chain |
+| Plan | `ana-plan` | `plan.md`, `spec.md`, `contract.yaml` | `scope.md`, codebase, context |
+| Build | `ana-build` | Code, tests, `build_report.md`, `build_data.yaml` | `spec.md`, `contract.yaml`, `plan.md`, scan |
+| Verify | `ana-verify` | `verify_report.md`, `verify_data.yaml` | `spec.md`, `contract.yaml`, `plan.md`, code |
+| Learn | `ana-learn` | Skill rules, closed findings | `proof_chain.json`, skill files, context |
+
+## The Learn stage
+
+Learn runs between cycles, not during them. It triages the proof chain — closing resolved findings, retiring stale ones, and surfacing what needs attention next. Its most common output is a suggested scope: "these three findings share a root cause, here's a Think prompt to fix it."
+
+Findings are useful immediately. Every pipeline run, Think and Plan query the proof chain mechanically (`ana proof context`) for any modules the current work touches. A finding about a weak test matcher in `auth.ts` reaches the next agent that scopes work on `auth.ts` — automatically, without anyone routing it.
+
+When a pattern recurs across multiple cycles, Learn can promote it to a permanent skill rule — a finding becomes a constraint that shapes every future build.
+
+[Guide: Using ana-learn →](/docs/guides/using-ana-learn)
+
+## The proof chain
+
+Every completed pipeline run produces a proof chain entry: contract assertions with pass/fail, independent findings with severity, timing per stage, and SHA-256 hashes of every artifact. The chain is the mechanical record of what was built, how it was verified, and what was found. [Browse our proofs](/docs/proof).
+
+The chain powers `ana proof health` (quality trajectory), `ana proof audit` (finding clustering), and `ana proof context` (relevant findings for the files you're working on).
+
+---
+
+## Skills
+
+> Skills are project-specific rules that shape what agents build. They start as templates with universal defaults, get enriched with your project's conventions during setup, and grow as you add rules or promote verification findings.
+
+## What Anatomia adds
+
+You've used [Claude Code skills](https://code.claude.com/docs/en/skills). Anatomia generates them from your scan — matched to your stack, pre-populated with rules and gotchas, and structured so agents load them automatically. Five core skills install for every project. Up to three conditional skills install when the scan detects their triggers.
+
+## Four-section structure
+
+Every skill file has the same four sections:
+
+1. **Detected** — machine-populated during `ana init` from scan data. Framework versions, patterns found, config paths.
+2. **Rules** — the actionable constraints. Each rule is a concise directive. Agents follow these during build and verify.
+3. **Gotchas** — stack-specific traps. Populated from the gotcha library when triggers match on fresh init.
+4. **Examples** — short code snippets showing the right way. Added from development and debugging sessions.
+
+## Ownership model
+
+**Detected** is machine-owned — refreshed on every `ana init` with current scan data. **Rules, Gotchas, and Examples** are yours — preserved across re-initialization. Your edits are safe. `ana init` will never overwrite a rule you added or a gotcha you customized.
+
+You can also create entirely new skills. Add a directory to `.claude/skills/` with a `SKILL.md` — any skill without an `ENRICHMENT.md` is treated as user-created. Learn won't auto-enrich it, but agents can load it via frontmatter.
+
+## How skills grow
+
+**Init scaffolding.** Template rules ship on `ana init`. Universal, correct for any project, but not specific to yours. `coding-standards` starts with 7 rules. `testing-standards` starts with 5.
+
+**Setup enrichment.** Running `claude --agent ana-setup` investigates your actual codebase and adds project-specific rules. Each skill ships with an `ENRICHMENT.md` — the setup agent's investigation playbook for that skill. In Anatomia's own repo, setup took `coding-standards` from 7 template rules to 11 enriched rules.
+
+**Manual editing.** Skills are your files. Add rules, add gotchas, add examples. The files are markdown — edit them directly or let an agent help. Custom skills work the same way.
+
+**Finding promotion.** When a verification finding describes a pattern worth encoding permanently, `ana proof promote` turns it into a skill rule. The finding becomes a constraint that shapes every future build.
+
+## How agents use skills
+
+Plan and Verify always load `coding-standards` and `testing-standards`. Build always loads `git-workflow`. Other skills are loaded on demand when the work requires them — Ana loads any skill when the conversation calls for it, and Build can invoke skills manually if the spec doesn't cover a situation.
+
+The key mechanism: Plan curates the relevant rules from your skill files into a **Build Brief** at the end of the spec, filtered to what matters for this specific change. Build reads the Brief first. A rule you add to `coding-standards` reaches the next build automatically — Plan picks it up and passes it through.
+
+## All 8 skills 
+
+| Skill | Description | Template rules | Type |
+|-------|-------------|---------------|------|
+| [`coding-standards`](/docs/reference/skills/coding-standards) | Naming conventions, error handling, type safety, import style. | 7 | Core |
+| [`testing-standards`](/docs/reference/skills/testing-standards) | Behavior over implementation, real over mocks, never weaken tests. | 5 | Core |
+| [`git-workflow`](/docs/reference/skills/git-workflow) | Commit discipline, staging practices, descriptive messages. | 3 | Core |
+| [`api-patterns`](/docs/reference/skills/api-patterns) | Validate at boundary, consistent errors, thin handlers. | 4 | Conditional |
+| [`data-access`](/docs/reference/skills/data-access) | Singleton client, transactions, no N+1, IDOR prevention. | 5 | Conditional |
+| [`ai-patterns`](/docs/reference/skills/ai-patterns) | Centralized client, no prompt injection, structured output, observability. | 7 | Conditional |
+| [`deployment`](/docs/reference/skills/deployment) | Platform-specific. Populated by setup based on detected platform. | 0 | Core |
+| [`troubleshooting`](/docs/reference/skills/troubleshooting) | Grows from real debugging sessions. Empty scaffold at init. | 0 | Core |
+
+## Conditional matching
+
+Core skills install for every project. Conditional skills only install when the scan detects their triggers: `ai-patterns` installs when an AI SDK is detected, `data-access` when a database ORM is found, and `api-patterns` when a web framework (not a CLI framework) is detected.
+
+## The gotcha library
+
+15 pre-curated gotchas ship with Anatomia. Each matches when all trigger conditions are satisfied — compound triggers prevent irrelevant advice. 
+
+```typescript
+{
+  id: 'prisma-serverless-singleton',
+  triggers: { database: 'Prisma', platform: 'Vercel' },
+  skill: 'data-access',
+  text: 'Prisma in serverless (Vercel, Lambda) exhausts connection
+         pools fast. Export a singleton from lib/prisma.ts with
+         global caching: globalThis.prisma ??= new PrismaClient().'
+}
+```
+
+---
+
+## The toolbelt
+
+> Each agent invokes a specific set of ana CLI commands \u2014 the toolbelt. These commands validate artifact structure, compute integrity hashes, and reject malformed output before it enters the pipeline. The CLI is the enforcement layer that makes \u201Cverified over trusted\u201D mechanical.
+
+## What the toolbelt is
+
+Claude Code gives every agent baseline tools — file read, file write, bash, web fetch. The toolbelt is the Anatomia layer on top: the `ana` CLI commands agents invoke to manage work, save artifacts, verify seals, and create PRs. Agents still use git directly for code commits during Build — but pipeline operations go through the CLI, which validates structure and records integrity hashes.
+
+The most common example: every agent runs `ana work status` on startup. One command tells the agent its pipeline stage, which worktree to enter, and what to do next. Without it, the agent would need to list directories, parse filenames, check git timestamps, and handle multi-phase numbering — every session, from scratch.
+
+## What it enforces
+
+Take `ana artifact save scope`. Without the CLI, you'd need a prompt instruction saying: "Before committing scope.md, check that it has at least 3 acceptance criteria, an Intent section, a Complexity Assessment with Kind matching feature/fix/chore/milestone..." — and then trust the agent to follow it every time. With the CLI command, it validates mechanically and exits non-zero if anything's wrong. The agent can't skip a check. The agent can't miscount.
+
+What `ana artifact save scope` does:
+
+1. Validates the scope has at least 3 acceptance criteria
+2. Validates an Intent section exists with content
+3. Validates Complexity Assessment fields (Kind, Size, Multi-phase)
+4. Validates Approach and Edge Cases sections exist
+5. Computes SHA-256 hash of the content
+6. Records the hash in `.saves.json`
+7. Commits with a standardized message format
+8. Pushes to the artifact branch
+
+One command. Eight checks. Correct every time. Similar validation exists for every artifact type — contracts validate YAML schema and assertion format, verify reports require a PASS/FAIL verdict, plans require phase checklists with spec references.
+
+## What each agent runs
+
+Every agent runs `ana work status` on startup to discover pipeline state. Beyond that:
+
+| Agent | Toolbelt commands |
+|-------|-------------------|
+| `ana` | [`ana work start`](/docs/reference/cli), [`ana artifact save scope`](/docs/reference/cli), [`ana proof context`](/docs/reference/cli) |
+| `ana-plan` | [`ana work start`](/docs/reference/cli), [`ana artifact save-all`](/docs/reference/cli), [`ana proof context`](/docs/reference/cli) |
+| `ana-build` | [`ana work start`](/docs/reference/cli), [`ana artifact save build-report`](/docs/reference/cli), build/test/lint from `ana.json` |
+| `ana-verify` | [`ana verify pre-check`](/docs/reference/cli), [`ana artifact save verify-report`](/docs/reference/cli), [`ana pr create`](/docs/reference/cli) |
+| `ana-learn` | [`ana proof audit`](/docs/reference/cli), [`ana proof promote`](/docs/reference/cli), [`ana proof close`](/docs/reference/cli), [`ana proof stale`](/docs/reference/cli) |
+
+## Why this matters
+
+**Mechanical enforcement.** The CLI rejects malformed artifacts before they enter the pipeline. An agent can't ship a scope without acceptance criteria or a verify report without a verdict.
+
+**Less context needed.** `ana work status` tells the agent its pipeline stage, worktree path, and what to do next — in one command. Without it, the agent would need to parse git branches, check directory contents, and reason about state.
+
+**Deterministic state.** `ana work start` creates the worktree, sets up the branch, and records timestamps. One command instead of five git operations.
+
+**Audit trail.** Every `ana artifact save` computes a SHA-256 hash and records it. The proof chain entry includes these hashes. `ana verify pre-check` compares the current contract hash against the sealed version — tamper-evident by design.
+
+## How access is enforced
+
+Two layers. **File access** — which artifacts each agent can read and write — is enforced by template instructions and session isolation. File access is enforced by session isolation — each agent starts fresh with no inherited context. **Artifact integrity** — format validation, hash computation, contract sealing — is enforced mechanically by the CLI. The CLI will reject a malformed save regardless of what the template says.
+
+---
+
+## Configurability
+
+> Everything ships as files in your repo \u2014 markdown agents, markdown skills, JSON config. Change what you need, from CLI commands to source-level edits. The parts that make verification work are fixed by design.
+
+## CLI-supported settings
+
+Settings the CLI manages for you. Change them with commands or `ana.json` edits — both survive `ana init`.
+
+Agent models
+Each agent can run a different model.
+ana agents model ana-build sonnet
+
+Any ana.json field
+Read or write config values. Validates field types.
+ana config set branchPrefix "ana/"
+
+Build / test / lint commands
+Every agent reads these. Init detects them; you override.
+ana config set commands.test "pnpm vitest run"
+
+Custom data
+The custom namespace stores arbitrary team data. Collision-safe.
+ana config set custom.teamId "anatomia"
+
+### What ana.json looks like
+
+```json
+{
+  "branchPrefix": "feature/",
+  "coAuthor": "Ana <build@anatomia.dev>",
+  "artifactBranch": "main",
+  "commands": {
+    "build": "pnpm run build",
+    "test": "pnpm vitest run",
+    "lint": "pnpm run lint"
+  },
+  "custom": { "teamId": "anatomia" }
+}
+```
+
+User fields (`branchPrefix`, `coAuthor`, `artifactBranch`, `commands`, `custom`) are yours. Machine fields (`anaVersion`, `lastScanAt`, `language`, `framework`) refresh on `ana init`. Unknown top-level keys you add are preserved across re-init.
+
+## Edit the files
+
+The system is markdown in your repo. You own it.
+
+### Skill rules
+
+Every skill has four sections. **Detected** refreshes on init. **Rules, Gotchas, Examples** are yours — preserved across re-init. The next pipeline run picks up changes through Plan's Build Brief.
+
+### Create a custom skill
+
+```bash
+# Create a domain-specific skill
+mkdir -p .claude/skills/billing
+cat > .claude/skills/billing/SKILL.md << 'EOF'
+---
+name: billing
+description: "Stripe integration, subscription lifecycle, webhook handling."
+---
+# Billing
+
+## Rules
+- Always verify webhook signatures before processing
+- Use idempotency keys on all payment mutations
+
+## Gotchas
+## Examples
+EOF
+```
+
+### Wire a skill to an agent
+
+Each agent declares which skills it loads in frontmatter. Plan loads `[coding-standards, testing-standards]`. Build loads `[git-workflow]`. Verify loads `[testing-standards, coding-standards]`. Add your skill to the agent that should know about it:
+
+```yaml
+# .claude/agents/ana-plan.md
+---
+name: ana-plan
+model: opus[1m]
+skills: [coding-standards, testing-standards, billing]
+---
+```
+
+Plan curates relevant skill rules into the Build Brief. A rule in a skill that Plan doesn't load won't appear in the Brief — Build can invoke skills manually, but won't see rules by default. If you add a custom skill, add it to Plan's frontmatter.
+
+### Context files
+
+`project-context.md` (architecture, domain vocabulary) and `design-principles.md` (how your team defines "good") in `.ana/context/`. Edit freely. Think, Plan, and Learn read them on every startup. Copied wholesale on re-init — your edits are always safe.
+
+### Agent templates
+
+The six agent files in `.claude/agents/` are yours to edit. Adjust Verify's disposition, add constraints to Build, modify Think's scoping process. Copied on `ana init`, not symlinked — edits persist across re-init.
+
+The pipeline assumes certain agent behaviors: Verify writes a report with a PASS/FAIL verdict, Build tags tests with `@ana`, Plan seals a contract. Removing these expectations breaks mechanical verification. Add behavior; be careful removing it.
+
+## Going further
+
+It's open source. Everything below works but isn't governed by the CLI — no validation, no re-init behavior. You're editing the engine directly.
+
+### Add a custom agent
+
+Drop a markdown file in `.claude/agents/`. Claude Code picks it up. A security reviewer, a migration planner, a domain expert — any role that doesn't need pipeline integration.
+
+```bash
+# A reviewer that focuses on your API surface
+$ claude --agent api-reviewer
+
+# A migration helper for your specific ORM
+$ claude --agent drizzle-migrator
+```
+
+Custom agents run outside the pipeline. They can read `ana.json`, load skills via frontmatter, and use any Claude Code tool — but they don't produce pipeline artifacts or proof chain entries. To gate work between stages, invoke your custom agent manually between Plan and Build (or any two stages). It can read `.ana/plans/active/{slug}/` to inspect the spec and contract.
+
+### Store team config in ana.json
+
+The `custom` namespace accepts arbitrary data and survives re-init. Nothing reads it automatically — the namespace is a convention for your own integrations. A custom agent that reads `custom.slackChannel` to post notifications, or `custom.reviewers` to tag PR reviewers — the config is there, the integration is yours to build.
+
+```json
+{
+  "custom": {
+    "teamId": "anatomia",
+    "slackChannel": "#eng-proofs",
+    "reviewers": ["@rsmith"],
+    "maxBuildMinutes": 120
+  }
+}
+```
+
+### CI/CD scripting
+
+`ana config` is scriptable. Set up a repo without interactive prompts:
+
+```bash
+# CI setup script
+ana init --yes
+ana config set branchPrefix "ci/"
+ana config set coAuthor "Ana <build@anatomia.dev>"
+ana config set custom.environment "staging"
+ana agents model --all sonnet
+```
+
+### Fork the CLI
+
+The nuclear option. Anatomia is MIT-licensed. Fork to change artifact formats, contract schemas, the proof chain entry structure, or the agent independence rules. If you're doing this, you're building your own verification system on top of the engine.
+
+## What survives re-init
+
+Updating the CLI (`npm update anatomia-cli`) changes the binary only. Your installed agents, skills, and config don't change until you choose to run `ana init` again. When you do:
+
+Preserved
+<ul style={{fontSize:"12.5px",color:"var(--ink-75)",lineHeight:1.6,margin:0,paddingLeft:"16px"}}>
+<li>context/ directory (copied wholesale)</li>
+<li>ana.json user fields + unknown keys</li>
+<li>Skill Rules, Gotchas, Examples</li>
+<li>proof_chain.json + PROOF_CHAIN.md</li>
+<li>plans/completed/ (all archives)</li>
+<li>Agent files in .claude/agents/</li>
+<li>CLAUDE.md + AGENTS.md</li>
+</ul>
+
+Refreshed
+<ul style={{fontSize:"12.5px",color:"var(--ink-75)",lineHeight:1.6,margin:0,paddingLeft:"16px"}}>
+<li>ana.json anaVersion + lastScanAt</li>
+<li>scan.json (full regeneration)</li>
+<li>Skill Detected sections</li>
+</ul>
+
+## What's fixed
+
+Load-bearing opinions. Fixed because changing them breaks the verification guarantee.
+
+- **Five pipeline stages** — Think, Plan, Build, Verify, Learn.
+- **Agent independence** — session isolation. Verify can't read the build report.
+- **Contract format** — YAML with typed assertions and matchers.
+- **Proof seal** — SHA-256 hashes of every artifact.
+- **Artifact structure** — the save commands validate format.
+
+These constraints are what make the proof chain trustworthy. Every customization above works because these five things don't change.
+
+---
+
+## Reading a proof
+
+> Every pipeline run produces a proof \u2014 a JSON record committed to your repo that captures what was built, how it was verified, and whether it can be trusted. This guide walks through security-hardening so you know what each part means.
+
+## What you see in the terminal
+
+After `ana work complete`, run `ana proof <slug>` to see the summary:
+
+bash
+
+{"$ "}ana proof{" security-hardening\n\n  Result: PASS\n  27/27 satisfied · 0 unsatisfied · 0 deviated\n\n  "}✓{" Slugs with shell injection characters are rejected before any operation\n  "}✓{" Valid kebab-case slugs pass validation\n  "}✓{" No direct shell execution calls remain in command or utility files\n"}{"    ...24 more"}{"\n\n  Timing: 74m (Think 2m · Plan 15m · Build 53m · Verify 5m)\n\n  [debt · scope] No dedicated integration tests for...\n  [obs · monitor] getCurrentBranch still uses execSync\n"}{"    ...and 8 more findings"}
+
+The proof page on the docs site shows the same data with more detail. Each section below maps to a part of that page.
+
+## The hero
+
+Six numbers at the top of every proof page:
+
+Verdict
+PASS
+
+Score
+27 / 27
+
+Findings
+10 3 debt · 7 obs
+
+Duration
+74m
+
+Rejections
+0
+
+Shipped
+may 4
+
+Score is contract assertions satisfied. Findings are independent observations from Verify — they don't block shipping. Rejections count how many times Build had to fix and re-verify. A proof with rejection cycles shows a longer build and a **Previous Findings Resolution** section — see [proof-promote](/docs/proof/proof-promote) for that story.
+
+## The timeline
+
+Four bars showing Think, Plan, Build, and Verify. The shape tells you what kind of work this was. Security-hardening: Think 2m, Plan 15m, Build 53m, Verify 5m — a heavy build, light verification. Compare with [worktree-isolation](/docs/proof/worktree-isolation): Think 3m, Plan 22m, Build 63m, Verify 11m — similar build but double the verification time because the contract had 45 assertions.
+
+The median across all 90 proofs: 7m think, 10m plan, 31m build, 8m verify.
+
+## The assertion ledger
+
+Every contract assertion, independently evaluated. The `says` field is human-readable; the status is mechanical.
+
+✓{" A001  Slugs with shell injection characters are rejected before any operation\n"}✓{" A003  Valid kebab-case slugs pass validation\n"}✓{" A023  No direct shell execution calls remain in command or utility files\n"}{"  ...24 more, all satisfied"}
+
+The ledger shows 27/27 SATISFIED. If any assertion were UNSATISFIED, the verdict would be FAIL and the work would go back to Build. The assertions are the mechanical definition of "done" — what the contract said, what Verify found.
+
+## The findings
+
+Each finding has a severity and a suggested action, rendered as a two-part tag:
+
+debt · scope
+No dedicated integration tests for command entry point injection rejection
+
+obs · monitor
+getCurrentBranch still uses execSync — not hardened by this phase
+
+debt · scope means: the codebase is getting worse (debt) and this needs engineering work (scope). obs · monitor means: worth knowing (observation) but watch it, don't act now (monitor). Findings enter the proof chain and are triaged by [Learn](/docs/guides/using-ana-learn) between cycles.
+
+Security-hardening's findings focus on test coverage gaps. Other proofs surface different catches: `process.exit(1)` on a rebase conflict without running `git rebase --abort`, leaving dirty state. `JSON.parse` on CLI stdout with no try/catch — malformed response crashes. Path normalization that breaks on Windows backslashes. A race condition where a file deleted between filter and `readFileSync` crashes `completeWork`.
+
+To triage findings after shipping, run `claude --agent ana-learn`. See [Using ana-learn](/docs/guides/using-ana-learn).
+
+## The integrity seal
+
+SHA-256 hashes of every artifact — scope, spec, contract, both reports, both data files. If any artifact changes after shipping, the hashes won't match.
+
+{"scope      sha256:13f7bad7930a...\ncontract   sha256:b9e52761c704...\nbuild-report  sha256:67bc172dade8...\nverify-report sha256:9f0dd78e9f3a...\n"}{"...4 more artifacts"}
+
+These are the real hashes from the security-hardening proof.
+
+---
+
+## Troubleshooting
+
+> Common problems grouped by when you hit them. If none of these match, email help@anatomia.dev with your CLI version (ana --version) and the proof slug if applicable.
+
+## Getting through the gate
+
+Scan → init → setup → first pipeline run. Once you complete one end-to-end cycle, most of these go away.
+
+1. Run from your project root, not a subdirectory or a worktree
+2. Git must be configured: `git status` must succeed, `git config user.name` and `user.email` must be set
+3. Node 20+ required (`node --version`) — declared in `package.json` but not checked at runtime, so older versions produce cryptic errors
+4. If a prior init was interrupted, you'll see "Found incomplete init from a previous run" — follow the recovery steps it prints
+5. If re-initializing: `ana init --force` skips confirmation prompts but still preserves your data
+
+Install dependencies first (`npm install` / `pnpm install`). Without `node_modules/`, convention detection (formatting, import patterns) is limited — init warns you. Framework and database detection reads `package.json` dependencies directly. An empty repo with no commits limits detection — commit at least once. If tree-sitter analysis failed, init shows a warning with what was missed.
+
+Setup's quality depends on your answers. Don't describe your stack — describe your product, your users, the problem you solve. Take your time on design principles. You can always re-run: delete `setupPhase` from `ana.json` and run `claude --agent ana-setup` again. See [Using ana-setup](/docs/guides/using-ana-setup) for how to give great answers.
+
+Anatomia scans the full repository, not individual packages. Init detects your primary package (largest `apps/` package with framework hints) and focuses convention detection there. Per-package scanning is planned. To scope pipeline work to a specific package, set `commands.test` and `commands.build` in `ana.json` to target it (e.g., `pnpm --filter web test`).
+
+## Pipeline problems
+
+FAIL means Verify found issues — this is the pipeline working as designed. 19 of our 90 proofs had rejection cycles. 
+
+1. Read `verify_report.md`. It lists every UNSATISFIED assertion with evidence.
+2. Common causes: test tagged `@ana A003` but doesn't actually test what the contract says, missing test tags, tests that pass on both correct and incorrect implementations.
+3. Run `claude --agent ana-build` to fix. Build reads the verify report and addresses each failure.
+4. Re-run `claude --agent ana-verify`.
+
+1. Large specs can exceed the model's context window. Try multi-phase specs for big changes.
+2. `ana work status` shows pipeline state. If build is "in-progress," the previous session may have crashed — re-open `claude --agent ana-build` and it resumes.
+3. Check if tests are hanging. Vitest defaults to watch mode — the test command must include `--run`.
+4. If Claude Code itself stops responding, check your subscription status and API rate limits — these aren't Anatomia failures but they surface during pipeline runs.
+
+Usually means the spec was too vague. Vague specs produce vague implementations, and Verify finds more to fault. Tighten the scope, write more specific acceptance criteria, and re-plan. A good contract has 15–30 assertions. Over 40 suggests the scope should be split.
+
+Must run from the main project directory on the artifact branch (usually `main`), not from inside a worktree. If using `--merge`: requires `gh` CLI, requires a PR to exist, and branch protection rules on GitHub can block the merge. Without `--merge`: merge the PR on GitHub first, then run `ana work complete <slug>`.
+
+The contract was satisfied but the behavior is wrong — the contract didn't cover what matters. An assertion that checks `toBeDefined()` passes on garbage output. This isn't a system failure — the verification proved the contract was met. The contract was underspecified. Next cycle: write assertions with specific values and matchers. Check: does every assertion test the behavior users would notice if broken?
+
+## Configuration and state
+
+Commands that modify the proof chain (`close`, `lesson`, `promote`, `strengthen`) require the artifact branch (usually `main`). Read-only commands (`proof`, `audit`, `health`, `stale`, `context`) work from any branch. If you see "Wrong branch," check: are you in a worktree? Run proof-modifying commands from the main project directory.
+
+**Deleted `.ana/`?** Proof chain history and archived artifacts are gone permanently. `ana init` regenerates scan data and scaffolds but cannot recover proofs, context, or design principles. **Deleted `.claude/`?** Enriched skill rules are gone. `ana init` regenerates templates but enrichments need re-running setup. **Prevention:** run `ana init` instead of deleting — it refreshes everything and preserves your data.
+
+Active work: `.ana/plans/active/`. Completed: `.ana/plans/completed/` and `proof_chain.json`. Run `ana proof` to see all entries. Run `ana proof <slug>` for details on a specific one.
+
+The pipeline creates PRs via `ana pr create`, which uses `gh` under the hood. If `gh` isn't installed or authenticated, PR creation fails but everything else works — Build, Verify, and the proof chain are independent of GitHub. Install from [cli.github.com](https://cli.github.com/), then `gh auth login`.
+
+If `ana work status` shows a version mismatch between your CLI and the project's `anaVersion`, run `ana init` to update the project to your CLI version. This refreshes scan data and templates while preserving your context and proof chain.
+
+## Best practices
+
+- **Start every agent with "hey" or "hi ana."** Claude Code agents may not fully load context files before acting on a complex first message. A simple greeting ensures the agent reads `project-context.md`, `design-principles.md`, and `scan.json` before doing anything. This applies to all pipeline agents (`ana-setup` starts automatically via its `initialPrompt`).
+- **One agent per terminal.** Each pipeline stage runs in its own Claude Code session. Running a second agent in the same session may inherit state from the previous run, breaking the independence guarantee. Open a new terminal for each stage.
+- **Let `ana work status` be the first check.** Before scoping, building, or verifying — run `ana work status`. It tells you what's in progress, what stage it's at, and what to do next. Every agent does this on startup; you should too.
+- **Don't edit `proof_chain.json` by hand.** Use `ana proof close`, `ana proof promote`, `ana proof lesson`. Manual edits can corrupt the chain — `ana proof health` reports incorrect trajectories, `ana proof audit` may skip entries. If the chain is corrupted, restore from git: `git checkout -- .ana/proof_chain.json`
+- **Re-init instead of deleting.** `ana init` refreshes scan data and templates while preserving your context, skills, proof chain, and config. Deleting `.ana/` loses proof history permanently.
+- **Pipeline runs can't break your code.** Build works in a git worktree — the main branch is untouched until you merge a PR. The worst a bad pipeline run produces is a PR you reject.
+
+Still stuck? [help@anatomia.dev](mailto:help@anatomia.dev) — include your CLI version (`ana --version`) and the proof slug if applicable.
+
+---
+
+## Using ana-learn
+
+> Findings accumulate. Learn tends them \u2014 closing what\u2019s resolved, promoting recurring patterns into skill rules, and routing what needs engineering work back to Think. Run it between pipeline cycles.
+
+## Starting a session
+
+bash
+
+{"$ "}claude --agent ana-learn{"\n\nProof chain: 78 runs, 188 active findings\n  9 risk · 63 debt · 116 observation\n  45 scope · 73 monitor · 70 accept (closeable)\n\nBefore we start \u2014 anything you've noticed since the last session?"}
+
+Learn reads the proof chain, checks health, detects staleness, and presents the shape. Then it offers options:
+
+- Review risks (9 risk findings)
+- Review debt (63 debt findings)
+- Focus on a hot module (work.ts: 15 findings across 8 runs)
+- Promote patterns
+
+You pick the focus. Learn does the homework — reads the code, checks git history, verifies each finding's claim against the current state. Nothing executes without your sign-off.
+
+The "anything you've noticed?" prompt isn't rhetorical. If you say "auth calls are slow" or "why does this pattern keep appearing," Learn traces it: missing skill rule? Curation gap where Plan doesn't load the skill? A bug that needs its own scope? Observations can surface at any point, not just at session start.
+
+## Triage: close and keep
+
+For each finding, Learn extracts the claim, verifies it against current code, and recommends an action. A real example from the chain:
+
+risk · scope
+find-project-root-C1
+
+findProjectRoot checks for .ana/ directory existence, not .ana/ana.json. A stale directory causes false root detection.
+Closed — Stale: code at validators.ts:105 now checks .ana/ana.json not .ana/ directory
+
+Learn verified the code changed, confirmed the finding no longer applies, and recommended closure with a specific reason. Every close reason describes what was checked — not "resolved" but exactly what changed and where.
+
+Findings that are still real get a **keep** with an exit condition: "Keep until test coverage for `work.ts` exceeds threshold" or "Keep for 3 more pipeline runs, then re-evaluate." When Learn can't determine resolution — code changed but the effect is ambiguous — it says so and asks you to verify manually.
+
+## Staleness detection
+
+The fastest part of triage. `ana proof stale` pre-identifies findings whose referenced files were modified by later pipeline runs — likely resolved without anyone explicitly closing them.
+
+bash
+
+{"$ "}ana proof stale{"\n\nStale Findings: 79 findings with staleness signals\n\nHigh confidence (3+ subsequent entries modified the file):\n  security-hardening-C1 [debt] A016-A019 @ana tags point to\n    pre-existing tests, not command entry point validation\n    Modified by: worktree-isolation, phase-timing-fix, ... (10 entries)\n    Created in: security-hardening (2026-05-04)"}
+
+Staleness is a signal, not proof. Learn reads the code before recommending closure — a file being modified doesn't mean the specific issue was fixed.
+
+## Promote and strengthen
+
+When a pattern recurs across multiple proofs, it belongs in a skill rule. Three conditions:
+
+1. The finding describes a **pattern**, not a one-off bug
+2. The pattern would have been caught earlier if the skill had the right rule
+3. The rule can be stated in one sentence
+
+Two operations:
+
+Promote
+No rule exists. Create a new one from the finding's pattern.
+ana proof promote C1 --skill coding-standards --text "..."
+
+Strengthen
+Rule exists but lacks specificity. Edit the skill file, then commit atomically.
+ana proof strengthen C1 --skill testing-standards --reason "..."
+
+Both commands handle the full workflow: stage the skill file and proof chain, commit, push. The finding transitions from `active` to `promoted`. The rule reaches Build through Plan's Build Brief on the next pipeline run.
+
+On the next pipeline run touching the same code, Plan includes the promoted rule in the Build Brief. Build follows it. Verify doesn't re-find the same issue. That's the loop.
+
+Two other terminal states: `ana proof close` for resolved findings, and `ana proof lesson` for observations worth remembering but not worth encoding as rules.
+
+## The session delta
+
+After executing approved actions, Learn re-reads the chain and reports the impact:
+
+```text
+Session complete.
+  Active findings: 188 → 171 (14 closed, 3 promoted)
+  Risk: 9 → 7
+  Promoted this session: testing-standards, coding-standards
+```
+
+If actionable work remains — scope-action findings, real debt, recurring patterns that need code fixes before they can become rules — Learn drafts a prompt for Think that synthesizes the remaining work.
+
+---
+
+## Using ana-setup
+
+> Setup reads your codebase, forms an opinion about your project, and asks you to correct it. Your corrections become the context every agent reads \u2014 what separates generic AI that happens to know your stack from an engineer who\u2019s been on your team for six months.
+
+## How it works
+
+Setup uses a **guess-and-confirm** pattern. It reads your scan data, README, documentation, landing pages, and source code — then presents what it thinks it knows and asks you to correct it. The correction is the content.
+
+bash
+
+{"$ "}claude --agent ana-setup{"\n\nHere's my understanding of your project:\n\n  Anatomia is an open-source pipeline that turns AI-generated code\n  into verified code. It runs locally, installs as sealed agents,\n  and produces a proof chain you can audit.\n\nIs this accurate? Anything you'd change or add?"}
+
+This is the moment that matters. If setup says "a CLI tool that scans codebases" and you say "yes" — your agents think in technology terms. If you correct it to "a verification system for teams that need quality guarantees from AI coding tools" — your agents think in product terms. **The correction is the content.**
+
+## What setup writes
+
+Three artifacts. Each one changes how agents work on your project:
+
+project-context.md
+What your product does, who it serves, how the code is organized, what decisions were made and why. Think and Plan read this on every startup.
+
+design-principles.md
+How your team defines "good." Each principle changes how Think evaluates tradeoffs and how Plan makes design decisions.
+
+Enriched skill files
+Template rules refined with your project's actual patterns. Anatomia's own coding-standards went from 7 template rules to 11 enriched rules.
+
+## The session
+
+Setup runs through five phases. The first is a config check, then two rounds of questions, then a draft review, then skill enrichment.
+
+### 1. Config confirmation
+
+Setup presents your detected configuration — application shape, stack, test and build commands, artifact branch — and asks "does this look right?" Correct anything that's wrong. These settings control how agents compile, test, and commit your code.
+
+### 2. Product identity
+
+"Who is your target user, and what's the gap this fills for them — what couldn't they do before, or what were they stuck with?"
+
+Don't describe your stack. Describe your user's problem. Compare:
+
+Weak
+"We use Next.js with Prisma and deploy to Vercel. We have about 50 API routes."
+
+Strong
+"Document sharing for investors. A founder uploads a pitch deck, sets access controls, gets analytics on who viewed which page and for how long. Competing with DocSend."
+
+Setup already knows your stack from the scan. It doesn't know why your product exists, who it hurts when it's down, or what your team chose to build and what they chose not to. AI reads code fluently. It doesn't experience the problem your users have. That context comes from you.
+
+### 3. Draft review
+
+Setup investigates your codebase silently — directory structure, entry points, import patterns, high-churn files, domain types — then presents a full draft of project-context.md. Seven sections, each with a confidence level. Sections marked ⚠ are thin and benefit from your input: key decisions the code doesn't explain, active constraints only you know, architectural choices that look wrong but are intentional.
+
+### 4. Design principles
+
+The highest-leverage part of setup. Three principles ship by default — we find them useful for most teams. You can reject any of them, but most people keep all three and add more:
+
+- **Name the disease, not the symptom** — state the root cause before fixing
+- **Surface tradeoffs explicitly** — show the paths, not just the fastest one
+- **Every change should be foundation** — would a senior approve this for craft, not just correctness?
+
+Setup then suggests 1–2 more based on patterns in your codebase. But the best principles come from you — from three places:
+
+- **AI behavior you keep correcting.** "Stop suggesting ORMs, we use raw SQL." That's a principle.
+- **Things that are non-negotiable when you design something new.** "Tests prove behavior, not implementation." That's a principle.
+- **What you'd tell a strong engineer before they open your codebase.** "Prefer explicit over clever." That's a principle.
+
+The test: if a principle wouldn't change how Think scopes or Plan designs, it doesn't belong here. Anatomia's own repo has 13 principles. Three of them:
+
+```markdown
+## Name the disease, not the symptom
+Before fixing something, state the root cause in one sentence.
+"This field is missing" leads to adding the field. "This field
+is missing because the same concept lives in three places with
+manual mapping" leads to deleting two of the three.
+
+## Every character earns its place
+No slop. Not in code, not in context files, not in prompts.
+If three words do what five did, use three.
+
+## Think more, build less
+The cost of building is near zero — the cost of building the
+WRONG thing is enormous. Spend time on diagnosis and design.
+```
+
+"Name the disease" means Think pushes back on symptom-level requests. "Every character earns its place" means Plan writes tighter specs. "Think more, build less" means Think spends longer on tradeoff analysis before recommending an approach. Each one shapes agent behavior on every pipeline run.
+
+### 5. Skill enrichment
+
+Setup asks two more questions: how code reaches production (writes your deployment skill) and what regularly trips people up (writes troubleshooting entries). Be specific — "push to main goes live via Vercel, cold starts on serverless functions" is better than "we deploy to Vercel."
+
+Then it reads your error handling, import patterns, test structure, and CI configuration, and drafts enrichments for every remaining skill. You can review each file individually (`"show me coding-standards"`) or accept all at once. Every enrichment includes rationale — what setup found in your code and why Build would write different code with the rule.
+
+If a template rule contradicts your codebase (e.g., "prefer named exports" but you use default exports), setup adjusts the rule and flags it with ⚠ for review.
+
+## Re-running setup
+
+Setup preserves what you wrote — sections with content aren't overwritten. To re-run after a previous setup, delete the `setupPhase` field from `.ana/ana.json` (or set it to `"not-started"`), then run `claude --agent ana-setup` again. Re-run when:
+
+- Your project has grown and the architecture section is stale
+- You want to add design principles after using the pipeline
+- New skill files were added (e.g., `ai-patterns` after integrating an AI SDK)
+
+bash
+
+{"# Check current setup state"}{"\n$ "}ana setup check{"\n\nSetup Status\n────────────\n  "}✓{" Setup complete\n\nFile Health\n───────────\nContext:\n  "}✓{" design-principles     populated\n  "}✗{" project-context       missing sections: Key Files, Active Constraints\nSkills:\n  "}✓{" coding-standards      Detected: 9 facts, Rules: 11 entries\n  "}✓{" testing-standards     Detected: 5 facts, Rules: 10 entries"}
+
+The ✗ marks are opportunities, not failures. Thin sections can be filled by re-running setup or editing the files directly.
+
+---
+
+## Verifying changes
+
+> Build finished. You're about to run claude --agent ana-verify. This guide covers what Verify does, what the report means, and what to do when it comes back FAIL.
+
+## What Verify does
+
+Verify reads the spec and the code — never the build report. Eight steps:
+
+1. **Seal check** — confirms the contract wasn't modified after sealing
+2. **Run tests, build, lint** — establishes the baseline
+3. **Predict** — writes predictions before reading code, to resist confirmation bias
+4. **Read code and evaluate assertions** — finds each `@ana` tag, verifies the test actually satisfies the contract
+5. **Check for over-building** — flags code not in the spec
+6. **Resolve predictions** — confirmed, not found, or surprised
+7. **Walk acceptance criteria** — each one gets PASS, FAIL, PARTIAL, or UNVERIFIABLE
+8. **Write findings and verdict** — PASS or FAIL, one word
+
+## The asymmetry
+
+Both agents read the same planning artifacts and project config. The difference is one file: `build_report.md`. Only the developer sees both reports.
+
+yaml
+
+{"# ana-build reads:"}{"\n"}-{" "}spec.md{"           "}{"# how to build it"}{"\n"}-{" "}contract.yaml{"     "}{"# what done means (sealed)"}{"\n"}-{" "}plan.md{"           "}{"# sequencing and phasing"}{"\n"}-{" "}ana.json{"          "}{"# build/test/lint commands"}{"\n"}-{" "}scan.json{"         "}{"# stack awareness"}{"\n"}-{" "}the codebase{"      "}{"# current state"}{"\n\n"}{"# ana-verify reads:"}{"\n"}-{" "}spec.md{"           "}{"# same"}{"\n"}-{" "}contract.yaml{"     "}{"# same"}{"\n"}-{" "}plan.md{"           "}{"# same"}{"\n"}-{" "}ana.json{"          "}{"# same"}{"\n"}-{" "}scan.json{"         "}{"# same"}{"\n"}-{" "}the codebase{"      "}{"# the diff at HEAD"}{"\n"}-{" "}{"❌ build_report.md  # forbidden"}
+
+## The verify report
+
+Verify produces two files: a markdown report for the developer and a YAML companion (`verify_data.yaml`) for the proof chain. The report's key section is **Contract Compliance** — a per-assertion ledger:
+
+```markdown
+## Contract Compliance
+
+| ID   | Says                                        | Status        | Evidence                          |
+|------|---------------------------------------------|---------------|-----------------------------------|
+| A001 | Slugs with shell injection are rejected     | ✅ SATISFIED | test line 42, rejects "; rm -rf"  |
+| A003 | Valid kebab-case slugs pass validation      | ✅ SATISFIED | test line 58, passes "my-feature" |
+| A023 | No direct execSync calls remain in commands | ✅ SATISFIED | grep confirms zero matches        |
+```
+
+After the ledger: **Findings** (categorized observations with severity and suggested actions — these enter the proof chain), **AC Walkthrough** (each acceptance criterion: PASS, FAIL, PARTIAL, or UNVERIFIABLE), **Blockers**, **Deployer Handoff**, and the **Verdict**. On re-verification, a **Previous Findings Resolution** section shows how each prior issue was addressed.
+
+## PASS and FAIL
+
+PASS
+Every assertion SATISFIED. Every AC passing. Tests green. Findings are informational — a PASS with 10 findings is normal.
+
+FAIL
+Any assertion UNSATISFIED. Any AC failed. Test failures or regressions. One unsatisfied assertion is enough.
+
+Findings measure depth of review. The verdict measures contract compliance. They're independent.
+
+## When Verify fails
+
+FAIL sends the work back to Build. 19 of Anatomia's own 90 proofs had rejection cycles. 
+
+1. Read the verify report. It lists every UNSATISFIED assertion and every finding.
+2. Run `claude --agent ana-build`. Build reads the verify report and fixes exactly what failed.
+3. Run `claude --agent ana-verify` again. On re-verification, Verify reads its own previous report and addresses each prior issue explicitly in a **Previous Findings Resolution** section.
+
+Re-verification is a full pass. Every assertion is re-evaluated. The previous report provides a checklist, not a shortcut.
+
+If the failure isn't obvious from the report, see [Troubleshooting](/docs/guides/troubleshooting).
+
+## Running verify
+
+Verify runs in the worktree Build created — no branch switching or setup needed.
+
+bash
+
+{"# After Build finishes, open a new session:"}{"\n$ "}claude --agent ana-verify{"\n\n"}{"# Verify finds the work item, enters the worktree,"}{"\n"}{"# runs the 8-step process, writes the report."}{"\n"}{"# On PASS, it creates a PR for review."}
+
+Under the hood: `ana work status` → `ana work start` → `ana verify pre-check` → verification → `ana artifact save verify-report` → `ana pr create`. The save runs the seal check again — tampered contracts are blocked.
+
+After the PR is created: read both reports, merge, then `ana work complete` to archive and record the proof chain entry.
+
+## Comparing the two reports
+
+After PASS, you have `build_report.md` and `verify_report.md`. Read both before merging. Where to look:
+
+- **Assertion status.** Build claims 27/27 SATISFIED. Verify also says 27/27. If they disagree — Build says SATISFIED but Verify says UNSATISFIED — that's the highest-value signal. Read both evidence columns.
+- **Test quality.** Build reports test counts. Verify reports whether those tests actually prove anything. A test tagged `@ana A003` that uses `toBeDefined()` passes on both correct and incorrect implementations — Verify catches that.
+- **Open issues vs findings.** Build's "Open Issues" are honest admissions. Verify's "Findings" are independent observations. Overlap means the issue is real. A finding that Build didn't mention means Build missed something.
+- **Over-building.** Verify flags code that exists but wasn't in the spec. Build's report won't mention it because Build wrote it intentionally. The gap itself is the signal.
+
+---
+
+## Quickstart
+
+> Install Anatomia, run init in your repo, and ship a verified change. Two minutes to scaffold. Twenty minutes to your first proof.
+
+## Prerequisites
+
+- Node.js 20 or later
+- Git with `user.name` and `user.email` configured
+- A Git repository with at least one commit
+- [Claude Code](https://claude.ai/code) with an active subscription — needed for pipeline agents (Steps 3–4)
+- [GitHub CLI](https://cli.github.com/) (`gh`) — used by Verify to create PRs after a passing run
+
+## Step 1: Install
+
+```bash
+npm i -g anatomia-cli
+```
+
+Also available via `pnpm add -g anatomia-cli` or `bun add -g anatomia-cli`. This installs the `ana` command.
+
+## Step 2: Initialize
+
+From inside your cloned repo:
+
+```bash
+ana init
+```
+
+Init scans your project, detects your stack, and scaffolds the pipeline into your repo — agents, skills matched to your stack, and project context. Runs entirely on your machine. Your output will reflect your project:
+
+terminal
+
+✓{" Scanned my-saas-app "}{"(3.2s)"}{"\n\n"}{"  "}Stack:{"    TypeScript · Next.js · Prisma → PostgreSQL · Vitest\n"}{"  "}Deploy:{"   Vercel\n\n"}✓{" Context → .ana/context/ (2 files)\n"}✓{" Skills → .claude/skills/ (7 skills)\n"}{"    "}Core:{"      coding-standards, testing-standards, git-workflow,\n"}{"               deployment, troubleshooting\n"}{"    "}Detected:{"  api-patterns, data-access\n"}{"  "}✓{" 4 gotchas pre-populated\n"}{"  "}✓{" Cross-tool: CLAUDE.md + AGENTS.md\n\n"}{"  "}Branch:{"   main\n"}{"  "}Test:{"     pnpm run test -- --run\n"}{"  "}Build:{"    pnpm run build\n\n"}{"  "}Next:{"\n"}{"    "}claude --agent ana{"          Start working\n"}{"    "}claude --agent ana-setup{"    Enrich with team knowledge (optional, ~10 min)"}
+
+**Optional but recommended:** Run `claude --agent ana-setup` to calibrate project knowledge (~10 min). Setup investigates your codebase, asks 2–3 questions, and writes rich context.
+
+## Step 3: First pipeline run
+
+Describe a small change — a single-file fix or a feature you'd normally spend 30 minutes on.
+
+```bash
+claude --agent ana
+```
+
+Ana investigates the codebase, surfaces tradeoffs, and writes a scope. You can scope several work items before building any of them — each runs through the pipeline independently. When you're ready to build, run each pipeline agent in a separate Claude Code session:
+
+1. **Plan:** `claude --agent ana-plan` — reads the scope, writes `spec.md`, and seals `contract.yaml`
+2. **Build:** `claude --agent ana-build` — implements the spec, writes tests tagged to contract assertions
+3. **Verify:** `claude --agent ana-verify` — independently verifies against the contract, writes findings, creates PR on pass
+
+Each agent runs CLI commands like `ana work start` and `ana artifact save` under the hood — managing worktrees, validating artifact structure, and computing integrity hashes. You don't run these manually.
+
+If Verify finds issues, it produces a FAIL report. Run `claude --agent ana-build` to fix, then `claude --agent ana-verify` again. This is normal — 19 of Anatomia's own 90 proofs had rejection cycles. 
+
+## Step 4: Review, merge, and complete
+
+After Verify passes, it creates a PR. Review the PR — compare Build's report with Verify's findings. This is the moment the two independent accounts meet. When you're satisfied, merge the PR, then complete the work item:
+
+```bash
+ana work complete <slug>
+```
+
+This archives the plan and writes a proof chain entry — assertions, findings, timing, and SHA-256 hashes of every artifact. The proof is a JSON record committed to your repo. It travels with the code.
+
+View it:
+
+```bash
+ana proof <slug>
+```
+
+You'll see the contract score, findings by severity, and timing per stage. Every assertion the contract defined, independently verified. The proof chain grows with every pipeline run — a permanent record of what was built, how it was verified, and what was found.

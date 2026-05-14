@@ -250,6 +250,8 @@ export default function DocsOverview() {
         toc={overviewToc}
         commitSha={buildMeta.commitSha}
         buildTimestamp={buildMeta.buildTimestamp}
+        pageUrl="https://anatomia.dev/docs"
+        pageContent={`# Documentation\n\n> Anatomia is an open-source pipeline that turns AI-generated code into verified code.\n\nSource: https://anatomia.dev/docs\n\n---\n\n${proofStats.entries} verified proofs · ${agentCount} agents · ${commandCount} CLI commands · ${skillCount} skills`}
       />
     </div>
   );

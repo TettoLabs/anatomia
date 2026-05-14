@@ -99,6 +99,9 @@ export default function ContextReferencePage() {
         toc={tocItems}
         commitSha={meta.commitSha}
         buildTimestamp={meta.buildTimestamp}
+        editUrl="https://github.com/TettoLabs/anatomia/tree/main/.ana/context"
+        pageUrl="https://anatomia.dev/docs/reference/context"
+        pageContent={`# Context Files\n\n${files.map(f => `## ${f.filename}\n**Path:** ${f.path}\n${f.description}`).join("\n\n")}`}
       />
     </div>
   );
