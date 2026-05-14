@@ -17559,7 +17559,10 @@
           "severity": "debt",
           "suggested_action": "accept",
           "id": "website-nav-copy-polish-C4",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Dead code: brandIconNames at icons.tsx:74 is exported but never imported — zero consumers across the entire website codebase. One-line dead export. Not worth tracking; trivially reconstructable (Object.keys(brandPaths)) if ever needed.",
+          "closed_at": "2026-05-14T16:40:31.676Z",
+          "closed_by": "human"
         },
         {
           "category": "upstream",
