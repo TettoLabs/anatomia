@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-94 runs · 297 active · 115 lessons · 0 promoted · 162 closed
+95 runs · 304 active · 116 lessons · 0 promoted · 162 closed
 
 ## Hot Modules
 
@@ -8,20 +8,21 @@
 |------|--------|--------|
 | packages/cli/src/commands/work.ts | 24 | 13 |
 | packages/cli/tests/commands/work.test.ts | 23 | 16 |
+| packages/cli/src/commands/artifact.ts | 12 | 7 |
 | packages/cli/tests/commands/proof.test.ts | 11 | 5 |
-| packages/cli/src/commands/artifact.ts | 10 | 6 |
 | packages/cli/src/utils/proofSummary.ts | 10 | 8 |
 
 ## Promoted Rules
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 297 total)
+## Active Findings (30 shown of 304 total)
 
 ### packages/cli/src/commands/artifact.ts
 
+- **code:** CommitHygieneFinding and runCommitHygieneChecks exported for test access — widens module public API — *Commit hygiene checks at build-report save*
+- **code:** Secret scan reads full file content for every non-test file in modules_touched — large binary files or generated bundles would be read entirely into memory — *Commit hygiene checks at build-report save*
 - **code:** writeSaveMetadata export scope widened for tests — only consumed by test files, widens module public API — *Fix pipeline timing accuracy for multi-phase and rejection cycles*
-- **code:** Unbounded history array growth — each rejection cycle appends with no cap — *Fix pipeline timing accuracy for multi-phase and rejection cycles*
 
 ### packages/cli/src/commands/proof.ts
 
@@ -32,9 +33,20 @@
 - **code:** Async/sync IO inconsistency — session file written with fsPromises.writeFile but read with fs.readFileSync — *Capture actual think time from Ana session start*
 - **code:** spawnSync used instead of spec-recommended execSync — better choice, structured exit code handling — *Capture actual think time from Ana session start*
 
+### packages/cli/src/types/proof.ts
+
+- **code:** commit_hygiene type duplicated in three locations (proof.ts, proofSummary.ts, work.ts inline) rather than imported from a shared definition — *Commit hygiene checks at build-report save*
+
 ### packages/cli/src/utils/proofSummary.ts
 
 - **code:** Non-null assertion on missing verify phase — verifyPhases[i-1]! crashes if verify-report-(N-1) missing when build-report-N exists — *Fix pipeline timing accuracy for multi-phase and rejection cycles*
+
+### packages/cli/tests/commands/commit-hygiene.test.ts
+
+- **test:** A002 test is tautological — verifies key absence without calling the function, not the gating conditional — *Commit hygiene checks at build-report save*
+- **test:** A017 uses toHaveProperty (existence) instead of asserting specific values — passes on any object shape — *Commit hygiene checks at build-report save*
+- **test:** A019 is type-level only — verifies ProofChainEntry accepts commit_hygiene, not that writeProofChain actually reads and writes it — *Commit hygiene checks at build-report save*
+- **test:** A024 tests the same function call as A001 — doesn't exercise saveAllArtifacts code path, just calls runCommitHygieneChecks directly — *Commit hygiene checks at build-report save*
 
 ### packages/cli/tests/commands/work.test.ts
 
@@ -45,24 +57,14 @@
 ### packages/cli/tests/utils/proofSummary.test.ts
 
 - **test:** Gantt bar assertions (A014-A018, A022) test a re-implemented copy of buildGanttBars, not the production function in PipelineGantt.tsx — *Multi-phase Gantt visualization for proof timeline*
-- **test:** A019 asserts on source code content — reads proofSummary.ts and checks string patterns instead of behavioral assertion — *Fix pipeline timing accuracy for multi-phase and rejection cycles*
 
 ### website/app/docs/[...slug]/page.tsx
 
 - **code:** Dynamic components not registered in catch-all mdxComponents map — contract specifies registration but builder used build-time regex approach instead — *Docs Search + Polish*
 
-### website/app/docs/docs.css
-
-- **code:** docs-content-full CSS class added in Phase 1 but only used by Phase 2 explorer — harmless dead code until Phase 2 ships — *Dynamic Pages — Reference & Proof Chain*
-- **code:** Reference grid responsive collapse only at 660px — no intermediate 2-col→1-col at 880px. Supermock shows collapse at 660px so this matches, but the spec text mentions 1180px and 880px rules — *Dynamic Pages — Reference & Proof Chain*
-
 ### website/app/docs/proof/[slug]/page.tsx
 
 - **code:** Multi-phase timeline text derives phase count via Math.max on filtered segments — works correctly but couples rendering to segment internals when entry.phases field exists for this purpose — *Multi-phase Gantt visualization for proof timeline*
-
-### website/app/docs/reference/cli/page.tsx
-
-- **code:** Hardcoded 'Last reviewed · 2026-05-11' in CLI reference page will become stale — *Dynamic Pages — Reference & Proof Chain*
 
 ### website/components/docs/layout/RightRail.tsx
 
@@ -78,7 +80,6 @@
 - **code:** buildGanttBars and GanttBar exported from PipelineGantt.tsx but never imported — YAGNI exports for potential cross-package testing that doesn't happen — *Multi-phase Gantt visualization for proof timeline*
 - **code:** OPACITY_MAP duplicates opacity values already in STAGES array — two sources of truth for the same constants — *Multi-phase Gantt visualization for proof timeline*
 - **code:** 60px label column may be tight for 'VERIFY 3' at 10.5px mono with 0.06em letter-spacing — fits now but fragile for higher phase counts — *Multi-phase Gantt visualization for proof timeline*
-- **code:** formatDuration defined but unused in PipelineGantt — duration column uses raw `{value}m` instead — *Dynamic Pages — Reference & Proof Chain*
 
 ### website/content/docs/concepts/pipeline.mdx
 
@@ -89,7 +90,6 @@
 - **code:** LLMS_SECTIONS constant declared but never used in extract-docs-data.ts — *Docs Search + Polish*
 - **code:** Unused variable 'other' in generateLlmsTxt — pages filtered but remainder never referenced — *Docs Search + Polish*
 - **code:** Duplicate stripJsx implementation — one in website/lib/docs-data/stripJsx.ts, another inlined in extract-docs-data.ts — *Docs Search + Polish*
-- **code:** Variable shadowing in extractSkillTemplates — inner 'content' (line 584) shadows outer 'content' (line 566), latent confusion risk — *Dynamic Pages — Reference & Proof Chain*
 
 ### General
 
