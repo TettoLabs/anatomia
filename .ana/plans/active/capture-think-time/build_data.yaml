@@ -1,14 +1,18 @@
 schema: 1
 concerns:
-  - summary: "Spec prescribed execSync but codebase enforcement test prevents it — used spawnSync instead"
+  - summary: "8 tests use conditional PID guard — zero assertions in CI/Docker environments"
+    file: "packages/cli/tests/commands/work.test.ts"
+    severity: debt
+    suggested_action: scope
+  - summary: "A015 tests source code content instead of runtime behavior"
+    file: "packages/cli/tests/commands/work.test.ts"
+    severity: debt
+    suggested_action: accept
+  - summary: "A008 delete-before-use ordering not enforced by test — only verified by source inspection"
+    file: "packages/cli/tests/commands/work.test.ts"
+    severity: observation
+    suggested_action: monitor
+  - summary: "Async writeFile in getWorkStatus vs sync readFileSync in startWork for session files"
     file: "packages/cli/src/commands/work.ts"
     severity: observation
     suggested_action: accept
-  - summary: "7 of 16 session tests skip early if getClaudePid() returns null in CI environments without process tree"
-    file: "packages/cli/tests/commands/work.test.ts"
-    severity: debt
-    suggested_action: monitor
-  - summary: "A014 test relies on try/catch around process.exit — fragile if startWork error path changes"
-    file: "packages/cli/tests/commands/work.test.ts"
-    severity: observation
-    suggested_action: monitor
