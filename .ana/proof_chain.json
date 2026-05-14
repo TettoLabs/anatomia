@@ -21266,7 +21266,10 @@
           "severity": "debt",
           "suggested_action": "monitor",
           "id": "add-milestone-kind-C6",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Local scope mitigates: kindClass and kindLabel at ProofFeed.tsx:19/26 are local functions (defined inside component body), not exported. Called exactly twice (lines 103-104) with e.kind which is typed as ProofKind. TypeScript allows passing ProofKind (narrow) to string (wide) — the string parameter is cosmetic. If these were extracted to a shared module, the type would matter. The LOGIC concern (chore → 'improve' default) is tracked separately.",
+          "closed_at": "2026-05-14T22:06:14.469Z",
+          "closed_by": "human"
         }
       ],
       "rejection_cycles": 0,
