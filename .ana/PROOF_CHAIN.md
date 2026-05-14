@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-90 runs · 272 active · 111 lessons · 0 promoted · 161 closed
+91 runs · 276 active · 112 lessons · 0 promoted · 161 closed
 
 ## Hot Modules
 
@@ -9,14 +9,27 @@
 | packages/cli/src/commands/work.ts | 22 | 12 |
 | packages/cli/tests/commands/work.test.ts | 20 | 15 |
 | packages/cli/tests/commands/proof.test.ts | 11 | 5 |
-| website/lib/proof-feed.ts | 10 | 3 |
-| packages/cli/tests/commands/artifact.test.ts | 9 | 5 |
+| packages/cli/src/commands/artifact.ts | 10 | 6 |
+| packages/cli/src/utils/proofSummary.ts | 10 | 8 |
 
 ## Promoted Rules
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 272 total)
+## Active Findings (30 shown of 276 total)
+
+### packages/cli/src/commands/artifact.ts
+
+- **code:** writeSaveMetadata export scope widened for tests — only consumed by test files, widens module public API — *Fix pipeline timing accuracy for multi-phase and rejection cycles*
+- **code:** Unbounded history array growth — each rejection cycle appends with no cap — *Fix pipeline timing accuracy for multi-phase and rejection cycles*
+
+### packages/cli/src/utils/proofSummary.ts
+
+- **code:** Non-null assertion on missing verify phase — verifyPhases[i-1]! crashes if verify-report-(N-1) missing when build-report-N exists — *Fix pipeline timing accuracy for multi-phase and rejection cycles*
+
+### packages/cli/tests/utils/proofSummary.test.ts
+
+- **test:** A019 asserts on source code content — reads proofSummary.ts and checks string patterns instead of behavioral assertion — *Fix pipeline timing accuracy for multi-phase and rejection cycles*
 
 ### website/app/docs/[...slug]/page.tsx
 
@@ -55,16 +68,10 @@
 ### website/components/docs/content/TroubleCard.tsx
 
 - **code:** TroubleCard has no aria/role attribute for accessibility — Callout uses role=note — *Content Pages — 16 editorial docs pages with bug fixes and sidebar ordering*
-- **test:** No unit tests for TroubleCard component — only verified via build compilation — *Content Pages — 16 editorial docs pages with bug fixes and sidebar ordering*
-
-### website/components/docs/layout/DocsErrorBoundary.tsx
-
-- **code:** Lint error: DocsErrorBoundary uses <a> tag instead of Next.js <Link> for /docs/ navigation — *Docs Shell (Layout + Shared Components)*
 
 ### website/components/docs/layout/RightRail.tsx
 
 - **code:** RightRail 'Download artifacts' and 'Open in Claude' links point to '#' — placeholder hrefs with no target — *Dynamic Pages — Reference & Proof Chain*
-- **code:** Right rail responsive breakpoint mismatch — hidden from 1181-1279px where spec says visible above 1180px — *Docs Shell (Layout + Shared Components)*
 
 ### website/components/docs/proof/FindingsList.tsx
 
@@ -83,10 +90,6 @@
 
 - **code:** formatDuration duplicated in 4 files (ProofExplorer, ProofHero, PipelineGantt, detail page) — extract to shared utility — *Dynamic Pages — Reference & Proof Chain*
 - **code:** ProofExplorer inline styles heavily duplicated across 7 column headers — same 9-property object repeated per th element — *Dynamic Pages — Reference & Proof Chain*
-
-### website/components/docs/providers/PlatformProvider.tsx
-
-- **code:** Lint error: PlatformProvider calls setState synchronously inside useEffect — violates react-hooks/set-state-in-effect rule — *Docs Shell (Layout + Shared Components)*
 
 ### website/content/docs/concepts/context.mdx
 

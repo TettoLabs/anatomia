@@ -23965,6 +23965,254 @@
         "commit_count": 0,
         "base_commit": "40516692073f4c3aadd6db2b6b3c0a6c69299a0f"
       }
+    },
+    {
+      "slug": "fix-timing-accuracy",
+      "feature": "Fix pipeline timing accuracy for multi-phase and rejection cycles",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 19,
+        "satisfied": 19,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Overwriting an artifact with new content preserves the previous timestamp and hash",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "History entries include both the timestamp and the content hash",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Multiple overwrites accumulate history in chronological order",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "Re-saving identical content does not create a history entry",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "SaveMetadata type in artifact.ts accepts a history array",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "SaveEntry type in proofSummary.ts accepts a history array",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "Two-phase builds report accurate build time by summing per-phase segments",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "Two-phase builds report accurate verify time by summing per-phase segments",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "Three-phase builds sum all phase segments correctly",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "Three-phase verify time sums all phase segments correctly",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "Multi-phase total time still spans the full pipeline duration",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "Rejection cycles produce accurate build time when history is available",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "Rejection cycles produce accurate verify time when history is available",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "Old proofs without history or numbered keys compute identical timing",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "Old proofs verify time unchanged by new computation path",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "Timing output shape has exactly the same fields as before",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A017",
+          "says": "Companion data keys are not included in timing computation",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A018",
+          "says": "A stale segment exceeding 24 hours is excluded from the phase total",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A019",
+          "says": "MAX_PHASE_MS is declared once at the top of computeTiming",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 9,
+        "met": 9
+      },
+      "timing": {
+        "total_minutes": 143,
+        "think": 2,
+        "plan": 9,
+        "build": 22,
+        "verify": 52
+      },
+      "hashes": {
+        "scope": "sha256:f401c2da924311fe18d4c2cd29ada18d8f4312130f5e867886e8dee145a63301",
+        "contract": "sha256:8b3ed93f870eae7bb17c7f5f4a9f55a10fe42076044c2687ddee9004057ab115",
+        "plan": "sha256:147eb386dd128d49f2118f4b4f351dd1c0963fbedf6fbabfa1bbb01f3bf0842b",
+        "spec": "sha256:1850ca241594a63dfd8be593944619386efe832bf2c23051147be754fd4c2bba",
+        "build-report": "sha256:f1261733255eed7745450209df87294c22f083de89d73ab75e65e07a85e8b365",
+        "build-data": "sha256:733ac084cc87888d687ccb7b5102cf0fffb14fa4c3d3a45be8dbef69669c3eac",
+        "verify-report": "sha256:a3bcc0f54004d6ac74817910bed634ce39dfdd78af61ee805ad92e988388cc40",
+        "verify-data": "sha256:8b375c04fc163238319c0ce3047f2bbaa7cc85643d6914ce5bf98f3e3c4c81d8"
+      },
+      "completed_at": "2026-05-14T03:31:59.296Z",
+      "modules_touched": [
+        "packages/cli/src/commands/artifact.ts",
+        "packages/cli/src/utils/proofSummary.ts",
+        "packages/cli/tests/utils/proofSummary.test.ts",
+        "pnpm-lock.yaml"
+      ],
+      "scope_summary": "Pipeline timing records inaccurate build/verify splits for any proof with multi-phase builds or rejection cycles. A 3-phase, 108-minute pipeline run (content-pages) initially recorded 0 minutes due to a key-lookup bug. The hotfix (`getLatestTime`) fixed the lookup but still produces wrong splits: for dynamic-pages (2 phases), it records build=56m/verify=41m when the accurate values are build=46m/verify=22m. The same conflation affects all 19 rejected proofs (21% of the chain). The total is always correct — it's the build/verify attribution that's wrong, with verify time counted as build time.",
+      "kind": "fix",
+      "findings": [
+        {
+          "category": "code",
+          "summary": "Non-null assertion on missing verify phase — verifyPhases[i-1]! crashes if verify-report-(N-1) missing when build-report-N exists",
+          "file": "packages/cli/src/utils/proofSummary.ts",
+          "anchor": null,
+          "line": 1627,
+          "severity": "risk",
+          "suggested_action": "monitor",
+          "related_assertions": [
+            "A007",
+            "A008"
+          ],
+          "id": "fix-timing-accuracy-C1",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "writeSaveMetadata export scope widened for tests — only consumed by test files, widens module public API",
+          "file": "packages/cli/src/commands/artifact.ts",
+          "anchor": null,
+          "line": 46,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A001"
+          ],
+          "id": "fix-timing-accuracy-C2",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Unbounded history array growth — each rejection cycle appends with no cap",
+          "file": "packages/cli/src/commands/artifact.ts",
+          "anchor": null,
+          "line": 74,
+          "severity": "debt",
+          "suggested_action": "monitor",
+          "id": "fix-timing-accuracy-C3",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "A019 asserts on source code content — reads proofSummary.ts and checks string patterns instead of behavioral assertion",
+          "file": "packages/cli/tests/utils/proofSummary.test.ts",
+          "anchor": null,
+          "line": 3988,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A019"
+          ],
+          "id": "fix-timing-accuracy-C4",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "proofSummary.ts continuing to grow — now ~1740 lines, past comfort threshold, known from prior cycles",
+          "file": "packages/cli/src/utils/proofSummary.ts",
+          "anchor": null,
+          "severity": "debt",
+          "suggested_action": "scope",
+          "id": "fix-timing-accuracy-C5",
+          "status": "lesson"
+        }
+      ],
+      "rejection_cycles": 1,
+      "previous_failures": [
+        {
+          "id": "A001",
+          "summary": "Test was non-deterministic — two synchronous writes produced identical `saved_at`, failing the inequality assertion at line 3743"
+        }
+      ],
+      "build_concerns": [
+        {
+          "summary": "writeSaveMetadata exported for testing — widens public API surface",
+          "file": "packages/cli/src/commands/artifact.ts",
+          "severity": "debt",
+          "suggested_action": "accept"
+        },
+        {
+          "summary": "Non-null assertion on verifyPhases[i-1]!.key — crashes if verify-report-(N-1) missing",
+          "file": "packages/cli/src/utils/proofSummary.ts",
+          "severity": "debt",
+          "suggested_action": "scope"
+        },
+        {
+          "summary": "History array grows without bound across rejection cycles",
+          "file": "packages/cli/src/commands/artifact.ts",
+          "severity": "observation",
+          "suggested_action": "monitor"
+        },
+        {
+          "summary": "Pre-existing lint warning in git-operations.ts:198 unused eslint-disable",
+          "file": "packages/cli/src/utils/git-operations.ts",
+          "severity": "observation",
+          "suggested_action": "accept"
+        }
+      ],
+      "worktree": {
+        "used": true,
+        "created_at": "2026-05-14T03:24:52.035Z",
+        "completed_at": "2026-05-14T03:31:59.292Z",
+        "commit_count": 0,
+        "base_commit": "1bf2899ea7d60688ffde80cb2692ac3f5c7e4208"
+      }
     }
   ],
   "schema": 1
