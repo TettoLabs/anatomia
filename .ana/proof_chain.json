@@ -16774,7 +16774,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "website-direct-polish-C5",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Intentional: footer element selector at globals.css:233 targets the single footer on this single-page marketing site. Comment at line 232 explains the raw selector is required for the :has() override at line 236 to work. If a future footer is added, margin-top:40px is reasonable default behavior.",
+          "closed_at": "2026-05-14T16:56:19.778Z",
+          "closed_by": "human"
         }
       ],
       "rejection_cycles": 0,
