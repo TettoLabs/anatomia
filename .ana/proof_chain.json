@@ -17320,7 +17320,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "test-suite-hygiene-C4",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Intentional: 'Previous Callouts' at proofSummary.test.ts:908 is a fixture string representing an older verify report format. The parseRejectionCycles function must handle historical report formats. The fixture preserves backward-compat coverage — current system no longer produces 'Callouts' sections but older proof chain entries may contain them.",
+          "closed_at": "2026-05-14T16:48:14.505Z",
+          "closed_by": "human"
         },
         {
           "category": "upstream",
