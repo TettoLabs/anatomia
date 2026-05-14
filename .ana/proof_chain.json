@@ -23461,7 +23461,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "content-pages-C4",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Intentional: catch-all route changed from [[...slug]] (optional) to [...slug] (required) because /docs has a dedicated page.tsx. Optional catch-all would conflict with the explicit page. Finding says 'necessary.' This is Next.js routing infrastructure — the builder made the correct routing decision.",
+          "closed_at": "2026-05-14T17:38:58.655Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
