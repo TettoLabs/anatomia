@@ -23485,7 +23485,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "content-pages-C6",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Stale: finding references globals.css but --brand-light and --info are defined in docs.css (lines 31-32 light mode, 48-49 dark mode), not globals.css. Variables are consumed by Callout.tsx within the docs layout where docs.css is loaded. The finding's file reference is incorrect for the current codebase.",
+          "closed_at": "2026-05-14T17:39:53.042Z",
+          "closed_by": "human"
         },
         {
           "category": "upstream",
