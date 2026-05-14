@@ -16525,7 +16525,10 @@
           "severity": "observation",
           "suggested_action": "monitor",
           "id": "phase-timing-fix-C3",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Not reachable: all writeTimestamp calls at work.ts:1777/1781/1784/1861/1899 use await — sequential execution, no concurrent calls within a process. Cross-process races prevented by worktree-exists guard (same slug) and separate .saves.json files (different slugs). The read-modify-write is non-atomic but never concurrent. Also consistent with commit-work-start-timestamps-C5 lesson which acknowledges the pattern.",
+          "closed_at": "2026-05-14T19:05:03.194Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
