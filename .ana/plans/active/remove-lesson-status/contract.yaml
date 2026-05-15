@@ -69,8 +69,8 @@ assertions:
     says: "Old lesson data in proof chains is counted as closed for health calculations"
     block: "computeChainHealth backward compat counts lesson as closed"
     target: "health.findings.closed"
-    matcher: "greater"
-    value: 0
+    matcher: "equals"
+    value: 1
 
   - id: A011
     says: "Health calculations no longer return a lesson count"
@@ -120,6 +120,19 @@ assertions:
     target: "ana-learn.md"
     matcher: "not_contains"
     value: "Lesson candidates"
+
+  - id: A027
+    says: "Backfilled upstream lessons record they were closed mechanically"
+    block: "backfill migrates lesson findings to closed"
+    target: "migratedFinding.closed_by"
+    matcher: "equals"
+    value: "mechanical"
+
+  - id: A028
+    says: "Backfilled upstream lessons record when they were closed using the original entry timestamp"
+    block: "backfill migrates lesson findings to closed"
+    target: "migratedFinding.closed_at"
+    matcher: "exists"
 
   - id: A017
     says: "The ana agent template says 'findings' not 'lessons' for proof context"
