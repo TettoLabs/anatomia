@@ -24,5 +24,38 @@
   "spec": {
     "saved_at": "2026-05-15T06:30:43.316Z",
     "hash": "sha256:3b875268c027fe935d8c37d06e9d0636433bd5f50eafd63337aa7950e59dd0ef"
-  }
+  },
+  "build_started_at": "2026-05-15T06:45:23.483Z",
+  "build_agent": "ana-build",
+  "build-report": {
+    "saved_at": "2026-05-15T06:50:04.237Z",
+    "hash": "sha256:ed9e117bf3f71c8e6688a71f1c65584a41fab43c07167cd24b618ba41133de51"
+  },
+  "build-data": {
+    "saved_at": "2026-05-15T06:50:04.237Z",
+    "hash": "sha256:cad679b5f1db35108491dfbd35daf8aa6e5c14fbf0149a9ec117cabde39d27dd"
+  },
+  "modules_touched": [
+    ".claude/skills/deployment/SKILL.md",
+    ".github/workflows/test.yml",
+    "CONTRIBUTING.md",
+    "README.md",
+    "package.json",
+    "packages/cli/ARCHITECTURE.md",
+    "packages/cli/CONTRIBUTING.md",
+    "packages/cli/package.json",
+    "packages/cli/tsup.config.ts",
+    "tsconfig.base.json",
+    "website/content/docs/concepts/pipeline.mdx",
+    "website/content/docs/guides/reading-a-proof.mdx",
+    "website/content/docs/guides/troubleshooting.mdx",
+    "website/content/docs/guides/using-ana-learn.mdx",
+    "website/content/docs/guides/verifying-changes.mdx",
+    "website/content/docs/start.mdx",
+    "website/lib/copy.ts",
+    "website/package.json",
+    "website/public/llms-full.txt",
+    "website/public/search-index.json"
+  ],
+  "commit_hygiene": []
 }
