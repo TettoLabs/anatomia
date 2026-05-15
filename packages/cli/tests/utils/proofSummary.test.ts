@@ -1731,7 +1731,7 @@ describe('extractScopeKind', () => {
 describe('generateDashboard', () => {
   it('contains summary line with run count and status counts', () => {
     const entries = [{ slug: 'feat-1', feature: 'Feature 1', completed_at: '2026-04-01T00:00:00Z', findings: [] }];
-    const md = generateDashboard(entries, { runs: 1, active: 0, lessons: 0, promoted: 0, closed: 0 });
+    const md = generateDashboard(entries, { runs: 1, active: 0, promoted: 0, closed: 0 });
     expect(md).toContain('# Proof Chain Dashboard');
     expect(md).toContain('1 runs');
     expect(md).toContain('0 active');
@@ -1748,7 +1748,7 @@ describe('generateDashboard', () => {
         findings: [{ id: 'c2', category: 'code', summary: 'Issue 2', file: 'src/foo.ts', anchor: null, status: 'active' }],
       },
     ];
-    const md = generateDashboard(entries, { runs: 2, active: 2, lessons: 0, promoted: 0, closed: 0 });
+    const md = generateDashboard(entries, { runs: 2, active: 2, promoted: 0, closed: 0 });
     expect(md).toContain('## Hot Modules');
     expect(md).toContain('src/foo.ts');
   });
@@ -1758,7 +1758,7 @@ describe('generateDashboard', () => {
       slug: 'feat-1', feature: 'Feature 1', completed_at: '2026-04-01T00:00:00Z',
       findings: [{ id: 'c1', category: 'code', summary: 'Issue', file: 'src/bar.ts', anchor: null, status: 'active' }],
     }];
-    const md = generateDashboard(entries, { runs: 1, active: 1, lessons: 0, promoted: 0, closed: 0 });
+    const md = generateDashboard(entries, { runs: 1, active: 1, promoted: 0, closed: 0 });
     expect(md).toContain('*No hot modules yet.*');
   });
 
@@ -1770,7 +1770,7 @@ describe('generateDashboard', () => {
         { id: 'c2', category: 'test', summary: 'Issue in bar', file: 'src/bar.ts', anchor: null, status: 'active' },
       ],
     }];
-    const md = generateDashboard(entries, { runs: 1, active: 2, lessons: 0, promoted: 0, closed: 0 });
+    const md = generateDashboard(entries, { runs: 1, active: 2, promoted: 0, closed: 0 });
     expect(md).toContain('### src/bar.ts');
     expect(md).toContain('### src/foo.ts');
   });
@@ -1781,7 +1781,7 @@ describe('generateDashboard', () => {
       id: `c${i}`, category: 'code', summary: `Issue ${i}`, file: `file-${i}.ts`, anchor: null, status: 'active' as const,
     }));
     const entries = [{ slug: 'feat-1', feature: 'Feature 1', completed_at: '2026-04-01T00:00:00Z', findings }];
-    const md = generateDashboard(entries, { runs: 1, active: 35, lessons: 0, promoted: 0, closed: 0 });
+    const md = generateDashboard(entries, { runs: 1, active: 35, promoted: 0, closed: 0 });
     expect(md).toContain('30 shown of 35 total');
     const findingLines = md.split('\n').filter(l => l.startsWith('- **'));
     expect(findingLines).toHaveLength(30);
@@ -1793,7 +1793,7 @@ describe('generateDashboard', () => {
 
   it('contains promoted rules placeholder', () => {
     const entries = [{ slug: 'f', feature: 'F', completed_at: '2026-04-01T00:00:00Z', findings: [] }];
-    const md = generateDashboard(entries, { runs: 1, active: 0, lessons: 0, promoted: 0, closed: 0 });
+    const md = generateDashboard(entries, { runs: 1, active: 0, promoted: 0, closed: 0 });
     expect(md).toContain('## Promoted Rules');
     expect(md).toContain('*No promoted rules yet.*');
   });
@@ -2178,7 +2178,7 @@ describe('findFindingById', () => {
         findings: [
           { id: 'F001', category: 'code', summary: 'Closed finding', status: 'closed' },
           { id: 'F002', category: 'code', summary: 'Promoted finding', status: 'promoted' },
-          { id: 'F003', category: 'code', summary: 'Lesson finding', status: 'lesson' },
+          { id: 'F003', category: 'code', summary: 'Closed finding 2', status: 'closed' },
         ],
       }],
     };
@@ -2316,14 +2316,13 @@ describe('computeChainHealth', () => {
         findings: [
           { status: 'active', severity: 'risk', suggested_action: 'scope' },
           { status: 'closed', severity: 'debt', suggested_action: 'accept' },
-          { status: 'lesson', severity: 'observation', suggested_action: 'monitor' },
+          { status: 'closed', severity: 'observation', suggested_action: 'monitor' },
         ],
       }],
     };
     const health = computeChainHealth(chain);
     expect(health.findings.active).toBe(1);
-    expect(health.findings.closed).toBe(1);
-    expect(health.findings.lesson).toBe(1);
+    expect(health.findings.closed).toBe(2);
     expect(health.findings.total).toBe(3);
     // by_severity and by_action count active findings only
     expect(health.findings.by_severity.risk).toBe(1);
@@ -2359,7 +2358,7 @@ describe('computeChainHealth', () => {
           { status: 'active', severity: 'debt', suggested_action: 'scope' },
           { status: 'closed', severity: 'risk', suggested_action: 'accept' },
           { status: 'promoted', severity: 'debt', suggested_action: 'monitor' },
-          { status: 'lesson', severity: 'observation', suggested_action: 'accept' },
+          { status: 'closed', severity: 'observation', suggested_action: 'accept' },
         ],
       }],
     };
@@ -2375,9 +2374,24 @@ describe('computeChainHealth', () => {
     // status counts still include all
     expect(health.findings.total).toBe(5);
     expect(health.findings.active).toBe(2);
-    expect(health.findings.closed).toBe(1);
+    expect(health.findings.closed).toBe(2);
     expect(health.findings.promoted).toBe(1);
-    expect(health.findings.lesson).toBe(1);
+  });
+
+  // @ana A010, A011
+  it('counts old lesson data as closed for backward compatibility', () => {
+    const chain = {
+      entries: [{
+        findings: [
+          { status: 'lesson', severity: 'observation', suggested_action: 'monitor' },
+        ],
+      }],
+    };
+    const health = computeChainHealth(chain);
+    expect(health.findings.closed).toBe(1);
+    expect(health.findings.active).toBe(0);
+    expect(health.findings.total).toBe(1);
+    expect((health.findings as Record<string, unknown>)['lesson']).toBeUndefined();
   });
 });
 

@@ -2321,14 +2321,14 @@ file_changes:
         const chainPath = path.join(tempDir, '.ana', 'proof_chain.json');
         const chain = JSON.parse(fsSync.readFileSync(chainPath, 'utf-8'));
         chain.entries[0].findings = [
-          { id: 'old-C1', category: 'upstream', summary: 'Upstream obs', file: 'nonexistent.ts', anchor: null, status: 'lesson' },
+          { id: 'old-C1', category: 'upstream', summary: 'Upstream obs', file: 'nonexistent.ts', anchor: null, status: 'closed', closed_reason: 'upstream', closed_by: 'mechanical', closed_at: '2026-04-20T10:00:00Z' },
         ];
         fsSync.writeFileSync(chainPath, JSON.stringify(chain));
 
         await completeWork('test-feature');
 
         const updated = JSON.parse(fsSync.readFileSync(chainPath, 'utf-8'));
-        expect(updated.entries[0].findings[0].status).toBe('lesson');
+        expect(updated.entries[0].findings[0].status).toBe('closed');
         expect(updated.entries[0].findings[0].closed_reason).not.toBe('file removed');
       });
 
@@ -2391,7 +2391,7 @@ file_changes:
         // Add findings that reference nonexistent files (will be auto-closed by staleness)
         chain.entries[0].findings = [
           { id: 'old-C1', category: 'code', summary: 'Stale', file: 'src/deleted.ts', anchor: null, status: 'active' },
-          { id: 'old-C2', category: 'upstream', summary: 'Upstream', file: null, anchor: null, status: 'lesson' },
+          { id: 'old-C2', category: 'upstream', summary: 'Upstream', file: null, anchor: null, status: 'closed', closed_reason: 'upstream' },
         ];
         fsSync.writeFileSync(chainPath, JSON.stringify(chain));
 
@@ -2411,7 +2411,7 @@ file_changes:
       });
 
       // @ana A008, A009
-      it('assigns active status to new code findings, lesson to upstream', async () => {
+      it('assigns active status to new code findings, closed to upstream', async () => {
         await createProofProject('test-feature');
 
         // Patch verify report to have both code and upstream findings
@@ -2439,7 +2439,10 @@ file_changes:
         const codeFinding = lastEntry.findings.find((f: { category: string }) => f.category === 'code');
         const upstreamFinding = lastEntry.findings.find((f: { category: string }) => f.category === 'upstream');
         expect(codeFinding.status).toBe('active');
-        expect(upstreamFinding.status).toBe('lesson');
+        expect(upstreamFinding.status).toBe('closed');
+        expect(upstreamFinding.closed_reason).toBe('upstream');
+        expect(upstreamFinding.closed_by).toBe('mechanical');
+        expect(upstreamFinding.closed_at).toMatch(/^\d{4}-\d{2}-\d{2}/);
       });
     });
 

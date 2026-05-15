@@ -933,10 +933,13 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
     }
   } catch { /* plan.md unavailable — omit phases field */ }
 
-  // Assign status to new findings (AC5)
+  // Assign status to new findings
   for (const finding of entry.findings) {
     if (finding.category === 'upstream') {
-      finding.status = 'lesson';
+      finding.status = 'closed';
+      finding.closed_reason = 'upstream';
+      finding.closed_at = new Date().toISOString();
+      finding.closed_by = 'mechanical';
     } else {
       finding.status = 'active';
     }
@@ -979,11 +982,18 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
 
   for (const chainEntry of allEntries) {
     for (const finding of chainEntry.findings || []) {
+      // Backfill migration: convert legacy lesson findings to closed
+      if ((finding.status as string) === 'lesson') {
+        finding.status = 'closed';
+        if (!finding.closed_reason) {
+          finding.closed_reason = 'upstream';
+          finding.closed_by = 'mechanical';
+          finding.closed_at = chainEntry.completed_at || new Date().toISOString();
+        }
+      }
+
       // Skip already-closed findings
       if (finding.status === 'closed') continue;
-
-      // Upstream findings are institutional memory — not subject to staleness
-      if (finding.category === 'upstream') continue;
 
       // Skip findings without file reference
       if (!finding.file) continue;
@@ -1039,16 +1049,15 @@ async function writeProofChain(slug: string, proof: ProofSummary, projectRoot: s
 
   // Compute chain health counts via shared utility
   const health = computeChainHealth(chain);
-  const { chain_runs: runs, findings: { active: activeCount, closed: closedCount, lesson: lessonsCount, promoted: promotedCount, total: totalFindings } } = health;
+  const { chain_runs: runs, findings: { active: activeCount, closed: closedCount, promoted: promotedCount, total: totalFindings } } = health;
 
-  const dashboardMd = generateDashboard(chain.entries, { runs, active: activeCount, lessons: lessonsCount, promoted: promotedCount, closed: closedCount });
+  const dashboardMd = generateDashboard(chain.entries, { runs, active: activeCount, promoted: promotedCount, closed: closedCount });
   await fsPromises.writeFile(chainMdPath, dashboardMd);
 
   const stats: ProofChainStats = {
     runs,
     findings: totalFindings,
     active: activeCount,
-    lessons: lessonsCount,
     promoted: promotedCount,
     closed: closedCount,
     newFindings: entry.findings.length,

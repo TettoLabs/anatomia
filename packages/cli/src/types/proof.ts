@@ -35,7 +35,7 @@ export interface ProofChainStats {
   runs: number;
   findings: number;
   active: number;
-  lessons: number;
+
   promoted: number;
   closed: number;
   newFindings: number;
@@ -75,7 +75,7 @@ export interface ProofChainEntry {
     suggested_action?: 'promote' | 'scope' | 'monitor' | 'accept';
     related_assertions?: string[];
     resolves?: string[];
-    status?: 'active' | 'lesson' | 'promoted' | 'closed';
+    status?: 'active' | 'promoted' | 'closed';
     closed_reason?: string;
     closed_at?: string;
     closed_by?: 'mechanical' | 'human' | 'agent';
