@@ -1,13 +1,13 @@
 # Proof Chain Dashboard
 
-109 runs · 37 active · 3 promoted · 610 closed
+110 runs · 44 active · 3 promoted · 610 closed
 
 ## Hot Modules
 
 | File | Active | Entries |
 |------|--------|--------|
-| packages/cli/src/commands/work.ts | 6 | 6 |
-| packages/cli/tests/commands/work.test.ts | 4 | 4 |
+| packages/cli/src/commands/work.ts | 10 | 7 |
+| packages/cli/tests/commands/work.test.ts | 7 | 5 |
 | packages/cli/tests/commands/artifact.test.ts | 3 | 2 |
 | packages/cli/tests/commands/proof.test.ts | 2 | 2 |
 
@@ -15,7 +15,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 37 total)
+## Active Findings (30 shown of 44 total)
 
 ### packages/cli/src/commands/init/commit.ts
 
@@ -23,12 +23,14 @@
 
 ### packages/cli/src/commands/work.ts
 
+- **code:** checkConcurrencyGuard has dead `force` parameter — never passed true from production call sites — *Pipeline Concurrency Guards*
+- **code:** isTimestampRecent duplicates checkConcurrencyGuard logic — both parse .saves.json, extract timestamp, compare against CONCURRENCY_TIMEOUT_MS — *Pipeline Concurrency Guards*
+- **code:** Inside-worktree resume path writes verify_started_at without checking concurrency guard first — *Pipeline Concurrency Guards*
+- **code:** plan_started_at written with force:true — spec only mentions verify_started_at force-write, this is over-building for consistency — *Pipeline Concurrency Guards*
 - **test:** Backfill migration logic has no dedicated test — mutation from lesson→closed with conditional metadata preservation is untested — *Remove lesson status from proof system*
 - **code:** work.ts duplicates resolves counting logic — JSON and console branches have identical loops — *Upstream Finding Resolution*
 - **code:** Two different result parsers with different casing: getVerifyResult returns 'unknown' (lowercase), parseResult in proofSummary returns 'UNKNOWN' (uppercase) — works correctly but fragile coupling between two parallel implementations — *work.ts untested branch coverage*
 - **test:** Pull-recovery guards (2 of 5) not directly exercised by any test — *Fix --merge stdout pollution in --json mode*
-- **code:** startWork resume path at line 1685 also duplicates HEAD-reading pattern — three places total read HEAD for branch name — *Kind-aware branch prefixes*
-- **code:** Auto-merge enabled path writes plain text to stdout before JSON output — pollutes stdout for --json consumers — *work complete --merge flag for structured PR merging*
 
 ### packages/cli/src/types/proof.ts
 
@@ -37,11 +39,6 @@
 ### packages/cli/src/utils/worktree.ts
 
 - **code:** getBuildCommandString re-reads ana.json instead of receiving command from runBuildCommand — duplicate I/O with misleading 'pnpm run build' fallback — *Run build command during worktree creation*
-
-### packages/cli/tests/commands/artifact.test.ts
-
-- **test:** A016 only tests 'Feature' case variant, not 'FIX' — contract says both should be accepted — *Scope Validation Integrity*
-- **test:** Pre-existing scope validation tests (lines 697-746) still use plain toThrow() without checking error message content — *Scope Validation Integrity*
 
 ### packages/cli/tests/commands/init/commit.test.ts
 
@@ -53,16 +50,13 @@
 - **code:** createMergedProject duplicated between work-ci-mocked.test.ts and work.test.ts — both have independent copies with different mock routing — *Fix CI Matrix and Broken Tests*
 - **test:** A004 assertion uses toBeGreaterThan(0) for exit call count instead of toBe(1) — passes even if process.exit is called multiple times — *Fix CI Matrix and Broken Tests*
 
-### packages/cli/tests/commands/work-merge.test.ts
-
-- **test:** No tests verify --json output for any of the 7 merge failure paths — *work complete --merge flag for structured PR merging*
-
 ### packages/cli/tests/commands/work.test.ts
 
+- **test:** No boundary test at exactly 1-hour timeout — tests use 2-hour-old (stale) and new Date() (fresh), missing 59m59s and 60m01s cases — *Pipeline Concurrency Guards*
+- **test:** A019 mock returns raw 'MERGED\n' string but implementation uses -q '.[0].state' jq filter — mock bypasses JSON parsing path — *Pipeline Concurrency Guards*
+- **test:** A019/A020 tests create full git repos with bare remotes — heavyweight setup that could be simplified with targeted spawnSync+runGit mocking — *Pipeline Concurrency Guards*
 - **test:** Arrow-line count assertion uses toBeGreaterThanOrEqual(2) — passes with any number >= 2, not specific to the 2-line ready-to-merge case — *work.ts saves.json backward compat bug + worktree dedup + formatting*
 - **test:** Conditional PID guard makes 8 tests potential no-ops in environments where getClaudePid() returns null — *Capture actual think time from Ana session start*
-- **test:** Stage detection tests use hardcoded timestamps with 1-hour gaps — no boundary test for equal timestamps — *Fix cycle stage detection breaks on multi-phase builds*
-- **test:** A010 test creates untracked file after commit — doesn't test scoped staging during commit — *Commit timestamps written by work start*
 
 ### website/app/docs/reference/cli/page.tsx
 

@@ -29813,6 +29813,321 @@
         "commit_count": 0,
         "base_commit": "68cd51fd2bfda4ba28ee24555f969467b709a725"
       }
+    },
+    {
+      "slug": "pipeline-concurrency-guards",
+      "feature": "Pipeline Concurrency Guards",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 22,
+        "satisfied": 20,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "A second verify session on the same work item is blocked",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "A second plan session on the same work item is blocked",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "The force flag overrides the verify concurrency guard",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "The force flag overrides the plan concurrency guard",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "Stale timestamps older than 1 hour are ignored automatically",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "Missing saves.json does not block session start",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "Corrupted saves.json does not block session start",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "An active verify session does not block a build session on the same work item",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "An active verify session on one work item does not block verify on a different work item",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "Work status shows verify-in-progress when a verify session is active",
+          "status": "UNVERIFIED"
+        },
+        {
+          "id": "A011",
+          "says": "Work status shows plan-in-progress when a plan session is active",
+          "status": "UNVERIFIED"
+        },
+        {
+          "id": "A012",
+          "says": "Verify-in-progress stage shows guidance to use --force",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "Plan-in-progress stage shows guidance to use --force",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "Creating a PR is blocked when a merged PR already exists for the branch",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "The merged-PR error message directs the user to work complete",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "Creating a PR is blocked when an open PR already exists for the branch",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A017",
+          "says": "The open-PR error message includes the existing PR URL",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A018",
+          "says": "PR creation proceeds when no existing PR is found",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A019",
+          "says": "Merged PRs are detected via GitHub CLI even when git is-ancestor fails",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A020",
+          "says": "Merge detection falls back to is-ancestor when GitHub CLI is unavailable",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A021",
+          "says": "Verify timestamp overwrites previous value on re-entry",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A022",
+          "says": "The start command accepts a --force flag",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 17,
+        "met": 17
+      },
+      "timing": {
+        "total_minutes": 104,
+        "think": 29,
+        "plan": 10,
+        "build": 45,
+        "verify": 15
+      },
+      "hashes": {
+        "scope": "sha256:ae9f5f707b28bc43c9a3ccdf4ee91f420a933d952a1b4064dccbaf4929b3a9b4",
+        "contract": "sha256:b4a85d19f8a96afc329b6d24f0e4e65388c9811e6d4ec12503d7e94e0b76140d",
+        "plan": "sha256:75bfb55d9c8a5bb9b40b476039ed6341f11e901aad7aa208fc9cf3c2439aba59",
+        "spec": "sha256:8c46744ed3b84a465301092bc990a73427cdb07e192f0f2146c69243e707e8dd",
+        "build-report": "sha256:f58f96274da4f49e2fe51f5c0f06aea7937ecddcfcaf736dd439f2a53c1ae8a4",
+        "build-data": "sha256:7885a45e271b37b41033ab30874439291a7c3798057046de974240daa75c1318",
+        "verify-report": "sha256:4eec4ff2ad3a16d2f05f161cb7c7f93155382d1274efb34683cecc6279b7f432",
+        "verify-data": "sha256:6a1cb23f9827b55b6cac80ff11fd57c4739f82af43330025bcd47798aad53cfd"
+      },
+      "completed_at": "2026-05-15T19:18:01.475Z",
+      "modules_touched": [
+        "packages/cli/src/commands/pr.ts",
+        "packages/cli/src/commands/work.ts",
+        "packages/cli/tests/commands/pr.test.ts",
+        "packages/cli/tests/commands/work.test.ts"
+      ],
+      "scope_summary": "Prevent concurrent pipeline sessions from corrupting each other. Learn Session 5 uncovered a real failure: two AnaVerify sessions ran against the same scope simultaneously. Session #2 archived a valid verify report, created a duplicate PR, force-pushed over the merged branch, and left `work complete` unable to detect the merge. Recovery required git internals knowledge our target customer doesn't have. The pipeline assumes one agent per stage but enforces nothing — this scope adds mechanical enforcement.",
+      "kind": "fix",
+      "findings": [
+        {
+          "category": "code",
+          "summary": "checkConcurrencyGuard has dead `force` parameter — never passed true from production call sites",
+          "file": "packages/cli/src/commands/work.ts",
+          "anchor": null,
+          "line": 2304,
+          "severity": "debt",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A003",
+            "A004"
+          ],
+          "id": "pipeline-concurrency-guards-C1",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "isTimestampRecent duplicates checkConcurrencyGuard logic — both parse .saves.json, extract timestamp, compare against CONCURRENCY_TIMEOUT_MS",
+          "file": "packages/cli/src/commands/work.ts",
+          "anchor": null,
+          "line": 365,
+          "severity": "debt",
+          "suggested_action": "scope",
+          "id": "pipeline-concurrency-guards-C2",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Inside-worktree resume path writes verify_started_at without checking concurrency guard first",
+          "file": "packages/cli/src/commands/work.ts",
+          "anchor": null,
+          "line": 1888,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "pipeline-concurrency-guards-C3",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "No boundary test at exactly 1-hour timeout — tests use 2-hour-old (stale) and new Date() (fresh), missing 59m59s and 60m01s cases",
+          "file": "packages/cli/tests/commands/work.test.ts",
+          "anchor": null,
+          "severity": "debt",
+          "suggested_action": "scope",
+          "related_assertions": [
+            "A005"
+          ],
+          "id": "pipeline-concurrency-guards-C4",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "plan_started_at written with force:true — spec only mentions verify_started_at force-write, this is over-building for consistency",
+          "file": "packages/cli/src/commands/work.ts",
+          "anchor": null,
+          "line": 2017,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "pipeline-concurrency-guards-C5",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "A019 mock returns raw 'MERGED\\n' string but implementation uses -q '.[0].state' jq filter — mock bypasses JSON parsing path",
+          "file": "packages/cli/tests/commands/work.test.ts",
+          "anchor": null,
+          "line": 5686,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "related_assertions": [
+            "A019"
+          ],
+          "id": "pipeline-concurrency-guards-C6",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "A019/A020 tests create full git repos with bare remotes — heavyweight setup that could be simplified with targeted spawnSync+runGit mocking",
+          "file": "packages/cli/tests/commands/work.test.ts",
+          "anchor": null,
+          "line": 5633,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "pipeline-concurrency-guards-C7",
+          "status": "active"
+        }
+      ],
+      "rejection_cycles": 1,
+      "previous_failures": [
+        {
+          "id": "A014",
+          "summary": "Source-content test read pr.ts for `pr.state === 'MERGED'` string"
+        },
+        {
+          "id": "A015",
+          "summary": "Source-content test checked for `'work complete'` string in source"
+        },
+        {
+          "id": "A016",
+          "summary": "Source-content test read pr.ts for `pr.state === 'OPEN'` string"
+        },
+        {
+          "id": "A017",
+          "summary": "Source-content test checked for `'pr.url'` string literal in source"
+        },
+        {
+          "id": "A018",
+          "summary": "Source-content test checked for loop structure in source"
+        },
+        {
+          "id": "A019",
+          "summary": "Source-content test checked string ordering (gh list index < is-ancestor index)"
+        },
+        {
+          "id": "A020",
+          "summary": "Source-content test checked for presence of merge-related strings"
+        }
+      ],
+      "build_concerns": [
+        {
+          "summary": "checkConcurrencyGuard has dead force parameter — neither production call site passes it",
+          "file": "packages/cli/src/commands/work.ts",
+          "severity": "debt",
+          "suggested_action": "accept"
+        },
+        {
+          "summary": "isTimestampRecent duplicates checkConcurrencyGuard timestamp-checking logic",
+          "file": "packages/cli/src/commands/work.ts",
+          "severity": "debt",
+          "suggested_action": "monitor"
+        },
+        {
+          "summary": "No boundary test at exactly 1-hour timeout threshold",
+          "file": "packages/cli/tests/commands/work.test.ts",
+          "severity": "observation",
+          "suggested_action": "monitor"
+        },
+        {
+          "summary": "plan_started_at force-write not explicitly in spec — added for consistency",
+          "file": "packages/cli/src/commands/work.ts",
+          "severity": "observation",
+          "suggested_action": "accept"
+        },
+        {
+          "summary": "vi.mock wraps spawnSync file-wide — future identity-check tests would see vi.fn wrapper",
+          "file": "packages/cli/tests/commands/pr.test.ts",
+          "severity": "observation",
+          "suggested_action": "accept"
+        }
+      ],
+      "worktree": {
+        "used": true,
+        "created_at": "2026-05-15T19:05:46.690Z",
+        "completed_at": "2026-05-15T19:18:01.470Z",
+        "commit_count": 0,
+        "base_commit": "f0e37ec5aa3cfb6cfc6713bc229a8199f5ed3f35"
+      }
     }
   ],
   "schema": 1
