@@ -1463,9 +1463,12 @@
           "summary": "`truncate` word-boundary behavior for CJK — readme.ts:65-69. When text has no spaces before `cap`, falls back to hard-cut at `cap` characters. Correct for Latin text; may split mid-character for CJK content. Not a blocker — CJK READMEs typically have spaces around headings and code blocks.",
           "file": "packages/cli/src/engine/detectors/readme.ts",
           "anchor": "truncate",
-          "status": "active",
+          "status": "closed",
           "severity": "observation",
-          "suggested_action": "monitor"
+          "suggested_action": "monitor",
+          "closed_reason": "Acceptable limitation: truncate at readme.ts:65-69 uses lastIndexOf(' ') for word boundaries. CJK text has no spaces — falls back to hard-cut at character position. This produces functional output (no crashes, no data loss) with ugly truncation for CJK READMEs. Current user base is English-only. When CJK users arrive, the hard-cut is a cosmetic issue in scan output summaries, not a data integrity problem. Fix would require language-aware segmentation (Intl.Segmenter), which is disproportionate for scan output.",
+          "closed_at": "2026-05-15T00:02:16.486Z",
+          "closed_by": "human"
         },
         {
           "id": "add-readme-extraction-C2",
