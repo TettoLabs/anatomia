@@ -29771,7 +29771,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "remove-lesson-status-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed: removed stale 'lesson' from comment at proofSummary.ts:2257. Comment said 'closed/lesson/promoted' but lesson status no longer exists. Filter logic was already correct (checks status !== 'active'). Commit 1ce8a514.",
+          "closed_at": "2026-05-15T18:57:57.770Z",
+          "closed_by": "human"
         },
         {
           "category": "upstream",

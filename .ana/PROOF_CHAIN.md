@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-109 runs · 38 active · 3 promoted · 609 closed
+109 runs · 37 active · 3 promoted · 610 closed
 
 ## Hot Modules
 
@@ -10,13 +10,12 @@
 | packages/cli/tests/commands/work.test.ts | 4 | 4 |
 | packages/cli/tests/commands/artifact.test.ts | 3 | 2 |
 | packages/cli/tests/commands/proof.test.ts | 2 | 2 |
-| packages/cli/src/utils/proofSummary.ts | 2 | 2 |
 
 ## Promoted Rules
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 38 total)
+## Active Findings (30 shown of 37 total)
 
 ### packages/cli/src/commands/init/commit.ts
 
@@ -35,10 +34,6 @@
 
 - **code:** commit_hygiene type duplicated in three locations (proof.ts, proofSummary.ts, work.ts inline) rather than imported from a shared definition — *Commit hygiene checks at build-report save*
 
-### packages/cli/src/utils/proofSummary.ts
-
-- **code:** Stale comment references 'lesson' in getProofContext filter description — *Remove lesson status from proof system*
-
 ### packages/cli/src/utils/worktree.ts
 
 - **code:** getBuildCommandString re-reads ana.json instead of receiving command from runBuildCommand — duplicate I/O with misleading 'pnpm run build' fallback — *Run build command during worktree creation*
@@ -46,6 +41,7 @@
 ### packages/cli/tests/commands/artifact.test.ts
 
 - **test:** A016 only tests 'Feature' case variant, not 'FIX' — contract says both should be accepted — *Scope Validation Integrity*
+- **test:** Pre-existing scope validation tests (lines 697-746) still use plain toThrow() without checking error message content — *Scope Validation Integrity*
 
 ### packages/cli/tests/commands/init/commit.test.ts
 
