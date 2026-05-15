@@ -32,5 +32,20 @@
   "modules_touched": [
     "packages/cli/tests/commands/worktree-guards.test.ts"
   ],
-  "commit_hygiene": []
+  "commit_hygiene": [],
+  "verify_started_at": "2026-05-15T02:05:16.962Z",
+  "verify_agent": "ana-verify",
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:47f9e1c0190bbaa4a40a56e72633b750667bc587ca8d1c0f6edb78b9c7f602a8",
+    "run_at": "2026-05-15T02:08:47.400Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-15T02:08:47.437Z",
+    "hash": "sha256:ebd5549fcfd5f56dbae8af953065c6baa7ecff27def3106cbc1a1c50dda65619"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-15T02:08:47.437Z",
+    "hash": "sha256:b517e916d6e6b12a20c264f19faaa3b8e133f3899ee91e937cbd3337332e27f5"
+  }
 }
