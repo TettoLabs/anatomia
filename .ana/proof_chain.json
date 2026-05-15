@@ -10137,7 +10137,10 @@
           "severity": "observation",
           "suggested_action": "scope",
           "id": "strengthen-weak-test-assertions-C5",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Largely resolved: was 21 instances, now 5. The remaining 5 toBeGreaterThan(0) in proofSummary.test.ts are 'non-empty result' assertions — hot_modules.length (2), scopeCandidates.length (1), total_stale (2). These verify the fixture produces output, not a specific count. toBeGreaterThan(0) IS the correct assertion for 'this list should not be empty given this fixture.' Asserting exact counts would couple to fixture internals.",
+          "closed_at": "2026-05-15T03:28:13.800Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
