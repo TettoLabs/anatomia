@@ -9845,7 +9845,10 @@
             "A030"
           ],
           "id": "proof-health-v2-C12",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Scoped: work.ts untested branch coverage scope prompt delivered to Think. UNKNOWN result warning at work.ts:870-875 has zero test coverage — the path fires when verify report exists but has no Result line. Combined with proof-health-v2-C8 into a single scope covering untested branches in work.ts.",
+          "closed_at": "2026-05-15T01:54:34.553Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
