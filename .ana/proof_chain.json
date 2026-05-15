@@ -9790,7 +9790,10 @@
           "severity": "observation",
           "suggested_action": "monitor",
           "id": "proof-health-v2-C8",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Scoped: combined with proof-health-v2-C12 into work.ts untested branch coverage scope. Defensive error paths: 'not a git repo' (work.ts:1087) and 'git pull conflict' (work.ts:1338) — both call process.exit(1) with error messages, neither has a dedicated test. Scope prompt delivered to Think.",
+          "closed_at": "2026-05-15T01:54:48.413Z",
+          "closed_by": "human"
         },
         {
           "category": "upstream",
