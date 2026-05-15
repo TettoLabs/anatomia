@@ -14,7 +14,7 @@ Every file path and code identifier below is verified against the current codeba
 
 **Setup:**
 ```bash
-git clone https://github.com/TettoLabs/anatomia.git
+git clone https://github.com/anatomia-dev/anatomia.git
 cd anatomia
 pnpm install
 pnpm build
@@ -433,4 +433,4 @@ Do not `--no-verify`. The pre-commit hook catches the exact class of bugs that l
 
 ---
 
-Questions? Open an issue: https://github.com/TettoLabs/anatomia/issues
+Questions? Open an issue: https://github.com/anatomia-dev/anatomia/issues

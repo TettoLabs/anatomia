@@ -17,7 +17,7 @@ const RESOURCES: Resource[] = [
     type: "Repo",
     name: "GitHub \u2197",
     description: "Source, issues, releases",
-    href: "https://github.com/TettoLabs/anatomia",
+    href: "https://github.com/anatomia-dev/anatomia",
     external: true,
   },
   {

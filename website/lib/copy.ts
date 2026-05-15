@@ -42,7 +42,7 @@ export const copy = {
     ],
     ctaInstall: "Install",
     ctaInstallHref: "https://www.npmjs.com/package/anatomia-cli",
-    githubUrl: "https://github.com/TettoLabs/anatomia",
+    githubUrl: "https://github.com/anatomia-dev/anatomia",
   },
 
   hero: {
@@ -550,8 +550,8 @@ export const copy = {
     channels: [
       {
         kind: "GitHub",
-        addr: "github.com/TettoLabs/anatomia",
-        href: "https://github.com/TettoLabs/anatomia",
+        addr: "github.com/anatomia-dev/anatomia",
+        href: "https://github.com/anatomia-dev/anatomia",
         note:
           "Bug reports, pull requests, feature discussions, RFCs. *The fastest way to get a real answer* — issues are triaged a few times a week.",
       },
@@ -603,7 +603,7 @@ export const copy = {
     eyebrow: "CLI Reference",
     title: "Every command, every *flag*.",
     body: "The complete CLI reference is coming soon. In the meantime, run `anatomia --help` for a full list of commands, or browse the source on GitHub.",
-    githubHref: "https://github.com/TettoLabs/anatomia",
+    githubHref: "https://github.com/anatomia-dev/anatomia",
   },
 
   examples: {
@@ -627,7 +627,7 @@ export const copy = {
     title: "MIT \u2014 free *forever*.",
     body: `MIT License
 
-Copyright (c) 2026 TettoLabs
+Copyright (c) 2026 Anatomia
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -668,7 +668,7 @@ SOFTWARE.`,
         title: "Developers",
         links: [
           { label: "Docs", href: "/docs" },
-          { label: "GitHub", href: "https://github.com/TettoLabs/anatomia" },
+          { label: "GitHub", href: "https://github.com/anatomia-dev/anatomia" },
           { label: "CLI reference", href: "/cli" },
           { label: "Examples", href: "/examples" },
         ],

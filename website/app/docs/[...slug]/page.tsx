@@ -116,7 +116,7 @@ export default async function DocsPage({ params }: DocsPageProps) {
         toc={tocItems}
         commitSha={meta.commitSha}
         buildTimestamp={meta.buildTimestamp}
-        editUrl={`https://github.com/TettoLabs/anatomia/edit/main/website/content/docs/${slug.join("/")}.mdx`}
+        editUrl={`https://github.com/anatomia-dev/anatomia/edit/main/website/content/docs/${slug.join("/")}.mdx`}
         pageUrl={pageUrl}
         pageContent={pageContent}
       />

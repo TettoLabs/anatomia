@@ -94,7 +94,7 @@ First stable release.
 
 Previous development history is preserved in git log.
 
-[Unreleased]: https://github.com/TettoLabs/anatomia/compare/v1.0.2...HEAD
-[1.0.2]: https://github.com/TettoLabs/anatomia/compare/v1.0.1...v1.0.2
-[1.0.1]: https://github.com/TettoLabs/anatomia/compare/v1.0.0...v1.0.1
-[1.0.0]: https://github.com/TettoLabs/anatomia/releases/tag/v1.0.0
+[Unreleased]: https://github.com/anatomia-dev/anatomia/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/anatomia-dev/anatomia/compare/v1.0.1...v1.0.2
+[1.0.1]: https://github.com/anatomia-dev/anatomia/compare/v1.0.0...v1.0.1
+[1.0.0]: https://github.com/anatomia-dev/anatomia/releases/tag/v1.0.0

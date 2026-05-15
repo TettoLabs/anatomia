@@ -12,7 +12,7 @@ import { getProofEntries, getProofBySlug } from "@/lib/docs-data";
 import { getBuildMeta } from "@/lib/docs-data/meta";
 import { HeadingWithAnchor } from "@/components/docs/content/HeadingWithAnchor";
 
-const GITHUB_BASE = "https://github.com/TettoLabs/anatomia/tree/main/.ana/plans/completed/";
+const GITHUB_BASE = "https://github.com/anatomia-dev/anatomia/tree/main/.ana/plans/completed/";
 
 function formatDuration(minutes: number): string {
   if (minutes >= 60) {

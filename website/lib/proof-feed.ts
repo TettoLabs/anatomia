@@ -48,13 +48,13 @@ function mockFeed(): ProofEntry[] {
 }
 
 const PROOF_CHAIN_URL =
-  "https://raw.githubusercontent.com/TettoLabs/anatomia/main/.ana/proof_chain.json";
+  "https://raw.githubusercontent.com/anatomia-dev/anatomia/main/.ana/proof_chain.json";
 
 const GITHUB_TAGS_URL =
-  "https://api.github.com/repos/TettoLabs/anatomia/tags";
+  "https://api.github.com/repos/anatomia-dev/anatomia/tags";
 
 const GITHUB_COMMITS_URL =
-  "https://api.github.com/repos/TettoLabs/anatomia/commits";
+  "https://api.github.com/repos/anatomia-dev/anatomia/commits";
 
 const VERSION_FALLBACK = "v1.0.2";
 

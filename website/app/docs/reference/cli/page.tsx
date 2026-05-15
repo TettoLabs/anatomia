@@ -78,7 +78,7 @@ export default function CLIReferencePage() {
         toc={tocItems}
         commitSha={meta.commitSha}
         buildTimestamp={meta.buildTimestamp}
-        editUrl="https://github.com/TettoLabs/anatomia/blob/main/packages/cli/src/index.ts"
+        editUrl="https://github.com/anatomia-dev/anatomia/blob/main/packages/cli/src/index.ts"
         pageUrl="https://anatomia.dev/docs/reference/cli"
         pageContent={`# CLI Commands\n\n${groups.map(g => `## ${g.name}\n${g.commands.map(c => `- **${c.name}**: ${c.description}`).join("\n")}`).join("\n\n")}`}
       />

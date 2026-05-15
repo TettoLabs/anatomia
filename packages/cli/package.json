@@ -25,15 +25,15 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/TettoLabs/anatomia.git",
+    "url": "git+https://github.com/anatomia-dev/anatomia.git",
     "directory": "packages/cli"
   },
   "homepage": "https://anatomia.dev",
   "bugs": {
-    "url": "https://github.com/TettoLabs/anatomia/issues"
+    "url": "https://github.com/anatomia-dev/anatomia/issues"
   },
   "author": {
-    "name": "TettoLabs",
+    "name": "Anatomia",
     "url": "https://anatomia.dev"
   },
   "engines": {

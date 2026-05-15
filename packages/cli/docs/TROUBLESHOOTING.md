@@ -689,7 +689,7 @@ ls Cargo.toml
 **Option 3: File issue for new language support**
 ```bash
 # If language should be supported, report it:
-# https://github.com/TettoLabs/anatomia/issues
+# https://github.com/anatomia-dev/anatomia/issues
 ```
 
 ### Example

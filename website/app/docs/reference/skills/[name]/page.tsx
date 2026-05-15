@@ -8,7 +8,7 @@ import { HeadingWithAnchor } from "@/components/docs/content/HeadingWithAnchor";
 import { getSkillTemplates, getSkillByName } from "@/lib/docs-data";
 import { getBuildMeta } from "@/lib/docs-data/meta";
 
-const GITHUB_BASE = "https://github.com/TettoLabs/anatomia/blob/main/packages/cli/templates/.claude/skills/";
+const GITHUB_BASE = "https://github.com/anatomia-dev/anatomia/blob/main/packages/cli/templates/.claude/skills/";
 
 interface SkillDetailProps {
   params: Promise<{ name: string }>;

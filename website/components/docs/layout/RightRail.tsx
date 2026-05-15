@@ -351,7 +351,7 @@ export function RightRail({ toc, commitSha, buildTimestamp, editUrl, variant, pr
           <>
             commit{" "}
             <a
-              href={`https://github.com/TettoLabs/anatomia/commit/${commitSha}`}
+              href={`https://github.com/anatomia-dev/anatomia/commit/${commitSha}`}
               target="_blank"
               rel="noopener noreferrer"
               style={{

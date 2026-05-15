@@ -159,7 +159,7 @@ export function MobileSidebarToggle() {
             }}
           >
             <a
-              href="https://github.com/TettoLabs/anatomia"
+              href="https://github.com/anatomia-dev/anatomia"
               target="_blank"
               rel="noopener noreferrer"
               onClick={close}

@@ -93,7 +93,7 @@ export function DocsNav() {
       <div style={{ justifySelf: "end", display: "flex", alignItems: "center", gap: "4px" }}>
         <span className="docs-nav-theme"><ThemeToggle /></span>
         <a
-          href="https://github.com/TettoLabs/anatomia"
+          href="https://github.com/anatomia-dev/anatomia"
           target="_blank"
           rel="noopener noreferrer"
           className="docs-nav-github"

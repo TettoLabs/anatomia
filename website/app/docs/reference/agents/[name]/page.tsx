@@ -7,7 +7,7 @@ import { HeadingWithAnchor } from "@/components/docs/content/HeadingWithAnchor";
 import { getAgentTemplates, getAgentByName } from "@/lib/docs-data";
 import { getBuildMeta } from "@/lib/docs-data/meta";
 
-const GITHUB_BASE = "https://github.com/TettoLabs/anatomia/blob/main/packages/cli/templates/.claude/agents/";
+const GITHUB_BASE = "https://github.com/anatomia-dev/anatomia/blob/main/packages/cli/templates/.claude/agents/";
 
 interface AgentDetailProps {
   params: Promise<{ name: string }>;

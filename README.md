@@ -1,6 +1,6 @@
 # Anatomia
 
-[![CI](https://github.com/TettoLabs/anatomia/actions/workflows/test.yml/badge.svg)](https://github.com/TettoLabs/anatomia/actions)
+[![CI](https://github.com/anatomia-dev/anatomia/actions/workflows/test.yml/badge.svg)](https://github.com/anatomia-dev/anatomia/actions)
 [![npm](https://img.shields.io/npm/v/anatomia-cli)](https://www.npmjs.com/package/anatomia-cli)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
@@ -192,12 +192,12 @@ Scan output (`AGENTS.md`, `CLAUDE.md`) works with any AI tool that reads markdow
 ## Development
 
 ```bash
-git clone https://github.com/TettoLabs/anatomia.git
+git clone https://github.com/anatomia-dev/anatomia.git
 cd anatomia && pnpm install && pnpm build
 cd packages/cli && pnpm vitest run
 ```
 
-See [CONTRIBUTING.md](https://github.com/TettoLabs/anatomia/blob/main/packages/cli/CONTRIBUTING.md) for extension guides and [ARCHITECTURE.md](https://github.com/TettoLabs/anatomia/blob/main/packages/cli/ARCHITECTURE.md) for the module map.
+See [CONTRIBUTING.md](https://github.com/anatomia-dev/anatomia/blob/main/packages/cli/CONTRIBUTING.md) for extension guides and [ARCHITECTURE.md](https://github.com/anatomia-dev/anatomia/blob/main/packages/cli/ARCHITECTURE.md) for the module map.
 
 This project is built with Anatomia. The `.ana/` directory is the proof — every feature was scoped, planned, built, and verified through the same pipeline this tool installs for you.
 

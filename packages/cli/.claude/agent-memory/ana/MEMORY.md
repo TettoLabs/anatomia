@@ -1,0 +1,2 @@
+- [Fixture manifest convention](project_fixture_convention.md) — test fixtures must use fictional package names to avoid GitHub security alerts
+- [Deferred major bumps](project_deferred_major_bumps.md) — glob 10→13, TS 5→6, tree-sitter 0.25→0.26 deferred with rationale
