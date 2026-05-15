@@ -29079,7 +29079,10 @@
           "severity": "risk",
           "suggested_action": "scope",
           "id": "fix-work-saves-compat-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Incorrect finding: resolves claims tests ARE present in work.test.ts. Three tests at lines 3367, 3396, 3421 inside 'resolves claims summary line' describe block. Tests verify: emits summary with resolves, omits summary without resolves, preserves resolves field without auto-close. ~120 lines intact. Code exists on main from upstream-finding-resolution scope.",
+          "closed_at": "2026-05-15T18:15:08.136Z",
+          "closed_by": "human"
         },
         {
           "category": "test",

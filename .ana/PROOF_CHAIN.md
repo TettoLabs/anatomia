@@ -1,13 +1,13 @@
 # Proof Chain Dashboard
 
-108 runs · 37 active · 134 lessons · 3 promoted · 473 closed
+108 runs · 36 active · 134 lessons · 3 promoted · 474 closed
 
 ## Hot Modules
 
 | File | Active | Entries |
 |------|--------|--------|
-| packages/cli/tests/commands/work.test.ts | 5 | 4 |
 | packages/cli/src/commands/work.ts | 5 | 5 |
+| packages/cli/tests/commands/work.test.ts | 4 | 4 |
 | packages/cli/tests/commands/artifact.test.ts | 3 | 2 |
 | packages/cli/tests/commands/proof.test.ts | 2 | 2 |
 
@@ -15,7 +15,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 37 total)
+## Active Findings (30 shown of 36 total)
 
 ### packages/cli/src/commands/init/commit.ts
 
@@ -58,11 +58,14 @@
 
 ### packages/cli/tests/commands/work.test.ts
 
-- **code:** Resolves claims tests removed (3 tests, ~120 lines) — unscoped deletion of upstream-finding-resolution feature tests — *work.ts saves.json backward compat bug + worktree dedup + formatting*
 - **test:** Arrow-line count assertion uses toBeGreaterThanOrEqual(2) — passes with any number >= 2, not specific to the 2-line ready-to-merge case — *work.ts saves.json backward compat bug + worktree dedup + formatting*
 - **test:** Conditional PID guard makes 8 tests potential no-ops in environments where getClaudePid() returns null — *Capture actual think time from Ana session start*
 - **test:** Stage detection tests use hardcoded timestamps with 1-hour gaps — no boundary test for equal timestamps — *Fix cycle stage detection breaks on multi-phase builds*
 - **test:** A010 test creates untracked file after commit — doesn't test scoped staging during commit — *Commit timestamps written by work start*
+
+### packages/cli/tests/utils/proofSummary.test.ts
+
+- **test:** proofSummary.test.ts parseFindings uses toBeGreaterThanOrEqual on deterministic fixture data — *Test Suite Hygiene*
 
 ### website/app/docs/reference/cli/page.tsx
 
