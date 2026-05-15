@@ -30,6 +30,8 @@ import type {
 } from '../lib/docs-data/types';
 import { stripJsx } from '../lib/docs-data/stripJsx';
 
+import { buildDocsStatValues, resolveDocsStatTags } from '../lib/docs-data/docsStatValues.js';
+
 // ---------------------------------------------------------------------------
 // Paths
 // ---------------------------------------------------------------------------
@@ -814,6 +816,7 @@ function generateSearchIndex(
 
 function generateLlmsTxt(
   searchIndex: SearchIndexEntry[],
+  docsStatValues: Record<string, string>,
 ): { llmsTxt: string; llmsFullTxt: string } {
   // Read project description from project-context.md
   const contextPath = path.join(MONOREPO_ROOT, '.ana', 'context', 'project-context.md');
@@ -908,7 +911,7 @@ function generateLlmsTxt(
         if (frontmatter.description) {
           fullLines.push(`> ${frontmatter.description}`, '');
         }
-        fullLines.push(stripJsx(body), '');
+        fullLines.push(stripJsx(resolveDocsStatTags(body, docsStatValues)), '');
       }
     }
   }
@@ -920,111 +923,7 @@ function generateLlmsTxt(
 }
 
 // ---------------------------------------------------------------------------
-// 10. Dynamic MDX value updates
-// ---------------------------------------------------------------------------
-
-function updateDynamicMdxValues(proofEntries: ProofEntry[], skillCount: number, gotchaCount: number): void {
-  const contentDir = path.join(WEBSITE_DIR, 'content', 'docs');
-
-  // Compute values
-  const proofCount = proofEntries.length;
-  let rejections = 0;
-  let totalFindings = 0;
-  const stages: Record<string, number[]> = { think: [], plan: [], build: [], verify: [] };
-
-  for (const entry of proofEntries) {
-    if (entry.rejectionCycles > 0) rejections++;
-    totalFindings += entry.findingCount;
-    if (entry.timing.think > 0) stages.think.push(entry.timing.think);
-    if (entry.timing.plan > 0) stages.plan.push(entry.timing.plan);
-    if (entry.timing.build > 0) stages.build.push(entry.timing.build);
-    if (entry.timing.verify > 0) stages.verify.push(entry.timing.verify);
-  }
-
-  function median(arr: number[]): number {
-    if (arr.length === 0) return 0;
-    const sorted = [...arr].sort((a, b) => a - b);
-    const mid = Math.floor(sorted.length / 2);
-    return sorted.length % 2 === 0 ? Math.round((sorted[mid - 1] + sorted[mid]) / 2) : sorted[mid];
-  }
-
-  const medians = {
-    think: median(stages.think),
-    plan: median(stages.plan),
-    build: median(stages.build),
-    verify: median(stages.verify),
-  };
-
-  // Define replacement patterns: tag → regex + replacement
-  const replacements: { tag: string; pattern: RegExp; replacement: string }[] = [
-    {
-      tag: 'rejectionProofCount',
-      // Matches: "N of ... N proofs had rejection cycles" with the marker
-      // Preserves the original phrasing ("Anatomia's own" vs "our")
-      pattern: /\d+ of (Anatomia's own |our )\d+ proofs had rejection cycles\.\s*\{\/\* ana:dynamic rejectionProofCount \*\/\}/g,
-      replacement: `${rejections} of $1${proofCount} proofs had rejection cycles. {/* ana:dynamic rejectionProofCount */}`,
-    },
-    {
-      tag: 'skillCount',
-      // Matches: "All N skills" heading marker
-      pattern: /All \d+ skills \{\/\* ana:dynamic skillCount \*\/\}/g,
-      replacement: `All ${skillCount} skills {/* ana:dynamic skillCount */}`,
-    },
-    {
-      tag: 'gotchaCount',
-      // Matches: "N pre-curated gotchas"
-      pattern: /\d+ pre-curated gotchas ship with Anatomia.*?\{\/\* ana:dynamic gotchaCount \*\/\}/g,
-      replacement: `${gotchaCount} pre-curated gotchas ship with Anatomia. Each matches when all trigger conditions are satisfied — compound triggers prevent irrelevant advice. {/* ana:dynamic gotchaCount */}`,
-    },
-    {
-      tag: 'medianTimings',
-      // Matches: the median timings paragraph
-      pattern: /The median across all \d+ proofs: \d+m think, \d+m plan, \d+m build, \d+m verify\.<\/p>\{\/\* ana:dynamic medianTimings \*\/\}/g,
-      replacement: `The median across all ${proofCount} proofs: ${medians.think}m think, ${medians.plan}m plan, ${medians.build}m build, ${medians.verify}m verify.</p>{/* ana:dynamic medianTimings */}`,
-    },
-    {
-      tag: 'proofSummary',
-      // Matches: "N verified pipeline runs." inside a JSX prop
-      pattern: /"\d+ verified pipeline runs\." \/\* ana:dynamic proofSummary \*\//g,
-      replacement: `"${proofCount} verified pipeline runs." /* ana:dynamic proofSummary */`,
-    },
-    {
-      tag: 'proofFindings',
-      // Matches: "N proofs, N findings to triage."
-      pattern: /"\d+ proofs, \d+ findings to triage\." \/\* ana:dynamic proofFindings \*\//g,
-      replacement: `"${proofCount} proofs, ${totalFindings} findings to triage." /* ana:dynamic proofFindings */`,
-    },
-  ];
-
-  // Scan all MDX files and apply replacements
-  let updatedCount = 0;
-  function scanAndUpdate(dir: string): void {
-    if (!fs.existsSync(dir)) return;
-    for (const item of fs.readdirSync(dir)) {
-      const fullPath = path.join(dir, item);
-      if (fs.statSync(fullPath).isDirectory()) {
-        scanAndUpdate(fullPath);
-      } else if (item.endsWith('.mdx')) {
-        let mdxContent = fs.readFileSync(fullPath, 'utf-8');
-        let changed = false;
-        for (const rep of replacements) {
-          const before = mdxContent;
-          mdxContent = mdxContent.replace(rep.pattern, rep.replacement);
-          if (mdxContent !== before) changed = true;
-        }
-        if (changed) {
-          fs.writeFileSync(fullPath, mdxContent, 'utf-8');
-          updatedCount++;
-        }
-      }
-    }
-  }
-  scanAndUpdate(contentDir);
-  console.log(`  ✓ Dynamic MDX values updated (${updatedCount} files)`);
-}
-
-// ---------------------------------------------------------------------------
-// 11. Internal link validation
+// 10. Internal link validation
 // ---------------------------------------------------------------------------
 
 function validateInternalLinks(
@@ -1137,8 +1036,35 @@ async function main(): Promise<void> {
   const buildMeta = extractBuildMeta();
   writeJSON('build-meta.json', buildMeta);
 
-  // Update dynamic values in MDX files
-  updateDynamicMdxValues(proofEntries, skillTemplates.length, gotchas.length);
+  // Build docs stat values for DocsStat tag resolution in llms-full.txt
+  const stages: Record<string, number[]> = { think: [], plan: [], build: [], verify: [] };
+  let rejections = 0;
+  let totalFindings = 0;
+  for (const entry of proofEntries) {
+    if (entry.rejectionCycles > 0) rejections++;
+    totalFindings += entry.findingCount;
+    if (entry.timing.think > 0) stages.think.push(entry.timing.think);
+    if (entry.timing.plan > 0) stages.plan.push(entry.timing.plan);
+    if (entry.timing.build > 0) stages.build.push(entry.timing.build);
+    if (entry.timing.verify > 0) stages.verify.push(entry.timing.verify);
+  }
+  function median(arr: number[]): number {
+    if (arr.length === 0) return 0;
+    const sorted = [...arr].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 === 0 ? Math.round((sorted[mid - 1] + sorted[mid]) / 2) : sorted[mid];
+  }
+  const docsStatValues = buildDocsStatValues({
+    proofCount: proofEntries.length,
+    rejections,
+    findings: totalFindings,
+    skillCount: skillTemplates.length,
+    gotchaCount: gotchas.length,
+    medianThink: median(stages.think),
+    medianPlan: median(stages.plan),
+    medianBuild: median(stages.build),
+    medianVerify: median(stages.verify),
+  });
 
   // Generate search index — write to both data/docs (for validation) and public (for client fetch)
   const searchIndex = generateSearchIndex(proofEntries, commands, agentTemplates, skillTemplates);
@@ -1148,7 +1074,7 @@ async function main(): Promise<void> {
   console.log('  ✓ public/search-index.json');
 
   // Generate llms.txt files
-  const { llmsTxt, llmsFullTxt } = generateLlmsTxt(searchIndex);
+  const { llmsTxt, llmsFullTxt } = generateLlmsTxt(searchIndex, docsStatValues);
   fs.writeFileSync(path.join(publicDir, 'llms.txt'), llmsTxt, 'utf-8');
   console.log('  ✓ public/llms.txt');
   fs.writeFileSync(path.join(publicDir, 'llms-full.txt'), llmsFullTxt, 'utf-8');
