@@ -15430,7 +15430,10 @@
             "A013"
           ],
           "id": "agent-dashboard-p1-C1",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed: consolidated setModel error into throw message at agents.ts:200. Previously console.error printed 'Unknown agent' + 'Available agents' then throw re-printed 'Unknown agent' via catch block. Now Error message contains all detail, printed once by catch block. Commit b1b699fc.",
+          "closed_at": "2026-05-15T15:44:42.708Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
