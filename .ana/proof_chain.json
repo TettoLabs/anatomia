@@ -15132,7 +15132,10 @@
           "severity": "debt",
           "suggested_action": "scope",
           "id": "website-lift-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Stale: empty-string guard exists at worktree.ts:112 — 'if (dir === \"\") return null'. The guard was not removed; finding predates a commit that touched the function for other reasons.",
+          "closed_at": "2026-05-15T06:23:46.797Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
