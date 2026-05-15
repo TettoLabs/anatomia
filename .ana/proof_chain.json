@@ -14762,7 +14762,10 @@
           "severity": "observation",
           "suggested_action": "scope",
           "id": "worktrees-v2-timing-danger-prune-C7",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Stale: same issue as non-main-artifact-branch-tests-C4 (closed above). detectWorktreeSlug('') has an explicit guard at worktree.ts:112 since commit df833875. Returns null immediately for empty string — no environment dependency. Both findings describe the pre-fix behavior.",
+          "closed_at": "2026-05-15T03:23:17.612Z",
+          "closed_by": "human"
         }
       ],
       "rejection_cycles": 0,
