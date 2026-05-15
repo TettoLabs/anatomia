@@ -16061,7 +16061,10 @@
             "A006"
           ],
           "id": "website-dead-links-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Stale: proofFeed.headSub at copy.ts:465 is now empty string — 'Each row links to the contract' text removed. Zero matches for 'Each row links' across entire website directory.",
+          "closed_at": "2026-05-15T06:23:38.266Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
