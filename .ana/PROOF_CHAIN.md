@@ -1,12 +1,12 @@
 # Proof Chain Dashboard
 
-102 runs · 80 active · 122 lessons · 3 promoted · 410 closed
+102 runs · 79 active · 122 lessons · 3 promoted · 411 closed
 
 ## Hot Modules
 
 | File | Active | Entries |
 |------|--------|--------|
-| packages/cli/src/commands/work.ts | 15 | 9 |
+| packages/cli/src/commands/work.ts | 14 | 9 |
 | packages/cli/tests/commands/work.test.ts | 6 | 5 |
 | packages/cli/src/utils/worktree.ts | 5 | 3 |
 | website/lib/copy.ts | 4 | 3 |
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 80 total)
+## Active Findings (30 shown of 79 total)
 
 ### packages/cli/src/commands/init/commit.ts
 

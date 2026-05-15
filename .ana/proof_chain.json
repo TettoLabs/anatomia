@@ -21658,7 +21658,10 @@
             "A013"
           ],
           "id": "kind-aware-branch-prefixes-C3",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Post-filter at work.ts:145 uses endsWith('/' + slug) || b === slug — glob pre-filter is intentionally broad but matching is precise. Over-match requires two branches with identical slug suffix, which the work system prevents (slugs are unique identifiers).",
+          "closed_at": "2026-05-15T04:31:31.885Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
