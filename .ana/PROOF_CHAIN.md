@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-99 runs · 87 active · 119 lessons · 0 promoted · 396 closed
+99 runs · 86 active · 119 lessons · 0 promoted · 397 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 87 total)
+## Active Findings (30 shown of 86 total)
 
 ### packages/cli/src/commands/init/commit.ts
 
@@ -52,7 +52,6 @@
 
 - **test:** A009 test only verifies cwd restoration, not process.exit or console spy cleanup — *Worktree Guard Integration Tests*
 - **test:** Console and process.exit spies restored inline after assertions — leak on assertion failure — *Worktree Guard Integration Tests*
-- **test:** A009 test is order-dependent — relies on running after the other describe blocks — *Worktree Guard Integration Tests*
 
 ### website/app/docs/[...slug]/page.tsx
 
@@ -61,6 +60,10 @@
 ### website/app/docs/[[...slug]]/page.tsx
 
 - **code:** Prose classes used without @tailwindcss/typography installed — *Docs Infrastructure — Fumadocs MDX Pipeline*
+
+### website/app/docs/layout.tsx
+
+- **code:** No error boundary in docs layout — broken MDX crashes entire docs section — *Docs Infrastructure — Fumadocs MDX Pipeline*
 
 ### website/app/docs/reference/cli/page.tsx
 
