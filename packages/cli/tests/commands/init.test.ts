@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { createEmptyEngineResult } from '../../src/engine/types/engineResult.js';
 import { fileExists } from '../../src/commands/init/preflight.js';
 import { displayBlindSpots, displaySuccessMessage } from '../../src/commands/init/state.js';
-import { AGENT_FILES } from '../../src/constants.js';
+import { AGENT_FILES, DOCS_QUICKSTART, DOCS_SETUP_GUIDE } from '../../src/constants.js';
 
 async function dirExists(dirPath: string): Promise<boolean> {
   try {
@@ -564,6 +564,106 @@ describe('ana init', () => {
       const output = logs.join('\n');
       expect(output).toContain('Pipeline readiness');
       spy.mockRestore();
+    });
+  });
+
+  describe('displaySuccessMessage quickstart URL', () => {
+    // @ana A001, A002
+    it('shows quickstart URL with label', () => {
+      const logs: string[] = [];
+      const spy = vi.spyOn(console, 'log').mockImplementation((...args) => { logs.push(args.join(' ')); });
+
+      const result = createEmptyEngineResult();
+      result.stack.language = 'TypeScript';
+      displaySuccessMessage(result, 'test-project', '2.0', undefined, []);
+
+      const output = logs.join('\n');
+      expect(output).toContain(DOCS_QUICKSTART);
+      expect(output).toContain('Quickstart');
+      spy.mockRestore();
+    });
+
+    // @ana A003
+    it('shows quickstart URL after Next steps block', () => {
+      const logs: string[] = [];
+      const spy = vi.spyOn(console, 'log').mockImplementation((...args) => { logs.push(args.join(' ')); });
+
+      const result = createEmptyEngineResult();
+      result.stack.language = 'TypeScript';
+      displaySuccessMessage(result, 'test-project', '2.0', undefined, []);
+
+      const output = logs.join('\n');
+      const nextIndex = output.indexOf('Next:');
+      const quickstartIndex = output.indexOf(DOCS_QUICKSTART);
+      expect(nextIndex).toBeGreaterThan(-1);
+      expect(quickstartIndex).toBeGreaterThan(nextIndex);
+      spy.mockRestore();
+    });
+
+    // @ana A011
+    it('shows quickstart URL even when engineResult is null', () => {
+      const logs: string[] = [];
+      const spy = vi.spyOn(console, 'log').mockImplementation((...args) => { logs.push(args.join(' ')); });
+
+      displaySuccessMessage(null, 'test-project', '2.0', undefined, []);
+
+      const output = logs.join('\n');
+      expect(output).toContain(DOCS_QUICKSTART);
+      spy.mockRestore();
+    });
+  });
+
+  describe('setup bare command guide URL', () => {
+    // @ana A004, A005
+    it('shows guide URL with label', async () => {
+      const logs: string[] = [];
+      const spy = vi.spyOn(console, 'log').mockImplementation((...args) => { logs.push(args.join(' ')); });
+
+      const { Command } = await import('commander');
+      const { registerSetupCommand } = await import('../../src/commands/setup.js');
+      const program = new Command();
+      program.exitOverride();
+      registerSetupCommand(program);
+      program.parse(['setup'], { from: 'user' });
+
+      const output = logs.join('\n');
+      expect(output).toContain(DOCS_SETUP_GUIDE);
+      expect(output).toContain('Guide');
+      spy.mockRestore();
+    });
+
+    // @ana A006
+    it('shows guide URL between agent command and subcommands', async () => {
+      const logs: string[] = [];
+      const spy = vi.spyOn(console, 'log').mockImplementation((...args) => { logs.push(args.join(' ')); });
+
+      const { Command } = await import('commander');
+      const { registerSetupCommand } = await import('../../src/commands/setup.js');
+      const program = new Command();
+      program.exitOverride();
+      registerSetupCommand(program);
+      program.parse(['setup'], { from: 'user' });
+
+      const output = logs.join('\n');
+      const agentIndex = output.indexOf('claude --agent ana-setup');
+      const guideIndex = output.indexOf(DOCS_SETUP_GUIDE);
+      const subcommandsIndex = output.indexOf('Subcommands:');
+      expect(agentIndex).toBeGreaterThan(-1);
+      expect(guideIndex).toBeGreaterThan(agentIndex);
+      expect(subcommandsIndex).toBeGreaterThan(guideIndex);
+      spy.mockRestore();
+    });
+  });
+
+  describe('URL constants', () => {
+    // @ana A007
+    it('DOCS_QUICKSTART has correct value', () => {
+      expect(DOCS_QUICKSTART).toBe('https://anatomia.dev/docs/start');
+    });
+
+    // @ana A008
+    it('DOCS_SETUP_GUIDE has correct value', () => {
+      expect(DOCS_SETUP_GUIDE).toBe('https://anatomia.dev/docs/guides/using-ana-setup');
     });
   });
 
