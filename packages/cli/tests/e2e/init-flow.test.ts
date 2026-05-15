@@ -190,6 +190,69 @@ describe('ana init E2E', () => {
     expect(testFileExists).toBe(false);
   }, 60000); // 60s timeout
 
+  it('re-init preserves plans/active/ (in-flight pipeline work survives)', async () => {
+    // First init
+    await execFileAsync('node', [cliPath, 'init'], {
+      cwd: tmpProject,
+    });
+
+    const anaPath = path.join(tmpProject, '.ana');
+    const activePath = path.join(anaPath, 'plans', 'active');
+
+    // Simulate in-flight pipeline work: a scoped work item with multiple files
+    const slugDir = path.join(activePath, 'fix-auth-timeout');
+    await fs.mkdir(slugDir, { recursive: true });
+    await fs.writeFile(
+      path.join(slugDir, 'scope.md'),
+      '# Scope: Fix auth timeout\n\n**Created by:** Ana\n'
+    );
+    await fs.writeFile(
+      path.join(slugDir, '.saves.json'),
+      '{"scope":{"sha":"abc123","savedAt":"2026-05-15T00:00:00Z"}}'
+    );
+
+    // Simulate a second work item at a later pipeline stage
+    const slugDir2 = path.join(activePath, 'add-export-csv');
+    await fs.mkdir(slugDir2, { recursive: true });
+    await fs.writeFile(
+      path.join(slugDir2, 'scope.md'),
+      '# Scope: Add export CSV\n'
+    );
+    await fs.writeFile(
+      path.join(slugDir2, 'spec.md'),
+      '# Spec: Add export CSV\n'
+    );
+    await fs.writeFile(
+      path.join(slugDir2, 'contract.yaml'),
+      'assertions:\n  - id: A001\n'
+    );
+
+    // Re-init with --force
+    await execFileAsync('node', [cliPath, 'init', '--force'], {
+      cwd: tmpProject,
+    });
+
+    // All active plan files must survive the atomic swap
+    const scope1Exists = await fileExists(path.join(slugDir, 'scope.md'));
+    expect(scope1Exists, 'scope.md for fix-auth-timeout lost during re-init').toBe(true);
+
+    const saves1Exists = await fileExists(path.join(slugDir, '.saves.json'));
+    expect(saves1Exists, '.saves.json for fix-auth-timeout lost during re-init').toBe(true);
+
+    const scope2Exists = await fileExists(path.join(slugDir2, 'scope.md'));
+    expect(scope2Exists, 'scope.md for add-export-csv lost during re-init').toBe(true);
+
+    const spec2Exists = await fileExists(path.join(slugDir2, 'spec.md'));
+    expect(spec2Exists, 'spec.md for add-export-csv lost during re-init').toBe(true);
+
+    const contract2Exists = await fileExists(path.join(slugDir2, 'contract.yaml'));
+    expect(contract2Exists, 'contract.yaml for add-export-csv lost during re-init').toBe(true);
+
+    // Verify file content survived intact (not just the path)
+    const scopeContent = await fs.readFile(path.join(slugDir, 'scope.md'), 'utf-8');
+    expect(scopeContent).toContain('Fix auth timeout');
+  }, 60000);
+
   it('init failure leaves existing .ana/ untouched (NEW-001 swap safety)', async () => {
     // First init creates a valid .ana/
     await execFileAsync('node', [cliPath, 'init'], {

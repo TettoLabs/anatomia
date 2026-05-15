@@ -454,6 +454,14 @@ export async function createAnaJson(
  *     like scanStaleDays, catches invalid enums like setupPhase:"guided"),
  *     merged with the fresh mechanical fields (anaVersion, lastScanAt)
  *     from `newAnaConfig`, written back to tmpAnaPath.
+ *   - proof_chain.json + PROOF_CHAIN.md → copied. Pipeline history
+ *     must survive re-init.
+ *   - plans/completed/ → copied wholesale. Archived pipeline artifacts.
+ *   - plans/active/ → copied wholesale. In-flight pipeline work (scopes,
+ *     specs, contracts, build reports) must survive re-init. Without this,
+ *     the atomic swap replaces active plans with an empty .gitkeep.
+ *   - .gitignore → NOT copied. Infrastructure-owned by createDirectoryStructure;
+ *     must match current CLI version's expectations (state/, worktrees/).
  *
  * Note on merge semantics: only anaVersion and lastScanAt refresh from
  * the new scan. language/framework/packageManager/commands preserve
@@ -539,6 +547,19 @@ export async function preserveUserState(
     }
   } catch {
     // No completed plans — keep the fresh .gitkeep
+  }
+
+  // 6. Copy plans/active/ (in-flight pipeline work — scopes, specs, contracts)
+  const activeSrc = path.join(existingAnaPath, 'plans', 'active');
+  const activeDst = path.join(tmpAnaPath, 'plans', 'active');
+  try {
+    const stats = await fs.stat(activeSrc);
+    if (stats.isDirectory()) {
+      await fs.rm(activeDst, { recursive: true, force: true });
+      await fs.cp(activeSrc, activeDst, { recursive: true });
+    }
+  } catch {
+    // No active plans — keep the fresh .gitkeep
   }
 }
 
