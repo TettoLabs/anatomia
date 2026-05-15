@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-96 runs · 105 active · 117 lessons · 0 promoted · 367 closed
+96 runs · 104 active · 117 lessons · 0 promoted · 368 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 105 total)
+## Active Findings (30 shown of 104 total)
 
 ### packages/cli/src/types/proof.ts
 
@@ -83,7 +83,6 @@
 ### website/components/docs/proof/ProofExplorer.tsx
 
 - **code:** formatDuration duplicated in 4 files (ProofExplorer, ProofHero, PipelineGantt, detail page) — extract to shared utility — *Dynamic Pages — Reference & Proof Chain*
-- **code:** ProofExplorer inline styles heavily duplicated across 7 column headers — same 9-property object repeated per th element — *Dynamic Pages — Reference & Proof Chain*
 
 ### website/components/docs/providers/PlatformProvider.tsx
 
@@ -107,4 +106,8 @@
 - **code:** Unused variable 'other' in generateLlmsTxt — pages filtered but remainder never referenced — *Docs Search + Polish*
 - **code:** Duplicate stripJsx implementation — one in website/lib/docs-data/stripJsx.ts, another inlined in extract-docs-data.ts — *Docs Search + Polish*
 - **code:** Keyword fallback categorization lacks word boundaries — 'scannable' matches /scan/, misassigning proof entries to Engine — *Docs Data Pipeline*
+
+### website/source.config.ts
+
+- **code:** Frontmatter schema allows empty strings — z.string() without .min(1) — *Docs Infrastructure — Fumadocs MDX Pipeline*
 

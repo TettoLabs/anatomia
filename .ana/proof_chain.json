@@ -24541,7 +24541,10 @@
           "severity": "debt",
           "suggested_action": "accept",
           "id": "dynamic-pages-C12",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed by Think direct commit — extracted shared 9-property inline style into thStyle const in ProofExplorer.tsx. 7 <th> elements now use spread with per-element textAlign override. ~47 lines of duplication removed. Zero visual change — same properties, same values.",
+          "closed_at": "2026-05-15T00:11:23.231Z",
+          "closed_by": "human"
         }
       ],
       "rejection_cycles": 0,
