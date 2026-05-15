@@ -18021,7 +18021,10 @@
             "A008"
           ],
           "id": "worktree-artifact-cleanup-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Test is valid despite misleading name: the test at artifact.test.ts:3681 proves saveArtifact succeeds from a worktree when there's nothing to sweep. The sweep's error handling (try/catch at lines 1508-1513) is a standard best-effort pattern — 'catch {}' swallows errors. Testing that catch swallows errors is testing the language, not the application. The cleanup failure path is correct by inspection: 1 line of catch {}.",
+          "closed_at": "2026-05-15T00:55:13.945Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
