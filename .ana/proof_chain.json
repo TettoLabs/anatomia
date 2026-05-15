@@ -22158,7 +22158,10 @@
             "A005"
           ],
           "id": "fix-worktree-branch-parsing-C4",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Same as fix-worktree-branch-parsing-C2 — companion finding about the same code. detectBranches is exercised through detectGitInfo integration tests. The git.ts fix (adding + to the regex character class) is verified by the same reasoning: [*+] is a single character class where testing * exercises the class. The integration test path through scanProject → detectGitInfo → detectBranches covers the function end-to-end.",
+          "closed_at": "2026-05-15T00:59:55.208Z",
+          "closed_by": "human"
         },
         {
           "category": "upstream",

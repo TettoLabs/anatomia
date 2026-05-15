@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-96 runs · 92 active · 117 lessons · 0 promoted · 380 closed
+96 runs · 91 active · 117 lessons · 0 promoted · 381 closed
 
 ## Hot Modules
 
@@ -16,11 +16,11 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 92 total)
+## Active Findings (30 shown of 91 total)
 
-### packages/cli/src/engine/detectors/git.ts
+### packages/cli/src/commands/work.ts
 
-- **test:** Integration test covers work.ts parsing path end-to-end but git.ts detectBranches is not exercised by any new test — the fix is verified only by source inspection — *Fix worktree branch parsing*
+- **code:** printExistingWorktree duplicates commitsBehind rev-list logic from getWorktreeInfo — now two inline computations duplicated instead of one — *Worktree freshness detection*
 
 ### packages/cli/src/types/proof.ts
 
