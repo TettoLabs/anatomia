@@ -7,6 +7,70 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-05-15
+
+### Added
+
+#### Build isolation
+- **Worktree-based builds** — Build and Verify run in dedicated git worktrees, isolating pipeline work from the main working tree
+- Worktree lifecycle management: creation, build-step execution, freshness detection, pruning on completion
+- Worktree artifact cleanup — stale copies removed from main tree after merge
+- Pipeline concurrency guards — prevent concurrent plan/build/verify sessions on the same slug
+
+#### Infrastructure persistence
+- **`ana init commit`** — commit infrastructure files (scan, context, skills, agents) to the artifact branch with a single command
+- `ana init` surfaces scan quality gaps and pipeline readiness warnings
+- Re-init now preserves `plans/active/` alongside completed plans, proof chain, and context files
+
+#### Configuration
+- **`ana config show` / `ana config get`** — read ana.json settings from the CLI
+- Configurable branch prefixes — `branchPrefix` supports per-kind mappings (feature/, fix/, chore/)
+- `ana.json` schema uses `.passthrough()` to preserve user-added fields across re-init
+
+#### Pipeline improvements
+- **Version awareness** — `work status` shows when a newer CLI version is available and when project context is outdated
+- **`work complete --merge`** — merge the PR via GitHub CLI before completing, with actionable messaging for branch protection failures
+- Scope validation — structural checks on scope.md (kind, size, multi-phase, AC format)
+- Commit hygiene checks — lint staged files during build-report save
+- Think session timestamps captured and displayed in proof chain timing
+- Phase-accurate pipeline timing written to worktree artifacts
+- Ship log `kind` field — explicit feature/fix/chore/milestone classification
+
+#### Proof intelligence
+- **`ana proof strengthen`** — commit skill file edits and close findings atomically
+- Upstream finding resolution — institutional findings persist across pipeline runs
+- Rejection artifact preservation — failed build artifacts preserved in git history
+
+#### Agent improvements
+- **Agent dashboard** — `ana agents` lists installed agents with model configuration
+- Learn infrastructure foundation — severity-based triage, upstream category, strengthen workflow
+- CLI UX polish — command grouping, help examples, ENRICHMENT.md markers for setup agent
+
+#### Website and AnaDocs
+- **anatomia.dev** — marketing site with product overview, system architecture, and pricing
+- **AnaDocs** at anatomia.dev/docs — concept pages, guides, CLI reference, and Proof Explorer
+- Dynamic reference pages for agents, skills, context files, and CLI commands
+- Full-text search across all documentation
+- Proof Explorer — navigable proof chain entries with assertion ledgers and finding details
+
+### Changed
+- **Node.js 22+ required** — dropped Node 20 support; CI matrix updated to Node 22 + 24
+- **GitHub organization** — repository moved from `TettoLabs/anatomia` to `anatomia-dev/anatomia`; old URLs redirect
+- Pipeline timing uses phase-accurate timestamps from worktree artifacts
+- Branch cleanup uses force-delete (`-D`) for squash/rebase merged branches
+- Work start timestamps committed to artifact branch immediately
+- Auto-clean untracked plan artifacts during `work complete` pull
+
+### Fixed
+- `--merge` flag — replaced auto-escalation with actionable messaging, JSON.parse crash guard, stderr+stdout consolidation
+- Proof chain JSON merge pollution — merge artifacts no longer corrupt proof data
+- Pre-build source mutation — build step no longer modifies source files
+- Gantt bar rendering distortion in multi-phase pipeline visualizations
+- Worktree branch parsing for `+` markers in `git branch` output
+- CI matrix failures on Node version mismatch
+- Pipeline stage detection for resumed builds
+- Phase timing precision across worktree boundaries
+
 ## [1.0.2] - 2026-05-05
 
 ### Fixed
@@ -94,7 +158,8 @@ First stable release.
 
 Previous development history is preserved in git log.
 
-[Unreleased]: https://github.com/anatomia-dev/anatomia/compare/v1.0.2...HEAD
+[Unreleased]: https://github.com/anatomia-dev/anatomia/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/anatomia-dev/anatomia/compare/v1.0.2...v1.1.0
 [1.0.2]: https://github.com/anatomia-dev/anatomia/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/anatomia-dev/anatomia/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/anatomia-dev/anatomia/releases/tag/v1.0.0
