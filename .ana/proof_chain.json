@@ -27087,6 +27087,170 @@
         "commit_count": 3,
         "base_commit": "11abad9acab9051f1405390790fa821108c7311c"
       }
+    },
+    {
+      "slug": "work-ts-branch-coverage",
+      "feature": "work.ts untested branch coverage",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 8,
+        "satisfied": 8,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Completing work with a malformed verify report triggers an UNKNOWN warning",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "The UNKNOWN warning tells the user to check the verify report",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Work still completes successfully despite the UNKNOWN result",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "The proof chain entry records the result as UNKNOWN",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "A git conflict during pull causes the process to exit",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "The conflict error message tells the user about the conflict",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "The conflict error message instructs the user to resolve and retry",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "Both tests live in the existing work.test.ts file",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 6,
+        "met": 6
+      },
+      "timing": {
+        "total_minutes": 29,
+        "think": 1,
+        "plan": 8,
+        "build": 6,
+        "verify": 6
+      },
+      "hashes": {
+        "scope": "sha256:48349541fd19b5e8ec2455ca725ce199587a9b1a0f75c448c8a622d6915596cc",
+        "contract": "sha256:e165b52b403ede294f81723ec22032d458401313df22e6c2fa8eeb87b6cca5e3",
+        "plan": "sha256:3a044a88db21b7157f81ca20efcb35eb9310de24792f1b60b2cd87b71fd79364",
+        "spec": "sha256:60fc33572c2c77291e7d6fd66067018307eabbf4758c03efede3d547497e6162",
+        "build-report": "sha256:ac772ea2cf22205be3136da993a0a10457d19a241b9a8474e98e02f466201add",
+        "build-data": "sha256:d897213fdf908f3b6af0a904f26d1d74d40fc3bc67852efc0fef1c4a2fe09aa9",
+        "verify-report": "sha256:fafe2712f4b7562f2c0a6b3b3103238c83a75c70382e4664079a764987c323ca",
+        "verify-data": "sha256:6925dc1c5a0de27bf3a46430a23444f4301c7bfacada1550bbcd6aa4587c8962"
+      },
+      "completed_at": "2026-05-15T03:18:47.277Z",
+      "modules_touched": [
+        "packages/cli/tests/commands/work.test.ts"
+      ],
+      "scope_summary": "Two proof findings (proof-health-v2-C12, proof-health-v2-C8) identify untested defensive branches in work.ts. The UNKNOWN verification result warning and the git pull conflict error path have zero test coverage. Both protect users from silent failures — a malformed verify report proceeding unnoticed, and a rebase conflict during completion losing work. The user wants regression tests for both paths.",
+      "kind": "chore",
+      "findings": [
+        {
+          "category": "test",
+          "summary": "exitCalls count assertion uses toBeGreaterThan(0) instead of toBe(1)",
+          "file": "packages/cli/tests/commands/work.test.ts",
+          "anchor": null,
+          "line": 3364,
+          "severity": "debt",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A005"
+          ],
+          "id": "work-ts-branch-coverage-C1",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "Conflict test creates bareDir and cloneDir as siblings of tempDir — afterEach only cleans tempDir, so these directories leak on each test run",
+          "file": "packages/cli/tests/commands/work.test.ts",
+          "anchor": null,
+          "line": 3321,
+          "severity": "debt",
+          "suggested_action": "scope",
+          "id": "work-ts-branch-coverage-C2",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "UNKNOWN test mocks process.exit as no-op, causing execution to pass through the early UNKNOWN guard at work.ts:1513 before reaching the target branch at work.ts:870 — exercises two exit points instead of isolating one",
+          "file": "packages/cli/tests/commands/work.test.ts",
+          "anchor": null,
+          "line": 3287,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "work-ts-branch-coverage-C3",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "A003 assertion uses toBeDefined() for proof chain entry — matches contract 'exists' matcher but weaker than testing standards preference for specific value assertions",
+          "file": "packages/cli/tests/commands/work.test.ts",
+          "anchor": null,
+          "line": 3308,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A003"
+          ],
+          "id": "work-ts-branch-coverage-C4",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Two different result parsers with different casing: getVerifyResult returns 'unknown' (lowercase), parseResult in proofSummary returns 'UNKNOWN' (uppercase) — works correctly but fragile coupling between two parallel implementations",
+          "file": "packages/cli/src/commands/work.ts",
+          "anchor": null,
+          "line": 187,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "work-ts-branch-coverage-C5",
+          "status": "active"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "UNKNOWN warning branch (work.ts:868-875) is unreachable in normal flow due to early guard at work.ts:1513-1516",
+          "file": "packages/cli/src/commands/work.ts",
+          "severity": "observation",
+          "suggested_action": "monitor"
+        }
+      ],
+      "worktree": {
+        "used": true,
+        "created_at": "2026-05-15T02:11:23.186Z",
+        "completed_at": "2026-05-15T03:18:47.273Z",
+        "commit_count": 3,
+        "base_commit": "8adfb1a09f14de0ae4fb33de37b5dd8ef00191ca"
+      }
     }
   ],
   "schema": 1

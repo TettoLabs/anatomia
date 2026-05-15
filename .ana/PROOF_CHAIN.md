@@ -1,13 +1,13 @@
 # Proof Chain Dashboard
 
-99 runs · 84 active · 119 lessons · 0 promoted · 399 closed
+100 runs · 89 active · 119 lessons · 0 promoted · 399 closed
 
 ## Hot Modules
 
 | File | Active | Entries |
 |------|--------|--------|
-| packages/cli/src/commands/work.ts | 14 | 8 |
-| packages/cli/tests/commands/work.test.ts | 6 | 6 |
+| packages/cli/src/commands/work.ts | 15 | 9 |
+| packages/cli/tests/commands/work.test.ts | 10 | 7 |
 | packages/cli/src/utils/worktree.ts | 5 | 3 |
 | packages/cli/src/commands/proof.ts | 4 | 3 |
 | website/lib/copy.ts | 4 | 3 |
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 84 total)
+## Active Findings (30 shown of 89 total)
 
 ### packages/cli/src/commands/init/commit.ts
 
@@ -24,8 +24,8 @@
 
 ### packages/cli/src/commands/work.ts
 
+- **code:** Two different result parsers with different casing: getVerifyResult returns 'unknown' (lowercase), parseResult in proofSummary returns 'UNKNOWN' (uppercase) — works correctly but fragile coupling between two parallel implementations — *work.ts untested branch coverage*
 - **test:** Pull-recovery guards (2 of 5) not directly exercised by any test — *Fix --merge stdout pollution in --json mode*
-- **code:** printExistingWorktree duplicates commitsBehind rev-list logic from getWorktreeInfo — now two inline computations duplicated instead of one — *Worktree freshness detection*
 
 ### packages/cli/src/types/proof.ts
 
@@ -47,19 +47,15 @@
 
 ### packages/cli/tests/commands/work.test.ts
 
+- **test:** exitCalls count assertion uses toBeGreaterThan(0) instead of toBe(1) — *work.ts untested branch coverage*
+- **test:** Conflict test creates bareDir and cloneDir as siblings of tempDir — afterEach only cleans tempDir, so these directories leak on each test run — *work.ts untested branch coverage*
+- **test:** UNKNOWN test mocks process.exit as no-op, causing execution to pass through the early UNKNOWN guard at work.ts:1513 before reaching the target branch at work.ts:870 — exercises two exit points instead of isolating one — *work.ts untested branch coverage*
+- **test:** A003 assertion uses toBeDefined() for proof chain entry — matches contract 'exists' matcher but weaker than testing standards preference for specific value assertions — *work.ts untested branch coverage*
 - **test:** Conditional PID guard makes 8 tests potential no-ops in environments where getClaudePid() returns null — *Capture actual think time from Ana session start*
 
 ### website/app/docs/[...slug]/page.tsx
 
 - **code:** Dynamic components not registered in catch-all mdxComponents map — contract specifies registration but builder used build-time regex approach instead — *Docs Search + Polish*
-
-### website/app/docs/[[...slug]]/page.tsx
-
-- **code:** Prose classes used without @tailwindcss/typography installed — *Docs Infrastructure — Fumadocs MDX Pipeline*
-
-### website/app/docs/layout.tsx
-
-- **code:** No error boundary in docs layout — broken MDX crashes entire docs section — *Docs Infrastructure — Fumadocs MDX Pipeline*
 
 ### website/app/docs/reference/cli/page.tsx
 
@@ -108,9 +104,4 @@
 - **code:** LLMS_SECTIONS constant declared but never used in extract-docs-data.ts — *Docs Search + Polish*
 - **code:** Unused variable 'other' in generateLlmsTxt — pages filtered but remainder never referenced — *Docs Search + Polish*
 - **code:** Duplicate stripJsx implementation — one in website/lib/docs-data/stripJsx.ts, another inlined in extract-docs-data.ts — *Docs Search + Polish*
-- **code:** Keyword fallback categorization lacks word boundaries — 'scannable' matches /scan/, misassigning proof entries to Engine — *Docs Data Pipeline*
-
-### General
-
-- **test:** Contract assertions A013-A019 have no tagged tests — verified by source inspection only — *Kind-aware branch prefixes*
 
