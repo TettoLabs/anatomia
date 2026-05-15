@@ -4524,8 +4524,11 @@
             "A008"
           ],
           "id": "structured-findings-companion-C1",
-          "status": "active",
-          "suggested_action": "scope"
+          "status": "closed",
+          "suggested_action": "scope",
+          "closed_reason": "Acceptable inefficiency: double YAML parse at artifact.ts:1353-1354 re-reads companion file (<1KB) to count findings for a success message. The file was already parsed by validateVerifyDataFormat/validateBuildDataFormat. But YAML parse of a <1KB file takes microseconds. Same reasoning as getMainTreeRoot duplication (closed this session) — cheap operation, not worth refactoring the validate return type to thread a count through.",
+          "closed_at": "2026-05-15T03:28:00.327Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
