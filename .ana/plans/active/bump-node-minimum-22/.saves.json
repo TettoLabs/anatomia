@@ -57,5 +57,20 @@
     "website/public/llms-full.txt",
     "website/public/search-index.json"
   ],
-  "commit_hygiene": []
+  "commit_hygiene": [],
+  "verify_started_at": "2026-05-15T06:51:01.329Z",
+  "verify_agent": "ana-verify",
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:c879061356e931e6ef694946ad8db2c1b703d35adb767c125836d4a8a4252a77",
+    "run_at": "2026-05-15T06:56:47.991Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-15T06:56:48.025Z",
+    "hash": "sha256:d0b5129bb7b29dd1fdc6c7d9fcea0b0486f8e62fec10430b5560689238abcf65"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-15T06:56:48.025Z",
+    "hash": "sha256:a987ff740795b499eef07313cc0e9fd69217a6df9c9370ff3366ef021a737602"
+  }
 }
