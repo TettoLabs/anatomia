@@ -28901,7 +28901,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "upstream-finding-resolution-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Intentional two-pass validation: first loop (line 914-918) checks types with early break on error. Second loop (line 922-926) checks format with warnings. Follows the same error/warning separation pattern as related_assertions validation above it. Combining would mix error-breaking and warning-accumulating logic.",
+          "closed_at": "2026-05-15T17:52:27.365Z",
+          "closed_by": "human"
         },
         {
           "category": "test",

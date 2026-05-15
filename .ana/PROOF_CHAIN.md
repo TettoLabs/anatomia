@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-107 runs · 38 active · 131 lessons · 3 promoted · 469 closed
+107 runs · 37 active · 131 lessons · 3 promoted · 470 closed
 
 ## Hot Modules
 
@@ -16,11 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 38 total)
-
-### packages/cli/src/commands/artifact.ts
-
-- **code:** artifact.ts resolves format warning iterates resolves array twice — once for type check, once for format check — *Upstream Finding Resolution*
+## Active Findings (30 shown of 37 total)
 
 ### packages/cli/src/commands/init/commit.ts
 
@@ -49,6 +45,7 @@
 ### packages/cli/tests/commands/artifact.test.ts
 
 - **test:** A016 only tests 'Feature' case variant, not 'FIX' — contract says both should be accepted — *Scope Validation Integrity*
+- **test:** Pre-existing scope validation tests (lines 697-746) still use plain toThrow() without checking error message content — *Scope Validation Integrity*
 
 ### packages/cli/tests/commands/init/commit.test.ts
 
