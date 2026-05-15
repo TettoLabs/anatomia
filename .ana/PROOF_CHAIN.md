@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-102 runs · 67 active · 122 lessons · 3 promoted · 423 closed
+102 runs · 66 active · 122 lessons · 3 promoted · 424 closed
 
 ## Hot Modules
 
@@ -9,14 +9,14 @@
 | packages/cli/src/commands/work.ts | 12 | 8 |
 | packages/cli/tests/commands/work.test.ts | 5 | 5 |
 | packages/cli/src/utils/worktree.ts | 5 | 3 |
-| website/scripts/extract-docs-data.ts | 4 | 2 |
 | packages/cli/tests/commands/artifact.test.ts | 3 | 2 |
+| website/lib/copy.ts | 3 | 2 |
 
 ## Promoted Rules
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 67 total)
+## Active Findings (30 shown of 66 total)
 
 ### packages/cli/src/commands/init/commit.ts
 
@@ -27,6 +27,7 @@
 - **code:** Two different result parsers with different casing: getVerifyResult returns 'unknown' (lowercase), parseResult in proofSummary returns 'UNKNOWN' (uppercase) — works correctly but fragile coupling between two parallel implementations — *work.ts untested branch coverage*
 - **test:** Pull-recovery guards (2 of 5) not directly exercised by any test — *Fix --merge stdout pollution in --json mode*
 - **code:** printExistingWorktree duplicates commitsBehind rev-list logic from getWorktreeInfo — now two inline computations duplicated instead of one — *Worktree freshness detection*
+- **code:** printExistingWorktree duplicates HEAD-reading logic from getWorktreeInfo — same pattern in two places — *Kind-aware branch prefixes*
 
 ### packages/cli/src/types/proof.ts
 
@@ -101,7 +102,6 @@
 - **code:** LLMS_SECTIONS constant declared but never used in extract-docs-data.ts — *Docs Search + Polish*
 - **code:** Unused variable 'other' in generateLlmsTxt — pages filtered but remainder never referenced — *Docs Search + Polish*
 - **code:** Duplicate stripJsx implementation — one in website/lib/docs-data/stripJsx.ts, another inlined in extract-docs-data.ts — *Docs Search + Polish*
-- **code:** Keyword fallback categorization lacks word boundaries — 'scannable' matches /scan/, misassigning proof entries to Engine — *Docs Data Pipeline*
 
 ### General
 
