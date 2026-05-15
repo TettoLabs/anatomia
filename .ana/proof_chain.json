@@ -12985,7 +12985,8 @@
             "A018"
           ],
           "id": "proof-system-near-term-C2",
-          "status": "active"
+          "status": "promoted",
+          "promoted_to": ".claude/skills/testing-standards/SKILL.md"
         },
         {
           "category": "code",
