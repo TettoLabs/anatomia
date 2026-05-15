@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-105 runs · 31 active · 128 lessons · 3 promoted · 467 closed
+106 runs · 36 active · 130 lessons · 3 promoted · 467 closed
 
 ## Hot Modules
 
@@ -15,7 +15,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 31 total)
+## Active Findings (30 shown of 36 total)
 
 ### packages/cli/src/commands/init/commit.ts
 
@@ -28,17 +28,9 @@
 - **code:** startWork resume path at line 1685 also duplicates HEAD-reading pattern — three places total read HEAD for branch name — *Kind-aware branch prefixes*
 - **code:** Auto-merge enabled path writes plain text to stdout before JSON output — pollutes stdout for --json consumers — *work complete --merge flag for structured PR merging*
 
-### packages/cli/src/engine/detectors/git.ts
-
-- **code:** git.ts in src/engine/detectors/ retains execSync — architecturally correct (engine boundary, not commands/utils) but is the last remaining execSync in the codebase outside tests. Future hardening could migrate this to spawnSync for consistency. — *Security Hardening — Command Injection Elimination*
-
 ### packages/cli/src/types/proof.ts
 
 - **code:** commit_hygiene type duplicated in three locations (proof.ts, proofSummary.ts, work.ts inline) rather than imported from a shared definition — *Commit hygiene checks at build-report save*
-
-### packages/cli/src/utils/proofSummary.ts
-
-- **code:** proofSummary.ts ~1550 lines — past comfort threshold, known from prior cycles — *V1 Code Changes*
 
 ### packages/cli/src/utils/worktree.ts
 
@@ -48,15 +40,10 @@
 
 - **test:** A016 only tests 'Feature' case variant, not 'FIX' — contract says both should be accepted — *Scope Validation Integrity*
 - **test:** Pre-existing scope validation tests (lines 697-746) still use plain toThrow() without checking error message content — *Scope Validation Integrity*
-- **test:** A014 test does not exercise actual archive failure (catch branch). Tests first-save no-op, not error recovery. — *Rejection Cycle Artifact Preservation*
 
 ### packages/cli/tests/commands/init/commit.test.ts
 
 - **test:** Push failure test doesn't test push failure — tests push skip (no remote) — *ana init commit — persist infrastructure to git*
-
-### packages/cli/tests/commands/proof.test.ts
-
-- **test:** 5-finding fixture manually duplicated three times across test blocks instead of shared constant — *Audit JSON Severity Summary*
 
 ### packages/cli/tests/commands/work-ci-mocked.test.ts
 
@@ -74,10 +61,6 @@
 - **test:** Stage detection tests use hardcoded timestamps with 1-hour gaps — no boundary test for equal timestamps — *Fix cycle stage detection breaks on multi-phase builds*
 - **test:** A010 test creates untracked file after commit — doesn't test scoped staging during commit — *Commit timestamps written by work start*
 
-### packages/cli/tests/e2e/init-flow.test.ts
-
-- **test:** E2E scan regression test uses 5 sole toBeDefined() assertions on scan.json keys — *Test Suite Hygiene*
-
 ### packages/cli/tests/utils/proofSummary.test.ts
 
 - **test:** proofSummary.test.ts parseFindings uses toBeGreaterThanOrEqual on deterministic fixture data — *Test Suite Hygiene*
@@ -85,6 +68,11 @@
 ### website/app/docs/reference/cli/page.tsx
 
 - **code:** Hardcoded 'Last reviewed · 2026-05-11' in CLI reference page will become stale — *Dynamic Pages — Reference & Proof Chain*
+
+### website/components/docs/content/DocsStat.tsx
+
+- **code:** DocsStat component recalculates all 9 values on every render — no caching — *Fix prebuild source mutation*
+- **code:** Misspelled DocsStat value key silently renders raw key string — no build-time validation — *Fix prebuild source mutation*
 
 ### website/components/docs/proof/FindingsList.tsx
 
@@ -98,6 +86,15 @@
 ### website/components/docs/proof/ProofExplorer.tsx
 
 - **code:** formatDuration duplicated in 4 files (ProofExplorer, ProofHero, PipelineGantt, detail page) — extract to shared utility — *Dynamic Pages — Reference & Proof Chain*
+
+### website/lib/docs-data/docsStatValues.ts
+
+- **code:** 2 of 9 value keys (skillCount, findings) defined but unused in any MDX file — *Fix prebuild source mutation*
+
+### website/scripts/extract-docs-data.ts
+
+- **code:** Prebuild inlines a fresh stripJsx copy instead of importing the lib version — duplication persists — *Fix prebuild source mutation*
+- **code:** Median computation duplicated between extract-docs-data.ts main() and lib/docs-data/proofs.ts getMedianTimings() — *Fix prebuild source mutation*
 
 ### General
 

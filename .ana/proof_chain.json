@@ -28457,6 +28457,255 @@
         "completed_at": "2026-05-15T15:54:12.927Z",
         "commit_count": 0
       }
+    },
+    {
+      "slug": "fix-prebuild-source-mutation",
+      "feature": "Fix prebuild source mutation",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 16,
+        "satisfied": 16,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "The prebuild no longer rewrites tracked MDX source files",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "No MDX files contain ana:dynamic markers after the fix",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "A shared values module defines all 9 dynamic value keys in one place",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "The shared values module maps all 9 keys including median timings",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "The tag resolution function replaces DocsStat tags with computed values",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "The DocsStat component renders as an inline span element",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "The DocsStat component reads from the shared values module, not its own map",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "The component is registered in the MDX components map",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "The lib stripJsx resolves DocsStat tags before stripping other JSX",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "Copy-as-markdown output contains resolved numbers, not component tags",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "The prebuild llms-full.txt generator resolves DocsStat tags before stripping",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "The prebuild imports the shared values module instead of defining its own map",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "Generated llms.txt is no longer tracked in git",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "Generated llms-full.txt is no longer tracked in git",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "Generated search-index.json is no longer tracked in git",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "The website builds end-to-end without errors after all changes",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 10,
+        "met": 8
+      },
+      "timing": {
+        "total_minutes": 70,
+        "think": 1,
+        "plan": 25,
+        "build": 12,
+        "verify": 6
+      },
+      "hashes": {
+        "scope": "sha256:d83321b08adcf1a26a946ec362dd2d7030c5516670eac795c14190eab1b94a12",
+        "contract": "sha256:448e22eaeefd85876e6ab21b95fcc892784253e6312fcbf73d68bd49b27e3b6f",
+        "plan": "sha256:cebbbc612bb67f2b6f762973c57bbd75ba999956a75f654a2d1269d1f09e9570",
+        "spec": "sha256:a462aef87a878778ccf3f13b35a1a18df276e0190fc534042de8e7f0a8e278ee",
+        "build-report": "sha256:5196229da24622d8d4d8fb31e0600c13232519db026a8373347ec5771be2cd44",
+        "build-data": "sha256:f7918fa3fe75966c86d385b2c0f03ee3b97490890047925585ac042d13a4328c",
+        "verify-report": "sha256:a5dc1d0b2b37771b57a11e2c34e53593f0d1364f818c57e5371740755824f564",
+        "verify-data": "sha256:1de118a8cd14550563c29289efbc736033b36f9734087218f3f0d6a643b7d749"
+      },
+      "completed_at": "2026-05-15T17:25:24.048Z",
+      "modules_touched": [
+        "website/.gitignore",
+        "website/app/docs/[...slug]/page.tsx",
+        "website/components/docs/content/DocsStat.tsx",
+        "website/content/docs/concepts/pipeline.mdx",
+        "website/content/docs/concepts/skills.mdx",
+        "website/content/docs/guides/reading-a-proof.mdx",
+        "website/content/docs/guides/troubleshooting.mdx",
+        "website/content/docs/guides/using-ana-learn.mdx",
+        "website/content/docs/guides/verifying-changes.mdx",
+        "website/content/docs/start.mdx",
+        "website/lib/docs-data/docsStatValues.ts",
+        "website/lib/docs-data/index.ts",
+        "website/lib/docs-data/stripJsx.ts",
+        "website/public/llms-full.txt",
+        "website/public/llms.txt",
+        "website/public/search-index.json",
+        "website/scripts/extract-docs-data.ts"
+      ],
+      "scope_summary": "The website prebuild script (`website/scripts/extract-docs-data.ts`) has a hidden side effect: `updateDynamicMdxValues()` rewrites tracked MDX source files, replacing `{/* ana:dynamic ... */}` markers with computed values. This causes silent dirty state on every build, guaranteed rebase conflicts on docs-touching branches, and maintains a redundant data path — every value hardcoded into MDX source already exists as a runtime function in `website/lib/docs-data/`. Separately, three generated files in `public/` (llms.txt, llms-full.txt, search-index.json) are tracked in git despite being regenerated by every prebuild run, compounding the same rebase-conflict problem.",
+      "kind": "fix",
+      "findings": [
+        {
+          "category": "code",
+          "summary": "DocsStat component recalculates all 9 values on every render — no caching",
+          "file": "website/components/docs/content/DocsStat.tsx",
+          "anchor": null,
+          "line": 17,
+          "severity": "debt",
+          "suggested_action": "scope",
+          "related_assertions": [
+            "A006",
+            "A007"
+          ],
+          "id": "fix-prebuild-source-mutation-C1",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "2 of 9 value keys (skillCount, findings) defined but unused in any MDX file",
+          "file": "website/lib/docs-data/docsStatValues.ts",
+          "anchor": null,
+          "line": 29,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "related_assertions": [
+            "A003"
+          ],
+          "id": "fix-prebuild-source-mutation-C2",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Misspelled DocsStat value key silently renders raw key string — no build-time validation",
+          "file": "website/components/docs/content/DocsStat.tsx",
+          "anchor": null,
+          "line": 33,
+          "severity": "risk",
+          "suggested_action": "scope",
+          "related_assertions": [
+            "A006"
+          ],
+          "id": "fix-prebuild-source-mutation-C3",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Prebuild inlines a fresh stripJsx copy instead of importing the lib version — duplication persists",
+          "file": "website/scripts/extract-docs-data.ts",
+          "anchor": null,
+          "line": 815,
+          "severity": "debt",
+          "suggested_action": "monitor",
+          "id": "fix-prebuild-source-mutation-C4",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "Spec called for skillCount in skills.mdx heading and findings in using-ana-learn description; builder simplified to static text instead",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "fix-prebuild-source-mutation-C5",
+          "status": "lesson"
+        },
+        {
+          "category": "code",
+          "summary": "Median computation duplicated between extract-docs-data.ts main() and lib/docs-data/proofs.ts getMedianTimings()",
+          "file": "website/scripts/extract-docs-data.ts",
+          "anchor": null,
+          "line": 1081,
+          "severity": "debt",
+          "suggested_action": "monitor",
+          "id": "fix-prebuild-source-mutation-C6",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "Duplicate stripJsx finding still present — known from proof context, not addressed by this scope",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "fix-prebuild-source-mutation-C7",
+          "status": "lesson"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "Fumadocs MDX cannot use server components in headings or JSX prop expressions",
+          "file": null,
+          "severity": "debt",
+          "suggested_action": "monitor"
+        },
+        {
+          "summary": "Two stripJsx copies remain (lib + prebuild inline) with separate DocsStat resolution paths",
+          "file": "website/scripts/extract-docs-data.ts",
+          "severity": "debt",
+          "suggested_action": "scope"
+        }
+      ],
+      "worktree": {
+        "used": false,
+        "created_at": "2026-05-15T16:41:24.496Z",
+        "completed_at": "2026-05-15T17:25:24.044Z",
+        "commit_count": 0
+      }
     }
   ],
   "schema": 1
