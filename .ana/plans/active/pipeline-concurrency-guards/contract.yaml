@@ -1,0 +1,176 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Pipeline Concurrency Guards"
+
+assertions:
+  # Guard 1 — Concurrency guard in startWork
+  - id: A001
+    says: "A second verify session on the same work item is blocked"
+    block: "blocks when verify_started_at is recent on same slug"
+    target: "process.exitCode"
+    matcher: "equals"
+    value: 1
+
+  - id: A002
+    says: "A second plan session on the same work item is blocked"
+    block: "blocks when plan_started_at is recent on same slug"
+    target: "process.exitCode"
+    matcher: "equals"
+    value: 1
+
+  - id: A003
+    says: "The force flag overrides the verify concurrency guard"
+    block: "force flag overrides verify guard"
+    target: "process.exitCode"
+    matcher: "not_equals"
+    value: 1
+
+  - id: A004
+    says: "The force flag overrides the plan concurrency guard"
+    block: "force flag overrides plan guard"
+    target: "process.exitCode"
+    matcher: "not_equals"
+    value: 1
+
+  - id: A005
+    says: "Stale timestamps older than 1 hour are ignored automatically"
+    block: "expired timestamp does not block"
+    target: "process.exitCode"
+    matcher: "not_equals"
+    value: 1
+
+  - id: A006
+    says: "Missing saves.json does not block session start"
+    block: "missing saves.json passes guard"
+    target: "process.exitCode"
+    matcher: "not_equals"
+    value: 1
+
+  - id: A007
+    says: "Corrupted saves.json does not block session start"
+    block: "corrupted saves.json passes guard"
+    target: "process.exitCode"
+    matcher: "not_equals"
+    value: 1
+
+  # Per-slug per-phase isolation
+  - id: A008
+    says: "An active verify session does not block a build session on the same work item"
+    block: "same slug different phase is allowed"
+    target: "guardResult.blocked"
+    matcher: "equals"
+    value: false
+
+  - id: A009
+    says: "An active verify session on one work item does not block verify on a different work item"
+    block: "different slug is allowed"
+    target: "guardResult.blocked"
+    matcher: "equals"
+    value: false
+
+  # determineStage new stages
+  - id: A010
+    says: "Work status shows verify-in-progress when a verify session is active"
+    block: "determineStage returns verify-in-progress"
+    target: "stage"
+    matcher: "equals"
+    value: "verify-in-progress"
+
+  - id: A011
+    says: "Work status shows plan-in-progress when a plan session is active"
+    block: "determineStage returns plan-in-progress"
+    target: "stage"
+    matcher: "equals"
+    value: "plan-in-progress"
+
+  # getNextAction guidance
+  - id: A012
+    says: "Verify-in-progress stage shows guidance to use --force"
+    block: "getNextAction returns force guidance for verify-in-progress"
+    target: "nextAction"
+    matcher: "contains"
+    value: "--force"
+
+  - id: A013
+    says: "Plan-in-progress stage shows guidance to use --force"
+    block: "getNextAction returns force guidance for plan-in-progress"
+    target: "nextAction"
+    matcher: "contains"
+    value: "--force"
+
+  # Guard 2 — PR duplicate detection
+  - id: A014
+    says: "Creating a PR is blocked when a merged PR already exists for the branch"
+    block: "blocks PR creation when merged PR exists"
+    target: "process.exitCode"
+    matcher: "equals"
+    value: 1
+
+  - id: A015
+    says: "The merged-PR error message directs the user to work complete"
+    block: "blocks PR creation when merged PR exists"
+    target: "stderr"
+    matcher: "contains"
+    value: "work complete"
+
+  - id: A016
+    says: "Creating a PR is blocked when an open PR already exists for the branch"
+    block: "blocks PR creation when open PR exists"
+    target: "process.exitCode"
+    matcher: "equals"
+    value: 1
+
+  - id: A017
+    says: "The open-PR error message includes the existing PR URL"
+    block: "blocks PR creation when open PR exists"
+    target: "stderr"
+    matcher: "contains"
+    value: "https://"
+
+  - id: A018
+    says: "PR creation proceeds when no existing PR is found"
+    block: "allows PR creation when no existing PR"
+    target: "guardPassed"
+    matcher: "equals"
+    value: true
+
+  # Guard 3 — Merge detection resilience
+  - id: A019
+    says: "Merged PRs are detected via GitHub CLI even when git is-ancestor fails"
+    block: "detects merge via gh when is-ancestor fails"
+    target: "merged"
+    matcher: "equals"
+    value: true
+
+  - id: A020
+    says: "Merge detection falls back to is-ancestor when GitHub CLI is unavailable"
+    block: "falls back to is-ancestor when gh unavailable"
+    target: "merged"
+    matcher: "equals"
+    value: true
+
+  # verify_started_at force-write
+  - id: A021
+    says: "Verify timestamp overwrites previous value on re-entry"
+    block: "verify_started_at uses force write"
+    target: "timestamp"
+    matcher: "not_equals"
+    value: "2026-01-01T00:00:00.000Z"
+
+  # --force flag registration
+  - id: A022
+    says: "The start command accepts a --force flag"
+    block: "startCommand registers --force option"
+    target: "options"
+    matcher: "contains"
+    value: "--force"
+
+file_changes:
+  - path: "packages/cli/src/commands/work.ts"
+    action: modify
+  - path: "packages/cli/src/commands/pr.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/work.test.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/pr.test.ts"
+    action: modify
