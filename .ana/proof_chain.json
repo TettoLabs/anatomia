@@ -28244,7 +28244,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "bump-node-minimum-22-C4",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Accepted: eslint-disable directive at git-operations.ts:198 was added intentionally by security-hardening Build as defensive coding for the control character regex. The no-control-regex rule is not currently active in eslint.config.js, making the directive a no-op. Keeping it — the comment + directive together protect a security-relevant regex. One lint warning is acceptable noise.",
+          "closed_at": "2026-05-15T17:03:10.924Z",
+          "closed_by": "human"
         }
       ],
       "rejection_cycles": 0,

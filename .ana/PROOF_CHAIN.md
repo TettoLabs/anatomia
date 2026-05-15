@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-105 runs · 33 active · 128 lessons · 3 promoted · 465 closed
+105 runs · 32 active · 128 lessons · 3 promoted · 466 closed
 
 ## Hot Modules
 
@@ -15,7 +15,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 33 total)
+## Active Findings (30 shown of 32 total)
 
 ### packages/cli/src/commands/init/commit.ts
 
@@ -35,6 +35,10 @@
 ### packages/cli/src/types/proof.ts
 
 - **code:** commit_hygiene type duplicated in three locations (proof.ts, proofSummary.ts, work.ts inline) rather than imported from a shared definition — *Commit hygiene checks at build-report save*
+
+### packages/cli/src/utils/proofSummary.ts
+
+- **code:** proofSummary.ts ~1550 lines — past comfort threshold, known from prior cycles — *V1 Code Changes*
 
 ### packages/cli/src/utils/worktree.ts
 
@@ -94,7 +98,6 @@
 
 ### General
 
-- **code:** Lint warning (pre-existing): unused eslint-disable directive for no-control-regex. Not introduced by this build. — *Bump Node Minimum to 22, Add Node 24 to CI*
 - **code:** URL reachability not verified — stable URL contract is a deployment assumption — *Documentation links in init and setup*
 - **test:** Contract assertions A013-A019 have no tagged tests — verified by source inspection only — *Kind-aware branch prefixes*
 
