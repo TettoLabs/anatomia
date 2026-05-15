@@ -1640,9 +1640,10 @@ function computeTiming(saves: SavesData): ProofSummary['timing'] {
       const phaseNum = buildPhase.phase;
 
       // Build segment: previous verify (or contract for phase 1) → this build
+      const prevVerify = verifyPhases[i - 1];
       const segStart = i === 0
         ? contractTime
-        : getTime(verifyPhases[i - 1]!.key);
+        : prevVerify ? getTime(prevVerify.key) : null;
       const segEnd = getTime(buildPhase.key);
 
       if (segStart !== null && segEnd !== null) {
