@@ -18113,7 +18113,10 @@
             "A010"
           ],
           "id": "worktree-artifact-cleanup-C4",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed: wrapped readFileSync at work.ts:1305 in try-catch (read failure → allMatch=false, triggers safe 'inspect manually' path). Wrapped unlinkSync at work.ts:1320 in try-catch (best-effort, matching existing pattern at line 1287). Commit 5d665444.",
+          "closed_at": "2026-05-15T05:06:41.174Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
