@@ -13976,7 +13976,10 @@
             "A021"
           ],
           "id": "worktree-isolation-C1",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Stale: tagged test exists at work.test.ts:1722 — '@ana A021: writes worktree metadata to proof chain entry when worktree exists'. Tests proofEntry.worktree.used === true, matching the contract assertion. Tag added by a subsequent scope that covers the same behavior.",
+          "closed_at": "2026-05-15T06:59:09.027Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
