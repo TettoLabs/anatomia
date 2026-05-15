@@ -41,5 +41,20 @@
     "website/content/docs/guides/using-ana-setup.mdx",
     "website/content/docs/start.mdx"
   ],
-  "commit_hygiene": []
+  "commit_hygiene": [],
+  "verify_started_at": "2026-05-15T01:40:57.102Z",
+  "verify_agent": "ana-verify",
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:c6f8537e1192a45f8d51d941d584f0864a49c274098d86974fc73f625a496de1",
+    "run_at": "2026-05-15T01:46:35.672Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-15T01:46:35.710Z",
+    "hash": "sha256:87c3fafe8ce798986eef9e3b6865cb53bbacf0709a2bf20e4a3f9666d1586e40"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-15T01:46:35.710Z",
+    "hash": "sha256:62b954a1e85891633cd929b1de5b5a0eba782d7660cdfe98cd1d28ff5d451ea1"
+  }
 }

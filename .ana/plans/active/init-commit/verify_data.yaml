@@ -1,0 +1,41 @@
+schema: 1
+findings:
+  - category: test
+    summary: "Push failure test doesn't test push failure — tests push skip (no remote)"
+    file: "packages/cli/tests/commands/init/commit.test.ts"
+    line: 425
+    severity: debt
+    suggested_action: scope
+    related_assertions: ["A019", "A020"]
+  - category: test
+    summary: "No integration test for pull conflict abort path"
+    file: "packages/cli/src/commands/init/commit.ts"
+    line: 224
+    severity: debt
+    suggested_action: scope
+    related_assertions: ["A024"]
+  - category: test
+    summary: "No integration test for worktree guard — verified by source inspection only"
+    file: "packages/cli/src/commands/init/commit.ts"
+    line: 287
+    severity: observation
+    suggested_action: monitor
+    related_assertions: ["A010"]
+  - category: code
+    summary: "discoverDirtyFiles returns empty array on git status failure without reporting why"
+    file: "packages/cli/src/commands/init/commit.ts"
+    line: 102
+    severity: observation
+    suggested_action: accept
+  - category: test
+    summary: "A013 (--no-verify) has no runtime assertion — test name claims it but only verifies commit happened"
+    file: "packages/cli/tests/commands/init/commit.test.ts"
+    line: 349
+    severity: observation
+    suggested_action: accept
+    related_assertions: ["A013"]
+  - category: upstream
+    summary: "Still present — see worktree-isolation proof finding: guard commands lack integration tests"
+    severity: observation
+    suggested_action: monitor
+    related_assertions: ["A010"]
