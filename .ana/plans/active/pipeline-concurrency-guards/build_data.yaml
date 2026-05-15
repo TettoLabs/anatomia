@@ -1,18 +1,22 @@
 schema: 1
 concerns:
-  - summary: "PR guard tests (A014-A018) use source inspection instead of behavioral testing due to process.exit in createPr"
-    file: "packages/cli/tests/commands/pr.test.ts"
+  - summary: "checkConcurrencyGuard has dead force parameter — neither production call site passes it"
+    file: "packages/cli/src/commands/work.ts"
     severity: debt
-    suggested_action: scope
-  - summary: "Merge detection tests (A019-A020) use source inspection — no mock harness for spawnSync gh calls"
+    suggested_action: accept
+  - summary: "isTimestampRecent duplicates checkConcurrencyGuard timestamp-checking logic"
+    file: "packages/cli/src/commands/work.ts"
+    severity: debt
+    suggested_action: monitor
+  - summary: "No boundary test at exactly 1-hour timeout threshold"
     file: "packages/cli/tests/commands/work.test.ts"
-    severity: debt
-    suggested_action: scope
-  - summary: "plan_started_at changed to force-write for consistency — not explicitly in spec"
+    severity: observation
+    suggested_action: monitor
+  - summary: "plan_started_at force-write not explicitly in spec — added for consistency"
     file: "packages/cli/src/commands/work.ts"
     severity: observation
     suggested_action: accept
-  - summary: "Pre-existing lint warning in git-operations.ts:198 — unused eslint-disable directive"
-    file: "packages/cli/src/utils/git-operations.ts"
+  - summary: "vi.mock wraps spawnSync file-wide — future identity-check tests would see vi.fn wrapper"
+    file: "packages/cli/tests/commands/pr.test.ts"
     severity: observation
-    suggested_action: monitor
+    suggested_action: accept
