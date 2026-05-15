@@ -1300,7 +1300,13 @@ export async function completeWork(slug: string, options?: { json?: boolean; mer
             let allMatch = true;
             for (const relPath of planningFiles) {
               const localPath = path.join(projectRoot, relPath);
-              const localContent = fs.readFileSync(localPath, 'utf-8');
+              let localContent: string;
+              try {
+                localContent = fs.readFileSync(localPath, 'utf-8');
+              } catch {
+                allMatch = false;
+                break;
+              }
               const remoteResult = runGit(['show', `origin/${artifactBranch}:${relPath}`], { cwd: projectRoot });
               if (remoteResult.exitCode !== 0 || remoteResult.stdout !== localContent) {
                 allMatch = false;
@@ -1310,7 +1316,11 @@ export async function completeWork(slug: string, options?: { json?: boolean; mer
 
             if (allMatch) {
               for (const relPath of planningFiles) {
-                fs.unlinkSync(path.join(projectRoot, relPath));
+                try {
+                  fs.unlinkSync(path.join(projectRoot, relPath));
+                } catch {
+                  // Best-effort — file may already be removed
+                }
               }
               if (!options?.json) {
                 console.log(chalk.yellow(`  ⚠ Removed ${planningFiles.length} untracked planning artifact(s) from the artifact branch (matched merged content).`));
