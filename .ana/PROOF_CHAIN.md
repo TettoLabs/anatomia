@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-105 runs · 45 active · 128 lessons · 3 promoted · 453 closed
+105 runs · 44 active · 128 lessons · 3 promoted · 454 closed
 
 ## Hot Modules
 
@@ -15,7 +15,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 45 total)
+## Active Findings (30 shown of 44 total)
 
 ### packages/cli/src/commands/init/commit.ts
 
@@ -29,6 +29,7 @@
 - **code:** printExistingWorktree duplicates HEAD-reading logic from getWorktreeInfo — same pattern in two places — *Kind-aware branch prefixes*
 - **code:** startWork resume path at line 1685 also duplicates HEAD-reading pattern — three places total read HEAD for branch name — *Kind-aware branch prefixes*
 - **test:** A013/A014 completeWork backward compat assertions have no tagged tests — verified by source inspection only — *Fix cycle stage detection breaks on multi-phase builds*
+- **code:** completeWork fallback lets two multi-phase specs share one unnumbered saves.json entry — phase 2 passes if phase 1's unnumbered key exists — *Fix cycle stage detection breaks on multi-phase builds*
 
 ### packages/cli/src/types/proof.ts
 
@@ -84,7 +85,6 @@
 
 ### website/scripts/extract-docs-data.ts
 
-- **code:** LLMS_SECTIONS constant declared but never used in extract-docs-data.ts — *Docs Search + Polish*
 - **code:** Unused variable 'other' in generateLlmsTxt — pages filtered but remainder never referenced — *Docs Search + Polish*
 - **code:** Duplicate stripJsx implementation — one in website/lib/docs-data/stripJsx.ts, another inlined in extract-docs-data.ts — *Docs Search + Polish*
 
