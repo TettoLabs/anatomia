@@ -605,7 +605,7 @@ async function writeWorktreeContext(
   sections.push('');
 
   if (data?.proofFindings) {
-    sections.push('## Proof Findings', '', data.proofFindings, '');
+    sections.push(data.proofFindings, '');
   }
 
   try {

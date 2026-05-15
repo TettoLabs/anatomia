@@ -194,16 +194,10 @@ function setModel(agentsDir: string, agentName: string, model: string): void {
 
   if (!fs.existsSync(filePath)) {
     const available = getAvailableAgentNames(agentsDir);
-    console.error(`Unknown agent '${agentName}'`);
-    console.error(`Available agents: ${available.join(', ')}`);
-
-    // Hint if the agent name looks like a model name
-    if (KNOWN_MODEL_NAMES.includes(agentName.toLowerCase())) {
-      console.error('');
-      console.error(`Did you mean: ana agents model --all ${agentName}`);
-    }
-
-    throw new Error(`Unknown agent '${agentName}'`);
+    const hint = KNOWN_MODEL_NAMES.includes(agentName.toLowerCase())
+      ? `\nDid you mean: ana agents model --all ${agentName}`
+      : '';
+    throw new Error(`Unknown agent '${agentName}'\nAvailable agents: ${available.join(', ')}${hint}`);
   }
 
   const content = fs.readFileSync(filePath, 'utf-8');
