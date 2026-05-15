@@ -13989,7 +13989,10 @@
           "severity": "debt",
           "suggested_action": "scope",
           "id": "worktree-isolation-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Systemic tag collision (lesson C3): phase detection logic IS extensively tested across work.test.ts (185 tests cover determineStage paths including single-phase, multi-phase, FAIL cycles, re-verify). The gap is tag attribution — A001-A011 collide across scopes — not behavior coverage.",
+          "closed_at": "2026-05-15T06:59:20.420Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
