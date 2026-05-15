@@ -1,0 +1,77 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Worktree Guard Integration Tests"
+
+assertions:
+  - id: A001
+    says: "Running init from a worktree exits with an error"
+    block: "init guard blocks execution from a worktree"
+    target: "process.exit"
+    matcher: "equals"
+    value: 1
+
+  - id: A002
+    says: "The init worktree error tells the user to use the main directory"
+    block: "init guard blocks execution from a worktree"
+    target: "console.error output"
+    matcher: "contains"
+    value: "main project directory"
+
+  - id: A003
+    says: "Running setup complete from a worktree exits with an error"
+    block: "setup complete guard blocks execution from a worktree"
+    target: "process.exit"
+    matcher: "equals"
+    value: 1
+
+  - id: A004
+    says: "The setup complete worktree error tells the user to use the main directory"
+    block: "setup complete guard blocks execution from a worktree"
+    target: "console.error output"
+    matcher: "contains"
+    value: "main project directory"
+
+  - id: A005
+    says: "Running work complete from a worktree exits with an error"
+    block: "work complete guard blocks execution from a worktree"
+    target: "process.exit"
+    matcher: "equals"
+    value: 1
+
+  - id: A006
+    says: "The work complete worktree error tells the user to use the main directory"
+    block: "work complete guard blocks execution from a worktree"
+    target: "console.error output"
+    matcher: "contains"
+    value: "main project directory"
+
+  - id: A007
+    says: "Running scan --save from a worktree warns but does not exit"
+    block: "scan --save guard warns but continues from a worktree"
+    target: "process.exit"
+    matcher: "not_equals"
+    value: 1
+
+  - id: A008
+    says: "The scan --save worktree warning mentions being in a worktree"
+    block: "scan --save guard warns but continues from a worktree"
+    target: "console.warn output"
+    matcher: "contains"
+    value: "worktree"
+
+  - id: A009
+    says: "Tests clean up process.cwd, process.exit, and console spies after each test"
+    block: "afterEach restores process state"
+    target: "test isolation"
+    matcher: "truthy"
+
+  - id: A010
+    says: "All existing tests continue to pass after adding worktree guard tests"
+    block: "full test suite regression check"
+    target: "test suite result"
+    matcher: "equals"
+    value: "pass"
+
+file_changes:
+  - path: "packages/cli/tests/commands/worktree-guards.test.ts"
+    action: create
