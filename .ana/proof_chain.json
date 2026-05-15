@@ -5044,8 +5044,11 @@
             "A021"
           ],
           "id": "close-the-loop-C2",
-          "status": "active",
-          "suggested_action": "monitor"
+          "status": "closed",
+          "suggested_action": "monitor",
+          "closed_reason": "Not manifesting: examined all 90 unique anchors across 96 pipeline runs — none are generic common words. Anchors are code-specific constructs (formatContextResult, toBeGreaterThan(0), git status --porcelain, @ana tags). The >5 char + letter + not-file-ref filter at proofSummary.ts:1413 is working effectively for actual verify report content. Theoretical concern about common-word anchors is not realized in practice. Think validation prompt delivered.",
+          "closed_at": "2026-05-15T00:10:16.597Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
