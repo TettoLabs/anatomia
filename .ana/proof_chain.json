@@ -24830,7 +24830,10 @@
             "A008"
           ],
           "id": "fix-timing-accuracy-C1",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed: extracted verifyPhases[i-1] to prevVerify variable with null guard at proofSummary.ts:1643. Missing verify phase now produces null segStart, skipped by existing guard at line 1648 instead of crashing. Commit 60ead5bd.",
+          "closed_at": "2026-05-15T04:36:13.254Z",
+          "closed_by": "human"
         },
         {
           "category": "code",

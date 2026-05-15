@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-102 runs · 78 active · 122 lessons · 3 promoted · 412 closed
+102 runs · 77 active · 122 lessons · 3 promoted · 413 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 78 total)
+## Active Findings (30 shown of 77 total)
 
 ### packages/cli/src/commands/init/commit.ts
 
@@ -30,10 +30,6 @@
 ### packages/cli/src/types/proof.ts
 
 - **code:** commit_hygiene type duplicated in three locations (proof.ts, proofSummary.ts, work.ts inline) rather than imported from a shared definition — *Commit hygiene checks at build-report save*
-
-### packages/cli/src/utils/proofSummary.ts
-
-- **code:** Non-null assertion on missing verify phase — verifyPhases[i-1]! crashes if verify-report-(N-1) missing when build-report-N exists — *Fix pipeline timing accuracy for multi-phase and rejection cycles*
 
 ### packages/cli/src/utils/worktree.ts
 
@@ -54,6 +50,10 @@
 ### website/app/docs/[...slug]/page.tsx
 
 - **code:** Dynamic components not registered in catch-all mdxComponents map — contract specifies registration but builder used build-time regex approach instead — *Docs Search + Polish*
+
+### website/app/docs/[[...slug]]/page.tsx
+
+- **code:** Prose classes used without @tailwindcss/typography installed — *Docs Infrastructure — Fumadocs MDX Pipeline*
 
 ### website/app/docs/reference/cli/page.tsx
 
