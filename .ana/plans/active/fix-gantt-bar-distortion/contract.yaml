@@ -1,0 +1,117 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Fix Gantt Bar Distortion and Document Timing"
+
+assertions:
+  - id: A001
+    says: "Gantt bars show time proportional to each phase, not inflated by idle gaps"
+    block: "buildGanttBars uses sum of phases as denominator"
+    target: "buildGanttBars.denominator"
+    matcher: "not_contains"
+    value: "totalMinutes"
+
+  - id: A002
+    says: "The sentinel that forced the last bar to 100% is removed"
+    block: "no lefts.push(100) sentinel"
+    target: "buildGanttBars.segmentPath"
+    matcher: "not_contains"
+    value: "lefts.push(100)"
+
+  - id: A003
+    says: "The sentinel is also removed from the flat 4-bar path"
+    block: "no lefts.push(100) sentinel"
+    target: "buildGanttBars.flatPath"
+    matcher: "not_contains"
+    value: "lefts.push(100)"
+
+  - id: A004
+    says: "A proof with 13m/2m/3m/3m shows Verify at roughly 14%, not 86%"
+    block: "findings-expand-collapse bar proportions"
+    target: "verifyBar.widthPct"
+    matcher: "equals"
+    value: 14.285714285714286
+
+  - id: A005
+    says: "The same proof shows Think at roughly 62%"
+    block: "findings-expand-collapse bar proportions"
+    target: "thinkBar.widthPct"
+    matcher: "equals"
+    value: 61.904761904761905
+
+  - id: A006
+    says: "Multi-phase proofs render last segment proportionally, not inflated"
+    block: "content-pages last segment proportional"
+    target: "lastSegment.widthPct"
+    matcher: "not_equals"
+    value: 100
+
+  - id: A007
+    says: "Zero-duration phases still get a minimum visible width"
+    block: "zero-duration minimum width preserved"
+    target: "zeroDurationBar.widthPct"
+    matcher: "equals"
+    value: 2
+
+  - id: A008
+    says: "When all phases are zero, no bars are rendered regardless of wall-clock time"
+    block: "all-zero phases returns empty"
+    target: "result.length"
+    matcher: "equals"
+    value: 0
+
+  - id: A009
+    says: "Negative phase values are clamped to zero so bars never go backwards"
+    block: "negative values clamped"
+    target: "negativePhaseBar.widthPct"
+    matcher: "greater"
+    value: -1
+
+  - id: A010
+    says: "The timeline docs explain what each pipeline phase measures"
+    block: "timeline docs content"
+    target: "reading-a-proof.mdx"
+    matcher: "contains"
+    value: "session"
+
+  - id: A011
+    says: "The timeline docs explain why duration exceeds the sum of phases"
+    block: "timeline docs content"
+    target: "reading-a-proof.mdx"
+    matcher: "contains"
+    value: "idle"
+
+  - id: A012
+    says: "The dynamic marker for median timings is preserved"
+    block: "ana:dynamic marker preserved"
+    target: "reading-a-proof.mdx"
+    matcher: "contains"
+    value: "ana:dynamic medianTimings"
+
+  - id: A013
+    says: "The search index is regenerated after docs changes"
+    block: "search-index.json regenerated"
+    target: "search-index.json"
+    matcher: "exists"
+
+  - id: A014
+    says: "The LLM context file is regenerated after docs changes"
+    block: "llms-full.txt regenerated"
+    target: "llms-full.txt"
+    matcher: "exists"
+
+  - id: A015
+    says: "The website builds without errors"
+    block: "website build succeeds"
+    target: "build.exitCode"
+    matcher: "equals"
+    value: 0
+
+file_changes:
+  - path: "website/components/docs/proof/PipelineGantt.tsx"
+    action: modify
+  - path: "website/content/docs/guides/reading-a-proof.mdx"
+    action: modify
+  - path: "website/public/llms-full.txt"
+    action: modify
+  - path: "website/public/search-index.json"
+    action: modify
