@@ -80,7 +80,7 @@ The contract was satisfied but the behavior is wrong — the contract didn't cov
 
 <TroubleCard title="Wrong branch errors">
 
-Commands that modify the proof chain (`close`, `lesson`, `promote`, `strengthen`) require the artifact branch (usually `main`). Read-only commands (`proof`, `audit`, `health`, `stale`, `context`) work from any branch. If you see "Wrong branch," check: are you in a worktree? Run proof-modifying commands from the main project directory.
+Commands that modify the proof chain (`close`, `promote`, `strengthen`) require the artifact branch (usually `main`). Read-only commands (`proof`, `audit`, `health`, `stale`, `context`) work from any branch. If you see "Wrong branch," check: are you in a worktree? Run proof-modifying commands from the main project directory.
 
 </TroubleCard>
 
@@ -113,7 +113,7 @@ If `ana work status` shows a version mismatch between your CLI and the project's
 - **Start every agent with "hey" or "hi ana."** Claude Code agents may not fully load context files before acting on a complex first message. A simple greeting ensures the agent reads `project-context.md`, `design-principles.md`, and `scan.json` before doing anything. This applies to all pipeline agents (`ana-setup` starts automatically via its `initialPrompt`).
 - **One agent per terminal.** Each pipeline stage runs in its own Claude Code session. Running a second agent in the same session may inherit state from the previous run, breaking the independence guarantee. Open a new terminal for each stage.
 - **Let `ana work status` be the first check.** Before scoping, building, or verifying — run `ana work status`. It tells you what's in progress, what stage it's at, and what to do next. Every agent does this on startup; you should too.
-- **Don't edit `proof_chain.json` by hand.** Use `ana proof close`, `ana proof promote`, `ana proof lesson`. Manual edits can corrupt the chain — `ana proof health` reports incorrect trajectories, `ana proof audit` may skip entries. If the chain is corrupted, restore from git: `git checkout -- .ana/proof_chain.json`
+- **Don't edit `proof_chain.json` by hand.** Use `ana proof close`, `ana proof promote`, `ana proof strengthen`. Manual edits can corrupt the chain — `ana proof health` reports incorrect trajectories, `ana proof audit` may skip entries. If the chain is corrupted, restore from git: `git checkout -- .ana/proof_chain.json`
 - **Re-init instead of deleting.** `ana init` refreshes scan data and templates while preserving your context, skills, proof chain, and config. Deleting `.ana/` loses proof history permanently.
 - **Pipeline runs can't break your code.** Build works in a git worktree — the main branch is untouched until you merge a PR. The worst a bad pipeline run produces is a PR you reject.
 

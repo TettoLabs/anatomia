@@ -1,0 +1,20 @@
+schema: 1
+findings:
+  - category: test
+    summary: "Backfill migration logic has no dedicated test — mutation from lesson→closed with conditional metadata preservation is untested"
+    file: "packages/cli/src/commands/work.ts"
+    line: 985
+    severity: debt
+    suggested_action: scope
+    related_assertions: ["A007", "A008", "A009", "A027", "A028"]
+  - category: code
+    summary: "Stale comment references 'lesson' in getProofContext filter description"
+    file: "packages/cli/src/utils/proofSummary.ts"
+    line: 2257
+    severity: observation
+    suggested_action: accept
+  - category: upstream
+    summary: "proofSummary.ts ~1550 lines — still past comfort threshold, this build adds 2 lines net"
+    file: "packages/cli/src/utils/proofSummary.ts"
+    severity: observation
+    suggested_action: monitor

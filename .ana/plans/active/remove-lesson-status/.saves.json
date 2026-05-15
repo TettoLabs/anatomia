@@ -50,5 +50,48 @@
         "hash": "sha256:6fc9add40b61b5efd826d9364fbe5de1609229d52ccbe0374b8b6fc6df1f4f51"
       }
     ]
+  },
+  "build_started_at": "2026-05-15T18:31:27.000Z",
+  "build_agent": "ana-build",
+  "build-report": {
+    "saved_at": "2026-05-15T18:42:39.023Z",
+    "hash": "sha256:588c25b5613e37776cfa582b6cdd65ac6c53f1139d6c19a155d4d7bf464d1bf6"
+  },
+  "build-data": {
+    "saved_at": "2026-05-15T18:42:39.023Z",
+    "hash": "sha256:16110f8f90565c1e4a0e709baae98d818a75e74bc2e96fbeaf9e9f4b3a0ccada"
+  },
+  "modules_touched": [
+    ".claude/agents/ana-learn.md",
+    ".claude/agents/ana.md",
+    "README.md",
+    "packages/cli/src/commands/proof.ts",
+    "packages/cli/src/commands/work.ts",
+    "packages/cli/src/types/proof.ts",
+    "packages/cli/src/utils/proofSummary.ts",
+    "packages/cli/templates/.claude/agents/ana-learn.md",
+    "packages/cli/templates/.claude/agents/ana.md",
+    "packages/cli/tests/commands/proof.test.ts",
+    "packages/cli/tests/commands/work.test.ts",
+    "packages/cli/tests/utils/proofSummary.test.ts",
+    "website/content/docs/concepts/findings.mdx",
+    "website/content/docs/guides/troubleshooting.mdx",
+    "website/content/docs/guides/using-ana-learn.mdx"
+  ],
+  "commit_hygiene": [],
+  "verify_started_at": "2026-05-15T18:46:09.312Z",
+  "verify_agent": "ana-verify",
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:1b945b9b60ad41e05832057d19613fd5b539e257c1a8a6a2201ae1eacc1c8bd3",
+    "run_at": "2026-05-15T18:52:39.069Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-15T18:52:39.105Z",
+    "hash": "sha256:871980268fe74c0537410069e34a0259b6b5e8a971310d61c4d55721a9675b7a"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-15T18:52:39.105Z",
+    "hash": "sha256:b9629b6e2cabe68855bc113e9d8e1ba58de99e64f89a3565f3008e2fa8cc9322"
   }
 }

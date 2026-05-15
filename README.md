@@ -169,7 +169,7 @@ Each entry adds to a proof chain. `ana proof health` tracks the trajectory acros
 | `ana proof close <ids...>` | Close resolved findings with reason |
 | `ana proof promote <ids...>` | Promote findings to skill rules |
 | `ana proof strengthen <ids...>` | Commit skill edits and close findings |
-| `ana proof lesson <ids...>` | Record findings as institutional lessons |
+
 | `ana proof stale` | Show findings with staleness signals |
 | `ana proof context <files...>` | Query proof chain for file context |
 

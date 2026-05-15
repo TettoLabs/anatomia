@@ -472,16 +472,15 @@ interface DashboardEntry {
  * @param stats - Chain health stats
  * @param stats.runs - Total pipeline runs
  * @param stats.active - Active finding count
- * @param stats.lessons - Lesson finding count
  * @param stats.promoted - Promoted finding count
  * @param stats.closed - Closed finding count
  * @returns Markdown string for PROOF_CHAIN.md
  */
-export function generateDashboard(entries: DashboardEntry[], stats: { runs: number; active: number; lessons: number; promoted: number; closed: number }): string {
+export function generateDashboard(entries: DashboardEntry[], stats: { runs: number; active: number; promoted: number; closed: number }): string {
   let md = '# Proof Chain Dashboard\n\n';
 
   // Summary line
-  md += `${stats.runs} runs · ${stats.active} active · ${stats.lessons} lessons · ${stats.promoted} promoted · ${stats.closed} closed\n\n`;
+  md += `${stats.runs} runs · ${stats.active} active · ${stats.promoted} promoted · ${stats.closed} closed\n\n`;
 
   // Hot Modules: files with active findings from 2+ distinct entries
   const fileEntryMap = new Map<string, Set<string>>();
@@ -583,7 +582,6 @@ export interface ChainHealth {
   findings: {
     active: number;
     closed: number;
-    lesson: number;
     promoted: number;
     total: number;
     by_severity: {
@@ -1368,7 +1366,6 @@ export function computeChainHealth(chain: { entries: Array<{ findings?: Array<{ 
   let total = 0;
   let active = 0;
   let closed = 0;
-  let lesson = 0;
   let promoted = 0;
 
   // Severity breakdowns
@@ -1389,7 +1386,7 @@ export function computeChainHealth(chain: { entries: Array<{ findings?: Array<{ 
       total++;
       switch (f.status) {
         case 'active': active++; break;
-        case 'lesson': lesson++; break;
+        case 'lesson': closed++; break; // backward compat: pre-migration data
         case 'promoted': promoted++; break;
         case 'closed': closed++; break;
         default: active++; break; // undefined = active
@@ -1417,7 +1414,7 @@ export function computeChainHealth(chain: { entries: Array<{ findings?: Array<{ 
   return {
     chain_runs: runs,
     findings: {
-      active, closed, lesson, promoted, total,
+      active, closed, promoted, total,
       by_severity: { risk: sevRisk, debt: sevDebt, observation: sevObservation, unclassified: sevUnclassified },
       by_action: { promote: actPromote, scope: actScope, monitor: actMonitor, accept: actAccept, unclassified: actUnclassified },
     },
@@ -1465,7 +1462,7 @@ export function wrapJsonError(
     : {
       chain_runs: 0,
       findings: {
-        active: 0, closed: 0, lesson: 0, promoted: 0, total: 0,
+        active: 0, closed: 0, promoted: 0, total: 0,
         by_severity: { risk: 0, debt: 0, observation: 0, unclassified: 0 },
         by_action: { promote: 0, scope: 0, monitor: 0, accept: 0, unclassified: 0 },
       },

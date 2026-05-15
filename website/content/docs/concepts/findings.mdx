@@ -12,7 +12,7 @@ lastReviewed: "2026-05-13"
 <tbody>
 <tr><td><span style={{display:"inline-block",padding:"2px 7px",borderRadius:"3px",fontWeight:500,letterSpacing:"0.06em",fontSize:"10px",fontFamily:"var(--font-mono)",textTransform:"uppercase",background:"var(--fail-bg)",color:"var(--fail)"}}>risk</span></td><td>Could hurt you. Security flaw, data loss, silent failure.</td><td>Fix before merging — usually `scope`.</td></tr>
 <tr><td><span style={{display:"inline-block",padding:"2px 7px",borderRadius:"3px",fontWeight:500,letterSpacing:"0.06em",fontSize:"10px",fontFamily:"var(--font-mono)",textTransform:"uppercase",background:"var(--warn-bg)",color:"var(--warn)"}}>debt</span></td><td>Making the codebase worse. Duplication, fragile patterns, missing tests.</td><td>`scope` for follow-up or `promote` to a skill rule.</td></tr>
-<tr><td><span style={{display:"inline-block",padding:"2px 7px",borderRadius:"3px",fontWeight:500,letterSpacing:"0.06em",fontSize:"10px",fontFamily:"var(--font-mono)",textTransform:"uppercase",background:"var(--info-bg)",color:"var(--info)"}}>obs</span></td><td>Worth knowing. Not wrong, but useful for the next engineer.</td><td>`accept`, `monitor`, or record as `lesson`.</td></tr>
+<tr><td><span style={{display:"inline-block",padding:"2px 7px",borderRadius:"3px",fontWeight:500,letterSpacing:"0.06em",fontSize:"10px",fontFamily:"var(--font-mono)",textTransform:"uppercase",background:"var(--info-bg)",color:"var(--info)"}}>obs</span></td><td>Worth knowing. Not wrong, but useful for the next engineer.</td><td>`accept` or `monitor`.</td></tr>
 </tbody>
 </table>
 
@@ -33,11 +33,10 @@ Each finding is categorized: `code` (implementation issue), `test` (test quality
 
 ## Lifecycle
 
-Every finding starts as **active**. From there, three terminal states:
+Every finding starts as **active**. From there, two terminal states:
 
 - **closed** — resolved or acknowledged. The `closed_by` field records who: `mechanical` (the referenced file was removed), `human` (developer decision), or `agent` (Learn triage).
 - **promoted** — the finding describes a recurring pattern. It becomes a rule in a skill file via `ana proof promote`. The `promoted_to` field records which skill received the rule.
-- **lesson** — recorded as institutional knowledge without becoming a rule. Worth remembering, not worth encoding.
 
 Between pipeline cycles, run `claude --agent ana-learn` to triage active findings. Learn presents them by severity, recommends actions, and executes closes and promotions with your approval.
 

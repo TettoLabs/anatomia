@@ -988,27 +988,6 @@ describe('ana proof', () => {
     build_concerns: [],
   };
 
-  /** Entry with a lesson finding */
-  const lessonEntry = {
-    slug: 'add-logging',
-    feature: 'Add Structured Logging',
-    result: 'PASS',
-    author: { name: 'Developer', email: 'dev@example.com' },
-    contract: { total: 3, covered: 3, uncovered: 0, satisfied: 3, unsatisfied: 0, deviated: 0 },
-    assertions: [{ id: 'A001', says: 'Logs work', status: 'SATISFIED' }],
-    acceptance_criteria: { total: 2, met: 2 },
-    timing: { total_minutes: 20 },
-    hashes: {},
-    completed_at: '2026-04-21T10:00:00Z',
-    modules_touched: [],
-    findings: [
-      { id: 'L001', category: 'testing', summary: 'Consider adding log rotation test', file: null, anchor: null, status: 'lesson' },
-    ],
-    rejection_cycles: 0,
-    previous_failures: [],
-    build_concerns: [],
-  };
-
   // @ana A001, A002, A003, A004, A005
   describe('closes finding successfully', () => {
     it('marks finding as closed with reason', async () => {
@@ -1129,19 +1108,6 @@ describe('ana proof', () => {
 
       const json = JSON.parse(stdout);
       expect(json.error.code).toBe('REASON_REQUIRED');
-    });
-  });
-
-  // @ana A010
-  describe('closes lesson finding', () => {
-    it('shows lesson → closed transition', async () => {
-      await createCloseTestProject([lessonEntry]);
-      process.chdir(tempDir);
-
-      const { stdout, exitCode } = runProof(['close', 'L001', '--reason', 'no longer relevant']);
-      expect(exitCode).toBe(0);
-      expect(stdout).toContain('lesson');
-      expect(stdout).toContain('closed');
     });
   });
 
@@ -2038,7 +2004,7 @@ describe('ana proof', () => {
       expect(json.meta.chain_runs).toBeTypeOf('number');
       expect(json.meta.findings.active).toBeTypeOf('number');
       expect(json.meta.findings.closed).toBeTypeOf('number');
-      expect(json.meta.findings.lesson).toBeTypeOf('number');
+
       expect(json.meta.findings.promoted).toBeTypeOf('number');
       expect(json.meta.findings.total).toBeTypeOf('number');
     });
@@ -3292,22 +3258,6 @@ describe('ana proof', () => {
     });
   });
 
-  // @ana A030
-  describe('promotes lesson finding', () => {
-    it('transitions lesson to promoted', async () => {
-      await createPromoteTestProject([lessonEntry]);
-      process.chdir(tempDir);
-
-      const { stdout, exitCode } = runProof(['promote', 'L001', '--skill', 'coding-standards']);
-      expect(exitCode).toBe(0);
-      expect(stdout).toContain('Promoted L001');
-
-      const chain = JSON.parse(await fs.readFile(path.join(tempDir, '.ana', 'proof_chain.json'), 'utf-8'));
-      const finding = chain.entries[0].findings.find((f: { id: string }) => f.id === 'L001');
-      expect(finding.status).toBe('promoted');
-    });
-  });
-
   describe('promotes finding that is not found', () => {
     it('returns FINDING_NOT_FOUND code in JSON', async () => {
       await createPromoteTestProject([promoteEntry]);
@@ -4160,161 +4110,6 @@ describe('ana proof', () => {
       // F001 is risk → actionable, F002 is observation+monitor → monitoring
       expect(json.results.actionable_count).toBe(1);
       expect(json.results.monitoring_count).toBe(1);
-    });
-  });
-
-  // ─── Lesson Subcommand Tests ──────────────────────────────────────────
-
-  /** Entry with a promoted finding for lesson rejection testing */
-  const promotedEntry = {
-    slug: 'promoted-test',
-    feature: 'Promoted Test',
-    result: 'PASS',
-    author: { name: 'Developer', email: 'dev@example.com' },
-    contract: { total: 2, covered: 2, uncovered: 0, satisfied: 2, unsatisfied: 0, deviated: 0 },
-    assertions: [{ id: 'A001', says: 'Works', status: 'SATISFIED' }],
-    acceptance_criteria: { total: 1, met: 1 },
-    timing: { total_minutes: 15 },
-    hashes: {},
-    completed_at: '2026-04-20T10:00:00Z',
-    modules_touched: [],
-    findings: [
-      { id: 'F004', category: 'code', summary: 'Already promoted item', file: 'src/api.ts', anchor: null, status: 'promoted', promoted_to: '.claude/skills/coding-standards/SKILL.md' },
-    ],
-    rejection_cycles: 0,
-    previous_failures: [],
-    build_concerns: [],
-  };
-
-  // @ana A022
-  describe('lesson sets finding to lesson status', () => {
-    it('records finding as lesson with reason', async () => {
-      await createCloseTestProject([closeEntry]);
-      process.chdir(tempDir);
-
-      const { stdout, exitCode } = runProof(['lesson', 'F001', '--reason', 'team-decision']);
-      expect(exitCode).toBe(0);
-      expect(stdout).toContain('Lessons recorded');
-      expect(stdout).toContain('F001');
-
-      // Verify chain was mutated
-      const chain = JSON.parse(await fs.readFile(path.join(tempDir, '.ana', 'proof_chain.json'), 'utf-8'));
-      const finding = chain.entries[0].findings.find((f: { id: string }) => f.id === 'F001');
-      expect(finding.status).toBe('lesson');
-      expect(finding.closed_by).toBe('human');
-      expect(finding.closed_reason).toBe('team-decision');
-      expect(finding.closed_at).toMatch(/^\d{4}-\d{2}-\d{2}/);
-    });
-  });
-
-  // @ana A023
-  describe('lesson requires --reason', () => {
-    it('shows REASON_REQUIRED error without --reason', async () => {
-      await createCloseTestProject([closeEntry]);
-      process.chdir(tempDir);
-
-      const { stderr, exitCode } = runProof(['lesson', 'F001']);
-      expect(exitCode).not.toBe(0);
-      expect(stderr).toContain('--reason is required');
-    });
-
-    it('returns REASON_REQUIRED code in JSON', async () => {
-      await createCloseTestProject([closeEntry]);
-      process.chdir(tempDir);
-
-      const { stdout, exitCode } = runProof(['lesson', 'F001', '--json']);
-      expect(exitCode).not.toBe(0);
-
-      const json = JSON.parse(stdout);
-      expect(json.error.code).toBe('REASON_REQUIRED');
-    });
-  });
-
-  // @ana A024
-  describe('lesson rejects closed findings', () => {
-    it('shows ALREADY_CLOSED error for closed finding', async () => {
-      await createCloseTestProject([closeEntry]);
-      process.chdir(tempDir);
-
-      const { stderr, exitCode } = runProof(['lesson', 'F003', '--reason', 'test']);
-      expect(exitCode).not.toBe(0);
-      expect(stderr).toContain('already closed');
-    });
-  });
-
-  // @ana A025
-  describe('lesson rejects promoted findings', () => {
-    it('shows ALREADY_PROMOTED error for promoted finding', async () => {
-      await createCloseTestProject([promotedEntry]);
-      process.chdir(tempDir);
-
-      const { stderr, exitCode } = runProof(['lesson', 'F004', '--reason', 'test']);
-      expect(exitCode).not.toBe(0);
-      expect(stderr).toContain('already promoted');
-    });
-  });
-
-  // @ana A026
-  describe('lesson commits with proof prefix', () => {
-    it('creates git commit with [proof] Lesson: prefix', async () => {
-      await createCloseTestProject([closeEntry]);
-      process.chdir(tempDir);
-
-      runProof(['lesson', 'F001', '--reason', 'institutional decision']);
-
-      const lastCommit = execSync('git log -1 --pretty=%s', { cwd: tempDir, encoding: 'utf-8' }).trim();
-      expect(lastCommit).toContain('[proof] Lesson:');
-      expect(lastCommit).toContain('F001');
-    });
-  });
-
-  // @ana A027
-  describe('lesson --dry-run does not mutate', () => {
-    it('shows what would happen without changing anything', async () => {
-      await createCloseTestProject([closeEntry]);
-      process.chdir(tempDir);
-
-      const commitCountBefore = parseInt(execSync('git log --oneline | wc -l', { cwd: tempDir, encoding: 'utf-8' }).trim());
-
-      const { stdout, exitCode } = runProof(['lesson', 'F001', '--reason', 'test', '--dry-run']);
-      expect(exitCode).toBe(0);
-      expect(stdout).toContain('Dry run');
-
-      // Finding should still be active
-      const chain = JSON.parse(await fs.readFile(path.join(tempDir, '.ana', 'proof_chain.json'), 'utf-8'));
-      const f1 = chain.entries[0].findings.find((f: { id: string }) => f.id === 'F001');
-      expect(f1.status).toBe('active');
-
-      // No git commit was created
-      const commitCountAfter = parseInt(execSync('git log --oneline | wc -l', { cwd: tempDir, encoding: 'utf-8' }).trim());
-      expect(commitCountAfter).toBe(commitCountBefore);
-    });
-  });
-
-  describe('lesson returns FINDING_NOT_FOUND for nonexistent ID', () => {
-    it('shows FINDING_NOT_FOUND error', async () => {
-      await createCloseTestProject([closeEntry]);
-      process.chdir(tempDir);
-
-      const { stderr, exitCode } = runProof(['lesson', 'F999', '--reason', 'test']);
-      expect(exitCode).not.toBe(0);
-      expect(stderr).toContain('not found');
-    });
-  });
-
-  describe('lesson --json returns structured response', () => {
-    it('returns JSON envelope with lesson result', async () => {
-      await createCloseTestProject([closeEntry]);
-      process.chdir(tempDir);
-
-      const { stdout, exitCode } = runProof(['lesson', 'F001', '--reason', 'json-test', '--json']);
-      expect(exitCode).toBe(0);
-
-      const json = JSON.parse(stdout);
-      expect(json.command).toBe('proof lesson');
-      expect(json.results.finding.id).toBe('F001');
-      expect(json.results.new_status).toBe('lesson');
-      expect(json.results.reason).toBe('json-test');
     });
   });
 
