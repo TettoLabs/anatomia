@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-105 runs · 42 active · 128 lessons · 3 promoted · 456 closed
+105 runs · 41 active · 128 lessons · 3 promoted · 457 closed
 
 ## Hot Modules
 
@@ -15,7 +15,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 42 total)
+## Active Findings (30 shown of 41 total)
 
 ### packages/cli/src/commands/init/commit.ts
 
@@ -30,6 +30,7 @@
 - **code:** startWork resume path at line 1685 also duplicates HEAD-reading pattern — three places total read HEAD for branch name — *Kind-aware branch prefixes*
 - **test:** A013/A014 completeWork backward compat assertions have no tagged tests — verified by source inspection only — *Fix cycle stage detection breaks on multi-phase builds*
 - **code:** completeWork fallback lets two multi-phase specs share one unnumbered saves.json entry — phase 2 passes if phase 1's unnumbered key exists — *Fix cycle stage detection breaks on multi-phase builds*
+- **code:** getNextAction multi-line return breaks status output formatting — second line lacks indentation and styling — *work complete --merge flag for structured PR merging*
 
 ### packages/cli/src/types/proof.ts
 
@@ -65,10 +66,6 @@
 ### website/components/docs/content/TroubleCard.tsx
 
 - **code:** TroubleCard has no aria/role attribute for accessibility — Callout uses role=note — *Content Pages — 16 editorial docs pages with bug fixes and sidebar ordering*
-
-### website/components/docs/layout/RightRail.tsx
-
-- **code:** pageTitle and pageDescription props accepted by RightRail but never used in any rendering logic — *Docs Search + Polish*
 
 ### website/components/docs/proof/FindingsList.tsx
 

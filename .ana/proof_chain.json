@@ -25362,7 +25362,10 @@
           "severity": "debt",
           "suggested_action": "scope",
           "id": "docs-search-polish-C6",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Stale: pageTitle and pageDescription removed from RightRail. Neither appears in the RightRailProps interface (lines 16-25) nor the component destructuring (line 34). Zero matches for either prop name in RightRail.tsx.",
+          "closed_at": "2026-05-15T16:38:20.641Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
