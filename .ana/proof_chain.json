@@ -27966,6 +27966,238 @@
         "commit_count": 0,
         "base_commit": "7ce3596c588dc1851757ab82820bb063b16ab2c2"
       }
+    },
+    {
+      "slug": "bump-node-minimum-22",
+      "feature": "Bump Node Minimum to 22, Add Node 24 to CI",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 22,
+        "satisfied": 22,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Root package requires Node 22 or higher",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "CLI package requires Node 22 or higher",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Website package requires Node 22 or higher",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "CLI builds against Node 22 as the syntax floor",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "CI tests against Node 22 and Node 24",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "CI no longer tests against the end-of-life Node 20",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "Coverage uploads from the lowest supported Node version",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "Coverage upload step name reflects Node 22",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "README tells users Node 22 is required",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "Getting started page tells users to install Node 22",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "Troubleshooting page references Node 22 as minimum",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "Root contributing guide requires Node 22",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "CLI contributing guide requires Node 22",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "CLI contributing guide describes the updated CI matrix",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "Architecture doc describes the updated CI matrix",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "Deployment skill reflects the current CI runners",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A017",
+          "says": "tsconfig comment references Node 22 as the baseline",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A018",
+          "says": "Website copy tells visitors Node 22 is required",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A019",
+          "says": "Generated docs file reflects the updated Node version from sources",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A020",
+          "says": "Generated docs file has no stale Node 20 references from source pages",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A021",
+          "says": "All existing tests still pass after the version bump",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A022",
+          "says": "CLI builds without errors",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 13,
+        "met": 12
+      },
+      "timing": {
+        "total_minutes": 137,
+        "think": 8,
+        "plan": 10,
+        "build": 5,
+        "verify": 6
+      },
+      "hashes": {
+        "scope": "sha256:fe24ab56399d7f0a50414b2b5da2e180526330f90d51ddd49a02774845debae7",
+        "contract": "sha256:c879061356e931e6ef694946ad8db2c1b703d35adb767c125836d4a8a4252a77",
+        "plan": "sha256:667cf38d2ddcbebfe9d1177594364279ef4ba4ed762bf706436cc0aa562ff897",
+        "spec": "sha256:3b875268c027fe935d8c37d06e9d0636433bd5f50eafd63337aa7950e59dd0ef",
+        "build-report": "sha256:ed9e117bf3f71c8e6688a71f1c65584a41fab43c07167cd24b618ba41133de51",
+        "build-data": "sha256:cad679b5f1db35108491dfbd35daf8aa6e5c14fbf0149a9ec117cabde39d27dd",
+        "verify-report": "sha256:d0b5129bb7b29dd1fdc6c7d9fcea0b0486f8e62fec10430b5560689238abcf65",
+        "verify-data": "sha256:a987ff740795b499eef07313cc0e9fd69217a6df9c9370ff3366ef021a737602"
+      },
+      "completed_at": "2026-05-15T07:00:13.044Z",
+      "modules_touched": [
+        ".claude/skills/deployment/SKILL.md",
+        ".github/workflows/test.yml",
+        "CONTRIBUTING.md",
+        "README.md",
+        "package.json",
+        "packages/cli/ARCHITECTURE.md",
+        "packages/cli/CONTRIBUTING.md",
+        "packages/cli/package.json",
+        "packages/cli/tsup.config.ts",
+        "tsconfig.base.json",
+        "website/content/docs/concepts/pipeline.mdx",
+        "website/content/docs/guides/reading-a-proof.mdx",
+        "website/content/docs/guides/troubleshooting.mdx",
+        "website/content/docs/guides/using-ana-learn.mdx",
+        "website/content/docs/guides/verifying-changes.mdx",
+        "website/content/docs/start.mdx",
+        "website/lib/copy.ts",
+        "website/package.json",
+        "website/public/llms-full.txt",
+        "website/public/search-index.json"
+      ],
+      "scope_summary": "Node 20 passed its maintenance EOL in April 2026 — it no longer receives security patches. Our engines field still declares `>=20`, our CI still tests against it, and our docs still advertise it. Meanwhile Node 22 is current LTS (maintained until April 2027) and Node 24 is Current (LTS in October 2026). We should stop validating against a dead version and start validating against the version our users will be on next.",
+      "kind": "chore",
+      "findings": [
+        {
+          "category": "upstream",
+          "summary": "Branch is 4 commits behind main — PR diff includes deletion of fix-gantt-bar-distortion plan artifacts (scope.md, spec.md, contract.yaml, plan.md) that were committed to main after the branch point. Rebase before merge.",
+          "file": null,
+          "anchor": null,
+          "severity": "risk",
+          "suggested_action": "scope",
+          "id": "bump-node-minimum-22-C1",
+          "status": "lesson"
+        },
+        {
+          "category": "code",
+          "summary": "Dynamic stat markers (ana:dynamic) updated as prebuild side effect — pipeline.mdx, reading-a-proof.mdx, using-ana-learn.mdx, verifying-changes.mdx, start.mdx, troubleshooting.mdx all have updated proof counts (90->103, 19->21 rejections). These are correct but outside the spec's file_changes list.",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "bump-node-minimum-22-C2",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "Contract A021 value may be stale — says 2297 tests but this is a snapshot. If main gains tests before merge, the assertion value won't match. The test count is correct for the current branch.",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "bump-node-minimum-22-C3",
+          "status": "lesson"
+        },
+        {
+          "category": "code",
+          "summary": "Lint warning (pre-existing): unused eslint-disable directive for no-control-regex. Not introduced by this build.",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "bump-node-minimum-22-C4",
+          "status": "active"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "Pre-existing lint warning in git-operations.ts:198 — unused eslint-disable directive for no-control-regex",
+          "file": "packages/cli/src/utils/git-operations.ts",
+          "severity": "debt",
+          "suggested_action": "accept"
+        }
+      ],
+      "worktree": {
+        "used": true,
+        "created_at": "2026-05-15T06:45:23.483Z",
+        "completed_at": "2026-05-15T07:00:13.040Z",
+        "commit_count": 0,
+        "base_commit": "4ca91221dac79f374732d09be766e0f4e407fb45"
+      }
     }
   ],
   "schema": 1

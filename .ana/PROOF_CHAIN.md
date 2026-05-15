@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-103 runs · 50 active · 125 lessons · 3 promoted · 443 closed
+104 runs · 52 active · 127 lessons · 3 promoted · 443 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 50 total)
+## Active Findings (30 shown of 52 total)
 
 ### packages/cli/src/commands/init/commit.ts
 
@@ -29,8 +29,6 @@
 - **code:** printExistingWorktree duplicates commitsBehind rev-list logic from getWorktreeInfo — now two inline computations duplicated instead of one — *Worktree freshness detection*
 - **code:** printExistingWorktree duplicates HEAD-reading logic from getWorktreeInfo — same pattern in two places — *Kind-aware branch prefixes*
 - **code:** startWork resume path at line 1685 also duplicates HEAD-reading pattern — three places total read HEAD for branch name — *Kind-aware branch prefixes*
-- **test:** A013/A014 completeWork backward compat assertions have no tagged tests — verified by source inspection only — *Fix cycle stage detection breaks on multi-phase builds*
-- **code:** completeWork fallback lets two multi-phase specs share one unnumbered saves.json entry — phase 2 passes if phase 1's unnumbered key exists — *Fix cycle stage detection breaks on multi-phase builds*
 
 ### packages/cli/src/types/proof.ts
 
@@ -102,6 +100,8 @@
 
 ### General
 
+- **code:** Dynamic stat markers (ana:dynamic) updated as prebuild side effect — pipeline.mdx, reading-a-proof.mdx, using-ana-learn.mdx, verifying-changes.mdx, start.mdx, troubleshooting.mdx all have updated proof counts (90->103, 19->21 rejections). These are correct but outside the spec's file_changes list. — *Bump Node Minimum to 22, Add Node 24 to CI*
+- **code:** Lint warning (pre-existing): unused eslint-disable directive for no-control-regex. Not introduced by this build. — *Bump Node Minimum to 22, Add Node 24 to CI*
 - **code:** URL reachability not verified — stable URL contract is a deployment assumption — *Documentation links in init and setup*
 - **test:** Contract assertions A013-A019 have no tagged tests — verified by source inspection only — *Kind-aware branch prefixes*
 
