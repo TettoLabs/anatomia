@@ -1228,6 +1228,108 @@ export function computeStaleness(
 }
 
 /**
+ * A resolution claim — an upstream finding claiming to resolve an earlier finding.
+ */
+export interface ResolutionClaim {
+  /** ID of the upstream finding making the claim (e.g., "slug-B-C3") */
+  upstream_id: string;
+  /** Summary of the upstream finding */
+  upstream_summary: string;
+  /** Slug of the entry containing the upstream finding */
+  upstream_slug: string;
+  /** ID of the referenced (original) finding being claimed as resolved */
+  referenced_id: string;
+  /** Summary of the referenced finding */
+  referenced_summary: string;
+  /** Current status of the referenced finding */
+  referenced_status: string;
+  /** File associated with the referenced finding */
+  referenced_file: string | null;
+  /** Severity of the referenced finding */
+  referenced_severity: string;
+}
+
+/**
+ * Result of resolution claims analysis.
+ */
+export interface ResolutionClaimsResult {
+  claims: ResolutionClaim[];
+}
+
+/**
+ * Compute resolution claims from the proof chain.
+ *
+ * Scans all entries for upstream findings with `resolves` arrays.
+ * For each referenced ID, checks whether the original finding is still active.
+ * Skips claims where the referenced ID doesn't exist or is already closed.
+ * Deduplicates: if multiple upstream findings claim the same original,
+ * only the most recent (latest entry) is kept.
+ *
+ * @param chain - Proof chain with entries array
+ * @param chain.entries - Array of proof chain entries to search
+ * @returns ResolutionClaimsResult with active claims
+ */
+export function computeResolutionClaims(
+  chain: {
+    entries: Array<{
+      slug?: string;
+      completed_at?: string;
+      findings?: Array<{
+        id?: string;
+        status?: string;
+        severity?: string;
+        category?: string;
+        summary?: string;
+        file?: string | null;
+        resolves?: string[];
+      }>;
+    }>;
+  },
+): ResolutionClaimsResult {
+  // Build index of all findings by ID
+  const findingIndex = new Map<string, { status: string; summary: string; file: string | null; severity: string }>();
+  for (const entry of chain.entries) {
+    for (const f of entry.findings ?? []) {
+      if (!f.id) continue;
+      findingIndex.set(f.id, {
+        status: f.status ?? 'active',
+        summary: f.summary ?? '',
+        file: f.file ?? null,
+        severity: f.severity ?? 'unclassified',
+      });
+    }
+  }
+
+  // Collect claims — later entries override earlier ones for dedup
+  const claimsByReferenced = new Map<string, ResolutionClaim>();
+
+  for (const entry of chain.entries) {
+    for (const f of entry.findings ?? []) {
+      if (f.category !== 'upstream' || !f.resolves || f.resolves.length === 0) continue;
+
+      for (const referencedId of f.resolves) {
+        const original = findingIndex.get(referencedId);
+        // Skip non-existent or non-active findings
+        if (!original || original.status !== 'active') continue;
+
+        claimsByReferenced.set(referencedId, {
+          upstream_id: f.id ?? 'unknown',
+          upstream_summary: f.summary ?? '',
+          upstream_slug: entry.slug ?? '',
+          referenced_id: referencedId,
+          referenced_summary: original.summary,
+          referenced_status: original.status,
+          referenced_file: original.file,
+          referenced_severity: original.severity,
+        });
+      }
+    }
+  }
+
+  return { claims: Array.from(claimsByReferenced.values()) };
+}
+
+/**
  * Find a finding by its ID across all entries in the chain.
  *
  * Returns both the finding and its parent entry so callers have access
