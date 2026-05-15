@@ -1,12 +1,37 @@
+import { getProofEntries, getProofStats, getMedianTimings } from './proofs';
+import { getSkillCount } from './skills';
+import { getGotchaCount } from './gotchas';
+import { buildDocsStatValues, resolveDocsStatTags } from './docsStatValues';
+
 /**
  * stripJsx — removes JSX components from raw MDX source, leaving clean markdown.
  *
  * Handles block-level components with children, self-closing components,
  * JSX expression comments, HTML-like wrappers with style objects,
  * and import/export statements.
+ *
+ * Resolves DocsStat tags to computed values before stripping, so dynamic
+ * statistics appear as plain numbers in the output.
  */
 export function stripJsx(mdxSource: string): string {
   let result = mdxSource;
+
+  // Resolve DocsStat tags to computed values before any stripping
+  const entries = getProofEntries();
+  const stats = getProofStats();
+  const medians = getMedianTimings();
+  const values = buildDocsStatValues({
+    proofCount: entries.length,
+    rejections: stats.rejections,
+    findings: stats.findings,
+    skillCount: getSkillCount(),
+    gotchaCount: getGotchaCount(),
+    medianThink: medians.think,
+    medianPlan: medians.plan,
+    medianBuild: medians.build,
+    medianVerify: medians.verify,
+  });
+  result = resolveDocsStatTags(result, values);
 
   // Remove import/export lines
   result = result.replace(/^(?:import|export)\s+.*$/gm, '');
