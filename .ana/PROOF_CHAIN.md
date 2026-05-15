@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-105 runs · 44 active · 128 lessons · 3 promoted · 454 closed
+105 runs · 43 active · 128 lessons · 3 promoted · 455 closed
 
 ## Hot Modules
 
@@ -15,7 +15,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 44 total)
+## Active Findings (30 shown of 43 total)
 
 ### packages/cli/src/commands/init/commit.ts
 
@@ -52,6 +52,7 @@
 ### packages/cli/tests/commands/work.test.ts
 
 - **test:** Conditional PID guard makes 8 tests potential no-ops in environments where getClaudePid() returns null — *Capture actual think time from Ana session start*
+- **test:** Stage detection tests use hardcoded timestamps with 1-hour gaps — no boundary test for equal timestamps — *Fix cycle stage detection breaks on multi-phase builds*
 
 ### website/app/docs/reference/cli/page.tsx
 
@@ -85,7 +86,6 @@
 
 ### website/scripts/extract-docs-data.ts
 
-- **code:** Unused variable 'other' in generateLlmsTxt — pages filtered but remainder never referenced — *Docs Search + Polish*
 - **code:** Duplicate stripJsx implementation — one in website/lib/docs-data/stripJsx.ts, another inlined in extract-docs-data.ts — *Docs Search + Polish*
 
 ### General

@@ -25345,7 +25345,10 @@
           "severity": "debt",
           "suggested_action": "scope",
           "id": "docs-search-polish-C5",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Stale: unused 'other' variable removed from extract-docs-data.ts. Zero matches for variable declarations or assignments using 'other'. The destructuring that produced the unused remainder was cleaned up.",
+          "closed_at": "2026-05-15T16:26:54.489Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
