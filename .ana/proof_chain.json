@@ -22710,7 +22710,10 @@
           "severity": "observation",
           "suggested_action": "scope",
           "id": "docs-infrastructure-C6",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Stale: DocsErrorBoundary exists at docs/layout.tsx:24, wrapping all children. Imported at line 4. Added during the docs-shell scope — finding predates the fix.",
+          "closed_at": "2026-05-15T04:40:03.111Z",
+          "closed_by": "human"
         }
       ],
       "rejection_cycles": 0,

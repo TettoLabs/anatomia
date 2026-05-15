@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-102 runs · 76 active · 122 lessons · 3 promoted · 414 closed
+102 runs · 75 active · 122 lessons · 3 promoted · 415 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 76 total)
+## Active Findings (30 shown of 75 total)
 
 ### packages/cli/src/commands/init/commit.ts
 
@@ -26,6 +26,7 @@
 
 - **code:** Two different result parsers with different casing: getVerifyResult returns 'unknown' (lowercase), parseResult in proofSummary returns 'UNKNOWN' (uppercase) — works correctly but fragile coupling between two parallel implementations — *work.ts untested branch coverage*
 - **test:** Pull-recovery guards (2 of 5) not directly exercised by any test — *Fix --merge stdout pollution in --json mode*
+- **code:** printExistingWorktree duplicates commitsBehind rev-list logic from getWorktreeInfo — now two inline computations duplicated instead of one — *Worktree freshness detection*
 
 ### packages/cli/src/types/proof.ts
 
@@ -54,10 +55,6 @@
 ### website/app/docs/[[...slug]]/page.tsx
 
 - **code:** Prose classes used without @tailwindcss/typography installed — *Docs Infrastructure — Fumadocs MDX Pipeline*
-
-### website/app/docs/layout.tsx
-
-- **code:** No error boundary in docs layout — broken MDX crashes entire docs section — *Docs Infrastructure — Fumadocs MDX Pipeline*
 
 ### website/app/docs/reference/cli/page.tsx
 
