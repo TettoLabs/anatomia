@@ -54,7 +54,7 @@
   "pre-check": {
     "seal": "INTACT",
     "seal_hash": "sha256:448e22eaeefd85876e6ab21b95fcc892784253e6312fcbf73d68bd49b27e3b6f",
-    "run_at": "2026-05-15T17:09:36.093Z"
+    "run_at": "2026-05-15T17:11:54.695Z"
   },
   "verify-report": {
     "saved_at": "2026-05-15T17:09:36.128Z",
