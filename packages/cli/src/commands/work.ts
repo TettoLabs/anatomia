@@ -469,8 +469,8 @@ function determineStage(slug: string, artifacts: ArtifactState, workBranch: stri
               // Try phase-numbered keys first, fall back to unnumbered for backward compat
               const buildKey = `build-report-${phaseNum}`;
               const verifyKey = `verify-report-${phaseNum}`;
-              const buildSavedAt = (saves[buildKey] ?? saves['build-report'])?.saved_at;
-              const verifySavedAt = (saves[verifyKey] ?? saves['verify-report'])?.saved_at;
+              const buildSavedAt = (saves[buildKey] ?? (phaseNum === 1 ? saves['build-report'] : undefined))?.saved_at;
+              const verifySavedAt = (saves[verifyKey] ?? (phaseNum === 1 ? saves['verify-report'] : undefined))?.saved_at;
               if (buildSavedAt && verifySavedAt && new Date(buildSavedAt) > new Date(verifySavedAt)) {
                 return `phase-${phaseNum}-ready-for-re-verify`;
               }
@@ -1549,9 +1549,9 @@ export async function completeWork(slug: string, options?: { json?: boolean; mer
     const buildKey = isUnnumbered ? 'build-report' : `build-report-${phaseNum}`;
     const verifyKey = isUnnumbered ? 'verify-report' : `verify-report-${phaseNum}`;
 
-    // Phase-aware lookup with fallback to unnumbered keys for backward compat
-    const buildSave = savesData[buildKey] ?? (!isUnnumbered ? savesData['build-report'] : undefined);
-    const verifySave = savesData[verifyKey] ?? (!isUnnumbered ? savesData['verify-report'] : undefined);
+    // Phase-aware lookup with fallback to unnumbered keys for backward compat (phase 1 only)
+    const buildSave = savesData[buildKey] ?? (!isUnnumbered && phaseNum === 1 ? savesData['build-report'] : undefined);
+    const verifySave = savesData[verifyKey] ?? (!isUnnumbered && phaseNum === 1 ? savesData['verify-report'] : undefined);
     const buildMissing = !buildSave || !buildSave.saved_at || !buildSave.hash;
     const verifyMissing = !verifySave || !verifySave.saved_at || !verifySave.hash;
 
