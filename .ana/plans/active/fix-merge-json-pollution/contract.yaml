@@ -1,0 +1,76 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Fix --merge stdout pollution in --json mode"
+
+assertions:
+  - id: A001
+    says: "Completing an already-merged PR with --json produces valid JSON output"
+    block: "already-merged path with --json produces valid JSON"
+    target: "stdout"
+    matcher: "exists"
+
+  - id: A002
+    says: "The JSON output contains the standard command envelope"
+    block: "already-merged path with --json produces valid JSON"
+    target: "json.command"
+    matcher: "equals"
+    value: "work complete"
+
+  - id: A003
+    says: "The JSON output includes results with the work item slug"
+    block: "already-merged path with --json produces valid JSON"
+    target: "json.results.slug"
+    matcher: "exists"
+
+  - id: A004
+    says: "The JSON output includes chain metadata"
+    block: "already-merged path with --json produces valid JSON"
+    target: "json.meta"
+    matcher: "exists"
+
+  - id: A005
+    says: "Merging a PR with --json produces valid JSON output"
+    block: "merge-succeeded path with --json produces valid JSON"
+    target: "stdout"
+    matcher: "exists"
+
+  - id: A006
+    says: "The merge-succeeded JSON output contains the standard command envelope"
+    block: "merge-succeeded path with --json produces valid JSON"
+    target: "json.command"
+    matcher: "equals"
+    value: "work complete"
+
+  - id: A007
+    says: "No progress messages appear before the JSON output on the already-merged path"
+    block: "already-merged path with --json produces valid JSON"
+    target: "stdout"
+    matcher: "not_contains"
+    value: "already merged"
+
+  - id: A008
+    says: "No progress messages appear before the JSON output on the merge-succeeded path"
+    block: "merge-succeeded path with --json produces valid JSON"
+    target: "stdout"
+    matcher: "not_contains"
+    value: "Merging PR"
+
+  - id: A009
+    says: "Human-readable output still shows progress messages without --json"
+    block: "merges PR and completes work item"
+    target: "output"
+    matcher: "contains"
+    value: "PR merged."
+
+  - id: A010
+    says: "Human-readable output still shows already-merged message without --json"
+    block: "skips merge when PR is already merged"
+    target: "output"
+    matcher: "contains"
+    value: "already merged"
+
+file_changes:
+  - path: "packages/cli/src/commands/work.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/work-merge.test.ts"
+    action: modify
