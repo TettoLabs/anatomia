@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-99 runs · 86 active · 119 lessons · 0 promoted · 397 closed
+99 runs · 85 active · 119 lessons · 0 promoted · 398 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 86 total)
+## Active Findings (30 shown of 85 total)
 
 ### packages/cli/src/commands/init/commit.ts
 
@@ -25,6 +25,7 @@
 ### packages/cli/src/commands/work.ts
 
 - **test:** Pull-recovery guards (2 of 5) not directly exercised by any test — *Fix --merge stdout pollution in --json mode*
+- **code:** printExistingWorktree duplicates commitsBehind rev-list logic from getWorktreeInfo — now two inline computations duplicated instead of one — *Worktree freshness detection*
 
 ### packages/cli/src/types/proof.ts
 
@@ -51,7 +52,6 @@
 ### packages/cli/tests/commands/worktree-guards.test.ts
 
 - **test:** A009 test only verifies cwd restoration, not process.exit or console spy cleanup — *Worktree Guard Integration Tests*
-- **test:** Console and process.exit spies restored inline after assertions — leak on assertion failure — *Worktree Guard Integration Tests*
 
 ### website/app/docs/[...slug]/page.tsx
 

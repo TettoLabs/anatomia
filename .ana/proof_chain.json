@@ -27047,7 +27047,10 @@
           "severity": "risk",
           "suggested_action": "scope",
           "id": "worktree-guard-tests-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed in fe728e70 — moved spy restoration from inline (after assertions) to afterEach (guaranteed cleanup). console.error, console.warn, and process.exit spies are saved in beforeEach and restored in afterEach. If an assertion fails, afterEach still runs — no spy leak into subsequent tests.",
+          "closed_at": "2026-05-15T02:19:39.029Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
