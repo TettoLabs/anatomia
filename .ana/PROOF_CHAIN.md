@@ -1,12 +1,12 @@
 # Proof Chain Dashboard
 
-96 runs · 84 active · 117 lessons · 0 promoted · 388 closed
+97 runs · 87 active · 118 lessons · 0 promoted · 388 closed
 
 ## Hot Modules
 
 | File | Active | Entries |
 |------|--------|--------|
-| packages/cli/src/commands/work.ts | 14 | 8 |
+| packages/cli/src/commands/work.ts | 15 | 9 |
 | packages/cli/tests/commands/work.test.ts | 8 | 8 |
 | packages/cli/src/utils/worktree.ts | 5 | 3 |
 | packages/cli/src/commands/proof.ts | 4 | 3 |
@@ -16,14 +16,12 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 84 total)
+## Active Findings (30 shown of 87 total)
 
 ### packages/cli/src/commands/work.ts
 
+- **test:** Pull-recovery guards (2 of 5) not directly exercised by any test — *Fix --merge stdout pollution in --json mode*
 - **code:** printExistingWorktree duplicates commitsBehind rev-list logic from getWorktreeInfo — now two inline computations duplicated instead of one — *Worktree freshness detection*
-- **code:** getWorkBranch glob pattern `*${slug}` may over-match for short slugs (e.g., slug 'fix' matches all branches containing 'fix') — *Kind-aware branch prefixes*
-- **code:** printExistingWorktree duplicates HEAD-reading logic from getWorktreeInfo — same pattern in two places — *Kind-aware branch prefixes*
-- **code:** startWork resume path at line 1685 also duplicates HEAD-reading pattern — three places total read HEAD for branch name — *Kind-aware branch prefixes*
 
 ### packages/cli/src/types/proof.ts
 
@@ -38,6 +36,11 @@
 - **code:** No timeout on spawnSync — hanging build command blocks worktree creation indefinitely — *Run build command during worktree creation*
 - **code:** Empty string build command passes typeof guard and executes spawnSync('') — *Run build command during worktree creation*
 - **code:** getBuildCommandString re-reads ana.json instead of receiving command from runBuildCommand — duplicate I/O with misleading 'pnpm run build' fallback — *Run build command during worktree creation*
+
+### packages/cli/tests/commands/work-merge.test.ts
+
+- **test:** A004 meta assertion uses toBeTypeOf('object') — passes for null — *Fix --merge stdout pollution in --json mode*
+- **test:** A009/A010 satisfied by existing tests but lack @ana tags for this contract — *Fix --merge stdout pollution in --json mode*
 
 ### packages/cli/tests/commands/work.test.ts
 

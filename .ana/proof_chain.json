@@ -26463,6 +26463,163 @@
         "commit_count": 4,
         "base_commit": "1dce7f5ccfcbe2279c00dbe9195f5eda8987f248"
       }
+    },
+    {
+      "slug": "fix-merge-json-pollution",
+      "feature": "Fix --merge stdout pollution in --json mode",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 10,
+        "satisfied": 10,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Completing an already-merged PR with --json produces valid JSON output",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "The JSON output contains the standard command envelope",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "The JSON output includes results with the work item slug",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "The JSON output includes chain metadata",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "Merging a PR with --json produces valid JSON output",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "The merge-succeeded JSON output contains the standard command envelope",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "No progress messages appear before the JSON output on the already-merged path",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "No progress messages appear before the JSON output on the merge-succeeded path",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "Human-readable output still shows progress messages without --json",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "Human-readable output still shows already-merged message without --json",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 2,
+        "met": 2
+      },
+      "timing": {
+        "total_minutes": 147,
+        "think": 1,
+        "plan": 4,
+        "build": 4,
+        "verify": 4
+      },
+      "hashes": {
+        "scope": "sha256:585a17ff0e7aacd12faf68dd673c78c15f9bba71523bd667de270c98f97420a5",
+        "contract": "sha256:9e1409911a63e1000263a6e1e9a6e4d1b7a8f3162fbbfb6cd8f5971e77854df6",
+        "plan": "sha256:e0d438dabeeb0df762d2af4a988c2da3bfb66b8e38a156b69dbfebac11803873",
+        "spec": "sha256:7d95cfccbd0cf9c9a6489925e649d7d0858f946ae31e49a4e3a6383faa6ec501",
+        "build-report": "sha256:655dbf76c1c748be5b85896c6b172b1725d1847f13cf543eda41851130e41471",
+        "build-data": "sha256:7b7fe5f4f09e1fd91fc1eefc3fdd147de3411cf16ca992522bb97bd69730b253",
+        "verify-report": "sha256:bbdbe6152a1eb0a04749f378aca832edcfe6d5da2943157b7445f1b1eb21b590",
+        "verify-data": "sha256:8eda1542fe2d9f65712f582d836a86658f4f7d527ab8daeae2889c37a4e0a0da"
+      },
+      "completed_at": "2026-05-15T01:45:14.858Z",
+      "modules_touched": [
+        "packages/cli/src/commands/work.ts",
+        "packages/cli/tests/commands/work-merge.test.ts"
+      ],
+      "scope_summary": "`ana work complete --merge --json <slug>` produces invalid JSON output. Progress messages (\"Merging PR...\", \"PR merged.\") and pull-recovery warnings write to stdout before the JSON envelope, breaking any consumer that pipes the output to `jq` or parses it programmatically. The fix guards these messages behind `if (!options?.json)` and adds test coverage for the `--merge --json` interaction.",
+      "kind": "fix",
+      "findings": [
+        {
+          "category": "test",
+          "summary": "A004 meta assertion uses toBeTypeOf('object') — passes for null",
+          "file": "packages/cli/tests/commands/work-merge.test.ts",
+          "anchor": null,
+          "line": 386,
+          "severity": "debt",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A004"
+          ],
+          "id": "fix-merge-json-pollution-C1",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "A009/A010 satisfied by existing tests but lack @ana tags for this contract",
+          "file": "packages/cli/tests/commands/work-merge.test.ts",
+          "anchor": null,
+          "line": 148,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A009",
+            "A010"
+          ],
+          "id": "fix-merge-json-pollution-C2",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "Pull-recovery guards (2 of 5) not directly exercised by any test",
+          "file": "packages/cli/src/commands/work.ts",
+          "anchor": null,
+          "line": 1290,
+          "severity": "debt",
+          "suggested_action": "monitor",
+          "id": "fix-merge-json-pollution-C3",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "JSON.parse on gh pr view stdout has no try/catch — malformed response crashes (pre-existing)",
+          "file": "packages/cli/src/commands/work.ts",
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "fix-merge-json-pollution-C4",
+          "status": "lesson"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": [],
+      "worktree": {
+        "used": true,
+        "created_at": "2026-05-15T01:19:20.003Z",
+        "completed_at": "2026-05-15T01:45:14.854Z",
+        "commit_count": 0,
+        "base_commit": "b1e4385e96f8327181c75e423a534357a457794a"
+      }
     }
   ],
   "schema": 1
