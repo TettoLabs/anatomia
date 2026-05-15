@@ -27036,7 +27036,10 @@
             "A009"
           ],
           "id": "worktree-guard-tests-C1",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed in fe728e70 — A009 test at line 149 now verifies console.error and console.warn restoration (expect(console.error).toBe(originalError), expect(console.warn).toBe(originalWarn)) in addition to cwd restoration. The afterEach cleanup guarantees all three are restored.",
+          "closed_at": "2026-05-15T02:19:54.016Z",
+          "closed_by": "human"
         },
         {
           "category": "test",

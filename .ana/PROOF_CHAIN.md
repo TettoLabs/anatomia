@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-99 runs · 85 active · 119 lessons · 0 promoted · 398 closed
+99 runs · 84 active · 119 lessons · 0 promoted · 399 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 85 total)
+## Active Findings (30 shown of 84 total)
 
 ### packages/cli/src/commands/init/commit.ts
 
@@ -48,10 +48,6 @@
 ### packages/cli/tests/commands/work.test.ts
 
 - **test:** Conditional PID guard makes 8 tests potential no-ops in environments where getClaudePid() returns null — *Capture actual think time from Ana session start*
-
-### packages/cli/tests/commands/worktree-guards.test.ts
-
-- **test:** A009 test only verifies cwd restoration, not process.exit or console spy cleanup — *Worktree Guard Integration Tests*
 
 ### website/app/docs/[...slug]/page.tsx
 
@@ -113,4 +109,8 @@
 - **code:** Unused variable 'other' in generateLlmsTxt — pages filtered but remainder never referenced — *Docs Search + Polish*
 - **code:** Duplicate stripJsx implementation — one in website/lib/docs-data/stripJsx.ts, another inlined in extract-docs-data.ts — *Docs Search + Polish*
 - **code:** Keyword fallback categorization lacks word boundaries — 'scannable' matches /scan/, misassigning proof entries to Engine — *Docs Data Pipeline*
+
+### General
+
+- **test:** Contract assertions A013-A019 have no tagged tests — verified by source inspection only — *Kind-aware branch prefixes*
 
