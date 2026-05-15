@@ -26101,7 +26101,10 @@
             "A017"
           ],
           "id": "commit-hygiene-checks-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Correct assertion type: A017 at commit-hygiene.test.ts:236 tests SCHEMA compliance — does the finding object have check/file/severity/message keys. toHaveProperty is the right assertion for schema tests. VALUE correctness is separately tested by A004 (toBe('lockfile-desync')), A005, A006 etc. A017 documents the expected shape; value tests verify specific outputs. Together they cover structure + values. Asserting values in A017 would duplicate A004.",
+          "closed_at": "2026-05-15T01:03:49.717Z",
+          "closed_by": "human"
         },
         {
           "category": "test",

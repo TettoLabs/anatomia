@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-96 runs · 90 active · 117 lessons · 0 promoted · 382 closed
+96 runs · 89 active · 117 lessons · 0 promoted · 383 closed
 
 ## Hot Modules
 
@@ -16,11 +16,12 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 90 total)
+## Active Findings (30 shown of 89 total)
 
 ### packages/cli/src/commands/work.ts
 
 - **code:** printExistingWorktree duplicates commitsBehind rev-list logic from getWorktreeInfo — now two inline computations duplicated instead of one — *Worktree freshness detection*
+- **code:** getWorkBranch glob pattern `*${slug}` may over-match for short slugs (e.g., slug 'fix' matches all branches containing 'fix') — *Kind-aware branch prefixes*
 
 ### packages/cli/src/types/proof.ts
 
@@ -35,10 +36,6 @@
 - **code:** No timeout on spawnSync — hanging build command blocks worktree creation indefinitely — *Run build command during worktree creation*
 - **code:** Empty string build command passes typeof guard and executes spawnSync('') — *Run build command during worktree creation*
 - **code:** getBuildCommandString re-reads ana.json instead of receiving command from runBuildCommand — duplicate I/O with misleading 'pnpm run build' fallback — *Run build command during worktree creation*
-
-### packages/cli/tests/commands/commit-hygiene.test.ts
-
-- **test:** A017 uses toHaveProperty (existence) instead of asserting specific values — passes on any object shape — *Commit hygiene checks at build-report save*
 
 ### packages/cli/tests/commands/work.test.ts
 
