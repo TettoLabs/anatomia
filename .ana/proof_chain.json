@@ -12135,7 +12135,10 @@
             "A019"
           ],
           "id": "security-hardening-C1",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Systemic tag collision: A016-A019 IDs reused across scopes (lesson C3). Tags point to correct tests for their respective scopes (kind-aware-branch-prefixes). Fixing for security-hardening would be overwritten by the next scope using these IDs. The security hardening entry points have validateSlug wired — artifact.ts:1124/1570, work.ts:1071, pr.ts:154, proof.ts:1662 — verified by code inspection.",
+          "closed_at": "2026-05-15T06:49:21.770Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
