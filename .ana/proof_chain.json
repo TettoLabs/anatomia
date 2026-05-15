@@ -27244,7 +27244,10 @@
             "A003"
           ],
           "id": "work-ts-branch-coverage-C4",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Contract-aligned: toBeDefined() at work.test.ts:3308 matches the contract's 'exists' matcher. The assertion proves the proof chain entry was created. Specific field assertions exist in other tests (result, contract counts, timing). Same structural assertion pattern closed throughout this session.",
+          "closed_at": "2026-05-15T03:36:10.391Z",
+          "closed_by": "human"
         },
         {
           "category": "code",

@@ -1,13 +1,13 @@
 # Proof Chain Dashboard
 
-101 runs · 82 active · 121 lessons · 0 promoted · 409 closed
+101 runs · 81 active · 121 lessons · 0 promoted · 410 closed
 
 ## Hot Modules
 
 | File | Active | Entries |
 |------|--------|--------|
 | packages/cli/src/commands/work.ts | 15 | 9 |
-| packages/cli/tests/commands/work.test.ts | 7 | 5 |
+| packages/cli/tests/commands/work.test.ts | 6 | 5 |
 | packages/cli/src/utils/worktree.ts | 5 | 3 |
 | website/lib/copy.ts | 4 | 3 |
 | website/scripts/extract-docs-data.ts | 4 | 2 |
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 82 total)
+## Active Findings (30 shown of 81 total)
 
 ### packages/cli/src/commands/init/commit.ts
 
@@ -49,7 +49,6 @@
 
 - **test:** Conflict test creates bareDir and cloneDir as siblings of tempDir — afterEach only cleans tempDir, so these directories leak on each test run — *work.ts untested branch coverage*
 - **test:** UNKNOWN test mocks process.exit as no-op, causing execution to pass through the early UNKNOWN guard at work.ts:1513 before reaching the target branch at work.ts:870 — exercises two exit points instead of isolating one — *work.ts untested branch coverage*
-- **test:** A003 assertion uses toBeDefined() for proof chain entry — matches contract 'exists' matcher but weaker than testing standards preference for specific value assertions — *work.ts untested branch coverage*
 - **test:** Conditional PID guard makes 8 tests potential no-ops in environments where getClaudePid() returns null — *Capture actual think time from Ana session start*
 
 ### website/app/docs/[...slug]/page.tsx
@@ -107,4 +106,5 @@
 - **code:** LLMS_SECTIONS constant declared but never used in extract-docs-data.ts — *Docs Search + Polish*
 - **code:** Unused variable 'other' in generateLlmsTxt — pages filtered but remainder never referenced — *Docs Search + Polish*
 - **code:** Duplicate stripJsx implementation — one in website/lib/docs-data/stripJsx.ts, another inlined in extract-docs-data.ts — *Docs Search + Polish*
+- **code:** Keyword fallback categorization lacks word boundaries — 'scannable' matches /scan/, misassigning proof entries to Engine — *Docs Data Pipeline*
 
