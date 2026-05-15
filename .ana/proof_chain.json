@@ -16078,7 +16078,10 @@
           "severity": "debt",
           "suggested_action": "scope",
           "id": "website-dead-links-C3",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Stale: zero matches for 'SubNav' or '(sub)' in website/MAINTENANCE_MANUAL.md. References to the deleted route group and component were removed by subsequent website scopes.",
+          "closed_at": "2026-05-15T06:23:55.561Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
