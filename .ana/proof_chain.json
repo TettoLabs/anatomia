@@ -28611,7 +28611,10 @@
             "A007"
           ],
           "id": "fix-prebuild-source-mutation-C1",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Not a performance issue: DocsStat is a server component (no 'use client' directive) — renders once at SSG build time, not per-request. ~10 DocsStat tags across 6 MDX files means ~10 invocations during static generation. Milliseconds total. No runtime cost — the HTML is pre-rendered.",
+          "closed_at": "2026-05-15T17:43:19.533Z",
+          "closed_by": "human"
         },
         {
           "category": "code",

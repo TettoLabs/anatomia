@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-106 runs · 36 active · 130 lessons · 3 promoted · 467 closed
+106 runs · 35 active · 130 lessons · 3 promoted · 468 closed
 
 ## Hot Modules
 
@@ -15,7 +15,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 36 total)
+## Active Findings (30 shown of 35 total)
 
 ### packages/cli/src/commands/init/commit.ts
 
@@ -61,6 +61,10 @@
 - **test:** Stage detection tests use hardcoded timestamps with 1-hour gaps — no boundary test for equal timestamps — *Fix cycle stage detection breaks on multi-phase builds*
 - **test:** A010 test creates untracked file after commit — doesn't test scoped staging during commit — *Commit timestamps written by work start*
 
+### packages/cli/tests/e2e/init-flow.test.ts
+
+- **test:** E2E scan regression test uses 5 sole toBeDefined() assertions on scan.json keys — *Test Suite Hygiene*
+
 ### packages/cli/tests/utils/proofSummary.test.ts
 
 - **test:** proofSummary.test.ts parseFindings uses toBeGreaterThanOrEqual on deterministic fixture data — *Test Suite Hygiene*
@@ -71,7 +75,6 @@
 
 ### website/components/docs/content/DocsStat.tsx
 
-- **code:** DocsStat component recalculates all 9 values on every render — no caching — *Fix prebuild source mutation*
 - **code:** Misspelled DocsStat value key silently renders raw key string — no build-time validation — *Fix prebuild source mutation*
 
 ### website/components/docs/proof/FindingsList.tsx
