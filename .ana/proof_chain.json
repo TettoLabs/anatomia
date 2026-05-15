@@ -12985,7 +12985,10 @@
             "A005"
           ],
           "id": "proof-system-near-term-C6",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Covered: commitAndPushProofChanges at proof.ts:156 is call-site independent — takes (root, files, message, coAuthor) and doesn't branch on which command invoked it. Called by close (line 932), lesson (1200), promote (1509), strengthen (1801) with identical structure. Testing through close's A001 test IS testing the function for all callers. Adding 3 duplicate retry tests for lesson/promote/strengthen would test the same code path.",
+          "closed_at": "2026-05-15T00:00:57.154Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
