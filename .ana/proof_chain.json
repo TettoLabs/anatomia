@@ -22127,7 +22127,10 @@
             "A005"
           ],
           "id": "fix-worktree-branch-parsing-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Covered through integration: detectBranches at git.ts:100 is called by detectGitInfo which is tested by git-activity.test.ts with real git repos. Real repos have '* main' output — the * stripping at line 109 IS exercised. The + marker (worktree branches) uses the same regex character class [*+] — if * stripping works, + stripping works. The function is 18 lines with standard regex. Direct unit test would add a mock for a pattern already exercised by integration.",
+          "closed_at": "2026-05-15T00:59:37.111Z",
+          "closed_by": "human"
         },
         {
           "category": "code",

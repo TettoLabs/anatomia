@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-96 runs · 93 active · 117 lessons · 0 promoted · 379 closed
+96 runs · 92 active · 117 lessons · 0 promoted · 380 closed
 
 ## Hot Modules
 
@@ -16,11 +16,11 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 93 total)
+## Active Findings (30 shown of 92 total)
 
 ### packages/cli/src/engine/detectors/git.ts
 
-- **test:** A004 and A005 are source-inspection-only assertions — no behavioral test verifies the regex actually strips + markers in git.ts (only work.ts path is integration-tested) — *Fix worktree branch parsing*
+- **test:** Integration test covers work.ts parsing path end-to-end but git.ts detectBranches is not exercised by any new test — the fix is verified only by source inspection — *Fix worktree branch parsing*
 
 ### packages/cli/src/types/proof.ts
 
