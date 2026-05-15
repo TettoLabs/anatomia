@@ -28210,6 +28210,193 @@
         "commit_count": 0,
         "base_commit": "4ca91221dac79f374732d09be766e0f4e407fb45"
       }
+    },
+    {
+      "slug": "fix-gantt-bar-distortion",
+      "feature": "Fix Gantt Bar Distortion and Document Timing",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 15,
+        "satisfied": 15,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Gantt bars show time proportional to each phase, not inflated by idle gaps",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "The sentinel that forced the last bar to 100% is removed",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "The sentinel is also removed from the flat 4-bar path",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "A proof with 13m/2m/3m/3m shows Verify at roughly 14%, not 86%",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "The same proof shows Think at roughly 62%",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "Multi-phase proofs render last segment proportionally, not inflated",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "Zero-duration phases still get a minimum visible width",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "When all phases are zero, no bars are rendered regardless of wall-clock time",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "Negative phase values are clamped to zero so bars never go backwards",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "The timeline docs explain what each pipeline phase measures",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "The timeline docs explain why duration exceeds the sum of phases",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "The dynamic marker for median timings is preserved",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "The search index is regenerated after docs changes",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "The LLM context file is regenerated after docs changes",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "The website builds without errors",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 10,
+        "met": 9
+      },
+      "timing": {
+        "total_minutes": 24,
+        "think": 5,
+        "plan": 4,
+        "build": 4,
+        "verify": 4
+      },
+      "hashes": {
+        "scope": "sha256:e844acbc9283b3c74703d6d97602a369d8e5a0c82f46e1d0150e187d6f6cb7ee",
+        "contract": "sha256:502a340637ce184a564f36bb64c0afd685301617645d49d02dd15271b240795b",
+        "plan": "sha256:e7dc0d05b5ff42ea279268ba557729c803302a58940149ab0911d05df034f448",
+        "spec": "sha256:ab2c94a8c8be1d30faac488688123061b5a948a46e145825f852cb84f8d66dd3",
+        "build-report": "sha256:88be7fc8a99c2ffc5826de84e9807b596ec2f384b4826468f7430962fdcf818e",
+        "build-data": "sha256:7b7fe5f4f09e1fd91fc1eefc3fdd147de3411cf16ca992522bb97bd69730b253",
+        "verify-report": "sha256:ac0f477cc6aa8260c53ab6e9628a230a10bdefee25ff550ef6af3d936da59d66",
+        "verify-data": "sha256:63d95bcd44173296d3a9d49fb5a806e8214cad655139a257ca287d7834191c04"
+      },
+      "completed_at": "2026-05-15T15:54:12.931Z",
+      "modules_touched": [
+        "website/components/docs/proof/PipelineGantt.tsx",
+        "website/content/docs/concepts/pipeline.mdx",
+        "website/content/docs/guides/reading-a-proof.mdx",
+        "website/content/docs/guides/troubleshooting.mdx",
+        "website/content/docs/guides/using-ana-learn.mdx",
+        "website/content/docs/guides/verifying-changes.mdx",
+        "website/content/docs/start.mdx",
+        "website/public/llms-full.txt",
+        "website/public/search-index.json"
+      ],
+      "scope_summary": "The pipeline Gantt chart on proof detail pages inflates the last bar to absorb idle time between phases. A proof with 21 minutes of active pipeline time and 129 minutes wall-clock shows Verify at 86% width instead of 14%. This affects 24% of all proof entries (13 severe, 11 moderate). Separately, the docs don't explain what timing measures or why duration can exceed the sum of phases — users see \"2h 9m\" in the header and \"21m\" in the bars and have no way to reconcile them.",
+      "kind": "fix",
+      "findings": [
+        {
+          "category": "code",
+          "summary": "Negative phase values display raw in bar label while bar width is clamped",
+          "file": "website/components/docs/proof/PipelineGantt.tsx",
+          "anchor": null,
+          "line": 61,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "related_assertions": [
+            "A009"
+          ],
+          "id": "fix-gantt-bar-distortion-C1",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "buildGanttBars and GanttBar exported but only consumed within PipelineGantt.tsx",
+          "file": "website/components/docs/proof/PipelineGantt.tsx",
+          "anchor": null,
+          "line": 21,
+          "severity": "debt",
+          "suggested_action": "accept",
+          "id": "fix-gantt-bar-distortion-C2",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "formatDuration defined but unused in PipelineGantt — pre-existing, still present",
+          "file": "website/components/docs/proof/PipelineGantt.tsx",
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "fix-gantt-bar-distortion-C3",
+          "status": "lesson"
+        },
+        {
+          "category": "code",
+          "summary": "Zero-duration bars get minimum 2% width that can push cumulative past 100% if many zero-duration phases exist",
+          "file": "website/components/docs/proof/PipelineGantt.tsx",
+          "anchor": null,
+          "line": 56,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "related_assertions": [
+            "A007"
+          ],
+          "id": "fix-gantt-bar-distortion-C4",
+          "status": "active"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": [],
+      "worktree": {
+        "used": false,
+        "created_at": "2026-05-15T06:55:24.701Z",
+        "completed_at": "2026-05-15T15:54:12.927Z",
+        "commit_count": 0
+      }
     }
   ],
   "schema": 1

@@ -1,12 +1,13 @@
 # Proof Chain Dashboard
 
-104 runs · 48 active · 127 lessons · 3 promoted · 447 closed
+105 runs · 51 active · 128 lessons · 3 promoted · 447 closed
 
 ## Hot Modules
 
 | File | Active | Entries |
 |------|--------|--------|
 | packages/cli/src/commands/work.ts | 9 | 6 |
+| website/components/docs/proof/PipelineGantt.tsx | 4 | 2 |
 | packages/cli/tests/commands/artifact.test.ts | 3 | 2 |
 | packages/cli/tests/commands/work.test.ts | 3 | 3 |
 | packages/cli/tests/commands/proof.test.ts | 2 | 2 |
@@ -15,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 48 total)
+## Active Findings (30 shown of 51 total)
 
 ### packages/cli/src/commands/init/commit.ts
 
@@ -26,8 +27,6 @@
 - **code:** Two different result parsers with different casing: getVerifyResult returns 'unknown' (lowercase), parseResult in proofSummary returns 'UNKNOWN' (uppercase) — works correctly but fragile coupling between two parallel implementations — *work.ts untested branch coverage*
 - **test:** Pull-recovery guards (2 of 5) not directly exercised by any test — *Fix --merge stdout pollution in --json mode*
 - **code:** printExistingWorktree duplicates commitsBehind rev-list logic from getWorktreeInfo — now two inline computations duplicated instead of one — *Worktree freshness detection*
-- **code:** printExistingWorktree duplicates HEAD-reading logic from getWorktreeInfo — same pattern in two places — *Kind-aware branch prefixes*
-- **code:** startWork resume path at line 1685 also duplicates HEAD-reading pattern — three places total read HEAD for branch name — *Kind-aware branch prefixes*
 
 ### packages/cli/src/types/proof.ts
 
@@ -77,6 +76,9 @@
 
 ### website/components/docs/proof/PipelineGantt.tsx
 
+- **code:** Negative phase values display raw in bar label while bar width is clamped — *Fix Gantt Bar Distortion and Document Timing*
+- **code:** buildGanttBars and GanttBar exported but only consumed within PipelineGantt.tsx — *Fix Gantt Bar Distortion and Document Timing*
+- **code:** Zero-duration bars get minimum 2% width that can push cumulative past 100% if many zero-duration phases exist — *Fix Gantt Bar Distortion and Document Timing*
 - **code:** formatDuration defined but unused in PipelineGantt — duration column uses raw `{value}m` instead — *Dynamic Pages — Reference & Proof Chain*
 
 ### website/components/docs/proof/ProofExplorer.tsx
@@ -102,5 +104,4 @@
 - **code:** Dynamic stat markers (ana:dynamic) updated as prebuild side effect — pipeline.mdx, reading-a-proof.mdx, using-ana-learn.mdx, verifying-changes.mdx, start.mdx, troubleshooting.mdx all have updated proof counts (90->103, 19->21 rejections). These are correct but outside the spec's file_changes list. — *Bump Node Minimum to 22, Add Node 24 to CI*
 - **code:** Lint warning (pre-existing): unused eslint-disable directive for no-control-regex. Not introduced by this build. — *Bump Node Minimum to 22, Add Node 24 to CI*
 - **code:** URL reachability not verified — stable URL contract is a deployment assumption — *Documentation links in init and setup*
-- **test:** Contract assertions A013-A019 have no tagged tests — verified by source inspection only — *Kind-aware branch prefixes*
 
