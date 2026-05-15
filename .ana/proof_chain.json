@@ -12154,7 +12154,10 @@
             "A019"
           ],
           "id": "security-hardening-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Security wiring verified: validateSlug is the first call in completeWork (work.ts:1071), saveArtifact (artifact.ts:1124/1570), createPr (pr.ts:154). validateSkillName at proof.ts:1662 for strengthen. All validators unit tested at validators.test.ts:21-32 with injection payloads. Wiring is one line deep with no conditional logic between entry point and validator.",
+          "closed_at": "2026-05-15T06:49:30.731Z",
+          "closed_by": "human"
         },
         {
           "category": "upstream",
