@@ -10141,7 +10141,10 @@
             "A010"
           ],
           "id": "strengthen-weak-test-assertions-C7",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Finding's concern is inverted: the before/after timestamp window test at work.test.ts:3453-3465 CANNOT flake from slow CI. Slow execution widens the window (before is earlier, after is later), making the assertion easier to satisfy, not harder. The only flake scenario would be a clock jump backward, which is a system issue not a test issue.",
+          "closed_at": "2026-05-15T00:47:22.349Z",
+          "closed_by": "human"
         }
       ],
       "rejection_cycles": 0,
