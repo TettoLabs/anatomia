@@ -27672,6 +27672,258 @@
         "commit_count": 0,
         "base_commit": "9d8be960cdc0bc12dd83581bfc2794a242b51106"
       }
+    },
+    {
+      "slug": "fix-ci-matrix-and-broken-tests",
+      "feature": "Fix CI Matrix and Broken Tests",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 20,
+        "satisfied": 20,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Claude PID resolution returns a valid process ID when the process tree is available",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "Claude PID resolution returns null when the ps command fails",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Claude PID resolution returns null when ps returns an invalid number",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "A rebase conflict during pull causes the process to exit with failure",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "The conflict error message tells the user what went wrong",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "The conflict error message tells the user how to recover",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "CI runs on Ubuntu only, not Windows or macOS",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "CI runs on Ubuntu only, not Windows or macOS",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "CI tests against both Node 20 and Node 22",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "CI tests against both Node 20 and Node 22",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "The pnpm setup action is bumped to v6 before the June deadline",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "The pnpm setup action is bumped to v6 in the release workflow too",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "The staging branch is removed from CI triggers since it does not exist",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "Coverage upload no longer checks the OS since there is only one",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "No tests were lost during the extraction — the new file has the same number of tests that were removed",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "The new test file exists and runs successfully",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A017",
+          "says": "The deployment skill reflects the actual Ubuntu-only CI matrix",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A018",
+          "says": "The deployment skill no longer warns about Windows path separators",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A019",
+          "says": "ARCHITECTURE.md reflects the actual CI matrix",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A020",
+          "says": "CONTRIBUTING.md reflects the actual CI matrix",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 10,
+        "met": 9
+      },
+      "timing": {
+        "total_minutes": 104,
+        "think": 19,
+        "plan": 19,
+        "build": 53,
+        "verify": 5
+      },
+      "hashes": {
+        "scope": "sha256:2e5077a957ac04dac0f666cb577464e997b8103ba9416836091cb7b9195a0156",
+        "contract": "sha256:cbf34eb02b669f616a874cb1982fd83bca501083a16699a79cf8af46fbc287d7",
+        "plan": "sha256:3a211a891abbb3c7dc801afddda33916093613a6e5f2f82c3084789a244799a6",
+        "spec": "sha256:ec34d0621c29276c2ed95975a4e7dacd0339c733baa0b90143e8cb70e4ef7aa1",
+        "build-report": "sha256:83ec572b5a02efaaacadb16652aea576b282683adba23dee8d5c7153eebb8e25",
+        "build-data": "sha256:d0c5534922720f40fc38d23ce9fffd4458bc4bd524376edaaa9a6d3cecd0f8f5",
+        "verify-report": "sha256:077ff45e76b9ecffd782ee4eb7522b1fda26ccfac5e5ee4105353decfbd91d66",
+        "verify-data": "sha256:93cecb194f1687ab5c43922c7b2171c3120935097e4bba8d45d6d2b98d317db8"
+      },
+      "completed_at": "2026-05-15T06:22:49.990Z",
+      "modules_touched": [
+        ".claude/skills/deployment/SKILL.md",
+        ".github/workflows/release.yml",
+        ".github/workflows/test.yml",
+        "packages/cli/ARCHITECTURE.md",
+        "packages/cli/CONTRIBUTING.md",
+        "packages/cli/tests/commands/work-ci-mocked.test.ts",
+        "packages/cli/tests/commands/work.test.ts"
+      ],
+      "scope_summary": "CI has been red for 50+ consecutive runs. Three tests in `work.test.ts` have never passed in CI since they were added (May 13-14). Windows runners intermittently timeout on top of that. The entire user base runs on macOS/Linux (Claude Code doesn't run natively on Windows), and the CLI has zero OS-specific code paths. We're burning billable minutes and developer attention on platforms that don't serve our users, and the constant red masks real regressions.",
+      "kind": "fix",
+      "findings": [
+        {
+          "category": "test",
+          "summary": "Broad mock intercept matches any git command with 'pull' in args, not specifically 'git pull --rebase'",
+          "file": "packages/cli/tests/commands/work-ci-mocked.test.ts",
+          "anchor": null,
+          "line": 188,
+          "severity": "debt",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A004",
+            "A005",
+            "A006"
+          ],
+          "id": "fix-ci-matrix-and-broken-tests-C1",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "createMergedProject duplicated between work-ci-mocked.test.ts and work.test.ts — both have independent copies with different mock routing",
+          "file": "packages/cli/tests/commands/work-ci-mocked.test.ts",
+          "anchor": null,
+          "line": 125,
+          "severity": "debt",
+          "suggested_action": "monitor",
+          "id": "fix-ci-matrix-and-broken-tests-C2",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "Stale finding 'Conditional PID guard makes 8 tests potential no-ops' resolved by this build — getClaudePid tests now use deterministic mocks",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "fix-ci-matrix-and-broken-tests-C3",
+          "status": "lesson"
+        },
+        {
+          "category": "upstream",
+          "summary": "Stale finding 'Conflict test creates bareDir and cloneDir as siblings of tempDir' resolved by this build — mocked version creates no temp directories outside tempDir",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "fix-ci-matrix-and-broken-tests-C4",
+          "status": "lesson"
+        },
+        {
+          "category": "upstream",
+          "summary": "Stale finding 'staging branch in trigger list is a no-op' resolved by this build — staging removed from test.yml",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "fix-ci-matrix-and-broken-tests-C5",
+          "status": "lesson"
+        },
+        {
+          "category": "test",
+          "summary": "A004 assertion uses toBeGreaterThan(0) for exit call count instead of toBe(1) — passes even if process.exit is called multiple times",
+          "file": "packages/cli/tests/commands/work-ci-mocked.test.ts",
+          "anchor": null,
+          "line": 211,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A004"
+          ],
+          "id": "fix-ci-matrix-and-broken-tests-C6",
+          "status": "active"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "AC4 branch protection must be updated manually via gh api before/after merge",
+          "file": null,
+          "severity": "risk",
+          "suggested_action": "monitor"
+        },
+        {
+          "summary": "Pre-existing lint warning in git-operations.ts:198 (unused eslint-disable directive)",
+          "file": "packages/cli/src/utils/git-operations.ts",
+          "severity": "observation",
+          "suggested_action": "accept"
+        },
+        {
+          "summary": "Contract A001 deviation: mocked test uses deterministic pid 12345 instead of real process tree",
+          "file": "packages/cli/tests/commands/work-ci-mocked.test.ts",
+          "severity": "observation",
+          "suggested_action": "accept"
+        }
+      ],
+      "worktree": {
+        "used": true,
+        "created_at": "2026-05-15T05:13:20.239Z",
+        "completed_at": "2026-05-15T06:22:49.986Z",
+        "commit_count": 0,
+        "base_commit": "7ce3596c588dc1851757ab82820bb063b16ab2c2"
+      }
     }
   ],
   "schema": 1
