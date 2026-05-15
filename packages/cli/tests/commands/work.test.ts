@@ -3,8 +3,15 @@ import * as fs from 'node:fs/promises';
 import * as fsSync from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
-import { execSync } from 'node:child_process';
-import { getWorkStatus, completeWork, startWork, getClaudePid } from '../../src/commands/work.js';
+import { execSync, spawnSync } from 'node:child_process';
+
+// Mock spawnSync for merge detection tests (A019, A020).
+// Passes through to the real implementation by default.
+vi.mock('node:child_process', async (importOriginal) => {
+  const mod = await importOriginal<typeof import('node:child_process')>();
+  return { ...mod, spawnSync: vi.fn(mod.spawnSync) };
+});
+import { getWorkStatus, completeWork, startWork, getClaudePid, checkConcurrencyGuard } from '../../src/commands/work.js';
 
 /**
  * Tests for `ana work status` and `ana work complete` commands
@@ -4224,7 +4231,7 @@ describe('work start early-return phase detection', () => {
   });
 
   // @ana A011
-  it('write-once guard preserves existing timestamp', async () => {
+  it('verify_started_at force-writes on re-entry (overwrites existing timestamp)', async () => {
     const slugDir = await createWorktreeTestProject('my-feature', {
       scope: true, plan: true, spec: true, contract: true, buildReport: true,
     });
@@ -4240,7 +4247,8 @@ describe('work start early-return phase detection', () => {
     await startWork('my-feature');
 
     const saves = JSON.parse(fsSync.readFileSync(savesPath, 'utf-8'));
-    expect(saves.verify_started_at).toBe(existingTimestamp);
+    // verify_started_at now uses force: true — timestamp should be overwritten
+    expect(saves.verify_started_at).not.toBe(existingTimestamp);
   });
 
   // @ana A012
@@ -5132,5 +5140,651 @@ describe('session marker and think-time capture', () => {
       const content = fsSync.readFileSync(templatePath, 'utf-8');
       expect(content).toContain('ana work status --session');
     });
+  });
+});
+
+describe('concurrency guards', () => {
+  let tempDir: string;
+  let originalCwd: string;
+
+  beforeEach(async () => {
+    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'concurrency-test-'));
+    originalCwd = process.cwd();
+    process.chdir(tempDir);
+  });
+
+  afterEach(async () => {
+    process.chdir(originalCwd);
+    // Clean up any worktrees before removing tempDir
+    try {
+      const result = execSync('git worktree list --porcelain', {
+        cwd: tempDir,
+        encoding: 'utf-8',
+        stdio: 'pipe',
+      });
+      const worktrees = result
+        .split('\n')
+        .filter(l => l.startsWith('worktree '))
+        .map(l => l.replace('worktree ', ''));
+      for (const wt of worktrees) {
+        if (wt !== tempDir) {
+          try {
+            execSync(`git worktree remove "${wt}" --force`, { cwd: tempDir, stdio: 'ignore' });
+          } catch {
+            // Force-remove directory if worktree remove fails
+          }
+        }
+      }
+    } catch {
+      // Not a git repo or no worktrees — nothing to clean
+    }
+    await fs.rm(tempDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
+  });
+
+  /**
+   * Helper to create a test project with git and slugs (mirrors work status helper)
+   */
+  async function createTestProjectForGuards(options: {
+    artifactBranch?: string;
+    branchPrefix?: string;
+    slugs?: Array<{
+      slug: string;
+      artifacts: string[];
+      planContent?: string;
+      featureBranch?: boolean;
+      worktree?: boolean;
+      featureArtifacts?: Array<{ file: string; content?: string }>;
+    }>;
+  }): Promise<void> {
+    const artifactBranch = options.artifactBranch || 'main';
+    const branchPrefix = options.branchPrefix;
+
+    execSync('git init', { cwd: tempDir, stdio: 'ignore' });
+    execSync('git config user.email "test@test.com"', { cwd: tempDir, stdio: 'ignore' });
+    execSync('git config user.name "Test"', { cwd: tempDir, stdio: 'ignore' });
+
+    const anaDir = path.join(tempDir, '.ana');
+    await fs.mkdir(anaDir, { recursive: true });
+    await fs.writeFile(
+      path.join(anaDir, 'ana.json'),
+      JSON.stringify({ artifactBranch, ...(branchPrefix !== undefined && { branchPrefix }) }),
+      'utf-8'
+    );
+
+    execSync('git add -A && git commit -m "init"', { cwd: tempDir, stdio: 'ignore' });
+    execSync(`git branch -M ${artifactBranch}`, { cwd: tempDir, stdio: 'ignore' });
+
+    if (options.slugs) {
+      for (const slug of options.slugs) {
+        const slugPath = path.join(tempDir, '.ana', 'plans', 'active', slug.slug);
+        await fs.mkdir(slugPath, { recursive: true });
+
+        for (const artifact of slug.artifacts) {
+          let content = `# ${artifact}`;
+          if (artifact === 'plan.md' && slug.planContent) {
+            content = slug.planContent;
+          }
+          await fs.writeFile(path.join(slugPath, artifact), content, 'utf-8');
+        }
+
+        execSync('git add -A && git commit -m "add artifacts"', { cwd: tempDir, stdio: 'ignore' });
+
+        if (slug.featureBranch) {
+          const prefix = branchPrefix !== undefined ? branchPrefix : 'feature/';
+          execSync(`git checkout -b ${prefix}${slug.slug}`, { cwd: tempDir, stdio: 'ignore' });
+
+          if (slug.featureArtifacts) {
+            for (const artifact of slug.featureArtifacts) {
+              const content = artifact.content || `# ${artifact.file}`;
+              await fs.writeFile(path.join(slugPath, artifact.file), content, 'utf-8');
+            }
+            execSync('git add -A && git commit -m "add feature artifacts"', { cwd: tempDir, stdio: 'ignore' });
+          }
+
+          execSync(`git checkout ${artifactBranch}`, { cwd: tempDir, stdio: 'ignore' });
+        }
+
+        if (slug.worktree) {
+          const prefix = branchPrefix !== undefined ? branchPrefix : 'feature/';
+          const branchName = `${prefix}${slug.slug}`;
+          const wtPath = path.join(tempDir, '.ana', 'worktrees', slug.slug);
+          await fs.mkdir(path.join(tempDir, '.ana', 'worktrees'), { recursive: true });
+          execSync(`git worktree add "${wtPath}" -b ${branchName}`, { cwd: tempDir, stdio: 'ignore' });
+
+          if (slug.featureArtifacts) {
+            const wtSlugPath = path.join(wtPath, '.ana', 'plans', 'active', slug.slug);
+            await fs.mkdir(wtSlugPath, { recursive: true });
+            for (const artifact of slug.featureArtifacts) {
+              const content = artifact.content || `# ${artifact.file}`;
+              await fs.writeFile(path.join(wtSlugPath, artifact.file), content, 'utf-8');
+            }
+            execSync('git add -A && git commit -m "add feature artifacts"', { cwd: wtPath, stdio: 'ignore' });
+          }
+
+          process.chdir(tempDir);
+        }
+      }
+    }
+  }
+
+  async function captureOutput(fn: () => void | Promise<void>): Promise<string> {
+    const originalLog = console.log;
+    const logs: string[] = [];
+    console.log = (...args: unknown[]) => {
+      logs.push(args.join(' '));
+    };
+    await fn();
+    console.log = originalLog;
+    return logs.join('\n');
+  }
+
+  // @ana A001
+  it('blocks when verify_started_at is recent on same slug', async () => {
+    const planContent = `# Plan\n## Phases\n- [ ] Phase 1\n  Spec: spec.md`;
+    await createTestProjectForGuards({
+      slugs: [{
+        slug: 'test-slug',
+        artifacts: ['scope.md', 'plan.md', 'spec.md', 'build_report.md'],
+        planContent,
+        worktree: true,
+      }],
+    });
+
+    // Write a recent verify_started_at in the worktree
+    const wtSlugPath = path.join(tempDir, '.ana', 'worktrees', 'test-slug', '.ana', 'plans', 'active', 'test-slug');
+    await fs.mkdir(wtSlugPath, { recursive: true });
+    await fs.writeFile(
+      path.join(wtSlugPath, '.saves.json'),
+      JSON.stringify({ verify_started_at: new Date().toISOString() }),
+      'utf-8',
+    );
+
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => { throw new Error('process.exit'); });
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    try {
+      await startWork('test-slug');
+    } catch {
+      // Expected
+    }
+
+    expect(exitSpy).toHaveBeenCalledWith(1);
+    const errorOutput = errorSpy.mock.calls.flat().join(' ');
+    expect(errorOutput).toContain('verify session is already in progress');
+    expect(errorOutput).toContain('--force');
+
+    exitSpy.mockRestore();
+    errorSpy.mockRestore();
+  });
+
+  // @ana A002
+  it('blocks when plan_started_at is recent on same slug', async () => {
+    await createTestProjectForGuards({
+      slugs: [{
+        slug: 'test-slug',
+        artifacts: ['scope.md'],
+      }],
+    });
+
+    // Write a recent plan_started_at on the artifact branch
+    const slugPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug');
+    await fs.writeFile(
+      path.join(slugPath, '.saves.json'),
+      JSON.stringify({ plan_started_at: new Date().toISOString() }),
+      'utf-8',
+    );
+
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => { throw new Error('process.exit'); });
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    try {
+      await startWork('test-slug');
+    } catch {
+      // Expected
+    }
+
+    expect(exitSpy).toHaveBeenCalledWith(1);
+    const errorOutput = errorSpy.mock.calls.flat().join(' ');
+    expect(errorOutput).toContain('plan session is already in progress');
+    expect(errorOutput).toContain('--force');
+
+    exitSpy.mockRestore();
+    errorSpy.mockRestore();
+  });
+
+  // @ana A003
+  it('force flag overrides verify guard', async () => {
+    const planContent = `# Plan\n## Phases\n- [ ] Phase 1\n  Spec: spec.md`;
+    await createTestProjectForGuards({
+      slugs: [{
+        slug: 'test-slug',
+        artifacts: ['scope.md', 'plan.md', 'spec.md', 'build_report.md'],
+        planContent,
+        worktree: true,
+      }],
+    });
+
+    // Write a recent verify_started_at in the worktree
+    const wtSlugPath = path.join(tempDir, '.ana', 'worktrees', 'test-slug', '.ana', 'plans', 'active', 'test-slug');
+    await fs.mkdir(wtSlugPath, { recursive: true });
+    await fs.writeFile(
+      path.join(wtSlugPath, '.saves.json'),
+      JSON.stringify({ verify_started_at: new Date().toISOString() }),
+      'utf-8',
+    );
+
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => { throw new Error('process.exit'); });
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+    try {
+      await startWork('test-slug', { force: true });
+    } catch {
+      // printExistingWorktree may call process.exit
+    }
+
+    // Should NOT have exited with 1 due to the guard
+    const exitCalls = exitSpy.mock.calls.filter(c => c[0] === 1);
+    expect(exitCalls.length).toBe(0);
+
+    const logOutput = logSpy.mock.calls.flat().join(' ');
+    expect(logOutput).toContain('Overriding active verify session');
+
+    exitSpy.mockRestore();
+    logSpy.mockRestore();
+  });
+
+  // @ana A004
+  it('force flag overrides plan guard', async () => {
+    await createTestProjectForGuards({
+      slugs: [{
+        slug: 'test-slug',
+        artifacts: ['scope.md'],
+      }],
+    });
+
+    const slugPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug');
+    await fs.writeFile(
+      path.join(slugPath, '.saves.json'),
+      JSON.stringify({ plan_started_at: new Date().toISOString() }),
+      'utf-8',
+    );
+
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => { throw new Error('process.exit'); });
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+    try {
+      await startWork('test-slug', { force: true });
+    } catch {
+      // Expected
+    }
+
+    // Should NOT have exited with 1 due to the guard
+    const exitCalls = exitSpy.mock.calls.filter(c => c[0] === 1);
+    expect(exitCalls.length).toBe(0);
+
+    const logOutput = logSpy.mock.calls.flat().join(' ');
+    expect(logOutput).toContain('Overriding active plan session');
+
+    exitSpy.mockRestore();
+    logSpy.mockRestore();
+  });
+
+  // @ana A005
+  it('expired timestamp does not block', async () => {
+    const planContent = `# Plan\n## Phases\n- [ ] Phase 1\n  Spec: spec.md`;
+    await createTestProjectForGuards({
+      slugs: [{
+        slug: 'test-slug',
+        artifacts: ['scope.md', 'plan.md', 'spec.md', 'build_report.md'],
+        planContent,
+        worktree: true,
+      }],
+    });
+
+    // Write a stale verify_started_at (2 hours ago)
+    const wtSlugPath = path.join(tempDir, '.ana', 'worktrees', 'test-slug', '.ana', 'plans', 'active', 'test-slug');
+    await fs.mkdir(wtSlugPath, { recursive: true });
+    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+    await fs.writeFile(
+      path.join(wtSlugPath, '.saves.json'),
+      JSON.stringify({ verify_started_at: twoHoursAgo }),
+      'utf-8',
+    );
+
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    await startWork('test-slug');
+
+    const logOutput = logSpy.mock.calls.flat().join(' ');
+    const errorOutput = errorSpy.mock.calls.flat().join(' ');
+    // Should proceed to printExistingWorktree without blocking
+    expect(logOutput).toContain('Worktree exists');
+    expect(errorOutput).not.toContain('session is already in progress');
+
+    logSpy.mockRestore();
+    errorSpy.mockRestore();
+  });
+
+  // @ana A006
+  it('missing saves.json passes guard', () => {
+    const nonexistentDir = path.join(tempDir, 'no-such-dir');
+    const result = checkConcurrencyGuard(nonexistentDir, 'verify_started_at', 'test-slug');
+    expect(result.blocked).toBe(false);
+  });
+
+  // @ana A007
+  it('corrupted saves.json passes guard', async () => {
+    const corruptDir = path.join(tempDir, 'corrupt-test');
+    await fs.mkdir(corruptDir, { recursive: true });
+    await fs.writeFile(path.join(corruptDir, '.saves.json'), '{{not json', 'utf-8');
+    const result = checkConcurrencyGuard(corruptDir, 'verify_started_at', 'test-slug');
+    expect(result.blocked).toBe(false);
+  });
+
+  // @ana A008
+  it('same slug different phase is allowed', async () => {
+    // verify_started_at is recent, but checking build_started_at — should not block
+    const testDir = path.join(tempDir, 'phase-isolation-test');
+    await fs.mkdir(testDir, { recursive: true });
+    await fs.writeFile(
+      path.join(testDir, '.saves.json'),
+      JSON.stringify({ verify_started_at: new Date().toISOString() }),
+      'utf-8',
+    );
+    const result = checkConcurrencyGuard(testDir, 'build_started_at', 'test-slug');
+    expect(result.blocked).toBe(false);
+  });
+
+  // @ana A009
+  it('different slug is allowed', async () => {
+    const slugADir = path.join(tempDir, 'slug-a');
+    const slugBDir = path.join(tempDir, 'slug-b');
+    await fs.mkdir(slugADir, { recursive: true });
+    await fs.mkdir(slugBDir, { recursive: true });
+    await fs.writeFile(
+      path.join(slugADir, '.saves.json'),
+      JSON.stringify({ verify_started_at: new Date().toISOString() }),
+      'utf-8',
+    );
+    const result = checkConcurrencyGuard(slugBDir, 'verify_started_at', 'test-slug-b');
+    expect(result.blocked).toBe(false);
+  });
+
+  // @ana A010
+  it('determineStage returns verify-in-progress when verify timestamp is recent', async () => {
+    const planContent = `# Plan\n## Phases\n- [ ] Phase 1\n  Spec: spec.md`;
+    await createTestProjectForGuards({
+      slugs: [{
+        slug: 'test-slug',
+        artifacts: ['scope.md', 'plan.md', 'spec.md'],
+        planContent,
+        worktree: true,
+        featureArtifacts: [{ file: 'build_report.md' }],
+      }],
+    });
+
+    // Write a recent verify_started_at in the worktree
+    const wtSlugPath = path.join(tempDir, '.ana', 'worktrees', 'test-slug', '.ana', 'plans', 'active', 'test-slug');
+    await fs.mkdir(wtSlugPath, { recursive: true });
+    await fs.writeFile(
+      path.join(wtSlugPath, '.saves.json'),
+      JSON.stringify({ verify_started_at: new Date().toISOString() }),
+      'utf-8',
+    );
+
+    const output = await captureOutput(async () => await getWorkStatus({ json: false }));
+    expect(output).toContain('verify-in-progress');
+  });
+
+  // @ana A011
+  it('determineStage returns plan-in-progress when plan timestamp is recent', async () => {
+    await createTestProjectForGuards({
+      slugs: [{
+        slug: 'test-slug',
+        artifacts: ['scope.md'],
+      }],
+    });
+
+    const slugPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug');
+    await fs.writeFile(
+      path.join(slugPath, '.saves.json'),
+      JSON.stringify({ plan_started_at: new Date().toISOString() }),
+      'utf-8',
+    );
+
+    const output = await captureOutput(async () => await getWorkStatus({ json: false }));
+    expect(output).toContain('plan-in-progress');
+  });
+
+  // @ana A012
+  it('getNextAction returns force guidance for verify-in-progress', async () => {
+    const planContent = `# Plan\n## Phases\n- [ ] Phase 1\n  Spec: spec.md`;
+    await createTestProjectForGuards({
+      slugs: [{
+        slug: 'test-slug',
+        artifacts: ['scope.md', 'plan.md', 'spec.md'],
+        planContent,
+        worktree: true,
+        featureArtifacts: [{ file: 'build_report.md' }],
+      }],
+    });
+
+    const wtSlugPath = path.join(tempDir, '.ana', 'worktrees', 'test-slug', '.ana', 'plans', 'active', 'test-slug');
+    await fs.mkdir(wtSlugPath, { recursive: true });
+    await fs.writeFile(
+      path.join(wtSlugPath, '.saves.json'),
+      JSON.stringify({ verify_started_at: new Date().toISOString() }),
+      'utf-8',
+    );
+
+    const output = await captureOutput(async () => await getWorkStatus({ json: false }));
+    expect(output).toContain('--force');
+  });
+
+  // @ana A013
+  it('getNextAction returns force guidance for plan-in-progress', async () => {
+    await createTestProjectForGuards({
+      slugs: [{
+        slug: 'test-slug',
+        artifacts: ['scope.md'],
+      }],
+    });
+
+    const slugPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug');
+    await fs.writeFile(
+      path.join(slugPath, '.saves.json'),
+      JSON.stringify({ plan_started_at: new Date().toISOString() }),
+      'utf-8',
+    );
+
+    const output = await captureOutput(async () => await getWorkStatus({ json: false }));
+    expect(output).toContain('--force');
+  });
+
+  // @ana A021
+  it('verify_started_at uses force write — overwrites on re-entry', async () => {
+    const planContent = `# Plan\n## Phases\n- [ ] Phase 1\n  Spec: spec.md`;
+    await createTestProjectForGuards({
+      slugs: [{
+        slug: 'test-slug',
+        artifacts: ['scope.md', 'plan.md', 'spec.md', 'build_report.md'],
+        planContent,
+        worktree: true,
+      }],
+    });
+
+    // Write an old verify_started_at in the worktree
+    const wtSlugPath = path.join(tempDir, '.ana', 'worktrees', 'test-slug', '.ana', 'plans', 'active', 'test-slug');
+    await fs.mkdir(wtSlugPath, { recursive: true });
+    const oldTimestamp = '2026-01-01T00:00:00.000Z';
+    await fs.writeFile(
+      path.join(wtSlugPath, '.saves.json'),
+      JSON.stringify({ verify_started_at: oldTimestamp }),
+      'utf-8',
+    );
+
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    await startWork('test-slug');
+    logSpy.mockRestore();
+
+    const saves = JSON.parse(fsSync.readFileSync(path.join(wtSlugPath, '.saves.json'), 'utf-8'));
+    expect(saves.verify_started_at).not.toBe(oldTimestamp);
+  });
+
+  // @ana A019
+  it('detects merge via gh when is-ancestor fails', async () => {
+    // Create project with a bare remote so hasRemote=true
+    const remoteDir = tempDir + '-remote';
+    execSync(`git init --bare "${remoteDir}"`, { stdio: 'ignore' });
+
+    execSync('git init', { cwd: tempDir, stdio: 'ignore' });
+    execSync('git config user.email "test@test.com"', { cwd: tempDir, stdio: 'ignore' });
+    execSync('git config user.name "Test"', { cwd: tempDir, stdio: 'ignore' });
+    execSync(`git remote add origin "${remoteDir}"`, { cwd: tempDir, stdio: 'ignore' });
+
+    // Set up ana.json and pipeline artifacts on main
+    const anaDir = path.join(tempDir, '.ana');
+    await fs.mkdir(anaDir, { recursive: true });
+    await fs.writeFile(path.join(anaDir, 'ana.json'), JSON.stringify({ artifactBranch: 'main' }), 'utf-8');
+    const slugPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug');
+    await fs.mkdir(slugPath, { recursive: true });
+    await fs.writeFile(path.join(slugPath, 'scope.md'), '# Scope', 'utf-8');
+    await fs.writeFile(path.join(slugPath, 'plan.md'), '# Plan\n## Phases\n- [ ] Phase 1\n  Spec: spec.md', 'utf-8');
+    await fs.writeFile(path.join(slugPath, 'spec.md'), '# Spec', 'utf-8');
+
+    execSync('git add -A && git commit -m "init"', { cwd: tempDir, stdio: 'ignore' });
+    execSync('git branch -M main', { cwd: tempDir, stdio: 'ignore' });
+    execSync('git push -u origin main', { cwd: tempDir, stdio: 'ignore' });
+
+    // Create feature branch with build/verify reports — NOT merged (is-ancestor will fail)
+    execSync('git checkout -b feature/test-slug', { cwd: tempDir, stdio: 'ignore' });
+    await fs.writeFile(path.join(slugPath, 'build_report.md'), '# Build Report', 'utf-8');
+    await fs.writeFile(path.join(slugPath, 'verify_report.md'), '# Verify Report\n\n**Result:** PASS', 'utf-8');
+    const savesEntries = {
+      'build-report': { saved_at: new Date().toISOString(), hash: 'sha256:' + '0'.repeat(64) },
+      'verify-report': { saved_at: new Date().toISOString(), hash: 'sha256:' + '0'.repeat(64) },
+    };
+    await fs.writeFile(path.join(slugPath, '.saves.json'), JSON.stringify(savesEntries), 'utf-8');
+    execSync('git add -A && git commit -m "reports"', { cwd: tempDir, stdio: 'ignore' });
+    execSync('git push -u origin feature/test-slug', { cwd: tempDir, stdio: 'ignore' });
+    execSync('git checkout main', { cwd: tempDir, stdio: 'ignore' });
+
+    // Restore artifacts on filesystem (checkout main removes feature-only files)
+    await fs.mkdir(slugPath, { recursive: true });
+    await fs.writeFile(path.join(slugPath, 'build_report.md'), '# Build Report', 'utf-8');
+    await fs.writeFile(path.join(slugPath, 'verify_report.md'), '# Verify Report\n\n**Result:** PASS', 'utf-8');
+    const savesOnMain = {
+      'build-report': { saved_at: new Date().toISOString(), hash: 'sha256:' + '0'.repeat(64) },
+      'verify-report': { saved_at: new Date().toISOString(), hash: 'sha256:' + '0'.repeat(64) },
+    };
+    await fs.writeFile(path.join(slugPath, '.saves.json'), JSON.stringify(savesOnMain), 'utf-8');
+
+    // Mock spawnSync: gh says MERGED, git commands pass through
+    const { spawnSync: realSpawnSync } = await vi.importActual<typeof import('node:child_process')>('node:child_process');
+    vi.mocked(spawnSync).mockImplementation(
+      ((command: string, args?: readonly string[], options?: object) => {
+        if (command === 'gh') {
+          if (args && args[0] === 'pr' && args[1] === 'list' && args?.includes('--state')) {
+            return { pid: 0, status: 0, stdout: 'MERGED\n', stderr: '', output: [null, '', ''], signal: null };
+          }
+          return { pid: 0, status: 1, stdout: '', stderr: 'gh not available', output: [null, '', ''], signal: null };
+        }
+        return realSpawnSync(command, args as string[], options);
+      }) as typeof spawnSync,
+    );
+
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    // completeWork should succeed — merge detected via gh even though branch is not merged locally
+    await completeWork('test-slug');
+
+    // Verify it completed (directory archived)
+    const completedPath = path.join(tempDir, '.ana', 'plans', 'completed', 'test-slug');
+    expect(fsSync.existsSync(completedPath)).toBe(true);
+
+    vi.mocked(spawnSync).mockRestore();
+    logSpy.mockRestore();
+    errorSpy.mockRestore();
+    // Clean up remote dir
+    await fs.rm(remoteDir, { recursive: true, force: true });
+  });
+
+  // @ana A020
+  it('falls back to is-ancestor when gh unavailable', async () => {
+    // Create project with a bare remote so hasRemote=true
+    const remoteDir = tempDir + '-remote';
+    execSync(`git init --bare "${remoteDir}"`, { stdio: 'ignore' });
+
+    execSync('git init', { cwd: tempDir, stdio: 'ignore' });
+    execSync('git config user.email "test@test.com"', { cwd: tempDir, stdio: 'ignore' });
+    execSync('git config user.name "Test"', { cwd: tempDir, stdio: 'ignore' });
+    execSync(`git remote add origin "${remoteDir}"`, { cwd: tempDir, stdio: 'ignore' });
+
+    // Set up ana.json and pipeline artifacts on main
+    const anaDir = path.join(tempDir, '.ana');
+    await fs.mkdir(anaDir, { recursive: true });
+    await fs.writeFile(path.join(anaDir, 'ana.json'), JSON.stringify({ artifactBranch: 'main' }), 'utf-8');
+    const slugPath = path.join(tempDir, '.ana', 'plans', 'active', 'test-slug');
+    await fs.mkdir(slugPath, { recursive: true });
+    await fs.writeFile(path.join(slugPath, 'scope.md'), '# Scope', 'utf-8');
+    await fs.writeFile(path.join(slugPath, 'plan.md'), '# Plan\n## Phases\n- [ ] Phase 1\n  Spec: spec.md', 'utf-8');
+    await fs.writeFile(path.join(slugPath, 'spec.md'), '# Spec', 'utf-8');
+
+    execSync('git add -A && git commit -m "init"', { cwd: tempDir, stdio: 'ignore' });
+    execSync('git branch -M main', { cwd: tempDir, stdio: 'ignore' });
+    execSync('git push -u origin main', { cwd: tempDir, stdio: 'ignore' });
+
+    // Create feature branch, then merge it (is-ancestor will succeed)
+    execSync('git checkout -b feature/test-slug', { cwd: tempDir, stdio: 'ignore' });
+    await fs.writeFile(path.join(slugPath, 'build_report.md'), '# Build Report', 'utf-8');
+    await fs.writeFile(path.join(slugPath, 'verify_report.md'), '# Verify Report\n\n**Result:** PASS', 'utf-8');
+    const savesEntries = {
+      'build-report': { saved_at: new Date().toISOString(), hash: 'sha256:' + '0'.repeat(64) },
+      'verify-report': { saved_at: new Date().toISOString(), hash: 'sha256:' + '0'.repeat(64) },
+    };
+    await fs.writeFile(path.join(slugPath, '.saves.json'), JSON.stringify(savesEntries), 'utf-8');
+    execSync('git add -A && git commit -m "reports"', { cwd: tempDir, stdio: 'ignore' });
+    execSync('git push -u origin feature/test-slug', { cwd: tempDir, stdio: 'ignore' });
+    execSync('git checkout main', { cwd: tempDir, stdio: 'ignore' });
+    execSync('git merge --no-ff feature/test-slug -m "merge"', { cwd: tempDir, stdio: 'ignore' });
+    execSync('git push origin main', { cwd: tempDir, stdio: 'ignore' });
+
+    // Mock spawnSync: gh fails, git commands pass through (is-ancestor succeeds naturally)
+    const { spawnSync: realSpawnSync } = await vi.importActual<typeof import('node:child_process')>('node:child_process');
+    vi.mocked(spawnSync).mockImplementation(
+      ((command: string, args?: readonly string[], options?: object) => {
+        if (command === 'gh') {
+          return { pid: 0, status: 1, stdout: '', stderr: 'gh not found', output: [null, '', ''], signal: null };
+        }
+        return realSpawnSync(command, args as string[], options);
+      }) as typeof spawnSync,
+    );
+
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    // completeWork should succeed — merge detected via is-ancestor fallback
+    await completeWork('test-slug');
+
+    // Verify it completed (directory archived)
+    const completedPath = path.join(tempDir, '.ana', 'plans', 'completed', 'test-slug');
+    expect(fsSync.existsSync(completedPath)).toBe(true);
+
+    vi.mocked(spawnSync).mockRestore();
+    logSpy.mockRestore();
+    errorSpy.mockRestore();
+    // Clean up remote dir
+    await fs.rm(remoteDir, { recursive: true, force: true });
+  });
+
+  // @ana A022
+  it('startCommand registers --force option', () => {
+    const workSrcPath = path.join(__dirname, '..', '..', 'src', 'commands', 'work.ts');
+    const content = fsSync.readFileSync(workSrcPath, 'utf-8');
+    const startMatch = content.match(/const startCommand[\s\S]*?\.action/);
+    expect(startMatch).not.toBeNull();
+    expect(startMatch![0]).toContain('--force');
   });
 });

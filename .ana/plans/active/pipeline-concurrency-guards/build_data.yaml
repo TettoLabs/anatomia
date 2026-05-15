@@ -1,0 +1,22 @@
+schema: 1
+concerns:
+  - summary: "checkConcurrencyGuard has dead force parameter — neither production call site passes it"
+    file: "packages/cli/src/commands/work.ts"
+    severity: debt
+    suggested_action: accept
+  - summary: "isTimestampRecent duplicates checkConcurrencyGuard timestamp-checking logic"
+    file: "packages/cli/src/commands/work.ts"
+    severity: debt
+    suggested_action: monitor
+  - summary: "No boundary test at exactly 1-hour timeout threshold"
+    file: "packages/cli/tests/commands/work.test.ts"
+    severity: observation
+    suggested_action: monitor
+  - summary: "plan_started_at force-write not explicitly in spec — added for consistency"
+    file: "packages/cli/src/commands/work.ts"
+    severity: observation
+    suggested_action: accept
+  - summary: "vi.mock wraps spawnSync file-wide — future identity-check tests would see vi.fn wrapper"
+    file: "packages/cli/tests/commands/pr.test.ts"
+    severity: observation
+    suggested_action: accept

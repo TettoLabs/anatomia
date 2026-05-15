@@ -18,5 +18,61 @@
   "spec": {
     "saved_at": "2026-05-15T18:12:00.942Z",
     "hash": "sha256:8c46744ed3b84a465301092bc990a73427cdb07e192f0f2146c69243e707e8dd"
+  },
+  "build_started_at": "2026-05-15T19:05:46.690Z",
+  "build_agent": "ana-build",
+  "build-report": {
+    "saved_at": "2026-05-15T19:04:08.101Z",
+    "hash": "sha256:f58f96274da4f49e2fe51f5c0f06aea7937ecddcfcaf736dd439f2a53c1ae8a4",
+    "history": [
+      {
+        "saved_at": "2026-05-15T18:38:05.795Z",
+        "hash": "sha256:da3baa3a89e3c83d889252ea762bcec2913a3d63e60cf82a24e0ee29ab53a6a9"
+      }
+    ]
+  },
+  "build-data": {
+    "saved_at": "2026-05-15T19:04:08.102Z",
+    "hash": "sha256:7885a45e271b37b41033ab30874439291a7c3798057046de974240daa75c1318",
+    "history": [
+      {
+        "saved_at": "2026-05-15T18:38:05.796Z",
+        "hash": "sha256:6d93edc43724cc6554d94286f9221bb25106c1cecc004b2772e17cb47c608d83"
+      }
+    ]
+  },
+  "modules_touched": [
+    "packages/cli/src/commands/pr.ts",
+    "packages/cli/src/commands/work.ts",
+    "packages/cli/tests/commands/pr.test.ts",
+    "packages/cli/tests/commands/work.test.ts"
+  ],
+  "commit_hygiene": [],
+  "verify_started_at": "2026-05-15T18:39:06.263Z",
+  "verify_agent": "ana-verify",
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:b4a85d19f8a96afc329b6d24f0e4e65388c9811e6d4ec12503d7e94e0b76140d",
+    "run_at": "2026-05-15T19:12:07.886Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-15T19:12:07.939Z",
+    "hash": "sha256:4eec4ff2ad3a16d2f05f161cb7c7f93155382d1274efb34683cecc6279b7f432",
+    "history": [
+      {
+        "saved_at": "2026-05-15T18:44:59.966Z",
+        "hash": "sha256:a8854998141e3df5b89fc91581dfb960fa27f4399775a42827eab6da48bc279f"
+      }
+    ]
+  },
+  "verify-data": {
+    "saved_at": "2026-05-15T19:12:07.939Z",
+    "hash": "sha256:6a1cb23f9827b55b6cac80ff11fd57c4739f82af43330025bcd47798aad53cfd",
+    "history": [
+      {
+        "saved_at": "2026-05-15T18:44:59.967Z",
+        "hash": "sha256:d3cba57b6808bd62c3e92a6ff839551803fc0bf60e8c7cf582b5d551be6e1583"
+      }
+    ]
   }
 }
