@@ -26595,7 +26595,10 @@
             "A010"
           ],
           "id": "fix-merge-json-pollution-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Missing @ana tags pattern: A009/A010 from fix-merge-json-pollution contract are satisfied by existing tests in work-merge.test.ts but lack tags for this specific contract. Same systemic pattern documented and closed 10+ times this session. Verify accepted it — behavior IS covered, tagging is cosmetic.",
+          "closed_at": "2026-05-15T02:05:33.888Z",
+          "closed_by": "human"
         },
         {
           "category": "test",

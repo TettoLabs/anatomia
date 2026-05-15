@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-98 runs · 89 active · 119 lessons · 0 promoted · 391 closed
+98 runs · 88 active · 119 lessons · 0 promoted · 392 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 89 total)
+## Active Findings (30 shown of 88 total)
 
 ### packages/cli/src/commands/init/commit.ts
 
@@ -50,7 +50,6 @@
 ### packages/cli/tests/commands/work-merge.test.ts
 
 - **test:** A004 meta assertion uses toBeTypeOf('object') — passes for null — *Fix --merge stdout pollution in --json mode*
-- **test:** A009/A010 satisfied by existing tests but lack @ana tags for this contract — *Fix --merge stdout pollution in --json mode*
 
 ### packages/cli/tests/commands/work.test.ts
 
@@ -107,4 +106,5 @@
 - **code:** LLMS_SECTIONS constant declared but never used in extract-docs-data.ts — *Docs Search + Polish*
 - **code:** Unused variable 'other' in generateLlmsTxt — pages filtered but remainder never referenced — *Docs Search + Polish*
 - **code:** Duplicate stripJsx implementation — one in website/lib/docs-data/stripJsx.ts, another inlined in extract-docs-data.ts — *Docs Search + Polish*
+- **code:** Keyword fallback categorization lacks word boundaries — 'scannable' matches /scan/, misassigning proof entries to Engine — *Docs Data Pipeline*
 
