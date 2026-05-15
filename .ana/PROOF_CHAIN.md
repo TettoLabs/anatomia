@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-107 runs · 36 active · 131 lessons · 3 promoted · 471 closed
+107 runs · 35 active · 131 lessons · 3 promoted · 472 closed
 
 ## Hot Modules
 
@@ -10,13 +10,12 @@
 | packages/cli/tests/commands/artifact.test.ts | 3 | 2 |
 | packages/cli/tests/commands/work.test.ts | 3 | 3 |
 | packages/cli/tests/commands/proof.test.ts | 2 | 2 |
-| packages/cli/src/utils/proofSummary.ts | 2 | 2 |
 
 ## Promoted Rules
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 36 total)
+## Active Findings (30 shown of 35 total)
 
 ### packages/cli/src/commands/init/commit.ts
 
@@ -33,10 +32,6 @@
 ### packages/cli/src/types/proof.ts
 
 - **code:** commit_hygiene type duplicated in three locations (proof.ts, proofSummary.ts, work.ts inline) rather than imported from a shared definition — *Commit hygiene checks at build-report save*
-
-### packages/cli/src/utils/proofSummary.ts
-
-- **code:** computeResolutionClaims findingIndex overwrites entries when same finding ID appears in multiple chain entries — last write wins, which could mask status transitions — *Upstream Finding Resolution*
 
 ### packages/cli/src/utils/worktree.ts
 
@@ -66,6 +61,10 @@
 - **test:** Conditional PID guard makes 8 tests potential no-ops in environments where getClaudePid() returns null — *Capture actual think time from Ana session start*
 - **test:** Stage detection tests use hardcoded timestamps with 1-hour gaps — no boundary test for equal timestamps — *Fix cycle stage detection breaks on multi-phase builds*
 - **test:** A010 test creates untracked file after commit — doesn't test scoped staging during commit — *Commit timestamps written by work start*
+
+### packages/cli/tests/e2e/init-flow.test.ts
+
+- **test:** E2E scan regression test uses 5 sole toBeDefined() assertions on scan.json keys — *Test Suite Hygiene*
 
 ### packages/cli/tests/utils/proofSummary.test.ts
 
