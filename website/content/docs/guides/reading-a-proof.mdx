@@ -57,6 +57,12 @@ Six numbers at the top of every proof page:
 
 Four bars showing Think, Plan, Build, and Verify. The shape tells you what kind of work this was. Security-hardening: Think 2m, Plan 15m, Build 53m, Verify 5m — a heavy build, light verification. Compare with [worktree-isolation](/docs/proof/worktree-isolation): Think 3m, Plan 22m, Build 63m, Verify 11m — similar build but double the verification time because the contract had 45 assertions.
 
+<p style={{fontSize:"13px",color:"var(--ink-60)",margin:"0 0 16px"}}>**What each phase measures.** Each bar spans from session start to artifact save for that agent. Think begins when Ana opens the scope conversation and ends when the scope is committed. Plan begins when AnaPlan starts and ends when the spec and contract are saved. Build and Verify follow the same pattern — session open to artifact save.</p>
+
+<p style={{fontSize:"13px",color:"var(--ink-60)",margin:"0 0 16px"}}>**Why duration exceeds the sum of phases.** The header duration is wall-clock time from the first `_started_at` timestamp to the last artifact save. The bars show active session time only. Idle time between sessions — the gap between Plan finishing and Build starting, lunch breaks, overnight pauses — inflates the header but doesn't appear in any bar. A proof showing 2h 9m in the header and 21m in the bars means 1h 48m was idle time between sessions.</p>
+
+<p style={{fontSize:"13px",color:"var(--ink-60)",margin:"0 0 16px"}}>**Multi-phase timing.** Some proofs split Build or Verify into numbered phases (Build 1, Build 2). Each phase gets its own bar, measured from that phase's session start to its artifact save. The bars are proportional to active time — a 3-minute verify phase next to a 53-minute build renders at roughly 5% width, not stretched to fill the remaining space.</p>
+
 <p style={{fontSize:"13px",color:"var(--ink-60)",margin:"0 0 16px"}}>The median across all 103 proofs: 9m think, 10m plan, 27m build, 7m verify.</p>{/* ana:dynamic medianTimings */}
 
 ## The assertion ledger

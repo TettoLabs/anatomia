@@ -672,6 +672,12 @@ Score is contract assertions satisfied. Findings are independent observations fr
 
 Four bars showing Think, Plan, Build, and Verify. The shape tells you what kind of work this was. Security-hardening: Think 2m, Plan 15m, Build 53m, Verify 5m — a heavy build, light verification. Compare with [worktree-isolation](/docs/proof/worktree-isolation): Think 3m, Plan 22m, Build 63m, Verify 11m — similar build but double the verification time because the contract had 45 assertions.
 
+**What each phase measures.** Each bar spans from session start to artifact save for that agent. Think begins when Ana opens the scope conversation and ends when the scope is committed. Plan begins when AnaPlan starts and ends when the spec and contract are saved. Build and Verify follow the same pattern — session open to artifact save.
+
+**Why duration exceeds the sum of phases.** The header duration is wall-clock time from the first `_started_at` timestamp to the last artifact save. The bars show active session time only. Idle time between sessions — the gap between Plan finishing and Build starting, lunch breaks, overnight pauses — inflates the header but doesn't appear in any bar. A proof showing 2h 9m in the header and 21m in the bars means 1h 48m was idle time between sessions.
+
+**Multi-phase timing.** Some proofs split Build or Verify into numbered phases (Build 1, Build 2). Each phase gets its own bar, measured from that phase's session start to its artifact save. The bars are proportional to active time — a 3-minute verify phase next to a 53-minute build renders at roughly 5% width, not stretched to fill the remaining space.
+
 The median across all 103 proofs: 9m think, 10m plan, 27m build, 7m verify.
 
 ## The assertion ledger
@@ -718,7 +724,7 @@ Scan → init → setup → first pipeline run. Once you complete one end-to-end
 
 1. Run from your project root, not a subdirectory or a worktree
 2. Git must be configured: `git status` must succeed, `git config user.name` and `user.email` must be set
-3. Node 22+ required (`node --version`) — declared in `package.json` but not checked at runtime, so older versions produce cryptic errors
+3. Node 20+ required (`node --version`) — declared in `package.json` but not checked at runtime, so older versions produce cryptic errors
 4. If a prior init was interrupted, you'll see "Found incomplete init from a previous run" — follow the recovery steps it prints
 5. If re-initializing: `ana init --force` skips confirmation prompts but still preserves your data
 
@@ -1068,7 +1074,7 @@ After PASS, you have `build_report.md` and `verify_report.md`. Read both before 
 
 ## Prerequisites
 
-- Node.js 22 or later
+- Node.js 20 or later
 - Git with `user.name` and `user.email` configured
 - A Git repository with at least one commit
 - [Claude Code](https://claude.ai/code) with an active subscription — needed for pipeline agents (Steps 3–4)
