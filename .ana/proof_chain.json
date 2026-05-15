@@ -25379,7 +25379,10 @@
           "severity": "debt",
           "suggested_action": "scope",
           "id": "docs-search-polish-C7",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed: replaced 30-line local stripJsx in extract-docs-data.ts with import from lib/docs-data/stripJsx.ts. Both implementations verified functionally identical on 5 test cases. Script already imported from ../lib/docs-data/types — same path. Script runs successfully, llms.txt and search-index.json generated correctly. Commit 172b58fa.",
+          "closed_at": "2026-05-15T16:43:46.328Z",
+          "closed_by": "human"
         },
         {
           "category": "code",

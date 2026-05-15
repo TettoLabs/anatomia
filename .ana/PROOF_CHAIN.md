@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-105 runs · 40 active · 128 lessons · 3 promoted · 458 closed
+105 runs · 39 active · 128 lessons · 3 promoted · 459 closed
 
 ## Hot Modules
 
@@ -15,7 +15,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 40 total)
+## Active Findings (30 shown of 39 total)
 
 ### packages/cli/src/commands/init/commit.ts
 
@@ -59,6 +59,7 @@
 
 - **test:** Conditional PID guard makes 8 tests potential no-ops in environments where getClaudePid() returns null — *Capture actual think time from Ana session start*
 - **test:** Stage detection tests use hardcoded timestamps with 1-hour gaps — no boundary test for equal timestamps — *Fix cycle stage detection breaks on multi-phase builds*
+- **test:** A010 test creates untracked file after commit — doesn't test scoped staging during commit — *Commit timestamps written by work start*
 
 ### website/app/docs/reference/cli/page.tsx
 
@@ -77,10 +78,6 @@
 ### website/components/docs/proof/ProofExplorer.tsx
 
 - **code:** formatDuration duplicated in 4 files (ProofExplorer, ProofHero, PipelineGantt, detail page) — extract to shared utility — *Dynamic Pages — Reference & Proof Chain*
-
-### website/scripts/extract-docs-data.ts
-
-- **code:** Duplicate stripJsx implementation — one in website/lib/docs-data/stripJsx.ts, another inlined in extract-docs-data.ts — *Docs Search + Polish*
 
 ### General
 
