@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-96 runs · 102 active · 117 lessons · 0 promoted · 370 closed
+96 runs · 101 active · 117 lessons · 0 promoted · 371 closed
 
 ## Hot Modules
 
@@ -16,7 +16,11 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 102 total)
+## Active Findings (30 shown of 101 total)
+
+### packages/cli/src/engine/detectors/git.ts
+
+- **test:** A004 and A005 are source-inspection-only assertions — no behavioral test verifies the regex actually strips + markers in git.ts (only work.ts path is integration-tested) — *Fix worktree branch parsing*
 
 ### packages/cli/src/types/proof.ts
 
@@ -106,8 +110,4 @@
 - **code:** Unused variable 'other' in generateLlmsTxt — pages filtered but remainder never referenced — *Docs Search + Polish*
 - **code:** Duplicate stripJsx implementation — one in website/lib/docs-data/stripJsx.ts, another inlined in extract-docs-data.ts — *Docs Search + Polish*
 - **code:** Keyword fallback categorization lacks word boundaries — 'scannable' matches /scan/, misassigning proof entries to Engine — *Docs Data Pipeline*
-
-### website/source.config.ts
-
-- **code:** Frontmatter schema allows empty strings — z.string() without .min(1) — *Docs Infrastructure — Fumadocs MDX Pipeline*
 
