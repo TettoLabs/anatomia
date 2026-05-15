@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-106 runs · 35 active · 130 lessons · 3 promoted · 468 closed
+106 runs · 34 active · 130 lessons · 3 promoted · 469 closed
 
 ## Hot Modules
 
@@ -15,7 +15,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 35 total)
+## Active Findings (30 shown of 34 total)
 
 ### packages/cli/src/commands/init/commit.ts
 
@@ -40,6 +40,7 @@
 
 - **test:** A016 only tests 'Feature' case variant, not 'FIX' — contract says both should be accepted — *Scope Validation Integrity*
 - **test:** Pre-existing scope validation tests (lines 697-746) still use plain toThrow() without checking error message content — *Scope Validation Integrity*
+- **test:** A014 test does not exercise actual archive failure (catch branch). Tests first-save no-op, not error recovery. — *Rejection Cycle Artifact Preservation*
 
 ### packages/cli/tests/commands/init/commit.test.ts
 
@@ -96,7 +97,6 @@
 
 ### website/scripts/extract-docs-data.ts
 
-- **code:** Prebuild inlines a fresh stripJsx copy instead of importing the lib version — duplication persists — *Fix prebuild source mutation*
 - **code:** Median computation duplicated between extract-docs-data.ts main() and lib/docs-data/proofs.ts getMedianTimings() — *Fix prebuild source mutation*
 
 ### General
