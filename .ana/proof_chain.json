@@ -25231,7 +25231,10 @@
             "A029"
           ],
           "id": "docs-search-polish-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Contract deviation — correct: A029 specified runtime mdxComponents registration for ProofCount/RejectionCount, but builder used build-time value injection via extract-docs-data.ts with ana:dynamic markers in MDX files. Build-time approach is architecturally better (no hydration, no component registration, values baked in). DynamicStat.tsx was created per contract, found dead, deleted.",
+          "closed_at": "2026-05-15T06:10:39.935Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
