@@ -21190,7 +21190,10 @@
             "A014"
           ],
           "id": "fix-cycle-stage-detection-C3",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Scoped in fix-work-saves-compat: spec Fix 1 adds phaseNum === 1 guard to saves.json fallback at both completeWork (line 1553) and getWorkStatus (line 472). Contract A001 verifies phase 2 cannot pass using phase 1's legacy data. Contract A003 verifies phase 2 status detection doesn't fall back.",
+          "closed_at": "2026-05-15T16:48:43.326Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
