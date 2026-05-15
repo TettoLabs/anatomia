@@ -12914,7 +12914,10 @@
             "A001"
           ],
           "id": "proof-system-near-term-C1",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Covered: commitAndPushProofChanges is a private shared helper (proof.ts:156) tested through the close command's A001 push retry test. The retry failure message at lines 184/188/195 is a static string ('Push failed after retry — run git push') — identical across all 3 failure conditions. Testing the failure path requires a second conflicting commit during the test, which is disproportionate to the value of asserting a static string.",
+          "closed_at": "2026-05-15T00:00:43.474Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
