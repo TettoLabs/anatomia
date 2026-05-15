@@ -26084,7 +26084,10 @@
             "A002"
           ],
           "id": "commit-hygiene-checks-C1",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Acceptable: the A002 test at commit-hygiene.test.ts:257 IS tautological — it asserts the test helper's output doesn't contain commit_hygiene, not that saveArtifact skips hygiene checks for non-build-report types. But the production gating is a 1-line conditional (artifact.ts:1437: baseType === 'build-report'). The POSITIVE path (build-report triggers checks) is thoroughly tested at lines 61-133. The tautological test is harmless noise — it doesn't reduce confidence in the production conditional.",
+          "closed_at": "2026-05-15T01:00:11.258Z",
+          "closed_by": "human"
         },
         {
           "category": "test",

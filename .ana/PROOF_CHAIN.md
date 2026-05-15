@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-96 runs · 91 active · 117 lessons · 0 promoted · 381 closed
+96 runs · 90 active · 117 lessons · 0 promoted · 382 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 91 total)
+## Active Findings (30 shown of 90 total)
 
 ### packages/cli/src/commands/work.ts
 
@@ -38,7 +38,6 @@
 
 ### packages/cli/tests/commands/commit-hygiene.test.ts
 
-- **test:** A002 test is tautological — verifies key absence without calling the function, not the gating conditional — *Commit hygiene checks at build-report save*
 - **test:** A017 uses toHaveProperty (existence) instead of asserting specific values — passes on any object shape — *Commit hygiene checks at build-report save*
 
 ### packages/cli/tests/commands/work.test.ts
@@ -110,4 +109,8 @@
 - **code:** Unused variable 'other' in generateLlmsTxt — pages filtered but remainder never referenced — *Docs Search + Polish*
 - **code:** Duplicate stripJsx implementation — one in website/lib/docs-data/stripJsx.ts, another inlined in extract-docs-data.ts — *Docs Search + Polish*
 - **code:** Keyword fallback categorization lacks word boundaries — 'scannable' matches /scan/, misassigning proof entries to Engine — *Docs Data Pipeline*
+
+### General
+
+- **test:** Contract assertions A013-A019 have no tagged tests — verified by source inspection only — *Kind-aware branch prefixes*
 
