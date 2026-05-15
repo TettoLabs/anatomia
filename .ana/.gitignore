@@ -1,5 +1,3 @@
 # Anatomia runtime state — local to each developer
 state/
 worktrees/
-worktree-meta.json
-worktree-context.md
