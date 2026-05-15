@@ -313,12 +313,6 @@ export const copy = {
     closer: "**126 sealed.** The chain is the moat.",
   },
 
-  systemThread: {
-    before: "That's the system. Next:",
-    cta: "the proof",
-    href: "#proof",
-  },
-
   marquee: {
     title: "Works with any AI tool",
     items: [
