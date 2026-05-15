@@ -2024,6 +2024,7 @@ export function generateProofSummary(slugDir: string): ProofSummary {
               if (typeof f['severity'] === 'string') finding.severity = f['severity'] as 'risk' | 'debt' | 'observation';
               if (typeof f['suggested_action'] === 'string') finding.suggested_action = f['suggested_action'] as 'promote' | 'scope' | 'monitor' | 'accept';
               if (Array.isArray(f['related_assertions'])) finding.related_assertions = f['related_assertions'] as string[];
+              if (Array.isArray(f['resolves'])) finding.resolves = f['resolves'] as string[];
               allFindings.push(finding);
             }
           }
