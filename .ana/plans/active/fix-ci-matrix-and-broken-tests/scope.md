@@ -9,17 +9,19 @@ CI has been red for 50+ consecutive runs. Three tests in `work.test.ts` have nev
 
 ## Complexity Assessment
 - **Kind:** fix
-- **Size:** small — 2 files changed (test.yml, work.test.ts), plus branch protection API call and release.yml action bump
-- **Files affected:** `.github/workflows/test.yml`, `.github/workflows/release.yml`, `packages/cli/tests/commands/work.test.ts`
+- **Size:** small — workflow configs, a new test file (extracted from work.test.ts), and documentation updates
+- **Files affected:** `.github/workflows/test.yml`, `.github/workflows/release.yml`, `packages/cli/tests/commands/work.test.ts` (remove 3 tests), new file `packages/cli/tests/commands/work-ci-mocked.test.ts` (or similar — houses extracted tests), `.claude/skills/deployment/SKILL.md`, `packages/cli/ARCHITECTURE.md`, `packages/cli/CONTRIBUTING.md`
 - **Blast radius:** CI configuration and 3 test assertions. No production code changes. Branch protection rules must be updated in lockstep with the matrix change or PRs cannot merge.
 - **Estimated effort:** 1-2 hours
 - **Multi-phase:** no
 
 ## Approach
 
-Two problems, one scope: broken tests and a wasteful matrix. Fix the tests by mocking at the boundary (spawnSync, runGit) instead of depending on CI-specific environment behavior. Trim the matrix to Ubuntu-only (the platform our users are on) and bump the action runtime before the June 2 deadline.
+Two problems, one scope: broken tests and a wasteful matrix. Fix the tests by mocking at the boundary (`node:child_process`) instead of depending on CI-specific environment behavior. Trim the matrix to Ubuntu-only (the platform our users are on) and bump the action runtime before the June 2 deadline. Update documentation that references the old OS matrix.
 
-The branch protection rules are the critical sequencing constraint. They must be updated to match the new matrix, or PRs block on checks that will never report.
+Critical constraint: mocking `node:child_process` requires `vi.mock` at module level, which affects every test in the file. The 3 broken tests must be extracted to a new test file (same pattern as `work-merge.test.ts`, which was separated from `work.test.ts` for the same reason).
+
+The branch protection rules are the other critical sequencing constraint. They must be updated to match the new matrix, or PRs block on checks that will never report.
 
 ## Acceptance Criteria
 
@@ -29,7 +31,8 @@ The branch protection rules are the critical sequencing constraint. They must be
 - AC4: Branch protection required status checks updated to only require `Test (ubuntu-latest, Node 20)` and `Test (ubuntu-latest, Node 22)` (4 removed checks)
 - AC5: `staging` removed from CI branch triggers
 - AC6: Coverage upload condition simplified (remove redundant `matrix.os` check)
-- AC7: No test count decrease — 2290 tests remain (broken tests fixed, not deleted)
+- AC7: No test count decrease — broken tests fixed (moved to new file), not deleted
+- AC8: Documentation updated to reflect Ubuntu-only matrix: deployment skill, ARCHITECTURE.md, CONTRIBUTING.md (root + cli)
 
 ## Edge Cases & Risks
 
@@ -38,6 +41,7 @@ The branch protection rules are the critical sequencing constraint. They must be
 - **Dead Windows guard in scan.test.ts:443:** The `if (process.platform === 'win32') return` in the chmod test becomes unreachable. Leave it — removing it is cosmetic and risks the scope.
 - **Leaked temp directories in conflict test:** The current test creates `bare-remote-*` and `clone-*` dirs in `/tmp/` outside the test's tempDir. If the fix mocks runGit, these directories are no longer created. If the fix keeps real git operations, add cleanup in afterEach.
 - **Future OS-specific code:** If someone adds `process.platform` branching later, they'll need to add the runners back. The static `cross-platform.test.ts` will catch hardcoded path separators but not runtime-conditional logic. This is an acceptable tradeoff — we add complexity when the code demands it, not prophylactically.
+- **Test file extraction:** The 3 broken tests move to a new file. The test count must not decrease — `work.test.ts` loses 3 tests, the new file gains 3 tests. The 2 skipped tests (WASM availability) remain in their original files.
 
 ## Rejected Approaches
 
@@ -86,13 +90,21 @@ None. All investigative questions resolved during research.
 - `packages/cli/src/utils/git-operations.ts:37-49` — `runGit()` returns `{ stdout, stderr, exitCode }`
 
 ### Patterns to Follow
-- Mock at the boundary: `vi.spyOn` on `spawnSync` (for getClaudePid) or the module-level `runGit` import (for conflict test)
-- The `UNKNOWN verify result` tests (line 3186) demonstrate the working pattern for testing `completeWork` error paths without real remotes
+- **`work-merge.test.ts` is THE pattern.** It was separated from `work.test.ts` specifically because mocking `node:child_process` requires `vi.mock` at module level (hoisted), which affects all tests in the file. Lines 1-32 show: `vi.hoisted()` captures real implementations, `vi.mock('node:child_process')` replaces `spawnSync`, the mock routes git calls through `realSpawnSync` and intercepts target calls. The new test file should follow this exact pattern.
+- The `UNKNOWN verify result` tests (line 3186) demonstrate the working pattern for testing `completeWork` error paths — but note they DO add a remote (invalid URL), they just don't create real conflicts
 
 ### Known Gotchas
 - Branch protection update must happen via `gh api -X PATCH repos/TettoLabs/anatomia/branches/main/protection/required_status_checks` — cannot be done through the workflow file itself
 - The conflict test creates directories outside `tempDir` (lines 3321, 3327) using `path.join(tempDir, '..', ...)` — if keeping real git, add cleanup. If mocking, these are eliminated.
 - `pnpm/action-setup@v6` appears in TWO places in test.yml (test job line 33, website job line 85) and ONE place in release.yml (line 19) — all three must be bumped
+- **Module-level mock constraint:** `vi.mock('node:child_process')` is hoisted to the top of the file and applies to ALL tests. This is why `work-merge.test.ts` exists as a separate file. The 3 broken tests MUST be extracted — you cannot add `vi.mock` to `work.test.ts` without breaking 2290+ other tests that depend on real `spawnSync`/`execSync`.
+
+### Documentation that needs OS matrix references updated
+- `.claude/skills/deployment/SKILL.md:12` — "3 OS × 2 Node versions (ubuntu, windows, macos × Node 20, 22)" → Ubuntu-only. Also remove Windows gotcha section (no longer relevant).
+- `packages/cli/ARCHITECTURE.md:225` — "Ubuntu/macOS/Windows x Node 20/22" → "Ubuntu x Node 20/22"
+- `packages/cli/CONTRIBUTING.md:398` — "Ubuntu/macOS/Windows x Node 20/22" → "Ubuntu x Node 20/22"
+- `packages/cli/CONTRIBUTING.md:414` — same
+- Note: Node version references (20 → 22) are scope 2's responsibility. This scope only fixes OS references.
 
 ### Things to Investigate
-- Whether to mock `runGit` at the module level (cleanest, but requires understanding the import graph) or restructure the conflict test to inject the pull result — design judgment for the planner
+None — the mock approach is now determined. Use the `work-merge.test.ts` pattern: extract to new file, `vi.hoisted` + `vi.mock('node:child_process')`, route real git calls through `realSpawnSync`.
