@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-107 runs · 37 active · 131 lessons · 3 promoted · 470 closed
+107 runs · 36 active · 131 lessons · 3 promoted · 471 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 37 total)
+## Active Findings (30 shown of 36 total)
 
 ### packages/cli/src/commands/init/commit.ts
 
@@ -69,7 +69,7 @@
 
 ### packages/cli/tests/utils/proofSummary.test.ts
 
-- **test:** A014 test uses toBeDefined() before toBe() — the toBeDefined assertion is redundant — *Upstream Finding Resolution*
+- **test:** proofSummary.test.ts parseFindings uses toBeGreaterThanOrEqual on deterministic fixture data — *Test Suite Hygiene*
 
 ### website/app/docs/reference/cli/page.tsx
 

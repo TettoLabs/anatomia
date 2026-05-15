@@ -28915,7 +28915,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "upstream-finding-resolution-C3",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Redundant assertion: toBeDefined() at proofSummary.test.ts:3431 is subsumed by toBe('slug-A-C2') at line 3432. If toBe passes, the value is necessarily defined. One-line test redundancy, not a behavior gap.",
+          "closed_at": "2026-05-15T17:52:36.793Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
