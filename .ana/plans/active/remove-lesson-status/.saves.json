@@ -78,5 +78,20 @@
     "website/content/docs/guides/troubleshooting.mdx",
     "website/content/docs/guides/using-ana-learn.mdx"
   ],
-  "commit_hygiene": []
+  "commit_hygiene": [],
+  "verify_started_at": "2026-05-15T18:46:09.312Z",
+  "verify_agent": "ana-verify",
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:1b945b9b60ad41e05832057d19613fd5b539e257c1a8a6a2201ae1eacc1c8bd3",
+    "run_at": "2026-05-15T18:52:39.069Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-15T18:52:39.105Z",
+    "hash": "sha256:871980268fe74c0537410069e34a0259b6b5e8a971310d61c4d55721a9675b7a"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-15T18:52:39.105Z",
+    "hash": "sha256:b9629b6e2cabe68855bc113e9d8e1ba58de99e64f89a3565f3008e2fa8cc9322"
+  }
 }
