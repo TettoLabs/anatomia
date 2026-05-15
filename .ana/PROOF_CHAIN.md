@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-98 runs · 85 active · 119 lessons · 0 promoted · 395 closed
+98 runs · 84 active · 119 lessons · 0 promoted · 396 closed
 
 ## Hot Modules
 
@@ -16,12 +16,11 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 85 total)
+## Active Findings (30 shown of 84 total)
 
 ### packages/cli/src/commands/init/commit.ts
 
 - **test:** No integration test for pull conflict abort path — *ana init commit — persist infrastructure to git*
-- **code:** discoverDirtyFiles returns empty array on git status failure without reporting why — *ana init commit — persist infrastructure to git*
 
 ### packages/cli/src/commands/work.ts
 
@@ -110,4 +109,8 @@
 - **code:** Unused variable 'other' in generateLlmsTxt — pages filtered but remainder never referenced — *Docs Search + Polish*
 - **code:** Duplicate stripJsx implementation — one in website/lib/docs-data/stripJsx.ts, another inlined in extract-docs-data.ts — *Docs Search + Polish*
 - **code:** Keyword fallback categorization lacks word boundaries — 'scannable' matches /scan/, misassigning proof entries to Engine — *Docs Data Pipeline*
+
+### General
+
+- **test:** Contract assertions A013-A019 have no tagged tests — verified by source inspection only — *Kind-aware branch prefixes*
 

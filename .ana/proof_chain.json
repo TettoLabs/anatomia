@@ -26864,7 +26864,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "init-commit-C4",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Intentional defensive behavior: discoverDirtyFiles at commit.ts:102-103 returns empty array when git status fails — 'assume no dirty files' is the safe default. The caller skips the commit step ('Everything is up to date'). This is misleading on git failure but not dangerous — no data corruption, user would notice files aren't committed and re-run. git status failure requires corrupted repo or missing git, both exceptional conditions.",
+          "closed_at": "2026-05-15T02:08:24.366Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
