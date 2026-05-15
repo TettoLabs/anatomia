@@ -1,0 +1,167 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Fix CI Matrix and Broken Tests"
+
+assertions:
+  # getClaudePid — deterministic via mocked spawnSync
+  - id: A001
+    says: "Claude PID resolution returns a valid process ID when the process tree is available"
+    block: "resolves Claude PID from process tree"
+    target: "pid"
+    matcher: "equals"
+    value: 12345
+
+  - id: A002
+    says: "Claude PID resolution returns null when the ps command fails"
+    block: "returns null when ps command fails"
+    target: "pid"
+    matcher: "equals"
+    value: null
+
+  - id: A003
+    says: "Claude PID resolution returns null when ps returns an invalid number"
+    block: "returns null when ps output is not a valid number"
+    target: "pid"
+    matcher: "equals"
+    value: null
+
+  # Conflict test — deterministic via mocked pull
+  - id: A004
+    says: "A rebase conflict during pull causes the process to exit with failure"
+    block: "exits with code 1 on rebase conflict"
+    target: "exitCode"
+    matcher: "equals"
+    value: 1
+
+  - id: A005
+    says: "The conflict error message tells the user what went wrong"
+    block: "exits with code 1 on rebase conflict"
+    target: "errorOutput"
+    matcher: "contains"
+    value: "conflict"
+
+  - id: A006
+    says: "The conflict error message tells the user how to recover"
+    block: "exits with code 1 on rebase conflict"
+    target: "errorOutput"
+    matcher: "contains"
+    value: "Resolve conflicts and try again"
+
+  # CI matrix — workflow file assertions
+  - id: A007
+    says: "CI runs on Ubuntu only, not Windows or macOS"
+    block: "test.yml matrix is Ubuntu-only"
+    target: "test.yml"
+    matcher: "not_contains"
+    value: "windows-latest"
+
+  - id: A008
+    says: "CI runs on Ubuntu only, not Windows or macOS"
+    block: "test.yml matrix is Ubuntu-only"
+    target: "test.yml"
+    matcher: "not_contains"
+    value: "macos-latest"
+
+  - id: A009
+    says: "CI tests against both Node 20 and Node 22"
+    block: "test.yml matrix has Node 20 and 22"
+    target: "test.yml.matrix.node-version"
+    matcher: "contains"
+    value: 20
+
+  - id: A010
+    says: "CI tests against both Node 20 and Node 22"
+    block: "test.yml matrix has Node 20 and 22"
+    target: "test.yml.matrix.node-version"
+    matcher: "contains"
+    value: 22
+
+  # pnpm/action-setup version
+  - id: A011
+    says: "The pnpm setup action is bumped to v6 before the June deadline"
+    block: "pnpm/action-setup bumped to v6 in test.yml"
+    target: "test.yml"
+    matcher: "not_contains"
+    value: "pnpm/action-setup@v4"
+
+  - id: A012
+    says: "The pnpm setup action is bumped to v6 in the release workflow too"
+    block: "pnpm/action-setup bumped to v6 in release.yml"
+    target: "release.yml"
+    matcher: "not_contains"
+    value: "pnpm/action-setup@v4"
+
+  # Branch triggers
+  - id: A013
+    says: "The staging branch is removed from CI triggers since it does not exist"
+    block: "staging removed from branch triggers"
+    target: "test.yml"
+    matcher: "not_contains"
+    value: "staging"
+
+  # Coverage condition
+  - id: A014
+    says: "Coverage upload no longer checks the OS since there is only one"
+    block: "coverage upload condition simplified"
+    target: "test.yml.coverage-if"
+    matcher: "not_contains"
+    value: "matrix.os"
+
+  # Test count preservation
+  - id: A015
+    says: "No tests were lost during the extraction — total count is preserved"
+    block: "test count preserved after extraction"
+    target: "testResults.passed"
+    matcher: "equals"
+    value: 2297
+
+  - id: A016
+    says: "The new test file exists and runs successfully"
+    block: "work-ci-mocked.test.ts exists and passes"
+    target: "testFile"
+    matcher: "exists"
+
+  # Documentation
+  - id: A017
+    says: "The deployment skill reflects the actual Ubuntu-only CI matrix"
+    block: "deployment skill updated"
+    target: "deployment-skill"
+    matcher: "not_contains"
+    value: "windows"
+
+  - id: A018
+    says: "The deployment skill no longer warns about Windows path separators"
+    block: "deployment skill Windows gotcha removed"
+    target: "deployment-skill.gotchas"
+    matcher: "not_contains"
+    value: "Windows"
+
+  - id: A019
+    says: "ARCHITECTURE.md reflects the actual CI matrix"
+    block: "ARCHITECTURE.md updated"
+    target: "architecture-md"
+    matcher: "not_contains"
+    value: "macOS/Windows"
+
+  - id: A020
+    says: "CONTRIBUTING.md reflects the actual CI matrix"
+    block: "CONTRIBUTING.md updated"
+    target: "contributing-md"
+    matcher: "not_contains"
+    value: "macOS/Windows"
+
+file_changes:
+  - path: ".github/workflows/test.yml"
+    action: modify
+  - path: ".github/workflows/release.yml"
+    action: modify
+  - path: "packages/cli/tests/commands/work-ci-mocked.test.ts"
+    action: create
+  - path: "packages/cli/tests/commands/work.test.ts"
+    action: modify
+  - path: ".claude/skills/deployment/SKILL.md"
+    action: modify
+  - path: "packages/cli/ARCHITECTURE.md"
+    action: modify
+  - path: "packages/cli/CONTRIBUTING.md"
+    action: modify
