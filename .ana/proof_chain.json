@@ -26847,7 +26847,10 @@
             "A010"
           ],
           "id": "init-commit-C3",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Covered by pattern: init commit worktree guard at commit.ts:287-290 is the identical pattern (isWorktreeDirectory → console.error → process.exit(1)) being tested by the worktree-guard-tests scope for init, setup complete, and work complete. Same function, same guard shape. The scope could include init commit as a one-test extension — but the detection function is unit-tested and the guard pattern is integration-tested for 3 other commands.",
+          "closed_at": "2026-05-15T02:06:10.346Z",
+          "closed_by": "human"
         },
         {
           "category": "code",

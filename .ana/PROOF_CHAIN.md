@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-98 runs · 88 active · 119 lessons · 0 promoted · 392 closed
+98 runs · 87 active · 119 lessons · 0 promoted · 393 closed
 
 ## Hot Modules
 
@@ -16,12 +16,11 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 88 total)
+## Active Findings (30 shown of 87 total)
 
 ### packages/cli/src/commands/init/commit.ts
 
 - **test:** No integration test for pull conflict abort path — *ana init commit — persist infrastructure to git*
-- **test:** No integration test for worktree guard — verified by source inspection only — *ana init commit — persist infrastructure to git*
 - **code:** discoverDirtyFiles returns empty array on git status failure without reporting why — *ana init commit — persist infrastructure to git*
 
 ### packages/cli/src/commands/work.ts
@@ -58,6 +57,10 @@
 ### website/app/docs/[...slug]/page.tsx
 
 - **code:** Dynamic components not registered in catch-all mdxComponents map — contract specifies registration but builder used build-time regex approach instead — *Docs Search + Polish*
+
+### website/app/docs/[[...slug]]/page.tsx
+
+- **code:** Prose classes used without @tailwindcss/typography installed — *Docs Infrastructure — Fumadocs MDX Pipeline*
 
 ### website/app/docs/reference/cli/page.tsx
 
