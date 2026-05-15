@@ -29066,7 +29066,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "fix-work-saves-compat-C1",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Incorrect finding: resolves claims summary IS present in work.ts. JSON path at lines 1704-1711 (resolvesClaimsCount loop + JSON field). Human-readable path at lines 1734-1742 (resolvesCount loop + chalk.gray output). work complete output proves it: 'Verify claims 3 findings resolved.' Code exists on main from upstream-finding-resolution scope; rebase brought it into the branch.",
+          "closed_at": "2026-05-15T18:14:56.874Z",
+          "closed_by": "human"
         },
         {
           "category": "code",

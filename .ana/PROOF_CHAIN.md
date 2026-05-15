@@ -1,13 +1,13 @@
 # Proof Chain Dashboard
 
-108 runs · 38 active · 134 lessons · 3 promoted · 472 closed
+108 runs · 37 active · 134 lessons · 3 promoted · 473 closed
 
 ## Hot Modules
 
 | File | Active | Entries |
 |------|--------|--------|
-| packages/cli/src/commands/work.ts | 6 | 6 |
 | packages/cli/tests/commands/work.test.ts | 5 | 4 |
+| packages/cli/src/commands/work.ts | 5 | 5 |
 | packages/cli/tests/commands/artifact.test.ts | 3 | 2 |
 | packages/cli/tests/commands/proof.test.ts | 2 | 2 |
 
@@ -15,7 +15,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 38 total)
+## Active Findings (30 shown of 37 total)
 
 ### packages/cli/src/commands/init/commit.ts
 
@@ -23,7 +23,6 @@
 
 ### packages/cli/src/commands/work.ts
 
-- **code:** Resolves claims summary removed from completeWork — both JSON and human-readable output — without spec authorization — *work.ts saves.json backward compat bug + worktree dedup + formatting*
 - **code:** work.ts duplicates resolves counting logic — JSON and console branches have identical loops — *Upstream Finding Resolution*
 - **code:** Two different result parsers with different casing: getVerifyResult returns 'unknown' (lowercase), parseResult in proofSummary returns 'UNKNOWN' (uppercase) — works correctly but fragile coupling between two parallel implementations — *work.ts untested branch coverage*
 - **test:** Pull-recovery guards (2 of 5) not directly exercised by any test — *Fix --merge stdout pollution in --json mode*
@@ -41,6 +40,7 @@
 ### packages/cli/tests/commands/artifact.test.ts
 
 - **test:** A016 only tests 'Feature' case variant, not 'FIX' — contract says both should be accepted — *Scope Validation Integrity*
+- **test:** Pre-existing scope validation tests (lines 697-746) still use plain toThrow() without checking error message content — *Scope Validation Integrity*
 
 ### packages/cli/tests/commands/init/commit.test.ts
 
