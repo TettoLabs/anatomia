@@ -18004,7 +18004,10 @@
             "A005"
           ],
           "id": "worktree-artifact-cleanup-C1",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Structural ESM limitation: moveFileCrossFs at artifact.ts:1032 is 10 lines — renameSync, catch EXDEV, copyFileSync+unlinkSync. ESM built-in modules have non-configurable exports, preventing mocking renameSync to throw EXDEV. The test at artifact.test.ts:3597 verifies the fallback operations (copy+delete) work correctly. The EXDEV error code check is POSIX standard, consistently implemented by Node.js. The function is correct by inspection — the untestable part is a 1-line error code comparison.",
+          "closed_at": "2026-05-15T00:51:11.670Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
