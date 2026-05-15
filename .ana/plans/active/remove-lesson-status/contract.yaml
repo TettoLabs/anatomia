@@ -122,6 +122,55 @@ assertions:
     value: "findings"
 
   - id: A018
+    says: "The findings documentation no longer lists lesson as a lifecycle state"
+    block: "findings.mdx lifecycle updated"
+    target: "findings.mdx"
+    matcher: "not_contains"
+    value: "lesson"
+
+  - id: A019
+    says: "The troubleshooting guide no longer references the lesson command"
+    block: "troubleshooting.mdx updated"
+    target: "troubleshooting.mdx"
+    matcher: "not_contains"
+    value: "lesson"
+
+  - id: A020
+    says: "The learn guide no longer references the lesson command"
+    block: "using-ana-learn.mdx updated"
+    target: "using-ana-learn.mdx"
+    matcher: "not_contains"
+    value: "ana proof lesson"
+
+  - id: A021
+    says: "The README command table no longer lists the lesson command"
+    block: "README updated"
+    target: "README.md"
+    matcher: "not_contains"
+    value: "ana proof lesson"
+
+  - id: A022
+    says: "The project-local ana agent says findings not lessons"
+    block: "project-local ana.md updated"
+    target: ".claude/agents/ana.md"
+    matcher: "not_contains"
+    value: "lessons"
+
+  - id: A023
+    says: "The project-local learn agent has no lesson references"
+    block: "project-local ana-learn.md updated"
+    target: ".claude/agents/ana-learn.md"
+    matcher: "not_contains"
+    value: "ana proof lesson"
+
+  - id: A024
+    says: "The project context reflects the simplified finding lifecycle"
+    block: "project-context.md updated"
+    target: ".ana/context/project-context.md"
+    matcher: "not_contains"
+    value: "or lesson"
+
+  - id: A025
     says: "All tests pass after the removal"
     block: "full test suite passes"
     target: "test exit code"
@@ -146,4 +195,18 @@ file_changes:
   - path: "packages/cli/tests/commands/work.test.ts"
     action: modify
   - path: "packages/cli/tests/utils/proofSummary.test.ts"
+    action: modify
+  - path: "website/content/docs/concepts/findings.mdx"
+    action: modify
+  - path: "website/content/docs/guides/troubleshooting.mdx"
+    action: modify
+  - path: "website/content/docs/guides/using-ana-learn.mdx"
+    action: modify
+  - path: "README.md"
+    action: modify
+  - path: ".claude/agents/ana.md"
+    action: modify
+  - path: ".claude/agents/ana-learn.md"
+    action: modify
+  - path: ".ana/context/project-context.md"
     action: modify

@@ -8,11 +8,12 @@
 
 Pure removal. The finding lifecycle simplifies from four states (`active | lesson | promoted | closed`) to three (`active | promoted | closed`). The lesson subcommand, the lesson status value, and the upstream auto-classification as lesson all go away. Close-with-reason already covers the "institutional decision" use case (128:6 adoption ratio).
 
-Three areas of work:
+Four areas of work:
 
 1. **Type system cleanup.** Remove `'lesson'` from the status union in `proof.ts`, remove `lessons` from `ProofChainStats`, remove `lesson` from `ChainHealth.findings`. The compiler surfaces every consumer that needs updating.
 2. **Behavioral changes.** Upstream findings get `status: 'closed'` with `closed_reason: 'upstream'`. The staleness loop's upstream skip becomes unreachable (closed skip catches first) — remove it. The backfill migration converts existing lesson findings to closed.
 3. **Deletion.** The entire lesson subcommand (~260 lines), its tests (~130 lines), lesson-specific test fixtures, and template references.
+4. **Documentation.** Website docs (findings lifecycle, troubleshooting, learn guide), README command table, project-level agent definitions (`.claude/agents/`), and project context all reference lesson. Update or remove each reference.
 
 The structural analog for removal is the close subcommand (proof.ts ~753-990) — same structure as lesson, and it stays. The lesson command was a clone of close.
 
@@ -95,6 +96,49 @@ Additionally, add a **backfill migration block** inside the staleness loop (the 
 **Pattern to follow:** The surrounding instruction style.
 **Why:** The instruction was already broken (getProofContext filters lessons out). Fixing the wording to match the actual behavior.
 
+### `website/content/docs/concepts/findings.mdx` (modify)
+**What changes:** Two changes:
+1. Line 15: the observation severity row's "Typical action" cell says `` `accept`, `monitor`, or record as `lesson`. `` — change to `` `accept` or `monitor`. ``
+2. Lines 36-40: the Lifecycle section lists three terminal states including "lesson." Remove the `- **lesson** — recorded as institutional knowledge...` bullet entirely. The lifecycle description at line 36 ("three terminal states") becomes "two terminal states" — but actually it stays at three because active → closed, promoted remain. Wait — active is the starting state, not a terminal state. The text says "three terminal states" and lists closed, promoted, lesson. After removing lesson, update the text to say "two terminal states" and remove the lesson bullet.
+**Pattern to follow:** The surrounding MDX prose and table style.
+**Why:** Documentation describes a feature that no longer exists. Users reading this would try `ana proof lesson` and get an unknown command error.
+
+### `website/content/docs/guides/troubleshooting.mdx` (modify)
+**What changes:** Two changes:
+1. Line 83: remove `lesson` from the command list: `` (`close`, `lesson`, `promote`, `strengthen`) `` → `` (`close`, `promote`, `strengthen`) ``
+2. Line 116: remove `ana proof lesson` from the "don't edit by hand" advice: `` Use `ana proof close`, `ana proof promote`, `ana proof lesson`. `` → `` Use `ana proof close`, `ana proof promote`, `ana proof strengthen`. ``
+**Pattern to follow:** The surrounding troubleshooting card prose.
+**Why:** References to a removed command in troubleshooting docs will confuse users.
+
+### `website/content/docs/guides/using-ana-learn.mdx` (modify)
+**What changes:** Line 89: remove the lesson terminal state reference. Change from mentioning two other terminal states (close and lesson) to just mentioning close: `` Two other terminal states: `ana proof close` for resolved findings, and `ana proof lesson` for observations worth remembering but not worth encoding as rules. `` → `` One other terminal state: `ana proof close` for resolved findings. ``
+**Pattern to follow:** The surrounding guide prose style.
+**Why:** The learn guide references a command that no longer exists.
+
+### `README.md` (modify)
+**What changes:** Remove the `ana proof lesson` row from the command table at line 172: ``| `ana proof lesson <ids...>` | Record findings as institutional lessons |``
+**Pattern to follow:** The surrounding table rows.
+**Why:** The README is the first thing users see. A command that doesn't exist shouldn't be listed.
+
+### `.claude/agents/ana.md` (modify)
+**What changes:** Line 108: "surface relevant lessons" → "surface relevant findings". Same change as the template — this is the project-local copy.
+**Pattern to follow:** Same as template change.
+**Why:** The project-local agent definition must match the template. This project uses its own agents for development.
+
+### `.claude/agents/ana-learn.md` (modify)
+**What changes:** Same 4 changes as the template version — this is the project-local copy:
+- Line 86: "meta includes closed and lesson findings" → "meta includes closed findings"
+- Line 105: "closed/lesson entries" → "closed entries" (appears twice)
+- Line 452: "closed/lesson entries" → "closed entries"
+- Line 498: remove the `ana proof lesson` command reference line
+**Pattern to follow:** Same as template changes.
+**Why:** The project-local agent definition must match the template.
+
+### `.ana/context/project-context.md` (modify)
+**What changes:** Line 115: the Domain Vocabulary entry for "Proof finding" says "lifecycle state: active → promoted, closed, or lesson." Change to "lifecycle state: active → promoted or closed."
+**Pattern to follow:** The surrounding vocabulary entries.
+**Why:** Project context is consumed by all pipeline agents. A stale lifecycle description causes agents to reference a status that doesn't exist.
+
 ### `packages/cli/tests/commands/proof.test.ts` (modify)
 **What changes:**
 1. Remove the `lessonEntry` fixture (~lines 978-996).
@@ -139,8 +183,15 @@ Additionally, add a **backfill migration block** inside the staleness loop (the 
 - [ ] AC11: The promote command has no lesson-specific rejection path.
 - [ ] AC12: ana-learn.md template does not reference the lesson command. "closed/lesson" mentions updated to "closed".
 - [ ] AC13: ana.md template says "surface relevant findings" not "surface relevant lessons".
-- [ ] AC14: Tests pass: `(cd packages/cli && pnpm vitest run)`
-- [ ] AC15: Lint passes: `pnpm run lint`
+- [ ] AC14: The findings.mdx lifecycle section does not list lesson as a terminal state.
+- [ ] AC15: The troubleshooting.mdx does not reference the lesson command.
+- [ ] AC16: The using-ana-learn.mdx does not reference `ana proof lesson`.
+- [ ] AC17: The README command table does not include `ana proof lesson`.
+- [ ] AC18: The project-local `.claude/agents/ana.md` says "findings" not "lessons".
+- [ ] AC19: The project-local `.claude/agents/ana-learn.md` has no lesson references.
+- [ ] AC20: The project-context.md domain vocabulary reflects the simplified lifecycle.
+- [ ] AC21: Tests pass: `(cd packages/cli && pnpm vitest run)`
+- [ ] AC22: Lint passes: `pnpm run lint`
 
 ## Testing Strategy
 
