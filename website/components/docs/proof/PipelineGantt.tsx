@@ -36,30 +36,25 @@ export interface GanttBar {
  * @returns Array of GanttBar objects describing each row
  */
 export function buildGanttBars(timing: ProofTiming): GanttBar[] {
-  const total = timing.totalMinutes;
-  if (total === 0) return [];
-
   if (timing.segments && timing.segments.length > 0) {
     // Multi-phase: build bars from segments
-    // Compute left positions from cumulative minutes, derive widths as gaps between
-    // adjacent positions. The last bar always reaches 100% — no rounding gaps.
+    // Denominator is the sum of phase values being rendered, not wall-clock duration.
+    // Cumulative left positions, widths computed directly from phase / total.
+    const total = timing.segments.reduce((sum, seg) => sum + Math.max(0, seg.minutes), 0);
+    if (total === 0) return [];
+
     const bars: GanttBar[] = [];
     let cumulative = 0;
-    const lefts: number[] = [];
-
-    for (const seg of timing.segments) {
-      lefts.push(total > 0 ? (cumulative / total) * 100 : 0);
-      cumulative += seg.minutes;
-    }
-    lefts.push(100); // sentinel — right edge of last bar
 
     for (let i = 0; i < timing.segments.length; i++) {
       const seg = timing.segments[i];
+      const value = Math.max(0, seg.minutes);
       const label = seg.phase != null
         ? `${seg.stage.charAt(0).toUpperCase() + seg.stage.slice(1)} ${seg.phase}`
         : seg.stage.charAt(0).toUpperCase() + seg.stage.slice(1);
-      const leftPct = lefts[i];
-      const widthPct = seg.minutes === 0 ? 2 : lefts[i + 1] - lefts[i];
+      const leftPct = (cumulative / total) * 100;
+      const widthPct = value === 0 ? 2 : (value / total) * 100;
+      cumulative += value;
 
       bars.push({
         label,
@@ -74,26 +69,23 @@ export function buildGanttBars(timing: ProofTiming): GanttBar[] {
   }
 
   // Fallback: 4-bar layout from flat fields
-  // Same gap-free math as multi-phase: derive widths from adjacent left positions
+  // Denominator is the sum of phase values, not wall-clock duration.
+  const total = STAGES.reduce((sum, stage) => sum + Math.max(0, timing[stage.key]), 0);
+  if (total === 0) return [];
+
   const bars: GanttBar[] = [];
   let cumulative = 0;
-  const lefts: number[] = [];
-
-  for (const stage of STAGES) {
-    lefts.push(total > 0 ? (cumulative / total) * 100 : 0);
-    cumulative += timing[stage.key];
-  }
-  lefts.push(100);
 
   for (let i = 0; i < STAGES.length; i++) {
     const stage = STAGES[i];
-    const value = timing[stage.key];
-    const leftPct = lefts[i];
-    const widthPct = value === 0 ? 2 : lefts[i + 1] - lefts[i];
+    const value = Math.max(0, timing[stage.key]);
+    const leftPct = (cumulative / total) * 100;
+    const widthPct = value === 0 ? 2 : (value / total) * 100;
+    cumulative += value;
 
     bars.push({
       label: stage.label,
-      minutes: value,
+      minutes: timing[stage.key],
       opacity: progressiveOpacity(i, STAGES.length),
       leftPct,
       widthPct,
