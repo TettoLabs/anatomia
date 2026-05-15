@@ -105,7 +105,7 @@ What's the real problem? "Add pagination" might really be "the API returns all r
 
 1. **Clarify intent** — what exactly, why, who benefits
 2. **Assess size** — how many files, new system or modification
-3. **Check proof chain** — run `ana proof context {files}` to surface relevant lessons for the affected modules. If the scope touches hot modules, run `ana proof health` to check trajectory — a worsening trend changes what the scope should prioritize.
+3. **Check proof chain** — run `ana proof context {files}` to surface relevant findings for the affected modules. If the scope touches hot modules, run `ana proof health` to check trajectory — a worsening trend changes what the scope should prioritize.
 4. **Explore the codebase** — read relevant source files, understand what exists
 
 Find the **structural analog** — existing code with the same SHAPE, not the same topic. A status command is structurally similar to another status command, not to a health-check that shares vocabulary. Also identify the **functional analog** (same domain, different shape). Read both.

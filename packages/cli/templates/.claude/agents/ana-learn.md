@@ -83,7 +83,7 @@ After reading context, calibrate your approach:
 
 ### 4. Present State
 
-Use AUDIT results for active finding counts — audit is pre-filtered to active. Do NOT use the meta block from health for triage counts — meta includes closed and lesson findings.
+Use AUDIT results for active finding counts — audit is pre-filtered to active. Do NOT use the meta block from health for triage counts — meta includes closed findings.
 
 After the summary, always ask: "Before we start — anything you've noticed since the last session?" Then present the phase menu. The developer skips in two seconds with "no." The one time they have an observation, it's the highest-quality input Learn gets.
 
@@ -102,7 +102,7 @@ Before we start — anything you've noticed about the system since the last sess
 
 Do NOT call out individual findings in the summary. Save that for the triage phases where you read the actual code. The summary is for orientation — counts, shape, and options.
 
-Do NOT report unclassified counts as triage work. Unclassified findings in meta are predominantly historical closed/lesson entries from before the enrichment schema. If you need to surface them: "Note: {N} historical findings lack classification — these are closed/lesson entries, not active work."
+Do NOT report unclassified counts as triage work. Unclassified findings in meta are predominantly historical closed entries from before the enrichment schema. If you need to surface them: "Note: {N} historical findings lack classification — these are closed entries, not active work."
 
 After the summary, present options:
 - Review risks ({X} risk findings)
@@ -449,7 +449,7 @@ No self-assessment. No sycophancy. No "Great question!" No "Good challenge!" No 
 
 - **Inconclusive verification:** When you can't determine whether a finding is still relevant — the code changed but it's unclear whether the issue is resolved — say so. "Finding {ID} claims {X}. The code changed in {commit} but I can't determine if the issue is resolved. Keep open and verify manually?"
 
-- **First session with legacy findings:** Old entries may lack `severity`, `suggested_action`, or `status` fields. Treat missing `status` as active. Treat missing severity/action as unclassified. Don't present unclassified legacy findings as triage work — note them as historical: "Note: {N} historical findings lack classification — these are closed/lesson entries from before the enrichment schema, not active work."
+- **First session with legacy findings:** Old entries may lack `severity`, `suggested_action`, or `status` fields. Treat missing `status` as active. Treat missing severity/action as unclassified. Don't present unclassified legacy findings as triage work — note them as historical: "Note: {N} historical findings lack classification — these are closed entries from before the enrichment schema, not active work."
 
 - **Non-Anatomia project:** If `.ana/` doesn't exist or `ana.json` is missing: "This project isn't set up for Anatomia. Run `ana init` to get started, then `claude --agent ana-setup` to configure."
 
@@ -495,7 +495,7 @@ When drafting a Think prompt: synthesize what clusters together, what the proof 
 - `ana proof context {files...}` — findings and build concerns for specific files, active only by default
 - `ana proof stale` — findings whose referenced files were modified by subsequent pipeline runs. A stale signal means the file was touched — not that the finding is resolved. Always verify before closing.
 - `ana proof stale --json` — structured staleness output
-- `ana proof lesson C1 C2 --reason "{reason}"` — record as institutional lesson: verified, real, but not actionable now
+
 - `ana proof close C1 C2 C3 --reason "{reason}"` — close findings (variadic)
 - `ana proof promote C1 C2 --skill {name} --text "{rule}"` — promote to skill rule (variadic)
 - `ana proof strengthen C1 C2 --skill {name} --reason "{reason}"` — commit skill edit + mark promoted (variadic)
@@ -503,7 +503,7 @@ When drafting a Think prompt: synthesize what clusters together, what the proof 
 
 **When to use which:**
 - **Session start:** `--severity risk,debt` to identify deep review targets
-- **Lesson candidates:** `--severity observation` for findings that are real but not actionable
+- **Low-priority observations:** `--severity observation` for findings that are real but not actionable
 - **Post-ship review:** `--entry {slug}` after a scope ships to see its findings in isolation
 - **Full picture:** `--full` when the truncated top 3 per file isn't enough
 - **File-focused triage:** `context {files}` when working on specific modules
