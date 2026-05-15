@@ -16397,7 +16397,10 @@
           "severity": "risk",
           "suggested_action": "scope",
           "id": "website-production-infra-C4",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Theoretical: tags are pushed only by the team via GitHub Actions releases — always semver. Non-semver tag would require intentional manual push. Blast radius is cosmetic (version pill shows wrong string) and self-correcting on next release.",
+          "closed_at": "2026-05-15T05:03:11.707Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
