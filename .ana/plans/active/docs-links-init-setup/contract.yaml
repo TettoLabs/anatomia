@@ -1,0 +1,91 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Documentation links in init and setup"
+
+assertions:
+  - id: A001
+    says: "Init success output shows a quickstart documentation link"
+    block: "init success output includes quickstart URL"
+    target: "output"
+    matcher: "contains"
+    value: "https://anatomia.dev/docs/start"
+
+  - id: A002
+    says: "The quickstart link has a labeled format users can scan"
+    block: "init success output includes quickstart URL"
+    target: "output"
+    matcher: "contains"
+    value: "Quickstart"
+
+  - id: A003
+    says: "The quickstart link appears after the Next steps block"
+    block: "quickstart URL appears after commit-readiness indicator"
+    target: "output.quickstartAfterNext"
+    matcher: "truthy"
+
+  - id: A004
+    says: "Setup bare command shows a link to the setup guide"
+    block: "setup bare command includes guide URL"
+    target: "output"
+    matcher: "contains"
+    value: "https://anatomia.dev/docs/guides/using-ana-setup"
+
+  - id: A005
+    says: "The setup guide link has a labeled format users can scan"
+    block: "setup bare command includes guide URL"
+    target: "output"
+    matcher: "contains"
+    value: "Guide"
+
+  - id: A006
+    says: "The setup guide link appears between the agent command and subcommands"
+    block: "guide URL appears between agent command and subcommands"
+    target: "output.guideBeforeSubcommands"
+    matcher: "truthy"
+
+  - id: A007
+    says: "CLI documentation URLs are defined as named constants, not inline strings"
+    block: "URL constants are exported from constants.ts"
+    target: "constants.DOCS_QUICKSTART"
+    matcher: "equals"
+    value: "https://anatomia.dev/docs/start"
+
+  - id: A008
+    says: "The setup guide URL constant matches the expected path"
+    block: "URL constants are exported from constants.ts"
+    target: "constants.DOCS_SETUP_GUIDE"
+    matcher: "equals"
+    value: "https://anatomia.dev/docs/guides/using-ana-setup"
+
+  - id: A009
+    says: "The setup agent template includes a link to the design principles guide"
+    block: "ana-setup template includes design principles URL"
+    target: "templateContent"
+    matcher: "contains"
+    value: "https://anatomia.dev/docs/guides/using-ana-setup#design-principles"
+
+  - id: A010
+    says: "The docs page links to the reference page's design principles section"
+    block: "using-ana-setup docs page links to design principles reference"
+    target: "mdxContent"
+    matcher: "contains"
+    value: "/docs/reference/context#design-principles"
+
+  - id: A011
+    says: "Init quickstart link appears even when scan data is unavailable"
+    block: "quickstart URL appears when engineResult is null"
+    target: "output"
+    matcher: "contains"
+    value: "https://anatomia.dev/docs/start"
+
+file_changes:
+  - path: "packages/cli/src/constants.ts"
+    action: modify
+  - path: "packages/cli/src/commands/init/state.ts"
+    action: modify
+  - path: "packages/cli/src/commands/setup.ts"
+    action: modify
+  - path: "packages/cli/templates/.claude/agents/ana-setup.md"
+    action: modify
+  - path: "website/content/docs/guides/using-ana-setup.mdx"
+    action: modify
