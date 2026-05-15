@@ -109,11 +109,11 @@ assertions:
 
   # Test count preservation
   - id: A015
-    says: "No tests were lost during the extraction — total count is preserved"
+    says: "No tests were lost during the extraction — the new file has the same number of tests that were removed"
     block: "test count preserved after extraction"
-    target: "testResults.passed"
+    target: "work-ci-mocked.test.ts.testCount"
     matcher: "equals"
-    value: 2297
+    value: 4
 
   - id: A016
     says: "The new test file exists and runs successfully"

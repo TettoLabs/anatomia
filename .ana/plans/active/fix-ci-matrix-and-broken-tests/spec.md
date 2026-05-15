@@ -20,7 +20,7 @@ The 4 tests to extract:
 
 The fix for each:
 - **getClaudePid tests:** Mock `spawnSync` to return controlled output when the command is `ps`. Route all other calls through `realSpawnSync`. This makes tests deterministic regardless of the CI runner's process namespace.
-- **Conflict test:** Instead of creating real bare remotes, clones, and divergent commits (which fail silently in CI and leak temp directories), mock `spawnSync` to return `{ status: 128, stdout: '', stderr: 'CONFLICT (content): Merge conflict in file\ncould not apply abc1234' }` when it sees a `git pull --rebase` call. Setup still uses real `execSync` via `createMergedProject` to build the git scaffold. The mock intercepts the pull inside `completeWork`, not the setup.
+- **Conflict test:** Instead of creating real bare remotes, clones, and divergent commits (which fail silently in CI and leak temp directories), mock `spawnSync` to return `{ status: 128, stdout: '', stderr: 'CONFLICT (content): Merge conflict in file\ncould not apply abc1234' }` when it sees a `git pull --rebase` call. **Critical:** `completeWork` checks `runGit(['remote']).stdout` at line 1243 — if it returns empty, the pull block is skipped and the mock never fires. The test must add a real remote via `realExecSync('git remote add origin https://example.com/fake.git', { cwd: tempDir, stdio: 'ignore' })` after `createMergedProject` so the remote check passes. The mock then intercepts the subsequent `git pull --rebase` call before it reaches the network.
 
 **Branch protection:** The `gh api` command to update required status checks is documented below. The developer must run this before or after merge — it cannot be automated in the workflow file.
 
@@ -36,9 +36,7 @@ strategy:
 
 Job name: `Test (ubuntu-latest, Node 20)` and `Test (ubuntu-latest, Node 22)` — these are the new required check names for branch protection. The job `name:` field keeps the `${{ matrix.os }}` reference with `runs-on: ubuntu-latest` hardcoded, so the rendered name includes `ubuntu-latest`.
 
-Wait — with `os` removed from the matrix but still in the job name template, the name template needs updating. The job name should be `Test (ubuntu-latest, Node ${{ matrix.node-version }})` with a hardcoded string for the OS portion since it's no longer a matrix variable. Or simpler: `Test (Node ${{ matrix.node-version }})` since there's only one OS.
-
-Use: `name: Test (ubuntu-latest, Node ${{ matrix.node-version }})` — keeps the OS visible in the check name for clarity and matches the branch protection check names in AC4.
+The job name must use a hardcoded OS string since `matrix.os` no longer exists: `name: Test (ubuntu-latest, Node ${{ matrix.node-version }})`. This matches the branch protection check names in AC4.
 
 Coverage upload condition after change:
 ```yaml
@@ -222,8 +220,7 @@ gh api -X PUT repos/TettoLabs/anatomia/branches/main/protection/required_status_
   "strict": true,
   "contexts": [
     "Test (ubuntu-latest, Node 20)",
-    "Test (ubuntu-latest, Node 22)",
-    "Website Check"
+    "Test (ubuntu-latest, Node 22)"
   ]
 }
 EOF
