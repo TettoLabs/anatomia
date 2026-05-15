@@ -17843,7 +17843,10 @@
           "severity": "risk",
           "suggested_action": "scope",
           "id": "website-nav-copy-polish-C3",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Stale: zero #pipeline matches in website/components/scan/ScanSlab.tsx. Link removed by subsequent website scope.",
+          "closed_at": "2026-05-15T06:15:41.442Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
