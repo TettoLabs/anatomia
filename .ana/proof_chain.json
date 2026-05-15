@@ -15700,7 +15700,10 @@
             "A009"
           ],
           "id": "website-visual-fidelity-C1",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Not broken: .tCompat:hover at bento.module.css:122 explicitly sets border-color: transparent, overriding .tile:hover at line 61. Same specificity (0,1,0 + pseudo), .tCompat:hover wins by cascade order. Both rules in same CSS module file — no bundler reordering risk.",
+          "closed_at": "2026-05-15T05:03:01.094Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
