@@ -56,7 +56,7 @@ const GITHUB_TAGS_URL =
 const GITHUB_COMMITS_URL =
   "https://api.github.com/repos/anatomia-dev/anatomia/commits";
 
-const VERSION_FALLBACK = "v1.0.2";
+const VERSION_FALLBACK = "v1.1.0";
 
 /**
  * Build GitHub API headers with conditional auth.

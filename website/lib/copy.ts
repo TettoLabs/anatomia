@@ -97,7 +97,7 @@ export const copy = {
       { label: "ships", value: "5 agents" },
       { label: "skills", value: "8 matched" },
       { label: "context", value: "4 files" },
-      { label: "cli", value: "25 commands" },
+      { label: "cli", value: "26 commands" },
       { label: "install", value: "~3s" },
     ],
     drawers: [
@@ -184,7 +184,7 @@ export const copy = {
         num: "04",
         name: "The CLI",
         teaser: "deterministic commands · the system's hands, human or agent",
-        meta: "25 commands",
+        meta: "26 commands",
         copy: [
           "The agent toolbelt. And yours. Every step is a single command — **deterministic, mechanical, the same whether a human runs it or an agent does.**",
           "This is what makes it a system, not a prompting tool. Without the CLI, the markdown is only suggestions. With it, the system has hands.",
@@ -198,8 +198,8 @@ export const copy = {
             { cmd: "pr create", desc: "package the run" },
             { cmd: "proof health", desc: "quality trajectory across runs" },
           ],
-          moreCount: 19,
-          moreNames: "init, setup, verify, proof, agents",
+          moreCount: 20,
+          moreNames: "init, setup, verify, proof, config, agents",
         },
       },
     ],
