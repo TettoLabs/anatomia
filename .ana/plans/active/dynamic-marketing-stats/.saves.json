@@ -4,5 +4,7 @@
   "scope": {
     "saved_at": "2026-05-16T04:42:35.395Z",
     "hash": "sha256:4da7316b61e686ce5179a8e302c27ccab917dd49c62067af6464d5d579cd0f24"
-  }
+  },
+  "plan_started_at": "2026-05-16T06:17:45.188Z",
+  "plan_agent": "ana-plan"
 }
