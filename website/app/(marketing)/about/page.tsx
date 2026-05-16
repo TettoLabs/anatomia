@@ -4,7 +4,7 @@ import { About } from "@/components/about/About";
 export const metadata: Metadata = {
   title: "About · Anatomia",
   description:
-    "Two people, one idea. The team behind Anatomia and why we built it.",
+    "One developer, 58 days, $1,085 in AI credits. The story behind Anatomia and the proof that it works.",
 };
 
 export default function AboutPage() {
