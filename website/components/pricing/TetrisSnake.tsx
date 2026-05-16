@@ -105,17 +105,14 @@ export function TetrisSnake() {
       trail.push({ x: p.x, y: p.y, age: 0 });
 
       // Place blocks at precomputed positions (corners + evenly spaced)
-      if (placeSet.has(pos)) {
+      // Skip if already placed at this position (no duplicates on subsequent laps)
+      if (placeSet.has(pos) && !placed.some(b => b.x === p.x && b.y === p.y)) {
         placed.push({ x: p.x, y: p.y, alpha: 0.18 });
       }
 
       pos = (pos + 1) % perim.length;
       if (pos === 0) {
         lap++;
-        // Clear ~40% of placed blocks every 2 laps
-        if (lap % 2 === 0) {
-          placed = placed.filter(() => Math.random() > 0.4);
-        }
       }
     }
 
