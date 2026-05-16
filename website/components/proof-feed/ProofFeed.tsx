@@ -14,7 +14,7 @@ import styles from "./proof-feed.module.css";
 export async function ProofFeed() {
   const entries = await getProofFeed();
   const latest = entries[0];
-  const passedCount = entries.filter((e) => e.passed === e.assertions).length;
+  const verifiedCount = entries.length;
 
   const kindClass = (kind: string) => {
     if (kind === "milestone") return styles.kindMilestone;
@@ -61,15 +61,15 @@ export async function ProofFeed() {
                       key={e.hash}
                       className={cn(
                         styles.sd,
-                        e.passed !== e.assertions && styles.sdFailed,
+                        e.hasRisk && styles.sdFailed,
                         i === 0 && styles.sdLatest,
                       )}
-                      title={`${e.hash} — ${e.passed === e.assertions ? "✓" : "✗"} ${e.passed}/${e.assertions}`}
+                      title={`${e.hash} — ${e.hasRisk ? "⚠ risk found" : "✓"} ${e.passed}/${e.assertions}`}
                     />
                   ))}
                 </span>
                 <span className={styles.dotsLabel}>
-                  <span className={styles.dotsLabelN}>{passedCount}</span>/<span className={styles.dotsLabelN}>{entries.length}</span> verified
+                  <span className={styles.dotsLabelN}>{verifiedCount}</span>/<span className={styles.dotsLabelN}>{entries.length}</span> verified
                 </span>
                 <span className={styles.psChev} aria-hidden="true">
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
