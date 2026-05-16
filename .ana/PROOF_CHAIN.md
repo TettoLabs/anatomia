@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-113 runs · 56 active · 3 promoted · 613 closed
+113 runs · 55 active · 3 promoted · 614 closed
 
 ## Hot Modules
 
@@ -16,12 +16,11 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 56 total)
+## Active Findings (30 shown of 55 total)
 
 ### packages/cli/src/commands/init/state.ts
 
 - **code:** Build/lint scoping silently degrades when cwd is omitted — no warning that scoping was skipped — *Monorepo build command scoping*
-- **code:** Empty catch block swallows all errors including unexpected ones (permission denied, disk full) — *Monorepo build command scoping*
 - **code:** pkg.path injected into shell command without sanitization — path with spaces or special chars would produce broken subshell — *Monorepo build command scoping*
 
 ### packages/cli/src/commands/work.ts
@@ -95,4 +94,8 @@
 ### website/vitest.config.ts
 
 - **code:** Over-build: vitest added to website package.json + vitest.config.ts created (not in spec file_changes) — *Dynamic marketing stats — wire command count and version fallback*
+
+### General
+
+- **code:** URL reachability not verified — stable URL contract is a deployment assumption — *Documentation links in init and setup*
 

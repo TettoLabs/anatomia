@@ -30275,7 +30275,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "monorepo-build-scoping-C3",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Correctly designed: catch at state.ts:446 handles fs.readFile and JSON.parse failures for primary package's package.json. Fallback (keep root commands) is appropriate for all error types — file not found, permission denied, corrupted JSON all have the same correct response. Comment documents intent. Verify classified as accept.",
+          "closed_at": "2026-05-16T17:13:29.739Z",
+          "closed_by": "human"
         },
         {
           "category": "test",
