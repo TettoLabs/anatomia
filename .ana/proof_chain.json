@@ -30476,6 +30476,236 @@
         "commit_count": 0,
         "base_commit": "b6d3cfb29b419a9c6f15b8056640eeb7ca5b17b8"
       }
+    },
+    {
+      "slug": "dynamic-marketing-stats",
+      "feature": "Dynamic marketing stats — wire command count and version fallback",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 12,
+        "satisfied": 12,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "The marketing command count returns the real number from extraction data",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "Missing extraction data falls back to the previous hardcoded count",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Malformed extraction data falls back safely",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "The marketing version reads from build metadata with a v prefix",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "Missing build metadata falls back to the previous hardcoded version",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "The specStrip renders the dynamic command count instead of the stale number",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "The CLI drawer shows the dynamic command count in its metadata",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "The man page shows the correct number of additional commands",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "The version fallback in proof-feed uses build metadata instead of a hardcoded string",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "copy.ts remains unmodified",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "The website builds without errors after wiring dynamic stats",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "No TypeScript errors are introduced",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 8,
+        "met": 8
+      },
+      "timing": {
+        "total_minutes": 131,
+        "think": 1,
+        "plan": 4,
+        "build": 8,
+        "verify": 4
+      },
+      "hashes": {
+        "scope": "sha256:4da7316b61e686ce5179a8e302c27ccab917dd49c62067af6464d5d579cd0f24",
+        "contract": "sha256:1ebf1cb8e486d2e543d8449bd5fead1fc2dbac5d86e6ac0e2e30315e48ca0d99",
+        "plan": "sha256:f7a74242e6fab062c2fc533cb2a7ecceece09cf0671a8cc829cc006a3e230b7e",
+        "spec": "sha256:8eae9b927c93c0d7dc7aa54b4326c7f7f58d487ac7a2fc95e108aee4edc8048b",
+        "build-report": "sha256:c9476b87183e99136663773f2a0446e26c9a4bb095ebabed7082e815f43dc736",
+        "build-data": "sha256:adac5334ae94b87168d75fc8b688b1b04148fa2543df3449fd733e607a146e8a",
+        "verify-report": "sha256:0c45791d4504a34a8b7e3b95dc726ff93b0ba6834726fa7a336c18d11bb50aff",
+        "verify-data": "sha256:8e111ef1c8af96b5dbf4a7b655e6ab578050a114bd7ec437161f2de8f98f6b89"
+      },
+      "completed_at": "2026-05-16T17:08:17.197Z",
+      "modules_touched": [
+        "pnpm-lock.yaml",
+        "website/components/system/Drawer.tsx",
+        "website/components/system/SystemSection.tsx",
+        "website/lib/__tests__/marketing-stats.test.ts",
+        "website/lib/marketing-stats.ts",
+        "website/lib/proof-feed.ts",
+        "website/package.json",
+        "website/vitest.config.ts"
+      ],
+      "scope_summary": "The marketing site hardcodes product stats in `copy.ts` that the docs data pipeline already computes dynamically. Every new command or version bump requires a manual edit to marketing copy that nobody remembers to do — and the numbers have already drifted (copy says \"26 commands\" but extraction counts 32; VERSION_FALLBACK says \"v1.1.0\" but build-meta says \"1.0.2\").",
+      "kind": "feature",
+      "findings": [
+        {
+          "category": "code",
+          "summary": "getMarketingVersion produces 'vundefined' when BuildMeta has undefined version field",
+          "file": "website/lib/marketing-stats.ts",
+          "anchor": null,
+          "line": 38,
+          "severity": "risk",
+          "suggested_action": "scope",
+          "related_assertions": [
+            "A004",
+            "A005"
+          ],
+          "id": "dynamic-marketing-stats-C1",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "VERSION_FALLBACK evaluated at module load time — single-shot, no retry on transient readFileSync failure",
+          "file": "website/lib/proof-feed.ts",
+          "anchor": null,
+          "line": 61,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "dynamic-marketing-stats-C2",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Drawer moreCount has no floor guard — commandCount < 6 produces negative display",
+          "file": "website/components/system/Drawer.tsx",
+          "anchor": null,
+          "line": 128,
+          "severity": "debt",
+          "suggested_action": "scope",
+          "id": "dynamic-marketing-stats-C3",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Two separate imports from same module instead of combined destructured import",
+          "file": "website/lib/marketing-stats.ts",
+          "anchor": null,
+          "line": 12,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "dynamic-marketing-stats-C4",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "vundefined test documents a real gap but accepts broken output as expected behavior",
+          "file": "website/lib/__tests__/marketing-stats.test.ts",
+          "anchor": null,
+          "line": 84,
+          "severity": "debt",
+          "suggested_action": "scope",
+          "related_assertions": [
+            "A004"
+          ],
+          "id": "dynamic-marketing-stats-C5",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Over-build: vitest added to website package.json + vitest.config.ts created (not in spec file_changes)",
+          "file": "website/vitest.config.ts",
+          "anchor": null,
+          "line": 1,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "dynamic-marketing-stats-C6",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "proof-feed.ts header comment still says 'mock-only state' — stale from Website Lift",
+          "file": "website/lib/proof-feed.ts",
+          "anchor": null,
+          "line": 1,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "resolves": [],
+          "id": "dynamic-marketing-stats-C7",
+          "status": "closed",
+          "closed_reason": "upstream",
+          "closed_at": "2026-05-16T17:08:17.197Z",
+          "closed_by": "mechanical"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "Pre-existing lint errors in TetrisSnake.tsx and git-operations.ts block pnpm run lint",
+          "file": "website/components/pricing/TetrisSnake.tsx",
+          "severity": "debt",
+          "suggested_action": "scope"
+        },
+        {
+          "summary": "getMarketingVersion returns 'vundefined' if getBuildMeta returns object with missing version field",
+          "file": "website/lib/marketing-stats.ts",
+          "severity": "observation",
+          "suggested_action": "monitor"
+        },
+        {
+          "summary": "Website vitest infrastructure added (vitest dep + config) beyond spec file changes",
+          "file": "website/vitest.config.ts",
+          "severity": "observation",
+          "suggested_action": "accept"
+        }
+      ],
+      "worktree": {
+        "used": true,
+        "created_at": "2026-05-16T06:39:31.156Z",
+        "completed_at": "2026-05-16T17:08:17.193Z",
+        "commit_count": 0,
+        "base_commit": "d4e45a9352e36a408aff41fcb48dbaddf353f029"
+      }
     }
   ],
   "schema": 1

@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-112 runs · 50 active · 3 promoted · 612 closed
+113 runs · 56 active · 3 promoted · 613 closed
 
 ## Hot Modules
 
@@ -16,11 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 50 total)
-
-### packages/cli/src/commands/init/commit.ts
-
-- **test:** No integration test for pull conflict abort path — *ana init commit — persist infrastructure to git*
+## Active Findings (30 shown of 56 total)
 
 ### packages/cli/src/commands/init/state.ts
 
@@ -35,17 +31,11 @@
 - **code:** Inside-worktree resume path writes verify_started_at without checking concurrency guard first — *Pipeline Concurrency Guards*
 - **test:** Backfill migration logic has no dedicated test — mutation from lesson→closed with conditional metadata preservation is untested — *Remove lesson status from proof system*
 - **code:** work.ts duplicates resolves counting logic — JSON and console branches have identical loops — *Upstream Finding Resolution*
-- **code:** Two different result parsers with different casing: getVerifyResult returns 'unknown' (lowercase), parseResult in proofSummary returns 'UNKNOWN' (uppercase) — works correctly but fragile coupling between two parallel implementations — *work.ts untested branch coverage*
-- **test:** Pull-recovery guards (2 of 5) not directly exercised by any test — *Fix --merge stdout pollution in --json mode*
 
 ### packages/cli/src/engine/detectors/git.ts
 
 - **code:** Multi-remote repos: origin/ prefix stripping ignores non-origin remotes — *Fix scan branch detection — remove local branches from shared intelligence*
 - **code:** detectBranches and detectBranchPatterns both run git branch -r independently — two subprocess calls for the same data — *Fix scan branch detection — remove local branches from shared intelligence*
-
-### packages/cli/tests/commands/init/commit.test.ts
-
-- **test:** Push failure test doesn't test push failure — tests push skip (no remote) — *ana init commit — persist infrastructure to git*
 
 ### packages/cli/tests/commands/init/monorepoCommandScoping.test.ts
 
@@ -72,24 +62,37 @@
 
 - **code:** Misspelled DocsStat value key silently renders raw key string — no build-time validation — *Fix prebuild source mutation*
 
-### website/components/docs/proof/FindingsList.tsx
-
-- **code:** Badge opacity 0.75 persists when interactive — reduces contrast for clickable element, potential a11y concern — *FindingsList expand/collapse for proof pages*
-
 ### website/components/docs/proof/PipelineGantt.tsx
 
 - **code:** Negative phase values display raw in bar label while bar width is clamped — *Fix Gantt Bar Distortion and Document Timing*
 - **code:** Zero-duration bars get minimum 2% width that can push cumulative past 100% if many zero-duration phases exist — *Fix Gantt Bar Distortion and Document Timing*
 
+### website/components/system/Drawer.tsx
+
+- **code:** Drawer moreCount has no floor guard — commandCount < 6 produces negative display — *Dynamic marketing stats — wire command count and version fallback*
+
+### website/lib/__tests__/marketing-stats.test.ts
+
+- **test:** vundefined test documents a real gap but accepts broken output as expected behavior — *Dynamic marketing stats — wire command count and version fallback*
+
 ### website/lib/docs-data/docsStatValues.ts
 
 - **code:** 2 of 9 value keys (skillCount, findings) defined but unused in any MDX file — *Fix prebuild source mutation*
+
+### website/lib/marketing-stats.ts
+
+- **code:** getMarketingVersion produces 'vundefined' when BuildMeta has undefined version field — *Dynamic marketing stats — wire command count and version fallback*
+- **code:** Two separate imports from same module instead of combined destructured import — *Dynamic marketing stats — wire command count and version fallback*
+
+### website/lib/proof-feed.ts
+
+- **code:** VERSION_FALLBACK evaluated at module load time — single-shot, no retry on transient readFileSync failure — *Dynamic marketing stats — wire command count and version fallback*
 
 ### website/scripts/extract-docs-data.ts
 
 - **code:** Median computation duplicated between extract-docs-data.ts main() and lib/docs-data/proofs.ts getMedianTimings() — *Fix prebuild source mutation*
 
-### General
+### website/vitest.config.ts
 
-- **code:** URL reachability not verified — stable URL contract is a deployment assumption — *Documentation links in init and setup*
+- **code:** Over-build: vitest added to website package.json + vitest.config.ts created (not in spec file_changes) — *Dynamic marketing stats — wire command count and version fallback*
 
