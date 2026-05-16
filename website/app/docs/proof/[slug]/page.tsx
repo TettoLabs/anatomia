@@ -12,7 +12,38 @@ import { getProofEntries, getProofBySlug } from "@/lib/docs-data";
 import { getBuildMeta } from "@/lib/docs-data/meta";
 import { HeadingWithAnchor } from "@/components/docs/content/HeadingWithAnchor";
 
+export const dynamicParams = true;
+export const revalidate = 3600;
+
 const GITHUB_BASE = "https://github.com/anatomia-dev/anatomia/tree/main/.ana/plans/completed/";
+
+const PROOF_CHAIN_URL =
+  "https://raw.githubusercontent.com/anatomia-dev/anatomia/main/.ana/proof_chain.json";
+
+interface ProofChainRawEntry {
+  slug: string;
+  feature: string;
+  result: string;
+  contract: { total: number; satisfied: number };
+  completed_at: string;
+}
+
+async function fetchProofChainEntry(slug: string): Promise<ProofChainRawEntry | null> {
+  try {
+    const res = await fetch(PROOF_CHAIN_URL, {
+      next: { revalidate: 3600 },
+      headers: { "User-Agent": "anatomia-web" },
+    });
+    if (!res.ok) return null;
+
+    const data: { entries: ProofChainRawEntry[] } = await res.json();
+    if (!data.entries) return null;
+
+    return data.entries.find(e => e.slug === slug) ?? null;
+  } catch {
+    return null;
+  }
+}
 
 function formatDuration(minutes: number): string {
   if (minutes >= 60) {
@@ -53,17 +84,81 @@ export function generateStaticParams(): { slug: string }[] {
 export async function generateMetadata({ params }: ProofDetailProps): Promise<Metadata> {
   const { slug } = await params;
   const entry = getProofBySlug(slug);
-  if (!entry) return { title: "Proof not found" };
-  return {
-    title: `${entry.feature} — Proof`,
-    description: entry.scopeSummary ?? `Proof chain entry for ${entry.feature}`,
-  };
+  if (entry) {
+    return {
+      title: `${entry.feature} — Proof`,
+      description: entry.scopeSummary ?? `Proof chain entry for ${entry.feature}`,
+    };
+  }
+
+  const rawEntry = await fetchProofChainEntry(slug);
+  if (rawEntry) {
+    return {
+      title: `${rawEntry.feature} — Proof`,
+      description: `Proof chain entry for ${rawEntry.feature}`,
+    };
+  }
+
+  return { title: "Proof not found" };
 }
 
 export default async function ProofDetailPage({ params }: ProofDetailProps) {
   const { slug } = await params;
   const entry = getProofBySlug(slug);
-  if (!entry) notFound();
+
+  if (!entry) {
+    const rawEntry = await fetchProofChainEntry(slug);
+    if (!rawEntry) notFound();
+
+    const date = new Date(rawEntry.completed_at).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+    const resultLabel = rawEntry.result === "PASS" ? "PASS" : "FAIL";
+    const githubUrl = `${GITHUB_BASE}${slug}`;
+
+    return (
+      <div style={{ display: "flex" }}>
+        <article className="docs-prose docs-content-area min-w-0 flex-1" style={{ padding: "32px 120px 96px 40px" }}>
+          <Breadcrumb segments={[
+            { name: "Proof Chain", url: "/docs/proof" },
+            { name: slug },
+          ]} />
+
+          <h1 style={{ fontSize: "28px", fontWeight: 700, marginTop: "24px", marginBottom: "8px" }}>
+            {rawEntry.feature}
+          </h1>
+          <p style={{ fontSize: "14px", color: "var(--ink-60)", marginBottom: "32px" }}>
+            {resultLabel} · {rawEntry.contract.satisfied}/{rawEntry.contract.total} assertions · {date}
+          </p>
+
+          <div style={{
+            padding: "20px 24px",
+            borderRadius: "8px",
+            background: "color-mix(in oklch, var(--brand-soft) 20%, transparent)",
+            border: "1px solid var(--hairline)",
+            fontSize: "13.5px",
+            color: "var(--ink-60)",
+            lineHeight: 1.6,
+          }}>
+            <p style={{ margin: 0 }}>
+              Full verification details will appear on the next site build.
+              This page shows a summary from the proof chain.
+            </p>
+            <p style={{ margin: "12px 0 0 0" }}>
+              <a
+                href={githubUrl}
+                style={{ color: "var(--ink-75)", textDecoration: "none", borderBottom: "1px solid var(--ink-25)" }}
+              >
+                → View source on GitHub
+              </a>
+            </p>
+          </div>
+        </article>
+      </div>
+    );
+  }
 
   const meta = getBuildMeta();
   const githubUrl = `${GITHUB_BASE}${entry.slug}`;
