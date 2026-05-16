@@ -1,0 +1,100 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Dynamic marketing stats — wire command count and version fallback"
+
+assertions:
+  - id: A001
+    says: "The marketing command count returns the real number from extraction data"
+    block: "getMarketingCommandCount returns dynamic value"
+    target: "result"
+    matcher: "equals"
+    value: 32
+
+  - id: A002
+    says: "Missing extraction data falls back to the previous hardcoded count"
+    block: "getMarketingCommandCount returns fallback when file missing"
+    target: "result"
+    matcher: "equals"
+    value: 26
+
+  - id: A003
+    says: "Malformed extraction data falls back safely"
+    block: "getMarketingCommandCount returns fallback when JSON invalid"
+    target: "result"
+    matcher: "equals"
+    value: 26
+
+  - id: A004
+    says: "The marketing version reads from build metadata with a v prefix"
+    block: "getMarketingVersion returns dynamic value"
+    target: "result"
+    matcher: "equals"
+    value: "v1.0.2"
+
+  - id: A005
+    says: "Missing build metadata falls back to the previous hardcoded version"
+    block: "getMarketingVersion returns fallback when file missing"
+    target: "result"
+    matcher: "equals"
+    value: "v1.1.0"
+
+  - id: A006
+    says: "The specStrip renders the dynamic command count instead of the stale number"
+    block: "SystemSection passes dynamic specStrip items"
+    target: "specStripCliValue"
+    matcher: "contains"
+    value: "32 commands"
+
+  - id: A007
+    says: "The CLI drawer shows the dynamic command count in its metadata"
+    block: "Drawer renders dynamic meta for CLI drawer"
+    target: "cliDrawerMeta"
+    matcher: "contains"
+    value: "32 commands"
+
+  - id: A008
+    says: "The man page shows the correct number of additional commands"
+    block: "Drawer computes moreCount from commandCount"
+    target: "moreCount"
+    matcher: "equals"
+    value: 26
+
+  - id: A009
+    says: "The version fallback in proof-feed uses build metadata instead of a hardcoded string"
+    block: "proof-feed VERSION_FALLBACK is dynamic"
+    target: "versionFallback"
+    matcher: "equals"
+    value: "v1.0.2"
+
+  - id: A010
+    says: "copy.ts remains unmodified"
+    block: "copy.ts is not changed"
+    target: "copyTsModified"
+    matcher: "equals"
+    value: false
+
+  - id: A011
+    says: "The website builds without errors after wiring dynamic stats"
+    block: "website build succeeds"
+    target: "buildExitCode"
+    matcher: "equals"
+    value: 0
+
+  - id: A012
+    says: "No TypeScript errors are introduced"
+    block: "tsc --noEmit passes"
+    target: "tscExitCode"
+    matcher: "equals"
+    value: 0
+
+file_changes:
+  - path: "website/lib/marketing-stats.ts"
+    action: create
+  - path: "website/lib/__tests__/marketing-stats.test.ts"
+    action: create
+  - path: "website/components/system/SystemSection.tsx"
+    action: modify
+  - path: "website/components/system/Drawer.tsx"
+    action: modify
+  - path: "website/lib/proof-feed.ts"
+    action: modify
