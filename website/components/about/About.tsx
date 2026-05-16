@@ -141,7 +141,7 @@ export function About() {
             <span className={styles.founderMeta}>Schwab ML → solo founder</span>
             <span className={styles.founderSep}>·</span>
             <a
-              href="https://www.linkedin.com/in/ryanpatricksmith"
+              href="https://www.linkedin.com/in/rsmith-ai/"
               target="_blank"
               rel="noopener noreferrer"
               className={styles.founderLink}
