@@ -1,0 +1,91 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Fix scan branch detection — remove local branches from shared intelligence"
+
+assertions:
+  # AC1: detectBranches uses git branch -r when remote exists
+  - id: A001
+    says: "Branch list on a repo with a remote contains only remote-tracking branches"
+    block: "returns only remote branches when remote exists"
+    target: "result.branches"
+    matcher: "not_contains"
+    value: "local-only-branch"
+
+  - id: A002
+    says: "Branch list includes branches that exist on the remote"
+    block: "returns only remote branches when remote exists"
+    target: "result.branches"
+    matcher: "contains"
+    value: "main"
+
+  # AC2: detectBranches falls back to local when no remote
+  - id: A003
+    says: "Local-only repos still get their branches detected"
+    block: "returns branch list for local repo with commits"
+    target: "result.branches"
+    matcher: "contains"
+    value: "main"
+
+  - id: A004
+    says: "Local-only repos include all local branches in the list"
+    block: "returns branch list for local repo with commits"
+    target: "result.branches"
+    matcher: "contains"
+    value: "feature"
+
+  # AC3: Bot prefix filtering in branchPatterns
+  - id: A005
+    says: "Dependency bot branches are excluded from branching convention analysis"
+    block: "excludes bot prefixes from branchPatterns"
+    target: "result.branchPatterns.prefixes"
+    matcher: "not_contains"
+    value: "dependabot/"
+
+  - id: A006
+    says: "Dependency bot branches are excluded from branching convention analysis"
+    block: "excludes bot prefixes from branchPatterns"
+    target: "result.branchPatterns.prefixes"
+    matcher: "not_contains"
+    value: "renovate/"
+
+  - id: A007
+    says: "Human branch prefixes are still detected after bot filtering"
+    block: "excludes bot prefixes from branchPatterns"
+    target: "result.branchPatterns.prefixes"
+    matcher: "exists"
+
+  - id: A008
+    says: "The primary branching convention is never a bot prefix"
+    block: "excludes bot prefixes from branchPatterns"
+    target: "result.branchPatterns.primary"
+    matcher: "not_equals"
+    value: "dependabot/"
+
+  # AC5: Local branches excluded when remote exists
+  - id: A009
+    says: "Branches that only exist locally are not included when a remote is configured"
+    block: "excludes local-only branches when remote exists"
+    target: "result.branches"
+    matcher: "not_contains"
+    value: "local-experiment"
+
+  - id: A010
+    says: "Remote branches are still included when local-only branches are filtered"
+    block: "excludes local-only branches when remote exists"
+    target: "result.branches"
+    matcher: "contains"
+    value: "main"
+
+  # Bot filtering in detectBranches too
+  - id: A011
+    says: "Bot branches are excluded from the branch list, not just from pattern analysis"
+    block: "excludes bot branches from branch list"
+    target: "result.branches"
+    matcher: "not_contains"
+    value: "dependabot/npm/typescript-5.8"
+
+file_changes:
+  - path: "packages/cli/src/engine/detectors/git.ts"
+    action: modify
+  - path: "packages/cli/tests/engine/detectors/git-detection.test.ts"
+    action: modify
