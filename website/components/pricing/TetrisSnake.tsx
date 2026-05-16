@@ -4,8 +4,8 @@ import { useEffect, useRef } from "react";
 
 /**
  * TetrisSnake — perimeter-walker canvas animation for the pricing frame.
- * Walks the frame border clockwise, laying permanent blocks every 3 steps.
- * Clears ~40% of placed blocks every 2 laps to prevent density buildup.
+ * Walks the frame border clockwise, laying permanent blocks at evenly
+ * spaced positions including corners.
  * Reads --color-brand per frame to track theme changes.
  * Pauses when offscreen (IntersectionObserver).
  * Honors prefers-reduced-motion.
@@ -31,10 +31,9 @@ export function TetrisSnake() {
     let rows = 0;
     let dpr = 1;
     let trail: { x: number; y: number; age: number }[] = [];
-    let placed: { x: number; y: number; alpha: number }[] = [];
+    const placed: { x: number; y: number; alpha: number }[] = [];
     let pos = 0;
     let perim: { x: number; y: number }[] = [];
-    let lap = 0;
     let running = true;
     let lastStep = 0;
     const STEP_MS = 70;
@@ -111,9 +110,6 @@ export function TetrisSnake() {
       }
 
       pos = (pos + 1) % perim.length;
-      if (pos === 0) {
-        lap++;
-      }
     }
 
     function draw() {
