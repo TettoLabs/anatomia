@@ -53,15 +53,18 @@ Like what you see? Install globally to use the `ana` command directly:
 npm install -g anatomia-cli
 ```
 
-Requires Node.js 22+.
+Requires Node.js 22+. To update: `npm update -g anatomia-cli`
 
 ## Quick start
 
 ```bash
 ana init                      # generate context + agents
+ana init commit               # persist to git (so teammates get it too)
 claude --agent ana            # start working
 claude --agent ana-setup      # enrich with your team's knowledge (optional, recommended, ~10 min)
 ```
+
+After updating the CLI, run `ana init` again to refresh scan data and skill detection. Your rules, context, and proof chain are preserved.
 
 `init` runs scan automatically and works standalone — no Claude Code required.
 The pipeline and setup require [Claude Code](https://claude.com/code).

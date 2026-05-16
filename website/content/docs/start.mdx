@@ -92,6 +92,16 @@ ana proof <slug>
 
 You'll see the contract score, findings by severity, and timing per stage. Every assertion the contract defined, independently verified. The proof chain grows with every pipeline run — a permanent record of what was built, how it was verified, and what was found.
 
+## Updating
+
+```bash
+npm update -g anatomia-cli    # update the CLI
+ana init                      # refresh scan data + skill detection
+ana init commit               # persist the refresh
+```
+
+Updating the CLI changes the binary only. Your agents, skills, context, and proof chain don't change until you run `ana init`. When you do, your rules, context files, and proof history are preserved — only machine-detected data refreshes. `ana work status` will tell you when your project was initialized with an older version.
+
 <NextCards cards={[
   {
     eyebrow: "Next concept",
