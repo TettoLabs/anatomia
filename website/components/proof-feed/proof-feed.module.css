@@ -319,9 +319,16 @@
 .riskTag {
   font-family: var(--font-serif);
   font-style: italic;
-  font-size: 11px;
-  font-weight: 400;
-  color: color-mix(in oklch, var(--color-brand) 50%, transparent);
+  font-size: 9.5px;
+  font-weight: 500;
+  color: var(--brand-deep);
+  background: color-mix(in oklch, var(--color-brand) 10%, transparent);
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+:global([data-theme="dark"]) .riskTag {
+  color: var(--color-brand);
+  background: color-mix(in oklch, var(--color-brand) 16%, transparent);
 }
 @media (max-width: 760px) {
   .proofRow {
