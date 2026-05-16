@@ -3,7 +3,7 @@
   "applicationShape": "cli",
   "overview": {
     "project": "anatomia-workspace",
-    "scannedAt": "2026-05-15T22:10:51.022Z",
+    "scannedAt": "2026-05-16T17:42:51.894Z",
     "depth": "deep"
   },
   "stack": {
@@ -41,10 +41,10 @@
     "vitest": "^4.1.5"
   },
   "files": {
-    "source": 246,
-    "test": 107,
-    "config": 19,
-    "total": 372
+    "source": 248,
+    "test": 109,
+    "config": 20,
+    "total": 377
   },
   "structure": [
     {
@@ -77,22 +77,15 @@
     "packageManager": "pnpm"
   },
   "git": {
-    "head": "2c2c3f01",
+    "head": "a51159af",
     "branch": "main",
-    "commitCount": 2362,
-    "lastCommitAt": "2026-05-15T14:59:09-06:00",
+    "commitCount": 2420,
+    "lastCommitAt": "2026-05-16T11:32:42-06:00",
     "uncommittedChanges": false,
     "contributorCount": 3,
     "defaultBranch": "main",
     "branches": [
-      "dependabot/npm_and_yarn/next-16.2.6",
-      "dependabot/npm_and_yarn/packages/cli/glob-13.0.6",
-      "dependabot/npm_and_yarn/packages/cli/ora-9.4.0",
-      "dependabot/npm_and_yarn/packages/cli/typescript-6.0.3",
-      "dependabot/npm_and_yarn/packages/cli/vite-8.0.11",
-      "dependabot/npm_and_yarn/packages/cli/vite-8.0.13",
-      "dependabot/npm_and_yarn/packages/cli/web-tree-sitter-0.26.8",
-      "dependabot/npm_and_yarn/website/next-16.2.6",
+      "feature/hero-wordmark",
       "main"
     ],
     "commitFormat": {
@@ -102,9 +95,9 @@
     },
     "branchPatterns": {
       "prefixes": {
-        "dependabot/": 8
+        "feature/": 1
       },
-      "primary": "dependabot/"
+      "primary": "feature/"
     },
     "hooks": {
       "preCommit": {
@@ -127,11 +120,11 @@
       "highChurnFiles": [
         {
           "path": "packages/cli/src/commands/work.ts",
-          "commits": 49
+          "commits": 45
         },
         {
           "path": "packages/cli/tests/commands/work.test.ts",
-          "commits": 37
+          "commits": 34
         },
         {
           "path": "packages/cli/src/commands/artifact.ts",
@@ -139,39 +132,39 @@
         },
         {
           "path": "packages/cli/src/utils/proofSummary.ts",
-          "commits": 25
+          "commits": 20
         },
         {
           "path": "packages/cli/tests/utils/proofSummary.test.ts",
-          "commits": 21
+          "commits": 18
         },
         {
           "path": "packages/cli/src/commands/proof.ts",
-          "commits": 19
+          "commits": 16
+        },
+        {
+          "path": "website/lib/copy.ts",
+          "commits": 15
         },
         {
           "path": "website/scripts/extract-docs-data.ts",
           "commits": 15
         },
         {
-          "path": "packages/cli/tests/commands/proof.test.ts",
-          "commits": 14
+          "path": "website/lib/proof-feed.ts",
+          "commits": 12
         },
         {
-          "path": "website/lib/copy.ts",
-          "commits": 13
-        },
-        {
-          "path": "packages/cli/src/types/proof.ts",
-          "commits": 11
+          "path": "website/components/proof-feed/ProofFeed.tsx",
+          "commits": 12
         }
       ],
       "activeContributors": 3,
       "weeklyCommits": [
-        850,
-        444,
-        270,
-        132
+        898,
+        395,
+        303,
+        142
       ]
     }
   },
@@ -271,7 +264,7 @@
         "vitest imports found"
       ]
     },
-    "sampledFiles": 248,
+    "sampledFiles": 250,
     "detectionTime": 1,
     "threshold": 0.7
   },
@@ -279,24 +272,24 @@
     "naming": {
       "files": {
         "majority": "PascalCase",
-        "confidence": 0.6428571428571429,
+        "confidence": 0.6377952755905512,
         "mixed": true,
         "distribution": {
-          "camelCase": 0.1652892561983471,
-          "PascalCase": 0.6694214876033058,
-          "kebab-case": 0.1652892561983471
+          "camelCase": 0.16393442622950818,
+          "PascalCase": 0.6639344262295082,
+          "kebab-case": 0.1721311475409836
         },
-        "sampleSize": 248
+        "sampleSize": 250
       },
       "functions": {
         "majority": "camelCase",
-        "confidence": 0.8323442136498517,
+        "confidence": 0.8330871491875923,
         "mixed": false,
         "distribution": {
-          "camelCase": 0.8385650224215246,
-          "PascalCase": 0.16143497757847533
+          "camelCase": 0.8392857142857143,
+          "PascalCase": 0.16071428571428573
         },
-        "sampleSize": 712
+        "sampleSize": 715
       },
       "classes": {
         "majority": "PascalCase",
@@ -309,31 +302,31 @@
       },
       "variables": {
         "majority": "camelCase",
-        "confidence": 0.9070167886353853,
+        "confidence": 0.9062901155327343,
         "mixed": false,
         "distribution": {
-          "camelCase": 0.9089732528041415,
-          "PascalCase": 0.013805004314063849,
-          "SCREAMING_SNAKE_CASE": 0.07722174288179465
+          "camelCase": 0.9082332761578045,
+          "PascalCase": 0.0137221269296741,
+          "SCREAMING_SNAKE_CASE": 0.07804459691252144
         },
-        "sampleSize": 3967
+        "sampleSize": 3997
       },
       "constants": {
         "majority": "SCREAMING_SNAKE_CASE",
-        "confidence": 0.9728260869565217,
+        "confidence": 0.9732620320855615,
         "mixed": false,
         "distribution": {
           "SCREAMING_SNAKE_CASE": 1
         },
-        "sampleSize": 179
+        "sampleSize": 182
       }
     },
     "imports": {
       "style": "mixed",
-      "confidence": 0.6405959031657356,
+      "confidence": 0.6358595194085028,
       "distribution": {
-        "absolute": 0.35940409683426444,
-        "relative": 0.6405959031657356
+        "absolute": 0.36414048059149723,
+        "relative": 0.6358595194085028
       },
       "aliasPattern": "@/"
     },
@@ -368,8 +361,8 @@
         "preference": "mixed"
       }
     },
-    "sampledFiles": 248,
-    "detectionTime": 392
+    "sampledFiles": 250,
+    "detectionTime": 367
   },
   "readme": {
     "description": "Anatomia is the engineering judgment your AI doesn't have. Four agents scope, plan, build, and verify every change. Contracts are sealed before code is written — typed assertions the verifier checks against the code, not Build's account of what it did. Every run produces a proof chain entry — what was asserted, what was found, what shipped. A fifth agent learns from that record and promotes what it finds to rules that shape future builds. Not opinion. Mechanical proof.",
@@ -389,7 +382,7 @@
         "path": "CONTRIBUTING.md",
         "category": "guides",
         "sizeBytes": 418,
-        "lastModifiedDays": 0
+        "lastModifiedDays": 1
       },
       {
         "path": "SECURITY.md",
@@ -413,7 +406,7 @@
         "path": ".github/PULL_REQUEST_TEMPLATE.md",
         "category": "templates",
         "sizeBytes": 309,
-        "lastModifiedDays": 9
+        "lastModifiedDays": 10
       },
       {
         "path": ".github/ISSUE_TEMPLATE",
@@ -425,7 +418,7 @@
         "path": "packages/cli/ARCHITECTURE.md",
         "category": "guides",
         "sizeBytes": 15017,
-        "lastModifiedDays": 0
+        "lastModifiedDays": 1
       },
       {
         "path": "packages/cli/CONTRIBUTING.md",
