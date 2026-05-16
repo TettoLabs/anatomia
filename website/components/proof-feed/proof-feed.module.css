@@ -133,6 +133,8 @@
 }
 @media (max-width: 640px) {
   .shipDots, .dotsLabel { display: none; }
+  .kOpen { display: none !important; }
+  .kCollapsed { display: inline !important; }
 }
 .card[data-open="true"] .psDivider,
 .card[data-open="true"] .psLatest { display: none; }
