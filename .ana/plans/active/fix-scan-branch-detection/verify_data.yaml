@@ -1,0 +1,22 @@
+schema: 1
+findings:
+  - category: code
+    summary: "Multi-remote repos: origin/ prefix stripping ignores non-origin remotes"
+    file: "packages/cli/src/engine/detectors/git.ts"
+    line: 146
+    severity: observation
+    suggested_action: monitor
+    related_assertions: ["A001", "A002"]
+  - category: test
+    summary: "Bot prefix filtering tests cover 2 of 5 prefixes (dependabot/, renovate/) — snyk-, greenkeeper/, imgbot/ untested"
+    file: "packages/cli/tests/engine/detectors/git-detection.test.ts"
+    line: 199
+    severity: debt
+    suggested_action: accept
+    related_assertions: ["A005", "A006"]
+  - category: code
+    summary: "detectBranches and detectBranchPatterns both run git branch -r independently — two subprocess calls for the same data"
+    file: "packages/cli/src/engine/detectors/git.ts"
+    line: 141
+    severity: observation
+    suggested_action: monitor
