@@ -11,7 +11,7 @@ export function Contact() {
   const title = splitHeadline(copy.contact.title);
 
   return (
-    <div className="mx-auto max-w-[680px] px-2">
+    <div className="mx-auto max-w-[800px] px-2">
       {/* Eyebrow */}
       <div className="mb-7 inline-flex items-center gap-2.5 font-mono text-[11px] font-medium uppercase tracking-[0.18em]" style={{ color: "var(--ink-45)" }}>
         <span className="h-px w-[18px]" style={{ background: "var(--color-brand)" }} />
