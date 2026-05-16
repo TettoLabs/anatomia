@@ -669,8 +669,8 @@ SOFTWARE.`,
         links: [
           { label: "Docs", href: "/docs" },
           { label: "GitHub", href: "https://github.com/anatomia-dev/anatomia" },
-          { label: "CLI reference", href: "/cli" },
-          { label: "Examples", href: "/examples" },
+          { label: "CLI reference", href: "/docs/reference/cli" },
+          { label: "Quickstart", href: "/docs/start" },
         ],
       },
       {
