@@ -113,6 +113,9 @@ export async function ProofFeed() {
                   </span>
                   <span className={styles.rowAgo}>{formatAge(e.ts)}</span>
                 </span>
+                <span className={styles.rowRisk}>
+                  {e.hasRisk && <span className={styles.riskTag}>risk</span>}
+                </span>
               </div>
             ))}
           </div>
