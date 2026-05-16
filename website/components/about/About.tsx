@@ -1,16 +1,7 @@
 import { Container } from "@/components/ui/Container";
 import styles from "./about.module.css";
 
-/**
- * Genesis date — March 19, 2026. First consistent commit.
- */
 const GENESIS = new Date("2026-03-19T00:00:00Z");
-
-/**
- * AI credit cost tracking.
- * Base: actual invoices through May 9, 2026.
- * Auto-increments $200 on the 9th of each subsequent month (Max subscription).
- */
 const CREDIT_BASE = 1085.13;
 const CREDIT_BASE_DATE = new Date("2026-05-09T00:00:00Z");
 const MONTHLY_RATE = 200;
@@ -37,131 +28,111 @@ function daysSinceGenesis(): number {
   return Math.floor((Date.now() - GENESIS.getTime()) / (1000 * 60 * 60 * 24));
 }
 
-/**
- * About page — genesis stats, thesis, founder.
- * Server component. Stats computed at build/ISR time.
- */
 export function About() {
   const days = daysSinceGenesis();
   const credits = computeCredits();
 
   return (
     <article className={styles.page}>
-      {/* ── Section 1: Genesis Stats ── */}
       <Container>
-        <section className={styles.genesis}>
+        <div className={styles.content}>
+
           <div className={styles.eyebrow}>
             <span className={styles.eyebrowLine} />
-            Project genesis
+            About
           </div>
 
           <h1 className={styles.headline}>
-            Built with <em>Ana</em>.
+            Building faster doesn't mean<br />
+            you know what you <em>built</em>.
           </h1>
-          <p className={styles.genesisIntro}>
-            Every feature in this product was scoped, planned, built, and
-            verified through the same pipeline it installs for you.
-            One developer. One AI subscription. Here are the numbers.
-          </p>
 
-          <div className={styles.statsGrid}>
-            <div className={styles.stat}>
-              <span className={styles.statValue}>{days}</span>
-              <span className={styles.statLabel}>days since genesis</span>
-              <span className={styles.statMeta}>March 19, 2026</span>
-            </div>
-            <div className={styles.stat}>
-              <span className={styles.statValue}>113</span>
-              <span className={styles.statLabel}>verified pipeline runs</span>
-              <span className={styles.statMeta}>every one produces a proof</span>
-            </div>
-            <div className={styles.stat}>
-              <span className={styles.statValue}>2,400+</span>
-              <span className={styles.statLabel}>tests</span>
-              <span className={styles.statMeta}>3 OS × 2 Node versions</span>
-            </div>
-            <div className={styles.stat}>
-              <span className={styles.statValue}>114</span>
-              <span className={styles.statLabel}>completed scopes</span>
-              <span className={styles.statMeta}>think → plan → build → verify</span>
-            </div>
-            <div className={styles.stat}>
-              <span className={styles.statValue}>${credits.toLocaleString()}</span>
-              <span className={styles.statLabel}>total AI credits</span>
-              <span className={styles.statMeta}>Claude Code Max · $200/mo</span>
-            </div>
-            <div className={styles.stat}>
-              <span className={styles.statValue}>1</span>
-              <span className={styles.statLabel}>developer</span>
-              <span className={styles.statMeta}>the system is the team</span>
-            </div>
+          <div className={styles.narrative}>
+            <p className={styles.lede}>
+              AI makes building easy. Knowing is the hard part.
+            </p>
+
+            <p className={styles.body}>
+              Every AI coding tool is optimized to say yes. It builds what you
+              ask for. It sounds confident. It confirms your assumptions. But
+              confidence isn't proof — and the gap between "it works" and "it's
+              right" is where products break.
+            </p>
+
+            <p className={styles.body}>
+              The best features are sometimes the ones that don't get built.
+              The best solutions sometimes expose a deeper problem worth solving
+              first. A senior engineer knows this — they push back before the
+              first line is written. They ask whether the intention behind the
+              request leads to the outcome the request is trying to reach. They
+              don't build what you said. They build what you meant.
+            </p>
+
+            <p className={styles.body}>
+              That's what Anatomia does. It scans your codebase, builds
+              validated context, and runs every change through a pipeline that
+              thinks before it builds, plans before it codes, and verifies
+              independently before it ships. Not to slow you down — to make
+              sure that what ships is what should have shipped.
+            </p>
+
+            <p className={styles.accent}>
+              How do you know you built the right thing? How do you know you
+              built it the right way? How do you know there isn't risk you
+              can't see?
+            </p>
+
+            <p className={styles.body}>
+              You ship with proof. A sealed contract before code is written.
+              An independent verification after. A proof chain that compounds
+              what the system learns into rules that shape the next build. Not
+              opinion. Not a confident summary. Mechanical evidence that
+              travels with the code.
+            </p>
           </div>
-        </section>
-      </Container>
 
-      {/* ── Divider ── */}
-      <Container>
-        <div className={styles.dividerLine} />
-      </Container>
+          {/* ── Genesis ── */}
+          <div className={styles.genesis}>
+            <div className={styles.genesisLine} />
+            <p className={styles.genesisIntro}>
+              Anatomia was built with Anatomia. One developer, one AI
+              subscription, every feature verified through the same pipeline
+              this tool installs for you.
+            </p>
 
-      {/* ── Section 2: The Thesis ── */}
-      <Container>
-        <section className={styles.centered}>
-          <div className={styles.sectionLabel}>Why we built this</div>
-          <p className={styles.thesisText}>
-            AI writes more code every month, and almost none of it arrives
-            with evidence. A diff, a confident summary, no proof. We thought
-            that was a solvable problem.
-          </p>
-          <p className={styles.bodyText}>
-            Anatomia is a CLI that scans your codebase, generates validated
-            context, and runs every change through a four-agent pipeline.
-            It works with{" "}
-            <a href="https://claude.ai/code" target="_blank" rel="noopener noreferrer" className={styles.link}>
-              Claude Code
-            </a>
-            . It's open source, MIT-licensed, and runs entirely on your
-            machine. The{" "}
-            <code className={styles.inlineCode}>.ana/</code>{" "}
-            directory in the{" "}
-            <a
-              href="https://github.com/anatomia-dev/anatomia"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.link}
-            >
-              repository
-            </a>{" "}
-            is the receipt.
-          </p>
-        </section>
-      </Container>
+            <div className={styles.statsRow}>
+              <div className={styles.stat}>
+                <span className={styles.statValue}>{days}</span>
+                <span className={styles.statLabel}>days</span>
+              </div>
+              <div className={styles.stat}>
+                <span className={styles.statValue}>113</span>
+                <span className={styles.statLabel}>verified runs</span>
+              </div>
+              <div className={styles.stat}>
+                <span className={styles.statValue}>2,400+</span>
+                <span className={styles.statLabel}>tests</span>
+              </div>
+              <div className={styles.stat}>
+                <span className={styles.statValue}>${credits.toLocaleString()}</span>
+                <span className={styles.statLabel}>AI credits</span>
+              </div>
+            </div>
 
-      {/* ── Divider ── */}
-      <Container>
-        <div className={styles.dividerLine} />
-      </Container>
+            <p className={styles.genesisCoda}>
+              Open source. MIT-licensed. Works with{" "}
+              <a href="https://claude.ai/code" target="_blank" rel="noopener noreferrer" className={styles.link}>
+                Claude Code
+              </a>
+              . The{" "}
+              <a href="https://github.com/anatomia-dev/anatomia" target="_blank" rel="noopener noreferrer" className={styles.link}>
+                .ana/ directory
+              </a>{" "}
+              is the receipt.
+            </p>
+          </div>
 
-      {/* ── Section 3: The Founder ── */}
-      <Container>
-        <section className={styles.centered}>
-          <div className={styles.sectionLabel}>The founder</div>
-          <h2 className={styles.founderName}>Ryan Smith</h2>
-          <p className={styles.founderRole}>Denver, CO</p>
-          <p className={styles.bodyText}>
-            Eight years at Charles Schwab, architecting ML systems that
-            served 30 million clients. Computer science and economics at
-            CU Boulder. The kind of background where you learn that
-            production systems need proof, not promises.
-          </p>
-          <p className={styles.bodyText}>
-            Anatomia started because every AI coding tool I used was
-            fast and wrong in ways I couldn't catch until later. I wanted
-            to ship AI-written code I could stand behind — so I built the
-            verification layer, and then I built it <em>with</em> the
-            verification layer.
-          </p>
-        </section>
+        </div>
       </Container>
     </article>
   );
