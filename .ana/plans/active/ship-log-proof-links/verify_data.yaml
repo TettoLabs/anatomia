@@ -1,0 +1,27 @@
+schema: 1
+findings:
+  - category: code
+    summary: "Duplicate GitHub fetch for dynamic slugs — generateMetadata and page component both call fetchProofChainEntry independently"
+    file: "website/app/docs/proof/[slug]/page.tsx"
+    line: 94
+    severity: observation
+    suggested_action: accept
+    related_assertions: ["A014"]
+  - category: code
+    summary: "GitHub outage degrades valid new slugs to 404 — fetchProofChainEntry returns null on network failure, triggering notFound()"
+    file: "website/app/docs/proof/[slug]/page.tsx"
+    line: 111
+    severity: risk
+    suggested_action: monitor
+    related_assertions: ["A011"]
+  - category: code
+    summary: "Mock feed slug-to-entry mapping is positional, not semantic — mock entry content describes different features than the slug names imply"
+    file: "website/lib/proof-feed.ts"
+    line: 45
+    severity: debt
+    suggested_action: accept
+    related_assertions: ["A004"]
+  - category: upstream
+    summary: "Contract A012 verifiable only by source inspection — no test infrastructure for website components"
+    severity: observation
+    suggested_action: monitor

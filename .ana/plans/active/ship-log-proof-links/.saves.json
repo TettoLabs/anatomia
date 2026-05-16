@@ -18,5 +18,36 @@
   "spec": {
     "saved_at": "2026-05-16T22:15:15.813Z",
     "hash": "sha256:35105dfb556689d1fe243f5b32c085c3e9bff8e39a72251fb3e030d2299d5121"
+  },
+  "build_started_at": "2026-05-16T22:21:36.484Z",
+  "build_agent": "ana-build",
+  "build-report": {
+    "saved_at": "2026-05-16T22:26:39.496Z",
+    "hash": "sha256:d13a4d2dae26d4d6106d4086955a7a9cdeb474d456f6aa215a727c04d6343880"
+  },
+  "build-data": {
+    "saved_at": "2026-05-16T22:26:39.497Z",
+    "hash": "sha256:558b19f74b59cbebf2e872999b7c35eef0c1d622393c3507d8bb188aeeab1b9e"
+  },
+  "modules_touched": [
+    "website/app/docs/proof/[slug]/page.tsx",
+    "website/components/proof-feed/ProofFeed.tsx",
+    "website/lib/proof-feed.ts"
+  ],
+  "commit_hygiene": [],
+  "verify_started_at": "2026-05-16T22:33:23.912Z",
+  "verify_agent": "ana-verify",
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:1a7e998d17e895665f423cc9c612aff61ffcf32233cba5bd4d043e08cceec9c8",
+    "run_at": "2026-05-16T22:36:40.945Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-16T22:36:40.984Z",
+    "hash": "sha256:6b33921b9c0f817e24825e0ac3f4ed7f34cf2759ba56927db0d95a7fd59c1ac7"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-16T22:36:40.985Z",
+    "hash": "sha256:c7fe55fa94f814841d51bad285191cb7f904752398cd9c156ac5d16adb003302"
   }
 }
