@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-111 runs · 47 active · 3 promoted · 612 closed
+112 runs · 50 active · 3 promoted · 612 closed
 
 ## Hot Modules
 
@@ -8,6 +8,7 @@
 |------|--------|--------|
 | packages/cli/src/commands/work.ts | 9 | 7 |
 | packages/cli/tests/commands/work.test.ts | 6 | 5 |
+| packages/cli/src/engine/detectors/git.ts | 3 | 2 |
 | packages/cli/tests/commands/artifact.test.ts | 3 | 2 |
 | packages/cli/tests/commands/proof.test.ts | 2 | 2 |
 
@@ -15,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 47 total)
+## Active Findings (30 shown of 50 total)
 
 ### packages/cli/src/commands/init/commit.ts
 
@@ -37,13 +38,10 @@
 - **code:** Two different result parsers with different casing: getVerifyResult returns 'unknown' (lowercase), parseResult in proofSummary returns 'UNKNOWN' (uppercase) — works correctly but fragile coupling between two parallel implementations — *work.ts untested branch coverage*
 - **test:** Pull-recovery guards (2 of 5) not directly exercised by any test — *Fix --merge stdout pollution in --json mode*
 
-### packages/cli/src/types/proof.ts
+### packages/cli/src/engine/detectors/git.ts
 
-- **code:** commit_hygiene type duplicated in three locations (proof.ts, proofSummary.ts, work.ts inline) rather than imported from a shared definition — *Commit hygiene checks at build-report save*
-
-### packages/cli/src/utils/worktree.ts
-
-- **code:** getBuildCommandString re-reads ana.json instead of receiving command from runBuildCommand — duplicate I/O with misleading 'pnpm run build' fallback — *Run build command during worktree creation*
+- **code:** Multi-remote repos: origin/ prefix stripping ignores non-origin remotes — *Fix scan branch detection — remove local branches from shared intelligence*
+- **code:** detectBranches and detectBranchPatterns both run git branch -r independently — two subprocess calls for the same data — *Fix scan branch detection — remove local branches from shared intelligence*
 
 ### packages/cli/tests/commands/init/commit.test.ts
 
@@ -65,7 +63,10 @@
 - **test:** No boundary test at exactly 1-hour timeout — tests use 2-hour-old (stale) and new Date() (fresh), missing 59m59s and 60m01s cases — *Pipeline Concurrency Guards*
 - **test:** A019/A020 tests create full git repos with bare remotes — heavyweight setup that could be simplified with targeted spawnSync+runGit mocking — *Pipeline Concurrency Guards*
 - **test:** Arrow-line count assertion uses toBeGreaterThanOrEqual(2) — passes with any number >= 2, not specific to the 2-line ready-to-merge case — *work.ts saves.json backward compat bug + worktree dedup + formatting*
-- **test:** Conditional PID guard makes 8 tests potential no-ops in environments where getClaudePid() returns null — *Capture actual think time from Ana session start*
+
+### packages/cli/tests/engine/detectors/git-detection.test.ts
+
+- **test:** Bot prefix filtering tests cover 2 of 5 prefixes (dependabot/, renovate/) — snyk-, greenkeeper/, imgbot/ untested — *Fix scan branch detection — remove local branches from shared intelligence*
 
 ### website/components/docs/content/DocsStat.tsx
 
