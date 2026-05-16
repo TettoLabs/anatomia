@@ -173,6 +173,10 @@
   background: var(--color-brand);
   box-shadow: 0 0 0 3px color-mix(in oklch, var(--color-brand) 14%, transparent);
 }
+.sdLatest.sdFailed {
+  background: var(--ink-30);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--ink-30) 14%, transparent);
+}
 .dotsLabel {
   margin-left: 4px;
   font-size: 11px;
