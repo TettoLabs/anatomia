@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-113 runs · 49 active · 3 promoted · 620 closed
+114 runs · 52 active · 3 promoted · 621 closed
 
 ## Hot Modules
 
@@ -16,11 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 49 total)
-
-### packages/cli/src/commands/init/commit.ts
-
-- **test:** No integration test for pull conflict abort path — *ana init commit — persist infrastructure to git*
+## Active Findings (30 shown of 52 total)
 
 ### packages/cli/src/commands/init/state.ts
 
@@ -35,16 +31,11 @@
 - **test:** Backfill migration logic has no dedicated test — mutation from lesson→closed with conditional metadata preservation is untested — *Remove lesson status from proof system*
 - **code:** work.ts duplicates resolves counting logic — JSON and console branches have identical loops — *Upstream Finding Resolution*
 - **code:** Two different result parsers with different casing: getVerifyResult returns 'unknown' (lowercase), parseResult in proofSummary returns 'UNKNOWN' (uppercase) — works correctly but fragile coupling between two parallel implementations — *work.ts untested branch coverage*
-- **test:** Pull-recovery guards (2 of 5) not directly exercised by any test — *Fix --merge stdout pollution in --json mode*
 
 ### packages/cli/src/engine/detectors/git.ts
 
 - **code:** Multi-remote repos: origin/ prefix stripping ignores non-origin remotes — *Fix scan branch detection — remove local branches from shared intelligence*
 - **code:** detectBranches and detectBranchPatterns both run git branch -r independently — two subprocess calls for the same data — *Fix scan branch detection — remove local branches from shared intelligence*
-
-### packages/cli/src/utils/worktree.ts
-
-- **code:** getBuildCommandString re-reads ana.json instead of receiving command from runBuildCommand — duplicate I/O with misleading 'pnpm run build' fallback — *Run build command during worktree creation*
 
 ### packages/cli/tests/commands/init/commit.test.ts
 
@@ -65,6 +56,11 @@
 - **test:** No boundary test at exactly 1-hour timeout — tests use 2-hour-old (stale) and new Date() (fresh), missing 59m59s and 60m01s cases — *Pipeline Concurrency Guards*
 - **test:** A019/A020 tests create full git repos with bare remotes — heavyweight setup that could be simplified with targeted spawnSync+runGit mocking — *Pipeline Concurrency Guards*
 - **test:** Arrow-line count assertion uses toBeGreaterThanOrEqual(2) — passes with any number >= 2, not specific to the 2-line ready-to-merge case — *work.ts saves.json backward compat bug + worktree dedup + formatting*
+
+### website/app/docs/proof/[slug]/page.tsx
+
+- **code:** Duplicate GitHub fetch for dynamic slugs — generateMetadata and page component both call fetchProofChainEntry independently — *Ship log proof linking*
+- **code:** GitHub outage degrades valid new slugs to 404 — fetchProofChainEntry returns null on network failure, triggering notFound() — *Ship log proof linking*
 
 ### website/components/docs/content/DocsStat.tsx
 
@@ -89,6 +85,7 @@
 
 ### website/lib/proof-feed.ts
 
+- **code:** Mock feed slug-to-entry mapping is positional, not semantic — mock entry content describes different features than the slug names imply — *Ship log proof linking*
 - **code:** VERSION_FALLBACK evaluated at module load time — single-shot, no retry on transient readFileSync failure — *Dynamic marketing stats — wire command count and version fallback*
 
 ### website/scripts/extract-docs-data.ts

@@ -30727,6 +30727,196 @@
         "commit_count": 0,
         "base_commit": "d4e45a9352e36a408aff41fcb48dbaddf353f029"
       }
+    },
+    {
+      "slug": "ship-log-proof-links",
+      "feature": "Ship log proof linking",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 14,
+        "satisfied": 14,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Ship log rows include the slug from the proof chain",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "Clicking a ship log row navigates to the proof detail page",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Rows without a slug render as plain divs, not broken links",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "Mock feed entries use slugs that exist in the static build",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "The proof page accepts slugs not in the static build",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "A new proof entry renders a fallback page instead of a 404",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "The fallback page shows the feature name from proof chain",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "The fallback page shows the verification result",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "The fallback page shows the assertion count",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "The fallback page shows the completion date",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "An invalid slug still returns a 404",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "Collapsed summary bar dots remain non-interactive spans",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "The fallback page caches for one hour before revalidating",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "Page metadata works for dynamically rendered proof entries",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 9,
+        "met": 8
+      },
+      "timing": {
+        "total_minutes": 35,
+        "think": 6,
+        "plan": 4,
+        "build": 5,
+        "verify": 3
+      },
+      "hashes": {
+        "scope": "sha256:6c8dd44a226cfba9a98335c60e3219f1df766ec2c794a1b4f6941535f72c30d6",
+        "contract": "sha256:1a7e998d17e895665f423cc9c612aff61ffcf32233cba5bd4d043e08cceec9c8",
+        "plan": "sha256:b8a795679d25e773716645d12820a39271eb5489b5dd282adfd49fc29e4e3bcf",
+        "spec": "sha256:35105dfb556689d1fe243f5b32c085c3e9bff8e39a72251fb3e030d2299d5121",
+        "build-report": "sha256:d13a4d2dae26d4d6106d4086955a7a9cdeb474d456f6aa215a727c04d6343880",
+        "build-data": "sha256:558b19f74b59cbebf2e872999b7c35eef0c1d622393c3507d8bb188aeeab1b9e",
+        "verify-report": "sha256:6b33921b9c0f817e24825e0ac3f4ed7f34cf2759ba56927db0d95a7fd59c1ac7",
+        "verify-data": "sha256:c7fe55fa94f814841d51bad285191cb7f904752398cd9c156ac5d16adb003302"
+      },
+      "completed_at": "2026-05-16T22:42:29.512Z",
+      "modules_touched": [
+        "website/app/docs/proof/[slug]/page.tsx",
+        "website/components/proof-feed/ProofFeed.tsx",
+        "website/lib/proof-feed.ts"
+      ],
+      "scope_summary": "Make the ship log's expanded proof rows link to their corresponding AnaDocs proof pages at `/docs/proof/{slug}`. The ship log is the public proof surface — clicking a row should take you to the full verification record. Currently the data is there (slug exists in proof_chain.json, the proof explorer pages exist) but the two surfaces aren't connected.",
+      "kind": "feature",
+      "findings": [
+        {
+          "category": "code",
+          "summary": "Duplicate GitHub fetch for dynamic slugs — generateMetadata and page component both call fetchProofChainEntry independently",
+          "file": "website/app/docs/proof/[slug]/page.tsx",
+          "anchor": null,
+          "line": 94,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A014"
+          ],
+          "id": "ship-log-proof-links-C1",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "GitHub outage degrades valid new slugs to 404 — fetchProofChainEntry returns null on network failure, triggering notFound()",
+          "file": "website/app/docs/proof/[slug]/page.tsx",
+          "anchor": null,
+          "line": 111,
+          "severity": "risk",
+          "suggested_action": "monitor",
+          "related_assertions": [
+            "A011"
+          ],
+          "id": "ship-log-proof-links-C2",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Mock feed slug-to-entry mapping is positional, not semantic — mock entry content describes different features than the slug names imply",
+          "file": "website/lib/proof-feed.ts",
+          "anchor": null,
+          "line": 45,
+          "severity": "debt",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A004"
+          ],
+          "id": "ship-log-proof-links-C3",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "Contract A012 verifiable only by source inspection — no test infrastructure for website components",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "ship-log-proof-links-C4",
+          "status": "closed",
+          "closed_reason": "upstream",
+          "closed_at": "2026-05-16T22:42:29.512Z",
+          "closed_by": "mechanical"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "Fallback page omits RightRail — visually inconsistent with full proof pages until next static build",
+          "file": "website/app/docs/proof/[slug]/page.tsx",
+          "severity": "observation",
+          "suggested_action": "accept"
+        }
+      ],
+      "worktree": {
+        "used": true,
+        "created_at": "2026-05-16T22:21:36.484Z",
+        "completed_at": "2026-05-16T22:42:29.507Z",
+        "commit_count": 0,
+        "base_commit": "a3b0bb47e64644167d8a74b2da7630a5ced31d34"
+      }
     }
   ],
   "schema": 1
