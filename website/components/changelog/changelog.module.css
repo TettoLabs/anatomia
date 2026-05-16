@@ -1,4 +1,4 @@
-/* Changelog — version entries with eyebrow + title pattern from manifesto. */
+/* Changelog — dynamically parsed from CHANGELOG.md */
 
 .article {
   max-width: 800px;
@@ -56,12 +56,12 @@
   display: flex;
   align-items: baseline;
   gap: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .entryVersion {
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--fg-strong);
 }
@@ -72,20 +72,34 @@
   color: var(--ink-45);
 }
 
+.section {
+  margin-bottom: 20px;
+}
+
+.sectionHeading {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-45);
+  margin-bottom: 10px;
+}
+
 .entryList {
   list-style: none;
   padding: 0;
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .entryList li {
-  font-family: var(--font-serif);
-  font-size: 16px;
+  font-family: var(--font-sans);
+  font-size: 15px;
   line-height: 1.6;
-  color: var(--ink-75);
+  color: var(--ink-60);
   padding-left: 16px;
   position: relative;
 }
@@ -98,4 +112,19 @@
   height: 4px;
   border-radius: 50%;
   background: var(--ink-30);
+}
+
+.bold {
+  font-weight: 600;
+  color: var(--fg-strong);
+}
+
+.code {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  padding: 1px 5px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border-soft);
+  border-radius: 3px;
+  color: var(--fg);
 }
