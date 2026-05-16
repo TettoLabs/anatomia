@@ -1,10 +1,10 @@
 # Project Context
 
-## What This Product Does
+## What This Project Does
 
 **Detected:** pnpm monorepo.
 
-Anatomia is an open-source methodology and CLI tool for verified AI development. It exports a framework — think, plan, build, verify — that turns AI coding tools from fast-but-unreliable into structured-and-proven. The CLI (`ana`) is the delivery mechanism: it scans a project, generates validated context, and runs every change through a four-agent pipeline (Think, Plan, Build, Verify) with a fifth agent (Learn) that tends the proof chain between cycles
+Anatomia is an open-source methodology and CLI tool for verified AI development. It exports a framework — think, plan, build, verify — that turns AI coding tools from fast-but-unreliable into structured-and-proven. The CLI (`ana`) is the delivery mechanism: it scans a project, generates validated context, and runs every change through a four-agent pipeline (Think, Plan, Build, Verify) with a fifth agent (Learn) that tends the proof chain between cycles.
 
 Three things Anatomia provides that don't exist elsewhere:
 
@@ -18,29 +18,21 @@ Three things Anatomia provides that don't exist elsewhere:
 
 The product enforces LLMs to act against their nature: think more, build less, surface tradeoffs instead of rushing to implementation. It's an advocate for quality — it exists to surface tradeoffs, challenge assumptions, and ensure that what gets built is what should get built.
 
-The product has three surfaces:
-1. **Scan + Init** — zero-config project analysis. Produces scan.json, CLAUDE.md, AGENTS.md, skills with rules and gotchas, and context scaffolds. Entry point for every user.
-2. **The Pipeline** — scope → spec → build → verify → proof. Managed through `ana work`, `ana artifact`, `ana verify`, `ana pr`. Where ongoing development happens with mechanical verification.
-3. **Proof Intelligence** — quality trajectory, active findings, staleness detection, finding-to-rule promotion. Managed through `ana proof` subcommands and the Learn agent. Where quality compounds across pipeline cycles.
-
-## How the Pipeline Works
-
-The pipeline is both the development process AND a product feature. Each stage produces typed artifacts that the next stage consumes:
+Each stage produces typed artifacts that the next stage consumes:
 
 ```
-Think (Ana)        →  scope.md           →  "what and why"
+Think (Ana)        →  scope.md           →  "what and why" (challenges assumptions, may push back)
 Plan (AnaPlan)     →  spec.md + contract.yaml + plan.md  →  "how, with assertions"
 Build (AnaBuild)   →  code + tests + build_report.md     →  "implementation + evidence"
 Verify (AnaVerify) →  verify_report.md   →  "independent proof"
 ```
 
-**Key constraints:**
-- Each agent runs in a separate session. No shared memory between stages.
-- Build and Verify are independent — Verify reads the spec and the code, never the build report. The developer compares both reports.
-- Artifacts are saved with SHA-256 hash verification and atomic commits. The CLI validates structure before accepting each artifact.
-- On PASS, Verify creates a PR. After merge, the developer completes the work item, which archives the plan and writes a proof chain entry.
+The product has four surfaces:
 
-**The flywheel:** Each completed pipeline run adds a proof chain entry with findings. Learn triages findings between cycles — closing resolved ones, promoting recurring patterns to skill rules. Promoted rules reach Build through Plan's Build Brief. Health tracks risks/run as the north star metric. The declining error rate proves the system works.
+1. **Scan + Init** — zero-config project analysis. Produces scan.json, CLAUDE.md, AGENTS.md, skills with rules and gotchas, and context scaffolds. Entry point for every user. `ana init commit` persists infrastructure to the artifact branch.
+2. **The Pipeline** — scope → spec → build → verify → proof. Managed through `ana work`, `ana artifact`, `ana verify`, `ana pr`. Where ongoing development happens with mechanical verification. Builds happen in git worktrees for isolation.
+3. **Proof Intelligence** — quality trajectory, active findings, staleness detection, finding-to-rule promotion. Managed through `ana proof` subcommands and the Learn agent. Where quality compounds across pipeline cycles.
+4. **Ana Docs** — the documentation site at `anatomia.dev/docs`. Concepts, guides, reference pages for agents/skills/CLI/context, and the Proof Explorer (live proof chain data rendered as navigable pages). Content lives in `website/content/docs/` (MDX) and dynamic reference pages in `website/app/docs/reference/`. The website reads CLI templates and context files at build time to generate reference documentation. Ana Docs is also an authoritative reference for agents — if an agent needs deeper understanding of a concept (contracts, findings, the proof chain, how verification works), the relevant docs page at `website/content/docs/concepts/` or `website/content/docs/guides/` is the canonical explanation.
 
 ## Architecture
 
@@ -48,11 +40,11 @@ Verify (AnaVerify) →  verify_report.md   →  "independent proof"
 **Detected:** 3 directories mapped: .github/, packages/, tests/
 **Detected deployment:** GitHub Actions
 
-- **`packages/cli`** — the product. All development happens here. The CLI has three layers:
-  - **Commands** (`src/commands/`) — user-facing surface. init, scan, setup, artifact, work, verify, pr, proof, agents.
+- **`packages/cli`** — the product. All CLI development happens here. Three layers:
+  - **Commands** (`src/commands/`) — user-facing surface. init (with commit subcommand), scan, setup (with check/complete subcommands), artifact, work, verify, pr, proof, config, agents.
   - **Engine** (`src/engine/`) — scan intelligence. Pure functions, no CLI dependencies. Census model → detectors → analyzers → findings.
-  - **Utils + Data** (`src/utils/`, `src/data/`) — shared helpers. Scaffold generators, gotcha matcher, gotcha library.
-- **`website/`** — marketing/demo site. Next.js + Tailwind. No code dependency on the CLI.
+  - **Utils + Data** (`src/utils/`, `src/data/`) — shared helpers. Scaffold generators, gotcha matcher, gotcha library, git operations, worktree management.
+- **`website/`** — the docs site and marketing surface. Next.js + Tailwind. No runtime dependency on the CLI, but reads CLI templates and `.ana/` context at build time for reference pages. Deployed on Vercel.
 
 ### Where to Make Changes
 
@@ -61,6 +53,7 @@ Verify (AnaVerify) →  verify_report.md   →  "independent proof"
 | Add a scan detector | `src/engine/detectors/` |
 | Add a gotcha | `src/data/gotchas.ts` (library) + `src/utils/gotchas.ts` (matcher) |
 | Change what init generates | `src/commands/init/assets.ts` (generators) or `templates/` (templates) |
+| Change infrastructure commit behavior | `src/commands/init/commit.ts` |
 | Change skill rules | `templates/.claude/skills/{name}/SKILL.md` |
 | Add a CLI command | `src/commands/`, register in `src/index.ts` |
 | Change EngineResult schema | `src/engine/types/engineResult.ts` + `createEmptyEngineResult()` + all consumers |
@@ -68,7 +61,12 @@ Verify (AnaVerify) →  verify_report.md   →  "independent proof"
 | Change agent definitions | `templates/.claude/agents/` |
 | Change proof chain commands | `src/commands/proof.ts` |
 | Change proof computation | `src/utils/proofSummary.ts` |
-| Change work complete flow | `src/commands/work.ts` |
+| Change work/pipeline flow | `src/commands/work.ts` |
+| Change worktree behavior | `src/utils/worktree.ts` |
+| Change what re-init preserves | `src/commands/init/state.ts` (`preserveUserState`) |
+| Add a docs concept/guide page | `website/content/docs/` (MDX with frontmatter) |
+| Change docs reference pages | `website/app/docs/reference/` (dynamic routes reading CLI data) |
+| Change ana.json schema | `src/commands/init/anaJsonSchema.ts` + `createAnaJson` in state.ts |
 
 ### Templates vs. Generators
 
@@ -79,13 +77,13 @@ This is the most common source of wrong-location errors:
 
 An LLM asked to "change the default coding-standards rules" should edit `templates/.claude/skills/coding-standards/SKILL.md`. An LLM asked to "change what the Detected section shows" should edit the injector in `src/commands/init/skills.ts`. These are different files with different change processes.
 
-## What Looks Wrong But Is Intentional
+### Re-init Preservation Contract
 
-- **allDeps merges all workspace packages.** Database, auth, testing, payments, and AI SDK detection run against the merged dependency map from ALL packages. Framework and uiSystem detection run against the primary package only. The split is intentional — database/auth/testing are project-wide facts; framework is identity.
-- **init is idempotent but asymmetric.** Re-running init refreshes machine-owned content (Detected sections, scan.json) but preserves human-owned content (Rules, Gotchas, Examples, context files). Most init commands are destructive. This one isn't.
-- **scan.json is designed for LLM agents, not humans.** Its field names, structure, and content are optimized for agent consumption. The human-readable version is the `ana scan` terminal display.
-- **Pre-commit hooks enforce types, not the build.** The build uses SWC (strips types without checking). The pre-commit hook runs `tsc --noEmit`. If you skip the hook, type errors ship silently.
-- **Gotcha triggers use display names, not package names.** `{ aiSdk: 'Anthropic' }` not `{ aiSdk: '@anthropic-ai/sdk' }`. Because `stack.aiSdk` stores display names from the detection layer.
+Re-running `ana init` is designed to be safe. The function `preserveUserState` (state.ts) governs what survives:
+
+- **Preserved:** `context/` (user-enriched content), `plans/completed/` (pipeline history), `proof_chain.json` + `PROOF_CHAIN.md` (proof data), `ana.json` user fields (commands, coAuthor, artifactBranch, branchPrefix, custom), `state/setup-progress.json` (only during in-progress setup).
+- **Refreshed:** `scan.json` (full re-scan), `ana.json` mechanical fields (anaVersion, lastScanAt), skills `## Detected` sections, symbol index, `.ana/.gitignore`.
+- **Merge-not-overwrite:** CLAUDE.md, AGENTS.md, agent definitions (`.claude/agents/*.md`). If they exist, they're kept as-is. Skill files get Detected refreshed but Rules/Gotchas/Examples preserved.
 
 ## Key Decisions
 
@@ -95,34 +93,61 @@ An LLM asked to "change the default coding-standards rules" should edit `templat
 
 **Atomic init via rename.** Init builds the complete `.ana/` tree in a temp directory, then atomically swaps. Crash-safe. SIGKILL recovery via stale-directory detection.
 
-**Merge-not-overwrite on re-init.** CLAUDE.md, AGENTS.md, and agent definitions are not overwritten if they exist. Skills get Detected refreshed but Rules/Gotchas/Examples preserved. User content survives.
+**Worktree-based build isolation.** Build creates a git worktree (`ana work start` in the worktree), commits artifacts there, and the developer merges via PR. The main working tree is never modified by Build. Worktrees are managed in `.ana/worktrees/` and pruned by `work complete`.
+
+**Infrastructure vs. pipeline commit boundary.** `ana init commit` commits project configuration and context. `ana artifact save` commits pipeline artifacts (scopes, specs, build reports). `ana work complete` commits proof chain data. Each subsystem manages its own git lifecycle. These never cross.
 
 **Two-tier scanning.** Surface tier (dependency-based, fast, no WASM) and deep tier (tree-sitter AST for conventions, patterns, naming). `--quick` forces surface-only.
 
-## Current Realities
+## Key Files
 
-- **CLI is the primary development focus.** The website is secondary — marketing only, no code dependency on the CLI.
-- **The scan produces one result per repo, not per package.** Per-package scanning for multi-product monorepos is a known limitation. The `primaryDeps` field on census is the foundation for future per-package support.
+- CI pipeline: `.github/workflows/test.yml`, `.github/workflows/release.yml`
+- Ana.json schema: `src/commands/init/anaJsonSchema.ts`
+- Proof computation: `src/utils/proofSummary.ts` — health, trajectory, staleness, audit, context queries
+- Work lifecycle: `src/commands/work.ts` — start, status, complete, worktree management
+- Artifact save: `src/commands/artifact.ts` — validation, hashing, branch enforcement, commit
+- Git operations: `src/utils/git-operations.ts` — branch detection, co-author, runGit wrapper
+- Worktree management: `src/utils/worktree.ts` — create, remove, detect, path resolution
+- Init orchestration: `src/commands/init/index.ts` → state.ts, assets.ts, preflight.ts, skills.ts, commit.ts
+- Scaffold generators: `src/utils/scaffold-generators.ts` — project-context.md and design-principles.md templates
+- Docs content: `website/content/docs/` — MDX pages with frontmatter schema
+- Docs dynamic pages: `website/app/docs/reference/` and `website/app/docs/proof/` — server components reading CLI data
+
+## What Looks Wrong But Is Intentional
+
+- **allDeps merges all workspace packages.** Database, auth, testing, payments, and AI SDK detection run against the merged dependency map from ALL packages. Framework and uiSystem detection run against the primary package only. The split is intentional — database/auth/testing are project-wide facts; framework is identity.
+- **init is idempotent but asymmetric.** Re-running init refreshes machine-owned content (Detected sections, scan.json) but preserves human-owned content (Rules, Gotchas, Examples, context files). Most init commands are destructive. This one isn't.
+- **scan.json is designed for LLM agents, not humans.** Its field names, structure, and content are optimized for agent consumption. The human-readable version is the `ana scan` terminal display.
+- **Pre-commit hooks enforce types, not the build.** The build uses SWC (strips types without checking). The pre-commit hook runs `tsc --noEmit`. If you skip the hook, type errors ship silently.
+- **Gotcha triggers use display names, not package names.** `{ aiSdk: 'Anthropic' }` not `{ aiSdk: '@anthropic-ai/sdk' }`. Because `stack.aiSdk` stores display names from the detection layer.
+- **Merge-not-overwrite means template improvements don't reach existing users.** Agent definitions and CLAUDE.md are skipped if they exist. Users who initialized with an older CLI keep their old templates. This is intentional — user customizations must survive. The tradeoff is that template improvements require manual adoption or re-init with the file deleted first.
+- **Anatomia is its own customer (dogfooding).** The `.ana/` and `.claude/` directories at the repo root are our own installation of the product — the same files that `ana init` generates for customers. The `templates/` directory inside `packages/cli/` is what customers GET when they run `ana init`. These are different files with different purposes. Editing `templates/.claude/agents/ana.md` changes the product for all customers. Editing `.claude/agents/ana.md` changes our own dogfood installation only. Both exist in the same repo. The same distinction applies to skills (`templates/.claude/skills/` vs `.claude/skills/`), CLAUDE.md (`templates/CLAUDE.md` vs root `CLAUDE.md`), and context scaffolds (`src/utils/scaffold-generators.ts` generates them, `.ana/context/` holds our enriched versions).
+
+## Active Constraints
+
+- **The CLI is the primary development focus.** The website is a product surface but secondary to CLI development.
 - **The CLI is published on npm as `anatomia-cli`.** Install with `npm install -g anatomia-cli`.
+- **The scan produces one result per repo, not per package.** Per-package scanning for multi-product monorepos is a known limitation.
 - **Test count must not decrease.** CI runs across 3 OS × 2 Node versions. Coverage thresholds enforced in vitest.config.ts.
+- **ana.json user fields are preserved on re-init.** Only `anaVersion` and `lastScanAt` refresh mechanically. Fields like `commands` and `artifactBranch` are user-owned and require manual update if the scan would produce a different value. Full mechanical-field refresh is a separate design decision.
+- **Every product change must work for all customers.** Anatomia dogfoods itself, but we are not the only user. Any change to templates, generators, scan detectors, CLI commands, or agent behavior ships to every customer on their next `ana init` or CLI update. A change that works for a TypeScript CLI monorepo (us) but breaks for a Python web app or a Go microservice is not shippable. Scope and test with the sniper customer (2-4 person startup, AI product, vibe-coded) and the shotgun customer (5-15 engineers, real conventions) in mind.
 
 ## Domain Vocabulary
 
 - **Scan** — engine analysis of a project. Produces `EngineResult` (serialized as `scan.json`). Two tiers: surface and deep.
-- **Init** — bootstraps `.ana/` and `.claude/` from scan data. Idempotent — re-init refreshes scan without destroying user content.
-- **Census** — the `ProjectCensus` object: source roots, deps, configs, primary root. Built once, consumed by all detectors.
+- **Init** — bootstraps `.ana/` and `.claude/` from scan data. Idempotent — re-init refreshes scan without destroying user content. `ana init commit` persists infrastructure to git.
 - **Scan finding** — deterministic check from the engine (secrets, validation, env hygiene). Severity: critical, warn, info, pass. Lives in `scan.json`.
-- **Proof finding** — verification observation from Verify or Build. Severity: risk (could hurt you), debt (codebase getting worse), observation (information). Suggested action: promote (encode as rule), scope (needs work), monitor (watch), accept (closeable). Lives in `proof_chain.json` with lifecycle state: active → promoted or closed.
-- **Gotcha** — stack-specific tip injected into skill Gotchas sections. Triggered by stack field matches. The library grows over time.
-- **Skill** — `.claude/skills/{name}/SKILL.md`. Four sections: Detected (machine-owned), Rules, Gotchas, Examples (human-owned).
-- **Contract** — `contract.yaml` written by Plan. Each assertion has: `id` (A001, A002...), `says` (plain-English description a non-engineer would understand), `block` (test label), `target` (what's checked, dot notation), `matcher` (equals, exists, contains, greater, truthy, not_equals, not_contains), and `value` (expected result). Build tags tests with `// @ana A001`. Verify checks each tag independently against the code.
-- **Proof chain** — `proof_chain.json` + `PROOF_CHAIN.md`. One entry per completed pipeline run. Each entry contains: result (PASS/FAIL), contract assertions with status, proof findings with severity and suggested action, build concerns, modules touched, timing, SHA-256 hashes. The structured record that Learn triages and health computes on.
-- **Health** — `ana proof health`. Quality trajectory across pipeline runs. North star metric: risks/run trending down.
-- **Promote** — `ana proof promote`. A proof finding becomes a skill rule. The mechanism that turns verification intelligence into agent behavior change.
-- **Stale** — a finding whose referenced file was modified by subsequent pipeline runs. Detected by `ana proof stale` via `modules_touched` cross-reference. Confidence tiers: high (3+ subsequent entries), medium (1-2). Learn's highest-priority triage targets.
-- **Strengthen** — `ana proof strengthen`. Commit ceremony for Learn's edits to existing skill rules. Learn edits the file, strengthen stages + commits + closes findings atomically. Distinct from promote (which appends new rules).
-- **Audit** — `ana proof audit`. Active findings grouped by file with severity and action classification. `--full` removes truncation for agent consumption.
-- **Learn** — `claude --agent ana-learn`. The fifth agent. Triages findings, promotes patterns to skills, routes developer observations. Runs between pipeline cycles.
-- **Trajectory** — risks/run averaged over a window. Computed per-entry (what did this run produce?), not cumulative. Trend: improving, stable, worsening, or insufficient data.
-- **Primary root** — in monorepos, the package that defines project identity. Largest `apps/` package with framework hints, or largest package overall.
-- **Slug** — kebab-case work item identifier. Used in branches (`feature/{slug}`), commits (`[{slug}]`), and plan directories.
+- **Proof finding** — verification observation from Verify or Build. Severity: risk, debt, observation. Suggested action: promote, scope, monitor, accept. Lives in `proof_chain.json` with lifecycle state: active → promoted or closed.
+- **Skill** — `.claude/skills/{name}/SKILL.md`. Four sections: Detected (machine-owned), Rules, Gotchas, Examples (human-owned). ENRICHMENT.md files guide the setup agent on what to enrich.
+- **Contract** — `contract.yaml` written by Plan. Typed assertions (id, says, block, target, matcher, value). Build tags tests with `// @ana A001`. Verify checks each tag independently.
+- **Proof chain** — `proof_chain.json` + `PROOF_CHAIN.md`. One entry per completed pipeline run with assertions, findings, timing, hashes. View an entry: `ana proof {slug}`. Query by file before scoping: `ana proof context {files}`. Run `ana proof --help` for all subcommands. For deeper understanding, read the AnaDocs guide at `website/content/docs/guides/reading-a-proof.mdx`.
+- **Worktree** — git worktree created by `ana work start` for build isolation. Build and Verify run in the worktree, not the main working tree.
+- **Learn** — `claude --agent ana-learn`. The fifth agent. Triages findings, promotes patterns to skills. Runs between pipeline cycles.
+- **AnaDocs** — the documentation site at `anatomia.dev/docs`. Content in `website/content/docs/`, dynamic reference pages in `website/app/docs/reference/`, Proof Explorer in `website/app/docs/proof/`. Also an authoritative reference for agents — read the relevant concept or guide page when a concept needs deeper understanding.
+- **Slug** — kebab-case work item identifier. Used in branches (`feature/{slug}` by default, configurable via `branchPrefix`), commits (`[{slug}]`), and plan directories.
+- **Dogfood** — Anatomia's own installation of itself. The `.ana/` and `.claude/` directories at the repo root are our dogfood — the product running on its own codebase. Changes to dogfood files affect only us. Changes to product files (`templates/`, generators in `src/`) affect all customers. When scoping work, always clarify: dogfood change or product change?
+- **Ana / AnaThink** — used interchangeably. The thinking agent (`claude --agent ana`). Scopes work, navigates, advises. Produces scope.md.
+- **AnaPlan** — the planning agent. Reads scope, produces spec.md + contract.yaml + plan.md.
+- **AnaBuild** — the build agent. Reads spec, produces code + tests + build_report.md.
+- **AnaVerify** — the verification agent. Reads spec + code, produces verify_report.md. Never reads the build report.
+- **AnaLearn** — the learning agent. Tends the proof chain between pipeline cycles.
