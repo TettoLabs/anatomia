@@ -30663,7 +30663,10 @@
             "A004"
           ],
           "id": "dynamic-marketing-stats-C5",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Fixed alongside C1: test at marketing-stats.test.ts:84 now expects 'v1.1.0' (the fallback) instead of 'vundefined' when version field is undefined. Comment updated from documenting the gap to describing correct fallback behavior. Commit b038e15a.",
+          "closed_at": "2026-05-16T17:32:42.317Z",
+          "closed_by": "human"
         },
         {
           "category": "code",

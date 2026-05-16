@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-113 runs · 50 active · 3 promoted · 619 closed
+113 runs · 49 active · 3 promoted · 620 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 50 total)
+## Active Findings (30 shown of 49 total)
 
 ### packages/cli/src/commands/init/commit.ts
 
@@ -41,6 +41,10 @@
 
 - **code:** Multi-remote repos: origin/ prefix stripping ignores non-origin remotes — *Fix scan branch detection — remove local branches from shared intelligence*
 - **code:** detectBranches and detectBranchPatterns both run git branch -r independently — two subprocess calls for the same data — *Fix scan branch detection — remove local branches from shared intelligence*
+
+### packages/cli/src/utils/worktree.ts
+
+- **code:** getBuildCommandString re-reads ana.json instead of receiving command from runBuildCommand — duplicate I/O with misleading 'pnpm run build' fallback — *Run build command during worktree creation*
 
 ### packages/cli/tests/commands/init/commit.test.ts
 
@@ -78,10 +82,6 @@
 ### website/components/system/Drawer.tsx
 
 - **code:** Drawer moreCount has no floor guard — commandCount < 6 produces negative display — *Dynamic marketing stats — wire command count and version fallback*
-
-### website/lib/__tests__/marketing-stats.test.ts
-
-- **test:** vundefined test documents a real gap but accepts broken output as expected behavior — *Dynamic marketing stats — wire command count and version fallback*
 
 ### website/lib/docs-data/docsStatValues.ts
 
