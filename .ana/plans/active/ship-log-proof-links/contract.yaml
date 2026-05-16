@@ -1,0 +1,106 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Ship log proof linking"
+
+assertions:
+  - id: A001
+    says: "Ship log rows include the slug from the proof chain"
+    block: "proof feed data layer passes slug through"
+    target: "ProofEntry.slug"
+    matcher: "exists"
+
+  - id: A002
+    says: "Clicking a ship log row navigates to the proof detail page"
+    block: "proof row links to detail page"
+    target: "Link.href"
+    matcher: "contains"
+    value: "/docs/proof/"
+
+  - id: A003
+    says: "Rows without a slug render as plain divs, not broken links"
+    block: "rows without slug have no link"
+    target: "element.tagName"
+    matcher: "not_equals"
+    value: "A"
+
+  - id: A004
+    says: "Mock feed entries use slugs that exist in the static build"
+    block: "mock feed has valid slugs"
+    target: "mockEntry.slug"
+    matcher: "exists"
+
+  - id: A005
+    says: "The proof page accepts slugs not in the static build"
+    block: "dynamic params enabled"
+    target: "dynamicParams"
+    matcher: "equals"
+    value: true
+
+  - id: A006
+    says: "A new proof entry renders a fallback page instead of a 404"
+    block: "fallback page renders for dynamic slug"
+    target: "fallbackPage.content"
+    matcher: "contains"
+    value: "next site build"
+
+  - id: A007
+    says: "The fallback page shows the feature name from proof chain"
+    block: "fallback page renders for dynamic slug"
+    target: "fallbackPage.feature"
+    matcher: "exists"
+
+  - id: A008
+    says: "The fallback page shows the verification result"
+    block: "fallback page renders for dynamic slug"
+    target: "fallbackPage.result"
+    matcher: "exists"
+
+  - id: A009
+    says: "The fallback page shows the assertion count"
+    block: "fallback page renders for dynamic slug"
+    target: "fallbackPage.assertionCount"
+    matcher: "exists"
+
+  - id: A010
+    says: "The fallback page shows the completion date"
+    block: "fallback page renders for dynamic slug"
+    target: "fallbackPage.completedAt"
+    matcher: "exists"
+
+  - id: A011
+    says: "An invalid slug still returns a 404"
+    block: "invalid slug returns not found"
+    target: "response"
+    matcher: "equals"
+    value: "notFound"
+
+  - id: A012
+    says: "Collapsed summary bar dots remain non-interactive spans"
+    block: "summary dots are not links"
+    target: "dotElement.tagName"
+    matcher: "equals"
+    value: "SPAN"
+
+  - id: A013
+    says: "The fallback page caches for one hour before revalidating"
+    block: "page revalidation configured"
+    target: "revalidate"
+    matcher: "equals"
+    value: 3600
+
+  - id: A014
+    says: "Page metadata works for dynamically rendered proof entries"
+    block: "generateMetadata handles dynamic slug"
+    target: "metadata.title"
+    matcher: "contains"
+    value: "Proof"
+
+file_changes:
+  - path: "website/lib/proof-feed.ts"
+    action: modify
+  - path: "website/components/proof-feed/ProofFeed.tsx"
+    action: modify
+  - path: "website/components/proof-feed/proof-feed.module.css"
+    action: modify
+  - path: "website/app/docs/proof/[slug]/page.tsx"
+    action: modify
