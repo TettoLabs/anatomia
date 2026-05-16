@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-113 runs · 52 active · 3 promoted · 617 closed
+113 runs · 51 active · 3 promoted · 618 closed
 
 ## Hot Modules
 
@@ -16,7 +16,11 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 52 total)
+## Active Findings (30 shown of 51 total)
+
+### packages/cli/src/commands/init/commit.ts
+
+- **test:** No integration test for pull conflict abort path — *ana init commit — persist infrastructure to git*
 
 ### packages/cli/src/commands/init/state.ts
 
@@ -93,10 +97,6 @@
 ### website/scripts/extract-docs-data.ts
 
 - **code:** Median computation duplicated between extract-docs-data.ts main() and lib/docs-data/proofs.ts getMedianTimings() — *Fix prebuild source mutation*
-
-### website/vitest.config.ts
-
-- **code:** Over-build: vitest added to website package.json + vitest.config.ts created (not in spec file_changes) — *Dynamic marketing stats — wire command count and version fallback*
 
 ### General
 

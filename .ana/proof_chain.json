@@ -30671,7 +30671,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "dynamic-marketing-stats-C6",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Required infrastructure: contract A001-A005 specify test assertions. Tests require a test runner. vitest + vitest.config.ts are necessary infrastructure for the contract's own assertions. Spec didn't list in file_changes because it's tooling, not the feature — but the contract implicitly requires it.",
+          "closed_at": "2026-05-16T17:31:15.858Z",
+          "closed_by": "human"
         },
         {
           "category": "upstream",
