@@ -30451,7 +30451,10 @@
             "A006"
           ],
           "id": "fix-scan-branch-detection-C2",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Loop logic is prefix-agnostic: isBotBranch at git.ts:109-112 iterates BOT_BRANCH_PREFIXES with startsWith — same operation for all 5 prefixes. Tests exercise dependabot/ and renovate/ (lines 152, 199), proving iteration and startsWith work. Remaining prefixes (snyk-, greenkeeper/, imgbot/) exercise the same String.prototype.startsWith with different strings — no additional branch coverage.",
+          "closed_at": "2026-05-16T17:26:35.527Z",
+          "closed_by": "human"
         },
         {
           "category": "code",

@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-113 runs · 54 active · 3 promoted · 615 closed
+113 runs · 53 active · 3 promoted · 616 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 54 total)
+## Active Findings (30 shown of 53 total)
 
 ### packages/cli/src/commands/init/state.ts
 
@@ -30,6 +30,7 @@
 - **code:** Inside-worktree resume path writes verify_started_at without checking concurrency guard first — *Pipeline Concurrency Guards*
 - **test:** Backfill migration logic has no dedicated test — mutation from lesson→closed with conditional metadata preservation is untested — *Remove lesson status from proof system*
 - **code:** work.ts duplicates resolves counting logic — JSON and console branches have identical loops — *Upstream Finding Resolution*
+- **code:** Two different result parsers with different casing: getVerifyResult returns 'unknown' (lowercase), parseResult in proofSummary returns 'UNKNOWN' (uppercase) — works correctly but fragile coupling between two parallel implementations — *work.ts untested branch coverage*
 
 ### packages/cli/src/engine/detectors/git.ts
 
@@ -51,10 +52,6 @@
 - **test:** No boundary test at exactly 1-hour timeout — tests use 2-hour-old (stale) and new Date() (fresh), missing 59m59s and 60m01s cases — *Pipeline Concurrency Guards*
 - **test:** A019/A020 tests create full git repos with bare remotes — heavyweight setup that could be simplified with targeted spawnSync+runGit mocking — *Pipeline Concurrency Guards*
 - **test:** Arrow-line count assertion uses toBeGreaterThanOrEqual(2) — passes with any number >= 2, not specific to the 2-line ready-to-merge case — *work.ts saves.json backward compat bug + worktree dedup + formatting*
-
-### packages/cli/tests/engine/detectors/git-detection.test.ts
-
-- **test:** Bot prefix filtering tests cover 2 of 5 prefixes (dependabot/, renovate/) — snyk-, greenkeeper/, imgbot/ untested — *Fix scan branch detection — remove local branches from shared intelligence*
 
 ### website/components/docs/content/DocsStat.tsx
 
