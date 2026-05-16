@@ -79,6 +79,7 @@ describe('git detection', () => {
       }
     });
 
+    // @ana A003, A004
     it('returns branch list for local repo with commits', async () => {
       const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'git-test-branches-'));
       try {
@@ -95,6 +96,139 @@ describe('git detection', () => {
         expect(result.branches).toContain('feature');
       } finally {
         fs.rmSync(tmpDir, { recursive: true, maxRetries: 3, retryDelay: 200 });
+      }
+    });
+
+    // @ana A009, A010
+    it('excludes local-only branches when remote exists', async () => {
+      const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'git-test-remote-'));
+      const bareDir = fs.mkdtempSync(path.join(os.tmpdir(), 'git-test-bare-'));
+      try {
+        // Create a bare remote repo
+        execSync('git init --bare', { cwd: bareDir, stdio: 'pipe' });
+
+        // Create the working repo with a remote
+        execSync('git init -b main', { cwd: tmpDir, stdio: 'pipe' });
+        execSync('git config user.email "test@test.com"', { cwd: tmpDir, stdio: 'pipe' });
+        execSync('git config user.name "Test"', { cwd: tmpDir, stdio: 'pipe' });
+        fs.writeFileSync(path.join(tmpDir, 'file.txt'), 'hello');
+        execSync('git add . && git commit -m "init"', { cwd: tmpDir, stdio: 'pipe' });
+        execSync(`git remote add origin ${bareDir}`, { cwd: tmpDir, stdio: 'pipe' });
+        execSync('git push -u origin main', { cwd: tmpDir, stdio: 'pipe' });
+
+        // Create a local-only branch (not pushed)
+        execSync('git checkout -b local-experiment', { cwd: tmpDir, stdio: 'pipe' });
+        fs.writeFileSync(path.join(tmpDir, 'local.txt'), 'local only');
+        execSync('git add . && git commit -m "local work"', { cwd: tmpDir, stdio: 'pipe' });
+        execSync('git checkout main', { cwd: tmpDir, stdio: 'pipe' });
+
+        const result = await detectGitInfo(tmpDir);
+        expect(result.branches).toContain('main');
+        expect(result.branches).not.toContain('local-experiment');
+      } finally {
+        fs.rmSync(tmpDir, { recursive: true, maxRetries: 3, retryDelay: 200 });
+        fs.rmSync(bareDir, { recursive: true, maxRetries: 3, retryDelay: 200 });
+      }
+    });
+
+    // @ana A001, A002, A011
+    it('excludes bot branches from branch list', async () => {
+      const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'git-test-botbranch-'));
+      const bareDir = fs.mkdtempSync(path.join(os.tmpdir(), 'git-test-bare-bot-'));
+      try {
+        // Create a bare remote repo
+        execSync('git init --bare', { cwd: bareDir, stdio: 'pipe' });
+
+        // Create working repo
+        execSync('git init -b main', { cwd: tmpDir, stdio: 'pipe' });
+        execSync('git config user.email "test@test.com"', { cwd: tmpDir, stdio: 'pipe' });
+        execSync('git config user.name "Test"', { cwd: tmpDir, stdio: 'pipe' });
+        fs.writeFileSync(path.join(tmpDir, 'file.txt'), 'hello');
+        execSync('git add . && git commit -m "init"', { cwd: tmpDir, stdio: 'pipe' });
+        execSync(`git remote add origin ${bareDir}`, { cwd: tmpDir, stdio: 'pipe' });
+        execSync('git push -u origin main', { cwd: tmpDir, stdio: 'pipe' });
+
+        // Create and push bot branches + a human branch
+        execSync('git checkout -b dependabot/npm/typescript-5.8', { cwd: tmpDir, stdio: 'pipe' });
+        fs.writeFileSync(path.join(tmpDir, 'dep.txt'), 'dep update');
+        execSync('git add . && git commit -m "bump typescript"', { cwd: tmpDir, stdio: 'pipe' });
+        execSync('git push origin dependabot/npm/typescript-5.8', { cwd: tmpDir, stdio: 'pipe' });
+
+        execSync('git checkout main', { cwd: tmpDir, stdio: 'pipe' });
+        execSync('git checkout -b feature/add-auth', { cwd: tmpDir, stdio: 'pipe' });
+        fs.writeFileSync(path.join(tmpDir, 'auth.txt'), 'auth');
+        execSync('git add . && git commit -m "add auth"', { cwd: tmpDir, stdio: 'pipe' });
+        execSync('git push origin feature/add-auth', { cwd: tmpDir, stdio: 'pipe' });
+
+        execSync('git checkout main', { cwd: tmpDir, stdio: 'pipe' });
+        // Also create a local-only branch to confirm both filters work
+        execSync('git checkout -b local-only-branch', { cwd: tmpDir, stdio: 'pipe' });
+        execSync('git checkout main', { cwd: tmpDir, stdio: 'pipe' });
+
+        const result = await detectGitInfo(tmpDir);
+        expect(result.branches).toContain('main');
+        expect(result.branches).toContain('feature/add-auth');
+        expect(result.branches).not.toContain('dependabot/npm/typescript-5.8');
+        expect(result.branches).not.toContain('local-only-branch');
+      } finally {
+        fs.rmSync(tmpDir, { recursive: true, maxRetries: 3, retryDelay: 200 });
+        fs.rmSync(bareDir, { recursive: true, maxRetries: 3, retryDelay: 200 });
+      }
+    });
+  });
+
+  // @ana A005, A006, A007, A008
+  describe('branchPatterns', () => {
+    it('excludes bot prefixes from branchPatterns', async () => {
+      const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'git-test-botpattern-'));
+      const bareDir = fs.mkdtempSync(path.join(os.tmpdir(), 'git-test-bare-pat-'));
+      try {
+        // Create bare remote
+        execSync('git init --bare', { cwd: bareDir, stdio: 'pipe' });
+
+        // Create working repo
+        execSync('git init -b main', { cwd: tmpDir, stdio: 'pipe' });
+        execSync('git config user.email "test@test.com"', { cwd: tmpDir, stdio: 'pipe' });
+        execSync('git config user.name "Test"', { cwd: tmpDir, stdio: 'pipe' });
+        fs.writeFileSync(path.join(tmpDir, 'file.txt'), 'hello');
+        execSync('git add . && git commit -m "init"', { cwd: tmpDir, stdio: 'pipe' });
+        execSync(`git remote add origin ${bareDir}`, { cwd: tmpDir, stdio: 'pipe' });
+        execSync('git push -u origin main', { cwd: tmpDir, stdio: 'pipe' });
+
+        // Push multiple bot branches (would dominate prefixes without filtering)
+        for (const botName of ['dependabot/npm/pkg-a', 'dependabot/npm/pkg-b', 'dependabot/npm/pkg-c', 'renovate/eslint-9.x']) {
+          execSync(`git checkout -b ${botName}`, { cwd: tmpDir, stdio: 'pipe' });
+          fs.writeFileSync(path.join(tmpDir, `${botName.replace(/\//g, '-')}.txt`), 'bot');
+          execSync(`git add . && git commit -m "bot: ${botName}"`, { cwd: tmpDir, stdio: 'pipe' });
+          execSync(`git push origin ${botName}`, { cwd: tmpDir, stdio: 'pipe' });
+          execSync('git checkout main', { cwd: tmpDir, stdio: 'pipe' });
+        }
+
+        // Push human branches
+        for (const humanName of ['feature/auth', 'feature/payments']) {
+          execSync(`git checkout -b ${humanName}`, { cwd: tmpDir, stdio: 'pipe' });
+          fs.writeFileSync(path.join(tmpDir, `${humanName.replace(/\//g, '-')}.txt`), 'human');
+          execSync(`git add . && git commit -m "feat: ${humanName}"`, { cwd: tmpDir, stdio: 'pipe' });
+          execSync(`git push origin ${humanName}`, { cwd: tmpDir, stdio: 'pipe' });
+          execSync('git checkout main', { cwd: tmpDir, stdio: 'pipe' });
+        }
+
+        const result = await detectGitInfo(tmpDir);
+
+        // Bot prefixes excluded
+        expect(result.branchPatterns?.prefixes).not.toHaveProperty('dependabot/');
+        expect(result.branchPatterns?.prefixes).not.toHaveProperty('renovate/');
+
+        // Human prefixes preserved
+        expect(result.branchPatterns?.prefixes).toHaveProperty('feature/');
+        expect(result.branchPatterns?.prefixes!['feature/']).toBe(2);
+
+        // Primary is never a bot prefix
+        expect(result.branchPatterns?.primary).toBe('feature/');
+        expect(result.branchPatterns?.primary).not.toBe('dependabot/');
+      } finally {
+        fs.rmSync(tmpDir, { recursive: true, maxRetries: 3, retryDelay: 200 });
+        fs.rmSync(bareDir, { recursive: true, maxRetries: 3, retryDelay: 200 });
       }
     });
   });
