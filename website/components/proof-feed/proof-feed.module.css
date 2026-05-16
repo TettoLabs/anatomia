@@ -298,6 +298,11 @@
   font-size: 14.5px;
   font-weight: 450;
   color: var(--fg);
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.rowFeat > :first-child {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

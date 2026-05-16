@@ -105,7 +105,7 @@ export async function ProofFeed() {
                   {kindLabel(e.kind)}
                 </span>
                 <span className={styles.rowFeat}>
-                  <Formatted text={e.feat} />
+                  <span><Formatted text={e.feat} /></span>
                   {e.hasRisk && <span className={styles.riskTag}>risk</span>}
                 </span>
                 <span className={styles.rowMeta}>
