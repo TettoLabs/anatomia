@@ -92,16 +92,35 @@ export async function Footer() {
               >
                 {col.title}
               </h4>
-              {col.links.map((l) => (
-                <Link
-                  key={l.href}
-                  href={l.href}
-                  className="text-[13.5px] font-medium transition-colors duration-150"
-                  style={{ color: "var(--ink-60)" }}
-                >
-                  {l.label}
-                </Link>
-              ))}
+              {col.links.map((l) => {
+                const isExternal = l.href.startsWith("http");
+                const isHash = l.href.startsWith("/#");
+                // Use <a> for external, hash, and docs links to force full navigation + scroll to top
+                if (isExternal || isHash || l.href.startsWith("/docs")) {
+                  return (
+                    <a
+                      key={l.href}
+                      href={l.href}
+                      {...(isExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                      className="text-[13.5px] font-medium transition-colors duration-150"
+                      style={{ color: "var(--ink-60)" }}
+                    >
+                      {l.label}
+                    </a>
+                  );
+                }
+                return (
+                  <Link
+                    key={l.href}
+                    href={l.href}
+                    scroll={true}
+                    className="text-[13.5px] font-medium transition-colors duration-150"
+                    style={{ color: "var(--ink-60)" }}
+                  >
+                    {l.label}
+                  </Link>
+                );
+              })}
             </div>
           ))}
         </div>
