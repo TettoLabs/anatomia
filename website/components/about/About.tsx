@@ -43,13 +43,13 @@ export function About() {
           </div>
 
           <h1 className={styles.headline}>
-            <em>Anatomia</em> is the engineering judgment<br />
-            your AI doesn't have.
+            Building faster doesn't mean<br />
+            you know what you <em>built</em>.
           </h1>
 
           <div className={styles.narrative}>
             <p className={styles.lede}>
-              Building faster doesn't mean you know what you built.
+              Anatomia is the engineering judgment your AI doesn't have.
               AI makes building easy. Knowing is the hard part.
             </p>
 
