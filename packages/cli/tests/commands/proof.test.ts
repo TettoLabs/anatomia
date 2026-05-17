@@ -4413,4 +4413,213 @@ describe('ana proof', () => {
       }
     });
   });
+
+  // ─── Matrix Mode Tests ────────────────────────────────────────────────
+
+  // @ana A006, A007, A008, A009
+  describe('matrix JSON includes orientation fields', () => {
+    it('returns orientation payload without by_file', async () => {
+      await createProofChain([multiSeverityEntry, secondEntry]);
+      process.chdir(tempDir);
+      const { stdout, exitCode } = runProof(['audit', '--matrix', '--json']);
+      expect(exitCode).toBe(0);
+      const json = JSON.parse(stdout);
+      // Orientation fields present
+      expect(json.results.total_active).toBe(5);
+      expect(json.results.stale_count).toBeDefined();
+      expect(json.results.recent_entries).toBeDefined();
+      expect(json.results.by_severity_action).toBeDefined();
+      // No by_file
+      expect(json.results.by_file).toBeUndefined();
+    });
+  });
+
+  // @ana A010, A011, A012
+  describe('matrix recent_entries have correct shape', () => {
+    it('includes slug, finding_count, and ago fields', async () => {
+      await createProofChain([multiSeverityEntry, secondEntry]);
+      process.chdir(tempDir);
+      const { stdout, exitCode } = runProof(['audit', '--matrix', '--json']);
+      expect(exitCode).toBe(0);
+      const json = JSON.parse(stdout);
+      const entries = json.results.recent_entries;
+      expect(entries.length).toBeGreaterThan(0);
+      const first = entries[0];
+      expect(first.slug).toBeDefined();
+      expect(first.finding_count).toBeDefined();
+      expect(first.ago).toContain('ago');
+    });
+  });
+
+  // @ana A013
+  describe('matrix recent_entries caps at 3', () => {
+    it('returns at most 3 recent entries', async () => {
+      const makeEntry = (slug: string, date: string) => ({
+        slug,
+        feature: `Feature ${slug}`,
+        result: 'PASS' as const,
+        author: { name: 'Dev', email: 'dev@test.com' },
+        contract: { total: 1, covered: 1, uncovered: 0, satisfied: 1, unsatisfied: 0, deviated: 0 },
+        assertions: [],
+        acceptance_criteria: { total: 1, met: 1 },
+        timing: { total_minutes: 10 },
+        hashes: {},
+        completed_at: date,
+        modules_touched: [],
+        findings: [
+          { id: `F-${slug}`, category: 'code', summary: `Finding from ${slug}`, file: 'src/x.ts', anchor: null, status: 'active', severity: 'debt', suggested_action: 'scope' },
+        ],
+        rejection_cycles: 0,
+        previous_failures: [],
+        build_concerns: [],
+      });
+      await createProofChain([
+        makeEntry('entry-1', '2026-04-10T10:00:00Z'),
+        makeEntry('entry-2', '2026-04-15T10:00:00Z'),
+        makeEntry('entry-3', '2026-04-18T10:00:00Z'),
+        makeEntry('entry-4', '2026-04-20T10:00:00Z'),
+      ]);
+      process.chdir(tempDir);
+      const { stdout, exitCode } = runProof(['audit', '--matrix', '--json']);
+      expect(exitCode).toBe(0);
+      const json = JSON.parse(stdout);
+      expect(json.results.recent_entries.length).toBe(3);
+    });
+  });
+
+  // @ana A014, A015, A016
+  describe('matrix human-readable shows orientation block', () => {
+    it('shows Proof Orientation header, staleness, and recent proofs', async () => {
+      await createProofChain([multiSeverityEntry, secondEntry]);
+      process.chdir(tempDir);
+      const { stdout, exitCode } = runProof(['audit', '--matrix']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('Proof Orientation');
+      expect(stdout).toContain('Staleness');
+      expect(stdout).toContain('Recent proofs');
+    });
+  });
+
+  // @ana A017
+  describe('matrix skips anchor-presence I/O', () => {
+    it('does not include by_file in matrix JSON output', async () => {
+      await createProofChain([multiSeverityEntry]);
+      process.chdir(tempDir);
+      const { stdout, exitCode } = runProof(['audit', '--matrix', '--json']);
+      expect(exitCode).toBe(0);
+      const json = JSON.parse(stdout);
+      expect(json.results.by_file).toBeUndefined();
+    });
+  });
+
+  // @ana A018
+  describe('matrix ignores severity filter', () => {
+    it('shows full count even when --severity is passed', async () => {
+      // 6 findings from createAuditChain (mix of risk and observation)
+      await createAuditChain(6, 3);
+      process.chdir(tempDir);
+      const { stdout, exitCode } = runProof(['audit', '--matrix', '--severity', 'risk', '--json']);
+      expect(exitCode).toBe(0);
+      const json = JSON.parse(stdout);
+      expect(json.results.total_active).toBe(6);
+    });
+  });
+
+  // @ana A019
+  describe('matrix ignores entry filter', () => {
+    it('shows full count even when --entry is passed', async () => {
+      await createAuditChain(6, 3);
+      process.chdir(tempDir);
+      const { stdout, exitCode } = runProof(['audit', '--matrix', '--entry', 'nonexistent', '--json']);
+      expect(exitCode).toBe(0);
+      const json = JSON.parse(stdout);
+      expect(json.results.total_active).toBe(6);
+    });
+  });
+
+  // @ana A020, A021
+  describe('matrix with zero findings returns payload', () => {
+    it('returns orientation with zeros and recent_entries', async () => {
+      const emptyEntry = {
+        slug: 'empty-run',
+        feature: 'Empty Feature',
+        result: 'PASS' as const,
+        author: { name: 'Dev', email: 'dev@test.com' },
+        contract: { total: 1, covered: 1, uncovered: 0, satisfied: 1, unsatisfied: 0, deviated: 0 },
+        assertions: [],
+        acceptance_criteria: { total: 1, met: 1 },
+        timing: { total_minutes: 10 },
+        hashes: {},
+        completed_at: '2026-04-20T10:00:00Z',
+        modules_touched: [],
+        findings: [],
+        rejection_cycles: 0,
+        previous_failures: [],
+        build_concerns: [],
+      };
+      await createProofChain([emptyEntry]);
+      process.chdir(tempDir);
+      const { stdout, exitCode } = runProof(['audit', '--matrix', '--json']);
+      expect(exitCode).toBe(0);
+      const json = JSON.parse(stdout);
+      expect(json.results.total_active).toBe(0);
+      expect(json.results.recent_entries).toBeDefined();
+      expect(json.results.recent_entries.length).toBe(1);
+    });
+  });
+
+  // @ana A022
+  describe('matrix with zero entries returns no-data', () => {
+    it('shows no proof chain data message', async () => {
+      await createProofChain([]);
+      process.chdir(tempDir);
+      const { stdout, exitCode } = runProof(['audit', '--matrix']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('no proof chain data');
+    });
+  });
+
+  // @ana A023
+  describe('matrix human-readable omits file groups', () => {
+    it('does not show file-grouped findings text', async () => {
+      await createProofChain([multiSeverityEntry]);
+      process.chdir(tempDir);
+      const { stdout, exitCode } = runProof(['audit', '--matrix']);
+      expect(exitCode).toBe(0);
+      // Standard audit shows "N findings)" for file groups - matrix should not
+      expect(stdout).not.toContain('findings)');
+    });
+  });
+
+  // ─── formatRelativeTime Tests ─────────────────────────────────────────
+
+  // @ana A026, A027
+  describe('formatRelativeTime returns correct strings', () => {
+    it('returns day-level and week-level precision', async () => {
+      // We test formatRelativeTime indirectly via --matrix recent_entries ago field
+      // But also test directly by importing
+      const { formatRelativeTime } = await import('../../src/utils/proofSummary.js');
+
+      const now = Date.now();
+      // 2 days ago
+      const twoDaysAgo = new Date(now - 2 * 24 * 60 * 60 * 1000).toISOString();
+      expect(formatRelativeTime(twoDaysAgo)).toBe('2d ago');
+
+      // 35 days ago → 5w ago
+      const fiveWeeksAgo = new Date(now - 35 * 24 * 60 * 60 * 1000).toISOString();
+      expect(formatRelativeTime(fiveWeeksAgo)).toBe('5w ago');
+
+      // 30 minutes ago → <1h ago
+      const thirtyMinAgo = new Date(now - 30 * 60 * 1000).toISOString();
+      expect(formatRelativeTime(thirtyMinAgo)).toBe('<1h ago');
+
+      // 5 hours ago → 5h ago
+      const fiveHoursAgo = new Date(now - 5 * 60 * 60 * 1000).toISOString();
+      expect(formatRelativeTime(fiveHoursAgo)).toBe('5h ago');
+
+      // 7 days ago → 1w ago (30+ days threshold for weeks)
+      const sevenDaysAgo = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
+      expect(formatRelativeTime(sevenDaysAgo)).toBe('7d ago');
+    });
+  });
 });

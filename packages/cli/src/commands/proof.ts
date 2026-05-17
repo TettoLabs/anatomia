@@ -25,7 +25,7 @@ import { spawnSync } from 'node:child_process';
 import { globSync } from 'glob';
 import type { ProofChainEntry, ProofChain } from '../types/proof.js';
 import { findProjectRoot, validateSkillName } from '../utils/validators.js';
-import { getProofContext, wrapJsonResponse, wrapJsonError, generateDashboard, computeChainHealth, computeHealthReport, computeFirstPassRate, computeStaleness, computeResolutionClaims, truncateSummary, findFindingById, MIN_ENTRIES_FOR_TREND } from '../utils/proofSummary.js';
+import { getProofContext, wrapJsonResponse, wrapJsonError, generateDashboard, computeChainHealth, computeHealthReport, computeFirstPassRate, computeStaleness, computeResolutionClaims, truncateSummary, findFindingById, formatRelativeTime, MIN_ENTRIES_FOR_TREND } from '../utils/proofSummary.js';
 import type { ProofContextResult } from '../utils/proofSummary.js';
 import { readArtifactBranch, getCurrentBranch, readCoAuthor, runGit } from '../utils/git-operations.js';
 
@@ -1582,7 +1582,8 @@ export function registerProofCommand(program: Command): void {
     .option('--full', 'Return all findings without truncation (requires --json)')
     .option('--severity <values>', 'Filter by severity (comma-separated: risk,debt,observation,unclassified)')
     .option('--entry <slug>', 'Filter to findings from a specific pipeline run')
-    .action(async (options: { json?: boolean; full?: boolean; severity?: string; entry?: string }) => {
+    .option('--matrix', 'Show orientation summary instead of file-grouped findings')
+    .action(async (options: { json?: boolean; full?: boolean; severity?: string; entry?: string; matrix?: boolean }) => {
       const proofRoot = findProjectRoot();
       const proofChainPath = path.join(proofRoot, '.ana', 'proof_chain.json');
       const parentOpts = proofCommand.opts();
@@ -1597,6 +1598,26 @@ export function registerProofCommand(program: Command): void {
 
       // Read chain (no branch check — audit is read-only)
       if (!fs.existsSync(proofChainPath)) {
+        if (options.matrix) {
+          if (useJson) {
+            console.log(JSON.stringify(wrapJsonResponse('proof audit', {
+              total_active: 0,
+              actionable_count: 0,
+              monitoring_count: 0,
+              by_severity: { risk: 0, debt: 0, observation: 0, unclassified: 0 },
+              by_action: { promote: 0, scope: 0, monitor: 0, accept: 0, unclassified: 0 },
+              by_severity_action: {},
+              recent_entries: [],
+              stale_count: 0,
+              stale_high: 0,
+              stale_medium: 0,
+            }, { entries: [] }), null, 2));
+          } else {
+            console.log('\nProof Orientation: no proof chain data');
+            console.log('  Run pipeline cycles to generate proof data.');
+          }
+          return;
+        }
         if (useJson) {
           console.log(JSON.stringify(wrapJsonResponse('proof audit', { total_active: 0, by_file: [] }, { entries: [] }), null, 2));
         } else {
@@ -1611,6 +1632,154 @@ export function registerProofCommand(program: Command): void {
       } catch {
         console.error(chalk.red('Error: Failed to parse proof_chain.json'));
         process.exit(1);
+        return;
+      }
+
+      // --matrix: orientation mode — early return before filters and file I/O
+      if (options.matrix) {
+        // Handle empty entries array
+        if (chain.entries.length === 0) {
+          if (useJson) {
+            console.log(JSON.stringify(wrapJsonResponse('proof audit', {
+              total_active: 0,
+              actionable_count: 0,
+              monitoring_count: 0,
+              by_severity: { risk: 0, debt: 0, observation: 0, unclassified: 0 },
+              by_action: { promote: 0, scope: 0, monitor: 0, accept: 0, unclassified: 0 },
+              by_severity_action: {},
+              recent_entries: [],
+              stale_count: 0,
+              stale_high: 0,
+              stale_medium: 0,
+            }, chain), null, 2));
+          } else {
+            console.log('\nProof Orientation: no proof chain data');
+            console.log('  Run pipeline cycles to generate proof data.');
+          }
+          return;
+        }
+
+        // Collect counts from all active findings (no file I/O, no anchor checking)
+        const matrixSeverityCounts: Record<string, number> = {};
+        const matrixActionCounts: Record<string, number> = {};
+        const matrixCrossTab: Record<string, number> = {};
+        const entryFindingCounts: Record<string, number> = {};
+        let matrixAllUnclassified = true;
+        let totalActive = 0;
+        let matrixActionable = 0;
+        let matrixMonitoring = 0;
+
+        for (const entry of chain.entries) {
+          for (const finding of entry.findings || []) {
+            if (finding.status && finding.status !== 'active') continue;
+            totalActive++;
+
+            const sev = (finding.severity ?? '—') === '—' ? 'unclassified' : finding.severity!;
+            matrixSeverityCounts[sev] = (matrixSeverityCounts[sev] || 0) + 1;
+            if ((finding.severity ?? '—') !== '—') matrixAllUnclassified = false;
+
+            const act = (finding.suggested_action ?? '—') === '—' ? 'unclassified' : finding.suggested_action!;
+            matrixActionCounts[act] = (matrixActionCounts[act] || 0) + 1;
+
+            matrixCrossTab[`${sev}/${act}`] = (matrixCrossTab[`${sev}/${act}`] || 0) + 1;
+
+            if (sev === 'risk' || sev === 'debt' || act === 'promote' || act === 'scope') {
+              matrixActionable++;
+            } else {
+              matrixMonitoring++;
+            }
+
+            // Count findings per entry slug
+            entryFindingCounts[entry.slug] = (entryFindingCounts[entry.slug] || 0) + 1;
+          }
+        }
+
+        // Staleness
+        const staleness = computeStaleness(chain);
+        const staleHigh = staleness.high_confidence.length;
+        const staleMedium = staleness.medium_confidence.length;
+
+        // Recent entries (last 3)
+        const recentEntries = chain.entries.slice(-3).reverse().map(e => ({
+          slug: e.slug,
+          result: e.result,
+          finding_count: entryFindingCounts[e.slug] || 0,
+          completed_at: e.completed_at,
+          ago: e.completed_at ? formatRelativeTime(e.completed_at) : 'unknown',
+        }));
+
+        const matrixBySeverity = {
+          risk: matrixSeverityCounts['risk'] || 0,
+          debt: matrixSeverityCounts['debt'] || 0,
+          observation: matrixSeverityCounts['observation'] || 0,
+          unclassified: matrixSeverityCounts['unclassified'] || 0,
+        };
+        const matrixByAction = {
+          promote: matrixActionCounts['promote'] || 0,
+          scope: matrixActionCounts['scope'] || 0,
+          monitor: matrixActionCounts['monitor'] || 0,
+          accept: matrixActionCounts['accept'] || 0,
+          unclassified: matrixActionCounts['unclassified'] || 0,
+        };
+
+        if (useJson) {
+          console.log(JSON.stringify(wrapJsonResponse('proof audit', {
+            total_active: totalActive,
+            actionable_count: matrixActionable,
+            monitoring_count: matrixMonitoring,
+            by_severity: matrixBySeverity,
+            by_action: matrixByAction,
+            by_severity_action: matrixCrossTab,
+            recent_entries: recentEntries,
+            stale_count: staleHigh + staleMedium,
+            stale_high: staleHigh,
+            stale_medium: staleMedium,
+          }, chain), null, 2));
+        } else {
+          // Human-readable orientation block
+          if (totalActive === 0) {
+            console.log(`\nProof Orientation: 0 active findings`);
+            console.log(`  No active findings. Chain has ${chain.entries.length} entr${chain.entries.length !== 1 ? 'ies' : 'y'}.`);
+          } else {
+            const actionablePart = ` (${matrixActionable} actionable, ${matrixMonitoring} monitoring)`;
+            console.log(`\nProof Orientation: ${totalActive} active finding${totalActive !== 1 ? 's' : ''}${actionablePart}`);
+
+            if (!matrixAllUnclassified) {
+              const sevOrder = ['risk', 'debt', 'observation', 'unclassified'];
+              const sevParts = sevOrder
+                .filter(s => (matrixSeverityCounts[s] || 0) > 0)
+                .map(s => `${matrixSeverityCounts[s]} ${s}`);
+              console.log(chalk.dim(`  ${sevParts.join(' · ')}`));
+
+              // Cross-tab (capped at 5, sorted by count desc)
+              const crossParts = Object.entries(matrixCrossTab)
+                .filter(([, count]) => count > 0)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5)
+                .map(([key, count]) => `${count} ${key}`);
+              if (crossParts.length > 0) {
+                console.log(chalk.dim(`  ${crossParts.join(' · ')}`));
+              }
+            }
+
+            const staleTotal = staleHigh + staleMedium;
+            if (staleTotal > 0) {
+              console.log(`  Staleness: ${staleTotal} stale (${staleHigh} high, ${staleMedium} medium)`);
+            } else {
+              console.log(`  Staleness: none detected`);
+            }
+          }
+
+          if (recentEntries.length > 0) {
+            console.log('');
+            console.log('  Recent proofs:');
+            for (const e of recentEntries) {
+              const pad = Math.max(0, 20 - (e.slug?.length || 0));
+              const findingLabel = `${e.finding_count} finding${e.finding_count !== 1 ? 's' : ''}`;
+              console.log(`    ${e.slug}${' '.repeat(pad)}${e.result}  ${findingLabel}  ${e.ago}`);
+            }
+          }
+        }
         return;
       }
 
