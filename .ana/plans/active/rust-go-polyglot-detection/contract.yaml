@@ -1,0 +1,134 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Rust/Go Polyglot Detection"
+
+assertions:
+  - id: A001
+    says: "A Rust workspace project with a secondary package.json is detected as Rust"
+    block: "detects Rust when Cargo.toml has [workspace] section (with lockfile)"
+    target: "result.type"
+    matcher: "equals"
+    value: "rust"
+
+  - id: A002
+    says: "A Rust workspace project gets high detection confidence"
+    block: "detects Rust when Cargo.toml has [workspace] section (with lockfile)"
+    target: "result.confidence"
+    matcher: "equals"
+    value: 0.90
+
+  - id: A003
+    says: "Cargo.toml appears in the detection indicators for Rust projects"
+    block: "detects Rust when Cargo.toml has [workspace] section (with lockfile)"
+    target: "result.indicators"
+    matcher: "contains"
+    value: "Cargo.toml"
+
+  - id: A004
+    says: "A WASM binding crate without a workspace stays detected as Node"
+    block: "single-crate Cargo.toml without [workspace] stays Node"
+    target: "result.type"
+    matcher: "equals"
+    value: "node"
+
+  - id: A005
+    says: "A Go project with a secondary package.json is detected as Go"
+    block: "detects Go when go.mod exists alongside package.json (with lockfile)"
+    target: "result.type"
+    matcher: "equals"
+    value: "go"
+
+  - id: A006
+    says: "A Go project gets high detection confidence"
+    block: "detects Go when go.mod exists alongside package.json (with lockfile)"
+    target: "result.confidence"
+    matcher: "equals"
+    value: 0.90
+
+  - id: A007
+    says: "go.mod appears in the detection indicators for Go projects"
+    block: "detects Go when go.mod exists alongside package.json (with lockfile)"
+    target: "result.indicators"
+    matcher: "contains"
+    value: "go.mod"
+
+  - id: A008
+    says: "Projects with only package.json and lockfile still detect as Node"
+    block: "preserves Node detection with lockfile and no competing manifest"
+    target: "result.type"
+    matcher: "equals"
+    value: "node"
+
+  - id: A009
+    says: "The fast path confidence is unchanged for pure Node projects"
+    block: "preserves Node detection with lockfile and no competing manifest"
+    target: "result.confidence"
+    matcher: "equals"
+    value: 0.95
+
+  - id: A010
+    says: "Node workspaces take priority over Cargo.toml presence"
+    block: "workspaces field overrides Cargo.toml presence"
+    target: "result.type"
+    matcher: "equals"
+    value: "node"
+
+  - id: A011
+    says: "Node workspaces take priority over go.mod presence"
+    block: "workspaces field overrides go.mod presence"
+    target: "result.type"
+    matcher: "equals"
+    value: "node"
+
+  - id: A012
+    says: "Malformed Cargo.toml does not crash detection"
+    block: "handles malformed Cargo.toml gracefully"
+    target: "result.type"
+    matcher: "equals"
+    value: "node"
+
+  - id: A013
+    says: "A Rust workspace project without a lockfile is still detected as Rust"
+    block: "detects Rust without lockfile when Cargo.toml has [workspace]"
+    target: "result.type"
+    matcher: "equals"
+    value: "rust"
+
+  - id: A014
+    says: "Rust detection without lockfile has reduced confidence"
+    block: "detects Rust without lockfile when Cargo.toml has [workspace]"
+    target: "result.confidence"
+    matcher: "equals"
+    value: 0.85
+
+  - id: A015
+    says: "A Go project without a lockfile is still detected as Go"
+    block: "detects Go without lockfile when go.mod exists"
+    target: "result.type"
+    matcher: "equals"
+    value: "go"
+
+  - id: A016
+    says: "Go detection without lockfile has reduced confidence"
+    block: "detects Go without lockfile when go.mod exists"
+    target: "result.confidence"
+    matcher: "equals"
+    value: 0.85
+
+  - id: A017
+    says: "After detecting Rust, framework detection receives Rust-specific dependencies"
+    block: "frameworkDeps routes to language-specific deps after Rust type flip"
+    target: "frameworkResult.framework"
+    matcher: "exists"
+
+  - id: A018
+    says: "All existing Python polyglot tests pass without modification"
+    block: "existing polyglot tests"
+    target: "testSuite.passed"
+    matcher: "truthy"
+
+file_changes:
+  - path: "packages/cli/src/engine/detectors/projectType.ts"
+    action: modify
+  - path: "packages/cli/tests/engine/detectors/polyglot.test.ts"
+    action: modify
