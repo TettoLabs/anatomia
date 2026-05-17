@@ -2,7 +2,7 @@
 title: Using ana-learn
 description: "Findings accumulate. Learn tends them \u2014 closing what\u2019s resolved, promoting recurring patterns into skill rules, and routing what needs engineering work back to Think. Run it between pipeline cycles."
 readingTime: 7
-lastReviewed: "2026-05-13"
+lastReviewed: "2026-05-17"
 ---
 
 ## Starting a session
@@ -12,18 +12,17 @@ lastReviewed: "2026-05-13"
 <span style={{color:"var(--ink-45)",textTransform:"uppercase",letterSpacing:"0.06em",fontSize:"10px"}}>bash</span>
 </div>
 <pre style={{padding:"14px 16px",color:"var(--ink-75)",overflowX:"auto",whiteSpace:"pre",margin:0,background:"transparent",fontSize:"inherit",lineHeight:"inherit",fontFamily:"inherit"}}>
-{"$ "}<span style={{color:"var(--pass)"}}>claude --agent ana-learn</span>{"\n\nProof chain: 78 runs, 188 active findings\n  9 risk · 63 debt · 116 observation\n  45 scope · 73 monitor · 70 accept (closeable)\n\nBefore we start \u2014 anything you've noticed since the last session?"}
+{"$ "}<span style={{color:"var(--pass)"}}>claude --agent ana-learn</span>{"\n\nProof Orientation: 47 active findings (31 actionable, 16 monitoring)\n  3 risk · 28 debt · 16 observation\n  3 risk/scope · 18 debt/scope · 10 debt/monitor · 8 observation/monitor · 8 observation/accept\n  Staleness: 12 stale (4 high, 8 medium)\n\n  Recent proofs:\n    auth-refactor      PASS  3 findings  2d ago\n    api-validation     PASS  5 findings  4d ago\n    stripe-payments    PASS  1 finding   1w ago\n\nBefore we start \u2014 anything you've noticed since the last session?"}
 </pre>
 </div>
 
-Learn reads the proof chain, checks health, detects staleness, and presents the shape. Then it offers options:
+Learn reads the proof chain, checks staleness, and presents the orientation — the severity/action cross-tab that tells you the shape of work, recent proofs, and how many findings are stale. Then it recommends a direction:
 
-- Review risks (9 risk findings)
-- Review debt (63 debt findings)
-- Focus on a hot module (work.ts: 15 findings across 8 runs)
-- Promote patterns
+- **Cleanup** — 12 stale findings to triage. Quick verifications, highest closure rate.
+- **Highest-impact** — 3 risk/scope findings to review. These may need engineering work.
+- **Recent findings** — 9 new findings from the last 3 proofs.
 
-You pick the focus. Learn does the homework — reads the code, checks git history, verifies each finding's claim against the current state. Nothing executes without your sign-off.
+Learn recommends based on the data: high stale count suggests cleanup first, risk findings suggest highest-impact. You pick the focus or redirect. Nothing executes without your sign-off.
 
 <p style={{fontSize:"13px",color:"var(--ink-60)",margin:"0 0 16px"}}>The "anything you've noticed?" prompt isn't rhetorical. If you say "auth calls are slow" or "why does this pattern keep appearing," Learn traces it: missing skill rule? Curation gap where Plan doesn't load the skill? A bug that needs its own scope? Observations can surface at any point, not just at session start.</p>
 
@@ -98,7 +97,7 @@ Session complete.
   Risk: 9 → 7
   Promoted this session: testing-standards, coding-standards
 ```
-{/* Dynamic: session greeting numbers (78 runs, 188 findings, severity/action splits) and delta numbers above are from supermock snapshot — update on data change */}
+{/* Dynamic: session greeting numbers (47 findings, severity/action splits, recent proofs) and delta numbers above are illustrative — update on data change */}
 
 If actionable work remains — scope-action findings, real debt, recurring patterns that need code fixes before they can become rules — Learn drafts a prompt for Think that synthesizes the remaining work.
 
