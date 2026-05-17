@@ -426,7 +426,8 @@ function getBuildCommandString(wtPath: string): string {
   try {
     const raw = fs.readFileSync(path.join(wtPath, '.ana', 'ana.json'), 'utf-8');
     const config = JSON.parse(raw);
-    const cmd = config?.commands?.build;
+    // Prefer buildRoot (unscoped project-wide command) over build (package-scoped).
+    const cmd = config?.commands?.buildRoot ?? config?.commands?.build;
     return typeof cmd === 'string' ? cmd : 'pnpm run build';
   } catch {
     return 'pnpm run build';
@@ -449,7 +450,8 @@ function runBuildCommand(wtPath: string): boolean | null {
   try {
     const raw = fs.readFileSync(anaJsonPath, 'utf-8');
     const config = JSON.parse(raw);
-    const buildCmd = config?.commands?.build;
+    // Prefer buildRoot (unscoped project-wide command) over build (package-scoped).
+    const buildCmd = config?.commands?.buildRoot ?? config?.commands?.build;
 
     if (typeof buildCmd !== 'string' || !buildCmd.trim()) {
       return null;

@@ -213,4 +213,27 @@ describe('AnaJsonSchema', () => {
       expect(parsed.setupPhase).toBeUndefined();
     });
   });
+
+  // @ana A016
+  describe('buildRoot/testRoot passthrough', () => {
+    it('AnaJsonSchema passthrough preserves buildRoot/testRoot', () => {
+      const input = {
+        anaVersion: '1.1.0',
+        name: 'my-monorepo',
+        commands: {
+          build: '(cd packages/cli && pnpm run build)',
+          test: '(cd packages/cli && pnpm vitest run)',
+          buildRoot: 'pnpm run build',
+          testRoot: 'pnpm run test',
+        },
+      };
+      const parsed = AnaJsonSchema.parse(input);
+      const cmds = parsed.commands as Record<string, unknown>;
+      expect(cmds['buildRoot']).toBe('pnpm run build');
+      expect(cmds['testRoot']).toBe('pnpm run test');
+      // Scoped commands still present
+      expect(cmds['build']).toBe('(cd packages/cli && pnpm run build)');
+      expect(cmds['test']).toBe('(cd packages/cli && pnpm vitest run)');
+    });
+  });
 });

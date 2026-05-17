@@ -321,6 +321,73 @@ describe('worktree utilities', () => {
       await expect(createWorktree(tempDir, 'test-slug', 'feature/')).rejects.toThrow('already exists');
     });
 
+    // @ana A007, A010
+    it('runBuildCommand prefers buildRoot over build', async () => {
+      await createTestProject();
+      const anaJsonPath = path.join(tempDir, '.ana', 'ana.json');
+      const config = JSON.parse(await fs.readFile(anaJsonPath, 'utf-8'));
+      // buildRoot runs; build would fail — proves buildRoot is preferred
+      config.commands = {
+        buildRoot: 'mkdir -p dist && echo root > dist/marker.txt',
+        build: 'exit 1',
+      };
+      await fs.writeFile(anaJsonPath, JSON.stringify(config), 'utf-8');
+      execSync('git add -A && git commit -m "add buildRoot"', { cwd: tempDir, stdio: 'ignore' });
+      process.chdir(tempDir);
+
+      const result = await createWorktree(tempDir, 'root-build', 'feature/');
+
+      expect(result.buildSucceeded).toBe(true);
+      const marker = await fs.readFile(
+        path.join(result.worktreePath, 'dist', 'marker.txt'),
+        'utf-8',
+      );
+      expect(marker.trim()).toBe('root');
+      // Context file should show the buildRoot command, not the scoped one
+      const contextContent = await fs.readFile(
+        path.join(result.worktreePath, '.ana', 'worktree-context.md'),
+        'utf-8',
+      );
+      expect(contextContent).toContain('dist && echo root');
+    });
+
+    // @ana A008, A011
+    it('runBuildCommand falls back to build when buildRoot is absent', async () => {
+      await createTestProject();
+      const anaJsonPath = path.join(tempDir, '.ana', 'ana.json');
+      const config = JSON.parse(await fs.readFile(anaJsonPath, 'utf-8'));
+      // No buildRoot — should use build
+      config.commands = { build: 'mkdir -p dist && echo scoped > dist/marker.txt' };
+      await fs.writeFile(anaJsonPath, JSON.stringify(config), 'utf-8');
+      execSync('git add -A && git commit -m "add build only"', { cwd: tempDir, stdio: 'ignore' });
+      process.chdir(tempDir);
+
+      const result = await createWorktree(tempDir, 'fallback-build', 'feature/');
+
+      expect(result.buildSucceeded).toBe(true);
+      const marker = await fs.readFile(
+        path.join(result.worktreePath, 'dist', 'marker.txt'),
+        'utf-8',
+      );
+      expect(marker.trim()).toBe('scoped');
+    });
+
+    // @ana A009
+    it('runBuildCommand returns null when neither command exists', async () => {
+      await createTestProject();
+      const anaJsonPath = path.join(tempDir, '.ana', 'ana.json');
+      const config = JSON.parse(await fs.readFile(anaJsonPath, 'utf-8'));
+      // No build commands at all
+      config.commands = {};
+      await fs.writeFile(anaJsonPath, JSON.stringify(config), 'utf-8');
+      execSync('git add -A && git commit -m "no build cmds"', { cwd: tempDir, stdio: 'ignore' });
+      process.chdir(tempDir);
+
+      const result = await createWorktree(tempDir, 'no-build-cmds', 'feature/');
+
+      expect(result.buildSucceeded).toBeNull();
+    });
+
     // @ana A001, A002, A003, A009, A010, A012
     it('runs build command when commands.build is configured', async () => {
       await createTestProject();
