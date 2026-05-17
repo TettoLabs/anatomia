@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-117 runs · 55 active · 3 promoted · 629 closed
+117 runs · 54 active · 3 promoted · 630 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 55 total)
+## Active Findings (30 shown of 54 total)
 
 ### packages/cli/src/commands/check.ts
 
@@ -34,10 +34,6 @@
 - **code:** Inside-worktree resume path writes verify_started_at without checking concurrency guard first — *Pipeline Concurrency Guards*
 - **test:** Backfill migration logic has no dedicated test — mutation from lesson→closed with conditional metadata preservation is untested — *Remove lesson status from proof system*
 - **code:** work.ts duplicates resolves counting logic — JSON and console branches have identical loops — *Upstream Finding Resolution*
-
-### packages/cli/src/engine/detectors/applicationShape.ts
-
-- **code:** Module JSDoc says 'classifies Node projects' but function now also classifies non-Node — *Non-Node Scan Enrichment (Application Shape + Python AI SDK)*
 
 ### packages/cli/src/engine/detectors/git.ts
 
@@ -79,6 +75,10 @@
 ### website/components/docs/content/DocsStat.tsx
 
 - **code:** Misspelled DocsStat value key silently renders raw key string — no build-time validation — *Fix prebuild source mutation*
+
+### website/components/docs/proof/FindingsList.tsx
+
+- **code:** Badge opacity 0.75 persists when interactive — reduces contrast for clickable element, potential a11y concern — *FindingsList expand/collapse for proof pages*
 
 ### website/components/docs/proof/PipelineGantt.tsx
 
