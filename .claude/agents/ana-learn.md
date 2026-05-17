@@ -63,15 +63,11 @@ When promoting, route to the skill that covers the finding's domain. If the righ
 
 ### 2. Assess the Proof Chain
 
-Run `ana proof health --json` to get the overview — runs, trajectory, hot modules, promotion candidates.
+Run `ana proof audit --matrix` to get the full orientation in one command — active finding counts, severity/action cross-tab, staleness signals, and recent proof entries with relative timestamps.
 
-Run `ana proof audit --json` to see active findings. **Note:** audit truncates to 3 findings per file group with an `overflow` count. When you need the full picture (all findings for a specific action type, all findings for a specific module), use `ana proof audit --json --full` to bypass truncation caps.
+**If the output says "no proof chain data":** "No proof chain data yet. Run a pipeline cycle (scope → plan → build → verify) to generate findings. Learn works with the output — without runs, there's nothing to triage."
 
-**If the proof chain file doesn't exist or has 0 runs:** "No proof chain data yet. Run a pipeline cycle (scope → plan → build → verify) to generate findings. Learn works with the output — without runs, there's nothing to triage."
-
-Check the last 3 entries to understand what shipped recently. Recent entries contain the freshest findings and the most likely staleness candidates.
-
-**Pre-scan for staleness.** Run `ana proof stale --json` to detect findings whose files were modified by subsequent pipeline runs. This gives you the shape before you present it: "57 active findings, 8 have staleness signals from recent builds." That sentence changes the developer's choices. Without it, 57 findings is a flat number — with it, the developer knows 8 of those are likely quick closures.
+When you need the detailed finding list (all findings for a specific file or action type), use `ana proof audit --json --full` to get the full file-grouped breakdown.
 
 ### 3. Calibrate
 
@@ -83,34 +79,28 @@ After reading context, calibrate your approach:
 
 ### 4. Present State
 
-Use AUDIT results for active finding counts — audit is pre-filtered to active. Do NOT use the meta block from health for triage counts — meta includes closed findings.
+Present the `--matrix` output directly — it already contains the shape summary (counts, cross-tab, staleness, recent proofs). Do NOT reformat or recompute counts from other sources.
 
-After the summary, always ask: "Before we start — anything you've noticed since the last session?" Then present the phase menu. The developer skips in two seconds with "no." The one time they have an observation, it's the highest-quality input Learn gets.
+After the summary, always ask: "Before we start — anything you've noticed since the last session?" Then present the adaptive menu.
 
-Summarize the shape, not individual findings:
+**Adaptive menu — choose the best recommendation based on the matrix data:**
+
+1. **Cleanup** — when staleness is high (stale_count > 20% of total_active), recommend closing stale findings first. Quick wins that reduce noise.
+2. **Highest-impact** — when risk findings dominate (risk > 30% of total_active), recommend reviewing risks. These are the findings most likely to hurt.
+3. **Recent findings** — when the last entry has a high finding count relative to the average, recommend reviewing findings from the most recent run. Fresh findings are most actionable.
+
+Present all three options with the recommended one marked:
 
 ```
-Proof chain: {N} runs, {M} active findings
-  {X} risk · {Y} debt · {Z} observation
-  {B} promotable · {C} need review
-
-Last 3 runs: {slug1} ({days} ago), {slug2} ({days} ago), {slug3} ({days} ago)
-Skills: {list installed}
-
 Before we start — anything you've noticed about the system since the last session?
+
+Suggested focus:
+  → Cleanup: {N} stale findings to triage (recommended)
+  · Highest-impact: {X} risk findings to review
+  · Recent: {Y} findings from {last_slug} ({ago})
 ```
 
-Do NOT call out individual findings in the summary. Save that for the triage phases where you read the actual code. The summary is for orientation — counts, shape, and options.
-
-Do NOT report unclassified counts as triage work. Unclassified findings in meta are predominantly historical closed entries from before the enrichment schema. If you need to surface them: "Note: {N} historical findings lack classification — these are closed entries, not active work."
-
-After the summary, present options:
-- Review risks ({X} risk findings)
-- Review debt ({Y} debt findings)
-- Promote patterns ({B} promotion candidates)
-- Focus on {module} ({N} findings in hot module)
-
-The developer picks the order. These are a menu, not a mandatory sequence. If they say "focus on risks" — go to risks. If they say "promote patterns" — go to promotions. The default ordering (risk → debt → promote → observations) is the recommendation, not the rule.
+The developer picks. The recommendation is guidance, not a mandate. If they say "focus on risks" — go to risks. If they say "promote patterns" — go to promotions.
 
 ---
 
