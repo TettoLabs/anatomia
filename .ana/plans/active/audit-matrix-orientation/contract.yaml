@@ -1,0 +1,223 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Audit matrix orientation"
+
+assertions:
+  # AC1: by_severity_action in JSON output
+  - id: A001
+    says: "Audit JSON includes a severity-by-action cross-tab showing how findings distribute"
+    block: "audit JSON includes by_severity_action"
+    target: "results.by_severity_action"
+    matcher: "exists"
+
+  - id: A002
+    says: "Cross-tab pairs use the severity/action format"
+    block: "audit JSON includes by_severity_action"
+    target: "results.by_severity_action.risk/scope"
+    matcher: "exists"
+
+  - id: A003
+    says: "Cross-tab counts match actual finding distribution"
+    block: "audit JSON by_severity_action counts are correct"
+    target: "results.by_severity_action.risk/scope"
+    matcher: "equals"
+    value: 2
+
+  # AC2: by_severity_action in human-readable output
+  - id: A004
+    says: "Human-readable audit shows the severity/action cross-tab inline"
+    block: "audit human-readable shows cross-tab"
+    target: "stdout"
+    matcher: "contains"
+    value: "risk/scope"
+
+  - id: A005
+    says: "Cross-tab line uses dot-separator formatting"
+    block: "audit human-readable shows cross-tab"
+    target: "stdout"
+    matcher: "contains"
+    value: " · "
+
+  # AC3: --matrix returns only orientation data
+  - id: A006
+    says: "Matrix mode returns orientation without individual findings"
+    block: "matrix JSON omits by_file"
+    target: "results.by_file"
+    matcher: "not_equals"
+    value: "exists"
+
+  - id: A007
+    says: "Matrix mode includes total active count"
+    block: "matrix JSON includes orientation fields"
+    target: "results.total_active"
+    matcher: "exists"
+
+  - id: A008
+    says: "Matrix mode includes staleness count"
+    block: "matrix JSON includes orientation fields"
+    target: "results.stale_count"
+    matcher: "exists"
+
+  - id: A009
+    says: "Matrix mode includes recent entries"
+    block: "matrix JSON includes orientation fields"
+    target: "results.recent_entries"
+    matcher: "exists"
+
+  # AC4: recent_entries shape
+  - id: A010
+    says: "Recent entries include the proof slug"
+    block: "matrix recent_entries have correct shape"
+    target: "results.recent_entries[0].slug"
+    matcher: "exists"
+
+  - id: A011
+    says: "Recent entries include active finding count from that run"
+    block: "matrix recent_entries have correct shape"
+    target: "results.recent_entries[0].finding_count"
+    matcher: "exists"
+
+  - id: A012
+    says: "Recent entries include human-readable relative time"
+    block: "matrix recent_entries have correct shape"
+    target: "results.recent_entries[0].ago"
+    matcher: "contains"
+    value: "ago"
+
+  - id: A013
+    says: "Recent entries are limited to at most 3"
+    block: "matrix recent_entries caps at 3"
+    target: "results.recent_entries.length"
+    matcher: "equals"
+    value: 3
+
+  # AC5: --matrix human-readable
+  - id: A014
+    says: "Matrix human output shows the orientation header"
+    block: "matrix human-readable shows orientation block"
+    target: "stdout"
+    matcher: "contains"
+    value: "Proof Orientation"
+
+  - id: A015
+    says: "Matrix human output shows staleness signal"
+    block: "matrix human-readable shows orientation block"
+    target: "stdout"
+    matcher: "contains"
+    value: "Staleness"
+
+  - id: A016
+    says: "Matrix human output shows recent proofs with relative time"
+    block: "matrix human-readable shows orientation block"
+    target: "stdout"
+    matcher: "contains"
+    value: "Recent proofs"
+
+  # AC6: --matrix skips file I/O
+  - id: A017
+    says: "Matrix mode does not read source files for anchor checking"
+    block: "matrix skips anchor-presence I/O"
+    target: "results.by_file"
+    matcher: "not_equals"
+    value: "exists"
+
+  # AC7: --matrix ignores filters
+  - id: A018
+    says: "Matrix mode shows full orientation even when severity filter is passed"
+    block: "matrix ignores severity filter"
+    target: "results.total_active"
+    matcher: "equals"
+    value: 6
+
+  - id: A019
+    says: "Matrix mode shows full orientation even when entry filter is passed"
+    block: "matrix ignores entry filter"
+    target: "results.total_active"
+    matcher: "equals"
+    value: 6
+
+  # AC8: 0 findings edge case
+  - id: A020
+    says: "Matrix with no active findings still returns orientation structure"
+    block: "matrix with zero findings returns payload"
+    target: "results.total_active"
+    matcher: "equals"
+    value: 0
+
+  - id: A021
+    says: "Matrix with no active findings still includes recent entries"
+    block: "matrix with zero findings returns payload"
+    target: "results.recent_entries"
+    matcher: "exists"
+
+  # AC9: 0 entries edge case
+  - id: A022
+    says: "Matrix with empty chain returns clean no-data response"
+    block: "matrix with zero entries returns no-data"
+    target: "stdout"
+    matcher: "contains"
+    value: "no proof chain data"
+
+  # AC11: --matrix without --json omits file list
+  - id: A023
+    says: "Matrix human output does not show file-grouped findings"
+    block: "matrix human-readable omits file groups"
+    target: "stdout"
+    matcher: "not_contains"
+    value: "findings)"
+
+  # AC12: cross-tab respects filters in standard mode
+  - id: A024
+    says: "Filtering by severity restricts the cross-tab to matching pairs"
+    block: "standard audit cross-tab respects severity filter"
+    target: "results.by_severity_action"
+    matcher: "not_contains"
+    value: "debt/"
+
+  - id: A025
+    says: "Filtered cross-tab counts only filtered findings"
+    block: "standard audit cross-tab respects severity filter"
+    target: "results.by_severity_action.risk/scope"
+    matcher: "exists"
+
+  # formatRelativeTime utility
+  - id: A026
+    says: "Relative time formatter produces day-level precision for recent dates"
+    block: "formatRelativeTime returns correct strings"
+    target: "result"
+    matcher: "equals"
+    value: "2d ago"
+
+  - id: A027
+    says: "Relative time formatter produces week-level precision for older dates"
+    block: "formatRelativeTime returns correct strings"
+    target: "result"
+    matcher: "equals"
+    value: "1w ago"
+
+  # AC10: template update (structural)
+  - id: A028
+    says: "Learn template instructs running audit --matrix as first orientation command"
+    block: "ana-learn template uses --matrix"
+    target: "templateContent"
+    matcher: "contains"
+    value: "ana proof audit --matrix"
+
+  - id: A029
+    says: "Learn template presents three-option adaptive menu"
+    block: "ana-learn template has adaptive menu"
+    target: "templateContent"
+    matcher: "contains"
+    value: "cleanup"
+
+file_changes:
+  - path: "packages/cli/src/commands/proof.ts"
+    action: modify
+  - path: "packages/cli/src/utils/proofSummary.ts"
+    action: modify
+  - path: "packages/cli/templates/.claude/agents/ana-learn.md"
+    action: modify
+  - path: ".claude/agents/ana-learn.md"
+    action: modify
+  - path: "packages/cli/tests/commands/proof.test.ts"
+    action: modify
