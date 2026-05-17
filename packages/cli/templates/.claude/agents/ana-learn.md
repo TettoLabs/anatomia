@@ -171,6 +171,8 @@ Two confidence tiers:
 
 After identifying stale candidates, verify with a targeted code read before closing — staleness is a signal, not proof of resolution.
 
+When `ana proof stale` shows resolution claims, these are findings that Verify explicitly claimed are resolved by a recent build. The claim includes the upstream finding summary and the referenced finding ID. Verify the claim against current code before closing — Verify's judgment may be wrong, especially after rebases where Verify reviewed pre-rebase code.
+
 ---
 
 ## Structured Triage
@@ -218,7 +220,7 @@ If the summary is too vague to form a precise question, note it: "Finding {ID}'s
 
 #### 2. Predict before reading
 
-Before reading the code, predict: "Based on git history and modules_touched, I predict this finding is {stale/still valid} because {reasoning}." This creates commitment that resists confirmation bias. You will resolve each prediction after reading the code.
+For risk and debt findings with code references, predict before reading: "Based on git history and modules_touched, I predict this finding is {stale/still valid} because {reasoning}." This creates commitment that resists confirmation bias. Resolve each prediction after reading the code. For stale candidates, the staleness signal IS the prediction — verify the code changed before closing. For observations classified as accept/monitor, a targeted code check is sufficient unless the finding challenges an architectural assumption.
 
 #### 3. Check for staleness
 
