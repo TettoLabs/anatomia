@@ -36,5 +36,20 @@
     "packages/cli/tests/engine/detectors/ai-sdk-detection.test.ts",
     "packages/cli/tests/engine/detectors/applicationShape.test.ts"
   ],
-  "commit_hygiene": []
+  "commit_hygiene": [],
+  "verify_started_at": "2026-05-17T05:58:48.289Z",
+  "verify_agent": "ana-verify",
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:f6fa674e3d50ac411b1da3d72c68753d367f0b72bab1673b70404a61a46f6586",
+    "run_at": "2026-05-17T06:03:18.282Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-17T06:03:18.328Z",
+    "hash": "sha256:be26ce7a8971733c04b45cdbc818dbb320cac8079851ac510c0bcd05709a0e15"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-17T06:03:18.328Z",
+    "hash": "sha256:49545e057a4772840d92f54b4d6ed06b9aacb3e85c40fb6246f2bcfccd8b2f22"
+  }
 }
