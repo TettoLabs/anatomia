@@ -4339,4 +4339,78 @@ describe('ana proof', () => {
       expect(matches).toBeNull();
     });
   });
+
+  // ─── Cross-tab (by_severity_action) Tests ─────────────────────────────
+
+  // @ana A001, A002, A003
+  describe('audit JSON includes by_severity_action', () => {
+    it('returns cross-tab with severity/action pairs and correct counts', async () => {
+      // multiSeverityEntry has:
+      //   F001: risk/scope, F002: debt/monitor, F003: observation/accept, F004: unclassified
+      // secondEntry has:
+      //   F010: risk/promote
+      // So: risk/scope=1, debt/monitor=1, observation/accept=1, risk/promote=1
+      await createProofChain([multiSeverityEntry, secondEntry]);
+      process.chdir(tempDir);
+      const { stdout, exitCode } = runProof(['audit', '--json']);
+      expect(exitCode).toBe(0);
+      const json = JSON.parse(stdout);
+      expect(json.results.by_severity_action).toBeDefined();
+      expect(json.results.by_severity_action['risk/scope']).toBe(1);
+      expect(json.results.by_severity_action['debt/monitor']).toBe(1);
+      expect(json.results.by_severity_action['observation/accept']).toBe(1);
+      expect(json.results.by_severity_action['risk/promote']).toBe(1);
+    });
+  });
+
+  // @ana A003
+  describe('audit JSON by_severity_action counts are correct', () => {
+    it('counts multiple findings with the same severity/action pair', async () => {
+      // createAuditChain: severity = i%3===0 ? 'risk' : 'observation', action = i%2===0 ? 'scope' : 'monitor'
+      // For 6 findings (i=0..5):
+      //   i=0: risk/scope, i=1: observation/monitor, i=2: observation/scope
+      //   i=3: risk/monitor, i=4: observation/scope, i=5: observation/monitor
+      // risk/scope=1, risk/monitor=1, observation/scope=2, observation/monitor=2
+      await createAuditChain(6, 3);
+      process.chdir(tempDir);
+      const { stdout, exitCode } = runProof(['audit', '--json']);
+      expect(exitCode).toBe(0);
+      const json = JSON.parse(stdout);
+      expect(json.results.by_severity_action['risk/scope']).toBe(1);
+      expect(json.results.by_severity_action['risk/monitor']).toBe(1);
+      expect(json.results.by_severity_action['observation/scope']).toBe(2);
+      expect(json.results.by_severity_action['observation/monitor']).toBe(2);
+    });
+  });
+
+  // @ana A004, A005
+  describe('audit human-readable shows cross-tab', () => {
+    it('displays severity/action pairs with dot separators', async () => {
+      await createProofChain([multiSeverityEntry, secondEntry]);
+      process.chdir(tempDir);
+      const { stdout, exitCode } = runProof(['audit']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('risk/scope');
+      expect(stdout).toContain(' · ');
+    });
+  });
+
+  // @ana A024, A025
+  describe('standard audit cross-tab respects severity filter', () => {
+    it('filters cross-tab to only matching severity pairs', async () => {
+      await createProofChain([multiSeverityEntry, secondEntry]);
+      process.chdir(tempDir);
+      const { stdout, exitCode } = runProof(['audit', '--severity', 'risk', '--json']);
+      expect(exitCode).toBe(0);
+      const json = JSON.parse(stdout);
+      // Should only have risk/* pairs
+      expect(json.results.by_severity_action['risk/scope']).toBe(1);
+      expect(json.results.by_severity_action['risk/promote']).toBe(1);
+      // No debt or observation pairs
+      const keys = Object.keys(json.results.by_severity_action);
+      for (const key of keys) {
+        expect(key).toMatch(/^risk\//);
+      }
+    });
+  });
 });

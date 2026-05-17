@@ -1697,6 +1697,7 @@ export function registerProofCommand(program: Command): void {
             total_active: 0,
             by_severity: { risk: 0, debt: 0, observation: 0, unclassified: 0 },
             by_action: { promote: 0, scope: 0, monitor: 0, accept: 0, unclassified: 0 },
+            by_severity_action: {},
             by_file: [],
           }, chain), null, 2));
         } else {
@@ -1734,6 +1735,7 @@ export function registerProofCommand(program: Command): void {
       // Severity and action summary counts (active findings only)
       const severityCounts: Record<string, number> = {};
       const actionCounts: Record<string, number> = {};
+      const severityActionCounts: Record<string, number> = {};
       let allUnclassified = true;
       for (const f of activeFindings) {
         const sev = f.severity === '—' ? 'unclassified' : f.severity;
@@ -1742,6 +1744,9 @@ export function registerProofCommand(program: Command): void {
 
         const act = f.suggested_action === '—' ? 'unclassified' : f.suggested_action;
         actionCounts[act] = (actionCounts[act] || 0) + 1;
+
+        const crossKey = `${sev}/${act}`;
+        severityActionCounts[crossKey] = (severityActionCounts[crossKey] || 0) + 1;
       }
 
       const bySeverity = {
@@ -1788,6 +1793,7 @@ export function registerProofCommand(program: Command): void {
           monitoring_count: monitoringCount,
           by_severity: bySeverity,
           by_action: byAction,
+          by_severity_action: severityActionCounts,
           by_file: byFile,
           overflow_files: overflowFiles,
         };
@@ -1810,6 +1816,16 @@ export function registerProofCommand(program: Command): void {
             }
           }
           console.log(chalk.dim(`  ${sevParts.join(' · ')}`));
+
+          // Cross-tab: severity/action pairs, sorted by count descending, capped at 5
+          const crossParts = Object.entries(severityActionCounts)
+            .filter(([, count]) => count > 0)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5)
+            .map(([key, count]) => `${count} ${key}`);
+          if (crossParts.length > 0) {
+            console.log(chalk.dim(`  ${crossParts.join(' · ')}`));
+          }
 
           const actOrder = ['promote', 'scope', 'monitor', 'accept'];
           const actParts: string[] = [];
