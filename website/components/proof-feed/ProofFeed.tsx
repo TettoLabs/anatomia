@@ -85,7 +85,7 @@ export async function ProofFeed() {
           <div className={styles.feedHead}>
             <div style={{ maxWidth: "44ch" }}>
               <h3 className={styles.feedHeadTitle}>
-                <Formatted text={copy.proofFeed.headTitle.replace("\n", " ")} />
+                <Formatted text={copy.proofFeed.headTitle.replace("\n", " ")} /><span style={{ fontFamily: "var(--font-sans)" }}>.</span>
               </h3>
               <p className={styles.feedHeadSub}>{copy.proofFeed.headSub}</p>
             </div>
