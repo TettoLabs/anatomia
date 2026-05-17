@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-117 runs · 56 active · 3 promoted · 628 closed
+117 runs · 55 active · 3 promoted · 629 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 56 total)
+## Active Findings (30 shown of 55 total)
 
 ### packages/cli/src/commands/check.ts
 
@@ -64,10 +64,6 @@
 - **test:** A019/A020 tests create full git repos with bare remotes — heavyweight setup that could be simplified with targeted spawnSync+runGit mocking — *Pipeline Concurrency Guards*
 - **test:** Arrow-line count assertion uses toBeGreaterThanOrEqual(2) — passes with any number >= 2, not specific to the 2-line ready-to-merge case — *work.ts saves.json backward compat bug + worktree dedup + formatting*
 
-### packages/cli/tests/engine/detectors/applicationShape.test.ts
-
-- **test:** A001-A007 multi-tagged on single describe block — assertion-to-test tracing is ambiguous — *Non-Node Scan Enrichment (Application Shape + Python AI SDK)*
-
 ### packages/cli/tests/engine/findings/secrets.test.ts
 
 - **test:** A007 test asserts 'at least one critical' but doesn't verify BOTH passwords fire — url2 could silently pass — *Fix Scanner Trust Output*
@@ -104,4 +100,8 @@
 ### website/scripts/extract-docs-data.ts
 
 - **code:** Median computation duplicated between extract-docs-data.ts main() and lib/docs-data/proofs.ts getMedianTimings() — *Fix prebuild source mutation*
+
+### General
+
+- **code:** URL reachability not verified — stable URL contract is a deployment assumption — *Documentation links in init and setup*
 

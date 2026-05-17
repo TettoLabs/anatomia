@@ -31522,7 +31522,10 @@
             "A007"
           ],
           "id": "non-node-scan-enrichment-C4",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Multi-tag is a summary annotation: line 350 tags the describe block with all 7 IDs as a group marker. Individual tests within the block have their own specific tags (A001 at line 309, A002 at 294, A003 at 284, A005 at 107, A006 at 120, A007 at 143). Tracing works at the individual test level — the describe-level tag is supplementary.",
+          "closed_at": "2026-05-17T06:14:33.821Z",
+          "closed_by": "human"
         }
       ],
       "rejection_cycles": 0,
