@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-117 runs · 58 active · 3 promoted · 626 closed
+117 runs · 57 active · 3 promoted · 627 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 58 total)
+## Active Findings (30 shown of 57 total)
 
 ### packages/cli/src/commands/check.ts
 
@@ -49,10 +49,6 @@
 
 - **code:** Single-angle pattern suppresses real passwords that happen to be lowercase words in angle brackets (e.g., <admin>, <token>) — *Fix Scanner Trust Output*
 
-### packages/cli/src/engine/scan-engine.ts
-
-- **test:** A017 has no @ana-tagged test — verified by source inspection only — *Non-Node Scan Enrichment (Application Shape + Python AI SDK)*
-
 ### packages/cli/tests/commands/init/monorepoCommandScoping.test.ts
 
 - **test:** Repeated tmpDir/cwdDir setup+teardown boilerplate in every test — no shared beforeEach/afterEach — *Monorepo build command scoping*
@@ -60,6 +56,7 @@
 ### packages/cli/tests/commands/work-ci-mocked.test.ts
 
 - **test:** Broad mock intercept matches any git command with 'pull' in args, not specifically 'git pull --rebase' — *Fix CI Matrix and Broken Tests*
+- **code:** createMergedProject duplicated between work-ci-mocked.test.ts and work.test.ts — both have independent copies with different mock routing — *Fix CI Matrix and Broken Tests*
 
 ### packages/cli/tests/commands/work.test.ts
 

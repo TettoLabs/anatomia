@@ -31474,7 +31474,10 @@
             "A017"
           ],
           "id": "non-node-scan-enrichment-C1",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Source inspection is valid verification per Rule 2 (enforcement tests for structural invariants). Verify classified as accept. Same pattern as 5+ findings closed this session (worktree-isolation-C1, phase-timing-fix-C4, etc.) — tag collision makes per-scope tag tracking ambiguous but the behavior IS verified.",
+          "closed_at": "2026-05-17T06:13:09.177Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
