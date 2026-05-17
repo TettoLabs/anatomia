@@ -436,7 +436,7 @@ export const copy = {
       {
         name: "Team",
         flag: "Beta · waitlist",
-        price: "$24",
+        price: "$45",
         priceUnit: "/seat",
         sub: "hosted · coming Q3 2026",
         highlighted: true,
