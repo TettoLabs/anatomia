@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-120 runs · 64 active · 3 promoted · 637 closed
+120 runs · 63 active · 3 promoted · 638 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 64 total)
+## Active Findings (30 shown of 63 total)
 
 ### packages/cli/src/commands/check.ts
 
@@ -76,7 +76,6 @@
 
 ### packages/cli/tests/engine/detectors/polyglot.test.ts
 
-- **test:** A017 frameworkDeps test uses toBeDefined — passes even if framework is null — *Rust/Go Polyglot Detection*
 - **test:** A012 frameworkDeps test verifies detector-level cascade but not the actual scan-engine.ts ternary conditional — the ternary fix is tested structurally, not behaviorally — *Polyglot Language Detection*
 
 ### packages/cli/tests/engine/findings/secrets.test.ts
@@ -94,6 +93,10 @@
 ### website/components/system/Drawer.tsx
 
 - **code:** Drawer moreCount has no floor guard — commandCount < 6 produces negative display — *Dynamic marketing stats — wire command count and version fallback*
+
+### website/lib/docs-data/docsStatValues.ts
+
+- **code:** 2 of 9 value keys (skillCount, findings) defined but unused in any MDX file — *Fix prebuild source mutation*
 
 ### website/lib/proof-feed.ts
 

@@ -31943,7 +31943,10 @@
             "A017"
           ],
           "id": "rust-go-polyglot-detection-C3",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Contract-aligned per Rule 3 (testing-standards): A017 contract uses matcher 'exists'. Test uses toBeDefined() — exact match. The closed upstream finding C6 from this same proof confirms: 'A017 contract matcher exists permits weak test.' The weakness is in the contract's precision, not the test's assertion.",
+          "closed_at": "2026-05-17T20:55:09.673Z",
+          "closed_by": "human"
         },
         {
           "category": "code",
