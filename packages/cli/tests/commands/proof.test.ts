@@ -4622,4 +4622,30 @@ describe('ana proof', () => {
       expect(formatRelativeTime(sevenDaysAgo)).toBe('7d ago');
     });
   });
+
+  // ─── Template Tests ───────────────────────────────────────────────────
+
+  // @ana A028
+  describe('ana-learn template uses --matrix', () => {
+    it('instructs running audit --matrix as orientation command', async () => {
+      const templateContent = await fs.readFile(
+        path.join(__dirname, '../../templates/.claude/agents/ana-learn.md'),
+        'utf-8',
+      );
+      expect(templateContent).toContain('ana proof audit --matrix');
+    });
+  });
+
+  // @ana A029
+  describe('ana-learn template has adaptive menu', () => {
+    it('presents three-option menu with cleanup option', async () => {
+      const templateContent = await fs.readFile(
+        path.join(__dirname, '../../templates/.claude/agents/ana-learn.md'),
+        'utf-8',
+      );
+      expect(templateContent).toContain('Cleanup');
+      expect(templateContent).toContain('Highest-impact');
+      expect(templateContent).toContain('Recent findings');
+    });
+  });
 });
