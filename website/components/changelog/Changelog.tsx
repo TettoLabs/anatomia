@@ -117,7 +117,7 @@ export function Changelog() {
       <div className={styles.eyebrow}>Changelog</div>
 
       <h1 className={styles.title}>
-        What's <em>new</em>.
+        What&apos;s <em>new</em>.
       </h1>
 
       <div className={styles.entries}>
