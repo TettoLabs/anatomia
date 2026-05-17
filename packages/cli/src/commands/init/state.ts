@@ -398,6 +398,9 @@ export async function createAnaJson(
   }
 
   let testCmd = makeTestCommandNonInteractive(result.commands.test, result.stack.testing, result.commands.all?.['test']);
+  // Capture root test command before monorepo scoping overwrites it.
+  // testCmd here is the non-interactive variant of the root-level command.
+  const testRootCmd = testCmd;
   if (testCmd && result.monorepo.isMonorepo && result.monorepo.primaryPackage) {
     const pkg = result.monorepo.primaryPackage;
     const pm = result.commands.packageManager || 'pnpm';
@@ -415,6 +418,8 @@ export async function createAnaJson(
   // Scope build and lint commands to primary package in monorepos.
   // Unlike test scoping (which maps framework → direct runner), build/lint
   // reads the primary package's package.json to find the actual script key.
+  // Capture root build command before scoping overwrites it.
+  const buildRootCmd = result.commands.build || null;
   let buildCmd = result.commands.build || null;
   let lintCmd = result.commands.lint || null;
 
@@ -449,18 +454,32 @@ export async function createAnaJson(
     }
   }
 
+  // Build the commands object, conditionally adding root commands for monorepos.
+  // Root commands are the unscoped project-wide commands (e.g., `pnpm run build`
+  // instead of `(cd packages/cli && pnpm run build)`). Agents use these for
+  // project-wide baseline builds; the scoped commands target the primary package.
+  const commands: Record<string, unknown> = {
+    build: buildCmd,
+    test: testCmd,
+    lint: lintCmd,
+    dev: result.commands.dev || null,
+  };
+  if (result.monorepo.isMonorepo && result.monorepo.primaryPackage) {
+    if (typeof buildRootCmd === 'string' && buildRootCmd.trim()) {
+      commands['buildRoot'] = buildRootCmd;
+    }
+    if (typeof testRootCmd === 'string' && testRootCmd.trim()) {
+      commands['testRoot'] = testRootCmd;
+    }
+  }
+
   const anaConfig: Record<string, unknown> = {
     anaVersion: cliVersion,
     name: result.overview.project,
     language: result.stack.language || null,
     framework: result.stack.framework || null,
     packageManager: result.commands.packageManager,
-    commands: {
-      build: buildCmd,
-      test: testCmd,
-      lint: lintCmd,
-      dev: result.commands.dev || null,
-    },
+    commands,
     coAuthor: 'Ana <build@anatomia.dev>',
     artifactBranch: detectArtifactBranch(result),
     branchPrefix: 'feature/',
@@ -555,7 +574,7 @@ export async function preserveUserState(
     const mergedCommands = merged.commands as Record<string, unknown> | undefined;
     if (mergedCommands) {
       const freshCommands = (newAnaConfig['commands'] ?? {}) as Record<string, unknown>;
-      for (const key of ['test', 'build', 'lint']) {
+      for (const key of ['test', 'build', 'lint', 'buildRoot', 'testRoot']) {
         if (mergedCommands[key] === '') {
           mergedCommands[key] = freshCommands[key] ?? null;
         }

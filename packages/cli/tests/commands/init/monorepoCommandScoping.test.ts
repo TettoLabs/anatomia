@@ -21,7 +21,7 @@ import { describe, it, expect } from 'vitest';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import * as os from 'node:os';
-import { createAnaJson } from '../../../src/commands/init/state.js';
+import { createAnaJson, preserveUserState } from '../../../src/commands/init/state.js';
 import { createEmptyEngineResult } from '../../../src/engine/types/engineResult.js';
 
 describe('createAnaJson monorepo build/lint command scoping', () => {
@@ -277,6 +277,130 @@ describe('createAnaJson monorepo build/lint command scoping', () => {
     }
   });
 
+  // @ana A001
+  it('monorepo init populates buildRoot with the unscoped root build command', async () => {
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ana-json-'));
+    cwdDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ana-cwd-'));
+    try {
+      await setupPrimaryPackage(cwdDir, 'packages/cli', { build: 'tsup', lint: 'eslint .' });
+      const result = makeMonorepoResult();
+
+      await createAnaJson(tmpDir, result, cwdDir);
+      const cmds = (await readAnaJson(tmpDir))['commands'] as Record<string, unknown>;
+      // AC1: buildRoot exists
+      expect(cmds['buildRoot']).toBeDefined();
+      // AC3: buildRoot is the unscoped root command (no "(cd " prefix)
+      expect(cmds['buildRoot']).toBe('pnpm run build');
+      expect(cmds['buildRoot']).not.toContain('(cd ');
+    } finally {
+      await fs.rm(tmpDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
+      await fs.rm(cwdDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
+    }
+  });
+
+  // @ana A002, A004
+  it('monorepo init populates testRoot with the unscoped root test command', async () => {
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ana-json-'));
+    cwdDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ana-cwd-'));
+    try {
+      await setupPrimaryPackage(cwdDir, 'packages/cli', { build: 'tsup', lint: 'eslint .' });
+      const result = makeMonorepoResult();
+
+      await createAnaJson(tmpDir, result, cwdDir);
+      const cmds = (await readAnaJson(tmpDir))['commands'] as Record<string, unknown>;
+      // AC2: testRoot exists
+      expect(cmds['testRoot']).toBeDefined();
+      // AC4: testRoot is the unscoped root command (no "(cd " prefix)
+      expect(cmds['testRoot']).not.toContain('(cd ');
+    } finally {
+      await fs.rm(tmpDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
+      await fs.rm(cwdDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
+    }
+  });
+
+  // @ana A005, A006
+  it('single-repo has no buildRoot or testRoot', async () => {
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ana-json-'));
+    cwdDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ana-cwd-'));
+    try {
+      const result = createEmptyEngineResult();
+      result.commands = {
+        build: 'pnpm run build', test: 'pnpm run test',
+        lint: 'pnpm run lint', dev: 'pnpm run dev',
+        packageManager: 'pnpm', all: { test: 'vitest' },
+      };
+      result.stack.testing = ['Vitest'];
+
+      await createAnaJson(tmpDir, result, cwdDir);
+      const cmds = (await readAnaJson(tmpDir))['commands'] as Record<string, unknown>;
+      // AC5: no buildRoot or testRoot
+      expect(cmds['buildRoot']).toBeUndefined();
+      expect(cmds['testRoot']).toBeUndefined();
+      // AC6: build still exists
+      expect(cmds['build']).toBeDefined();
+    } finally {
+      await fs.rm(tmpDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
+      await fs.rm(cwdDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
+    }
+  });
+
+  // @ana A014
+  it('monorepo with no root build script omits buildRoot', async () => {
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ana-json-'));
+    cwdDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ana-cwd-'));
+    try {
+      await setupPrimaryPackage(cwdDir, 'packages/cli', { build: 'tsup' });
+      const result = makeMonorepoResult();
+      // Simulate no root build script — set build to null after helper
+      result.commands.build = null as unknown as string;
+
+      await createAnaJson(tmpDir, result, cwdDir);
+      const cmds = (await readAnaJson(tmpDir))['commands'] as Record<string, unknown>;
+      expect(cmds['buildRoot']).toBeUndefined();
+    } finally {
+      await fs.rm(tmpDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
+      await fs.rm(cwdDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
+    }
+  });
+
+  // @ana A015
+  it('monorepo with no root test script omits testRoot', async () => {
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ana-json-'));
+    cwdDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ana-cwd-'));
+    try {
+      await setupPrimaryPackage(cwdDir, 'packages/cli', { build: 'tsup' });
+      const result = makeMonorepoResult();
+      // Simulate no root test script — set test to null after helper
+      result.commands.test = null as unknown as string;
+
+      await createAnaJson(tmpDir, result, cwdDir);
+      const cmds = (await readAnaJson(tmpDir))['commands'] as Record<string, unknown>;
+      expect(cmds['testRoot']).toBeUndefined();
+    } finally {
+      await fs.rm(tmpDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
+      await fs.rm(cwdDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
+    }
+  });
+
+  // @ana A003
+  it('buildRoot is the unscoped command even when build gets scoped', async () => {
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ana-json-'));
+    cwdDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ana-cwd-'));
+    try {
+      await setupPrimaryPackage(cwdDir, 'packages/cli', { build: 'tsup', lint: 'eslint .' });
+      const result = makeMonorepoResult();
+
+      await createAnaJson(tmpDir, result, cwdDir);
+      const cmds = (await readAnaJson(tmpDir))['commands'] as Record<string, unknown>;
+      // build is scoped, buildRoot is not
+      expect(cmds['build']).toBe('(cd packages/cli && pnpm run build)');
+      expect(cmds['buildRoot']).toBe('pnpm run build');
+    } finally {
+      await fs.rm(tmpDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
+      await fs.rm(cwdDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
+    }
+  });
+
   // @ana A012
   it('scopes pnpm monorepo with Vitest using direct invocation', async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ana-json-'));
@@ -301,6 +425,99 @@ describe('createAnaJson monorepo build/lint command scoping', () => {
     } finally {
       await fs.rm(tmpDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
       await fs.rm(cwdDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
+    }
+  });
+});
+
+describe('preserveUserState buildRoot/testRoot sanitization', () => {
+  let existingDir: string;
+  let tmpDir: string;
+
+  // @ana A012
+  it('preserveUserState handles missing buildRoot/testRoot', async () => {
+    existingDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ana-exist-'));
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ana-tmp-'));
+    try {
+      // Old ana.json has no buildRoot/testRoot
+      await fs.writeFile(
+        path.join(existingDir, 'ana.json'),
+        JSON.stringify({
+          anaVersion: '1.0.0',
+          name: 'test',
+          commands: { build: 'pnpm run build', test: 'pnpm run test' },
+        }),
+        'utf-8',
+      );
+      // New ana.json in tmpDir (fresh from createAnaJson)
+      await fs.writeFile(
+        path.join(tmpDir, 'ana.json'),
+        JSON.stringify({
+          anaVersion: '1.1.0',
+          name: 'test',
+          commands: { build: 'pnpm run build', test: 'pnpm run test', buildRoot: 'pnpm run build', testRoot: 'pnpm run test' },
+          lastScanAt: '2026-05-17T00:00:00Z',
+        }),
+        'utf-8',
+      );
+
+      const merged = await preserveUserState(existingDir, tmpDir, {
+        anaVersion: '1.1.0',
+        lastScanAt: '2026-05-17T00:00:00Z',
+        commands: { build: 'pnpm run build', test: 'pnpm run test', buildRoot: 'pnpm run build', testRoot: 'pnpm run test' },
+      });
+
+      expect(merged).toBeTruthy();
+      // Old config without root commands is preserved — no crash or corruption
+      const cmds = (merged as Record<string, unknown>)['commands'] as Record<string, unknown>;
+      expect(cmds['build']).toBe('pnpm run build');
+    } finally {
+      await fs.rm(existingDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
+      await fs.rm(tmpDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
+    }
+  });
+
+  // @ana A013
+  it('preserveUserState sanitizes blank buildRoot/testRoot', async () => {
+    existingDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ana-exist-'));
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ana-tmp-'));
+    try {
+      // Old ana.json has blank buildRoot/testRoot (user accidentally set to empty)
+      await fs.writeFile(
+        path.join(existingDir, 'ana.json'),
+        JSON.stringify({
+          anaVersion: '1.0.0',
+          name: 'test',
+          commands: { build: 'pnpm run build', test: 'pnpm run test', buildRoot: '', testRoot: '' },
+        }),
+        'utf-8',
+      );
+      await fs.writeFile(
+        path.join(tmpDir, 'ana.json'),
+        JSON.stringify({
+          anaVersion: '1.1.0',
+          name: 'test',
+          commands: { build: 'pnpm run build', test: 'pnpm run test', buildRoot: 'pnpm run build', testRoot: 'pnpm vitest run' },
+          lastScanAt: '2026-05-17T00:00:00Z',
+        }),
+        'utf-8',
+      );
+
+      const merged = await preserveUserState(existingDir, tmpDir, {
+        anaVersion: '1.1.0',
+        lastScanAt: '2026-05-17T00:00:00Z',
+        commands: { build: 'pnpm run build', test: 'pnpm run test', buildRoot: 'pnpm run build', testRoot: 'pnpm vitest run' },
+      });
+
+      expect(merged).toBeTruthy();
+      const cmds = (merged as Record<string, unknown>)['commands'] as Record<string, unknown>;
+      // Blank values restored to fresh detection values
+      expect(cmds['buildRoot']).not.toBe('');
+      expect(cmds['buildRoot']).toBe('pnpm run build');
+      expect(cmds['testRoot']).not.toBe('');
+      expect(cmds['testRoot']).toBe('pnpm vitest run');
+    } finally {
+      await fs.rm(existingDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
+      await fs.rm(tmpDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
     }
   });
 });
