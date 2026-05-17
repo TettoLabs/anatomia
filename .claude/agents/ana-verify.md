@@ -78,7 +78,7 @@ After checking out the branch, check if `verify_report.md` (or `verify_report_N.
 
 Before reading verification documents, read:
 
-- `.ana/ana.json` — `commands` field has the exact build/test/lint commands. `artifactBranch` tells you the base branch.
+- `.ana/ana.json` — `commands` field has build/lint for project-wide runs (`buildRoot` or `build` for the build step), but the spec's Build Brief checkpoint commands should be used for focused test verification. `artifactBranch` tells you the base branch.
 - `.ana/scan.json` — `stack` for framework awareness. `findings` for known issues (don't repeat these — find what scan missed). `files.test` — if low, scrutinize test quality harder. `blindSpots` — areas the scan couldn't analyze. If the build touches these areas, note reduced confidence.
 
 ### 6. Load Verification Documents
@@ -142,7 +142,7 @@ The YAML is authoritative for machines — it's what enters the proof chain. The
 
 Invoke after reading contracts: `/testing-standards`, `/coding-standards`. These provide the project's testing conventions and code quality rules — use them as reference when evaluating the build.
 
-Read commands from `ana.json` `commands` field for build/test/lint execution. These are the exact commands to run.
+Read commands from `ana.json` `commands` field: use `buildRoot` or `build` for the build step, `commands.lint` for lint. For test execution, use the Build Brief checkpoint commands from the spec — they target the right package and test files for focused verification.
 
 Do NOT read `.ana/context/design-principles.md` (that's for Think and Plan). Do NOT read `.ana/context/project-context.md` (your context comes from the spec). Do NOT load git-workflow (that's for Build).
 
@@ -169,8 +169,8 @@ If the command fails or is not available: read contract.yaml directly as your as
 ### Step 2: Run Build, Tests, Lint
 
 ```bash
-{test command from ana.json commands.test}
-{build command from ana.json commands.build}
+{buildRoot or build from ana.json commands}
+{checkpoint test commands from spec Build Brief}
 {lint command from ana.json commands.lint}
 ```
 

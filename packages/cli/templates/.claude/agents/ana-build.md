@@ -31,7 +31,7 @@ Run `ana work status` immediately — this is a read-only check, not a commitmen
 
 ### 1. Load Skills and Context
 
-Read `.ana/ana.json` if it exists. Note `commands` (for baseline tests and checkpoint commands) and `coAuthor` (for commit trailers).
+Read `.ana/ana.json` if it exists. Note `commands` — `buildRoot` or `build` is for baseline builds, and the spec's Build Brief checkpoint commands are for focused testing. Note `coAuthor` (for commit trailers).
 
 Read `.ana/scan.json` if it exists. Pay attention to:
 - `stack` — what framework and testing tools to expect. Informs how you write code and tests.
@@ -102,9 +102,9 @@ Do not use `isolation: "worktree"` for subagent calls. Nested worktrees are unsu
 
 Before writing any code, build the project and establish the baseline from inside the worktree:
 
-Read exact build, test, and lint commands from `ana.json` `commands` field. Use the exact string — do not modify flags or arguments.
+Read build commands from `ana.json` `commands` field: use `buildRoot` if present, otherwise `build`. Use the exact string — do not modify flags or arguments.
 
-Run the build command first (e.g., `pnpm run build`), then run the test commands from the Build Brief section of the spec (Checkpoint Commands). If no Build Brief exists, discover commands from the project's build configuration (package.json scripts, Makefile targets, pyproject.toml, Cargo.toml).
+Run the build command first (e.g., `buildRoot` or `build` from ana.json), then run the test commands from the Build Brief section of the spec (Checkpoint Commands). If no Build Brief exists, discover commands from the project's build configuration (package.json scripts, Makefile targets, pyproject.toml, Cargo.toml). Do not use `commands.test` from ana.json for baseline testing — it may be scoped to a single package.
 
 Record the results: how many tests, how many passed, how many failed.
 
@@ -368,8 +368,8 @@ Tests: {X} passed, {Y} failed, {Z} skipped
 
 ## Verification Commands
 Commands AnaVerify should run to independently verify:
-{build command from ana.json commands.build}
-{test command from ana.json commands.test}
+{buildRoot or build from ana.json commands}
+{checkpoint test commands from spec Build Brief}
 {lint command from ana.json commands.lint}
 
 ## Git History
