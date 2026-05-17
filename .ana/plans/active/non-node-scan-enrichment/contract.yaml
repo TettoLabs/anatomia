@@ -1,0 +1,150 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Non-Node Scan Enrichment (Application Shape + Python AI SDK)"
+
+assertions:
+  # AC1: Framework-to-shape mapping works
+  - id: A001
+    says: "A Python FastAPI project is classified as an API server"
+    block: "maps fastapi to api-server shape"
+    target: "result.shape"
+    matcher: "equals"
+    value: "api-server"
+
+  - id: A002
+    says: "A Python Typer project is classified as a CLI"
+    block: "maps typer to cli shape"
+    target: "result.shape"
+    matcher: "equals"
+    value: "cli"
+
+  - id: A003
+    says: "A Python Django project is classified as full-stack"
+    block: "maps django to full-stack shape"
+    target: "result.shape"
+    matcher: "equals"
+    value: "full-stack"
+
+  - id: A004
+    says: "A Go Gin project is classified as an API server"
+    block: "maps gin to api-server shape"
+    target: "result.shape"
+    matcher: "equals"
+    value: "api-server"
+
+  - id: A005
+    says: "A Go Cobra project is classified as a CLI"
+    block: "maps cobra-cli to cli shape"
+    target: "result.shape"
+    matcher: "equals"
+    value: "cli"
+
+  - id: A006
+    says: "A Rust Axum project is classified as an API server"
+    block: "maps axum to api-server shape"
+    target: "result.shape"
+    matcher: "equals"
+    value: "api-server"
+
+  - id: A007
+    says: "A Rust Clap project is classified as a CLI"
+    block: "maps clap-cli to cli shape"
+    target: "result.shape"
+    matcher: "equals"
+    value: "cli"
+
+  # AC2: Graceful fallback
+  - id: A008
+    says: "A non-Node project with no detected framework gets unknown shape"
+    block: "returns unknown when frameworkName is null"
+    target: "result.shape"
+    matcher: "equals"
+    value: "unknown"
+
+  - id: A009
+    says: "A non-Node project with an unmapped framework gets unknown shape"
+    block: "returns unknown for unmapped framework string"
+    target: "result.shape"
+    matcher: "equals"
+    value: "unknown"
+
+  # AC3: Node path unchanged
+  - id: A010
+    says: "Node projects still use the full detection chain, not the lookup table"
+    block: "does not affect Node shape detection"
+    target: "result.shape"
+    matcher: "not_equals"
+    value: "unknown"
+
+  # AC4: Python AI SDK detection - OpenAI
+  - id: A011
+    says: "A Python project with openai is detected as using OpenAI"
+    block: "detects openai as OpenAI"
+    target: "result"
+    matcher: "equals"
+    value: "OpenAI"
+
+  # AC5: Meta-framework priority
+  - id: A012
+    says: "LangChain takes priority over OpenAI when both are present"
+    block: "prioritizes langchain over openai"
+    target: "result"
+    matcher: "equals"
+    value: "LangChain"
+
+  # AC6: CrewAI detection
+  - id: A013
+    says: "A Python project with crewai is detected as using CrewAI"
+    block: "detects crewai as CrewAI"
+    target: "result"
+    matcher: "equals"
+    value: "CrewAI"
+
+  # Additional AI SDK coverage
+  - id: A014
+    says: "A Python project with the Anthropic SDK is detected as using Anthropic"
+    block: "detects anthropic as Anthropic"
+    target: "result"
+    matcher: "equals"
+    value: "Anthropic"
+
+  - id: A015
+    says: "An empty dependency list returns no AI SDK"
+    block: "returns null for empty deps"
+    target: "result"
+    matcher: "equals"
+    value: null
+
+  - id: A016
+    says: "Dependencies without any AI packages return no AI SDK"
+    block: "returns null when no AI packages present"
+    target: "result"
+    matcher: "equals"
+    value: null
+
+  # AC7: Node AI SDK unchanged
+  - id: A017
+    says: "The Node AI SDK enrichment path is not affected by the new function"
+    block: "enrichment gate prevents running on Node projects"
+    target: "stack.aiSdk"
+    matcher: "exists"
+
+  # Shape map completeness
+  - id: A018
+    says: "All 15 framework strings have a mapping in the lookup table"
+    block: "maps all framework strings"
+    target: "mappedCount"
+    matcher: "equals"
+    value: 15
+
+file_changes:
+  - path: "packages/cli/src/engine/detectors/applicationShape.ts"
+    action: modify
+  - path: "packages/cli/src/engine/detectors/dependencies.ts"
+    action: modify
+  - path: "packages/cli/src/engine/scan-engine.ts"
+    action: modify
+  - path: "packages/cli/tests/engine/detectors/applicationShape.test.ts"
+    action: modify
+  - path: "packages/cli/tests/engine/detectors/ai-sdk-detection.test.ts"
+    action: modify
