@@ -31130,7 +31130,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "unified-staleness-awareness-C4",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Correct and consistent: Math.floor at scan-freshness.ts:56 produces daysSinceScan. The staleness check at line 89 uses daysSinceScan > 7 (strictly greater). A 7.9-day-old scan floors to 7, 7 > 7 is false, shows 'current' — correct because it hasn't completed 8 full days. Display and comparison use the same floored value, so the number shown matches the threshold logic. Boundary is deterministic.",
+          "closed_at": "2026-05-17T03:54:30.977Z",
+          "closed_by": "human"
         }
       ],
       "rejection_cycles": 0,

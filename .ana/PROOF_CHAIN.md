@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-115 runs · 53 active · 3 promoted · 624 closed
+115 runs · 52 active · 3 promoted · 625 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 53 total)
+## Active Findings (30 shown of 52 total)
 
 ### packages/cli/src/commands/check.ts
 
@@ -41,9 +41,9 @@
 - **code:** Multi-remote repos: origin/ prefix stripping ignores non-origin remotes — *Fix scan branch detection — remove local branches from shared intelligence*
 - **code:** detectBranches and detectBranchPatterns both run git branch -r independently — two subprocess calls for the same data — *Fix scan branch detection — remove local branches from shared intelligence*
 
-### packages/cli/src/utils/scan-freshness.ts
+### packages/cli/tests/commands/init/commit.test.ts
 
-- **code:** daysSinceScan uses Math.floor — scan exactly 7.9 days old shows as 7, not stale — *Unified Staleness Awareness*
+- **test:** Push failure test doesn't test push failure — tests push skip (no remote) — *ana init commit — persist infrastructure to git*
 
 ### packages/cli/tests/commands/init/monorepoCommandScoping.test.ts
 
