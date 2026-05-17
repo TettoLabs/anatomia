@@ -30,17 +30,17 @@
 
 /* ── Headline ── */
 .headline {
-  font-family: var(--font-serif);
-  font-size: clamp(32px, 4.8vw, 48px);
-  font-weight: 400;
-  font-style: italic;
-  font-variation-settings: "opsz" 72;
-  line-height: 1.12;
-  letter-spacing: -0.015em;
+  font-size: clamp(36px, 5.2vw, 56px);
+  font-weight: 500;
+  line-height: 1.02;
+  letter-spacing: -0.025em;
   color: var(--fg-strong);
   margin-bottom: 48px;
 }
 .headline :global(em) {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
   color: var(--color-brand);
 }
 
