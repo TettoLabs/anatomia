@@ -612,7 +612,14 @@ git remote -v
 ```
 Report findings. Do not install software or modify git configuration unless the user explicitly asks.
 
-**Persist infrastructure:** Check the current branch against `artifactBranch` from `.ana/ana.json`. If on the artifact branch, run `ana init commit` to persist all infrastructure changes. If not on the artifact branch, print: "Run `ana init commit` after switching to `{artifactBranch}` to persist your infrastructure."
+**Persist infrastructure:** Check the current branch against `artifactBranch` from `.ana/ana.json`. If on the artifact branch, persist all infrastructure changes with this exact command:
+
+```bash
+# Persist infrastructure to git (use this EXACT command):
+ana init commit
+```
+
+If not on the artifact branch, print: "Run `ana init commit` after switching to `{artifactBranch}` to persist your infrastructure."
 
 **Present:**
 

@@ -198,10 +198,28 @@ export function createPr(slug: string): void {
     process.exit(1);
   }
 
+  // 3a. Detect GitHub repo from origin URL for explicit --repo targeting.
+  // Without --repo, gh uses heuristics that fail when multiple remotes exist
+  // (e.g., origin + upstream in fork setups).
+  let ghRepoArgs: string[] = [];
+  try {
+    const originUrl = runGit(['remote', 'get-url', 'origin'], { cwd: projectRoot });
+    if (originUrl.exitCode === 0 && originUrl.stdout) {
+      const repoMatch = originUrl.stdout.trim().replace(/\.git$/, '').match(/github\.com[:/]([^/]+\/[^/]+)$/);
+      if (repoMatch && repoMatch[1]) {
+        ghRepoArgs = ['--repo', repoMatch[1]];
+      } else {
+        console.log(chalk.yellow('Warning: Could not parse GitHub repo from origin URL. PR commands may target the wrong repo.'));
+      }
+    }
+  } catch {
+    // No origin remote or git error — continue without --repo
+  }
+
   // 3b. Check for existing PRs on this branch
   const branchPrefix = readBranchPrefix(projectRoot);
   const workBranch = currentBranch.endsWith('/' + slug) ? currentBranch : `${branchPrefix}${slug}`;
-  const prListResult = spawnSync('gh', ['pr', 'list', '--head', workBranch, '--state', 'all', '--json', 'state,url'], {
+  const prListResult = spawnSync('gh', ['pr', 'list', '--head', workBranch, '--state', 'all', '--json', 'state,url', ...ghRepoArgs], {
     cwd: projectRoot, encoding: 'utf-8', stdio: 'pipe',
   });
   if (prListResult.status === 0 && prListResult.stdout) {
@@ -326,7 +344,7 @@ Co-authored-by: ${coAuthor}`;
   const prTitle = `[${slug}] ${title}`;
   const ghResult = spawnSync(
     'gh',
-    ['pr', 'create', '--base', artifactBranch, '--head', currentBranch, '--title', prTitle, '--body', prBody],
+    ['pr', 'create', '--base', artifactBranch, '--head', currentBranch, '--title', prTitle, '--body', prBody, ...ghRepoArgs],
     { cwd: projectRoot, stdio: 'pipe', encoding: 'utf-8' }
   );
 
@@ -338,7 +356,7 @@ Co-authored-by: ${coAuthor}`;
       console.log(chalk.yellow('PR already exists for this branch.'));
 
       // Try to get existing PR URL
-      const viewResult = spawnSync('gh', ['pr', 'view', '--json', 'url', '-q', '.url'], {
+      const viewResult = spawnSync('gh', ['pr', 'view', '--json', 'url', '-q', '.url', ...ghRepoArgs], {
         cwd: projectRoot,
         stdio: 'pipe',
         encoding: 'utf-8'
