@@ -1,0 +1,10 @@
+schema: 1
+concerns:
+  - summary: "readAnaJson called twice in check.ts (Consistency + Freshness sections)"
+    file: "packages/cli/src/commands/check.ts"
+    severity: observation
+    suggested_action: accept
+  - summary: "Pre-existing lint warning in git-operations.ts:198 unused eslint-disable"
+    file: "packages/cli/src/utils/git-operations.ts"
+    severity: observation
+    suggested_action: monitor
