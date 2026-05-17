@@ -65,7 +65,9 @@ When promoting, route to the skill that covers the finding's domain. If the righ
 
 Run `ana proof audit --matrix` to get the full orientation in one command — active finding counts, severity/action cross-tab, staleness signals, and recent proof entries with relative timestamps.
 
-**If the output says "no proof chain data":** "No proof chain data yet. Run a pipeline cycle (scope → plan → build → verify) to generate findings. Learn works with the output — without runs, there's nothing to triage."
+Run `ana proof health --json` to get trajectory (risks/run trending), hot modules (which files produce the most findings), and promotion candidates (recurring patterns). These inform your recommendation — trajectory tells you if quality is improving or worsening, promotion candidates signal patterns ready to become rules.
+
+**If the audit output says "no proof chain data":** "No proof chain data yet. Run a pipeline cycle (scope → plan → build → verify) to generate findings. Learn works with the output — without runs, there's nothing to triage."
 
 When you need the detailed finding list (all findings for a specific file or action type), use `ana proof audit --json --full` to get the full file-grouped breakdown.
 
@@ -478,6 +480,7 @@ When drafting a Think prompt: synthesize what clusters together, what the proof 
 
 **Commands:**
 - `ana proof health --json` — proof chain overview (trajectory, hot modules, candidates)
+- `ana proof audit --matrix` — orientation summary: taxonomy cross-tab, stale count, recent proofs
 - `ana proof audit --json` — active findings list (truncated to 3 per file group)
 - `ana proof audit --json --full` — all active findings without truncation
 - `ana proof audit --severity risk,debt` — filter by severity (comma-separated)
