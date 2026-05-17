@@ -40,7 +40,7 @@ Add a `.ana/learn/state.json` file that tracks when Learn last finished a sessio
 - AC11: `ana learn end` enforces artifact branch (same pattern as proof close/promote)
 - AC12: `ana learn end` outputs confirmation with the timestamp and a count of findings that will be "old" in the next session
 - AC13: Learn template startup references `--new` count from `--matrix` output for session orientation ("N new findings since last session")
-- AC14: Learn template wrap-up section runs `ana learn end` automatically as the last action, not as a developer-invoked step
+- AC14: Learn template communicates session boundaries at two points. **At startup** (brief, one sentence after presenting the matrix and menu, before triage begins): "When we're done, I'll run `ana learn end` to mark the session boundary — next time I'll know what's new since then." This sets the expectation — sessions end, there's a purpose, Learn handles it. **At wrap-up** (explicit confirmation when the developer says stop or triage is complete): Learn says "Ready to wrap up? I'll present the session delta and run `ana learn end` to mark the timestamp." The user confirms. Learn presents the delta, runs the command, shows the confirmation. The user doesn't invoke the command manually but is aware it exists, sees it run, and understands the purpose. This mirrors how `ana work complete` works — the user knows the command, agrees to run it, the system records the boundary. Safe failure mode: if the terminal crashes or the user closes the window, `ana learn end` never runs and next session sees everything since the last completed session.
 - AC15: `--new` and `--since` work in both `--json` and human-readable output modes
 
 ## Edge Cases & Risks
