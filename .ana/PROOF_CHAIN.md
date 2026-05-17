@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-115 runs · 56 active · 3 promoted · 621 closed
+115 runs · 55 active · 3 promoted · 622 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 56 total)
+## Active Findings (30 shown of 55 total)
 
 ### packages/cli/src/commands/check.ts
 
@@ -66,7 +66,6 @@
 
 ### website/app/docs/proof/[slug]/page.tsx
 
-- **code:** Duplicate GitHub fetch for dynamic slugs — generateMetadata and page component both call fetchProofChainEntry independently — *Ship log proof linking*
 - **code:** GitHub outage degrades valid new slugs to 404 — fetchProofChainEntry returns null on network failure, triggering notFound() — *Ship log proof linking*
 
 ### website/components/docs/content/DocsStat.tsx
@@ -98,4 +97,8 @@
 ### website/scripts/extract-docs-data.ts
 
 - **code:** Median computation duplicated between extract-docs-data.ts main() and lib/docs-data/proofs.ts getMedianTimings() — *Fix prebuild source mutation*
+
+### General
+
+- **code:** URL reachability not verified — stable URL contract is a deployment assumption — *Documentation links in init and setup*
 
