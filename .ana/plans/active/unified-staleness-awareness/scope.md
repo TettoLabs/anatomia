@@ -31,7 +31,7 @@ The combined threshold (>7 days AND >50 commits) ensures proportional detection 
 - AC2: When git SHA from scan.json is unresolvable (shallow clone, force-push), the notification falls back to time-only: `ℹ Scan is {N} days old. Run: ana init`
 - AC3: Scan staleness notification is suppressed when `CI=true` (same pattern as npm update check)
 - AC4: `ana setup check` displays a Freshness section showing scan age or "current" status
-- AC5: The Ana agent template (both product and dogfood) includes an explicit instruction to relay ℹ notification lines verbatim
+- AC5: The Ana agent template (both product and dogfood) includes this exact instruction after the `work status --session` paragraph in Step 0: "If the output includes ℹ notification lines (updates, staleness, version mismatches), include them in your first message verbatim."
 - AC6: Product template and dogfood template contain identical content for the modified section
 - AC7: `printVersionNotifications` is renamed to `printNotifications` with no behavior change to existing notifications
 - AC8: The `scanStale` field appears in both human-readable and JSON output paths of `work status`
