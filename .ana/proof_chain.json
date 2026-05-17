@@ -31323,6 +31323,225 @@
         "commit_count": 0,
         "base_commit": "16a10ebd29851018881d171c2b782efe5286d5b9"
       }
+    },
+    {
+      "slug": "non-node-scan-enrichment",
+      "feature": "Non-Node Scan Enrichment (Application Shape + Python AI SDK)",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 18,
+        "satisfied": 18,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "A Python FastAPI project is classified as an API server",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "A Python Typer project is classified as a CLI",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "A Python Django project is classified as full-stack",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "A Go Gin project is classified as an API server",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "A Go Cobra project is classified as a CLI",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "A Rust Axum project is classified as an API server",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "A Rust Clap project is classified as a CLI",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "A non-Node project with no detected framework gets unknown shape",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "A non-Node project with an unmapped framework gets unknown shape",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "Node projects still use the full detection chain, not the lookup table",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "A Python project with openai is detected as using OpenAI",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "LangChain takes priority over OpenAI when both are present",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "A Python project with crewai is detected as using CrewAI",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "A Python project with the Anthropic SDK is detected as using Anthropic",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "An empty dependency list returns no AI SDK",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "Dependencies without any AI packages return no AI SDK",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A017",
+          "says": "The Node AI SDK enrichment path is not affected by the new function",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A018",
+          "says": "All 15 framework strings have a mapping in the lookup table",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 11,
+        "met": 11
+      },
+      "timing": {
+        "total_minutes": 34,
+        "think": 1,
+        "plan": 5,
+        "build": 5,
+        "verify": 5
+      },
+      "hashes": {
+        "scope": "sha256:bc91fcb8ec796c007b71928f3bc980c81afe6757e2a236f823e03f1019d08b1f",
+        "contract": "sha256:f6fa674e3d50ac411b1da3d72c68753d367f0b72bab1673b70404a61a46f6586",
+        "plan": "sha256:85d1226c4305d2f651b96bcdd1f54841febdb5eaed51bbec4cc1afcd5a7cbc2c",
+        "spec": "sha256:86f540ca8443539af8000b4f40b6213af4d5c2d94d1d7f67591b6814e6ea53db",
+        "build-report": "sha256:b2aceae7503392be3eb8c72e7c617e00b7a9148d64dfdd27e326a36ca3e1ff70",
+        "build-data": "sha256:2a2931fe86110fce5f49432d0c2e1120a8b9f19b1de1411592780dc351714031",
+        "verify-report": "sha256:be26ce7a8971733c04b45cdbc818dbb320cac8079851ac510c0bcd05709a0e15",
+        "verify-data": "sha256:49545e057a4772840d92f54b4d6ed06b9aacb3e85c40fb6246f2bcfccd8b2f22"
+      },
+      "completed_at": "2026-05-17T06:08:55.579Z",
+      "modules_touched": [
+        "packages/cli/src/engine/detectors/applicationShape.ts",
+        "packages/cli/src/engine/detectors/dependencies.ts",
+        "packages/cli/src/engine/scan-engine.ts",
+        "packages/cli/tests/engine/detectors/ai-sdk-detection.test.ts",
+        "packages/cli/tests/engine/detectors/applicationShape.test.ts"
+      ],
+      "scope_summary": "The scan engine produces no application shape and no AI SDK detection for non-Node projects. A Python FastAPI project gets `shape: 'unknown'` and `aiSdk: null` even when the framework and AI dependencies are correctly detected. Two independent gaps, same disease: the engine detects non-Node signals but discards or never routes them to shape and AI SDK classification.",
+      "kind": "feature",
+      "findings": [
+        {
+          "category": "test",
+          "summary": "A017 has no @ana-tagged test — verified by source inspection only",
+          "file": "packages/cli/src/engine/scan-engine.ts",
+          "anchor": null,
+          "line": 818,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A017"
+          ],
+          "id": "non-node-scan-enrichment-C1",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Module JSDoc says 'classifies Node projects' but function now also classifies non-Node",
+          "file": "packages/cli/src/engine/detectors/applicationShape.ts",
+          "anchor": null,
+          "line": 1,
+          "severity": "debt",
+          "suggested_action": "monitor",
+          "id": "non-node-scan-enrichment-C2",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "FRAMEWORK_TO_SHAPE map placed between JSDoc and function — unconventional positioning",
+          "file": "packages/cli/src/engine/detectors/applicationShape.ts",
+          "anchor": null,
+          "line": 127,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "non-node-scan-enrichment-C3",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "A001-A007 multi-tagged on single describe block — assertion-to-test tracing is ambiguous",
+          "file": "packages/cli/tests/engine/detectors/applicationShape.test.ts",
+          "anchor": null,
+          "line": 350,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A001",
+            "A002",
+            "A003",
+            "A004",
+            "A005",
+            "A006",
+            "A007"
+          ],
+          "id": "non-node-scan-enrichment-C4",
+          "status": "active"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "A017 (Node AI SDK unchanged) has no dedicated test — relies on structural gate analysis",
+          "file": "packages/cli/src/engine/scan-engine.ts",
+          "severity": "observation",
+          "suggested_action": "accept"
+        },
+        {
+          "summary": "Pre-existing lint warning in git-operations.ts:198 (unused eslint-disable)",
+          "file": "packages/cli/src/utils/git-operations.ts",
+          "severity": "observation",
+          "suggested_action": "monitor"
+        }
+      ],
+      "worktree": {
+        "used": true,
+        "created_at": "2026-05-17T05:48:36.427Z",
+        "completed_at": "2026-05-17T06:08:55.574Z",
+        "commit_count": 0,
+        "base_commit": "249f8cc4a3395582256080d0d4f4b82d3a6bc943"
+      }
     }
   ],
   "schema": 1
