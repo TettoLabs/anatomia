@@ -1,0 +1,240 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Learn Session Memory"
+
+assertions:
+  # Init — directory creation and seed
+  - id: A001
+    says: "Initializing a new project creates a learn state file with no session history"
+    block: "init creates learn directory with seeded state.json"
+    target: "state_json.last_session_at"
+    matcher: "equals"
+    value: null
+
+  - id: A002
+    says: "Re-initializing a project keeps the existing learn session timestamp"
+    block: "re-init preserves learn state.json"
+    target: "state_json.last_session_at"
+    matcher: "not_equals"
+    value: null
+
+  # Audit --new flag
+  - id: A003
+    says: "Filtering by new shows only findings from entries completed after the last session"
+    block: "audit --new filters to findings after last_session_at"
+    target: "result.total_active"
+    matcher: "equals"
+    value: 2
+
+  - id: A004
+    says: "When no session has been recorded, filtering by new shows all findings"
+    block: "audit --new with null last_session_at shows all findings"
+    target: "result.total_active"
+    matcher: "equals"
+    value: 4
+
+  - id: A005
+    says: "When the learn state file is missing, filtering by new shows all findings without error"
+    block: "audit --new with missing state.json shows all findings"
+    target: "result.total_active"
+    matcher: "equals"
+    value: 4
+
+  # Audit --since flag
+  - id: A006
+    says: "Filtering by date shows only findings from entries completed after that date"
+    block: "audit --since filters to findings after given date"
+    target: "result.total_active"
+    matcher: "equals"
+    value: 2
+
+  - id: A007
+    says: "Filtering by an invalid date exits with an error"
+    block: "audit --since with invalid date shows error"
+    target: "exitCode"
+    matcher: "not_equals"
+    value: 0
+
+  - id: A008
+    says: "Filtering by a future date returns zero findings"
+    block: "audit --since with future date returns empty"
+    target: "result.total_active"
+    matcher: "equals"
+    value: 0
+
+  # Filter composition
+  - id: A009
+    says: "New and severity filters combine — only findings matching both appear"
+    block: "audit --new composes with --severity"
+    target: "filtered_count"
+    matcher: "greater"
+    value: 0
+
+  - id: A010
+    says: "The orientation matrix ignores the new filter and shows all findings"
+    block: "audit --matrix ignores --new"
+    target: "result.total_active"
+    matcher: "equals"
+    value: 4
+
+  - id: A011
+    says: "The orientation matrix ignores the since filter and shows all findings"
+    block: "audit --matrix ignores --since"
+    target: "result.total_active"
+    matcher: "equals"
+    value: 4
+
+  # Matrix enrichment
+  - id: A012
+    says: "The orientation matrix shows how many findings are new since the last session"
+    block: "matrix includes new_since_last when last_session_at is set"
+    target: "result.new_since_last"
+    matcher: "equals"
+    value: 2
+
+  - id: A013
+    says: "The orientation matrix includes the last session timestamp"
+    block: "matrix includes last_session_at when set"
+    target: "result.last_session_at"
+    matcher: "exists"
+
+  - id: A014
+    says: "The orientation matrix omits session info when no session has been recorded"
+    block: "matrix omits new_since_last when last_session_at is null"
+    target: "result.new_since_last"
+    matcher: "equals"
+    value: undefined
+
+  # Human-readable matrix output
+  - id: A015
+    says: "The human-readable matrix shows a new-since line when a session timestamp exists"
+    block: "matrix human-readable shows new since line"
+    target: "stdout"
+    matcher: "contains"
+    value: "New since last session"
+
+  - id: A016
+    says: "The human-readable matrix omits the new-since line when no session exists"
+    block: "matrix human-readable omits new since line when null"
+    target: "stdout"
+    matcher: "not_contains"
+    value: "New since last session"
+
+  # --new and --since with --json
+  - id: A017
+    says: "Filtering by new works in JSON output mode"
+    block: "audit --new --json returns valid filtered JSON"
+    target: "json.data.total_active"
+    matcher: "equals"
+    value: 2
+
+  - id: A018
+    says: "Filtering by date works in JSON output mode"
+    block: "audit --since --json returns valid filtered JSON"
+    target: "json.data.total_active"
+    matcher: "equals"
+    value: 2
+
+  # learn end command
+  - id: A019
+    says: "Ending a learn session records the current timestamp"
+    block: "learn end writes last_session_at"
+    target: "state_json.last_session_at"
+    matcher: "exists"
+
+  - id: A020
+    says: "Ending a learn session creates a git commit"
+    block: "learn end commits state.json"
+    target: "last_commit_message"
+    matcher: "contains"
+    value: "[learn] End session"
+
+  - id: A021
+    says: "Ending a learn session from the wrong branch is rejected"
+    block: "learn end rejects wrong branch"
+    target: "exitCode"
+    matcher: "not_equals"
+    value: 0
+
+  - id: A022
+    says: "Ending a learn session shows how many findings will be old next time"
+    block: "learn end shows findings count"
+    target: "stdout"
+    matcher: "contains"
+    value: "Findings now"
+
+  - id: A023
+    says: "Ending a learn session on a project without a learn directory creates it"
+    block: "learn end creates missing learn directory"
+    target: "state_json.last_session_at"
+    matcher: "exists"
+
+  - id: A024
+    says: "Ending a learn session returns valid JSON when requested"
+    block: "learn end --json returns valid JSON"
+    target: "json.command"
+    matcher: "equals"
+    value: "learn end"
+
+  # Template
+  - id: A025
+    says: "The Learn template references session-aware startup with new findings count"
+    block: "learn template includes session startup"
+    target: "template_content"
+    matcher: "contains"
+    value: "new findings since last session"
+
+  - id: A026
+    says: "The Learn template includes session wrap-up with ana learn end"
+    block: "learn template includes session wrap-up"
+    target: "template_content"
+    matcher: "contains"
+    value: "ana learn end"
+
+  # Documentation
+  - id: A027
+    says: "The README documents the learn end command"
+    block: "README includes learn end"
+    target: "readme_content"
+    matcher: "contains"
+    value: "ana learn end"
+
+  - id: A028
+    says: "The using-ana-learn guide references session memory"
+    block: "learn guide mentions session boundary"
+    target: "guide_content"
+    matcher: "contains"
+    value: "ana learn end"
+
+  - id: A029
+    says: "The toolbelt page lists learn end in the ana-learn agent row"
+    block: "toolbelt includes learn end"
+    target: "toolbelt_content"
+    matcher: "contains"
+    value: "ana learn end"
+
+file_changes:
+  - path: "packages/cli/src/commands/learn.ts"
+    action: create
+  - path: "packages/cli/src/commands/init/assets.ts"
+    action: modify
+  - path: "packages/cli/src/commands/init/state.ts"
+    action: modify
+  - path: "packages/cli/src/commands/proof.ts"
+    action: modify
+  - path: "packages/cli/src/index.ts"
+    action: modify
+  - path: "packages/cli/templates/.claude/agents/ana-learn.md"
+    action: modify
+  - path: "README.md"
+    action: modify
+  - path: "website/content/docs/guides/using-ana-learn.mdx"
+    action: modify
+  - path: "website/content/docs/concepts/toolbelt.mdx"
+    action: modify
+  - path: "packages/cli/tests/commands/learn.test.ts"
+    action: create
+  - path: "packages/cli/tests/commands/init.test.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/proof.test.ts"
+    action: modify
