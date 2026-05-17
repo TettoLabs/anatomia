@@ -1,0 +1,140 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Polyglot Language Detection"
+
+assertions:
+  - id: A001
+    says: "A Python project with frontend tooling (package.json + lockfile + pyproject.toml with deps) detects as Python"
+    block: "detects Python when pyproject.toml has PEP 621 dependencies"
+    target: "result.type"
+    matcher: "equals"
+    value: "python"
+
+  - id: A002
+    says: "A standard Node project with a lockfile still detects as Node"
+    block: "preserves Node detection with lockfile and no pyproject.toml"
+    target: "result.type"
+    matcher: "equals"
+    value: "node"
+
+  - id: A003
+    says: "Standard Node projects retain full confidence"
+    block: "preserves Node detection with lockfile and no pyproject.toml"
+    target: "result.confidence"
+    matcher: "equals"
+    value: 0.95
+
+  - id: A004
+    says: "A monorepo with workspaces always detects as Node even with pyproject.toml present"
+    block: "workspaces field overrides pyproject.toml presence"
+    target: "result.type"
+    matcher: "equals"
+    value: "node"
+
+  - id: A005
+    says: "Poetry-based Python projects are correctly identified"
+    block: "detects Python when pyproject.toml has Poetry dependencies"
+    target: "result.type"
+    matcher: "equals"
+    value: "python"
+
+  - id: A006
+    says: "A project without a lockfile but with pyproject.toml detects as Python"
+    block: "detects Python when no lockfile but pyproject.toml exists"
+    target: "result.type"
+    matcher: "equals"
+    value: "python"
+
+  - id: A007
+    says: "A project without a lockfile but with pyproject.toml gets appropriate confidence"
+    block: "detects Python when no lockfile but pyproject.toml exists"
+    target: "result.confidence"
+    matcher: "equals"
+    value: 0.85
+
+  - id: A008
+    says: "A bare package.json without lockfile or competing manifest gets reduced confidence"
+    block: "reduces confidence for bare package.json without lockfile"
+    target: "result.confidence"
+    matcher: "equals"
+    value: 0.70
+
+  - id: A009
+    says: "Tooling-only pyproject.toml (ruff/black config) does not flip type to Python"
+    block: "tooling-only pyproject.toml does not trigger Python detection"
+    target: "result.type"
+    matcher: "equals"
+    value: "node"
+
+  - id: A010
+    says: "Malformed pyproject.toml falls through safely to Node detection"
+    block: "handles malformed pyproject.toml gracefully"
+    target: "result.type"
+    matcher: "equals"
+    value: "node"
+
+  - id: A011
+    says: "Bun 1.2 text-based lockfile is recognized as a lockfile indicator"
+    block: "recognizes bun.lock as lockfile indicator"
+    target: "result.indicators"
+    matcher: "contains"
+    value: "bun.lock"
+
+  - id: A012
+    says: "Python framework detection works after type flip from Node to Python"
+    block: "frameworkDeps uses Python deps after type flip"
+    target: "frameworkDeps"
+    matcher: "not_contains"
+    value: "react"
+
+  - id: A013
+    says: "Lockfile invariant holds: package.json + pnpm-lock.yaml without pyproject.toml is always Node"
+    block: "lockfile invariant: pnpm-lock.yaml"
+    target: "result.type"
+    matcher: "equals"
+    value: "node"
+
+  - id: A014
+    says: "Lockfile invariant holds: package.json + package-lock.json without pyproject.toml is always Node"
+    block: "lockfile invariant: package-lock.json"
+    target: "result.type"
+    matcher: "equals"
+    value: "node"
+
+  - id: A015
+    says: "Lockfile invariant holds: package.json + yarn.lock without pyproject.toml is always Node"
+    block: "lockfile invariant: yarn.lock"
+    target: "result.type"
+    matcher: "equals"
+    value: "node"
+
+  - id: A016
+    says: "Lockfile invariant holds: package.json + bun.lockb without pyproject.toml is always Node"
+    block: "lockfile invariant: bun.lockb"
+    target: "result.type"
+    matcher: "equals"
+    value: "node"
+
+  - id: A017
+    says: "Lockfile invariant holds: package.json + bun.lock without pyproject.toml is always Node"
+    block: "lockfile invariant: bun.lock"
+    target: "result.type"
+    matcher: "equals"
+    value: "node"
+
+  - id: A018
+    says: "Empty dependencies array in pyproject.toml does not count as a Python project"
+    block: "empty dependencies array does not trigger Python detection"
+    target: "result.type"
+    matcher: "equals"
+    value: "node"
+
+file_changes:
+  - path: "packages/cli/src/engine/detectors/projectType.ts"
+    action: modify
+  - path: "packages/cli/src/engine/scan-engine.ts"
+    action: modify
+  - path: "packages/cli/tests/engine/detectors/projectType.test.ts"
+    action: modify
+  - path: "packages/cli/tests/engine/detectors/polyglot.test.ts"
+    action: create
