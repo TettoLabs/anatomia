@@ -129,6 +129,13 @@ assertions:
     matcher: "equals"
     value: "node"
 
+  - id: A019
+    says: "A bare package.json without lockfile or competing manifest still detects as Node"
+    block: "reduces confidence for bare package.json without lockfile"
+    target: "result.type"
+    matcher: "equals"
+    value: "node"
+
 file_changes:
   - path: "packages/cli/src/engine/detectors/projectType.ts"
     action: modify
