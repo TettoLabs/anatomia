@@ -14,7 +14,7 @@ The four structural patterns (tested against `pw`, which is the lowercased extra
 - `<<...>>` — `/^<<[^>]+>>$/`
 - `{{...}}` — `/^\{\{[^}]+\}\}$/`
 - `${...}` — `/^\$\{[^}]+\}$/`
-- `<word>` — `/^<[a-z][a-z_]*>$/` (single-angle with lowercase alpha+underscore content, matches `<YOUR_PASSWORD>` after lowercasing)
+- `<word>` — `/^<[a-z][a-z_-]*>$/` (single-angle with lowercase alpha+underscore+hyphen content, matches `<YOUR_PASSWORD>`, `<your-password>`, `<db-password-here>` after lowercasing)
 
 All patterns are anchored (`^...$`) — the template syntax must be the ENTIRE password. This ensures passwords containing template characters (`p@ss<w0rd`, `my{secret}123`) are not suppressed.
 
@@ -96,7 +96,7 @@ None. Both fixes modify leaf functions with no upstream dependencies.
 
 ## Gotchas
 
-- **`pw` is lowercased.** The `<UPPER_CASE>` pattern from source becomes `<your_password>` by the time the regex sees it. The single-angle regex must match lowercase: `/^<[a-z][a-z_]*>$/`.
+- **`pw` is lowercased.** The `<UPPER_CASE>` pattern from source becomes `<your_password>` by the time the regex sees it. The single-angle regex must match lowercase with hyphens: `/^<[a-z][a-z_-]*>$/` (covers `<your-password>`, `<db-password-here>`).
 - **Anchoring is critical.** Without `^...$`, passwords like `p@ss<w0rd` would partially match `<w0rd>` patterns. Every template regex must be fully anchored.
 - **The existing mocha test is WRONG.** Line 98 asserts `'npm mocha --exit'` — this is the broken behavior. The fix changes the expected value, it doesn't add a "skip" or "todo". If the builder leaves the old assertion, the test will fail.
 - **`bun` forwards to local bins.** Don't add bun to the npm conditional. Only npm needs the `npx` substitution.
