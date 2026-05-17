@@ -26,17 +26,19 @@
 }
 
 .title {
-  font-family: var(--font-serif);
+  
   font-size: clamp(40px, 5.2vw, 56px);
-  font-weight: 400;
-  font-style: italic;
-  line-height: 1.06;
-  letter-spacing: -0.02em;
+  font-weight: 500;
+  
+  line-height: 1.02;
+  letter-spacing: -0.025em;
   color: var(--fg-strong);
   margin-bottom: 40px;
   max-width: 16ch;
 }
 .title :global(em) {
+  font-family: var(--font-serif);
+  font-weight: 400;
   font-style: italic;
   color: var(--color-brand);
 }
