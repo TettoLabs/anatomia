@@ -54,7 +54,25 @@ describe('AI SDK detection', () => {
       '@anthropic-ai/sdk': '0.20.0',
       'langchain': '0.1.0',
     };
-    // Anthropic has highest precedence
+    // LangChain is a meta-framework — wins over provider SDKs
+    expect(detectAiSdk(deps)).toBe('LangChain');
+  });
+
+  it('meta-framework wins over provider SDK when both present', () => {
+    const deps = {
+      '@anthropic-ai/sdk': '0.20.0',
+      'ai': '3.0.0',
+    };
+    // Vercel AI (meta-framework) takes priority over Anthropic (provider)
+    expect(detectAiSdk(deps)).toBe('Vercel AI');
+  });
+
+  it('provider SDK wins when no meta-framework present', () => {
+    const deps = {
+      '@anthropic-ai/sdk': '0.20.0',
+      'openai': '4.0.0',
+    };
+    // No meta-framework — first provider SDK wins
     expect(detectAiSdk(deps)).toBe('Anthropic');
   });
 

@@ -192,13 +192,16 @@ export const JOBS_PACKAGES: Record<string, string> = {
  * Order defines precedence when multiple SDKs detected.
  */
 const AI_SDK_PACKAGES: Array<[string, string]> = [
-  ['@anthropic-ai/sdk', 'Anthropic'],
-  ['openai', 'OpenAI'],
-  ['@ai-sdk/core', 'Vercel AI'],
+  // Meta-frameworks — architectural choice, should be primary
   ['ai', 'Vercel AI'],
-  ['@google/generative-ai', 'Google AI'],
+  ['@ai-sdk/core', 'Vercel AI'],
   ['langchain', 'LangChain'],
   ['@langchain/core', 'LangChain'],
+  // Provider SDKs — specific, but not the architectural identity
+  ['@anthropic-ai/sdk', 'Anthropic'],
+  ['openai', 'OpenAI'],
+  ['@google/generative-ai', 'Google AI'],
+  // Vercel AI provider packages (already branded correctly)
   ['@ai-sdk/anthropic', 'Vercel AI'],
   ['@ai-sdk/openai', 'Vercel AI'],
   ['@ai-sdk/google', 'Vercel AI'],

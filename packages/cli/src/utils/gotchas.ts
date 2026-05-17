@@ -32,6 +32,10 @@ export function matchTriggers(triggers: Record<string, string>, result: EngineRe
     if (result.externalServices.some(svc => svc.category === key && svc.name === value)) {
       return true;
     }
+    // Alias: aiSdk triggers resolve against externalServices category 'ai'
+    if (key === 'aiSdk' && result.externalServices.some(svc => svc.category === 'ai' && svc.name === value)) {
+      return true;
+    }
     // Deployment field match (platform, ci)
     if (key === 'platform' && result.deployment?.platform === value) return true;
     if (key === 'ci' && result.deployment?.ci === value) return true;
