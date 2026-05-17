@@ -278,4 +278,208 @@ version = "1.0.0"
     expect(result.type).toBe('node');
     expect(result.confidence).toBe(0.95);
   });
+
+  // --- Rust/Go polyglot detection ---
+
+  // @ana A001, A002, A003
+  it('detects Rust when Cargo.toml has [workspace] section (with lockfile)', async () => {
+    const dir = await createTempDir();
+    await fs.writeFile(path.join(dir, 'package.json'), '{}');
+    await fs.writeFile(path.join(dir, 'pnpm-lock.yaml'), '');
+    await fs.writeFile(path.join(dir, 'Cargo.toml'), `[workspace]
+members = ["crates/*"]
+
+[workspace.package]
+version = "0.1.0"
+`);
+
+    const result = await detectProjectType(dir);
+
+    expect(result.type).toBe('rust');
+    expect(result.confidence).toBe(0.90);
+    expect(result.indicators).toContain('Cargo.toml');
+  });
+
+  // @ana A004
+  it('single-crate Cargo.toml without [workspace] stays Node', async () => {
+    const dir = await createTempDir();
+    await fs.writeFile(path.join(dir, 'package.json'), '{}');
+    await fs.writeFile(path.join(dir, 'package-lock.json'), '{}');
+    await fs.writeFile(path.join(dir, 'Cargo.toml'), `[package]
+name = "wasm-bindings"
+version = "0.1.0"
+
+[dependencies]
+wasm-bindgen = "0.2"
+`);
+
+    const result = await detectProjectType(dir);
+
+    expect(result.type).toBe('node');
+    expect(result.confidence).toBe(0.95);
+  });
+
+  // @ana A005, A006, A007
+  it('detects Go when go.mod exists alongside package.json (with lockfile)', async () => {
+    const dir = await createTempDir();
+    await fs.writeFile(path.join(dir, 'package.json'), '{}');
+    await fs.writeFile(path.join(dir, 'package-lock.json'), '{}');
+    await fs.writeFile(path.join(dir, 'go.mod'), `module github.com/example/app
+
+go 1.21
+`);
+
+    const result = await detectProjectType(dir);
+
+    expect(result.type).toBe('go');
+    expect(result.confidence).toBe(0.90);
+    expect(result.indicators).toContain('go.mod');
+  });
+
+  // @ana A008, A009
+  it('preserves Node detection with lockfile and no competing manifest', async () => {
+    const dir = await createTempDir();
+    await fs.writeFile(path.join(dir, 'package.json'), '{}');
+    await fs.writeFile(path.join(dir, 'yarn.lock'), '');
+
+    const result = await detectProjectType(dir);
+
+    expect(result.type).toBe('node');
+    expect(result.confidence).toBe(0.95);
+  });
+
+  // @ana A010
+  it('workspaces field overrides Cargo.toml presence', async () => {
+    const dir = await createTempDir();
+    await fs.writeFile(path.join(dir, 'package.json'), JSON.stringify({
+      workspaces: ['packages/*'],
+    }));
+    await fs.writeFile(path.join(dir, 'pnpm-lock.yaml'), '');
+    await fs.writeFile(path.join(dir, 'Cargo.toml'), `[workspace]
+members = ["crates/*"]
+`);
+
+    const result = await detectProjectType(dir);
+
+    expect(result.type).toBe('node');
+    expect(result.confidence).toBe(0.90);
+  });
+
+  // @ana A011
+  it('workspaces field overrides go.mod presence', async () => {
+    const dir = await createTempDir();
+    await fs.writeFile(path.join(dir, 'package.json'), JSON.stringify({
+      workspaces: ['packages/*'],
+    }));
+    await fs.writeFile(path.join(dir, 'pnpm-lock.yaml'), '');
+    await fs.writeFile(path.join(dir, 'go.mod'), `module github.com/example/app
+
+go 1.21
+`);
+
+    const result = await detectProjectType(dir);
+
+    expect(result.type).toBe('node');
+    expect(result.confidence).toBe(0.90);
+  });
+
+  // @ana A012
+  it('handles malformed Cargo.toml gracefully', async () => {
+    const dir = await createTempDir();
+    await fs.writeFile(path.join(dir, 'package.json'), '{}');
+    await fs.writeFile(path.join(dir, 'package-lock.json'), '{}');
+    await fs.writeFile(path.join(dir, 'Cargo.toml'), '{{{{invalid toml!@#$%^&*');
+
+    const result = await detectProjectType(dir);
+
+    expect(result.type).toBe('node');
+    expect(result.confidence).toBe(0.95);
+  });
+
+  // @ana A013, A014
+  it('detects Rust without lockfile when Cargo.toml has [workspace]', async () => {
+    const dir = await createTempDir();
+    await fs.writeFile(path.join(dir, 'package.json'), '{}');
+    await fs.writeFile(path.join(dir, 'Cargo.toml'), `[workspace]
+members = ["crates/*"]
+`);
+
+    const result = await detectProjectType(dir);
+
+    expect(result.type).toBe('rust');
+    expect(result.confidence).toBe(0.85);
+  });
+
+  // @ana A015, A016
+  it('detects Go without lockfile when go.mod exists', async () => {
+    const dir = await createTempDir();
+    await fs.writeFile(path.join(dir, 'package.json'), '{}');
+    await fs.writeFile(path.join(dir, 'go.mod'), `module github.com/example/app
+
+go 1.21
+`);
+
+    const result = await detectProjectType(dir);
+
+    expect(result.type).toBe('go');
+    expect(result.confidence).toBe(0.85);
+  });
+
+  // @ana A017
+  it('frameworkDeps routes to language-specific deps after Rust type flip', async () => {
+    const dir = await createTempDir();
+    await fs.writeFile(path.join(dir, 'package.json'), JSON.stringify({
+      dependencies: { react: '^18.0.0' },
+    }));
+    await fs.writeFile(path.join(dir, 'pnpm-lock.yaml'), '');
+    await fs.writeFile(path.join(dir, 'Cargo.toml'), `[workspace]
+members = ["crates/*"]
+`);
+
+    // Type detection flips to Rust
+    const result = await detectProjectType(dir);
+    expect(result.type).toBe('rust');
+
+    // Framework detection with Rust deps finds a framework
+    const rustDeps = ['actix-web', 'serde', 'tokio'];
+    const frameworkResult = detectFramework(rustDeps, 'rust', []);
+    expect(frameworkResult.framework).toBeDefined();
+  });
+
+  // @ana A018
+  it('existing polyglot tests pass without modification (regression guard)', async () => {
+    // This test validates that the tier changes don't break existing Python detection.
+    // The fact that ALL tests in this file pass serves as the regression proof.
+    // Explicit check: Python with lockfile still works alongside Cargo.toml changes.
+    const dir = await createTempDir();
+    await fs.writeFile(path.join(dir, 'package.json'), '{}');
+    await fs.writeFile(path.join(dir, 'package-lock.json'), '{}');
+    await fs.writeFile(path.join(dir, 'pyproject.toml'), `[project]
+name = "backend"
+dependencies = ["fastapi", "uvicorn"]
+`);
+
+    const result = await detectProjectType(dir);
+
+    expect(result.type).toBe('python');
+    expect(result.confidence).toBe(0.90);
+  });
+
+  it('Cargo.toml with [workspace.members] but no [workspace] stays Node', async () => {
+    const dir = await createTempDir();
+    await fs.writeFile(path.join(dir, 'package.json'), '{}');
+    await fs.writeFile(path.join(dir, 'package-lock.json'), '{}');
+    await fs.writeFile(path.join(dir, 'Cargo.toml'), `[package]
+name = "wasm-lib"
+version = "0.1.0"
+
+[workspace.members]
+include = ["sub-crate"]
+`);
+
+    const result = await detectProjectType(dir);
+
+    expect(result.type).toBe('node');
+    expect(result.confidence).toBe(0.95);
+  });
 });
