@@ -71,6 +71,14 @@ The pipeline and setup require [Claude Code](https://claude.com/code).
 
 Tell Ana what you want to build. It'll investigate the codebase, surface tradeoffs, and push back if the approach has problems. When the scope is right, it hands off to Plan, Build, and Verify.
 
+## Removing
+
+```bash
+rm -rf .ana .claude/agents .claude/skills AGENTS.md
+```
+
+If Anatomia created your `CLAUDE.md` (check git blame), remove that too. If you ran `ana init commit`, revert that commit: `git revert <commit-hash>`. Your source code is never modified — only infrastructure files.
+
 ## What it does
 
 ### Scan + init

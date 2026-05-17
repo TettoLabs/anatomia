@@ -1,7 +1,7 @@
 ---
 title: Troubleshooting
 description: "Common problems grouped by when you hit them. If none of these match, email help@anatomia.dev with your CLI version (ana --version) and the proof slug if applicable."
-lastReviewed: "2026-05-13"
+lastReviewed: "2026-05-16"
 ---
 
 ## Getting through the gate
@@ -21,6 +21,12 @@ Scan → init → setup → first pipeline run. Once you complete one end-to-end
 <TroubleCard title="Scan missed my stack">
 
 Install dependencies first (`npm install` / `pnpm install`). Without `node_modules/`, convention detection (formatting, import patterns) is limited — init warns you. Framework and database detection reads `package.json` dependencies directly. An empty repo with no commits limits detection — commit at least once. If tree-sitter analysis failed, init shows a warning with what was missed.
+
+</TroubleCard>
+
+<TroubleCard title="Scan detected the wrong database/AI SDK/framework">
+
+Scan detects from your dependency manifest and reports the first match when multiple options exist. If a dependency is listed but unused, you'll see inaccurate detection. This doesn't affect your code — it affects what agents know about your stack. To correct: edit `.ana/context/project-context.md` (the file agents actually read for architecture decisions). To reduce noise on future scans, remove unused dependencies from your manifest. If wrong gotchas were seeded during init, edit or remove them from `.claude/skills/{name}/SKILL.md` under the Gotchas section.
 
 </TroubleCard>
 
@@ -58,6 +64,15 @@ FAIL means Verify found issues — this is the pipeline working as designed. <Do
 
 </TroubleCard>
 
+<TroubleCard title="Tests fail in pipeline but pass locally">
+
+1. Check the detected command: `ana config show` — look at `commands.test`
+2. In monorepos, init may target the wrong package or produce an invalid invocation
+3. Override: `ana config set commands.test "your-command"`
+4. Common fixes: `pnpm --filter web test`, `npx vitest run`, `npm run test:unit`
+
+</TroubleCard>
+
 <TroubleCard title="My finding count is huge">
 
 Usually means the spec was too vague. Vague specs produce vague implementations, and Verify finds more to fault. Tighten the scope, write more specific acceptance criteria, and re-plan. A good contract has 15–30 assertions. Over 40 suggests the scope should be split.
@@ -90,6 +105,12 @@ Commands that modify the proof chain (`close`, `promote`, `strengthen`) require 
 
 </TroubleCard>
 
+<TroubleCard title="I want to remove Anatomia from my project">
+
+Remove Anatomia's generated content: `rm -rf .ana .claude/agents .claude/skills AGENTS.md`. If Anatomia created your CLAUDE.md, remove it too (check `git log --oneline CLAUDE.md`). Keep `.claude/settings.json` and `.claude/agent-memory/` if you use Claude Code — those are Claude Code native, not Anatomia. If you committed with `ana init commit`, revert: `git revert <commit-hash>`. Your source code is never modified — only infrastructure files.
+
+</TroubleCard>
+
 <TroubleCard title="Where did my proof go?">
 
 Active work: `.ana/plans/active/`. Completed: `.ana/plans/completed/` and `proof_chain.json`. Run `ana proof` to see all entries. Run `ana proof <slug>` for details on a specific one.
@@ -110,7 +131,7 @@ If `ana work status` shows a version mismatch between your CLI and the project's
 
 ## Best practices
 
-- **Start every agent with "hey" or "hi ana."** Claude Code agents may not fully load context files before acting on a complex first message. A simple greeting ensures the agent reads `project-context.md`, `design-principles.md`, and `scan.json` before doing anything. This applies to all pipeline agents (`ana-setup` starts automatically via its `initialPrompt`).
+- **Start with a brief greeting.** "Hey" or "hi ana" lets the agent load project context before acting on your request. Complex first messages may be processed before all context files are read.
 - **One agent per terminal.** Each pipeline stage runs in its own Claude Code session. Running a second agent in the same session may inherit state from the previous run, breaking the independence guarantee. Open a new terminal for each stage.
 - **Let `ana work status` be the first check.** Before scoping, building, or verifying — run `ana work status`. It tells you what's in progress, what stage it's at, and what to do next. Every agent does this on startup; you should too.
 - **Don't edit `proof_chain.json` by hand.** Use `ana proof close`, `ana proof promote`, `ana proof strengthen`. Manual edits can corrupt the chain — `ana proof health` reports incorrect trajectories, `ana proof audit` may skip entries. If the chain is corrupted, restore from git: `git checkout -- .ana/proof_chain.json`

@@ -2,7 +2,7 @@
 title: Quickstart
 description: Install Anatomia, run init in your repo, and ship a verified change. Two minutes to scaffold. Twenty minutes to your first proof.
 readingTime: 8
-lastReviewed: "2026-05-13"
+lastReviewed: "2026-05-16"
 ---
 
 ## Prerequisites
@@ -16,7 +16,7 @@ lastReviewed: "2026-05-13"
 ## Step 1: Install
 
 ```bash
-npm i -g anatomia-cli      # first install (or: npm update -g anatomia-cli)
+npm install -g anatomia-cli      # first install (or: npm update -g anatomia-cli)
 ```
 
 Also available via `pnpm add -g anatomia-cli` or `bun add -g anatomia-cli`. This installs the `ana` command.
@@ -41,6 +41,10 @@ Init scans your project, detects your stack, and scaffolds the pipeline into you
 </div>
 
 <Callout variant="note">
+**Verify detected commands.** The Test, Build, and Lint lines above are inferred from your package.json. In monorepos they may not target the right package. Override with `ana config set commands.test "your-command"` if needed.
+</Callout>
+
+<Callout variant="note">
 **Optional but recommended:** Run `claude --agent ana-setup` to calibrate project knowledge (~10 min). Setup investigates your codebase, asks 2–3 questions, and writes rich context.
 </Callout>
 
@@ -62,7 +66,7 @@ Describe a small change — a single-file fix or a feature you'd normally spend 
 claude --agent ana
 ```
 
-Ana investigates the codebase, surfaces tradeoffs, and writes a scope. You can scope several work items before building any of them — each runs through the pipeline independently. When you're ready to build, run each pipeline agent in a separate Claude Code session:
+Ana investigates the codebase, surfaces tradeoffs, and writes a scope. You can scope several work items before building any of them — each runs through the pipeline independently. When you're ready to build, open a new terminal for each pipeline agent — agents must start fresh without state from previous runs:
 
 1. **Plan:** `claude --agent ana-plan` — reads the scope, writes `spec.md`, and seals `contract.yaml`
 2. **Build:** `claude --agent ana-build` — implements the spec, writes tests tagged to contract assertions
