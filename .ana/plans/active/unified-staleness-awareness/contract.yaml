@@ -127,6 +127,20 @@ assertions:
     matcher: "greater"
     value: 0
 
+  - id: A019
+    says: "Time-only fallback notification omits commit count"
+    block: "falls back to time-only when git rev-list fails"
+    target: "output"
+    matcher: "not_contains"
+    value: "commits since scan"
+
+  - id: A020
+    says: "Fresh scan produces null scanStale in JSON"
+    block: "scanStale is null when scan is current"
+    target: "json.scanStale"
+    matcher: "equals"
+    value: null
+
 file_changes:
   - path: "packages/cli/src/utils/scan-freshness.ts"
     action: create
