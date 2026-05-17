@@ -167,17 +167,17 @@ describe('detectProjectType', () => {
     expect(result.indicators).toEqual([]);
   });
 
-  it('prioritizes Node.js over Go when both present (priority order)', async () => {
+  it('detects Go when both package.json and go.mod present (no lockfile)', async () => {
     const dir = await createTempDir();
     await fs.writeFile(path.join(dir, 'package.json'), '{}');
     await fs.writeFile(path.join(dir, 'go.mod'), 'module test');
 
     const result = await detectProjectType(dir);
 
-    // Node.js comes first in priority order (bare package.json = 0.70)
-    expect(result.type).toBe('node');
-    expect(result.confidence).toBe(0.70);
-    expect(result.indicators).toContain('package.json');
+    // Go polyglot detection: go.mod is a competing manifest → Go 0.85
+    expect(result.type).toBe('go');
+    expect(result.confidence).toBe(0.85);
+    expect(result.indicators).toContain('go.mod');
   });
 
   it('prioritizes pyproject.toml over requirements.txt', async () => {
