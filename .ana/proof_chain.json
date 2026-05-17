@@ -31767,6 +31767,237 @@
         "commit_count": 0,
         "base_commit": "9386717ee82a97fae4d1ae450995dc5d4157e882"
       }
+    },
+    {
+      "slug": "rust-go-polyglot-detection",
+      "feature": "Rust/Go Polyglot Detection",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 18,
+        "satisfied": 18,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "A Rust workspace project with a secondary package.json is detected as Rust",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "A Rust workspace project gets high detection confidence",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Cargo.toml appears in the detection indicators for Rust projects",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "A WASM binding crate without a workspace stays detected as Node",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "A Go project with a secondary package.json is detected as Go",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "A Go project gets high detection confidence",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "go.mod appears in the detection indicators for Go projects",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "Projects with only package.json and lockfile still detect as Node",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "The fast path confidence is unchanged for pure Node projects",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "Node workspaces take priority over Cargo.toml presence",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "Node workspaces take priority over go.mod presence",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "Malformed Cargo.toml does not crash detection",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "A Rust workspace project without a lockfile is still detected as Rust",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "Rust detection without lockfile has reduced confidence",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "A Go project without a lockfile is still detected as Go",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "Go detection without lockfile has reduced confidence",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A017",
+          "says": "After detecting Rust, framework detection receives Rust-specific dependencies",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A018",
+          "says": "All existing Python polyglot tests pass without modification",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 12,
+        "met": 12
+      },
+      "timing": {
+        "total_minutes": 547,
+        "think": 2,
+        "plan": 9,
+        "build": 5,
+        "verify": 4
+      },
+      "hashes": {
+        "scope": "sha256:85ce719a170fd162f6cd2e2b176615b95d7d523c24e758b9ece0b555125e3cc9",
+        "contract": "sha256:5be120e2d744626407b60485fb0ae99793917b6eeb6efbd9948245c651beef71",
+        "plan": "sha256:eed85030e96bd5a304b04634f5a7f7d86d26defd99c445664cd07a17c0cb879b",
+        "spec": "sha256:52d5a8662b376f4c7cb89ed9b86ea701a3f98ba6572614c93b69ac1c21d9cde1",
+        "build-report": "sha256:66519e0d07b20c8471715d83b6d9135ef46c5b3d3190eccff58a057d96227966",
+        "build-data": "sha256:d2d57712949ae3a587000beaad88dfe86668f9f476239fc5d27854b9b8bf6894",
+        "verify-report": "sha256:ebac47ea6d2c8fbe610dd7110afdc02b1e887eb2d32e61cd21560cd1ef9c767c",
+        "verify-data": "sha256:6bac0f659016e0a6bd49ce34e901d791c34095fc51ac78fceb438ba3fc793a92"
+      },
+      "completed_at": "2026-05-17T17:24:53.231Z",
+      "modules_touched": [
+        "packages/cli/src/engine/detectors/projectType.ts",
+        "packages/cli/tests/engine/detectors/polyglot.test.ts",
+        "packages/cli/tests/engine/detectors/projectType.test.ts"
+      ],
+      "scope_summary": "`detectProjectType` only checks for `pyproject.toml` as a competing manifest when `package.json` exists. It never checks for `Cargo.toml` (Rust) or `go.mod` (Go). Result: tabby (92.9% Rust, 20-crate Cargo workspace, 37k stars) is classified as TypeScript because it has a thin `package.json` for turborepo orchestration. This is the same disease class as the Python polyglot fix — a non-Node project with a secondary package.json for frontend/build tooling gets misclassified as Node.",
+      "kind": "feature",
+      "findings": [
+        {
+          "category": "code",
+          "summary": "Preflight .git detection regression — fileExists returns false for directories",
+          "file": "packages/cli/src/commands/init/preflight.ts",
+          "anchor": null,
+          "line": 88,
+          "severity": "risk",
+          "suggested_action": "scope",
+          "id": "rust-go-polyglot-detection-C1",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Over-building — init/state.ts, init/index.ts, scan.ts changes unrelated to polyglot detection",
+          "file": "packages/cli/src/commands/scan.ts",
+          "anchor": null,
+          "severity": "debt",
+          "suggested_action": "accept",
+          "id": "rust-go-polyglot-detection-C2",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "A017 frameworkDeps test uses toBeDefined — passes even if framework is null",
+          "file": "packages/cli/tests/engine/detectors/polyglot.test.ts",
+          "anchor": null,
+          "line": 446,
+          "severity": "debt",
+          "suggested_action": "monitor",
+          "related_assertions": [
+            "A017"
+          ],
+          "id": "rust-go-polyglot-detection-C3",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "hasRustWorkspace catch block unreachable — regex cannot throw",
+          "file": "packages/cli/src/engine/detectors/projectType.ts",
+          "anchor": null,
+          "line": 37,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "rust-go-polyglot-detection-C4",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Priority ordering Python > Rust > Go in Tier 3 is implicit and untested",
+          "file": "packages/cli/src/engine/detectors/projectType.ts",
+          "anchor": null,
+          "line": 146,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "rust-go-polyglot-detection-C5",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "A017 contract matcher 'exists' permits weak test — consider 'equals' with specific framework",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "related_assertions": [
+            "A017"
+          ],
+          "resolves": [
+            "polyglot-language-detection-C2"
+          ],
+          "id": "rust-go-polyglot-detection-C6",
+          "status": "closed",
+          "closed_reason": "upstream",
+          "closed_at": "2026-05-17T17:24:53.231Z",
+          "closed_by": "mechanical"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "Updated pre-existing projectType.test.ts assertion from Node→Go to match new AC9 behavior",
+          "file": "packages/cli/tests/engine/detectors/projectType.test.ts",
+          "severity": "observation",
+          "suggested_action": "accept"
+        }
+      ],
+      "worktree": {
+        "used": true,
+        "created_at": "2026-05-17T17:09:28.001Z",
+        "completed_at": "2026-05-17T17:24:53.225Z",
+        "commit_count": 0,
+        "base_commit": "f79ba254dbcbaee68c350f8b299a9c778692b3e0"
+      }
     }
   ],
   "schema": 1

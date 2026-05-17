@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-118 runs · 57 active · 3 promoted · 631 closed
+119 runs · 62 active · 3 promoted · 632 closed
 
 ## Hot Modules
 
@@ -8,24 +8,32 @@
 |------|--------|--------|
 | packages/cli/src/commands/work.ts | 9 | 7 |
 | packages/cli/tests/commands/work.test.ts | 6 | 5 |
+| packages/cli/src/engine/detectors/projectType.ts | 4 | 2 |
 | packages/cli/src/engine/detectors/git.ts | 3 | 2 |
 | packages/cli/tests/commands/artifact.test.ts | 3 | 2 |
-| packages/cli/tests/commands/proof.test.ts | 2 | 2 |
 
 ## Promoted Rules
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 57 total)
+## Active Findings (30 shown of 62 total)
 
 ### packages/cli/src/commands/check.ts
 
 - **code:** Freshness section shows 'current' when scan data is unavailable (null result) — *Unified Staleness Awareness*
 
+### packages/cli/src/commands/init/preflight.ts
+
+- **code:** Preflight .git detection regression — fileExists returns false for directories — *Rust/Go Polyglot Detection*
+
 ### packages/cli/src/commands/init/state.ts
 
 - **code:** Build/lint scoping silently degrades when cwd is omitted — no warning that scoping was skipped — *Monorepo build command scoping*
 - **code:** pkg.path injected into shell command without sanitization — path with spaces or special chars would produce broken subshell — *Monorepo build command scoping*
+
+### packages/cli/src/commands/scan.ts
+
+- **code:** Over-building — init/state.ts, init/index.ts, scan.ts changes unrelated to polyglot detection — *Rust/Go Polyglot Detection*
 
 ### packages/cli/src/commands/work.ts
 
@@ -42,6 +50,8 @@
 
 ### packages/cli/src/engine/detectors/projectType.ts
 
+- **code:** hasRustWorkspace catch block unreachable — regex cannot throw — *Rust/Go Polyglot Detection*
+- **code:** Priority ordering Python > Rust > Go in Tier 3 is implicit and untested — *Rust/Go Polyglot Detection*
 - **code:** Tier 4 no-lockfile + pyproject with no real deps returns 0.70 — same confidence as Tier 5 bare package.json, indistinguishable to downstream consumers — *Polyglot Language Detection*
 - **code:** nextSection search uses indexOf('\n[') which misses a section header at position 0 of the sliced block (no preceding newline) — *Polyglot Language Detection*
 
@@ -53,11 +63,6 @@
 
 - **test:** Repeated tmpDir/cwdDir setup+teardown boilerplate in every test — no shared beforeEach/afterEach — *Monorepo build command scoping*
 
-### packages/cli/tests/commands/work-ci-mocked.test.ts
-
-- **test:** Broad mock intercept matches any git command with 'pull' in args, not specifically 'git pull --rebase' — *Fix CI Matrix and Broken Tests*
-- **code:** createMergedProject duplicated between work-ci-mocked.test.ts and work.test.ts — both have independent copies with different mock routing — *Fix CI Matrix and Broken Tests*
-
 ### packages/cli/tests/commands/work.test.ts
 
 - **test:** No boundary test at exactly 1-hour timeout — tests use 2-hour-old (stale) and new Date() (fresh), missing 59m59s and 60m01s cases — *Pipeline Concurrency Guards*
@@ -66,6 +71,7 @@
 
 ### packages/cli/tests/engine/detectors/polyglot.test.ts
 
+- **test:** A017 frameworkDeps test uses toBeDefined — passes even if framework is null — *Rust/Go Polyglot Detection*
 - **test:** A012 frameworkDeps test verifies detector-level cascade but not the actual scan-engine.ts ternary conditional — the ternary fix is tested structurally, not behaviorally — *Polyglot Language Detection*
 
 ### packages/cli/tests/engine/findings/secrets.test.ts
@@ -84,11 +90,6 @@
 
 - **code:** Misspelled DocsStat value key silently renders raw key string — no build-time validation — *Fix prebuild source mutation*
 
-### website/components/docs/proof/PipelineGantt.tsx
-
-- **code:** Negative phase values display raw in bar label while bar width is clamped — *Fix Gantt Bar Distortion and Document Timing*
-- **code:** Zero-duration bars get minimum 2% width that can push cumulative past 100% if many zero-duration phases exist — *Fix Gantt Bar Distortion and Document Timing*
-
 ### website/components/system/Drawer.tsx
 
 - **code:** Drawer moreCount has no floor guard — commandCount < 6 produces negative display — *Dynamic marketing stats — wire command count and version fallback*
@@ -100,8 +101,4 @@
 ### website/lib/proof-feed.ts
 
 - **code:** VERSION_FALLBACK evaluated at module load time — single-shot, no retry on transient readFileSync failure — *Dynamic marketing stats — wire command count and version fallback*
-
-### website/scripts/extract-docs-data.ts
-
-- **code:** Median computation duplicated between extract-docs-data.ts main() and lib/docs-data/proofs.ts getMedianTimings() — *Fix prebuild source mutation*
 
