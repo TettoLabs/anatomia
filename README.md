@@ -60,7 +60,7 @@ Requires Node.js 22+. To update: `npm update -g anatomia-cli`
 ```bash
 ana init                      # generate context + agents
 ana init commit               # persist to git (so teammates get it too)
-claude --agent ana            # start working
+claude --agent ana            # start with "hey Ana" — context loads first
 claude --agent ana-setup      # enrich with your team's knowledge (optional, recommended, ~10 min)
 ```
 

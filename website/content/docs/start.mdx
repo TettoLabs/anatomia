@@ -66,6 +66,8 @@ Describe a small change — a single-file fix or a feature you'd normally spend 
 claude --agent ana
 ```
 
+Start with a greeting — "hey Ana" — so the agent loads your project context before you describe the work.
+
 Ana investigates the codebase, surfaces tradeoffs, and writes a scope. You can scope several work items before building any of them — each runs through the pipeline independently. When you're ready to build, open a new terminal for each pipeline agent — agents must start fresh without state from previous runs:
 
 1. **Plan:** `claude --agent ana-plan` — reads the scope, writes `spec.md`, and seals `contract.yaml`
