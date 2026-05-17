@@ -49,32 +49,29 @@ export function About() {
 
           <div className={styles.narrative}>
             <p className={styles.lede}>
-              Anatomia is the engineering judgment your AI doesn't have.
               AI makes building easy. Knowing is the hard part.
             </p>
 
             <p className={styles.body}>
-              Every AI coding tool is optimized to say yes. It builds what you
-              ask for. It sounds confident. It confirms your assumptions. But
-              confidence isn't proof — and the gap between "it works" and "it's
-              right" is where products break.
+              Anatomia started with a frustration. Every AI coding tool we
+              used was fast, fluent, and wrong in ways we couldn't catch until
+              later. They all said yes. They all sounded confident. None of
+              them showed their work.
             </p>
 
             <p className={styles.body}>
               The best features are sometimes the ones that don't get built.
-              The best solutions sometimes expose a deeper problem worth solving
-              first. A senior engineer knows this — they push back before the
-              first line is written. They ask whether the intention behind the
-              request leads to the outcome the request is trying to reach. They
-              don't build what you said. They build what you meant.
+              The best solutions expose a deeper problem worth solving first.
+              A senior engineer knows this — they push back before the first
+              line is written. They don't build what you said. They build what
+              you meant.
             </p>
 
             <p className={styles.body}>
-              That's what Anatomia does. It scans your codebase, builds
-              validated context, and runs every change through a pipeline that
-              thinks before it builds, plans before it codes, and verifies
-              independently before it ships. Not to slow you down — to make
-              sure that what ships is what should have shipped.
+              So we built a system that does that. It scans your codebase,
+              builds validated context, and runs every change through a
+              pipeline that thinks before it builds, plans before it codes,
+              and verifies independently before it ships.
             </p>
 
             <p className={styles.accent}>
