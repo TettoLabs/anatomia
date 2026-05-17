@@ -246,7 +246,7 @@
   display: inline-block;
   width: 0.3em;
   height: 0.37em;
-  background: var(--color-brand);
+  background: var(--brand-mark);
   margin-left: 0.12em;
   position: relative;
   top: -0.02em;
