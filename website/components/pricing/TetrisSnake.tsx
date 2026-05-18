@@ -54,8 +54,14 @@ export function TetrisSnake() {
       canvas.style.width = `${W}px`;
       canvas.style.height = `${H}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      // Round cols and rows DOWN to nearest multiple of 3 so blocks
+      // land perfectly every 3 cells with zero remainder on every edge.
+      // The canvas loses at most 20px per dimension — invisible.
       cols = Math.floor(W / CELL);
       rows = Math.floor(H / CELL);
+      cols = cols - (cols % 3);
+      rows = rows - (rows % 3);
+      if (cols < 6 || rows < 6) return; // too small to draw
 
       // Build perimeter clockwise from top-left
       perim = [];
@@ -65,39 +71,15 @@ export function TetrisSnake() {
       for (let y = rows - 2; y > 0; y--) perim.push({ x: 0, y });
       if (perim.length > 0) pos = pos % perim.length;
 
-      // Precompute corner indices and placement set so blocks always
-      // land on corners and space evenly along each edge.
-      corners = new Set<number>();
+      // Place a block every 3 cells. Because cols and rows are both
+      // multiples of 3, every edge divides perfectly — no remainder,
+      // no bunching, corners always get a block.
       placeSet = new Set<number>();
-      if (perim.length > 0) {
-        const c0 = 0;                                    // top-left
-        const c1 = cols - 1;                              // top-right
-        const c2 = cols - 1 + rows - 1;                   // bottom-right
-        const c3 = cols - 1 + rows - 1 + cols - 1;        // bottom-left
-        corners.add(c0); corners.add(c1); corners.add(c2); corners.add(c3);
-
-        // Space blocks evenly along each edge using exact fractional distribution.
-        // Each edge gets N blocks (not counting the far corner — that's the next
-        // edge's first block). Positions are Math.round(i * len / N) so every
-        // gap is identical within rounding tolerance.
-        const edges = [
-          [c0, c1],     // top
-          [c1, c2],     // right
-          [c2, c3],     // bottom
-          [c3, perim.length], // left (wraps to 0)
-        ];
-        for (const [start, end] of edges) {
-          const len = end - start;
-          const numBlocks = Math.max(1, Math.round(len / 3));
-          for (let i = 0; i < numBlocks; i++) {
-            const idx = start + Math.round(i * len / numBlocks);
-            placeSet.add(idx % perim.length);
-          }
-        }
+      for (let i = 0; i < perim.length; i++) {
+        if (i % 3 === 0) placeSet.add(i);
       }
     }
 
-    let corners = new Set<number>();
     let placeSet = new Set<number>();
 
     function step() {
