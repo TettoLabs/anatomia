@@ -54,8 +54,20 @@ export function TetrisSnake() {
       canvas.style.width = `${W}px`;
       canvas.style.height = `${H}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      cols = Math.floor(W / CELL);
-      rows = Math.floor(H / CELL);
+      // Snap cols and rows so each edge length is divisible by 3.
+      // Need (cols-1) % 3 == 0 and (rows-1) % 3 == 0, i.e. cols%3==1, rows%3==1.
+      // Loses at most 20px per dimension — invisible.
+      const rawCols = Math.floor(W / CELL);
+      const rawRows = Math.floor(H / CELL);
+      const snap = (n: number) => { const r = n % 3; return r === 1 ? n : r === 0 ? n - 2 : n - 1; };
+      cols = snap(rawCols);
+      rows = snap(rawRows);
+      if (cols < 7 || rows < 7) return;
+
+      // Center the snapped grid within the canvas so the border
+      // is equidistant from top/bottom and left/right content.
+      offsetX = ((rawCols - cols) * CELL) / 2;
+      offsetY = ((rawRows - rows) * CELL) / 2;
 
       // Build perimeter clockwise from top-left
       perim = [];
@@ -65,38 +77,17 @@ export function TetrisSnake() {
       for (let y = rows - 2; y > 0; y--) perim.push({ x: 0, y });
       if (perim.length > 0) pos = pos % perim.length;
 
-      // Precompute corner indices and placement set so blocks always
-      // land on corners and space evenly along each edge.
-      corners = new Set<number>();
+      // Every edge length is now divisible by 3. Place a block every
+      // 3 steps — corners land perfectly, spacing is identical everywhere.
       placeSet = new Set<number>();
-      if (perim.length > 0) {
-        const c0 = 0;                                    // top-left
-        const c1 = cols - 1;                              // top-right
-        const c2 = cols - 1 + rows - 1;                   // bottom-right
-        const c3 = cols - 1 + rows - 1 + cols - 1;        // bottom-left
-        corners.add(c0); corners.add(c1); corners.add(c2); corners.add(c3);
-
-        // Space blocks evenly along each edge (including corners)
-        const edges = [
-          [c0, c1],     // top
-          [c1, c2],     // right
-          [c2, c3],     // bottom
-          [c3, perim.length], // left (wraps to 0)
-        ];
-        for (const [start, end] of edges) {
-          const len = end - start;
-          const spacing = Math.max(3, Math.round(len / Math.floor(len / 3)));
-          for (let i = start; i < end; i += spacing) {
-            placeSet.add(i % perim.length);
-          }
-        }
-        // Ensure all corners are in the placement set
-        for (const c of corners) placeSet.add(c);
+      for (let i = 0; i < perim.length; i++) {
+        if (i % 3 === 0) placeSet.add(i);
       }
     }
 
-    let corners = new Set<number>();
     let placeSet = new Set<number>();
+    let offsetX = 0;
+    let offsetY = 0;
 
     function step() {
       if (!perim.length) return;
@@ -120,7 +111,7 @@ export function TetrisSnake() {
       for (const b of placed) {
         ctx.fillStyle = c;
         ctx.globalAlpha = b.alpha;
-        ctx.fillRect(b.x * CELL + 1, b.y * CELL + 1, CELL - 2, CELL - 2);
+        ctx.fillRect(offsetX + b.x * CELL + 1, offsetY + b.y * CELL + 1, CELL - 2, CELL - 2);
       }
       ctx.globalAlpha = 1;
 
@@ -129,7 +120,7 @@ export function TetrisSnake() {
         const a = Math.max(0, 1 - t.age / 10);
         ctx.fillStyle = c;
         ctx.globalAlpha = a * 0.9;
-        ctx.fillRect(t.x * CELL + 1, t.y * CELL + 1, CELL - 2, CELL - 2);
+        ctx.fillRect(offsetX + t.x * CELL + 1, offsetY + t.y * CELL + 1, CELL - 2, CELL - 2);
       }
       ctx.globalAlpha = 1;
 
@@ -137,7 +128,7 @@ export function TetrisSnake() {
       const head = perim[pos];
       if (head) {
         ctx.fillStyle = c;
-        ctx.fillRect(head.x * CELL, head.y * CELL, CELL, CELL);
+        ctx.fillRect(offsetX + head.x * CELL, offsetY + head.y * CELL, CELL, CELL);
       }
     }
 
