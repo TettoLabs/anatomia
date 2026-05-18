@@ -630,7 +630,20 @@ export async function preserveUserState(
     // No completed plans — keep the fresh .gitkeep
   }
 
-  // 6. Copy plans/active/ (in-flight pipeline work — scopes, specs, contracts)
+  // 6. Copy learn/ directory (session state — must survive re-init)
+  const learnSrc = path.join(existingAnaPath, 'learn');
+  const learnDst = path.join(tmpAnaPath, 'learn');
+  try {
+    const stats = await fs.stat(learnSrc);
+    if (stats.isDirectory()) {
+      await fs.rm(learnDst, { recursive: true, force: true });
+      await fs.cp(learnSrc, learnDst, { recursive: true });
+    }
+  } catch {
+    // No learn directory — keep the fresh seed
+  }
+
+  // 7. Copy plans/active/ (in-flight pipeline work — scopes, specs, contracts)
   const activeSrc = path.join(existingAnaPath, 'plans', 'active');
   const activeDst = path.join(tmpAnaPath, 'plans', 'active');
   try {

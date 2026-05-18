@@ -6,6 +6,8 @@ import { fileURLToPath } from 'node:url';
 import { createEmptyEngineResult } from '../../src/engine/types/engineResult.js';
 import { fileExists } from '../../src/commands/init/preflight.js';
 import { displayBlindSpots, displaySuccessMessage } from '../../src/commands/init/state.js';
+import { createDirectoryStructure } from '../../src/commands/init/assets.js';
+import { preserveUserState } from '../../src/commands/init/state.js';
 import { AGENT_FILES, DOCS_QUICKSTART, DOCS_SETUP_GUIDE } from '../../src/constants.js';
 
 async function dirExists(dirPath: string): Promise<boolean> {
@@ -703,6 +705,65 @@ describe('ana init', () => {
       const content = await fs.readFile(mdxPath, 'utf-8');
 
       expect(content).toContain('/docs/reference/context#design-principles');
+    });
+  });
+
+  // ─── Learn Directory Tests ──────────────────────────────────────────
+
+  // @ana A001
+  describe('init creates learn directory with seeded state.json', () => {
+    it('creates .ana/learn/state.json with null last_session_at', async () => {
+      const anaPath = path.join(tmpDir, '.ana');
+      await fs.mkdir(anaPath, { recursive: true });
+
+      await createDirectoryStructure(anaPath);
+
+      const stateContent = await fs.readFile(
+        path.join(anaPath, 'learn', 'state.json'),
+        'utf-8',
+      );
+      const state = JSON.parse(stateContent);
+      expect(state.last_session_at).toBe(null);
+    });
+  });
+
+  // @ana A002
+  describe('re-init preserves learn state.json', () => {
+    it('preserves existing learn state with non-null timestamp', async () => {
+      // Set up existing .ana with a learn state that has a timestamp
+      const existingAnaPath = path.join(tmpDir, '.ana-existing');
+      await fs.mkdir(path.join(existingAnaPath, 'learn'), { recursive: true });
+      const existingTimestamp = '2026-05-15T14:30:00Z';
+      await fs.writeFile(
+        path.join(existingAnaPath, 'learn', 'state.json'),
+        JSON.stringify({ last_session_at: existingTimestamp }),
+      );
+
+      // Create tmp .ana with fresh seed
+      const tmpAnaPath = path.join(tmpDir, '.ana-tmp');
+      await createDirectoryStructure(tmpAnaPath);
+
+      // Verify fresh seed has null
+      const freshState = JSON.parse(
+        await fs.readFile(path.join(tmpAnaPath, 'learn', 'state.json'), 'utf-8'),
+      );
+      expect(freshState.last_session_at).toBe(null);
+
+      // Create minimal ana.json for preserveUserState
+      await fs.writeFile(
+        path.join(existingAnaPath, 'ana.json'),
+        JSON.stringify({ artifactBranch: 'main' }),
+      );
+      const newConfig = { anaVersion: '1.0.0', lastScanAt: new Date().toISOString() };
+
+      // Run preserveUserState
+      await preserveUserState(existingAnaPath, tmpAnaPath, newConfig);
+
+      // Verify the timestamp was preserved
+      const preservedState = JSON.parse(
+        await fs.readFile(path.join(tmpAnaPath, 'learn', 'state.json'), 'utf-8'),
+      );
+      expect(preservedState.last_session_at).toBe(existingTimestamp);
     });
   });
 

@@ -1,0 +1,10 @@
+schema: 1
+concerns:
+  - summary: "commitAndPushProofChanges exported from proof.ts rather than extracted to git-operations.ts"
+    file: "packages/cli/src/commands/proof.ts"
+    severity: debt
+    suggested_action: scope
+  - summary: "Pre-existing lint warning (unused eslint-disable) in git-operations.ts"
+    file: "packages/cli/src/utils/git-operations.ts"
+    severity: observation
+    suggested_action: accept

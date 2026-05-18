@@ -64,6 +64,14 @@ export async function createDirectoryStructure(tmpAnaPath: string): Promise<void
   await fs.mkdir(path.join(tmpAnaPath, 'plans/active'), { recursive: true });
   await fs.mkdir(path.join(tmpAnaPath, 'plans/completed'), { recursive: true });
   await fs.mkdir(path.join(tmpAnaPath, 'state'), { recursive: true });
+  await fs.mkdir(path.join(tmpAnaPath, 'learn'), { recursive: true });
+
+  // Seed learn state file
+  await fs.writeFile(
+    path.join(tmpAnaPath, 'learn', 'state.json'),
+    JSON.stringify({ last_session_at: null }, null, 2),
+    'utf-8',
+  );
 
   // Create .gitkeep files for empty plan directories
   await fs.writeFile(path.join(tmpAnaPath, 'plans/active/.gitkeep'), '', 'utf-8');
