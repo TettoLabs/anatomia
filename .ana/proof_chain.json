@@ -32874,7 +32874,10 @@
           "severity": "debt",
           "suggested_action": "accept",
           "id": "learn-session-memory-C5",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Consistent with commands layer patterns: proof.ts has 37 sync fs calls (existsSync, readFileSync, writeFileSync). learn.ts follows the same pattern. Init uses async because it runs parallel scan I/O — different use case. Sync fs is standard for single-shot CLI commands reading one small file.",
+          "closed_at": "2026-05-18T03:45:24.141Z",
+          "closed_by": "human"
         },
         {
           "category": "upstream",

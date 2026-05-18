@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-122 runs · 69 active · 3 promoted · 644 closed
+122 runs · 68 active · 3 promoted · 645 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 69 total)
+## Active Findings (30 shown of 68 total)
 
 ### packages/cli/src/commands/check.ts
 
@@ -32,10 +32,6 @@
 - **code:** Propagation loop iterates all freshCommands keys including non-command keys like 'packageManager' and 'all' if present — *Flip Monorepo Command Semantics*
 - **code:** Build/lint scoping silently degrades when cwd is omitted — no warning that scoping was skipped — *Monorepo build command scoping*
 - **code:** pkg.path injected into shell command without sanitization — path with spaces or special chars would produce broken subshell — *Monorepo build command scoping*
-
-### packages/cli/src/commands/learn.ts
-
-- **code:** learn.ts uses synchronous fs (existsSync, readFileSync, writeFileSync, mkdirSync) while init assets.ts uses async fs — *Learn Session Memory*
 
 ### packages/cli/src/commands/proof.ts
 
@@ -77,6 +73,10 @@
 ### packages/cli/tests/commands/proof.test.ts
 
 - **test:** A008/A009 use toBeDefined() instead of specific values for stale_count and recent_entries — *Audit matrix orientation*
+
+### packages/cli/tests/commands/work.test.ts
+
+- **test:** No boundary test at exactly 1-hour timeout — tests use 2-hour-old (stale) and new Date() (fresh), missing 59m59s and 60m01s cases — *Pipeline Concurrency Guards*
 
 ### packages/cli/tests/engine/detectors/polyglot.test.ts
 
