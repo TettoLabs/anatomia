@@ -156,14 +156,13 @@ export function ScanSlab() {
               ))}
             </div>
 
-          </div>
-
-          {/* Thread — outside the grid on mobile so it appears below the terminal */}
-          <div className="col-span-full">
-            <SectionThread
-              segments={[copy.scanThread.before, copy.scanThread.after]}
-              link={{ href: copy.scanThread.href, label: copy.scanThread.cta }}
-            />
+            {/* Thread — hidden on mobile */}
+            <div className="hidden min-[920px]:block">
+              <SectionThread
+                segments={[copy.scanThread.before, copy.scanThread.after]}
+                link={{ href: copy.scanThread.href, label: copy.scanThread.cta }}
+              />
+            </div>
           </div>
         </div>
       </Container>
