@@ -3,7 +3,7 @@
   "applicationShape": "cli",
   "overview": {
     "project": "anatomia-workspace",
-    "scannedAt": "2026-05-16T17:42:51.894Z",
+    "scannedAt": "2026-05-18T03:30:32.382Z",
     "depth": "deep"
   },
   "stack": {
@@ -41,10 +41,10 @@
     "vitest": "^4.1.5"
   },
   "files": {
-    "source": 248,
-    "test": 109,
+    "source": 249,
+    "test": 111,
     "config": 20,
-    "total": 377
+    "total": 380
   },
   "structure": [
     {
@@ -77,15 +77,19 @@
     "packageManager": "pnpm"
   },
   "git": {
-    "head": "a51159af",
+    "head": "40218dc5",
     "branch": "main",
-    "commitCount": 2420,
-    "lastCommitAt": "2026-05-16T11:32:42-06:00",
-    "uncommittedChanges": false,
+    "commitCount": 2564,
+    "lastCommitAt": "2026-05-17T21:29:46-06:00",
+    "uncommittedChanges": true,
     "contributorCount": 3,
     "defaultBranch": "main",
     "branches": [
+      "feature/about-page-redesign",
+      "feature/flip-monorepo-commands",
       "feature/hero-wordmark",
+      "feature/learn-session-memory",
+      "feature/monorepo-root-commands",
       "main"
     ],
     "commitFormat": {
@@ -95,7 +99,7 @@
     },
     "branchPatterns": {
       "prefixes": {
-        "feature/": 1
+        "feature/": 5
       },
       "primary": "feature/"
     },
@@ -124,26 +128,30 @@
         },
         {
           "path": "packages/cli/tests/commands/work.test.ts",
-          "commits": 34
+          "commits": 33
         },
         {
           "path": "packages/cli/src/commands/artifact.ts",
-          "commits": 27
+          "commits": 26
+        },
+        {
+          "path": "website/lib/copy.ts",
+          "commits": 21
         },
         {
           "path": "packages/cli/src/utils/proofSummary.ts",
           "commits": 20
         },
         {
-          "path": "packages/cli/tests/utils/proofSummary.test.ts",
-          "commits": 18
-        },
-        {
-          "path": "packages/cli/src/commands/proof.ts",
+          "path": "website/components/proof-feed/ProofFeed.tsx",
           "commits": 16
         },
         {
-          "path": "website/lib/copy.ts",
+          "path": "packages/cli/tests/utils/proofSummary.test.ts",
+          "commits": 16
+        },
+        {
+          "path": "packages/cli/src/commands/proof.ts",
           "commits": 15
         },
         {
@@ -152,19 +160,15 @@
         },
         {
           "path": "website/lib/proof-feed.ts",
-          "commits": 12
-        },
-        {
-          "path": "website/components/proof-feed/ProofFeed.tsx",
-          "commits": 12
+          "commits": 13
         }
       ],
       "activeContributors": 3,
       "weeklyCommits": [
-        898,
+        959,
+        357,
         395,
-        303,
-        142
+        157
       ]
     }
   },
@@ -264,7 +268,7 @@
         "vitest imports found"
       ]
     },
-    "sampledFiles": 250,
+    "sampledFiles": 251,
     "detectionTime": 1,
     "threshold": 0.7
   },
@@ -272,24 +276,24 @@
     "naming": {
       "files": {
         "majority": "PascalCase",
-        "confidence": 0.6377952755905512,
+        "confidence": 0.6328125,
         "mixed": true,
         "distribution": {
-          "camelCase": 0.16393442622950818,
-          "PascalCase": 0.6639344262295082,
-          "kebab-case": 0.1721311475409836
+          "camelCase": 0.16260162601626016,
+          "PascalCase": 0.6585365853658537,
+          "kebab-case": 0.17886178861788618
         },
-        "sampleSize": 250
+        "sampleSize": 251
       },
       "functions": {
         "majority": "camelCase",
-        "confidence": 0.8330871491875923,
+        "confidence": 0.8355167394468704,
         "mixed": false,
         "distribution": {
-          "camelCase": 0.8392857142857143,
-          "PascalCase": 0.16071428571428573
+          "camelCase": 0.841642228739003,
+          "PascalCase": 0.15835777126099707
         },
-        "sampleSize": 715
+        "sampleSize": 725
       },
       "classes": {
         "majority": "PascalCase",
@@ -302,31 +306,31 @@
       },
       "variables": {
         "majority": "camelCase",
-        "confidence": 0.9062901155327343,
+        "confidence": 0.9072630283135003,
         "mixed": false,
         "distribution": {
-          "camelCase": 0.9082332761578045,
-          "PascalCase": 0.0137221269296741,
-          "SCREAMING_SNAKE_CASE": 0.07804459691252144
+          "camelCase": 0.9091282894736842,
+          "PascalCase": 0.013157894736842105,
+          "SCREAMING_SNAKE_CASE": 0.07771381578947369
         },
-        "sampleSize": 3997
+        "sampleSize": 4125
       },
       "constants": {
         "majority": "SCREAMING_SNAKE_CASE",
-        "confidence": 0.9732620320855615,
+        "confidence": 0.9742268041237113,
         "mixed": false,
         "distribution": {
           "SCREAMING_SNAKE_CASE": 1
         },
-        "sampleSize": 182
+        "sampleSize": 189
       }
     },
     "imports": {
       "style": "mixed",
-      "confidence": 0.6358595194085028,
+      "confidence": 0.6420664206642066,
       "distribution": {
-        "absolute": 0.36414048059149723,
-        "relative": 0.6358595194085028
+        "absolute": 0.35793357933579334,
+        "relative": 0.6420664206642066
       },
       "aliasPattern": "@/"
     },
@@ -337,9 +341,9 @@
     },
     "codePatterns": {
       "jsExtensionImports": {
-        "count": 85,
-        "total": 87,
-        "ratio": 0.9770114942528736
+        "count": 88,
+        "total": 90,
+        "ratio": 0.9777777777777777
       },
       "nodePrefix": {
         "count": 41,
@@ -348,26 +352,26 @@
       },
       "emptyCatches": {
         "empty": 0,
-        "commented": 65,
-        "total": 153
+        "commented": 67,
+        "total": 155
       },
       "defaultExports": {
         "count": 3,
         "totalFiles": 30
       },
       "nullStyle": {
-        "nullCount": 99,
-        "optionalCount": 148,
+        "nullCount": 100,
+        "optionalCount": 149,
         "preference": "mixed"
       }
     },
-    "sampledFiles": 250,
-    "detectionTime": 367
+    "sampledFiles": 251,
+    "detectionTime": 376
   },
   "readme": {
     "description": "Anatomia is the engineering judgment your AI doesn't have. Four agents scope, plan, build, and verify every change. Contracts are sealed before code is written — typed assertions the verifier checks against the code, not Build's account of what it did. Every run produces a proof chain entry — what was asserted, what was found, what shipped. A fifth agent learns from that record and promotes what it finds to rules that shape future builds. Not opinion. Mechanical proof.",
     "architecture": null,
-    "setup": "Like what you see? Install globally to use the `ana` command directly:\n\n```bash\nnpm install -g anatomia-cli\n```\n\nRequires Node.js 22+.",
+    "setup": "Like what you see? Install globally to use the `ana` command directly:\n\n```bash\nnpm install -g anatomia-cli\n```\n\nRequires Node.js 22+. To update: `npm update -g anatomia-cli`",
     "source": "pre-section"
   },
   "documentation": {
@@ -375,56 +379,56 @@
       {
         "path": "README.md",
         "category": "project-docs",
-        "sizeBytes": 9372,
+        "sizeBytes": 10122,
         "lastModifiedDays": 0
       },
       {
         "path": "CONTRIBUTING.md",
         "category": "guides",
         "sizeBytes": 418,
-        "lastModifiedDays": 1
+        "lastModifiedDays": 2
       },
       {
         "path": "SECURITY.md",
         "category": "guides",
         "sizeBytes": 1016,
-        "lastModifiedDays": 12
+        "lastModifiedDays": 14
       },
       {
         "path": "CODE_OF_CONDUCT.md",
         "category": "guides",
         "sizeBytes": 5477,
-        "lastModifiedDays": 12
+        "lastModifiedDays": 14
       },
       {
         "path": "CHANGELOG.md",
         "category": "changelog",
         "sizeBytes": 8295,
-        "lastModifiedDays": 0
+        "lastModifiedDays": 2
       },
       {
         "path": ".github/PULL_REQUEST_TEMPLATE.md",
         "category": "templates",
         "sizeBytes": 309,
-        "lastModifiedDays": 10
+        "lastModifiedDays": 12
       },
       {
         "path": ".github/ISSUE_TEMPLATE",
         "category": "templates",
         "sizeBytes": 0,
-        "lastModifiedDays": 12
+        "lastModifiedDays": 14
       },
       {
         "path": "packages/cli/ARCHITECTURE.md",
         "category": "guides",
         "sizeBytes": 15017,
-        "lastModifiedDays": 1
+        "lastModifiedDays": 2
       },
       {
         "path": "packages/cli/CONTRIBUTING.md",
         "category": "guides",
         "sizeBytes": 19216,
-        "lastModifiedDays": 0
+        "lastModifiedDays": 2
       }
     ],
     "docsDirectory": null,
