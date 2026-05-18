@@ -1,5 +1,4 @@
 import { Container } from "@/components/ui/Container";
-import { getProofFeed } from "@/lib/proof-feed";
 import styles from "./about.module.css";
 
 const GENESIS = new Date("2026-03-19T00:00:00Z");
@@ -47,18 +46,19 @@ export async function About() {
   const days = daysSinceGenesis();
   const credits = computeCredits();
 
-  // Proof count from live proof chain data
-  const PROOF_CHAIN_URL =
-    "https://raw.githubusercontent.com/anatomia-dev/anatomia/main/.ana/proof_chain.json";
-  let proofCount = 113; // fallback
+  // Proof count — same data source and fetch pattern as the ship log (proof-feed.ts)
+  let proofCount = 113;
   try {
-    const res = await fetch(PROOF_CHAIN_URL, { next: { revalidate: 3600 } });
+    const res = await fetch(
+      "https://raw.githubusercontent.com/anatomia-dev/anatomia/main/.ana/proof_chain.json",
+      { next: { revalidate: 60 }, headers: { "User-Agent": "anatomia-web" } },
+    );
     if (res.ok) {
       const data = await res.json();
       if (data.entries) proofCount = data.entries.length;
     }
   } catch {
-    // Silent fallback to hardcoded value
+    // Silent fallback
   }
 
   return (
