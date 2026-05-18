@@ -33207,6 +33207,177 @@
         "commit_count": 7,
         "base_commit": "6a1ae5fc7ffbb55bf9fe74afc15080fd97284c0c"
       }
+    },
+    {
+      "slug": "reinit-field-refresh",
+      "feature": "Re-init mechanical field refresh",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 13,
+        "satisfied": 13,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Re-init updates the project name from the fresh scan",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "Re-init updates the language from the fresh scan",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Re-init updates the framework from the fresh scan",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "Re-init updates the package manager from the fresh scan",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "User-customized commands survive re-init",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "Unknown user-added keys survive re-init alongside field refresh",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "Co-author setting survives re-init",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "Artifact branch setting survives re-init",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "Branch prefix setting survives re-init",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "Custom config block survives re-init",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "A null scan result correctly overwrites a non-null old value",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "A null framework from scan overwrites a non-null old framework",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "The doc comment lists all six mechanical refresh fields",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 10,
+        "met": 10
+      },
+      "timing": {
+        "total_minutes": 677,
+        "think": 4,
+        "plan": 650,
+        "build": 3,
+        "verify": 3
+      },
+      "hashes": {
+        "scope": "sha256:e810a909f4a226e34c669b637f4234ebdbb7a605df7fc6b780f62d33f23192c7",
+        "contract": "sha256:038d579a1a343babd584312907aeb9e5f396154daa812eb507c98a20ba20715c",
+        "plan": "sha256:4d1704257545229ff5568ab8dc4cb25934f3f51b38e47e4b9f32748ba7abd42e",
+        "spec": "sha256:34014f2078122279f0be22f0df8e8bb94b1ae02c1ca9cdb7c2c0e20b472cb340",
+        "build-report": "sha256:ab7f898cc2d637d0fb60e1567fed8d4fbfc382e08ab148ec70888dc3b281b3f7",
+        "build-data": "sha256:bb9080c9cfd9af3bd66f2e3b80819ee837e6167885aeb354bc1d33fa4f1d4226",
+        "verify-report": "sha256:dbacd07bf843a47c7c46b0e85c1306a00c1f8221275f569378f4711b79286c67",
+        "verify-data": "sha256:7c478a3537791cbee9ec96d8140abc9cec5d2b66112992533e88e5b426dbfb5f"
+      },
+      "completed_at": "2026-05-18T18:33:57.457Z",
+      "modules_touched": [
+        "packages/cli/src/commands/init/state.ts",
+        "packages/cli/tests/commands/init.test.ts"
+      ],
+      "scope_summary": "Re-init runs a fresh scan but then discards the scan's metadata fields (`name`, `language`, `framework`, `packageManager`) in favor of potentially stale values from the old config. A project that changed its primary language, switched package managers, or renamed itself gets stale ana.json fields even after re-init. The user wants these four fields to refresh automatically, the same way `anaVersion` and `lastScanAt` already do.",
+      "kind": "fix",
+      "findings": [
+        {
+          "category": "test",
+          "summary": "A013 (doc comment) has no tagged test — verified by source inspection only",
+          "file": "packages/cli/src/commands/init/state.ts",
+          "anchor": null,
+          "line": 520,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A013"
+          ],
+          "id": "reinit-field-refresh-C1",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Merge override assumes newAnaConfig always contains all four keys — undefined would silently drop the field from JSON output",
+          "file": "packages/cli/src/commands/init/state.ts",
+          "anchor": null,
+          "line": 564,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "related_assertions": [
+            "A001",
+            "A002",
+            "A003",
+            "A004"
+          ],
+          "id": "reinit-field-refresh-C2",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "pkg.path injected without sanitization in createAnaJson — pre-existing, unrelated to this build",
+          "file": "packages/cli/src/commands/init/state.ts",
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "resolves": [],
+          "id": "reinit-field-refresh-C3",
+          "status": "active"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "Pre-existing unused eslint-disable directive in git-operations.ts:198",
+          "file": "packages/cli/src/utils/git-operations.ts",
+          "severity": "debt",
+          "suggested_action": "accept"
+        }
+      ],
+      "worktree": {
+        "used": true,
+        "created_at": "2026-05-18T18:22:03.925Z",
+        "completed_at": "2026-05-18T18:33:57.452Z",
+        "commit_count": 5,
+        "base_commit": "ff1b21303e0207c940160443ba3b2d25fa223d01"
+      }
     }
   ],
   "schema": 1
