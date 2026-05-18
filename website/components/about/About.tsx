@@ -1,26 +1,41 @@
 import { Container } from "@/components/ui/Container";
+import { getProofFeed } from "@/lib/proof-feed";
 import styles from "./about.module.css";
 
 const GENESIS = new Date("2026-03-19T00:00:00Z");
 const CREDIT_BASE = 1085.13;
 const CREDIT_BASE_DATE = new Date("2026-05-09T00:00:00Z");
 const MONTHLY_RATE = 200;
+const DAILY_RATE = MONTHLY_RATE / 30;
 const OVERAGE_ADDITIONS: { date: string; amount: number }[] = [];
 
 function computeCredits(): number {
   const now = new Date();
   let total = CREDIT_BASE;
+
+  // Count full months since base date
   let cursor = new Date(CREDIT_BASE_DATE);
+  let lastBillingDate = new Date(CREDIT_BASE_DATE);
   while (true) {
     const next = new Date(cursor);
     next.setMonth(next.getMonth() + 1);
     if (next > now) break;
     total += MONTHLY_RATE;
+    lastBillingDate = next;
     cursor = next;
   }
+
+  // Add partial month: daily interpolation since last billing date
+  const daysSinceLastBilling = Math.floor(
+    (now.getTime() - lastBillingDate.getTime()) / (1000 * 60 * 60 * 24)
+  );
+  total += daysSinceLastBilling * DAILY_RATE;
+
+  // Add manual overages
   for (const o of OVERAGE_ADDITIONS) {
     if (new Date(o.date) <= now) total += o.amount;
   }
+
   return Math.round(total);
 }
 
@@ -28,9 +43,23 @@ function daysSinceGenesis(): number {
   return Math.floor((Date.now() - GENESIS.getTime()) / (1000 * 60 * 60 * 24));
 }
 
-export function About() {
+export async function About() {
   const days = daysSinceGenesis();
   const credits = computeCredits();
+
+  // Proof count from live proof chain data
+  const PROOF_CHAIN_URL =
+    "https://raw.githubusercontent.com/anatomia-dev/anatomia/main/.ana/proof_chain.json";
+  let proofCount = 113; // fallback
+  try {
+    const res = await fetch(PROOF_CHAIN_URL, { next: { revalidate: 3600 } });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.entries) proofCount = data.entries.length;
+    }
+  } catch {
+    // Silent fallback to hardcoded value
+  }
 
   return (
     <article className={styles.page}>
@@ -103,7 +132,7 @@ export function About() {
                 <span className={styles.statLabel}>days</span>
               </div>
               <div className={styles.stat}>
-                <span className={styles.statValue}>113</span>
+                <span className={styles.statValue}>{proofCount}</span>
                 <span className={styles.statLabel}>verified runs</span>
               </div>
               <div className={styles.stat}>
