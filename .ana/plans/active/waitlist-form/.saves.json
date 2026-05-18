@@ -41,5 +41,20 @@
     "website/components/pricing/pricing.module.css",
     "website/lib/copy.ts"
   ],
-  "commit_hygiene": []
+  "commit_hygiene": [],
+  "verify_started_at": "2026-05-18T05:36:56.230Z",
+  "verify_agent": "ana-verify",
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:b7c91dfdf3d46a924bef827485bdb02d99fa9c4c7e72f09babf98c4cdff5d5a9",
+    "run_at": "2026-05-18T05:41:00.627Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-18T05:41:00.667Z",
+    "hash": "sha256:1d8d43a710985a1e161a65f759204e1a4d3d9a1a4620b7cd0b15ab2d29bfe478"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-18T05:41:00.667Z",
+    "hash": "sha256:acd77807eb50afc1f813de11522ffff5f24a04eef559199b326abd87d9fbbba2"
+  }
 }
