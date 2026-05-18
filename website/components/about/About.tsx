@@ -43,7 +43,7 @@ export function About() {
           </div>
 
           <h1 className={styles.headline}>
-            Building faster doesn't mean<br />
+            Building faster doesn&apos;t mean<br />
             you know what you <em>built</em>.
           </h1>
 
@@ -54,16 +54,16 @@ export function About() {
 
             <p className={styles.body}>
               Anatomia started with a frustration. Every AI coding tool we
-              used was fast, fluent, and wrong in ways we couldn't catch until
+              used was fast, fluent, and wrong in ways we couldn&apos;t catch until
               later. They all said yes. They all sounded confident. None of
               them showed their work.
             </p>
 
             <p className={styles.body}>
-              The best features are sometimes the ones that don't get built.
+              The best features are sometimes the ones that don&apos;t get built.
               The best solutions expose a deeper problem worth solving first.
               A senior engineer knows this — they push back before the first
-              line is written. They don't build what you said. They build what
+              line is written. They don&apos;t build what you said. They build what
               you meant.
             </p>
 
@@ -76,8 +76,8 @@ export function About() {
 
             <p className={styles.accent}>
               How do you know you built the right thing? How do you know you
-              built it the right way? How do you know there isn't risk you
-              can't see?
+              built it the right way? How do you know there isn&apos;t risk you
+              can&apos;t see?
             </p>
 
             <p className={styles.body}>

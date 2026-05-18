@@ -71,7 +71,7 @@ export function WaitlistForm() {
         aria-live="polite"
         tabIndex={-1}
       >
-        ✓ You're on the list. We'll reach out when Team is ready.
+        ✓ You&apos;re on the list. We&apos;ll reach out when Team is ready.
       </p>
     );
   }
