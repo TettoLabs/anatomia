@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-121 runs · 67 active · 3 promoted · 640 closed
+122 runs · 72 active · 3 promoted · 641 closed
 
 ## Hot Modules
 
@@ -10,13 +10,13 @@
 | packages/cli/tests/commands/work.test.ts | 6 | 5 |
 | packages/cli/src/commands/init/state.ts | 4 | 2 |
 | packages/cli/src/engine/detectors/projectType.ts | 4 | 2 |
-| packages/cli/tests/commands/proof.test.ts | 3 | 3 |
+| packages/cli/src/commands/proof.ts | 4 | 2 |
 
 ## Promoted Rules
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 67 total)
+## Active Findings (30 shown of 72 total)
 
 ### packages/cli/src/commands/check.ts
 
@@ -33,15 +33,16 @@
 - **code:** Build/lint scoping silently degrades when cwd is omitted — no warning that scoping was skipped — *Monorepo build command scoping*
 - **code:** pkg.path injected into shell command without sanitization — path with spaces or special chars would produce broken subshell — *Monorepo build command scoping*
 
+### packages/cli/src/commands/learn.ts
+
+- **code:** learn.ts uses synchronous fs (existsSync, readFileSync, writeFileSync, mkdirSync) while init assets.ts uses async fs — *Learn Session Memory*
+
 ### packages/cli/src/commands/proof.ts
 
+- **code:** commitAndPushProofChanges and pullBeforeRead exported from proof.ts instead of extracted to git-operations.ts — *Learn Session Memory*
+- **code:** Duplicated learn state reading logic — matrix block and filter block both parse state.json independently — *Learn Session Memory*
+- **code:** --new and --since can be provided simultaneously — --since silently wins with no documentation — *Learn Session Memory*
 - **code:** Duplicated zero-entry JSON payload — identical object literal at two call sites — *Audit matrix orientation*
-
-### packages/cli/src/commands/work.ts
-
-- **code:** checkConcurrencyGuard has dead `force` parameter — never passed true from production call sites — *Pipeline Concurrency Guards*
-- **code:** isTimestampRecent duplicates checkConcurrencyGuard logic — both parse .saves.json, extract timestamp, compare against CONCURRENCY_TIMEOUT_MS — *Pipeline Concurrency Guards*
-- **code:** Inside-worktree resume path writes verify_started_at without checking concurrency guard first — *Pipeline Concurrency Guards*
 
 ### packages/cli/src/engine/detectors/git.ts
 
@@ -73,11 +74,6 @@
 
 - **test:** A008/A009 use toBeDefined() instead of specific values for stale_count and recent_entries — *Audit matrix orientation*
 
-### packages/cli/tests/commands/work.test.ts
-
-- **test:** No boundary test at exactly 1-hour timeout — tests use 2-hour-old (stale) and new Date() (fresh), missing 59m59s and 60m01s cases — *Pipeline Concurrency Guards*
-- **test:** A019/A020 tests create full git repos with bare remotes — heavyweight setup that could be simplified with targeted spawnSync+runGit mocking — *Pipeline Concurrency Guards*
-
 ### packages/cli/tests/engine/detectors/polyglot.test.ts
 
 - **test:** A012 frameworkDeps test verifies detector-level cascade but not the actual scan-engine.ts ternary conditional — the ternary fix is tested structurally, not behaviorally — *Polyglot Language Detection*
@@ -101,4 +97,8 @@
 ### website/lib/proof-feed.ts
 
 - **code:** VERSION_FALLBACK evaluated at module load time — single-shot, no retry on transient readFileSync failure — *Dynamic marketing stats — wire command count and version fallback*
+
+### General
+
+- **test:** No @ana tags for A025-A029 — template/doc assertions verified by source inspection only — *Learn Session Memory*
 

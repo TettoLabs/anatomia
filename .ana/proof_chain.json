@@ -32603,6 +32603,307 @@
         "completed_at": "2026-05-18T03:30:53.817Z",
         "commit_count": 0
       }
+    },
+    {
+      "slug": "learn-session-memory",
+      "feature": "Learn Session Memory",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 29,
+        "satisfied": 29,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Initializing a new project creates a learn state file with no session history",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "Re-initializing a project keeps the existing learn session timestamp",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Filtering by new shows only findings from entries completed after the last session",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "When no session has been recorded, filtering by new shows all findings",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "When the learn state file is missing, filtering by new shows all findings without error",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "Filtering by date shows only findings from entries completed after that date",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "Filtering by an invalid date exits with an error",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "Filtering by a future date returns zero findings",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "New and severity filters combine — only findings matching both appear",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "The orientation matrix ignores the new filter and shows all findings",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "The orientation matrix ignores the since filter and shows all findings",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "The orientation matrix shows how many findings are new since the last session",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "The orientation matrix includes the last session timestamp",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "The orientation matrix omits session info when no session has been recorded",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "The human-readable matrix shows a new-since line when a session timestamp exists",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "The human-readable matrix omits the new-since line when no session exists",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A017",
+          "says": "Filtering by new works in JSON output mode",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A018",
+          "says": "Filtering by date works in JSON output mode",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A019",
+          "says": "Ending a learn session records the current timestamp",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A020",
+          "says": "Ending a learn session creates a git commit",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A021",
+          "says": "Ending a learn session from the wrong branch is rejected",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A022",
+          "says": "Ending a learn session shows how many findings will be old next time",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A023",
+          "says": "Ending a learn session on a project without a learn directory creates it",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A024",
+          "says": "Ending a learn session returns valid JSON when requested",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A025",
+          "says": "The Learn template references session-aware startup with new findings count",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A026",
+          "says": "The Learn template includes session wrap-up with ana learn end",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A027",
+          "says": "The README documents the learn end command",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A028",
+          "says": "The using-ana-learn guide references session memory",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A029",
+          "says": "The toolbelt page lists learn end in the ana-learn agent row",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 19,
+        "met": 19
+      },
+      "timing": {
+        "total_minutes": 349,
+        "think": 18,
+        "plan": 11,
+        "build": 130,
+        "verify": 7
+      },
+      "hashes": {
+        "scope": "sha256:fe87abaace779844572d7de4689fdc8f974e8a3a6e187a2659cc2b063444f48a",
+        "contract": "sha256:f17ae9fb0cc9c446edad2482ea557bb9bff86504dd0110a1ce7986b3caef5fb3",
+        "plan": "sha256:10238767b4f10ab69574240e6de702b74eef9abd584fa31d067a0cce8bae779c",
+        "spec": "sha256:d9bcdbb28b22eed56d2b9ae2c5d135007082810e294969cc792159104d5c87c1",
+        "build-report": "sha256:8ec98374ed958bdc8e86b3cc04df54c34837f352fc3654372731594049c86cb2",
+        "build-data": "sha256:c271c50c8f1f0caa21869eaad49c906b7689b0c523f343814333a316fb962405",
+        "verify-report": "sha256:97383d13fd3b09301ca7349884e6cf847227504cad012a6d6b9925c216909ff6",
+        "verify-data": "sha256:1f398ddf39bf224be9c393ba17ddb7ca56cf416239a784631e2a790b1f0b4af4"
+      },
+      "completed_at": "2026-05-18T03:40:00.306Z",
+      "modules_touched": [
+        ".claude/agents/ana-learn.md",
+        "README.md",
+        "packages/cli/src/commands/init/assets.ts",
+        "packages/cli/src/commands/init/state.ts",
+        "packages/cli/src/commands/learn.ts",
+        "packages/cli/src/commands/proof.ts",
+        "packages/cli/src/index.ts",
+        "packages/cli/templates/.claude/agents/ana-learn.md",
+        "packages/cli/tests/commands/init.test.ts",
+        "packages/cli/tests/commands/learn.test.ts",
+        "packages/cli/tests/commands/proof.test.ts",
+        "website/content/docs/concepts/toolbelt.mdx",
+        "website/content/docs/guides/using-ana-learn.mdx"
+      ],
+      "scope_summary": "Learn starts every session from zero. With 55+ active findings, there's no way to distinguish \"already triaged\" from \"appeared since last time.\" The session wastes time re-reading known findings and risks missing new ones in the noise. The developer wants Learn to know what's new — and filter to just those findings.",
+      "kind": "feature",
+      "findings": [
+        {
+          "category": "code",
+          "summary": "commitAndPushProofChanges and pullBeforeRead exported from proof.ts instead of extracted to git-operations.ts",
+          "file": "packages/cli/src/commands/proof.ts",
+          "anchor": null,
+          "line": 126,
+          "severity": "debt",
+          "suggested_action": "scope",
+          "related_assertions": [],
+          "id": "learn-session-memory-C1",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "Duplicated learn state reading logic — matrix block and filter block both parse state.json independently",
+          "file": "packages/cli/src/commands/proof.ts",
+          "anchor": null,
+          "line": 1717,
+          "severity": "debt",
+          "suggested_action": "accept",
+          "id": "learn-session-memory-C2",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "--new and --since can be provided simultaneously — --since silently wins with no documentation",
+          "file": "packages/cli/src/commands/proof.ts",
+          "anchor": null,
+          "line": 1899,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "id": "learn-session-memory-C3",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "No @ana tags for A025-A029 — template/doc assertions verified by source inspection only",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A025",
+            "A026",
+            "A027",
+            "A028",
+            "A029"
+          ],
+          "id": "learn-session-memory-C4",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "learn.ts uses synchronous fs (existsSync, readFileSync, writeFileSync, mkdirSync) while init assets.ts uses async fs",
+          "file": "packages/cli/src/commands/learn.ts",
+          "anchor": null,
+          "line": 63,
+          "severity": "debt",
+          "suggested_action": "accept",
+          "id": "learn-session-memory-C5",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "Lint warning: unused eslint-disable directive in git-operations.ts — pre-existing, not introduced by this build",
+          "file": "packages/cli/src/utils/git-operations.ts",
+          "anchor": null,
+          "line": 198,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "learn-session-memory-C6",
+          "status": "closed",
+          "closed_reason": "upstream",
+          "closed_at": "2026-05-18T03:40:00.306Z",
+          "closed_by": "mechanical"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "commitAndPushProofChanges exported from proof.ts rather than extracted to git-operations.ts",
+          "file": "packages/cli/src/commands/proof.ts",
+          "severity": "debt",
+          "suggested_action": "scope"
+        },
+        {
+          "summary": "Pre-existing lint warning (unused eslint-disable) in git-operations.ts",
+          "file": "packages/cli/src/utils/git-operations.ts",
+          "severity": "observation",
+          "suggested_action": "accept"
+        }
+      ],
+      "worktree": {
+        "used": false,
+        "created_at": "2026-05-18T00:58:01.395Z",
+        "completed_at": "2026-05-18T03:40:00.300Z",
+        "commit_count": 0
+      }
     }
   ],
   "schema": 1
