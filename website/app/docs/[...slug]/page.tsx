@@ -127,12 +127,14 @@ export default async function DocsPage({ params }: DocsPageProps) {
 function buildBreadcrumb(slug?: string[]): { name: string; url?: string }[] {
   if (!slug || slug.length === 0) return [];
 
-  return slug.map((segment, i) => ({
+  // Category segments (guides, concepts, reference) don't have index pages.
+  // Only the first "Docs" link in the Breadcrumb component is clickable.
+  // All breadcrumb segments here are plain text — no URLs.
+  return slug.map((segment) => ({
     name: segment
       .split("-")
       .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
       .join(" "),
-    url: i < slug.length - 1 ? `/docs/${slug.slice(0, i + 1).join("/")}` : undefined,
   }));
 }
 
