@@ -23,9 +23,9 @@ export async function Hero() {
       <Container className={styles.inner}>
         {/* Eyebrow dispatch pill */}
         <a
-          href="#proof-feed"
+          href="/changelog"
           className={styles.eyebrow}
-          aria-label="Proof chains are live — view ship log"
+          aria-label="Proof chains are live — view changelog"
         >
           <span className={styles.live} aria-hidden="true" />
           <span className={styles.tag}>{copy.hero.eyebrow.tag}</span>
