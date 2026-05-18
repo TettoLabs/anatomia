@@ -76,7 +76,10 @@ export function TetrisSnake() {
         const c3 = cols - 1 + rows - 1 + cols - 1;        // bottom-left
         corners.add(c0); corners.add(c1); corners.add(c2); corners.add(c3);
 
-        // Space blocks evenly along each edge (including corners)
+        // Space blocks evenly along each edge using exact fractional distribution.
+        // Each edge gets N blocks (not counting the far corner — that's the next
+        // edge's first block). Positions are Math.round(i * len / N) so every
+        // gap is identical within rounding tolerance.
         const edges = [
           [c0, c1],     // top
           [c1, c2],     // right
@@ -85,13 +88,12 @@ export function TetrisSnake() {
         ];
         for (const [start, end] of edges) {
           const len = end - start;
-          const spacing = Math.max(3, Math.round(len / Math.floor(len / 3)));
-          for (let i = start; i < end; i += spacing) {
-            placeSet.add(i % perim.length);
+          const numBlocks = Math.max(1, Math.round(len / 3));
+          for (let i = 0; i < numBlocks; i++) {
+            const idx = start + Math.round(i * len / numBlocks);
+            placeSet.add(idx % perim.length);
           }
         }
-        // Ensure all corners are in the placement set
-        for (const c of corners) placeSet.add(c);
       }
     }
 
