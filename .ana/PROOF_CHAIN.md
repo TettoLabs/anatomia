@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-122 runs · 68 active · 3 promoted · 645 closed
+122 runs · 67 active · 3 promoted · 646 closed
 
 ## Hot Modules
 
@@ -8,15 +8,15 @@
 |------|--------|--------|
 | packages/cli/src/commands/work.ts | 9 | 7 |
 | packages/cli/tests/commands/work.test.ts | 6 | 5 |
-| packages/cli/src/commands/init/state.ts | 4 | 2 |
 | packages/cli/src/engine/detectors/projectType.ts | 4 | 2 |
 | packages/cli/tests/commands/proof.test.ts | 3 | 3 |
+| packages/cli/src/utils/proofSummary.ts | 3 | 2 |
 
 ## Promoted Rules
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 68 total)
+## Active Findings (30 shown of 67 total)
 
 ### packages/cli/src/commands/check.ts
 
@@ -29,7 +29,6 @@
 ### packages/cli/src/commands/init/state.ts
 
 - **code:** pkg.path injected without sanitization in new buildPackageCmd and testPackageCmd — same known risk as monorepo-build-scoping-C5 — *Flip Monorepo Command Semantics*
-- **code:** Propagation loop iterates all freshCommands keys including non-command keys like 'packageManager' and 'all' if present — *Flip Monorepo Command Semantics*
 - **code:** Build/lint scoping silently degrades when cwd is omitted — no warning that scoping was skipped — *Monorepo build command scoping*
 - **code:** pkg.path injected into shell command without sanitization — path with spaces or special chars would produce broken subshell — *Monorepo build command scoping*
 
@@ -77,6 +76,7 @@
 ### packages/cli/tests/commands/work.test.ts
 
 - **test:** No boundary test at exactly 1-hour timeout — tests use 2-hour-old (stale) and new Date() (fresh), missing 59m59s and 60m01s cases — *Pipeline Concurrency Guards*
+- **test:** A019/A020 tests create full git repos with bare remotes — heavyweight setup that could be simplified with targeted spawnSync+runGit mocking — *Pipeline Concurrency Guards*
 
 ### packages/cli/tests/engine/detectors/polyglot.test.ts
 

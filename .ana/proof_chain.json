@@ -32578,7 +32578,10 @@
           "severity": "observation",
           "suggested_action": "accept",
           "id": "flip-monorepo-commands-C6",
-          "status": "active"
+          "status": "closed",
+          "closed_reason": "Correct behavior: propagation loop at state.ts:582 is intentionally generic. Guard at line 583 only adds keys that don't exist in mergedCommands — existing packageManager/all are already present and skipped. New keys from fresh detection (e.g., future buildPackage) correctly propagate to users on re-init. Comment at lines 578-581 documents the additive-only design.",
+          "closed_at": "2026-05-18T03:46:13.189Z",
+          "closed_by": "human"
         }
       ],
       "rejection_cycles": 0,
