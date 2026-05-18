@@ -33,5 +33,20 @@
     "packages/cli/src/commands/init/state.ts",
     "packages/cli/tests/commands/init.test.ts"
   ],
-  "commit_hygiene": []
+  "commit_hygiene": [],
+  "verify_started_at": "2026-05-18T18:27:28.851Z",
+  "verify_agent": "ana-verify",
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:038d579a1a343babd584312907aeb9e5f396154daa812eb507c98a20ba20715c",
+    "run_at": "2026-05-18T18:30:41.767Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-18T18:30:41.806Z",
+    "hash": "sha256:dbacd07bf843a47c7c46b0e85c1306a00c1f8221275f569378f4711b79286c67"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-18T18:30:41.807Z",
+    "hash": "sha256:7c478a3537791cbee9ec96d8140abc9cec5d2b66112992533e88e5b426dbfb5f"
+  }
 }
