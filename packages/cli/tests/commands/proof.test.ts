@@ -4623,6 +4623,266 @@ describe('ana proof', () => {
     });
   });
 
+  // ─── Session-aware filter tests (--new, --since) ─────────────────────
+
+  // Entries with distinct completed_at for session filtering
+  const oldEntry = {
+    slug: 'old-entry',
+    feature: 'Old Feature',
+    result: 'PASS' as const,
+    author: { name: 'Dev', email: 'dev@test.com' },
+    contract: { total: 1, covered: 1, uncovered: 0, satisfied: 1, unsatisfied: 0, deviated: 0 },
+    assertions: [],
+    acceptance_criteria: { total: 1, met: 1 },
+    timing: { total_minutes: 10 },
+    hashes: {},
+    completed_at: '2026-04-10T10:00:00Z',
+    modules_touched: [],
+    findings: [
+      { id: 'F100', category: 'code', summary: 'Old finding 1', file: 'src/old.ts', anchor: null, status: 'active', severity: 'risk', suggested_action: 'scope' },
+      { id: 'F101', category: 'code', summary: 'Old finding 2', file: 'src/old2.ts', anchor: null, status: 'active', severity: 'debt', suggested_action: 'monitor' },
+    ],
+    rejection_cycles: 0,
+    previous_failures: [],
+    build_concerns: [],
+  };
+
+  const newEntry = {
+    slug: 'new-entry',
+    feature: 'New Feature',
+    result: 'PASS' as const,
+    author: { name: 'Dev', email: 'dev@test.com' },
+    contract: { total: 1, covered: 1, uncovered: 0, satisfied: 1, unsatisfied: 0, deviated: 0 },
+    assertions: [],
+    acceptance_criteria: { total: 1, met: 1 },
+    timing: { total_minutes: 10 },
+    hashes: {},
+    completed_at: '2026-05-16T10:00:00Z',
+    modules_touched: [],
+    findings: [
+      { id: 'F200', category: 'code', summary: 'New finding 1', file: 'src/new.ts', anchor: null, status: 'active', severity: 'risk', suggested_action: 'scope' },
+      { id: 'F201', category: 'code', summary: 'New finding 2', file: 'src/new2.ts', anchor: null, status: 'active', severity: 'observation', suggested_action: 'monitor' },
+    ],
+    rejection_cycles: 0,
+    previous_failures: [],
+    build_concerns: [],
+  };
+
+  /** Helper: write learn state.json into the test project */
+  async function writeLearnState(dir: string, lastSessionAt: string | null): Promise<void> {
+    const learnDir = path.join(dir, '.ana', 'learn');
+    await fs.mkdir(learnDir, { recursive: true });
+    await fs.writeFile(
+      path.join(learnDir, 'state.json'),
+      JSON.stringify({ last_session_at: lastSessionAt }),
+    );
+  }
+
+  // @ana A003
+  describe('audit --new filters to findings after last_session_at', () => {
+    it('shows only findings from entries completed after last session', async () => {
+      await createProofChain([oldEntry, newEntry]);
+      // Set last_session_at between old and new entries
+      await writeLearnState(tempDir, '2026-05-01T00:00:00Z');
+      process.chdir(tempDir);
+      const { stdout, exitCode } = runProof(['audit', '--new', '--json']);
+      expect(exitCode).toBe(0);
+      const json = JSON.parse(stdout);
+      expect(json.results.total_active).toBe(2);
+    });
+  });
+
+  // @ana A004
+  describe('audit --new with null last_session_at shows all findings', () => {
+    it('shows all findings when no session recorded', async () => {
+      await createProofChain([oldEntry, newEntry]);
+      await writeLearnState(tempDir, null);
+      process.chdir(tempDir);
+      const { stdout, exitCode } = runProof(['audit', '--new', '--json']);
+      expect(exitCode).toBe(0);
+      const json = JSON.parse(stdout);
+      expect(json.results.total_active).toBe(4);
+    });
+  });
+
+  // @ana A005
+  describe('audit --new with missing state.json shows all findings', () => {
+    it('shows all findings when learn state file does not exist', async () => {
+      await createProofChain([oldEntry, newEntry]);
+      // No writeLearnState call — state.json does not exist
+      process.chdir(tempDir);
+      const { stdout, exitCode } = runProof(['audit', '--new', '--json']);
+      expect(exitCode).toBe(0);
+      const json = JSON.parse(stdout);
+      expect(json.results.total_active).toBe(4);
+    });
+  });
+
+  // @ana A006
+  describe('audit --since filters to findings after given date', () => {
+    it('shows only findings from entries completed after the date', async () => {
+      await createProofChain([oldEntry, newEntry]);
+      process.chdir(tempDir);
+      const { stdout, exitCode } = runProof(['audit', '--since', '2026-05-01', '--json']);
+      expect(exitCode).toBe(0);
+      const json = JSON.parse(stdout);
+      expect(json.results.total_active).toBe(2);
+    });
+  });
+
+  // @ana A007
+  describe('audit --since with invalid date shows error', () => {
+    it('exits with error for invalid date', async () => {
+      await createProofChain([oldEntry, newEntry]);
+      process.chdir(tempDir);
+      const { exitCode, stderr } = runProof(['audit', '--since', 'not-a-date']);
+      expect(exitCode).not.toBe(0);
+      expect(stderr).toContain('Invalid date');
+    });
+  });
+
+  // @ana A008
+  describe('audit --since with future date returns empty', () => {
+    it('shows zero findings for future date', async () => {
+      await createProofChain([oldEntry, newEntry]);
+      process.chdir(tempDir);
+      const { stdout, exitCode } = runProof(['audit', '--since', '2099-01-01', '--json']);
+      expect(exitCode).toBe(0);
+      const json = JSON.parse(stdout);
+      expect(json.results.total_active).toBe(0);
+    });
+  });
+
+  // @ana A009
+  describe('audit --new composes with --severity', () => {
+    it('returns intersection of --new and --severity filters', async () => {
+      await createProofChain([oldEntry, newEntry]);
+      await writeLearnState(tempDir, '2026-05-01T00:00:00Z');
+      process.chdir(tempDir);
+      const { stdout, exitCode } = runProof(['audit', '--new', '--severity', 'risk', '--json']);
+      expect(exitCode).toBe(0);
+      const json = JSON.parse(stdout);
+      // newEntry has 1 risk finding (F200)
+      expect(json.results.total_active).toBeGreaterThan(0);
+      expect(json.results.total_active).toBe(1);
+    });
+  });
+
+  // @ana A010
+  describe('audit --matrix ignores --new', () => {
+    it('matrix shows all findings regardless of --new', async () => {
+      await createProofChain([oldEntry, newEntry]);
+      await writeLearnState(tempDir, '2026-05-01T00:00:00Z');
+      process.chdir(tempDir);
+      const { stdout, exitCode } = runProof(['audit', '--matrix', '--new', '--json']);
+      expect(exitCode).toBe(0);
+      const json = JSON.parse(stdout);
+      expect(json.results.total_active).toBe(4);
+    });
+  });
+
+  // @ana A011
+  describe('audit --matrix ignores --since', () => {
+    it('matrix shows all findings regardless of --since', async () => {
+      await createProofChain([oldEntry, newEntry]);
+      process.chdir(tempDir);
+      const { stdout, exitCode } = runProof(['audit', '--matrix', '--since', '2026-05-01', '--json']);
+      expect(exitCode).toBe(0);
+      const json = JSON.parse(stdout);
+      expect(json.results.total_active).toBe(4);
+    });
+  });
+
+  // @ana A012
+  describe('matrix includes new_since_last when last_session_at is set', () => {
+    it('includes new_since_last count in matrix JSON', async () => {
+      await createProofChain([oldEntry, newEntry]);
+      await writeLearnState(tempDir, '2026-05-01T00:00:00Z');
+      process.chdir(tempDir);
+      const { stdout, exitCode } = runProof(['audit', '--matrix', '--json']);
+      expect(exitCode).toBe(0);
+      const json = JSON.parse(stdout);
+      expect(json.results.new_since_last).toBe(2);
+    });
+  });
+
+  // @ana A013
+  describe('matrix includes last_session_at when set', () => {
+    it('includes last_session_at in matrix JSON', async () => {
+      await createProofChain([oldEntry, newEntry]);
+      await writeLearnState(tempDir, '2026-05-01T00:00:00Z');
+      process.chdir(tempDir);
+      const { stdout, exitCode } = runProof(['audit', '--matrix', '--json']);
+      expect(exitCode).toBe(0);
+      const json = JSON.parse(stdout);
+      expect(json.results.last_session_at).toBeDefined();
+    });
+  });
+
+  // @ana A014
+  describe('matrix omits new_since_last when last_session_at is null', () => {
+    it('omits new_since_last when no session recorded', async () => {
+      await createProofChain([oldEntry, newEntry]);
+      await writeLearnState(tempDir, null);
+      process.chdir(tempDir);
+      const { stdout, exitCode } = runProof(['audit', '--matrix', '--json']);
+      expect(exitCode).toBe(0);
+      const json = JSON.parse(stdout);
+      expect(json.results.new_since_last).toBeUndefined();
+    });
+  });
+
+  // @ana A015
+  describe('matrix human-readable shows new since line', () => {
+    it('shows "New since last session" line when last_session_at is set', async () => {
+      await createProofChain([oldEntry, newEntry]);
+      await writeLearnState(tempDir, '2026-05-01T00:00:00Z');
+      process.chdir(tempDir);
+      const { stdout, exitCode } = runProof(['audit', '--matrix']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('New since last session');
+    });
+  });
+
+  // @ana A016
+  describe('matrix human-readable omits new since line when null', () => {
+    it('omits "New since last session" line when no session recorded', async () => {
+      await createProofChain([oldEntry, newEntry]);
+      await writeLearnState(tempDir, null);
+      process.chdir(tempDir);
+      const { stdout, exitCode } = runProof(['audit', '--matrix']);
+      expect(exitCode).toBe(0);
+      expect(stdout).not.toContain('New since last session');
+    });
+  });
+
+  // @ana A017
+  describe('audit --new --json returns valid filtered JSON', () => {
+    it('returns valid JSON with filtered count', async () => {
+      await createProofChain([oldEntry, newEntry]);
+      await writeLearnState(tempDir, '2026-05-01T00:00:00Z');
+      process.chdir(tempDir);
+      const { stdout, exitCode } = runProof(['audit', '--new', '--json']);
+      expect(exitCode).toBe(0);
+      const json = JSON.parse(stdout);
+      expect(json.command).toBe('proof audit');
+      expect(json.results.total_active).toBe(2);
+    });
+  });
+
+  // @ana A018
+  describe('audit --since --json returns valid filtered JSON', () => {
+    it('returns valid JSON with filtered count', async () => {
+      await createProofChain([oldEntry, newEntry]);
+      process.chdir(tempDir);
+      const { stdout, exitCode } = runProof(['audit', '--since', '2026-05-01', '--json']);
+      expect(exitCode).toBe(0);
+      const json = JSON.parse(stdout);
+      expect(json.command).toBe('proof audit');
+      expect(json.results.total_active).toBe(2);
+    });
+  });
+
   // ─── Template Tests ───────────────────────────────────────────────────
 
   // @ana A028

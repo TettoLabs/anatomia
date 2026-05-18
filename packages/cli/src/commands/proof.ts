@@ -1583,7 +1583,9 @@ export function registerProofCommand(program: Command): void {
     .option('--severity <values>', 'Filter by severity (comma-separated: risk,debt,observation,unclassified)')
     .option('--entry <slug>', 'Filter to findings from a specific pipeline run')
     .option('--matrix', 'Show orientation summary instead of file-grouped findings')
-    .action(async (options: { json?: boolean; full?: boolean; severity?: string; entry?: string; matrix?: boolean }) => {
+    .option('--new', 'Filter to findings from entries completed after the last learn session')
+    .option('--since <date>', 'Filter to findings from entries completed after ISO date')
+    .action(async (options: { json?: boolean; full?: boolean; severity?: string; entry?: string; matrix?: boolean; new?: boolean; since?: string }) => {
       const proofRoot = findProjectRoot();
       const proofChainPath = path.join(proofRoot, '.ana', 'proof_chain.json');
       const parentOpts = proofCommand.opts();
@@ -1708,6 +1710,31 @@ export function registerProofCommand(program: Command): void {
           ago: e.completed_at ? formatRelativeTime(e.completed_at) : 'unknown',
         }));
 
+        // Session-aware enrichment: count findings new since last learn session
+        let matrixNewSinceLast: number | undefined;
+        let matrixLastSessionAt: string | undefined;
+        try {
+          const learnStatePath = path.join(proofRoot, '.ana', 'learn', 'state.json');
+          if (fs.existsSync(learnStatePath)) {
+            const learnState = JSON.parse(fs.readFileSync(learnStatePath, 'utf-8'));
+            if (learnState.last_session_at) {
+              matrixLastSessionAt = learnState.last_session_at;
+              const threshold = new Date(learnState.last_session_at).getTime();
+              let newCount = 0;
+              for (const entry of chain.entries) {
+                if (!entry.completed_at) continue;
+                if (new Date(entry.completed_at).getTime() > threshold) {
+                  for (const finding of entry.findings || []) {
+                    if (finding.status && finding.status !== 'active') continue;
+                    newCount++;
+                  }
+                }
+              }
+              matrixNewSinceLast = newCount;
+            }
+          }
+        } catch { /* missing or malformed learn state — omit session info */ }
+
         const matrixBySeverity = {
           risk: matrixSeverityCounts['risk'] || 0,
           debt: matrixSeverityCounts['debt'] || 0,
@@ -1723,7 +1750,7 @@ export function registerProofCommand(program: Command): void {
         };
 
         if (useJson) {
-          console.log(JSON.stringify(wrapJsonResponse('proof audit', {
+          const matrixPayload: Record<string, unknown> = {
             total_active: totalActive,
             actionable_count: matrixActionable,
             monitoring_count: matrixMonitoring,
@@ -1734,7 +1761,12 @@ export function registerProofCommand(program: Command): void {
             stale_count: staleHigh + staleMedium,
             stale_high: staleHigh,
             stale_medium: staleMedium,
-          }, chain), null, 2));
+          };
+          if (matrixNewSinceLast !== undefined) {
+            matrixPayload['new_since_last'] = matrixNewSinceLast;
+            matrixPayload['last_session_at'] = matrixLastSessionAt;
+          }
+          console.log(JSON.stringify(wrapJsonResponse('proof audit', matrixPayload, chain), null, 2));
         } else {
           // Human-readable orientation block
           if (totalActive === 0) {
@@ -1767,6 +1799,10 @@ export function registerProofCommand(program: Command): void {
               console.log(`  Staleness: ${staleTotal} stale (${staleHigh} high, ${staleMedium} medium)`);
             } else {
               console.log(`  Staleness: none detected`);
+            }
+
+            if (matrixNewSinceLast !== undefined && matrixLastSessionAt) {
+              console.log(`  New since last session: ${matrixNewSinceLast} finding${matrixNewSinceLast !== 1 ? 's' : ''} (last session: ${matrixLastSessionAt})`);
             }
           }
 
@@ -1857,6 +1893,49 @@ export function registerProofCommand(program: Command): void {
       if (options.entry) {
         const entrySlug = options.entry;
         activeFindings = activeFindings.filter(f => f.entry_slug === entrySlug);
+      }
+
+      // Apply --new / --since filter (post-collection, before grouping)
+      if (options.new || options.since) {
+        let threshold: number | null = null;
+
+        if (options.since) {
+          const sinceDate = new Date(options.since);
+          if (isNaN(sinceDate.getTime())) {
+            console.error(chalk.red(`Error: Invalid date for --since: "${options.since}". Use ISO format (e.g., 2026-05-15).`));
+            process.exit(1);
+            return;
+          }
+          threshold = sinceDate.getTime();
+        } else {
+          // --new: read last_session_at from learn state
+          try {
+            const learnStatePath = path.join(proofRoot, '.ana', 'learn', 'state.json');
+            if (fs.existsSync(learnStatePath)) {
+              const learnState = JSON.parse(fs.readFileSync(learnStatePath, 'utf-8'));
+              if (learnState.last_session_at) {
+                threshold = new Date(learnState.last_session_at).getTime();
+              }
+            }
+          } catch { /* missing or malformed — show all */ }
+        }
+
+        if (threshold !== null) {
+          // Build entry slug → completed_at map
+          const entryCompletedMap = new Map<string, string>();
+          for (const entry of chain.entries) {
+            if (entry.completed_at) {
+              entryCompletedMap.set(entry.slug, entry.completed_at);
+            }
+          }
+
+          activeFindings = activeFindings.filter(f => {
+            const completedAt = entryCompletedMap.get(f.entry_slug);
+            if (!completedAt) return false;
+            return new Date(completedAt).getTime() > threshold!;
+          });
+        }
+        // If threshold is null (no last_session_at), show all — no filter applied
       }
 
       // Zero findings
