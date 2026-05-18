@@ -22,20 +22,18 @@ export async function Hero() {
 
       <Container className={styles.inner}>
         {/* Eyebrow dispatch pill */}
-        <span
+        <a
+          href="/changelog"
           className={styles.eyebrow}
-          aria-label="Latest proof: Proof chains are live"
+          aria-label="Proof chains are live — view changelog"
         >
           <span className={styles.live} aria-hidden="true" />
           <span className={styles.tag}>{copy.hero.eyebrow.tag}</span>
-          {latest && (
-            <span className={styles.meta}>· {formatAge(latest.ts)}</span>
-          )}
           <span className={styles.rule} aria-hidden="true" />
           <span className={styles.feature}>
             <Formatted text={copy.hero.eyebrow.feature} />
           </span>
-        </span>
+        </a>
 
         {/* Headline */}
         <h1 className={styles.headline}>
