@@ -1,0 +1,51 @@
+schema: 1
+findings:
+  - category: code
+    summary: "Honeypot DOM input is dead code — JSON submission hardcodes _gotcha: '' regardless of field value"
+    file: "website/components/pricing/WaitlistForm.tsx"
+    line: 87
+    severity: debt
+    suggested_action: accept
+    related_assertions: ["A009"]
+
+  - category: code
+    summary: "Hidden _source DOM input is dead code — JSON body hardcodes _source value, DOM element never read"
+    file: "website/components/pricing/WaitlistForm.tsx"
+    line: 89
+    severity: debt
+    suggested_action: accept
+    related_assertions: ["A010"]
+
+  - category: code
+    summary: "Success message aria-live on freshly mounted element — screen readers may not announce dynamically inserted aria-live regions"
+    file: "website/components/pricing/WaitlistForm.tsx"
+    line: 71
+    severity: observation
+    suggested_action: monitor
+    related_assertions: ["A018", "A022"]
+
+  - category: code
+    summary: "Error color hardcoded as #ff8a8a on highlighted card instead of CSS custom property"
+    file: "website/components/pricing/pricing.module.css"
+    line: 242
+    severity: debt
+    suggested_action: accept
+
+  - category: code
+    summary: "No client-side rate limiting — user can spam submit after error state re-enables the button"
+    file: "website/components/pricing/WaitlistForm.tsx"
+    line: 54
+    severity: observation
+    suggested_action: monitor
+
+  - category: upstream
+    summary: "Spec says desktop >768px for side-by-side but CSS only enforces column at ≤480px — 481-768px relies on flex-wrap heuristics"
+    severity: observation
+    suggested_action: accept
+    related_assertions: ["A015", "A016"]
+
+  - category: upstream
+    summary: "copy.ts still has stale manifesto link (/#pipeline) and proofFeed clickable rows reference — pre-existing, not introduced by this build"
+    file: "website/lib/copy.ts"
+    severity: observation
+    suggested_action: monitor

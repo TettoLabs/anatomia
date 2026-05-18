@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/Button";
+import { WaitlistForm } from "@/components/pricing/WaitlistForm";
 import { cn } from "@/lib/utils";
 import styles from "./pricing.module.css";
 
@@ -6,6 +7,7 @@ type Plan = typeof import("@/lib/copy").copy.pricing.plans[number];
 
 export function PriceCard({ plan }: { plan: Plan }) {
   const highlighted = "highlighted" in plan && plan.highlighted;
+  const isWaitlist = "waitlist" in plan && plan.waitlist;
 
   return (
     <div className={cn(styles.card, highlighted && styles.cardHighlighted)}>
@@ -29,14 +31,18 @@ export function PriceCard({ plan }: { plan: Plan }) {
         ))}
       </div>
       <div className={styles.cardCta}>
-        <Button
-          variant={highlighted ? "primary" : "secondary"}
-          size="md"
-          href={plan.cta.href}
-          className="w-full justify-center"
-        >
-          {plan.cta.label}
-        </Button>
+        {isWaitlist ? (
+          <WaitlistForm />
+        ) : (
+          <Button
+            variant={highlighted ? "primary" : "secondary"}
+            size="md"
+            href={"href" in plan.cta ? plan.cta.href : undefined}
+            className="w-full justify-center"
+          >
+            {plan.cta.label}
+          </Button>
+        )}
       </div>
     </div>
   );

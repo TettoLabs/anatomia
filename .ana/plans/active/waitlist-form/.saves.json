@@ -24,5 +24,37 @@
         "hash": "sha256:4f6d43b8288f309e0b59872c398eece2b20ec053425c4d4e96242d6ef6b06544"
       }
     ]
+  },
+  "build_started_at": "2026-05-18T05:32:05.684Z",
+  "build_agent": "ana-build",
+  "build-report": {
+    "saved_at": "2026-05-18T05:35:50.843Z",
+    "hash": "sha256:21c8328603505569208fb5b7aaa790ebb76853e540fc14c9604e871bd3d664b9"
+  },
+  "build-data": {
+    "saved_at": "2026-05-18T05:35:50.844Z",
+    "hash": "sha256:9e50852d5cad2f59cb726bc38885636efd0b86ef94aba983771731cb41b41e60"
+  },
+  "modules_touched": [
+    "website/components/pricing/PriceCard.tsx",
+    "website/components/pricing/WaitlistForm.tsx",
+    "website/components/pricing/pricing.module.css",
+    "website/lib/copy.ts"
+  ],
+  "commit_hygiene": [],
+  "verify_started_at": "2026-05-18T05:36:56.230Z",
+  "verify_agent": "ana-verify",
+  "pre-check": {
+    "seal": "INTACT",
+    "seal_hash": "sha256:b7c91dfdf3d46a924bef827485bdb02d99fa9c4c7e72f09babf98c4cdff5d5a9",
+    "run_at": "2026-05-18T05:41:00.627Z"
+  },
+  "verify-report": {
+    "saved_at": "2026-05-18T05:41:00.667Z",
+    "hash": "sha256:1d8d43a710985a1e161a65f759204e1a4d3d9a1a4620b7cd0b15ab2d29bfe478"
+  },
+  "verify-data": {
+    "saved_at": "2026-05-18T05:41:00.667Z",
+    "hash": "sha256:acd77807eb50afc1f813de11522ffff5f24a04eef559199b326abd87d9fbbba2"
   }
 }

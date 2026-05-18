@@ -447,8 +447,8 @@ export const copy = {
           "Hosted backlog · queue, build, verify",
           "Cross-project intelligence · patterns from one repo improve the next",
         ],
-        // TODO: Replace with waitlist form URL when available
-        cta: { label: "Join the waitlist", href: "/contact" },
+        waitlist: true,
+        cta: { label: "Join the waitlist" },
       },
     ],
   },

@@ -119,7 +119,7 @@
   font-size: 28px;
   font-weight: 600;
   letter-spacing: -0.02em;
-  color: var(--fg-strong);
+  color: var(--bg);
 }
 
 .cardPrice {
@@ -132,7 +132,7 @@
   font-size: 48px;
   font-weight: 600;
   letter-spacing: -0.03em;
-  color: var(--fg-strong);
+  color: var(--bg);
 }
 .cardPriceUnit {
   font-size: 14px;
@@ -172,4 +172,105 @@
 
 .cardCta {
   margin-top: 28px;
+}
+
+/* Waitlist form */
+.waitlistForm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.waitlistInput {
+  flex: 1 1 200px;
+  min-width: 0;
+  padding: 10px 14px;
+  font-size: 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-soft);
+  background: var(--bg-card);
+  color: var(--fg);
+  outline: none;
+  transition: border-color 150ms;
+}
+.waitlistInput::placeholder {
+  color: var(--ink-45);
+}
+.waitlistInput:focus {
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 2px color-mix(in oklch, var(--color-brand) 25%, transparent);
+}
+.waitlistInput:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Input on the highlighted (inverted) card */
+.cardHighlighted .waitlistInput {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: var(--bg);
+}
+.cardHighlighted .waitlistInput::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+.cardHighlighted .waitlistInput:focus {
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 2px color-mix(in oklch, var(--color-brand) 35%, transparent);
+}
+[data-theme="dark"] .cardHighlighted .waitlistInput {
+  background: rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  color: var(--bg);
+}
+[data-theme="dark"] .cardHighlighted .waitlistInput::placeholder {
+  color: rgba(0, 0, 0, 0.35);
+}
+
+.waitlistMessage {
+  flex-basis: 100%;
+}
+
+.waitlistError {
+  font-size: 13px;
+  color: var(--color-danger, #dc3545);
+  margin-top: 2px;
+  line-height: 1.4;
+}
+.waitlistError a {
+  color: inherit;
+  text-decoration: underline;
+}
+.cardHighlighted .waitlistError {
+  color: #ff8a8a;
+}
+
+.waitlistSuccess {
+  font-size: 14px;
+  line-height: 1.5;
+  animation: waitlistFadeIn 250ms ease-out;
+  outline: none;
+}
+.cardHighlighted .waitlistSuccess {
+  color: var(--bg);
+}
+
+@keyframes waitlistFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.waitlistHoneypot {
+  position: absolute;
+  left: -9999px;
+}
+
+@media (max-width: 480px) {
+  .waitlistForm {
+    flex-direction: column;
+  }
+  .waitlistInput {
+    flex: none;
+    width: 100%;
+  }
 }
