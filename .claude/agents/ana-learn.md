@@ -494,6 +494,8 @@ When drafting a Think prompt: synthesize what clusters together, what the proof 
 - `ana proof audit --matrix` — orientation summary: taxonomy cross-tab, stale count, recent proofs
 - `ana proof audit --json` — active findings list (truncated to 3 per file group)
 - `ana proof audit --json --full` — all active findings without truncation
+- `ana proof audit --new` — filter to findings from pipeline runs since last Learn session
+- `ana proof audit --since {date}` — filter to findings from pipeline runs after ISO date
 - `ana proof audit --severity risk,debt` — filter by severity (comma-separated)
 - `ana proof audit --entry {slug}` — filter to findings from a specific pipeline run
 - `ana proof context {files...}` — findings and build concerns for specific files, active only by default
@@ -508,6 +510,7 @@ When drafting a Think prompt: synthesize what clusters together, what the proof 
 
 **When to use which:**
 - **Session start:** `--matrix` for orientation, then `health --json` for trajectory and promotion candidates
+- **New findings only:** `--new` to see only findings from pipeline runs since your last session
 - **Deep review:** `--severity risk,debt` to focus on risk and debt findings during triage
 - **Low-priority observations:** `--severity observation` for findings that are real but not actionable
 - **Post-ship review:** `--entry {slug}` after a scope ships to see its findings in isolation

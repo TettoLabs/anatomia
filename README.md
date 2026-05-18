@@ -187,6 +187,11 @@ Each entry adds to a proof chain. `ana proof health` tracks the trajectory acros
 | `ana proof audit --since <date>` | Filter to findings after ISO date |
 | `ana proof stale` | Show findings with staleness signals |
 | `ana proof context <files...>` | Query proof chain for file context |
+
+### Learn
+
+| Command | Description |
+|---------|-------------|
 | `ana learn end` | Mark session boundary — next Learn session knows what's new |
 
 ### Setup
