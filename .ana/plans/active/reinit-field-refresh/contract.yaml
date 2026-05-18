@@ -1,0 +1,101 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Re-init mechanical field refresh"
+
+assertions:
+  - id: A001
+    says: "Re-init updates the project name from the fresh scan"
+    block: "refreshes metadata fields from new scan"
+    target: "mergedConfig.name"
+    matcher: "equals"
+    value: "fresh-project-name"
+
+  - id: A002
+    says: "Re-init updates the language from the fresh scan"
+    block: "refreshes metadata fields from new scan"
+    target: "mergedConfig.language"
+    matcher: "equals"
+    value: "Python"
+
+  - id: A003
+    says: "Re-init updates the framework from the fresh scan"
+    block: "refreshes metadata fields from new scan"
+    target: "mergedConfig.framework"
+    matcher: "equals"
+    value: "Django"
+
+  - id: A004
+    says: "Re-init updates the package manager from the fresh scan"
+    block: "refreshes metadata fields from new scan"
+    target: "mergedConfig.packageManager"
+    matcher: "equals"
+    value: "pip"
+
+  - id: A005
+    says: "User-customized commands survive re-init"
+    block: "refreshes metadata fields from new scan"
+    target: "mergedConfig.commands.test"
+    matcher: "equals"
+    value: "my-custom-test"
+
+  - id: A006
+    says: "Unknown user-added keys survive re-init alongside field refresh"
+    block: "refreshes metadata fields from new scan"
+    target: "mergedConfig.myCustomKey"
+    matcher: "truthy"
+
+  - id: A007
+    says: "Co-author setting survives re-init"
+    block: "preserves user-owned fields during metadata refresh"
+    target: "mergedConfig.coAuthor"
+    matcher: "equals"
+    value: "My Team <team@example.com>"
+
+  - id: A008
+    says: "Artifact branch setting survives re-init"
+    block: "preserves user-owned fields during metadata refresh"
+    target: "mergedConfig.artifactBranch"
+    matcher: "equals"
+    value: "develop"
+
+  - id: A009
+    says: "Branch prefix setting survives re-init"
+    block: "preserves user-owned fields during metadata refresh"
+    target: "mergedConfig.branchPrefix"
+    matcher: "equals"
+    value: "fix/"
+
+  - id: A010
+    says: "Custom config block survives re-init"
+    block: "preserves user-owned fields during metadata refresh"
+    target: "mergedConfig.custom.myFlag"
+    matcher: "truthy"
+
+  - id: A011
+    says: "A null scan result correctly overwrites a non-null old value"
+    block: "refreshes null values from scan without preserving stale data"
+    target: "mergedConfig.language"
+    matcher: "equals"
+    value: null
+
+  - id: A012
+    says: "A null framework from scan overwrites a non-null old framework"
+    block: "refreshes null values from scan without preserving stale data"
+    target: "mergedConfig.framework"
+    matcher: "equals"
+    value: null
+
+  - id: A013
+    says: "The doc comment lists all six mechanical refresh fields"
+    block: "doc comment preservation contract is accurate"
+    target: "docComment"
+    matcher: "contains"
+    value: "name, language, framework, packageManager"
+
+file_changes:
+  - path: "packages/cli/src/commands/init/state.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/init.test.ts"
+    action: modify
+  - path: ".ana/context/project-context.md"
+    action: modify
