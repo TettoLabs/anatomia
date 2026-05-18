@@ -54,14 +54,8 @@ export function TetrisSnake() {
       canvas.style.width = `${W}px`;
       canvas.style.height = `${H}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      // Round cols and rows DOWN to nearest multiple of 3 so blocks
-      // land perfectly every 3 cells with zero remainder on every edge.
-      // The canvas loses at most 20px per dimension — invisible.
       cols = Math.floor(W / CELL);
       rows = Math.floor(H / CELL);
-      cols = cols - (cols % 3);
-      rows = rows - (rows % 3);
-      if (cols < 6 || rows < 6) return; // too small to draw
 
       // Build perimeter clockwise from top-left
       perim = [];
@@ -71,12 +65,28 @@ export function TetrisSnake() {
       for (let y = rows - 2; y > 0; y--) perim.push({ x: 0, y });
       if (perim.length > 0) pos = pos % perim.length;
 
-      // Place a block every 3 cells. Because cols and rows are both
-      // multiples of 3, every edge divides perfectly — no remainder,
-      // no bunching, corners always get a block.
+      // Compute block positions per-edge independently.
+      // Each edge is treated separately: corners always get a block,
+      // interior blocks are placed at Math.round(i * L / N) — each
+      // position computed from the edge start, no accumulated error.
+      // Gaps within an edge differ by at most 1 cell.
+      const total = perim.length;
+      const TARGET = 3;
+      const edgeSpecs = [
+        { start: 0,                       length: cols - 1 },
+        { start: cols - 1,                length: rows - 1 },
+        { start: cols + rows - 2,         length: cols - 1 },
+        { start: 2 * cols + rows - 3,     length: rows - 1 },
+      ];
+
       placeSet = new Set<number>();
-      for (let i = 0; i < perim.length; i++) {
-        if (i % 3 === 0) placeSet.add(i);
+      for (const { start, length } of edgeSpecs) {
+        placeSet.add(start % total);
+        if (length <= 0) continue;
+        const numIntervals = Math.max(1, Math.round(length / TARGET));
+        for (let i = 1; i < numIntervals; i++) {
+          placeSet.add((start + Math.round(i * length / numIntervals)) % total);
+        }
       }
     }
 
