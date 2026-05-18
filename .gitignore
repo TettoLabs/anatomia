@@ -49,8 +49,9 @@ packages/cli/src/.ana/
 *DIAGNOSTIC*.md
 *DOSSIER*.md
 
-# Claude Code per-machine config (must not be committed)
+# Claude Code per-developer state (must not be committed)
 **/.claude/settings.local.json
+**/.claude/agent-memory/
 
 # Other AI tool per-machine config
 .aider*

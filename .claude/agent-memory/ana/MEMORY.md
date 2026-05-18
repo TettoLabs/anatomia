@@ -1,7 +1,0 @@
-- [Design principles](feedback_design_principles.md) — Anatomia's 23 design principles: verify over trust, no slop, remove over add, name the disease, etc.
-- [Website handoff](project_website_handoff.md) — Website overhaul has a complete design handoff package with HTML references, Next.js starter, and sub-pages
-- [Monetization strategy](project_monetization.md) — Open source CLI + hosted platform for teams. Proof cards are the acquisition feature.
-- [Versioning strategy](project_versioning.md) — Don't over-bump. 1.1.0 = "ready for users" release with worktrees + version awareness.
-- [Launch planning](project_launch_planning.md) — 2026-05-11: three launch docs + backstory created, six research agents dispatched, full founder arc captured
-- [Ryan's profile](user_ryan_profile.md) — Founder context: Schwab SWE Manager, CU Boulder CS+Econ, solo founder, ~2hr/day bandwidth, 1,500 LinkedIn connections
-- [Verbatim supermock copy](feedback_verbatim_supermock.md) — All docs content must be verbatim from supermock, translated not rewritten. 35hrs of editorial work.

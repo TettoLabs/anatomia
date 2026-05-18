@@ -182,12 +182,21 @@ export async function createClaudeConfiguration(cwd: string, engineResult: Engin
 
   const claudeExists = await dirExists(claudePath);
 
+  // Ensure .gitignore exists for per-developer state (agent-memory/, settings.local.json).
+  // Written on every run (fresh and re-init) — infrastructure-owned, same as .ana/.gitignore.
+  const claudeGitignorePath = path.join(claudePath, '.gitignore');
+  const claudeGitignoreContent = `# Per-developer state — not committed
+agent-memory/
+settings.local.json
+`;
+
   if (!claudeExists) {
     // First run: create everything fresh
     await fs.mkdir(claudePath, { recursive: true });
     await fs.mkdir(agentsPath, { recursive: true });
     await fs.mkdir(skillsPath, { recursive: true });
     await fs.writeFile(settingsPath, JSON.stringify(templateSettings, null, 2), 'utf-8');
+    await fs.writeFile(claudeGitignorePath, claudeGitignoreContent, 'utf-8');
 
     // Copy all agent files
     await copyAgentFiles(agentsPath, templatesDir);
@@ -205,6 +214,9 @@ export async function createClaudeConfiguration(cwd: string, engineResult: Engin
   }
 
   // .claude/ exists - handle merge
+  // Always refresh .gitignore — infrastructure-owned, same as .ana/.gitignore
+  await fs.writeFile(claudeGitignorePath, claudeGitignoreContent, 'utf-8');
+
   const settingsExists = await fileExists(settingsPath);
 
   if (!settingsExists) {
