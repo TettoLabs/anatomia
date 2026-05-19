@@ -233,7 +233,9 @@ async function assessContext(projectRoot: string): Promise<ContextDimension> {
   }
 
   let status: DimensionStatus;
-  if (setupState === 'complete' && sectionsPopulated === sectionsTotal) {
+  if (sectionsPopulated === sectionsTotal) {
+    // Content is fully populated — green regardless of how it got there
+    // (setup agent, manual editing, or any other path)
     status = 'pass';
   } else {
     status = 'warn';
@@ -447,7 +449,7 @@ function classifyMaturity(
   if (proofChain.runs >= ESTABLISHED_RUNS_THRESHOLD) {
     return 'established';
   }
-  if (context.setup_state === 'complete' || proofChain.runs > 0) {
+  if (context.setup_state === 'complete' || context.sections_populated === context.sections_total || proofChain.runs > 0) {
     return 'setup';
   }
   return 'new';
@@ -493,13 +495,13 @@ function formatTerminalOutput(results: DoctorResults): string {
     lines.push(`  ${chalk.green('✓')} Scan fresh (today${d.scan_freshness.depth ? `, ${d.scan_freshness.depth}` : ''})`);
   }
 
-  // Context
-  if (d.context.setup_state === 'complete' && d.context.sections_populated === d.context.sections_total) {
+  // Context — content quality is what matters, not how it got there
+  if (d.context.sections_populated === d.context.sections_total) {
     lines.push(`  ${chalk.green('✓')} Context — ${d.context.sections_populated}/${d.context.sections_total} sections populated`);
   } else if (d.context.setup_state === 'in-progress') {
     lines.push(`  ${chalk.yellow('○')} Context — setup in progress (resume: claude --agent ana-setup)`);
   } else if (d.context.setup_state === 'complete' && d.context.sections_populated < d.context.sections_total) {
-    lines.push(`  ${chalk.yellow('○')} Context — scaffold (setup completed but sections thin)`);
+    lines.push(`  ${chalk.yellow('○')} Context — ${d.context.sections_populated}/${d.context.sections_total} sections (setup completed but sections thin)`);
   } else {
     lines.push(`  ${chalk.yellow('○')} Context — scaffold (run: claude --agent ana-setup)`);
   }
