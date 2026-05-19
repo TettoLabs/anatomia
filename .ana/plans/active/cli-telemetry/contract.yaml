@@ -1,0 +1,230 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "CLI Telemetry Foundation"
+
+assertions:
+  # AC1, AC2: Consent management
+  - id: A001
+    says: "Enabling telemetry saves the user's choice with a unique anonymous ID"
+    block: "consent prompt persists enabled state"
+    target: "config.enabled"
+    matcher: "equals"
+    value: true
+
+  - id: A002
+    says: "The anonymous ID is a standard UUID format"
+    block: "consent prompt persists enabled state"
+    target: "config.anonymousId"
+    matcher: "exists"
+
+  - id: A003
+    says: "The consent timestamp records when the user made their choice"
+    block: "consent prompt persists enabled state"
+    target: "config.promptedAt"
+    matcher: "exists"
+
+  - id: A004
+    says: "The config includes a schema version for future migrations"
+    block: "consent prompt persists enabled state"
+    target: "config.version"
+    matcher: "equals"
+    value: 1
+
+  - id: A005
+    says: "Declining telemetry saves disabled state without recording events"
+    block: "consent prompt persists disabled state"
+    target: "config.enabled"
+    matcher: "equals"
+    value: false
+
+  # AC3: Non-TTY default
+  - id: A006
+    says: "Non-interactive environments silently disable telemetry without prompting"
+    block: "non-TTY defaults to disabled"
+    target: "result"
+    matcher: "equals"
+    value: false
+
+  # AC4: DO_NOT_TRACK
+  - id: A007
+    says: "The DO_NOT_TRACK standard environment variable disables all telemetry"
+    block: "DO_NOT_TRACK=1 disables telemetry"
+    target: "eventsWritten"
+    matcher: "equals"
+    value: 0
+
+  - id: A008
+    says: "DO_NOT_TRACK overrides even an enabled config file"
+    block: "DO_NOT_TRACK overrides enabled config"
+    target: "trackResult"
+    matcher: "equals"
+    value: false
+
+  # AC5, AC6: Event recording and shape
+  - id: A009
+    says: "Running a CLI command records an event with the command name"
+    block: "command_run event includes command name"
+    target: "event.properties.command"
+    matcher: "exists"
+
+  - id: A010
+    says: "Every event identifies itself as coming from the CLI, not the website"
+    block: "event includes source property"
+    target: "event.properties.source"
+    matcher: "equals"
+    value: "cli"
+
+  - id: A011
+    says: "Every event includes a timestamp for time-series analysis"
+    block: "event includes timestamp"
+    target: "event.timestamp"
+    matcher: "exists"
+
+  - id: A012
+    says: "Every event includes the anonymous ID for session grouping"
+    block: "event includes distinct_id"
+    target: "event.distinct_id"
+    matcher: "exists"
+
+  - id: A013
+    says: "The command_run event records which OS the user is on"
+    block: "command_run includes os and node version"
+    target: "event.properties.os"
+    matcher: "exists"
+
+  - id: A014
+    says: "The command_run event records CI detection for separating human from automated usage"
+    block: "command_run includes isCI"
+    target: "event.properties.isCI"
+    matcher: "exists"
+
+  # AC7: No PII
+  - id: A015
+    says: "Events never contain file paths that could identify the user's project"
+    block: "no PII in events"
+    target: "eventJson"
+    matcher: "not_contains"
+    value: "/"
+
+  # AC8: NDJSON append
+  - id: A016
+    says: "Multiple events are stored as separate lines in a single file"
+    block: "events append as NDJSON lines"
+    target: "lineCount"
+    matcher: "equals"
+    value: 3
+
+  - id: A017
+    says: "Each line in the events file is valid JSON"
+    block: "each NDJSON line is valid JSON"
+    target: "allLinesValid"
+    matcher: "equals"
+    value: true
+
+  # AC9: Detached flush
+  - id: A018
+    says: "Flushing events spawns a background process that doesn't block the CLI"
+    block: "flush spawns detached child process"
+    target: "spawnOptions.detached"
+    matcher: "equals"
+    value: true
+
+  - id: A019
+    says: "The flush process is fully independent — the CLI can exit immediately"
+    block: "flush child is unreffed"
+    target: "unrefCalled"
+    matcher: "equals"
+    value: true
+
+  - id: A020
+    says: "The flush script sends events to PostHog's capture endpoint"
+    block: "flush script targets PostHog API"
+    target: "script"
+    matcher: "contains"
+    value: "posthog.com"
+
+  # AC10, AC11, AC12: Telemetry command
+  - id: A021
+    says: "Users can check whether telemetry is currently enabled or disabled"
+    block: "telemetry status shows current state"
+    target: "output"
+    matcher: "contains"
+    value: "Telemetry:"
+
+  - id: A022
+    says: "Users can enable telemetry with a single command"
+    block: "telemetry enable updates config"
+    target: "config.enabled"
+    matcher: "equals"
+    value: true
+
+  - id: A023
+    says: "Users can disable telemetry with a single command"
+    block: "telemetry disable updates config"
+    target: "config.enabled"
+    matcher: "equals"
+    value: false
+
+  - id: A024
+    says: "Users can inspect exactly what data telemetry would send"
+    block: "telemetry show displays sample event"
+    target: "output"
+    matcher: "contains"
+    value: "command_run"
+
+  # AC13: No-throw guarantee
+  - id: A025
+    says: "A corrupted config file doesn't crash the CLI"
+    block: "corrupt config does not throw"
+    target: "threw"
+    matcher: "equals"
+    value: false
+
+  - id: A026
+    says: "Telemetry failures are completely invisible to the user"
+    block: "track with unwritable dir does not throw"
+    target: "threw"
+    matcher: "equals"
+    value: false
+
+  # AC15: Retry on flush failure
+  - id: A027
+    says: "Failed flushes leave events on disk for the next attempt"
+    block: "events persist when flush is not called"
+    target: "fileExists"
+    matcher: "equals"
+    value: true
+
+  # AC17: Cap at 500
+  - id: A028
+    says: "Old events are discarded when more than 500 accumulate"
+    block: "flush script caps at 500 events"
+    target: "script"
+    matcher: "contains"
+    value: "500"
+
+  # AC18: Version/help exclusion
+  - id: A029
+    says: "Telemetry subcommands don't track themselves to avoid circular inflation"
+    block: "telemetry commands excluded from command_run"
+    target: "tracked"
+    matcher: "equals"
+    value: false
+
+file_changes:
+  - path: "src/utils/telemetry.ts"
+    action: create
+  - path: "src/commands/telemetry.ts"
+    action: create
+  - path: "src/index.ts"
+    action: modify
+  - path: "src/commands/scan.ts"
+    action: modify
+  - path: "src/commands/init/index.ts"
+    action: modify
+  - path: "src/commands/work.ts"
+    action: modify
+  - path: "src/commands/artifact.ts"
+    action: modify
+  - path: "tests/utils/telemetry.test.ts"
+    action: create
