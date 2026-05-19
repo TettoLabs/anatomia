@@ -2,7 +2,13 @@
   "work_started_at": "2026-05-19T00:39:20.422Z",
   "work_agent": "ana",
   "scope": {
-    "saved_at": "2026-05-19T00:41:06.157Z",
-    "hash": "sha256:33484c45262108997c5945a4bd95603f400a1a107ecc78a044aaf7ec9f34428e"
+    "saved_at": "2026-05-19T00:48:30.816Z",
+    "hash": "sha256:755cd52aeebe405241635b72447512e3845c0199a5e18c72982d0da0c2b624ed",
+    "history": [
+      {
+        "saved_at": "2026-05-19T00:41:06.157Z",
+        "hash": "sha256:33484c45262108997c5945a4bd95603f400a1a107ecc78a044aaf7ec9f34428e"
+      }
+    ]
   }
 }

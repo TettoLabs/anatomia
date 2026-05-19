@@ -48,7 +48,7 @@ The module has three responsibilities:
 - AC3: If `!process.stdin.isTTY` or `!process.stdout.isTTY`, no prompt fires and telemetry defaults to disabled silently.
 - AC4: If `DO_NOT_TRACK=1` is set, telemetry is disabled regardless of config file. No prompt, no events, no disk writes.
 - AC5: Seven events fire at the correct instrumentation points: `command_run` (every command except `ana telemetry *`), `scan_completed`, `init_completed`, `pipeline_started` (`work start`), `pipeline_completed` (`work complete`), `artifact_saved`, `error_occurred` (unhandled exception in `main()` catch block).
-- AC6: Every event includes `anonymousId` and `timestamp`. `command_run` includes `command`, `cliVersion`, `os`, `nodeVersion`, `isCI`. Other events include their specific properties (see Event Design below).
+- AC6: Every event includes `anonymousId`, `timestamp`, and `source: 'cli'`. `command_run` includes `command`, `cliVersion`, `os`, `nodeVersion`, `isCI`. Other events include their specific properties (see Event Design below).
 - AC7: No PII in any event. No file paths, no project names, no git URLs, no usernames. `detectedStack` is the only project-derived property and contains only technology names (e.g., "TypeScript", "Next.js").
 - AC8: Events are appended to `~/.config/anatomia/pending-events.ndjson` as one JSON object per line. No read-modify-write.
 - AC9: After successful command completion (parseAsync resolves in main), a detached child process is spawned that reads pending events, POSTs them to PostHog's capture API, and deletes the file. The main CLI process does not wait.
@@ -59,10 +59,11 @@ The module has three responsibilities:
 - AC14: PostHog project API key is hardcoded in source. Not in env vars, not in config. It's a public key by design.
 - AC15: If the detached flush fails (network error, PostHog down), events remain on disk and are included in the next flush attempt. Events accumulate across runs until successfully sent.
 - AC16: Tests verify: consent persistence, event shape validation (Zod schemas), DO_NOT_TRACK override, non-TTY default, NDJSON append correctness, no-throw guarantees on telemetry failure, mock injection for the HTTP layer.
+- AC17: The flush script caps pending events at 500 most recent. Older events are discarded before sending.
 
 ## Event Design
 
-| Event | Trigger | Properties (beyond anonymousId + timestamp) |
+| Event | Trigger | Properties (beyond anonymousId + timestamp + source) |
 |-------|---------|----------------------------------------------|
 | `command_run` | Every command except `ana telemetry *` | `command`, `cliVersion`, `os`, `nodeVersion`, `isCI` |
 | `scan_completed` | End of `ana scan` | `duration_ms`, `hasFindings` |
@@ -148,6 +149,7 @@ The module has three responsibilities:
 - Command registration: `config.ts` command group pattern
 - Error handling: every function catches internally, never throws (same as update-check)
 - Config location: use `$XDG_CONFIG_HOME/anatomia/` if set, else `~/.config/anatomia/` on macOS/Linux, `%APPDATA%/anatomia/` on Windows
+- PostHog `/batch` endpoint: the flush script sends all pending events in a single HTTP request, not individual `/capture` calls. One request regardless of event count.
 
 ### Known Gotchas
 
@@ -158,5 +160,4 @@ The module has three responsibilities:
 
 ### Things to Investigate
 
-- The PostHog `/batch` endpoint accepts multiple events in one request. The flush script should use this rather than individual `/capture` calls — one HTTP request regardless of event count.
 - The consent prompt needs to handle raw stdin. Check whether Commander's built-in prompt utilities work, or if a minimal readline implementation is needed (no new dependencies).
