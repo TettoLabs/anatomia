@@ -4,12 +4,14 @@ feature: "Fix Deep Tier Sampling & Finding Accuracy"
 
 assertions:
   # --- Validation finding: own glob, full denominators ---
+  # Test fixture must create routes at varying depths (e.g., 5 shallow + 10 deep = 15)
+  # to prove the glob finds ALL routes, not just shallow ones a depth-first sampler would hit.
   - id: A001
     says: "The validation rule finds all API routes in a project, not just sampled ones"
     block: "validation rule globs for API routes independently"
     target: "finding.title"
     matcher: "contains"
-    value: "/12"
+    value: "/15"
 
   - id: A002
     says: "Routes with validation library imports are correctly detected as validated"

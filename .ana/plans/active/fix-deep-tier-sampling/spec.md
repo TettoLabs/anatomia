@@ -71,7 +71,7 @@ info  24 pages, no error boundaries
 **Why:** Projects with multiple path aliases (`@/lib/*`, `@/pages/*`, `@/ui/*`) only get the first one, causing all other aliased imports to be misclassified as external.
 
 ### `packages/cli/src/engine/analyzers/conventions/index.ts` (modify)
-**What changes:** Update the `parseTsconfigAlias` call site. Currently: `const tsconfigAlias = ... await parseTsconfigAlias(...); const aliasPatterns = tsconfigAlias ? [`${tsconfigAlias}*`] : undefined;`. Changes to: `const tsconfigAliases = ... await parseTsconfigAlias(...); const aliasPatterns = tsconfigAliases.length > 0 ? tsconfigAliases : undefined;`. The aliases already come back as `@/lib/`, `@/` etc. from the updated `parseTsconfigAlias`, so no need to append `*`. Also update `analyzeImportConvention` call and the `aliasPattern` field on the result — store first alias or null (no schema change).
+**What changes:** Update the `parseTsconfigAlias` call site. Currently: `const tsconfigAlias = ... await parseTsconfigAlias(...); const aliasPatterns = tsconfigAlias ? [`${tsconfigAlias}*`] : undefined;`. Changes to: `const tsconfigAliases = ... await parseTsconfigAlias(...); const aliasPatterns = tsconfigAliases.length > 0 ? tsconfigAliases : undefined;`. The aliases already come back as `@/lib/`, `@/` etc. from the updated `parseTsconfigAlias`, so no need to append `*`. Also update `analyzeImportConvention` call. The `aliasPattern` field on the convention result stores `tsconfigAliases[0] ?? null` — the first alias for backward compatibility. No scan.json schema change.
 **Pattern to follow:** Existing code at lines 92-103.
 **Why:** Completes the alias classifier fix — the orchestrator must pass all aliases through to `classifyTSImport`.
 
