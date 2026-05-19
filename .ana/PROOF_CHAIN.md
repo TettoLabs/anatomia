@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-124 runs · 75 active · 3 promoted · 648 closed
+124 runs · 74 active · 3 promoted · 649 closed
 
 ## Hot Modules
 
@@ -8,7 +8,7 @@
 |------|--------|--------|
 | packages/cli/src/commands/work.ts | 9 | 7 |
 | packages/cli/tests/commands/work.test.ts | 6 | 5 |
-| packages/cli/src/commands/init/state.ts | 6 | 3 |
+| packages/cli/src/commands/init/state.ts | 5 | 3 |
 | packages/cli/src/engine/detectors/projectType.ts | 4 | 2 |
 | packages/cli/tests/commands/proof.test.ts | 3 | 3 |
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 75 total)
+## Active Findings (30 shown of 74 total)
 
 ### packages/cli/src/commands/check.ts
 
@@ -28,10 +28,10 @@
 
 ### packages/cli/src/commands/init/state.ts
 
-- **test:** A013 (doc comment) has no tagged test — verified by source inspection only — *Re-init mechanical field refresh*
 - **code:** Merge override assumes newAnaConfig always contains all four keys — undefined would silently drop the field from JSON output — *Re-init mechanical field refresh*
 - **code:** pkg.path injected without sanitization in createAnaJson — pre-existing, unrelated to this build — *Re-init mechanical field refresh*
 - **code:** pkg.path injected without sanitization in new buildPackageCmd and testPackageCmd — same known risk as monorepo-build-scoping-C5 — *Flip Monorepo Command Semantics*
+- **code:** Build/lint scoping silently degrades when cwd is omitted — no warning that scoping was skipped — *Monorepo build command scoping*
 
 ### packages/cli/src/commands/proof.ts
 
