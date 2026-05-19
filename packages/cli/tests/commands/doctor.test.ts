@@ -309,32 +309,46 @@ describe('CLI version dimension', () => {
 
   // @ana A021
   it('shows outdated CLI as fail with latest version', async () => {
-    // Write a fake update cache to simulate outdated version
-    const cacheDir = path.join(tmpDir, '.ana', 'state', 'cache');
-    await fs.mkdir(cacheDir, { recursive: true });
-    await fs.writeFile(
-      path.join(cacheDir, 'update-check.json'),
-      JSON.stringify({ version: '99.0.0', timestamp: Date.now() }),
-    );
-    await createMinimalProject(tmpDir);
+    // checkForUpdates skips cache read when CI=true — unset for this test
+    const savedCi = process.env['CI'];
+    delete process.env['CI'];
+    try {
+      // Write a fake update cache to simulate outdated version
+      const cacheDir = path.join(tmpDir, '.ana', 'state', 'cache');
+      await fs.mkdir(cacheDir, { recursive: true });
+      await fs.writeFile(
+        path.join(cacheDir, 'update-check.json'),
+        JSON.stringify({ version: '99.0.0', timestamp: Date.now() }),
+      );
+      await createMinimalProject(tmpDir);
 
-    const results = await runDoctor(tmpDir);
-    expect(results.dimensions.cli_version.status).toBe('fail');
-    expect(results.dimensions.cli_version.latest).toBe('99.0.0');
+      const results = await runDoctor(tmpDir);
+      expect(results.dimensions.cli_version.status).toBe('fail');
+      expect(results.dimensions.cli_version.latest).toBe('99.0.0');
+    } finally {
+      if (savedCi !== undefined) process.env['CI'] = savedCi;
+    }
   });
 
   // @ana A012
   it('project with outdated CLI has overall fail', async () => {
-    const cacheDir = path.join(tmpDir, '.ana', 'state', 'cache');
-    await fs.mkdir(cacheDir, { recursive: true });
-    await fs.writeFile(
-      path.join(cacheDir, 'update-check.json'),
-      JSON.stringify({ version: '99.0.0', timestamp: Date.now() }),
-    );
-    await createMinimalProject(tmpDir);
+    // checkForUpdates skips cache read when CI=true — unset for this test
+    const savedCi = process.env['CI'];
+    delete process.env['CI'];
+    try {
+      const cacheDir = path.join(tmpDir, '.ana', 'state', 'cache');
+      await fs.mkdir(cacheDir, { recursive: true });
+      await fs.writeFile(
+        path.join(cacheDir, 'update-check.json'),
+        JSON.stringify({ version: '99.0.0', timestamp: Date.now() }),
+      );
+      await createMinimalProject(tmpDir);
 
-    const results = await runDoctor(tmpDir);
-    expect(results.overall).toBe('fail');
+      const results = await runDoctor(tmpDir);
+      expect(results.overall).toBe('fail');
+    } finally {
+      if (savedCi !== undefined) process.env['CI'] = savedCi;
+    }
   });
 });
 
@@ -343,14 +357,20 @@ describe('CLI version dimension', () => {
 describe('scan freshness dimension', () => {
   // @ana A020
   it('stale scan shows fail status', async () => {
-    const staleDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-    await createMinimalProject(tmpDir, {
-      anaJson: { lastScanAt: staleDate },
-    });
-    const results = await runDoctor(tmpDir);
-    // Note: staleness requires both time AND commit threshold. Without git,
-    // checkScanFreshness may use time-only fallback.
-    expect(results.dimensions.scan_freshness.days_since_scan).toBeGreaterThan(7);
+    // checkScanFreshness returns null when CI=true — unset for this test
+    const savedCi = process.env['CI'];
+    delete process.env['CI'];
+    try {
+      const staleDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      await createMinimalProject(tmpDir, {
+        anaJson: { lastScanAt: staleDate },
+      });
+      const results = await runDoctor(tmpDir);
+      // Without git, checkScanFreshness uses time-only fallback
+      expect(results.dimensions.scan_freshness.days_since_scan).toBeGreaterThan(7);
+    } finally {
+      if (savedCi !== undefined) process.env['CI'] = savedCi;
+    }
   });
 
   // @ana A036
