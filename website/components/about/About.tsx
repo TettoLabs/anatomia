@@ -87,8 +87,7 @@ export async function About() {
           </div>
 
           <h1 className={styles.headline}>
-            AI made building easy.<br />
-            Understanding what you <em>built</em> is the hard part.
+            AI made building easy. Understanding what you <em>built</em> is the hard part.
           </h1>
 
           {/* ── Narrative ── */}

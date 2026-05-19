@@ -194,12 +194,41 @@
   color: var(--ink-45);
 }
 
+@media (max-width: 768px) {
+  .headline {
+    margin-bottom: 36px;
+  }
+  .narrative {
+    margin-bottom: 48px;
+  }
+  .principles,
+  .genesis {
+    margin-bottom: 48px;
+  }
+  .sectionHead {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
 @media (max-width: 520px) {
+  .page {
+    padding-bottom: 80px;
+  }
   .statsRow {
     flex-wrap: wrap;
   }
   .stat {
     flex: 1 1 45%;
+  }
+  .statValue {
+    font-size: 24px;
+  }
+  .accent {
+    font-size: 18px;
+  }
+  .founderMeta {
+    font-size: 13px;
   }
 }
 

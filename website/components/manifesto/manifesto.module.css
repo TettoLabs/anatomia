@@ -4,7 +4,13 @@
 .article {
   max-width: 800px;
   margin: 0 auto;
-  padding: 0 8px;
+  padding: 0 24px;
+}
+
+@media (max-width: 520px) {
+  .article {
+    padding: 0 16px;
+  }
 }
 
 .eyebrow {
@@ -143,4 +149,32 @@
 .outbound a:hover {
   color: var(--fg);
   border-color: var(--color-brand);
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .pull {
+    font-size: clamp(20px, 2.8vw, 26px);
+    padding: 20px 0 20px 20px;
+    margin: 28px 0;
+  }
+  .sectionHead {
+    margin-top: 36px;
+  }
+}
+
+@media (max-width: 520px) {
+  .body {
+    font-size: 16.5px;
+  }
+  .pull {
+    font-size: 20px;
+    padding: 16px 0 16px 16px;
+  }
+  .principleName {
+    font-size: 15.5px;
+  }
+  .principleBody {
+    font-size: 15px;
+  }
 }
