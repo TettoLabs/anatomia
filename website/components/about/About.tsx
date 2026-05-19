@@ -140,12 +140,7 @@ export async function About() {
 
           {/* ── Principles ── */}
           <div className={styles.principles}>
-            <h2 className={styles.sectionHead}>
-              What drives this
-              <a href="/manifesto#principles" className={styles.sectionLink}>
-                All principles →
-              </a>
-            </h2>
+            <h2 className={styles.sectionHead}>What drives this</h2>
             {PRINCIPLES.map((p) => (
               <div key={p.name} className={styles.principle}>
                 <p className={styles.principleName}>{p.name}</p>
