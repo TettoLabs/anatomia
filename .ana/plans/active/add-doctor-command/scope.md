@@ -17,7 +17,9 @@ There is no single command that answers "is my Anatomia installation healthy?" T
   - `packages/cli/src/commands/doctor.ts` (new — the command, ~200-300 LoC)
   - `packages/cli/src/index.ts` (register command in GETTING STARTED group)
   - `packages/cli/tests/commands/doctor.test.ts` (new)
-- **Blast radius:** Low. Doctor reads from existing modules but doesn't modify them. The only structural change is a new command registration in index.ts.
+  - `website/data/docs/commands.json` (add doctor entry to Getting Started group)
+  - `README.md` (add `ana doctor` to Quick Start section)
+- **Blast radius:** Low. Doctor reads from existing modules but doesn't modify them. The structural changes are a new command registration in index.ts, a new entry in the static commands.json data file that drives the AnaDocs CLI reference page, and a one-line addition to the README Quick Start.
 - **Estimated effort:** 1-2 days
 - **Multi-phase:** no
 
@@ -182,6 +184,8 @@ Structured envelope following the `proof` command pattern:
 - AC8: Each ✗ line includes an actionable fix command (e.g., "Run: npm update -g anatomia-cli", "Run: ana init")
 - AC9: Skills dimension names which skills are still scaffold-default when not all are enriched
 - AC10: Stale work items (>14 days at any stage) appear as ⚠ lines after the five dimensions
+- AC11: `website/data/docs/commands.json` includes a `doctor` entry in the Getting Started group with name, description, options (`--json`), and no subcommands — so the AnaDocs CLI reference page renders it automatically
+- AC12: `README.md` Quick Start section includes `ana doctor` as the "check your installation" step after `ana init commit`
 
 ## Edge Cases & Risks
 
@@ -239,6 +243,12 @@ Structured envelope following the `proof` command pattern:
 ### Structural Analog
 
 `packages/cli/src/commands/proof.ts` — specifically the `health` subcommand action handler. It reads proof_chain.json, calls `computeHealthReport()`, formats a multi-section terminal dashboard, and supports `--json`. Doctor follows the same orchestrate-and-format pattern across more data sources.
+
+### Documentation Surface
+
+- `website/data/docs/commands.json` — static JSON data file that drives the AnaDocs CLI reference page at `/docs/reference/cli`. Not auto-generated — each command is manually entered. Doctor needs an entry in the Getting Started group matching the schema: `{ name, description, arguments, options, subcommands }`.
+- `README.md` — Quick Start section (lines ~58-65) lists the onboarding commands. Doctor belongs after `ana init commit` as the "see what's healthy" step.
+- AnaDocs does NOT need a dedicated guide page for doctor at this stage. It's a single command, not a concept. The CLI reference entry is sufficient. A guide page can be added later if customers need more explanation.
 
 ### Relevant Code Paths
 
