@@ -36,7 +36,7 @@ export function Manifesto() {
       </blockquote>
 
       {/* Principles */}
-      <h2 className={styles.sectionHead}>Principles</h2>
+      <h2 id="principles" className={styles.sectionHead}>Principles</h2>
       {copy.manifesto.principles.map((p) => (
         <div key={p.name} className={styles.principle}>
           <p className={styles.principleName}>{p.name}</p>

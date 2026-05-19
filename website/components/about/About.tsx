@@ -141,7 +141,12 @@ export async function About() {
 
           {/* ── Principles ── */}
           <div className={styles.principles}>
-            <h2 className={styles.sectionHead}>What drives this</h2>
+            <h2 className={styles.sectionHead}>
+              What drives this
+              <a href="/manifesto#principles" className={styles.sectionLink}>
+                All principles →
+              </a>
+            </h2>
             {PRINCIPLES.map((p) => (
               <div key={p.name} className={styles.principle}>
                 <p className={styles.principleName}>{p.name}</p>
@@ -198,11 +203,11 @@ export async function About() {
           {/* ── Founder ── */}
           <div className={styles.founder}>
             <div className={styles.founderHeader}>
-              <span className={styles.founderName}>Ryan Smith</span>
+              <span className={styles.founderName}>Ryan Patrick Smith</span>
               <span className={styles.founderRole}>Founder</span>
             </div>
             <p className={styles.founderMeta}>
-              Denver, CO · 8 years at Schwab building ML systems for 30M+ clients · CU Boulder CS + Economics
+              Denver, CO · 8 years building ML systems at enterprise scale (30M+ clients) · CU Boulder CS + Economics
             </p>
             <p className={styles.founderStory}>
               Built five projects with AI coding tools. Couldn&apos;t fully
