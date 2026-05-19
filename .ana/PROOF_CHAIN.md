@@ -1,6 +1,6 @@
 # Proof Chain Dashboard
 
-124 runs · 74 active · 3 promoted · 649 closed
+125 runs · 79 active · 3 promoted · 650 closed
 
 ## Hot Modules
 
@@ -16,7 +16,7 @@
 
 *No promoted rules yet.*
 
-## Active Findings (30 shown of 74 total)
+## Active Findings (30 shown of 79 total)
 
 ### packages/cli/src/commands/check.ts
 
@@ -26,22 +26,21 @@
 
 - **test:** No dedicated test for empty-string buildPackage/testPackage rejection — verified by source inspection only — *Flip Monorepo Command Semantics*
 
+### packages/cli/src/commands/doctor.ts
+
+- **code:** ana.json read twice — assessScanFreshness and assessContext both parse .ana/ana.json independently — *ana doctor — unified project health diagnostic*
+- **code:** formatFooter redCount only counts cli_version and scan_freshness — if fail status were ever added to context/skills/proof_chain, the count would be wrong — *ana doctor — unified project health diagnostic*
+
 ### packages/cli/src/commands/init/state.ts
 
 - **code:** Merge override assumes newAnaConfig always contains all four keys — undefined would silently drop the field from JSON output — *Re-init mechanical field refresh*
 - **code:** pkg.path injected without sanitization in createAnaJson — pre-existing, unrelated to this build — *Re-init mechanical field refresh*
 - **code:** pkg.path injected without sanitization in new buildPackageCmd and testPackageCmd — same known risk as monorepo-build-scoping-C5 — *Flip Monorepo Command Semantics*
-- **code:** Build/lint scoping silently degrades when cwd is omitted — no warning that scoping was skipped — *Monorepo build command scoping*
 
 ### packages/cli/src/commands/proof.ts
 
 - **code:** commitAndPushProofChanges and pullBeforeRead exported from proof.ts instead of extracted to git-operations.ts — *Learn Session Memory*
 - **code:** Duplicated zero-entry JSON payload — identical object literal at two call sites — *Audit matrix orientation*
-
-### packages/cli/src/engine/detectors/git.ts
-
-- **code:** Multi-remote repos: origin/ prefix stripping ignores non-origin remotes — *Fix scan branch detection — remove local branches from shared intelligence*
-- **code:** detectBranches and detectBranchPatterns both run git branch -r independently — two subprocess calls for the same data — *Fix scan branch detection — remove local branches from shared intelligence*
 
 ### packages/cli/src/engine/detectors/projectType.ts
 
@@ -58,6 +57,12 @@
 
 - **code:** formatRelativeTime doesn't handle invalid input — produces 'NaNw ago' for bad ISO strings — *Audit matrix orientation*
 - **code:** proofSummary.ts now ~2330 lines — past comfort threshold, growing — *Audit matrix orientation*
+
+### packages/cli/tests/commands/doctor.test.ts
+
+- **test:** A001-A005 tests verify data model, not terminal output — contract targets output.lines — *ana doctor — unified project health diagnostic*
+- **test:** A022 test line 410 contains dead logic — 'still scaffold'.split(' ')[0] ternary always evaluates to truthy branch, duplicating line 408 — *ana doctor — unified project health diagnostic*
+- **test:** No tests for guard clauses (A018/A019 no-ana guard, A025/A026 worktree guard) — these are in the command handler and require subprocess testing to reach — *ana doctor — unified project health diagnostic*
 
 ### packages/cli/tests/commands/init/monorepoCommandScoping.test.ts
 
@@ -93,12 +98,4 @@
 - **code:** Hidden _source DOM input is dead code — JSON body hardcodes _source value, DOM element never read — *Team edition waitlist form*
 - **code:** Success message aria-live on freshly mounted element — screen readers may not announce dynamically inserted aria-live regions — *Team edition waitlist form*
 - **code:** No client-side rate limiting — user can spam submit after error state re-enables the button — *Team edition waitlist form*
-
-### website/components/system/Drawer.tsx
-
-- **code:** Drawer moreCount has no floor guard — commandCount < 6 produces negative display — *Dynamic marketing stats — wire command count and version fallback*
-
-### website/lib/proof-feed.ts
-
-- **code:** VERSION_FALLBACK evaluated at module load time — single-shot, no retry on transient readFileSync failure — *Dynamic marketing stats — wire command count and version fallback*
 

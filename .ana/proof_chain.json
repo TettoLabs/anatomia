@@ -33381,6 +33381,354 @@
         "commit_count": 5,
         "base_commit": "ff1b21303e0207c940160443ba3b2d25fa223d01"
       }
+    },
+    {
+      "slug": "add-doctor-command",
+      "feature": "ana doctor — unified project health diagnostic",
+      "result": "PASS",
+      "author": {
+        "name": "Ryan Smith",
+        "email": "ryan@rsmith.ai"
+      },
+      "contract": {
+        "total": 37,
+        "satisfied": 37,
+        "unsatisfied": 0,
+        "deviated": 0
+      },
+      "assertions": [
+        {
+          "id": "A001",
+          "says": "Doctor prints a status line for each health dimension",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A002",
+          "says": "Doctor shows scan freshness status",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A003",
+          "says": "Doctor shows context quality status",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A004",
+          "says": "Doctor shows skill enrichment status",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A005",
+          "says": "Doctor shows proof chain status",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A006",
+          "says": "JSON output includes the doctor command name",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A007",
+          "says": "JSON output includes a timestamp",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A008",
+          "says": "JSON output includes all five dimension objects",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A009",
+          "says": "JSON output includes the maturity classification",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A010",
+          "says": "JSON output includes the overall pass/fail status",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A011",
+          "says": "A healthy project exits with code 0",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A012",
+          "says": "A project with problems exits with code 1",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A013",
+          "says": "Yellow warnings do not cause a failure exit code",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A014",
+          "says": "A brand new project sees a welcome message directing them to setup",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A015",
+          "says": "A brand new project sees the compact view without the full dashboard footer",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A016",
+          "says": "An established project with 10+ runs sees a healthy message without a welcome CTA",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A017",
+          "says": "Doctor delegates version checking to the existing update-check module",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A018",
+          "says": "Running doctor without an Anatomia installation shows a helpful error",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A019",
+          "says": "Running doctor without an Anatomia installation exits with failure",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A020",
+          "says": "A stale scan includes the fix command to re-initialize",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A021",
+          "says": "An outdated CLI includes the fix command to update",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A022",
+          "says": "When some skills are still scaffold-default, their names are shown",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A023",
+          "says": "A work item stalled for over 14 days appears as a warning",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A024",
+          "says": "A work item with an active worktree is not shown as stalled",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A025",
+          "says": "Running doctor from a worktree is blocked with a helpful message",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A026",
+          "says": "Running doctor from a worktree exits with failure",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A027",
+          "says": "A project with setup in progress shows a resume message",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A028",
+          "says": "The resume message tells the user how to continue setup",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A029",
+          "says": "A project that completed setup but has scaffold sections says so",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A030",
+          "says": "A project that never started setup directs the user to begin",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A031",
+          "says": "JSON scan dimension includes the scan depth",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A032",
+          "says": "JSON skills dimension lists scaffold-default skill names",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A033",
+          "says": "JSON context dimension includes the setup state",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A034",
+          "says": "JSON proof chain dimension includes the trend",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A035",
+          "says": "JSON output includes stale work items array",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A036",
+          "says": "Missing scan.json degrades the scan dimension gracefully without crashing",
+          "status": "SATISFIED"
+        },
+        {
+          "id": "A037",
+          "says": "Missing proof_chain.json shows zero proof runs",
+          "status": "SATISFIED"
+        }
+      ],
+      "acceptance_criteria": {
+        "total": 20,
+        "met": 20
+      },
+      "timing": {
+        "total_minutes": 664,
+        "think": 634,
+        "plan": 7,
+        "build": 8,
+        "verify": 6
+      },
+      "hashes": {
+        "scope": "sha256:b86e0d5d58e17777ca53e50e9ad13dd1874607ccc8b4d163f1127f7831f37bd6",
+        "contract": "sha256:17d5f48bc65d6a755395d2df2a3d2c48eab8469e6ab3129254cd52643192aae6",
+        "plan": "sha256:eff8afdd9363dc58b00d596e6d48f5bc2850722d9e9f05ed02cd9c90617a4d4e",
+        "spec": "sha256:e8fe7ca34d674bb955876822bc8a6dbc7f89efe32fff7203cd2985f400585c02",
+        "build-report": "sha256:b7f3871a4951ef140d915bf4a9ec51ba5d06d18136ac5e2f4055828d5caaa037",
+        "build-data": "sha256:5c590bbd2ea8f08e1e270949691b333fa23fb00d6b30f1b6bc67564bc2e831f2",
+        "verify-report": "sha256:fba16a81dcf0ab2e4295704bce94e06f8d8e1348e010218a56a53b3f91f4862e",
+        "verify-data": "sha256:772d763ef5b4f80a201ec666e9dfab72db6b02448f50d4d0dfbdbd0b9cd53e56"
+      },
+      "completed_at": "2026-05-19T19:52:28.360Z",
+      "modules_touched": [
+        "README.md",
+        "packages/cli/src/commands/check.ts",
+        "packages/cli/src/commands/doctor.ts",
+        "packages/cli/src/index.ts",
+        "packages/cli/tests/commands/doctor.test.ts",
+        "website/content/docs/guides/troubleshooting.mdx",
+        "website/content/docs/start.mdx",
+        "website/scripts/extract-docs-data.ts"
+      ],
+      "scope_summary": "There is no single command that answers \"is my Anatomia installation healthy?\" The health data exists — scan freshness, context maturity, skill enrichment, proof chain trajectory, CLI version, stale work items — but it's scattered across `setup check`, `work status`, `proof health`, and `update-check.ts`. Nobody runs all four. A customer who just finished init has no way to know what's healthy, what's next, and what needs attention.",
+      "kind": "feature",
+      "findings": [
+        {
+          "category": "test",
+          "summary": "A001-A005 tests verify data model, not terminal output — contract targets output.lines",
+          "file": "packages/cli/tests/commands/doctor.test.ts",
+          "anchor": null,
+          "line": 131,
+          "severity": "observation",
+          "suggested_action": "accept",
+          "related_assertions": [
+            "A001",
+            "A002",
+            "A003",
+            "A004",
+            "A005"
+          ],
+          "id": "add-doctor-command-C1",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "A022 test line 410 contains dead logic — 'still scaffold'.split(' ')[0] ternary always evaluates to truthy branch, duplicating line 408",
+          "file": "packages/cli/tests/commands/doctor.test.ts",
+          "anchor": null,
+          "line": 410,
+          "severity": "debt",
+          "suggested_action": "accept",
+          "id": "add-doctor-command-C2",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "ana.json read twice — assessScanFreshness and assessContext both parse .ana/ana.json independently",
+          "file": "packages/cli/src/commands/doctor.ts",
+          "anchor": null,
+          "line": 153,
+          "severity": "debt",
+          "suggested_action": "scope",
+          "related_assertions": [],
+          "id": "add-doctor-command-C3",
+          "status": "active"
+        },
+        {
+          "category": "test",
+          "summary": "No tests for guard clauses (A018/A019 no-ana guard, A025/A026 worktree guard) — these are in the command handler and require subprocess testing to reach",
+          "file": "packages/cli/tests/commands/doctor.test.ts",
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "related_assertions": [
+            "A018",
+            "A019",
+            "A025",
+            "A026"
+          ],
+          "id": "add-doctor-command-C4",
+          "status": "active"
+        },
+        {
+          "category": "code",
+          "summary": "formatFooter redCount only counts cli_version and scan_freshness — if fail status were ever added to context/skills/proof_chain, the count would be wrong",
+          "file": "packages/cli/src/commands/doctor.ts",
+          "anchor": null,
+          "line": 549,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "add-doctor-command-C5",
+          "status": "active"
+        },
+        {
+          "category": "upstream",
+          "summary": "Proof context: readAnaJson called twice in check.ts — doctor adds a third and fourth read of ana.json in separate dimension assessors",
+          "file": null,
+          "anchor": null,
+          "severity": "observation",
+          "suggested_action": "monitor",
+          "id": "add-doctor-command-C6",
+          "status": "closed",
+          "closed_reason": "upstream",
+          "closed_at": "2026-05-19T19:52:28.360Z",
+          "closed_by": "mechanical"
+        }
+      ],
+      "rejection_cycles": 0,
+      "previous_failures": [],
+      "build_concerns": [
+        {
+          "summary": "A018/A019/A025/A026 guards tested indirectly — action handler process.exit paths not unit-tested",
+          "file": "packages/cli/src/commands/doctor.ts",
+          "severity": "observation",
+          "suggested_action": "accept"
+        },
+        {
+          "summary": "ana.json read 3 times across dimension assessors instead of once",
+          "file": "packages/cli/src/commands/doctor.ts",
+          "severity": "debt",
+          "suggested_action": "monitor"
+        },
+        {
+          "summary": "Stale work detection depends on internal .saves.json format",
+          "file": "packages/cli/src/commands/doctor.ts",
+          "severity": "observation",
+          "suggested_action": "monitor"
+        }
+      ],
+      "worktree": {
+        "used": true,
+        "created_at": "2026-05-19T18:42:24.602Z",
+        "completed_at": "2026-05-19T19:52:28.354Z",
+        "commit_count": 0,
+        "base_commit": "2ca40401b9f38651a09bbb818256b8bf09dc1b59"
+      }
     }
   ],
   "schema": 1
