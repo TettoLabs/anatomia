@@ -45,6 +45,7 @@ Two independent fixes in the same file, shipping together because they're the sa
 - AC9: A priority ordering test exists: when both `pyproject.toml` (with deps) and `Cargo.toml` (with [workspace]) coexist alongside `package.json` + lockfile, Python wins (code-position ordering is tested, not implicit)
 - AC10: The Tauri discriminator also applies to Tier 4 (no lockfile case): `package.json` (no lockfile) + `pnpm-workspace.yaml` + `Cargo.toml` with `[workspace]` + `tauri` dep → Node 0.80
 - AC11: Malformed `[workspace.dependencies]` section in Cargo.toml falls through safely to Rust (conservative default)
+- AC12: Cargo.toml with `[workspace.dependencies.tauri]` sub-table format (instead of inline `tauri = { ... }`) is correctly detected as having tauri dependency
 
 ## Edge Cases & Risks
 
@@ -66,8 +67,6 @@ Two independent fixes in the same file, shipping together because they're the sa
 **Lines of code instead of file count.** More expensive to compute and still a statistical proxy. The architectural question (is Rust the core or a component?) is answered more directly by the Tauri dependency than by any counting heuristic.
 
 **Polyglot output type.** Adding a `'polyglot'` or `'typescript+rust'` ProjectType would require changes to 32 downstream comparison sites. Convention detection, pattern inference, structure analysis, framework detection, and dep reading all use `=== 'node'` / `=== 'rust'` string comparisons. A polyglot type would fall through every conditional and get zero analysis. The right long-term direction but an architectural scope, not a detection fix.
-
-**Tier 2 module path heuristics for wrapper detection.** Investigated and rejected — module path alone cannot distinguish auth wrappers from validation wrappers. Ship with Tier 1 (direct validation library imports + schema/validate path patterns) only.
 
 ## Open Questions
 
@@ -124,11 +123,14 @@ None — the Tauri discriminator, Ruby addition, tier ordering, and blast radius
 
 ### Known Gotchas
 
-- The `[workspace.dependencies]` regex must use the section-scoping pattern from `hasPythonProjectDeps` — find the section header with `^\[workspace\.dependencies\]\s*$` (multiline), slice to next section header (`\n[`), then check for `^tauri\s*=` within that slice. Without section scoping, the regex would match `"apps/desktop/src-tauri"` in the members array.
+- The `hasTauriWorkspaceDep` function must detect BOTH TOML formats for workspace dependencies:
+  1. **Inline format** (Cap's pattern): `tauri = { version = "2.5.0" }` inside a `[workspace.dependencies]` section. Detect with section-scoping: find `^\[workspace\.dependencies\]\s*$` header, slice to next section, check for `^tauri\s*=` within that slice.
+  2. **Sub-table format** (valid TOML alternative, seen in tabby for other deps like uuid): `[workspace.dependencies.tauri]` as a standalone section header with `version = "2.5.0"` on the next line. Detect with `^\[workspace\.dependencies\.tauri\]` anywhere in the file — this is unambiguous (it's a TOML section header, not a string in a members array).
+  Either match means tauri is a workspace dependency. Without checking both, the function would miss projects using the sub-table format. Without section scoping for the inline format, the regex would match `"apps/desktop/src-tauri"` in the members array.
 - The Tauri check is INSIDE the existing `hasRustWorkspace` conditional — it's a refinement of the Rust path, not a separate tier. The flow: `hasRustWorkspace(content)` returns true → check `hasTauriWorkspaceDep(content)` + `hasPnpmWorkspace` → if both, return Node instead of Rust.
 - `pnpm-workspace.yaml` existence check adds one `exists()` call. Only fires when package.json + lockfile + Cargo.toml all exist — rare path. Negligible performance impact.
 - The Ruby `hasGemfile` check doesn't need a content reader — Gemfile existence is sufficient. But it DOES need to be added to the Tier 1 fast path condition (`!hasGemfile`), otherwise a Ruby project with a lockfile and no other competing manifest would hit Tier 1 and return Node 0.95.
 
 ### Things to Investigate
 
-- Whether `[workspace.dependencies]` can appear as `[workspace.dependencies.tauri]` (inline table) in Cargo.toml. If so, the section header regex needs to handle subsection headers. The planner should check Cargo.toml spec for this pattern.
+None — all design-judgment questions resolved during investigation.
