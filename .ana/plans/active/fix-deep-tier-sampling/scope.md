@@ -84,6 +84,10 @@ None — all design-judgment questions were resolved during investigation.
 - `FindingContext` already has `rootPath` (line 31) — no interface changes needed for findings to do their own globbing
 - `FindingRule.check` already returns `Promise` (line 38) — async glob is already supported
 - `parseTsconfigAlias` line 342: `aliasKeys.find()` returns only the first match — the bug. Return type is `string | null`, needs to become `string[]`. Lines 342-346 filter for `@`-prefixed aliases with scope length ≤ 2, which excludes `~/`, `#/`, and bare aliases — the filter needs to be generalized
+- `parseTsconfigAlias` has TWO call sites with different purposes:
+  - `conventions/index.ts` line 93: builds `aliasPatterns` array for import classification. Currently wraps single result in array + appends `*`. With `string[]` return, becomes a `.map()` instead.
+  - `detectProjectRoot` in `imports.ts` line 259: returns the alias as the "project root" for Node projects. `detectProjectRoot` returns `string | null`. With `string[]` return from `parseTsconfigAlias`, this call site needs adaptation (return first alias, common prefix, or stop delegating to `parseTsconfigAlias` for this purpose).
+- `aliasPattern` field on `ConventionAnalysis` (imports.ts line 230): currently stores a single alias string in scan.json output. With multiple aliases, Plan must decide: keep first alias (cosmetic, no schema change) or change to array (changes scan.json schema).
 - `classifyTSImport` line 83: already calls `aliases?.some()` — handles multiple aliases correctly if they're passed
 - Convention analyzer line 93-94: passes `parseTsconfigAlias` result to `classifyTSImport` — the pipeline is correct, just underfed
 
