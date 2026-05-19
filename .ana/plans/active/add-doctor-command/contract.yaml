@@ -1,0 +1,288 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "ana doctor — unified project health diagnostic"
+
+assertions:
+  # AC1: Human-readable dashboard
+  - id: A001
+    says: "Doctor prints a status line for each health dimension"
+    block: "displays all six dimension lines in terminal output"
+    target: "output.lines"
+    matcher: "contains"
+    value: "CLI v"
+
+  - id: A002
+    says: "Doctor shows scan freshness status"
+    block: "displays all six dimension lines in terminal output"
+    target: "output.lines"
+    matcher: "contains"
+    value: "Scan"
+
+  - id: A003
+    says: "Doctor shows context quality status"
+    block: "displays all six dimension lines in terminal output"
+    target: "output.lines"
+    matcher: "contains"
+    value: "Context"
+
+  - id: A004
+    says: "Doctor shows skill enrichment status"
+    block: "displays all six dimension lines in terminal output"
+    target: "output.lines"
+    matcher: "contains"
+    value: "Skills"
+
+  - id: A005
+    says: "Doctor shows proof chain status"
+    block: "displays all six dimension lines in terminal output"
+    target: "output.lines"
+    matcher: "contains"
+    value: "Proof chain"
+
+  # AC2: JSON output
+  - id: A006
+    says: "JSON output includes the doctor command name"
+    block: "outputs structured JSON with --json flag"
+    target: "json.command"
+    matcher: "equals"
+    value: "doctor"
+
+  - id: A007
+    says: "JSON output includes a timestamp"
+    block: "outputs structured JSON with --json flag"
+    target: "json.timestamp"
+    matcher: "exists"
+
+  - id: A008
+    says: "JSON output includes all five dimension objects"
+    block: "outputs structured JSON with --json flag"
+    target: "json.results.dimensions.cli_version"
+    matcher: "exists"
+
+  - id: A009
+    says: "JSON output includes the maturity classification"
+    block: "outputs structured JSON with --json flag"
+    target: "json.results.maturity"
+    matcher: "exists"
+
+  - id: A010
+    says: "JSON output includes the overall pass/fail status"
+    block: "outputs structured JSON with --json flag"
+    target: "json.results.overall"
+    matcher: "exists"
+
+  # AC3: Exit codes
+  - id: A011
+    says: "A healthy project exits with code 0"
+    block: "exits 0 when no red items exist"
+    target: "exitCode"
+    matcher: "equals"
+    value: 0
+
+  - id: A012
+    says: "A project with problems exits with code 1"
+    block: "exits 1 when red items exist"
+    target: "exitCode"
+    matcher: "equals"
+    value: 1
+
+  - id: A013
+    says: "Yellow warnings do not cause a failure exit code"
+    block: "exits 0 when only yellow items exist"
+    target: "exitCode"
+    matcher: "equals"
+    value: 0
+
+  # AC4: Compact welcome view
+  - id: A014
+    says: "A brand new project sees a welcome message directing them to setup"
+    block: "shows compact welcome view for new project"
+    target: "output"
+    matcher: "contains"
+    value: "Next:"
+
+  - id: A015
+    says: "A brand new project sees the compact view without the full dashboard footer"
+    block: "shows compact welcome view for new project"
+    target: "output"
+    matcher: "not_contains"
+    value: "All healthy"
+
+  # AC5: Established project
+  - id: A016
+    says: "An established project with 10+ runs sees a healthy message without a welcome CTA"
+    block: "shows full dashboard for established project"
+    target: "output"
+    matcher: "not_contains"
+    value: "Next:"
+
+  # AC6: No reimplemented health logic
+  - id: A017
+    says: "Doctor delegates version checking to the existing update-check module"
+    block: "calls checkForUpdates for CLI version dimension"
+    target: "result.cli_version.current"
+    matcher: "exists"
+
+  # AC7: No .ana/ directory
+  - id: A018
+    says: "Running doctor without an Anatomia installation shows a helpful error"
+    block: "prints error and exits 1 when no .ana/ directory"
+    target: "output"
+    matcher: "contains"
+    value: "No Anatomia installation found"
+
+  - id: A019
+    says: "Running doctor without an Anatomia installation exits with failure"
+    block: "prints error and exits 1 when no .ana/ directory"
+    target: "exitCode"
+    matcher: "equals"
+    value: 1
+
+  # AC8: Actionable fix commands on red items
+  - id: A020
+    says: "A stale scan includes the fix command to re-initialize"
+    block: "shows actionable fix for stale scan"
+    target: "output"
+    matcher: "contains"
+    value: "Run: ana init"
+
+  - id: A021
+    says: "An outdated CLI includes the fix command to update"
+    block: "shows actionable fix for outdated CLI"
+    target: "output"
+    matcher: "contains"
+    value: "npm update -g anatomia-cli"
+
+  # AC9: Skills names scaffold defaults
+  - id: A022
+    says: "When some skills are still scaffold-default, their names are shown"
+    block: "names scaffold-default skills when not all enriched"
+    target: "output"
+    matcher: "contains"
+    value: "still scaffold"
+
+  # AC10: Stale work items
+  - id: A023
+    says: "A work item stalled for over 14 days appears as a warning"
+    block: "surfaces stale work items after dimensions"
+    target: "output"
+    matcher: "contains"
+    value: "stalled"
+
+  - id: A024
+    says: "A work item with an active worktree is not shown as stalled"
+    block: "does not flag items with active worktrees as stalled"
+    target: "output"
+    matcher: "not_contains"
+    value: "active-worktree-item"
+
+  # AC15: Worktree guard
+  - id: A025
+    says: "Running doctor from a worktree is blocked with a helpful message"
+    block: "blocks execution from worktree directory"
+    target: "output"
+    matcher: "contains"
+    value: "Run from the main project directory"
+
+  - id: A026
+    says: "Running doctor from a worktree exits with failure"
+    block: "blocks execution from worktree directory"
+    target: "exitCode"
+    matcher: "equals"
+    value: 1
+
+  # AC16: Context — setup in progress
+  - id: A027
+    says: "A project with setup in progress shows a resume message"
+    block: "shows setup-in-progress context message"
+    target: "output"
+    matcher: "contains"
+    value: "setup in progress"
+
+  - id: A028
+    says: "The resume message tells the user how to continue setup"
+    block: "shows setup-in-progress context message"
+    target: "output"
+    matcher: "contains"
+    value: "resume: claude --agent ana-setup"
+
+  # AC17: Context — setup complete but thin
+  - id: A029
+    says: "A project that completed setup but has scaffold sections says so"
+    block: "shows complete-but-thin context message"
+    target: "output"
+    matcher: "contains"
+    value: "setup completed but sections thin"
+
+  # AC18: Context — setup never started
+  - id: A030
+    says: "A project that never started setup directs the user to begin"
+    block: "shows setup-never-started context message"
+    target: "output"
+    matcher: "contains"
+    value: "run: claude --agent ana-setup"
+
+  # AC2 JSON: dimension status values
+  - id: A031
+    says: "JSON scan dimension includes the scan depth"
+    block: "outputs structured JSON with --json flag"
+    target: "json.results.dimensions.scan_freshness.depth"
+    matcher: "exists"
+
+  - id: A032
+    says: "JSON skills dimension lists scaffold-default skill names"
+    block: "outputs JSON with scaffold skill names"
+    target: "json.results.dimensions.skills.scaffold_defaults"
+    matcher: "exists"
+
+  - id: A033
+    says: "JSON context dimension includes the setup state"
+    block: "outputs JSON with context setup state"
+    target: "json.results.dimensions.context.setup_state"
+    matcher: "exists"
+
+  - id: A034
+    says: "JSON proof chain dimension includes the trend"
+    block: "outputs JSON with proof chain trend"
+    target: "json.results.dimensions.proof_chain.trend"
+    matcher: "exists"
+
+  # AC10 JSON: stale work in JSON
+  - id: A035
+    says: "JSON output includes stale work items array"
+    block: "outputs structured JSON with --json flag"
+    target: "json.results.stale_work"
+    matcher: "exists"
+
+  # Partial .ana/ degradation
+  - id: A036
+    says: "Missing scan.json degrades the scan dimension gracefully without crashing"
+    block: "degrades gracefully with missing scan.json"
+    target: "output"
+    matcher: "contains"
+    value: "Scan"
+
+  - id: A037
+    says: "Missing proof_chain.json shows zero proof runs"
+    block: "degrades gracefully with missing proof_chain.json"
+    target: "output"
+    matcher: "contains"
+    value: "no pipeline runs"
+
+file_changes:
+  - path: "packages/cli/src/commands/doctor.ts"
+    action: create
+  - path: "packages/cli/src/commands/check.ts"
+    action: modify
+  - path: "packages/cli/src/index.ts"
+    action: modify
+  - path: "packages/cli/tests/commands/doctor.test.ts"
+    action: create
+  - path: "website/scripts/extract-docs-data.ts"
+    action: modify
+  - path: "website/content/docs/guides/troubleshooting.mdx"
+    action: modify
+  - path: "website/content/docs/start.mdx"
+    action: modify
+  - path: "README.md"
+    action: modify
