@@ -1,0 +1,179 @@
+version: "1.0"
+sealed_by: "AnaPlan"
+feature: "Fix Deep Tier Sampling & Finding Accuracy"
+
+assertions:
+  # --- Validation finding: own glob, full denominators ---
+  - id: A001
+    says: "The validation rule finds all API routes in a project, not just sampled ones"
+    block: "validation rule globs for API routes independently"
+    target: "finding.title"
+    matcher: "contains"
+    value: "/12"
+
+  - id: A002
+    says: "Routes with validation library imports are correctly detected as validated"
+    block: "validation rule detects validation imports"
+    target: "finding.severity"
+    matcher: "equals"
+    value: "pass"
+
+  - id: A003
+    says: "Both App Router and Pages Router API routes are discovered"
+    block: "validation rule covers both router patterns"
+    target: "routeCount"
+    matcher: "equals"
+    value: 3
+
+  - id: A004
+    says: "Small projects with few API routes get info severity at most, not warn"
+    block: "validation severity caps at info for small projects"
+    target: "finding.severity"
+    matcher: "equals"
+    value: "info"
+
+  - id: A005
+    says: "Projects with no API routes produce no validation finding"
+    block: "validation rule returns null when no API routes"
+    target: "finding"
+    matcher: "equals"
+    value: null
+
+  - id: A006
+    says: "The validation finding title shows actual counts instead of saying sampled"
+    block: "validation title uses actual counts"
+    target: "finding.title"
+    matcher: "not_contains"
+    value: "sampled"
+
+  - id: A007
+    says: "Partially validated projects include a limitation note about wrapper-based validation"
+    block: "validation detail includes limitation note"
+    target: "finding.detail"
+    matcher: "contains"
+    value: "wrapper-based"
+
+  - id: A008
+    says: "Routes importing schema or validate path patterns count as validated"
+    block: "validation detects schema path patterns"
+    target: "finding.severity"
+    matcher: "equals"
+    value: "pass"
+
+  # --- Error boundaries: own glob ---
+  - id: A009
+    says: "Error boundaries are found regardless of directory depth"
+    block: "error-boundaries detects deeply nested error.tsx"
+    target: "finding.severity"
+    matcher: "equals"
+    value: "pass"
+
+  - id: A010
+    says: "Page count is accurate when no error boundaries exist"
+    block: "error-boundaries counts pages via glob"
+    target: "finding.title"
+    matcher: "contains"
+    value: "5 pages"
+
+  - id: A011
+    says: "Non-Next.js projects skip the error boundary check entirely"
+    block: "error-boundaries skips non-Next.js projects"
+    target: "finding"
+    matcher: "equals"
+    value: null
+
+  # --- Alias classifier: all aliases ---
+  - id: A012
+    says: "All path aliases from tsconfig are returned, not just the first one"
+    block: "parseTsconfigAlias returns all aliases"
+    target: "aliases.length"
+    matcher: "equals"
+    value: 4
+
+  - id: A013
+    says: "Aliases with tilde prefix are recognized as path aliases"
+    block: "parseTsconfigAlias recognizes tilde aliases"
+    target: "aliases"
+    matcher: "contains"
+    value: "~/"
+
+  - id: A014
+    says: "Aliases with hash prefix are recognized as path aliases"
+    block: "parseTsconfigAlias recognizes hash aliases"
+    target: "aliases"
+    matcher: "contains"
+    value: "#imports/"
+
+  - id: A015
+    says: "Scoped npm packages like @nestjs are excluded from alias detection"
+    block: "parseTsconfigAlias excludes scoped packages"
+    target: "aliases"
+    matcher: "not_contains"
+    value: "@nestjs/"
+
+  - id: A016
+    says: "Imports using any configured alias are classified as absolute, not external"
+    block: "classifyTSImport handles multiple aliases"
+    target: "classification"
+    matcher: "equals"
+    value: "absolute"
+
+  - id: A017
+    says: "Projects with no tsconfig paths get an empty alias list"
+    block: "parseTsconfigAlias returns empty array for no paths"
+    target: "aliases.length"
+    matcher: "equals"
+    value: 0
+
+  # --- Depth-stratified sampling ---
+  - id: A018
+    says: "Deep files get sampled even when the budget is smaller than the total file count"
+    block: "sampler includes files from all depth levels"
+    target: "hasDeepFiles"
+    matcher: "truthy"
+
+  - id: A019
+    says: "The default sample budget is 750 files"
+    block: "sampler default budget is 750"
+    target: "files.length"
+    matcher: "equals"
+    value: 750
+
+  - id: A020
+    says: "A project with all files at the same depth still samples correctly"
+    block: "sampler handles flat projects gracefully"
+    target: "files.length"
+    matcher: "equals"
+    value: 10
+
+  # --- Comment fix ---
+  - id: A021
+    says: "The tree-sitter parse cost comment reflects actual measured performance"
+    block: "treeSitter comment is accurate"
+    target: "commentText"
+    matcher: "contains"
+    value: "0.8ms"
+
+file_changes:
+  - path: "packages/cli/src/engine/findings/rules/validation.ts"
+    action: modify
+  - path: "packages/cli/src/engine/findings/rules/errorBoundaries.ts"
+    action: modify
+  - path: "packages/cli/src/engine/analyzers/conventions/imports.ts"
+    action: modify
+  - path: "packages/cli/src/engine/analyzers/conventions/index.ts"
+    action: modify
+  - path: "packages/cli/src/engine/sampling/proportionalSampler.ts"
+    action: modify
+  - path: "packages/cli/src/engine/scan-engine.ts"
+    action: modify
+  - path: "packages/cli/src/engine/parsers/treeSitter.ts"
+    action: modify
+  - path: "packages/cli/tests/engine/findings/rules/validation.test.ts"
+    action: create
+  - path: "packages/cli/tests/engine/findings/rules/errorBoundaries.test.ts"
+    action: create
+  - path: "packages/cli/tests/engine/analyzers/conventions/imports.test.ts"
+    action: create
+  - path: "packages/cli/tests/engine/sampling/proportional-sampler.test.ts"
+    action: modify
